@@ -9,7 +9,7 @@ function App() {
     
     
     <>
-  <h1>this is common </h1>
+  <h1>this is live </h1>
       
     </>
   )

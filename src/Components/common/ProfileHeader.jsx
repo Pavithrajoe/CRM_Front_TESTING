@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function ProfileHeader() {
   const [image, setImage] = useState(null);
@@ -26,8 +27,10 @@ export default function ProfileHeader() {
   };
 
   return (
-    <div className="flex justify-end items-center gap-4 mb-6 relative">
-      <Bell className="w-5 h-5 text-blue-600" />
+    <div className="flex justify-end items-center gap-10 mb-6 relative">
+    <Link to="/notifications">
+  <Bell className="w-10 h-10 border rounded-full ms-[-50px] p-2 text-blue-600 cursor-pointer" />
+   </Link>
       <div className="flex items-center gap-2 cursor-pointer">
         <label htmlFor="profile-upload">
           <img

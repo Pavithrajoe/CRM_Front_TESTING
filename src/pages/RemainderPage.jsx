@@ -8,10 +8,14 @@ const RemainderPage = () => {
   return (
     <>
      <ProfileHeader />
+     <div className="fixed top-[70px] ms-[-550px] right-0">
       <ProgressBar />
+      </div>
+      <div className=" fixed top-[150px] ms-[-570px] right-0">
       <TabsBar />
+      </div>
    
-    <div className="w-full max-w-3xl mx-auto mt-10 mr-10 shadow rounded bg-white">
+    <div className="w-full max-w-4xl mx-auto mt-[180px] mr-10 shadow rounded bg-white">
       <RemainderForm />
     </div>
     </>

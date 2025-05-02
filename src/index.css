@@ -5,5 +5,16 @@
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+ 
+}
+
+
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #EEEEEE;
+  
+
 }
 

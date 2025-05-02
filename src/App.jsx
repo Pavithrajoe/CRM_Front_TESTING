@@ -5,6 +5,7 @@ import Layout from './Components/Layout';
 import Login from './pages/credential/login';
 import SignupRes from './pages/credential/signup_res';
 import RemainderPage from './pages/RemainderPage';
+import ReminderHistory from './pages/reminderHistory';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       {/* Protected Layout with Sidebar */}
       <Route element={<Layout />}>
         <Route path="/remainderpage" element={<RemainderPage />} />
+        <Route path="/reminderhistory" element={<ReminderHistory />} />
         {/* Add more routes here */}
       </Route>
     </Routes>

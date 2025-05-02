@@ -2,11 +2,12 @@ import React from "react";
 import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
-import RemainderForm from "@/components/RemainderForm";
+import AllReminders from "../Components/AllReminders";
+
 import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
 
 
-const RemainderPage = () => {
+const RemainderHistory = () => {
   return (
     <>
      <ProfileHeader />
@@ -23,11 +24,11 @@ const RemainderPage = () => {
           <ProfileWithHistoryCard />
         </div>
     <div className="w-full mx-auto mr-10 mt-[40px] shadow rounded bg-white">
-      <RemainderForm />
+      <AllReminders />
     </div>
     </div>
     </>
   );
 };
 
-export default RemainderPage;
+export default RemainderHistory;

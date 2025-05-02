@@ -6,7 +6,7 @@ const steps = [
   { label: "Qualified", path: "/comments" },
   { label: "non", path: "/remainders" },
   { label: "New", path: "/analytics" },
-  { label: "New", path: "/assigned" },
+
 ];
 
 export default function ProgressBar() {
@@ -14,7 +14,7 @@ export default function ProgressBar() {
   const location = useLocation();
 
   return (
-    <div className="flex items-center space-x-[-65px] ms-[-995px] ">
+    <div className="flex text-center space-x-[-45px] ms-[1030px] ">
       {steps.map((step, index) => {
         const isFirst = index === 0;
         const isLast = index === steps.length - 1;
@@ -34,7 +34,7 @@ export default function ProgressBar() {
             key={index}
             viewBox="0 0 150 40"
             preserveAspectRatio="xMidYMid meet"
-            className="w-[200px] h-[40px] cursor-pointer z-10"
+            className="w-[180px] h-[40px] cursor-pointer z-10"
             onClick={() => navigate(step.path)}
           >
             <path d={path} fill={fill} stroke="#bbb" />

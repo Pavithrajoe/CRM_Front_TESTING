@@ -1,5 +1,5 @@
 // pages/forgotpassword.js
-import ForgotPasswordComponent from '../components/ForgotPasswordComponent'; // adjust path
+import ForgotPasswordComponent from '../components/ForgotPasswordComponent';
 
 export default function ForgotPasswordPage() {
   return (

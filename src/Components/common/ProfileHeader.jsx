@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // ← Add useNavigate
-
+import { Link, useNavigate } from 'react-router-dom'; 
 export default function ProfileHeader() {
   const [image, setImage] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate(); // ← Hook for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedImage = localStorage.getItem('profileImage');
@@ -28,7 +27,7 @@ export default function ProfileHeader() {
 
   const handleLogout = () => {
     localStorage.removeItem('profileImage');
-    navigate('/login_dev'); // ← Redirect to login page (or any logout route)
+    navigate('/login_dev'); 
   };
 
   return (

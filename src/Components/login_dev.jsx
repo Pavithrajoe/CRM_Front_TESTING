@@ -12,19 +12,31 @@ const LoginPage = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-
-    // Basic validation
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+  
     if (!emailOrPhone.trim()) {
       alert('Please enter your email or phone number.');
       return;
     }
-
+  
+    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+      alert('Please enter a valid email address or 10-digit mobile number.');
+      return;
+    }
+  
     if (!password.trim()) {
       alert('Please enter your password.');
       return;
     }
-
-    // Proceed to dashboard if validation passes
+  
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long.');
+      return;
+    }
+  
+    // Success: navigate to dashboard
     navigate('/dashboard');
   };
 

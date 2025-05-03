@@ -2,12 +2,15 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './common/sidebar';
+import TabManager from './TabManager';
+
 
 const Layout = () => {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 overflow-auto bg-gray-100 p-4">
+      <TabManager />
+      <div className="flex-1 bg-[#EEEEEE] p-4 overflow-x-hidden overflow-y-scroll">
         <Outlet /> {/* Dynamic content from routes */}
       </div>
     </div>

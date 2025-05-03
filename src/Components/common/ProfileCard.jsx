@@ -183,7 +183,7 @@ const ProfileCard = () => {
       )}
 
       <div>
-        <ul className="space-y-1 max-h-40 overflow-auto pr-1">
+        <ul className="space-y-1 max-h-40 overflow-hidden pr-1">
           {history.map((item, index) => (
             <li key={index} className="text-xs text-gray-600">
               <span className="font-medium">Modified</span> {item.user}'s work

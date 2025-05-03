@@ -5,6 +5,7 @@
 #root {
 
   font-family: barlow;
+  @apply overflow-x-hidden;
 }
 
 @layer base {

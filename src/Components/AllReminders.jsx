@@ -14,6 +14,7 @@ const AllReminders = () => {
     '/images/nav/group.png',
     '/profile4.png',
     '/profile5.png',
+    ""
   ];
 
   useEffect(() => {

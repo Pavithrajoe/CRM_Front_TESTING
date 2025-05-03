@@ -2,11 +2,11 @@ import React from "react";
 import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
-import RemainderForm from "@/components/RemainderForm";
+import Comments from "@/components/commandshistory";
 import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
 
 
-const RemainderPage = () => {
+const Commandpage = () => {
   return (
     <>
      <ProfileHeader />
@@ -22,12 +22,12 @@ const RemainderPage = () => {
         <div className="w-[550px] h-100vh">
           <ProfileWithHistoryCard />
         </div>
-    <div className="w-full h-100vh mx-auto ms-10 mr-10 mt-[40px] shadow rounded bg-white">
-      <RemainderForm />
+    <div className="w-full h-100vh ms-10 mr-10 mt-[40px] overflow-x-hidden shadow rounded bg-white">
+      <Comments />
     </div>
     </div>
     </>
   );
 };
 
-export default RemainderPage;
+export default Commandpage;

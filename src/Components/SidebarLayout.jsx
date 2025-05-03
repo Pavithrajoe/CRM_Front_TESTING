@@ -7,7 +7,7 @@ const SidebarLayout = () => {
   return (
     <div className="flex">
       <Sidebar />
-      <main className="flex-1 p-4 bg-gray-50 min-h-screen">
+      <main className="flex-1 p-4 bg-[#EEEEEE] min-h-screen">
         <Outlet /> {/* This renders the nested route content */}
       </main>
     </div>

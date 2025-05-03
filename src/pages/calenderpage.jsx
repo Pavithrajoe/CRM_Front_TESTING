@@ -2,8 +2,9 @@ import React from "react";
 import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
-import RemainderForm from "@/components/RemainderForm";
-import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
+import CalendarView from "@/components/CalendarView";
+import GoogleMeet from "@/components/GoogleMeet";
+
 
 
 const RemainderPage = () => {
@@ -11,19 +12,17 @@ const RemainderPage = () => {
     <>
      <ProfileHeader />
      
-     <div className="ms-[-700px]">
+     <div className="ms-[-900px]">
       <ProgressBar />
       </div>
-      <div className="">
+      <div className=" ms-[-200px]">
       <TabsBar />
       </div>
       <div className="flex px-2 gap-4">
-        {/* LEFT: Profile + History */}
-        <div className="w-[550px] h-100vh">
-          <ProfileWithHistoryCard />
-        </div>
-    <div className="w-full h-100vh mx-auto ms-10 mr-10 mt-[40px] shadow rounded bg-white">
-      <RemainderForm />
+    
+    <div className="w-full h-100vh mx-auto mr-10 mt-[40px] shadow rounded bg-white">
+      <CalendarView />
+      <GoogleMeet />
     </div>
     </div>
     </>

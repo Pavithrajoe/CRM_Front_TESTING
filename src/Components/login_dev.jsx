@@ -13,17 +13,34 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    // Basic validation
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+  
     if (!emailOrPhone.trim()) {
       alert('Please enter your email or phone number.');
       return;
     }
-
+  
+    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+      alert('Please enter a valid email address or 10-digit mobile number.');
+      return;
+    }
+  
     if (!password.trim()) {
       alert('Please enter your password.');
       return;
     }
+
+  
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long.');
+      return;
+    }
+  
+    // Success: navigate to dashboard
+    navigate('/dashboard');
+
 
     try {
       const response = await fetch(ENDPOINTS.LOGIN, {
@@ -47,14 +64,15 @@ const LoginPage = () => {
       console.error("Login error:", error);
       alert('Something went wrong. Please try again.');
     }
+
   };
 
   return (
-    <div className="min-h-screen w-full mb-10 flex items-center justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] rounded-xl overflow-hidden">
+    <div className="min-h-70vh w-full flex items-center justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[620px] rounded-xl overflow-hidden">
         {/* Left Side Image */}
-        <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-10 rounded-2xl"></div>
+        <div className="relative w-full mb-4 md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-4 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
+          <div className="absolute inset-0 bg-white/15 backdrop-blur-xl z-10 rounded-2xl"></div>
           <img
             src="/images/login/login.png"
             alt="Illustration"
@@ -117,12 +135,7 @@ const LoginPage = () => {
             </div>
           </form>
 
-          <p className="text-sm mt-4 text-center">
-            Don’t have an account to Login?{' '}
-            <a href="#" className="text-blue-600 font-semibold hover:underline">
-              Sign Up
-            </a>
-          </p>
+          
         </div>
       </div>
 

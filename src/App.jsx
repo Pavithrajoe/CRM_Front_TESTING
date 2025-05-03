@@ -1,3 +1,8 @@
+
+import ForgetPassword from "./Components/ForgetPassword";
+import SuccessMessage from "./pages/credential/SuccessMessage";
+import VerifyCodePage from "./pages/credential/verify_code"; 
+import LeadsDashboard from "./pages/LeadDashboard";
 // App.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -10,6 +15,12 @@ import ReminderHistory from './pages/reminderHistory';
 function App() {
   return (
     <Routes>
+
+      <Route path="/" element={<ForgetPassword />} />
+      <Route path="/success" element={<SuccessMessage />} />
+      <Route path="/verify" element={<VerifyCodePage />} /> 
+      <Route path="/leads" element={<LeadsDashboard />} />
+
       {/* Public Routes */}
       <Route path="/" element={<Login />} />
       <Route path="/signupres" element={<SignupRes />} />

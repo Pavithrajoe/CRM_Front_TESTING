@@ -96,6 +96,13 @@ const Sidebar = () => {
             alt="Logout"
             className="w-5 h-5"
           />
+          // tested
+
+<img
+            src="/images/nav/logout.png"
+            alt="Logout"
+            className="w-5 h-5"
+          />
           {!isCollapsed && (
             <span className="ml-2 text-sm text-white font-medium">Logout</span>
           )}

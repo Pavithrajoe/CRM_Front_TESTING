@@ -1,0 +1,163 @@
+import React, { useState } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { FaThLarge, FaListUl, FaSortAlphaDown, FaSortAlphaUp } from 'react-icons/fa';
+
+const LeadToolbar = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('My Leads');
+  const [sortAsc, setSortAsc] = useState(true);
+  const [viewMode, setViewMode] = useState('card');
+
+  // Dummy data
+  const allLeads = [
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Contacted', lead: 'Hot', category: 'My Leads' },
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Pending', lead: 'Warm', category: 'All Leads' },
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Follow-up', lead: 'Cold', category: 'Converted Leads' },
+    ...Array(7).fill().map(() => ({
+      name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230',
+      email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago',
+      status: 'Contacted', lead: 'Hot', category: 'My Leads'
+    }))
+  ];
+
+  const filteredLeads = allLeads.filter((lead) => {
+    if (activeTab === 'All Leads') return true;
+    return lead.category === activeTab;
+  });
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Contacted': return 'bg-green-100 text-green-700';
+      case 'Pending': return 'bg-yellow-100 text-yellow-700';
+      case 'Follow-up': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getLeadStyle = (lead) => {
+    switch (lead) {
+      case 'Hot': return 'bg-red-100 text-red-700';
+      case 'Warm': return 'bg-orange-100 text-orange-700';
+      case 'Cold': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* First Row: Search and Action */}
+      <div className="flex justify-between items-center flex-wrap mb-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search"
+            className="border border-gray-300 rounded-full pl-12 pr-7 py-3 w-full md:w-96 focus:outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-4 mt-2 md:mt-0">
+          <button className="bg-black text-white px-4 py-2 rounded-md">
+            Create List
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs without counts */}
+      <div className="flex justify-between items-center flex-wrap mb-2">
+        <div className="flex items-center gap-6">
+          {['My Leads', 'All Leads', 'Converted Leads'].map((tab) => (
+            <span
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`cursor-pointer text-base font-medium ${
+                activeTab === tab ? 'text-blue-600 underline' : 'text-black'
+              }`}
+            >
+              {tab}
+            </span>
+          ))}
+        </div>
+
+        {/* Sort and View Mode */}
+        <div className="flex items-center gap-4 mt-2 md:mt-0">
+          <button
+            onClick={() => setSortAsc(!sortAsc)}
+            className="border px-4 py-2 rounded-md flex items-center text-sm gap-2"
+          >
+            {sortAsc ? <FaSortAlphaDown /> : <FaSortAlphaUp />}
+            Sort By
+          </button>
+
+          <button
+            onClick={() => setViewMode('card')}
+            className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
+              viewMode === 'card' ? 'bg-black text-white' : ''
+            }`}
+          >
+            <FaThLarge />
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-xs bg-black text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              Card View
+            </span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('list')}
+            className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
+              viewMode === 'list' ? 'bg-black text-white' : ''
+            }`}
+          >
+            <FaListUl />
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-xs bg-black text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              List View
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Lead Table */}
+      <div className="overflow-auto">
+        <table className="min-w-full border-collapse table-auto">
+          <thead>
+            <tr className="bg-gray-100 text-left">
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Organization</th>
+              <th className="px-4 py-2">Phone No</th>
+              <th className="px-4 py-2">E-mail ID</th>
+              <th className="px-4 py-2">Assigned To</th>
+              <th className="px-4 py-2">Modified</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Lead</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredLeads.map((lead, idx) => (
+              <tr key={idx} className="border-b">
+                <td className="px-4 py-2">{lead.name}</td>
+                <td className="px-4 py-2">{lead.organization}</td>
+                <td className="px-4 py-2">{lead.phone}</td>
+                <td className="px-4 py-2">{lead.email}</td>
+                <td className="px-4 py-2">{lead.assignedTo}</td>
+                <td className="px-4 py-2">{lead.modified}</td>
+                <td className="px-4 py-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
+                    {lead.status}
+                  </span>
+                </td>
+                <td className="px-4 py-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLeadStyle(lead.lead)}`}>
+                    {lead.lead}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default LeadToolbar;

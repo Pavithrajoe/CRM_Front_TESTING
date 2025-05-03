@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
+import { ENDPOINTS} from '../api/constraints';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,7 +11,7 @@ const LoginPage = () => {
 
   const togglePassword = () => setShowPassword(prev => !prev);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
   
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,6 +31,7 @@ const LoginPage = () => {
       alert('Please enter your password.');
       return;
     }
+
   
     if (password.length < 6) {
       alert('Password must be at least 6 characters long.');
@@ -38,6 +40,31 @@ const LoginPage = () => {
   
     // Success: navigate to dashboard
     navigate('/dashboard');
+
+
+    try {
+      const response = await fetch(ENDPOINTS.LOGIN, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ emailOrPhone, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Save token or user info if needed
+        localStorage.setItem('token', data.token);
+
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        alert(data.message || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert('Something went wrong. Please try again.');
+    }
+
   };
 
   return (

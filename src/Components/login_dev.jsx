@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ENDPOINTS} from '../api/constraints';
 
 const LoginPage = () => {
+  //String name ="";
   const [showPassword, setShowPassword] = useState(false);
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');

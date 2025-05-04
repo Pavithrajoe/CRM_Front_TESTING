@@ -13,7 +13,7 @@ import { Routes, Route } from 'react-router-dom';
 import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
 import LeadManagePage from "./pages/LeadManagePage";
 import LeadListViewPage from './pages/dashboard/LeadListView';
-import LeadCardViewPage from './pages/dashboard/LeadCardView';
+import LeadCardViewPage from './pages/dashboard/LeadcardView';
 // App.jsx
 
 import Layout from './Components/Layout';

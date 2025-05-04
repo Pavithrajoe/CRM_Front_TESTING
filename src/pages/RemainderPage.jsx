@@ -19,13 +19,13 @@ const RemainderPage = () => {
       </div>
       <div className="flex px-2 gap-4">
         {/* LEFT: Profile + History */}
-        <div className="w-[550px] h-100vh">
+        <div className="w-[550px]  min-h-screen">
           <ProfileWithHistoryCard />
         </div>
-    <div className="w-full h-100vh mx-auto ms-10 mr-10 mt-[40px] shadow rounded bg-white">
-      <RemainderForm />
-    </div>
-    </div>
+        <div className="w-full h-100vh mx-auto ms-10 mr-10 mt-[40px] shadow rounded bg-white">
+          <RemainderForm />
+        </div>
+      </div>
     </>
   );
 };

@@ -1,22 +1,32 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+
 import ForgetPassword from "./Components/ForgetPassword";
 import SuccessMessage from "./pages/credential/SuccessMessage";
-import VerifyCodePage from "./pages/credential/verify_code"; 
-import LeadsDashboard from "./pages/LeadDashboard";
-import { TabProvider } from "./context/TabContext";
-
-import AppLayout from '@/Components/AppLayout'; // This is your Sidebar+Tabs layout
+import VerifyCodePage from "./pages/credential/verify_code";
 import Login from './pages/credential/login';
 import SignupRes from './pages/credential/signup_res';
+
+import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
+import LeadManagePage from './pages/LeadManagePage';
+import LeadListViewPage from './pages/dashboard/LeadListView';
+import LeadCardViewPage from './pages/dashboard/LeadCardView';
+
 import RemainderPage from './pages/RemainderPage';
 import ReminderHistory from './pages/reminderHistory';
-import CalendarPage from './pages/calenderpage';   
-import Commandpage from './pages/command'; 
+import CalendarPage from './pages/calenderpage';
+import Commandpage from './pages/command';
+
+import { TabProvider } from "./context/TabContext";
+
+// You can choose one layout to use consistently
+// If 'AppLayout' is newer or preferred, use it; otherwise use 'Layout'
+import AppLayout from '@/Components/AppLayout'; // Sidebar + Tabs layout
+// import Layout from './Components/Layout'; // If using old layout
 
 function App() {
   return (
-    <TabProvider> 
+    <TabProvider>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Login />} />
@@ -24,16 +34,19 @@ function App() {
         <Route path="/success" element={<SuccessMessage />} />
         <Route path="/verify" element={<VerifyCodePage />} />
         <Route path="/signupres" element={<SignupRes />} />
-        <Route path="/leads" element={<LeadsDashboard />} />
 
-        {/* Protected Routes with Sidebar + Tab layout */}
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<LeadsDashboard />} />
+        {/* Extra Public Views */}
+        <Route path="/leads" element={<LeadsDashboard />} />
+        <Route path="/leadmanage" element={<LeadManagePage />} />
+        <Route path="/leadlistview" element={<LeadListViewPage />} />
+        <Route path="/leadcardview" element={<LeadCardViewPage />} />
+
+        {/* Protected Routes with Layout */}
+        <Route element={<AppLayout />}>
           <Route path="remainderpage" element={<RemainderPage />} />
           <Route path="reminderhistory" element={<ReminderHistory />} />
           <Route path="calenderpage" element={<CalendarPage />} />
           <Route path="commandpage" element={<Commandpage />} />
-          {/* Add more protected routes here */}
         </Route>
       </Routes>
     </TabProvider>

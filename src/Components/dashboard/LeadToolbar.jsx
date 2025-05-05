@@ -44,10 +44,10 @@ const LeadToolbar = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 mt-[-60px] p-4">
       {/* First Row: Search and Action */}
       <div className="flex justify-between items-center flex-wrap mb-4">
-        <div className="flex-1 min-w-[200px] relative">
+        <div className="flex-1 min-w-[150px] relative">
           <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
           <input
             type="text"
@@ -58,15 +58,10 @@ const LeadToolbar = () => {
           />
         </div>
 
-        <div className="flex gap-4 mt-2 md:mt-0">
-          <button className="bg-black text-white px-4 py-2 rounded-md">
-            Create List
-          </button>
-        </div>
       </div>
 
       {/* Tabs without counts */}
-      <div className="flex justify-between items-center flex-wrap mb-2">
+      <div className="flex justify-between mt-[150px] items-center flex-wrap mb-2">
         <div className="flex items-center gap-6">
           {['My Leads', 'All Leads', 'Converted Leads'].map((tab) => (
             <span

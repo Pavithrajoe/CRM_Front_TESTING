@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "@/components/common/sidebar";
 import ProfileHeader from "@/components/common/ProfileHeader";
+import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
 import NewComment from "@/components/LeadManage/NewComments";
 
 const LeadsManagePage = () => {
@@ -16,12 +17,19 @@ const LeadsManagePage = () => {
             <h1 className="text-2xl font-semibold text-gray-800 mt-0">Lead Management</h1>
             <ProfileHeader />
         </div>
-
-        {/* Additional content goes here */}
-        <div>
-          {/* Content section */}
-          < NewComment />
-        </div>
+        
+          <div className="flex px-2 gap-4">
+                  {/* LEFT: Profile + History */}
+                  <div className="w-[550px] h-100vh">
+                    <ProfileWithHistoryCard />
+                    < NewComment />
+                  </div>
+                  <div className="w-full h-100vh mx-auto ms-10 mr-10 mt-[40px] shadow rounded bg-white">
+                  < NewComment />
+                  </div>
+                </div>
+          
+        
       </main>
     </div>
   );

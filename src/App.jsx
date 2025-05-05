@@ -18,11 +18,7 @@ import CalendarPage from './pages/calenderpage';
 import Commandpage from './pages/command';
 
 import { TabProvider } from "./context/TabContext";
-
-// You can choose one layout to use consistently
-// If 'AppLayout' is newer or preferred, use it; otherwise use 'Layout'
-import AppLayout from '@/Components/AppLayout'; // Sidebar + Tabs layout
-// import Layout from './Components/Layout'; // If using old layout
+import AppLayout from '@/Components/AppLayout'; // Unified layout
 
 function App() {
   return (
@@ -35,7 +31,7 @@ function App() {
         <Route path="/verify" element={<VerifyCodePage />} />
         <Route path="/signupres" element={<SignupRes />} />
 
-        {/* Extra Public Views */}
+        {/* Lead Dashboard Routes */}
         <Route path="/leads" element={<LeadsDashboard />} />
         <Route path="/leadmanage" element={<LeadManagePage />} />
         <Route path="/leadlistview" element={<LeadListViewPage />} />
@@ -43,10 +39,10 @@ function App() {
 
         {/* Protected Routes with Layout */}
         <Route element={<AppLayout />}>
-          <Route path="remainderpage" element={<RemainderPage />} />
-          <Route path="reminderhistory" element={<ReminderHistory />} />
-          <Route path="calenderpage" element={<CalendarPage />} />
-          <Route path="commandpage" element={<Commandpage />} />
+          <Route path="/remainderpage" element={<RemainderPage />} />
+          <Route path="/reminderhistory" element={<ReminderHistory />} />
+          <Route path="/calenderpage" element={<CalendarPage />} />
+          <Route path="/commandpage" element={<Commandpage />} />
         </Route>
       </Routes>
     </TabProvider>

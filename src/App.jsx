@@ -16,6 +16,7 @@ import RemainderPage from './pages/RemainderPage';
 import ReminderHistory from './pages/reminderHistory';
 import CalendarPage from './pages/calenderpage';
 import Commandpage from './pages/command';
+import UserAnalyticsPage from './pages/user_analytics';
 
 import { TabProvider } from "./context/TabContext";
 import AppLayout from '@/Components/AppLayout'; // Unified layout
@@ -32,7 +33,7 @@ function App() {
         <Route path="/signupres" element={<SignupRes />} />
 
         {/* Lead Dashboard Routes */}
-        <Route path="/leads" element={<LeadsDashboard />} />
+        {/* <Route path="/leads" element={<LeadsDashboard />} />  */}
         <Route path="/leadmanage" element={<LeadManagePage />} />
         <Route path="/leadlistview" element={<LeadListViewPage />} />
         <Route path="/leadcardview" element={<LeadCardViewPage />} />
@@ -43,9 +44,14 @@ function App() {
           <Route path="/reminderhistory" element={<ReminderHistory />} />
           <Route path="/calenderpage" element={<CalendarPage />} />
           <Route path="/commandpage" element={<Commandpage />} />
+          <Route path="/leads" element={<LeadsDashboard />} /> 
+          <Route path="/user_analytics" element={<UserAnalyticsPage />} /> 
+
         </Route>
       </Routes>
     </TabProvider>
+
+    
   );
 }
 

@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Mail, Phone, Globe, MessageSquare } from 'lucide-react';
 
 const tabs = [
   { name: 'History', path: '/history' },
-  { name: 'Comments', path: '/comments' },
-  { name: 'Remainders', path: '/remainders' },
+  { name: 'Comments', path: '/Commandpage' },
+  { name: 'Remainders', path: '/remainderpage' },
   { name: 'Analytics', path: '/analytics' },
 ];
 
@@ -13,6 +13,7 @@ export default function TabsBar() {
   const [activePanel, setActivePanel] = useState(null);
   const [panelPosition, setPanelPosition] = useState('left');
   const [sent, setSent] = useState(false);
+  const location = useLocation();
 
   const togglePanel = (panel) => {
     setSent(false);
@@ -75,7 +76,8 @@ export default function TabsBar() {
   };
 
   return (
-    <>
+    <div className="flex flex-col w-full">
+      {/* Tab Navigation Bar */}
       <div className="flex w-full mt-[20px] ms-[390px]">
         <div className="flex items-center space-x-2">
           {tabs.map((tab) => (
@@ -86,7 +88,7 @@ export default function TabsBar() {
                 `px-4 py-2 rounded-full text-sm font-medium border ${
                   isActive
                     ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-black border-gray-300'
+                    : 'bg-white text-black border-gray-300 hover:bg-gray-100'
                 }`
               }
             >
@@ -96,21 +98,47 @@ export default function TabsBar() {
         </div>
         <div className="border-l border-dotted border-blue-500 h-8 mx-3" />
         <div className="flex items-center space-x-2">
-          <button onClick={() => togglePanel('email')} className="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">
+          <button 
+            onClick={() => togglePanel('email')} 
+            className={`w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 ${
+              activePanel === 'email' ? 'bg-blue-100 border-blue-300' : ''
+            }`}
+          >
             <Mail className="w-4 h-4" />
           </button>
-          <button onClick={() => togglePanel('phone')} className="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">
+          <button 
+            onClick={() => togglePanel('phone')} 
+            className={`w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 ${
+              activePanel === 'phone' ? 'bg-blue-100 border-blue-300' : ''
+            }`}
+          >
             <Phone className="w-4 h-4" />
           </button>
-          <button onClick={() => togglePanel('web')} className="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">
+          <button 
+            onClick={() => togglePanel('web')} 
+            className={`w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 ${
+              activePanel === 'web' ? 'bg-blue-100 border-blue-300' : ''
+            }`}
+          >
             <Globe className="w-4 h-4" />
           </button>
-          <button onClick={() => togglePanel('whatsapp')} className="w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100">
+          <button 
+            onClick={() => togglePanel('whatsapp')} 
+            className={`w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 ${
+              activePanel === 'whatsapp' ? 'bg-blue-100 border-blue-300' : ''
+            }`}
+          >
             <MessageSquare className="w-4 h-4" />
           </button>
         </div>
       </div>
 
+      {/* Content Area for Tabs */}
+      <div className="ms-[390px] mt-4 w-[calc(100%-390px)]">
+        <Outlet />
+      </div>
+
+      {/* Action Panels */}
       {activePanel && (
         <div className={`fixed bottom-0 ${panelPosition === 'right' ? 'right-0 animate-slide-in-right' : 'left-0 animate-slide-in-left'} w-full md:w-1/3 p-5 bg-white shadow-lg border-t z-50`}>
           <div className="flex justify-between items-center mb-3">
@@ -151,6 +179,6 @@ export default function TabsBar() {
           }
         `}
       </style>
-    </>
+    </div>
   );
 }

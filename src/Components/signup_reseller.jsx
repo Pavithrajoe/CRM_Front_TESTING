@@ -51,7 +51,7 @@ const LoginPage = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (!form.industry || form.industry === 'Industry') {
+    if (!form.industry || form.industry === '') {
       newErrors.industry = 'Please select a business type';
     }
 
@@ -66,6 +66,8 @@ const LoginPage = () => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
+
+    console.log('📝 Form data:', form);
 
     if (Object.keys(validationErrors).length === 0) {
       const requestBody = {
@@ -122,8 +124,9 @@ const LoginPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full mb-10 flex items-center py-4 justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] rounded-xl overflow-hidden">
+    <div className="min-h-screen w-full flex items-center py-4 justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] mb-5 mt-[-10px] rounded-xl overflow-hidden">
+        {/* Left Section */}
         <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-10 rounded-2xl"></div>
           <img
@@ -133,6 +136,7 @@ const LoginPage = () => {
           />
         </div>
 
+        {/* Right Section */}
         <div className="w-full md:w-1/2 md:mt-[30px] py-4 bg-white md:ms-10 p-6 md:p-10">
           <h2 className="text-xl font-medium text-center text-gray-900">
             Hey<span className="animate-waving-hand">👋</span>, Hi there!
@@ -208,26 +212,6 @@ const LoginPage = () => {
           </form>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes wave {
-            0% { transform: rotate(0deg); }
-            10% { transform: rotate(14deg); }
-            20% { transform: rotate(-8deg); }
-            30% { transform: rotate(14deg); }
-            40% { transform: rotate(-4deg); }
-            50% { transform: rotate(10deg); }
-            60% { transform: rotate(0deg); }
-            100% { transform: rotate(0deg); }
-          }
-          .animate-waving-hand {
-            display: inline-block;
-            animation: wave 2s infinite;
-            transform-origin: 70% 70%;
-          }
-        `}
-      </style>
     </div>
   );
 };

@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 
 
 const LoginPage = () => {
+  //String name ="";
   const [showPassword, setShowPassword] = useState(false);
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [email, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
@@ -16,13 +17,17 @@ const LoginPage = () => {
   
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10}$/;
+
+    console.log('Email/Phone:', email);
+    console.log('Password:', password);
+
   
-    if (!emailOrPhone.trim()) {
+    if (!email.trim()) {
       alert('Please enter your email or phone number.');
       return;
     }
   
-    if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+    if (!emailRegex.test(email) && !phoneRegex.test(email)) {
       alert('Please enter a valid email address or 10-digit mobile number.');
       return;
     }
@@ -39,29 +44,34 @@ const LoginPage = () => {
     }
   
     // Success: navigate to dashboard
-    navigate('/dashboard');
+    //navigate('/dashboard');
 
 
     try {
       // eslint-disable-next-line no-undef
       const response = await fetch(ENDPOINTS.LOGIN, {
         method: 'POST',
+<<<<<<< HEAD
         // eslint-disable-next-line no-undef
         headers: HEADERS,
         body: JSON.stringify({ emailOrPhone, password })
+=======
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+>>>>>>> c92930d46b706056d6fdf486f7bf59c6dcdb1c08
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        // Save token or user info if needed
         localStorage.setItem('token', data.token);
-
-        // Navigate to dashboard
-        navigate('/dashboard');
+        console.log("Login successful:", data);
+        navigate('/leads');
       } else {
         alert(data.message || 'Login failed. Please try again.');
       }
+      
     } catch (error) {
       console.error("Login error:", error);
       alert('Something went wrong. Please try again.');
@@ -95,7 +105,7 @@ const LoginPage = () => {
             </label>
             <input
               type="text"
-              value={emailOrPhone}
+              value={email}
               onChange={(e) => setEmailOrPhone(e.target.value)}
               className="w-full px-4 py-2 border-2 grey-900 rounded-md focus:outline-none focus:ring-2 focus:ring-grey-600 mb-4"
               placeholder="69545 32587"

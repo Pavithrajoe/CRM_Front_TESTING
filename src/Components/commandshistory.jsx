@@ -88,7 +88,7 @@ export default function Comments() {
         </div>
         <div className="p-4">
           <textarea
-            className="w-full border rounded bg-black p-2 mb-4"
+            className="w-full border rounded bg-grey-500 p-2 mb-4"
             rows={4}
             placeholder="Write your comment..."
           />

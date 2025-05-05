@@ -4,20 +4,19 @@ const steps = [
   { label: "New", color: "#b0c4de" },        // blue-400
   { label: "Qualified", color: "#8fbc8f" },  // green-400
   { label: "Contacted", color: "#efcc00" },  // yellow-400
-  { label: "Converted", color: "#edc9af " },  // red-400
+  { label: "Converted", color: "#edc9af" },  // red-400
 ];
 
 export default function ProgressBar() {
   const [activeStep, setActiveStep] = useState(null); // No step selected initially
 
   return (
-    <div className="w-full overflow-x-auto px-4">
-      <div className="flex w-max items-center text-center space-x-[-45px] mx-auto lg:ms-[1075px]">
+    <div className="w-full overflow-hidden px-4">
+      <div className="flex flex-wrap gap-x-0 gap-y-2 sm:flex-nowrap sm:space-x-[-65px] sm:mx-auto lg:ms-[1025px]">
         {steps.map((step, index) => {
           const isFirst = index === 0;
           const isLast = index === steps.length - 1;
           const isActive = activeStep === step.label;
-
           const fill = isActive ? step.color : "#ddd";
 
           const path = isFirst
@@ -29,9 +28,9 @@ export default function ProgressBar() {
           return (
             <svg
               key={index}
-              viewBox="0 0 150 40"
+              viewBox="0 0 100 40"
               preserveAspectRatio="xMidYMid meet"
-              className="w-[180px] h-[40px] cursor-pointer z-10"
+              className="w-[200px] h-[40px] cursor-pointer z-10"
               onClick={() => setActiveStep(step.label)}
             >
               <path d={path} fill={fill} stroke="#bbb" />

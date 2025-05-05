@@ -65,9 +65,9 @@ const LoginPage = () => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
-  
+
     console.log('📝 Form data:', form);
-  
+
     if (Object.keys(validationErrors).length === 0) {
       try {
         const response = await fetch('http://192.168.0.107:3000/api/reseller', {
@@ -75,7 +75,7 @@ const LoginPage = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         });
-  
+
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Registration successful:', data);
@@ -101,8 +101,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full mb-10 flex items-center py-4 justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] rounded-xl overflow-hidden">
+    <div className="min-h-100vh w-full flex items-center py-4 justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] mb-5 mt-[-10px] rounded-xl overflow-y-hidden">
         {/* Left Section */}
         <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-10 rounded-2xl"></div>

@@ -13,7 +13,7 @@ const LeadsDashboard = () => {
   return (
     <div className="flex">
       {/* Sidebar */}
-      <Sidebar />
+    
 
       {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-50 min-h-screen">

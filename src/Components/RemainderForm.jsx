@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import { X } from "lucide-react"; // Optional: install lucide-react for the close icon
 
 const employees = [
   { id: 1, name: "Shivakumar", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
@@ -48,14 +49,11 @@ const ReminderForm = () => {
     const data = { ...form, status };
 
     try {
-      // Replace this URL with your API endpoint
       const response = await axios.post("https://your-api-url.com/reminders", data);
-
       if (response.status === 200) {
         toast.success(status === "submitted" ? "Successfully Submitted" : "Saved as Draft");
 
         setReminders((prev) => [...prev, data]);
-
         setTimeout(() => {
           setShowForm(false);
           setIsNewUser(false);
@@ -131,7 +129,7 @@ const ReminderForm = () => {
         </>
       )}
 
-      {/* Overlay click to close */}
+      {/* Overlay */}
       {showForm && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40"
@@ -141,7 +139,18 @@ const ReminderForm = () => {
 
       {/* Slide-in Form */}
       <div className={`fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 ${showForm ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="p-6 h-full overflow-y-auto">
+        <div className="p-6 h-full overflow-y-auto relative">
+          {/* Close Icon */}
+          <button
+            className="absolute top-4 right-4 text-gray-600 hover:text-black"
+            onClick={() => setShowForm(false)}
+          >
+            <X size={24} />
+          </button>
+
+          {/* Right top Add Reminder button */}
+       
+
           <h2 className="font-semibold text-lg mt-5 mb-4">New Reminder</h2>
 
           <label className="block text-sm mb-2">Project Title *</label>

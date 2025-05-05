@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import ProfileHeader from '@/components/common/ProfileHeader';
 import LeadToolbar from '@/components/dashboard/LeadToolbar';
+import LeadForm from '@/components/LeadForm'; 
 
 const LeadCardViewPage = () => {
   const [leads, setLeads] = useState([]);
@@ -9,6 +10,7 @@ const LeadCardViewPage = () => {
   const [activeTab, setActiveTab] = useState('My Leads');
   const [sortAsc, setSortAsc] = useState(true);
   const [viewMode, setViewMode] = useState('card');
+  const [showForm, setShowForm] = useState(false); // modal state
 
   useEffect(() => {
     const mockLeads = Array(100).fill().map((_, index) => ({
@@ -32,11 +34,19 @@ const LeadCardViewPage = () => {
 
   return (
     <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-gray-50 min-h-screen p-6">
+  
+
+      <main className="flex-1 bg-gray-50 mt-[-5] min-h-screen p-6">
+        <div className="ml-auto"><ProfileHeader /></div>
+
         <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
-          <h1 className="text-2xl font-semibold mt-[-20px] text-gray-800">Lead Management</h1>
-          <div className="ml-auto"><ProfileHeader /></div>
+          <h1 className="text-2xl font-semibold mt-[-100px] text-gray-800">Lead Management</h1>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-black text-white rounded-md hover:bg-blue-00"
+          >
+            + Create List
+          </button>
         </div>
 
         <LeadToolbar
@@ -51,7 +61,7 @@ const LeadCardViewPage = () => {
         />
 
         {/* Card View Only */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[150px]">
           {filteredLeads.map((lead, index) => (
             <div key={index} className="bg-white shadow-md rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
@@ -94,6 +104,22 @@ const LeadCardViewPage = () => {
           ))}
         </div>
       </main>
+
+      {/* Fullscreen Modal for Lead Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white w-full h-full overflow-y-scroll p-8 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-xl"
+              onClick={() => setShowForm(false)}
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Create New Lead</h2>
+            <LeadForm onClose={() => setShowForm(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

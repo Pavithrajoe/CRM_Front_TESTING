@@ -10,15 +10,15 @@ const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { iconPath: '/images/nav/home.png', label: 'Home', route: '/LeadDashboard' },
-    { iconPath: '/images/nav/group.png', label: 'Lead', route: '/command' },
+    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
+    { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
     { iconPath: '/images/nav/call.png', label: 'Contact', route: '/reminderHistory' },
     { iconPath: '/images/nav/email.png', label: 'Email', route: '/email' },
   { iconPath: '/images/nav/task.png', label: 'Remainder', route: '/remainderpage' },
-     /* { iconPath: '/images/nav/deal.png', label: 'Deal', route: '/deal' },
-    { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/organisation' },
-    { iconPath: '/images/nav/notes.png', label: 'Notes', route: '/notes' },*/
+  { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settings' },  
+    { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companypage' },
+    { iconPath: '/images/nav/Support.png', label: 'Support', route: '/support' },
   ];
 
   const handleTabChange = (_, newValue) => {

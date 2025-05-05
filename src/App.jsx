@@ -6,16 +6,22 @@ import SuccessMessage from "./pages/credential/SuccessMessage";
 import VerifyCodePage from "./pages/credential/verify_code";
 import Login from './pages/credential/login';
 import SignupRes from './pages/credential/signup_res';
+import LeadTimeline from "./Components/LeadTimeline";
+import HistoryPage from "./pages/history";
+import CompanyList from "./Components/Company/CompanyList";
+import CompanyPage from './pages/companypage';
+ 
 
 import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
 import LeadManagePage from './pages/LeadManagePage';
 import LeadListViewPage from './pages/dashboard/LeadListView';
-import LeadCardViewPage from './pages/dashboard/LeadCardView';
+import LeadCardViewPage from '@/pages/dashboard/LeadCardView';
 
 import RemainderPage from './pages/RemainderPage';
 import ReminderHistory from './pages/reminderHistory';
 import CalendarPage from './pages/calenderpage';
 import Commandpage from './pages/command';
+
 
 import { TabProvider } from "./context/TabContext";
 
@@ -36,10 +42,8 @@ function App() {
         <Route path="/signupres" element={<SignupRes />} />
 
         {/* Extra Public Views */}
-        <Route path="/leads" element={<LeadsDashboard />} />
-        <Route path="/leadmanage" element={<LeadManagePage />} />
-        <Route path="/leadlistview" element={<LeadListViewPage />} />
-        <Route path="/leadcardview" element={<LeadCardViewPage />} />
+   
+       
 
         {/* Protected Routes with Layout */}
         <Route element={<AppLayout />}>
@@ -47,6 +51,16 @@ function App() {
           <Route path="reminderhistory" element={<ReminderHistory />} />
           <Route path="calenderpage" element={<CalendarPage />} />
           <Route path="commandpage" element={<Commandpage />} />
+          <Route path="/leads" element={<LeadsDashboard />} />
+          <Route path="/leadlistview" element={<LeadListViewPage />} />
+          <Route path="/leadcardview" element={<LeadCardViewPage />} />
+          <Route path="/leads" element={<LeadsDashboard />} />
+          <Route path="/leadmanage" element={<LeadManagePage />} />
+          <Route path="/leadtimeline" element={<LeadTimeline />} />
+    
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/companylist" element={<CompanyList />} />
+          <Route path="/companypage" element={<CompanyPage />} />
         </Route>
       </Routes>
     </TabProvider>

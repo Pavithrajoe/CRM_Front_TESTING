@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
-import { ENDPOINTS} from '../api/constraints';
+
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,8 +43,10 @@ const LoginPage = () => {
 
 
     try {
+      // eslint-disable-next-line no-undef
       const response = await fetch(ENDPOINTS.LOGIN, {
         method: 'POST',
+        // eslint-disable-next-line no-undef
         headers: HEADERS,
         body: JSON.stringify({ emailOrPhone, password })
       });

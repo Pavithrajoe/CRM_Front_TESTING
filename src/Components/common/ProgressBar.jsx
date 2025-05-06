@@ -1,37 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const steps = [
-  { label: "New", color: "#b0c4de" },        // blue-400
-  { label: "Qualified", color: "#8fbc8f" },  // green-400
-  { label: "Contacted", color: "#efcc00" },  // yellow-400
-  { label: "Converted", color: "#edc9af" },  // red-400
+const allSteps = [
+  { label: "New", color: "#b0c4de" },
+  { label: "Qualified", color: "#8fbc8f" },
+  { label: "Contacted", color: "#efcc00" },
+  { label: "Converted", color: "#edc9af" },
+  { label: "Proposal", color: "#add8e6" },
+  { label: "Negotiation", color: "#dda0dd" },
+  { label: "Final Review", color: "#f08080" },
+  { label: "Won", color: "#4BB543" },
 ];
 
 export default function ProgressBar() {
-  const [activeStep, setActiveStep] = useState(null); // No step selected initially
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [groupStart, setGroupStart] = useState(0);
+
+  useEffect(() => {
+    if ((activeIndex + 1) % 4 === 0 && activeIndex < allSteps.length - 1) {
+      setTimeout(() => {
+        setGroupStart((prev) => prev + 4);
+      }, 300);
+    }
+  }, [activeIndex]);
+
+  const visibleSteps = allSteps.slice(groupStart, groupStart + 4);
+
+  const handleStepClick = (stepLabel) => {
+    const clickedIndex = allSteps.findIndex((step) => step.label === stepLabel);
+    if (clickedIndex === activeIndex + 1) {
+      setActiveIndex(clickedIndex);
+    }
+  };
 
   return (
     <div className="w-full overflow-hidden px-4">
+      {/* Progress Steps */}
       <div className="flex flex-wrap gap-x-0 gap-y-2 sm:flex-nowrap sm:space-x-[-65px] sm:mx-auto lg:ms-[1025px]">
-        {steps.map((step, index) => {
-          const isFirst = index === 0;
-          const isLast = index === steps.length - 1;
-          const isActive = activeStep === step.label;
-          const fill = isActive ? step.color : "#ddd";
+        {visibleSteps.map((step, idx) => {
+          const globalIndex = groupStart + idx;
+          const fill = globalIndex <= activeIndex ? step.color : "#ddd";
 
-          const path = isFirst
-            ? "M1,0 H130 L150,20 L130,40 H0 Z"
-            : isLast
-            ? "M0,0 L20,20 L0,40 H130 L150,20 L130,0 Z"
-            : "M0,0 L20,20 L0,40 H130 L150,20 L130,0 Z";
+          const path =
+            idx === 0
+              ? "M1,0 H130 L150,20 L130,40 H0 Z"
+              : idx === visibleSteps.length - 1
+              ? "M0,0 L20,20 L0,40 H130 L150,20 L130,0 Z"
+              : "M0,0 L20,20 L0,40 H130 L150,20 L130,0 Z";
 
           return (
             <svg
-              key={index}
+              key={step.label}
               viewBox="0 0 100 40"
               preserveAspectRatio="xMidYMid meet"
-              className="w-[200px] h-[40px] cursor-pointer z-10"
-              onClick={() => setActiveStep(step.label)}
+              className="w-[400px] h-[40px] cursor-pointer z-10"
+              onClick={() => handleStepClick(step.label)}
             >
               <path d={path} fill={fill} stroke="#bbb" />
               <text
@@ -49,6 +71,13 @@ export default function ProgressBar() {
           );
         })}
       </div>
+
+      {/* Only show 🔥 next to "Won" */}
+      {allSteps[activeIndex]?.label === "Won" && (
+        <div className="text-xl flex items-center justify-center gap-2 mt-10 text-green-600 ms-[1050px] font-semibold">
+          Won <span>🔥</span>
+        </div>
+      )}
     </div>
   );
 }

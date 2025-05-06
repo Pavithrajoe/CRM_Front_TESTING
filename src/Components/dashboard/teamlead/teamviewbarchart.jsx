@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload }) => {
 
 export default function LeadManagementCard() {
   return (
-    <div className="bg-white shadow rounded-xl p-4 w-full max-w-md">
+    <div className="bg-white rounded-md p-4 w-full max-w-full mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-semibold text-gray-700">Lead Management</h2>
         <div className="flex items-center space-x-2">

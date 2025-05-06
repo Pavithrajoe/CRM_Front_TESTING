@@ -10,8 +10,8 @@ export default function teamleadHeader() {
   const isTeam = currentPath.includes('team');
 
   const handleTabClick = (tab) => {
-    if (tab === 'profile') navigate('/dashboard/profile');
-    if (tab === 'team') navigate('/dashboard/team');
+    if (tab === 'profile') navigate('/leads');
+    if (tab === 'team') navigate('/teamview');
   };
 
   return (

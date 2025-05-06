@@ -1,51 +1,20 @@
-import React, { useState } from 'react';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
-import { FaThLarge, FaListUl, FaSortAlphaDown, FaSortAlphaUp } from 'react-icons/fa';
+import React from "react";
+import { FaSortAlphaDown, FaSortAlphaUp, FaThLarge, FaListUl } from "react-icons/fa";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
-const LeadToolbar = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('My Leads');
-  const [sortAsc, setSortAsc] = useState(true);
-  const [viewMode, setViewMode] = useState('card');
-
-  // Dummy data
-  const allLeads = [
-    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Contacted', lead: 'Hot', category: 'My Leads' },
-    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Pending', lead: 'Warm', category: 'All Leads' },
-    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Follow-up', lead: 'Cold', category: 'Converted Leads' },
-    ...Array(7).fill().map(() => ({
-      name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230',
-      email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago',
-      status: 'Contacted', lead: 'Hot', category: 'My Leads'
-    }))
-  ];
-
-  const filteredLeads = allLeads.filter((lead) => {
-    if (activeTab === 'All Leads') return true;
-    return lead.category === activeTab;
-  });
-
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Contacted': return 'bg-green-100 text-green-700';
-      case 'Pending': return 'bg-yellow-100 text-yellow-700';
-      case 'Follow-up': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const getLeadStyle = (lead) => {
-    switch (lead) {
-      case 'Hot': return 'bg-red-100 text-red-700';
-      case 'Warm': return 'bg-orange-100 text-orange-700';
-      case 'Cold': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
+const LeadToolbar = ({
+  searchTerm,
+  setSearchTerm,
+  activeTab,
+  setActiveTab,
+  sortAsc,
+  setSortAsc,
+  viewMode,
+  setViewMode,
+}) => {
   return (
     <div className="space-y-6 mt-[-60px] p-4">
-      {/* First Row: Search and Action */}
+      {/* Search Field */}
       <div className="flex justify-between items-center flex-wrap mb-4">
         <div className="flex-1 min-w-[150px] relative">
           <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
@@ -57,18 +26,18 @@ const LeadToolbar = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
       </div>
 
-      {/* Tabs without counts */}
-      <div className="flex justify-between mt-[150px] items-center flex-wrap mb-2">
+      {/* Tabs and Controls */}
+      <div className="flex justify-between items-center flex-wrap mb-2 mt-[150px]">
+        {/* Tabs */}
         <div className="flex items-center gap-6">
-          {['My Leads', 'All Leads', 'Converted Leads'].map((tab) => (
+          {["My Leads", "All Leads", "Converted Leads"].map((tab) => (
             <span
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`cursor-pointer text-base font-medium ${
-                activeTab === tab ? 'text-blue-600 underline' : 'text-black'
+                activeTab === tab ? "text-blue-600 underline" : "text-black"
               }`}
             >
               {tab}
@@ -76,7 +45,7 @@ const LeadToolbar = () => {
           ))}
         </div>
 
-        {/* Sort and View Mode */}
+        {/* Sort & View Mode Buttons */}
         <div className="flex items-center gap-4 mt-2 md:mt-0">
           <button
             onClick={() => setSortAsc(!sortAsc)}
@@ -87,9 +56,9 @@ const LeadToolbar = () => {
           </button>
 
           <button
-            onClick={() => setViewMode('card')}
+            onClick={() => setViewMode("card")}
             className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
-              viewMode === 'card' ? 'bg-black text-white' : ''
+              viewMode === "card" ? "bg-black text-white" : ""
             }`}
           >
             <FaThLarge />
@@ -99,9 +68,9 @@ const LeadToolbar = () => {
           </button>
 
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
             className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
-              viewMode === 'list' ? 'bg-black text-white' : ''
+              viewMode === "list" ? "bg-black text-white" : ""
             }`}
           >
             <FaListUl />
@@ -110,46 +79,6 @@ const LeadToolbar = () => {
             </span>
           </button>
         </div>
-      </div>
-
-      {/* Lead Table */}
-      <div className="overflow-auto">
-        <table className="min-w-full border-collapse table-auto">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Organization</th>
-              <th className="px-4 py-2">Phone No</th>
-              <th className="px-4 py-2">E-mail ID</th>
-              <th className="px-4 py-2">Assigned To</th>
-              <th className="px-4 py-2">Modified</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Lead</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeads.map((lead, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="px-4 py-2">{lead.name}</td>
-                <td className="px-4 py-2">{lead.organization}</td>
-                <td className="px-4 py-2">{lead.phone}</td>
-                <td className="px-4 py-2">{lead.email}</td>
-                <td className="px-4 py-2">{lead.assignedTo}</td>
-                <td className="px-4 py-2">{lead.modified}</td>
-                <td className="px-4 py-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
-                    {lead.status}
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLeadStyle(lead.lead)}`}>
-                    {lead.lead}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bell, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import LeadForm from '@/components/LeadForm';  // Import the LeadForm component
+import LeadForm from '@/components/LeadForm';  
 
 export default function ProfileHeader() {
   const [image, setImage] = useState(null);
@@ -9,11 +9,10 @@ export default function ProfileHeader() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [showLeadForm, setShowLeadForm] = useState(false); // State for Lead Form modal visibility
+  const [showLeadForm, setShowLeadForm] = useState(false); 
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId'); // or from context/redux
+  const userId = localStorage.getItem('userId'); 
 
-  // Fetch profile by userId
   useEffect(() => {
     fetch(`/api/profile/${userId}`)
       .then(res => res.json())
@@ -87,8 +86,7 @@ export default function ProfileHeader() {
       {showLeadForm && (
         <div className="fixed inset-0 z-50 bg-white bg-opacity-50 flex justify-end items-start"> {/* Ensure it doesn't cover other elements */}
           <div className="bg-white p-6 rounded-xl shadow-lg w-3/2 max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out slide-in-right">
-            <h2 className="text-xl font-bold mb-4">Create New Lead</h2>
-            
+                  
             {/* Call the LeadForm component */}
             <LeadForm onClose={handleLeadFormClose} />
 

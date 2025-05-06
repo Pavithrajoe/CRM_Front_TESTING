@@ -45,20 +45,21 @@ const LeadCardViewPage = () => {
             onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-black text-white rounded-md hover:bg-blue-00"
           >
-            + Create List
+            Create Lead
           </button>
         </div>
 
-        <LeadToolbar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sortAsc={sortAsc}
-          setSortAsc={setSortAsc}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-        />
+      <LeadToolbar
+  searchTerm={searchTerm}
+  setSearchTerm={setSearchTerm}
+  activeTab={activeTab}
+  setActiveTab={setActiveTab}
+  sortAsc={sortAsc}
+  setSortAsc={setSortAsc}
+  viewMode={viewMode}
+  setViewMode={setViewMode}
+/>
+
 
         {/* Card View Only */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[150px]">
@@ -105,7 +106,6 @@ const LeadCardViewPage = () => {
         </div>
       </main>
 
-      {/* Fullscreen Modal for Lead Form */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white w-full h-full overflow-y-scroll p-8 relative">
@@ -113,9 +113,9 @@ const LeadCardViewPage = () => {
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-xl"
               onClick={() => setShowForm(false)}
             >
-              ✕
+             
             </button>
-            <h2 className="text-xl font-semibold mb-4">Create New Lead</h2>
+            {/* <h2 className="text-xl font-semibold mb-4">Create New Lead</h2> */}
             <LeadForm onClose={() => setShowForm(false)} />
           </div>
         </div>

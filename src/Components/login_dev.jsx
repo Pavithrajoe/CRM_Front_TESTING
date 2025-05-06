@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaTimesCircle } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
-import { ENDPOINTS } from '../api/constraints'; 
-
+import { ENDPOINTS } from '../api/constraints';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState(''); // ✅ Moved inside the component
   const navigate = useNavigate();
 
   const togglePassword = () => setShowPassword(prev => !prev);
@@ -18,60 +18,72 @@ const LoginPage = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10}$/;
 
-    console.log('Email/Phone:', email);
-    console.log('Password:', password);
-
     if (!email.trim()) {
-      alert('Please enter your email!');
+      setLoginError('Please enter your email!');
       return;
     }
 
     if (!emailRegex.test(email) && !phoneRegex.test(email)) {
-      alert('Please enter a valid email address');
+      setLoginError('Please enter a valid email address');
       return;
     }
 
     if (!password.trim()) {
-      alert('Please enter your password.');
+      setLoginError('Please enter your password.');
       return;
     }
+     
+
+   
+
+
 
     if (password.length < 6) {
-      alert('Password must be at least 6 characters long.');
+      setLoginError('Password must be at least 6 characters long.');
       return;
     }
 
     try {
-
-    const response = await fetch(ENDPOINTS.LOGIN, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    });
+      const response = await fetch(ENDPOINTS.LOGIN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        console.log("Login successful:", data);
+        localStorage.setItem('token', data.jwtToken);
         navigate('/leads');
       } else {
-        alert(data.message || 'Login failed. Please try again.');
+        setLoginError('Login failed, please enter correct details');
       }
-
+       
     } catch (error) {
       console.error("Login error:", error);
-      alert('Something went wrong. Please try again.');
+      setLoginError('Something went wrong. Please try again.');
     }
   };
+  const handleLogout = () => {
+    // When you want to log out or clear the token:
+      localStorage.removeItem('token');
+      console.log('Token removed from localStorage');
+      localStorage.removeItem('profileImage');
+      navigate('/login_dev'); 
+    };
+  const LoginFailedAlert = ({ message }) => (
+    <div className="flex items-center gap-3 bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-md mt-5 animate-shake">
+      <FaTimesCircle className="text-xl text-red-600" />
+      <span className="font-semibold text-sm">{message}</span>
+    </div>
+  );
 
   return (
-    <div className="min-h-60vh w-full flex items-center justify-center bg-white px-4">
+    <div className="h-screen w-full flex items-center justify-center bg-white px-4">
       <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[630px] rounded-xl overflow-y-hidden">
+        
         {/* Left Side Image */}
-        <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-5 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
+        <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/15 backdrop-blur-xl z-10 rounded-2xl"></div>
           <img
             src="/images/login/login.png"
@@ -88,9 +100,7 @@ const LoginPage = () => {
           <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Sign into your account</h1>
 
           <form onSubmit={handleLogin}>
-            <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">
-              E-mail address
-            </label>
+            <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">E-mail address</label>
             <input
               type="text"
               value={email}
@@ -99,9 +109,7 @@ const LoginPage = () => {
               placeholder="Enter your email"
             />
 
-            <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">
-              Password
-            </label>
+            <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -120,18 +128,18 @@ const LoginPage = () => {
             </div>
 
             <div className="text-right mb-4">
-              <a href="#" className="text-sm text-black hover:underline">
-                Forgot password?
-              </a>
+              <a href="#" className="text-sm text-black hover:underline">Forgot password?</a>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex flex-col justify-center items-center">
               <button
                 type="submit"
-                className="w-[150px] flex items-center justify-center bg-black shadow-inner shadow-gray-50 text-white py-2 font-semibold rounded-md hover:bg-gray-900"
-              >
+                className="w-[150px] bg-black shadow-inner shadow-gray-50 text-white py-2 font-semibold rounded-md hover:bg-gray-900"
+               onClick={handleLogout} >
                 Login
               </button>
+
+              {loginError && <LoginFailedAlert message={loginError} />}
             </div>
           </form>
         </div>
@@ -154,6 +162,18 @@ const LoginPage = () => {
           .animate-waving-hand {
             animation: wave 2s infinite;
             transform-origin: 70% 70%;
+          }
+
+          @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
+            100% { transform: translateX(0); }
+          }
+
+          .animate-shake {
+            animation: shake 0.4s ease-in-out;
           }
         `}
       </style>

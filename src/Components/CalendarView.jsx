@@ -3,7 +3,7 @@ import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, 
 import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-
+import ReminderForm from '../../own_crm_frontend/src/Components/RemainderForm';
 // Dummy API functions (keep this the same)
 const dummyApi = {
   getReminders: (date) => new Promise((resolve) => {
@@ -78,7 +78,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated }) => {
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <div className="w-96 p-6">
-        <h2 className="text-xl font-semibold mb-6">Schedule Google Meet</h2>
+        <h2 className="text-xl font-semibold mb-6">Meeting</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextField
             fullWidth
@@ -227,20 +227,34 @@ const CalendarView = () => {
             }
           />
 
-          <button 
-            onClick={() => setOpenDrawer(true)}
-            className="w-[180px] mt-6 bg-black hover:bg-gray-800 ms-[80px] text-white py-2 px-4 rounded-md flex items-center justify-center"
-          >
-            <FaPlus className="mr-2" />
-            Create Meet
-          </button>
+<div className="flex gap-4 mt-6 ms-[80px]">
+
+  <button 
+    onClick={() => setOpenDrawer(true)}
+    className="w-[180px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-md flex items-center justify-center"
+  >
+    <FaPlus className="mr-2" />
+    Create Reminder
+  </button>
+
+  <button 
+  onClick={() => window.open("https://meet.google.com/landing", "_blank")}
+  className="w-[200px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-md flex items-center justify-center"
+>
+  <div className="flex items-center gap-2">
+    <b>G</b>
+    <span>Create Meet</span>
+  </div>
+</button>
+</div>
+
         </div>
 
         {/* Draft Form */}
         <div className="bg-white rounded-lg shadow-sm p-4 flex-1">
           <h2 className="text-xl font-semibold mb-4">Draft Form</h2>
           <div className="space-y-4">
-            <div className="border border-gray-200 rounded-lg p-4">
+            {/* <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-medium text-gray-800">New Draft Meeting</h3>
               <p className="text-sm text-gray-600 mt-2">
                 This is where you can prepare meeting drafts before scheduling them.
@@ -255,7 +269,7 @@ const CalendarView = () => {
                   Start New Draft
                 </Button>
               </div>
-            </div>
+            </div> */}
             
             {/* Example draft items */}
             <div className="border border-gray-200 rounded-lg p-4">

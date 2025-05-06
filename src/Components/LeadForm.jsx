@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react"; // optional icon
+import { X } from "lucide-react";
 
 const LeadForm = ({ onClose }) => {
   const initialForm = {
@@ -21,6 +21,7 @@ const LeadForm = ({ onClose }) => {
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
+  const [sameAsPhone, setSameAsPhone] = useState(false);
   const [dropdownData, setDropdownData] = useState({
     services: [],
     sources: [],
@@ -30,7 +31,6 @@ const LeadForm = ({ onClose }) => {
   });
 
   useEffect(() => {
-    // Mock API fetches — replace with your real API endpoints
     const fetchDropdowns = async () => {
       setDropdownData({
         services: ["Web", "Mobile", "Design"],
@@ -43,19 +43,66 @@ const LeadForm = ({ onClose }) => {
     fetchDropdowns();
   }, []);
 
+  // Field-specific inline validation
+  const validateField = (name, value) => {
+    let error = "";
+    if (name === 'mobile' || name === 'whatsapp') {
+      if (!/^[0-9]*$/.test(value)) {
+        error = 'Only numeric characters allowed';
+      } else if (value.length > 10) {
+        error = 'Maximum 10 digits';
+      } else if (value.length < 10) {
+        error = 'Must be exactly 10 digits';
+      }
+    }
+    if (name === 'email') {
+      const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      if (value && !emailRegex.test(value)) {
+        error = 'Invalid email format';
+      }
+    }
+    return error;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setForm(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'mobile' && sameAsPhone) {
+        updated.whatsapp = value;
+        const waError = validateField('whatsapp', value);
+        setErrors(prevErr => ({ ...prevErr, whatsapp: waError }));
+      }
+      return updated;
+    });
+    const fieldError = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: fieldError }));
+  };
+
+  const toggleSame = (e) => {
+    const checked = e.target.checked;
+    setSameAsPhone(checked);
+    if (checked) {
+      setForm(prev => ({ ...prev, whatsapp: prev.mobile }));
+      const waError = validateField('whatsapp', form.mobile);
+      setErrors(prevErr => ({ ...prevErr, whatsapp: waError }));
+    }
   };
 
   const validateForm = () => {
     const newErrors = {};
     Object.entries(form).forEach(([key, value]) => {
-      if (!value) newErrors[key] = "This field is required";
+      if (key !== 'address2' && !value) {
+        newErrors[key] = 'This field is required';
+      } else {
+        const inlineErr = validateField(key, value);
+        if (inlineErr) newErrors[key] = inlineErr;
+      }
     });
     return newErrors;
   };
+
+  const hasErrors = Object.values(errors).some(err => err);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,14 +111,12 @@ const LeadForm = ({ onClose }) => {
       setErrors(validationErrors);
       return;
     }
-
     try {
       const res = await fetch("/api/leads/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       if (res.ok) {
         alert("Lead created successfully!");
         onClose();
@@ -86,38 +131,28 @@ const LeadForm = ({ onClose }) => {
 
   return (
     <div className="relative inset-0 flex justify-center items-start pt-10 overflow-y-auto z-50">
-      <form
-        onSubmit={handleSubmit}
-        className="relative bg-white w-[95%] max-w-[1200px] rounded-2xl shadow-2xl p-6 space-y-6"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-red-500"
-        >
+      <form onSubmit={handleSubmit} className="relative bg-white w-[95%] max-w-[1200px] rounded-2xl shadow-2xl p-6 space-y-6">
+        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-red-500">
           <X size={20} />
         </button>
-
-        <h2 className="text-xl font-bold text-center">
-          Enter the details to create the Lead
-        </h2>
+        <h2 className="text-xl font-bold text-center">Enter the details to create the Lead</h2>
 
         <h3 className="text-lg font-semibold">Customer Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { label: "Lead Name", name: "name" },
-            { label: "Organization Name", name: "company" },
-            { label: "E-mail ID", name: "email" },
-            { label: "Mobile Number", name: "mobile" },
-            { label: "WhatsApp Number", name: "whatsapp" },
-            { label: "Location", name: "location" },
-            { label: "Address 1", name: "address1" },
-            { label: "Address 2", name: "address2" },
-            { label: "Pincode", name: "pincode" },
-          ].map(({ label, name }) => (
+            { label: "Lead Name", name: "name", required: true },
+            { label: "Organization Name", name: "company", required: true },
+            { label: "E-mail ID", name: "email", required: true },
+            { label: "Mobile Number", name: "mobile", required: true },
+            { label: "WhatsApp Number", name: "whatsapp", required: true },
+            { label: "Location", name: "location", required: true },
+            { label: "Address 1", name: "address1", required: true },
+            { label: "Address 2", name: "address2", required: false },
+            { label: "Pincode", name: "pincode", required: true },
+          ].map(({ label, name, required }) => (
             <div key={name}>
               <label className="text-sm font-medium">
-                {label} <span className="text-red-500">*</span>
+                {label} {required && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="text"
@@ -126,8 +161,20 @@ const LeadForm = ({ onClose }) => {
                 onChange={handleChange}
                 placeholder={`Enter ${label.toLowerCase()}`}
                 className="mt-1 w-full border px-3 py-2 rounded"
+                disabled={name === 'whatsapp' && sameAsPhone}
               />
               {errors[name] && <p className="text-red-600 text-sm">{errors[name]}</p>}
+              {name === 'mobile' && (
+                <label className="inline-flex items-center mt-2">
+                  <input
+                    type="checkbox"
+                    checked={sameAsPhone}
+                    onChange={toggleSame}
+                    className="mr-2"
+                  />
+                  WhatsApp same as phone
+                </label>
+              )}
             </div>
           ))}
         </div>
@@ -152,7 +199,7 @@ const LeadForm = ({ onClose }) => {
                 className="mt-1 w-full border border-gray-300 px-3 py-2 rounded"
               >
                 <option value="">Select {label}</option>
-                {options.map((opt) => (
+                {options.map(opt => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
@@ -173,7 +220,8 @@ const LeadForm = ({ onClose }) => {
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800"
+            disabled={hasErrors}
+            className={`px-6 py-2 bg-black text-white rounded hover:bg-gray-800 ${hasErrors ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Submit
           </button>

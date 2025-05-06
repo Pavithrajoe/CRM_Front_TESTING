@@ -11,19 +11,19 @@ const RemainderPage = () => {
     <>
      <ProfileHeader />
      
-     <div className="ms-[-670px]">
+     <div className="ms-[-700px]">
       <ProgressBar />
       </div>
-      <div className="ms-[30px]">
+      <div className="">
       <TabsBar />
       </div>
       <div className="flex px-2 gap-4">
         {/* LEFT: Profile + History */}
-        <div className="w-[550px] h-100vh mt-[20px]">
+        <div className="w-[550px] h-100vh">
           <ProfileWithHistoryCard />
         </div>
 
-    <div className="w-[1300px] ms-5 mt-[40px] shadow rounded bg-white">
+        <div className="w-full h-[-100px] ms-10 mr-10 mt-[40px] overflow-x-hidden shadow rounded bg-white">
       <RemainderForm />
     </div>
     </div>

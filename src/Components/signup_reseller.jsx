@@ -21,62 +21,80 @@ const LoginPage = () => {
 
   const togglePassword = () => setShowPassword(prev => !prev);
 
-  const validate = () => {
-    const newErrors = {};
+  const validateField = (field, value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const nameRegex = /^[A-Za-z]+$/;
     const phoneRegex = /^\d{10}$/;
 
-    if (!form.name || !nameRegex.test(form.name)) {
-      newErrors.name = 'Valid name required';
+    switch (field) {
+      case 'name':
+        if (!value || !nameRegex.test(value)) return 'Valid name required';
+        break;
+      case 'lastName':
+        if (!value || !nameRegex.test(value)) return 'Valid last name required';
+        break;
+      case 'email':
+        if (!emailRegex.test(value)) return 'Invalid email format';
+        break;
+      case 'phone':
+        if (!phoneRegex.test(value)) return 'Phone number must be exactly 10 digits';
+        break;
+      case 'password':
+        if (value.length < 6) return 'Password must be at least 6 characters';
+        break;
+      case 'confirmPassword':
+        if (value !== form.password) return 'Passwords do not match';
+        break;
+      case 'industry':
+        if (!value) return 'Please select a business type';
+        break;
+      case 'planType':
+        if (!value) return 'Please select a plan type';
+        break;
+      default:
+        return '';
+    }
+    return '';
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+
+    const fieldError = validateField(name, value);
+    setErrors(prevErrors => ({
+      ...prevErrors,
+      [name]: fieldError,
+    }));
+  };
+
+  const validateAllFields = () => {
+    const newErrors = {};
+    for (const field in form) {
+      const error = validateField(field, form[field]);
+      if (error) newErrors[field] = error;
     }
 
-    if (!form.lastName || !nameRegex.test(form.lastName)) {
-      newErrors.lastName = 'Valid last name required';
+    // Validate plan
+    const selectedPlan = plans.find(plan => plan.plan_id.toString() === form.planType);
+    if (!selectedPlan || !selectedPlan.bactive || selectedPlan.is_default) {
+      newErrors.planType = 'Please choose a valid non-default plan to register.';
     }
 
-    if (!emailRegex.test(form.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!phoneRegex.test(form.phone)) {
-      newErrors.phone = 'Phone number must be exactly 10 digits';
-    }
-
-    if (form.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!form.industry || form.industry === '') {
-      newErrors.industry = 'Please select a business type';
-    }
-
-    if (!form.planType || form.planType === '') {
-      newErrors.planType = 'Please select a plan type';
-    }
-
-    return newErrors;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
+    const isValid = validateAllFields();
 
-    console.log('📝 Form data:', form);
-
-    if (Object.keys(validationErrors).length === 0) {
+    if (isValid) {
       const requestBody = {
         cEmail: form.email,
         cPassword: form.password,
         plan_id: parseInt(form.planType),
       };
-
-      console.log('Request Body:', requestBody);
 
       try {
         const response = await fetch('http://192.168.0.107:3000/api/reseller', {
@@ -87,25 +105,17 @@ const LoginPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Registration successful:', data);
           navigate('/leads');
         } else {
           const errorText = await response.text();
-          console.error('❌ API error:', errorText);
           alert('Registration failed: ' + errorText);
         }
       } catch (error) {
-        console.error('❌ Network error:', error);
         alert('Network error. Please try again.');
       }
     } else {
-      console.warn('❗ Validation errors:', validationErrors);
       alert('Validation failed. Please check your inputs.');
     }
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   useEffect(() => {
@@ -113,19 +123,23 @@ const LoginPage = () => {
       try {
         const response = await fetch('http://192.168.0.107:3000/api/pricing-plans');
         const data = await response.json();
-        const activePlans = data.filter(plan => plan.bactive);
-        setPlans(activePlans);
+        const filteredPlans = data.filter(plan => plan.bactive && !plan.is_default);
+        setPlans(filteredPlans);
       } catch (error) {
         console.error('Failed to fetch plans:', error);
       }
     };
-
     fetchPlans();
   }, []);
 
+  const inputStyle = (field) =>
+    `border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 ${
+      errors[field] ? 'border-red-500 focus:ring-red-400' : 'focus:ring-blue-400'
+    }`;
+
   return (
-    <div className="min-h-screen w-full flex items-center py-4 justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[600px] mb-5 mt-[-10px] rounded-xl overflow-hidden">
+    <div className="h-50vh w-full flex items-center py-4 justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[640px] mt-[-40px] rounded-xl overflow-hidden">
         {/* Left Section */}
         <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-10 rounded-2xl"></div>
@@ -144,48 +158,29 @@ const LoginPage = () => {
           <h1 className="text-2xl font-bold text-gray-800 mt-2 text-center mb-6">Create your account to get started.</h1>
 
           <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 mt-10 w-full gap-4">
-            <div>
-              <label className="text-sm text-gray-700">First Name</label>
-              <input name="name" type="text" value={form.name} onChange={handleChange} placeholder="Name" className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400" />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">Last Name</label>
-              <input name="lastName" type="text" value={form.lastName} onChange={handleChange} placeholder="Last Name" className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400" />
-              {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">E-mail ID</label>
-              <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="E-mail ID" className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400" />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">Phone Number</label>
-              <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="Phone Number" className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400" />
-              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-            </div>
-
-            <div className="relative">
-              <label className="text-sm text-gray-700">Password</label>
-              <input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={handleChange} placeholder="Password" className="border-2 mt-2 rounded-md w-full px-4 py-1 pr-10 focus:ring-2 focus:ring-blue-400" />
-              <button type="button" onClick={togglePassword} className="absolute right-3 top-[43px] text-sm text-black">
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">Confirm Password</label>
-              <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm your password" className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400" />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
-            </div>
+            {['name', 'lastName', 'email', 'phone', 'password', 'confirmPassword'].map((field, i) => (
+              <div key={field} className={i === 4 ? 'relative' : ''}>
+                <label className="text-sm text-gray-700 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
+                <input
+                  name={field}
+                  type={field.toLowerCase().includes('password') ? (field === 'password' && showPassword ? 'text' : 'password') : field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                  value={form[field]}
+                  onChange={handleChange}
+                  placeholder={field === 'confirmPassword' ? 'Confirm your password' : field.charAt(0).toUpperCase() + field.slice(1)}
+                  className={inputStyle(field)}
+                />
+                {field === 'password' && (
+                  <button type="button" onClick={togglePassword} className="absolute right-3 top-[43px] text-sm text-black">
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                )}
+                {errors[field] && <p className="text-red-500 text-sm mt-1">{errors[field]}</p>}
+              </div>
+            ))}
 
             <div>
               <label className="text-sm text-gray-700">Industry</label>
-              <select name="industry" value={form.industry} onChange={handleChange} className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400">
+              <select name="industry" value={form.industry} onChange={handleChange} className={inputStyle('industry')}>
                 <option value="">Select Industry</option>
                 <option value="retail">Retail</option>
                 <option value="service">Service</option>
@@ -195,10 +190,12 @@ const LoginPage = () => {
 
             <div>
               <label className="text-sm text-gray-700">Plan Type</label>
-              <select name="planType" value={form.planType} onChange={handleChange} className="border-2 mt-2 rounded-md w-full px-4 py-1 focus:ring-2 focus:ring-blue-400">
+              <select name="planType" value={form.planType} onChange={handleChange} className={inputStyle('planType')}>
                 <option value="">Select Plan</option>
                 {plans.map(plan => (
-                  <option key={plan.plan_id} value={plan.plan_id}>{plan.plan_name}</option>
+                  <option key={plan.plan_id} value={plan.plan_id}>
+                    {plan.plan_name}
+                  </option>
                 ))}
               </select>
               {errors.planType && <p className="text-red-500 text-sm mt-1">{errors.planType}</p>}

@@ -29,9 +29,9 @@ export default function Comments() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-[200px] ">
       {/* Header with Button */}
-      <div className="flex items-center justify-between px-5 overflow-x-hidden py-4 mb-4">
+      <div className="flex items-center  justify-between px-5 overflow-x-hidden py-4 mb-4">
         <h2 className="text-xl font-semibold">All Comments</h2>
         <button
           onClick={handleNewCommentClick}
@@ -78,7 +78,7 @@ export default function Comments() {
 
       {/* Slide-in Form Panel */}
       <div
-        className={`fixed top-[150px] right-0 h-full w-96 bg-white shadow-lg border-l transform transition-transform duration-300 ${
+        className={`fixed top-[150px] right-0 h-full mt-10 w-96 bg-white shadow-lg border-l transform transition-transform duration-300 ${
           showForm ? "translate-x-0" : "translate-x-full"
         }`}
       >

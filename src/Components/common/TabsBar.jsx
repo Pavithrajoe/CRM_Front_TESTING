@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Mail, Phone, Globe, MessageSquare } from 'lucide-react';
 
+
 const tabs = [
   { name: 'History', path: '/history' },
   { name: 'Comments', path: '/Commandpage' },
@@ -41,7 +42,7 @@ export default function TabsBar() {
             <input type="email" placeholder="Recipient Email" className="w-full border p-2 rounded" required />
             <input type="text" placeholder="Subject" className="w-full border p-2 rounded" required />
             <textarea placeholder="Message" className="w-full border p-2 rounded h-24" required />
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Send Email</button>
+            <button type="submit" className="bg-blue-900 text-white px-4 py-2 rounded-3xl">Send Email</button>
             {sent && <p className="text-green-600 mt-2">Email sent successfully!</p>}
           </form>
         );
@@ -59,7 +60,7 @@ export default function TabsBar() {
           <form onSubmit={handleSubmit} className="flex flex-col space-y-3">
             <div className="bg-green-100 p-3 rounded text-sm">Hi, how can I help you today?</div>
             <textarea placeholder="Type your WhatsApp message..." className="border rounded p-2 h-24" required />
-            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Send Message</button>
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-3xl">Send Message</button>
             {sent && <p className="text-green-600">Message sent on WhatsApp!</p>}
           </form>
         );
@@ -96,12 +97,12 @@ export default function TabsBar() {
             </NavLink>
           ))}
         </div>
-        <div className="border-l border-dotted border-blue-500 h-8 mx-3" />
+        <div className="border-l border-dotted border-blue-900 h-8 mx-3" />
         <div className="flex items-center space-x-2">
           <button 
             onClick={() => togglePanel('email')} 
             className={`w-8 h-8 border rounded flex items-center justify-center hover:bg-gray-100 ${
-              activePanel === 'email' ? 'bg-blue-100 border-blue-300' : ''
+              activePanel === 'email' ? 'bg-blue-100 border-blue-900' : ''
             }`}
           >
             <Mail className="w-4 h-4" />

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import ProfileHeader from '@/components/common/ProfileHeader';
 import LeadToolbar from '@/components/dashboard/LeadToolbar';
+import LeadsTable from '@/components/dashboard/LeadsTable'; // <-- make sure this is your table component
 import LeadForm from '@/components/LeadForm'; 
 
-const LeadCardViewPage = () => {
+export default function LeadCardViewPage() {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('My Leads');
@@ -14,6 +15,7 @@ const LeadCardViewPage = () => {
 
   useEffect(() => {
     const mockLeads = Array(100).fill().map((_, index) => ({
+      id: index + 1,
       name: `Karthik Raja ${index + 1}`,
       organization: 'Zero Consultancy Services',
       phone: '98745 61230',
@@ -27,14 +29,20 @@ const LeadCardViewPage = () => {
     setLeads(mockLeads);
   }, []);
 
-  const filteredLeads = leads
-    .filter((lead) => activeTab === 'All Leads' || lead.category === activeTab)
-    .filter((lead) => lead.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+  // Memoized filter + sort + search
+  const filteredLeads = useMemo(() => {
+    return leads
+      .filter(lead => activeTab === 'All Leads' || lead.category === activeTab)
+      .filter(lead => lead.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => sortAsc
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+      );
+  }, [leads, activeTab, searchTerm, sortAsc]);
 
   return (
     <div className="flex">
-  
+      <Sidebar />
 
       <main className="flex-1 bg-gray-50 mt-[-5] min-h-screen p-6">
         <div className="ml-auto"><ProfileHeader /></div>
@@ -45,21 +53,20 @@ const LeadCardViewPage = () => {
             onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-black text-white rounded-md hover:bg-blue-00"
           >
-            Create Lead
+            + Create List
           </button>
         </div>
 
-      <LeadToolbar
-  searchTerm={searchTerm}
-  setSearchTerm={setSearchTerm}
-  activeTab={activeTab}
-  setActiveTab={setActiveTab}
-  sortAsc={sortAsc}
-  setSortAsc={setSortAsc}
-  viewMode={viewMode}
-  setViewMode={setViewMode}
-/>
-
+        <LeadToolbar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          sortAsc={sortAsc}
+          setSortAsc={setSortAsc}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
 
         {/* Card View Only */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[150px]">
@@ -79,31 +86,40 @@ const LeadCardViewPage = () => {
                 </span>
               </div>
 
-              <div className="mt-3 space-y-2 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <span>📧</span><span>{lead.email}</span>
+                <div className="mt-3 space-y-2 text-sm text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <span>📧</span><span>{lead.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>📞</span><span>{lead.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>👤</span><span>{lead.assignedTo}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span>📞</span><span>{lead.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>👤</span><span>{lead.assignedTo}</span>
-                </div>
-              </div>
 
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-xs text-gray-500">📝 Last Modified {lead.modified}</span>
-                <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                  lead.lead === 'Hot' ? 'bg-red-400 text-white'
-                  : lead.lead === 'Warm' ? 'bg-orange-400 text-white'
-                  : 'bg-blue-400 text-white'
-                }`}>
-                  {lead.lead} Lead
-                </span>
+                <div className="flex justify-between items-center mt-4">
+                  <span className="text-xs text-gray-500">
+                    📝 Last Modified {lead.modified}
+                  </span>
+                  <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                    lead.lead === 'Hot'
+                      ? 'bg-red-400 text-white'
+                      : lead.lead === 'Warm'
+                      ? 'bg-orange-400 text-white'
+                      : 'bg-blue-400 text-white'
+                  }`}>
+                    {lead.lead} Lead
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto mt-6">
+            <LeadsTable leads={filteredLeads} />
+          </div>
+        )}
       </main>
 
       {showForm && (
@@ -122,6 +138,4 @@ const LeadCardViewPage = () => {
       )}
     </div>
   );
-};
-
-export default LeadCardViewPage;
+}

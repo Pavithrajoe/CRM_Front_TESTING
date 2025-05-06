@@ -46,6 +46,11 @@ export default function ProfileHeader() {
   };
 
   const handleLogout = () => {
+  // When you want to log out or clear the token:
+    localStorage.removeItem('token');
+    console.log('Token removed from localStorage');
+    localStorage.removeItem('profileImage');
+    navigate('/'); 
     localStorage.clear(); // Clear session if needed
     navigate('/login_dev');
   };

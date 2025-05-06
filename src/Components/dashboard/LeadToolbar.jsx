@@ -1,17 +1,48 @@
-import React from "react";
-import { FaSortAlphaDown, FaSortAlphaUp, FaThLarge, FaListUl } from "react-icons/fa";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import React, { useState } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { FaThLarge, FaListUl, FaSortAlphaDown, FaSortAlphaUp } from 'react-icons/fa';
 
-const LeadToolbar = ({
-  searchTerm,
-  setSearchTerm,
-  activeTab,
-  setActiveTab,
-  sortAsc,
-  setSortAsc,
-  viewMode,
-  setViewMode,
-}) => {
+const LeadToolbar = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('My Leads');
+  const [sortAsc, setSortAsc] = useState(true);
+  const [viewMode, setViewMode] = useState('card');
+
+  // Dummy data
+  const allLeads = [
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Contacted', lead: 'Hot', category: 'My Leads' },
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Pending', lead: 'Warm', category: 'All Leads' },
+    { name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230', email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago', status: 'Follow-up', lead: 'Cold', category: 'Converted Leads' },
+    ...Array(7).fill().map(() => ({
+      name: 'Karthik Raja', organization: 'Zero Consultancy services', phone: '98745 61230',
+      email: 'harish@gmail.com', assignedTo: 'Shivakumar', modified: 'week ago',
+      status: 'Contacted', lead: 'Hot', category: 'My Leads'
+    }))
+  ];
+
+  const filteredLeads = allLeads.filter((lead) => {
+    if (activeTab === 'All Leads') return true;
+    return lead.category === activeTab;
+  });
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Contacted': return 'bg-green-100 text-green-700';
+      case 'Pending': return 'bg-yellow-100 text-yellow-700';
+      case 'Follow-up': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getLeadStyle = (lead) => {
+    switch (lead) {
+      case 'Hot': return 'bg-red-100 text-red-700';
+      case 'Warm': return 'bg-orange-100 text-orange-700';
+      case 'Cold': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="space-y-6 mt-[-60px] p-4">
       {/* Search Field */}
@@ -82,6 +113,6 @@ const LeadToolbar = ({
       </div>
     </div>
   );
-};
+};}
 
 export default LeadToolbar;

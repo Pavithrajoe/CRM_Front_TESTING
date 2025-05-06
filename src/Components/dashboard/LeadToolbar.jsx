@@ -6,7 +6,7 @@ const LeadToolbar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('My Leads');
   const [sortAsc, setSortAsc] = useState(true);
-  const [viewMode, setViewMode] = useState('card');
+  const [viewMode, setViewMode] = useState(true);
 
   // Dummy data
   const allLeads = [
@@ -92,9 +92,9 @@ const LeadToolbar = () => {
           </button>
 
           <button
-            onClick={() => setViewMode('card')}
+            onClick={() => setViewMode(true)}
             className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
-              viewMode === 'card' ? 'bg-black text-white' : ''
+              viewMode = 'card' ? 'bg-black text-white' : ''
             }`}
           >
             <FaThLarge />
@@ -104,9 +104,9 @@ const LeadToolbar = () => {
           </button>
 
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode(false)}
             className={`relative border p-3 rounded-md hover:bg-gray-100 group ${
-              viewMode === 'list' ? 'bg-black text-white' : ''
+              viewMode  ? 'bg-black text-white' : ''
             }`}
           >
             <FaListUl />
@@ -119,42 +119,65 @@ const LeadToolbar = () => {
 
       {/* Lead Table */}
       <div className="overflow-auto">
-        <table className="min-w-full border-collapse table-auto">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Organization</th>
-              <th className="px-4 py-2">Phone No</th>
-              <th className="px-4 py-2">E-mail ID</th>
-              <th className="px-4 py-2">Assigned To</th>
-              <th className="px-4 py-2">Modified</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Lead</th>
-            </tr>
-          </thead>
-          <tbody>
+        {viewMode  ? (
+          // Card View
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredLeads.map((lead, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="px-4 py-2">{lead.name}</td>
-                <td className="px-4 py-2">{lead.organization}</td>
-                <td className="px-4 py-2">{lead.phone}</td>
-                <td className="px-4 py-2">{lead.email}</td>
-                <td className="px-4 py-2">{lead.assignedTo}</td>
-                <td className="px-4 py-2">{lead.modified}</td>
-                <td className="px-4 py-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
-                    {lead.status}
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLeadStyle(lead.lead)}`}>
-                    {lead.lead}
-                  </span>
-                </td>
-              </tr>
+              <div key={idx} className="border rounded-lg p-4 shadow-sm">
+                <h3 className="font-bold text-lg">{lead.name}</h3>
+                <p className="text-sm text-gray-600">{lead.organization}</p>
+                <p className="text-sm text-gray-600">{lead.phone}</p>
+                <p className="text-sm text-gray-600">{lead.email}</p>
+                <p className="text-sm text-gray-600">Assigned To: {lead.assignedTo}</p>
+                <p className="text-sm text-gray-600">Modified: {lead.modified}</p>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
+                  {lead.status}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLeadStyle(lead.lead)}`}>
+                  {lead.lead}
+                </span>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          // List View
+          <table className="min-w-full border-collapse table-auto">
+            <thead>
+              <tr className="bg-gray-100 text-left">
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Organization</th>
+                <th className="px-4 py-2">Phone No</th>
+                <th className="px-4 py-2">E-mail ID</th>
+                <th className="px-4 py-2">Assigned To</th>
+                <th className="px-4 py-2">Modified</th>
+                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">Lead</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeads.map((lead, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="px-4 py-2">{lead.name}</td>
+                  <td className="px-4 py-2">{lead.organization}</td>
+                  <td className="px-4 py-2">{lead.phone}</td>
+                  <td className="px-4 py-2">{lead.email}</td>
+                  <td className="px-4 py-2">{lead.assignedTo}</td>
+                  <td className="px-4 py-2">{lead.modified}</td>
+                  <td className="px-4 py-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
+                      {lead.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLeadStyle(lead.lead)}`}>
+                      {lead.lead}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

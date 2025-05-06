@@ -26,8 +26,11 @@ export default function ProfileHeader() {
   };
 
   const handleLogout = () => {
+  // When you want to log out or clear the token:
+    localStorage.removeItem('token');
+    console.log('Token removed from localStorage');
     localStorage.removeItem('profileImage');
-    navigate('/login_dev'); 
+    navigate('/'); 
   };
 
   return (
@@ -68,12 +71,7 @@ export default function ProfileHeader() {
             <div className="text-gray-500">Department: Development</div>
             <div className="text-gray-500">Team: UI/UX</div>
             <hr className="my-2" />
-            <button
-              onClick={handleLogout}
-              className="w-full text-left text-red-500 hover:text-red-600"
-            >
-              Logout
-            </button>
+           
           </div>
         )}
       </div>

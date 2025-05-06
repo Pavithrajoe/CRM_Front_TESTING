@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ENDPOINTS } from '../api/constraints'; 
 
 const SalesFunnel = () => {
   const [chartData, setChartData] = useState([]);
@@ -25,7 +26,7 @@ const SalesFunnel = () => {
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        const res = await fetch('http://192.168.0.107:3000/api/lead-status');
+        const res = await fetch(ENDPOINTS.LEAD_STATUS);
         const data = await res.json();
         const processed = transformStatusDataToChart(data);
         setChartData(processed);
@@ -37,8 +38,8 @@ const SalesFunnel = () => {
     const fetchLeadOwner = async () => {
       try {
         const [leadRes, usersRes] = await Promise.all([
-          fetch('http://192.168.0.107:3000/api/lead'),
-          fetch('http://192.168.0.107:3000/api/users'),
+          fetch(ENDPOINTS.LEAD),
+          fetch(ENDPOINTS.USERS),
         ]);
 
         const leadData = await leadRes.json();
@@ -55,7 +56,7 @@ const SalesFunnel = () => {
 
     const fetchFollowUps = async () => {
       try {
-        const res = await fetch('http://192.168.0.107:3000/api/follow-ups');
+        const res = await fetch(ENDPOINTS.FOLLOW_UP);
         const data = await res.json();
         setFollowUpCount(Array.isArray(data) ? data.length : 0);
       } catch (err) {

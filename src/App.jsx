@@ -21,7 +21,7 @@ import RemainderPage from './pages/RemainderPage';
 import ReminderHistory from './pages/reminderHistory';
 import CalendarPage from './pages/calenderpage';
 import Commandpage from './pages/command';
-
+import TeamviewDashboard from './pages/dashboard/teamviewdashboard';
 
 import { TabProvider } from "./context/TabContext";
 import AppLayout from '@/Components/AppLayout'; // Unified layout
@@ -65,6 +65,7 @@ function App() {
         <Route path="/leadmanage" element={<LeadManagePage />} />
         <Route path="/leadlistview" element={<LeadListViewPage />} />
         <Route path="/leadcardview" element={<LeadCardViewPage />} />
+        <Route path="/teamview" element={<TeamviewDashboard />} />
               </Route>
 
         {/* Protected Routes with Layout */}

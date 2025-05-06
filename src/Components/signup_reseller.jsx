@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { ENDPOINTS } from '../api/constraints'; 
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -55,7 +56,7 @@ const LoginPage = () => {
       console.log('Request Body:', requestBody);
 
       try {
-        const response = await fetch('http://192.168.0.107:3000/api/reseller', {
+        const response = await fetch(ENDPOINTS.RESELLER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestBody),
@@ -87,7 +88,7 @@ const LoginPage = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await fetch('http://192.168.0.107:3000/api/pricing-plans');
+        const response = await fetch(ENDPOINTS.PLAN_TYPE);
         const data = await response.json();
         const activePlans = data.filter(plan => plan.bactive);
         setPlans(activePlans);

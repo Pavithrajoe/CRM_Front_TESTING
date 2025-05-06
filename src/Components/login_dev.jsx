@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
-import { ENDPOINTS} from '../api/constraints';
+import { ENDPOINTS } from '../api/constraints'; 
+
 
 const LoginPage = () => {
-  //String name ="";
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmailOrPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
@@ -14,49 +14,45 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10}$/;
 
     console.log('Email/Phone:', email);
     console.log('Password:', password);
 
-  
     if (!email.trim()) {
-      alert('Please enter your email or phone number.');
+      alert('Please enter your email!');
       return;
     }
-  
+
     if (!emailRegex.test(email) && !phoneRegex.test(email)) {
-      alert('Please enter a valid email address or 10-digit mobile number.');
+      alert('Please enter a valid email address');
       return;
     }
-  
+
     if (!password.trim()) {
       alert('Please enter your password.');
       return;
     }
 
-  
     if (password.length < 6) {
       alert('Password must be at least 6 characters long.');
       return;
     }
-  
-    // Success: navigate to dashboard
-    //navigate('/dashboard');
-
 
     try {
-      const response = await fetch(ENDPOINTS.LOGIN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+
+    const response = await fetch(ENDPOINTS.LOGIN, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
 
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem('token', data.token);
         console.log("Login successful:", data);
@@ -64,19 +60,18 @@ const LoginPage = () => {
       } else {
         alert(data.message || 'Login failed. Please try again.');
       }
-      
+
     } catch (error) {
       console.error("Login error:", error);
       alert('Something went wrong. Please try again.');
     }
-
   };
 
   return (
-    <div className="min-h-70vh w-full flex items-center justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[620px] rounded-xl overflow-hidden">
+    <div className="min-h-60vh w-full flex items-center justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[630px] rounded-xl overflow-y-hidden">
         {/* Left Side Image */}
-        <div className="relative w-full mb-4 md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-4 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
+        <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-5 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/15 backdrop-blur-xl z-10 rounded-2xl"></div>
           <img
             src="/images/login/login.png"
@@ -94,14 +89,14 @@ const LoginPage = () => {
 
           <form onSubmit={handleLogin}>
             <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">
-              E-mail address / mobile number
+              E-mail address
             </label>
             <input
               type="text"
               value={email}
-              onChange={(e) => setEmailOrPhone(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border-2 grey-900 rounded-md focus:outline-none focus:ring-2 focus:ring-grey-600 mb-4"
-              placeholder="69545 32587"
+              placeholder="Enter your email"
             />
 
             <label className="block text-sm font-medium pt-4 pb-2 text-gray-700">
@@ -139,8 +134,6 @@ const LoginPage = () => {
               </button>
             </div>
           </form>
-
-          
         </div>
       </div>
 

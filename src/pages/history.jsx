@@ -2,34 +2,32 @@ import React from "react";
 import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
-import RemainderForm from "@/components/RemainderForm";
 import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
+import LeadTimeline from "../Components/LeadTimeline";
 
 
-const RemainderPage = () => {
+const HistoryPage = () => {
   return (
     <>
      <ProfileHeader />
      
-     <div className="ms-[-670px]">
+     <div className="ms-[-700px]">
       <ProgressBar />
       </div>
-      <div className="ms-[30px]">
+      <div className="">
       <TabsBar />
       </div>
       <div className="flex px-2 gap-4">
         {/* LEFT: Profile + History */}
-        <div className="w-[550px] h-100vh mt-[20px]">
+        <div className="w-[550px] h-100vh">
           <ProfileWithHistoryCard />
         </div>
-
-    <div className="w-[1300px] ms-5 mt-[40px] shadow rounded bg-white">
-      <RemainderForm />
+    <div className="w-full h-100vh ms-10 mr-10 mt-[40px] overflow-x-hidden shadow rounded bg-white">
+      <LeadTimeline />
     </div>
     </div>
-
     </>
   );
 };
 
-export default RemainderPage;
+export default HistoryPage;

@@ -4,7 +4,7 @@ import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@m
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
-// Dummy API functions
+// Dummy API functions (keep this the same)
 const dummyApi = {
   getReminders: (date) => new Promise((resolve) => {
     setTimeout(() => resolve({
@@ -48,7 +48,7 @@ const dummyApi = {
   })
 };
 
-// MeetFormDrawer Component
+// MeetFormDrawer Component (keep this the same)
 const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -133,6 +133,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated }) => {
 };
 
 const CalendarView = () => {
+  // State declarations for all variables being used
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -142,7 +143,9 @@ const CalendarView = () => {
     message: '',
     severity: 'success'
   });
+  const [draftToEdit, setDraftToEdit] = useState(null); // For editing drafts
 
+  // Define all functions being used
   const fetchReminders = async (date = selectedDate) => {
     setLoading(true);
     try {
@@ -189,45 +192,98 @@ const CalendarView = () => {
 
   return (
     <div className="flex h-80vh overflow-y-scroll w-full p-4 bg-gray-50">
-      {/* Left Side - Calendar */}
-      <div className="w-1/2 bg-white rounded-lg shadow-sm p-4 mr-6">
-        <Calendar
-          onChange={setSelectedDate}
-          value={selectedDate}
-          className="border-none w-full"
-          navigationLabel={({ date }) => (
-            <div className="flex items-center justify-center">
-              <FaChevronLeft className="mr-4 cursor-pointer" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedDate(new Date(date.setMonth(date.getMonth() - 1)));
-                }} 
-              />
-              <span className="text-lg font-semibold">
-                {date.toLocaleString('default', { month: 'long' })} {date.getFullYear()}
-              </span>
-              <FaChevronRight className="ml-4 cursor-pointer" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedDate(new Date(date.setMonth(date.getMonth() + 1)));
-                }} 
-              />
-            </div>
-          )}
-          prevLabel={<FaChevronLeft />}
-          nextLabel={<FaChevronRight />}
-          tileClassName={({ date }) => 
-            date.getDate() === selectedDate.getDate() ? 'bg-black text-white rounded' : ''
-          }
-        />
+      
+      {/* Left Column - Calendar and Draft Form */}
+      <div className="w-1/2 flex flex-col mr-6">
+        {/* Calendar */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <Calendar
+            onChange={setSelectedDate}
+            value={selectedDate}
+            className="border-none w-full"
+            navigationLabel={({ date }) => (
+              <div className="flex items-center justify-center">
+                <FaChevronLeft className="mr-4 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedDate(new Date(date.setMonth(date.getMonth() - 1)));
+                  }} 
+                />
+                <span className="text-lg font-semibold">
+                  {date.toLocaleString('default', { month: 'long' })} {date.getFullYear()}
+                </span>
+                <FaChevronRight className="ml-4 cursor-pointer" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedDate(new Date(date.setMonth(date.getMonth() + 1)));
+                  }} 
+                />
+              </div>
+            )}
+            prevLabel={<FaChevronLeft />}
+            nextLabel={<FaChevronRight />}
+            tileClassName={({ date }) => 
+              date.getDate() === selectedDate.getDate() ? 'bg-black text-white rounded' : ''
+            }
+          />
 
-        <button 
-          onClick={() => setOpenDrawer(true)}
-          className="w-[180px] mt-6 bg-black hover:bg-gray-800 ms-[80px] text-white py-2 px-4 rounded-md flex items-center justify-center"
-        >
-          <FaPlus className="mr-2" />
-          Create Meet
-        </button>
+          <button 
+            onClick={() => setOpenDrawer(true)}
+            className="w-[180px] mt-6 bg-black hover:bg-gray-800 ms-[80px] text-white py-2 px-4 rounded-md flex items-center justify-center"
+          >
+            <FaPlus className="mr-2" />
+            Create Meet
+          </button>
+        </div>
+
+        {/* Draft Form */}
+        <div className="bg-white rounded-lg shadow-sm p-4 flex-1">
+          <h2 className="text-xl font-semibold mb-4">Draft Form</h2>
+          <div className="space-y-4">
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800">New Draft Meeting</h3>
+              <p className="text-sm text-gray-600 mt-2">
+                This is where you can prepare meeting drafts before scheduling them.
+              </p>
+              <div className="mt-4">
+                <Button 
+                  variant="outlined" 
+                  className="w-full"
+                  startIcon={<FaPlus />}
+                  onClick={() => setOpenDrawer(true)}
+                >
+                  Start New Draft
+                </Button>
+              </div>
+            </div>
+            
+            {/* Example draft items */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium text-gray-800">Project Discussion</h3>
+                  <p className="text-sm text-gray-600 mt-1">Draft created on {new Date().toLocaleDateString()}</p>
+                </div>
+                <Button 
+                  size="small" 
+                  variant="contained" 
+                  style={{ backgroundColor: 'black' }}
+                  onClick={() => {
+                    // Set the draft item to edit and open the form
+                    setDraftToEdit({
+                      title: "Project Discussion",
+                      time: "3:00 PM",
+                      participants: "email@example.com"
+                    });
+                    setOpenDrawer(true);
+                  }}
+                >
+                  Continue Editing
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right Side - Reminders */}

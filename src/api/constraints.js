@@ -8,10 +8,12 @@ console.log("Base URL:", BASE_URL);
 // Define all API endpoints relative to BASE_URL
 export const ENDPOINTS = {
   LOGIN: `${BASE_URL}/login`,
-  //REGISTER: `${BASE_URL}/register`,
-  //GET_USER: `${BASE_URL}/user`,
-  //UPDATE_PROFILE: `${BASE_URL}/user/update`,
-  //LOGOUT: `${BASE_URL}/logout`,
+  PLAN_TYPE: `${BASE_URL}/pricing-plans`,
+  RESELLER: `${BASE_URL}/reseller`,
+  LEAD_STATUS: `${BASE_URL}/lead-status`,
+  LEAD: `${BASE_URL}/lead`,
+  USERS: `${BASE_URL}/users`,
+  FOLLOW_UP: `${BASE_URL}/follow-ups`,
   // Add more endpoints here as needed
 };
 

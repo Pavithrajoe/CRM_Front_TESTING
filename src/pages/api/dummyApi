@@ -1,0 +1,15 @@
+export const dummyApi = {
+  createMeet: (meetData) => new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        data: {
+          ...meetData,
+          id: meetData.id || Math.floor(Math.random() * 1000),  // Add ID for new or editing
+          client: "New Client",
+          completed: false,
+          description: `Meeting scheduled at ${meetData.time}`
+        }
+      });
+    }, 800);  // Simulate network delay
+  }),
+};

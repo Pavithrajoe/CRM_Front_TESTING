@@ -22,7 +22,7 @@ const Commandpage = () => {
         <div className="w-[550px] h-100vh">
           <ProfileWithHistoryCard />
         </div>
-    <div className="w-full h-100vh ms-10 mr-10 mt-[40px] overflow-x-hidden shadow rounded bg-white">
+    <div className="w-full h-[-100px] ms-10 mr-10 mt-[40px] overflow-x-hidden shadow rounded bg-white">
       <Comments />
     </div>
     </div>

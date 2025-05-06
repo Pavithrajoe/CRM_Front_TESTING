@@ -3,13 +3,15 @@ import Sidebar from '@/components/common/sidebar';
 import ProfileHeader from '@/components/common/ProfileHeader';
 import LeadToolbar from '@/components/dashboard/LeadToolbar';
 import LeadsTable from '@/components/dashboard/LeadsTable'; // <-- make sure this is your table component
+import LeadForm from '@/components/LeadForm'; 
 
 export default function LeadCardViewPage() {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('My Leads');
   const [sortAsc, setSortAsc] = useState(true);
-  const [viewMode, setViewMode] = useState('card'); // "card" or "list"
+  const [viewMode, setViewMode] = useState('card');
+  const [showForm, setShowForm] = useState(false); // modal state
 
   useEffect(() => {
     const mockLeads = Array(100).fill().map((_, index) => ({
@@ -121,6 +123,22 @@ export default function LeadCardViewPage() {
           </div>
         )}
       </main>
+
+      {/* Fullscreen Modal for Lead Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white w-full h-full overflow-y-scroll p-8 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-xl"
+              onClick={() => setShowForm(false)}
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Create New Lead</h2>
+            <LeadForm onClose={() => setShowForm(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

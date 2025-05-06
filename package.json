@@ -18,6 +18,7 @@
     "axios": "^1.9.0",
     "dayjs": "^1.11.13",
     "framer-motion": "^12.9.4",
+    "gapi-script": "^1.2.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.507.0",
     "react": "^19.0.0",
@@ -26,7 +27,12 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.5.3",
     "react-toastify": "^11.0.5",
+<<<<<<< HEAD
+    "recharts": "^2.15.3",
+    "uuid": "^11.1.0"
+=======
     "recharts": "^2.15.3"
+>>>>>>> c41f53c9df0f5c983e8889821d456224bd40a87e
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

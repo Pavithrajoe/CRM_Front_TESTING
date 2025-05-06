@@ -143,6 +143,7 @@ const CalendarView = () => {
     message: '',
     severity: 'success'
   });
+  const [draftToEdit, setDraftToEdit] = useState(null); // For editing drafts
 
   // Define all functions being used
   const fetchReminders = async (date = selectedDate) => {
@@ -267,6 +268,15 @@ const CalendarView = () => {
                   size="small" 
                   variant="contained" 
                   style={{ backgroundColor: 'black' }}
+                  onClick={() => {
+                    // Set the draft item to edit and open the form
+                    setDraftToEdit({
+                      title: "Project Discussion",
+                      time: "3:00 PM",
+                      participants: "email@example.com"
+                    });
+                    setOpenDrawer(true);
+                  }}
                 >
                   Continue Editing
                 </Button>

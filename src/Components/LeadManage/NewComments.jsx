@@ -33,7 +33,7 @@ const NewComment = () => {
 
       {/* Textarea */}
       <textarea
-        className="w-full border rounded p-2 text-sm resize-none"
+        className="w-full border mt-10 rounded p-2 text-sm resize-none"
         placeholder="Write your comments here........."
         maxLength={1000}
         rows={4}

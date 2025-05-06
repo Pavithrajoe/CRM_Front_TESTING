@@ -38,7 +38,7 @@ const CompanyList = () => {
         <input
           type="text"
           placeholder="Search Company..."
-          className="border p-2 rounded w-1/2"
+          className="border p-2 rounded-2xl w-3/2"
           onChange={e => setSearchTerm(e.target.value)}
         />
         <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ const CompanyList = () => {
               setEditData(null);
               setFormOpen(true);
             }}
-            className="p-2 rounded bg-green-600 text-white flex items-center gap-1 hover:bg-green-700"
+            className="p-2 rounded bg-black text-white flex items-center gap-1 hover:bg-green-700"
           >
             <Plus size={18} /> Add
           </button>

@@ -42,13 +42,14 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.LOGIN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+
+    const response = await fetch(ENDPOINTS.LOGIN, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
 
       const data = await response.json();
 
@@ -67,10 +68,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-70vh w-full flex items-center justify-center bg-white px-4">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[620px] rounded-xl overflow-hidden">
+    <div className="min-h-60vh w-full flex items-center justify-center bg-white px-4">
+      <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[630px] rounded-xl overflow-y-hidden">
         {/* Left Side Image */}
-        <div className="relative w-full mb-4 md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-4 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
+        <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,_#2563eb,_#164CA1,_#164CA1)] md:mb-5 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/15 backdrop-blur-xl z-10 rounded-2xl"></div>
           <img
             src="/images/login/login.png"

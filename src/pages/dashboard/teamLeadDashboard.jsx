@@ -1,5 +1,4 @@
 import React from "react";
-import Sidebar from "@/components/common/sidebar";
 import ProfileHeader from "@/components/common/ProfileHeader"; 
 import TeamleadHeader from "@/components/dashboard/teamlead/tlHeader"; 
 import KPIStats from "@/components/dashboard/teamlead/tlKPIcards";
@@ -11,12 +10,12 @@ import ContactsTable from "@/components/dashboard/teamlead/tlcontactscard";
 
 const LeadsDashboard = () => {
   return (
-    <div className="flex">
+    <div className="flex mt-[-80px]">
       {/* Sidebar */}
-    
+      {/* <Sidebar /> */}
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-50 min-h-screen">
+      <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <TeamleadHeader /> {/* My Profile / Team buttons */}
@@ -37,4 +36,4 @@ const LeadsDashboard = () => {
   );
 };
 
-export default LeadsDashboard;
+export default LeadsDashboard;

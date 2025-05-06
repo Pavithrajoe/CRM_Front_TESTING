@@ -16,7 +16,7 @@ import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
 import LeadManagePage from './pages/LeadManagePage';
 import LeadListViewPage from './pages/dashboard/LeadListView';
 import LeadCardViewPage from '@/pages/dashboard/LeadCardView';
-
+import UserAnalyticsPage from './pages/user_analytics';
 import RemainderPage from './pages/RemainderPage';
 import ReminderHistory from './pages/reminderHistory';
 import CalendarPage from './pages/calenderpage';
@@ -73,6 +73,7 @@ function App() {
           <Route path="/reminderhistory" element={<ReminderHistory />} />
           <Route path="/calenderpage" element={<CalendarPage />} />
           <Route path="/commandpage" element={<Commandpage />} />
+          <Route path="/user_analytics" element={<UserAnalyticsPage />} />
 
         </Route>
       </Routes>

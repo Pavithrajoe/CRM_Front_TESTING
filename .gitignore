@@ -6,7 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+own_crm_frontend
 node_modules
 dist
 dist-ssr

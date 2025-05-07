@@ -113,6 +113,6 @@ const LeadToolbar = () => {
       </div>
     </div>
   );
-};}
+};
 
 export default LeadToolbar;

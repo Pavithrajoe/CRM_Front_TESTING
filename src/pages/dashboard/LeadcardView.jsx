@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import ProfileHeader from '@/components/common/ProfileHeader';
 import LeadToolbar from '@/components/dashboard/LeadToolbar';
-import LeadsTable from '@/components/dashboard/LeadsTable'; // <-- make sure this is your table component
+//import LeadsTable from '@/components/dashboard/LeadsTable'; // <-- make sure this is your table component
 import LeadForm from '@/components/LeadForm'; 
 
 export default function LeadCardViewPage() {
@@ -115,11 +115,11 @@ export default function LeadCardViewPage() {
               </div>
             ))}
           </div>
-        ) : (
+         : (
           <div className="overflow-x-auto mt-6">
             <LeadsTable leads={filteredLeads} />
           </div>
-        )}
+        )
       </main>
 
       {showForm && (

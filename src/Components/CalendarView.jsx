@@ -3,7 +3,7 @@ import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, 
 import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import ReminderForm from '../../own_crm_frontend/src/Components/RemainderForm';
+// import ReminderForm from './src/Components/RemainderForm';
 // Dummy API functions (keep this the same)
 const dummyApi = {
   getReminders: (date) => new Promise((resolve) => {

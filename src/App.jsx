@@ -21,7 +21,7 @@ import Commandpage from './pages/command';
 import TeamviewDashboard from './pages/dashboard/teamviewdashboard';
 import { TabProvider } from "./context/TabContext";
 import LeadDetailView from "../src/context/leaddetailsview";
-import AppLayout from '@/Components/AppLayout'; // Unified layout
+import AppLayout from "../src/Components/AppLayout";
 function App() {
   return (
     <TabProvider>

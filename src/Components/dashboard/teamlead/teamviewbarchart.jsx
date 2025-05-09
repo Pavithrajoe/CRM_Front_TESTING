@@ -1,25 +1,45 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Eshwar', leads: 45 },
-  { name: 'Shivaraj', leads: 20 },
-  { name: 'Bala kumar', leads: 35 },
-  { name: 'Tamilselvan', leads: 25 },
-  { name: 'Arun kumar', leads: 33 }
-];
+
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-gray-300 px-2 py-1 rounded text-sm">
-        {payload[0].value} Leads
+        {payload[0].value}  
       </div>
     );
   }
   return null;
 };
 
-export default function LeadManagementCard() {
+export default function LeadManagementCard({leads }) {
+
+
+  const userLeadCounts = leads.reduce((acc, lead) => {
+  const userName = lead.user?.cFull_name || 'Unknown';
+
+  // If the user already exists in the accumulator, increment the count
+  if (acc[userName]) {
+    acc[userName]++;
+  } else {
+    acc[userName] = 1;
+  }
+
+  return acc;
+}, {});
+
+
+
+
+ const data = Object.entries(userLeadCounts).map(([name, count]) => ({
+  name,
+  leads: count
+}));
+
+console.log(data);
+
+
   return (
     <div className="bg-white rounded-md p-4 w-full max-w-full mx-auto">
       <div className="flex justify-between items-center mb-4">

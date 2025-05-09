@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bell, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+// import LeadForm from '@/components/LeadForm';
 import LeadForm from '../LeadForm';
 import logo from './favicon.png';
 
@@ -67,12 +68,15 @@ export default function ProfileHeader() {
 
   return (
     <div className="flex justify-end items-center gap-10 mb-6 relative">
-      <button
-        className="w-10 h-10 border rounded-full p-2 hover:bg-gray-100"
-        onClick={handleLeadFormOpen}
-      >
-        <Plus className="text-blue-600" />
-      </button>
+  <button
+  onClick={handleLeadFormOpen}
+  className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black bg-clip-padding focus:outline-none"
+>
+ 
+    
+    + Create Lead
+</button>
+
 
       {showLeadForm && (
         <div className="fixed inset-0 z-50 bg-white bg-opacity-50 flex justify-end items-start">
@@ -144,14 +148,14 @@ export default function ProfileHeader() {
           <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-4 text-sm z-50">
             <div className="font-bold text-gray-800">{profile.name}</div>
             <div className="text-gray-500">Role: {userRole}</div>
-            <div className="text-gray-500">Team: {profile.team}</div>
+            {/* <div className="text-gray-500">Company: {profile.company}</div> */}
             <hr className="my-2" />
-            <Link
+            {/* <Link
               to={`/profile-settings/${userId}`}
               className="block text-blue-600 hover:underline mb-2"
             >
               Profile Settings
-            </Link>
+            </Link> */}
             <button
               onClick={handleLogout}
               className="w-full text-left text-red-500 hover:text-red-600"

@@ -15,50 +15,42 @@ const getActivityMessage = (activity) => {
   const userName = user?.cFull_name || `User ${performedbyid}`;
   const rawMessage = data?.newStatus;
 
-  // Helper to replace user ID with actual name if needed
   const personalizeMessage = (msg) =>
     typeof msg === "string" ? msg.replace(`${performedbyid}`, userName) : msg;
 
   switch (activitytype) {
     case "lead_created":
       return personalizeMessage(rawMessage) || `Lead created by ${userName}.`;
-
     case "follow_up":
       return "Follow-up scheduled.";
-
     case "proposal_sent":
       return "Proposal sent to the client.";
-
     case "comment_added":
       return personalizeMessage(rawMessage) || `A comment was added by ${userName}.`;
-
     case "assigned_to_user":
       if (typeof rawMessage === "string" && rawMessage.includes("[object Object]")) {
         return `The lead was assigned by ${userName}.`;
       }
       return personalizeMessage(rawMessage) || `The lead was assigned by ${userName}.`;
-
     default:
       return personalizeMessage(rawMessage) ||
-        activitytype
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+        activitytype.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
 };
+
 export default function LeadTimeline({ leadId }) {
   const [history, setHistory] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch Activity Log
   const fetchActivityLog = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `${ENDPOINTS.BASE_URL_IS}/lead-activity-log/${leadId}`, // Adjusted URL format
+        `${ENDPOINTS.BASE_URL_IS}/lead-activity-log/${leadId}`,
         {
           headers: {
             "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }), // Include token if available
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
         }
       );
@@ -70,10 +62,14 @@ export default function LeadTimeline({ leadId }) {
       }
 
       const data = await response.json();
-      console.log("API Response Data:", data); // Log the successful response
+      console.log("API Response Data:", data);
 
-      setHistory(data);
-      // setHistory(Array.isArray(data?.details) ? data.details : []); // Safely access details
+      // Sort activities by timestamp in descending order (latest first)
+      const sortedHistory = data.sort(
+        (a, b) => new Date(b.activitytimestamp) - new Date(a.activitytimestamp)
+      );
+
+      setHistory(sortedHistory);
     } catch (err) {
       console.error("Fetch Error:", err);
       setError(err.message || "Unable to fetch timeline data");
@@ -81,11 +77,9 @@ export default function LeadTimeline({ leadId }) {
   };
 
   useEffect(() => {
-    if (leadId) fetchActivityLog(); // Trigger fetch when leadId changes
+    if (leadId) fetchActivityLog();
   }, [leadId]);
 
-
-  console.log("This is an histry data:", history);
   return (
     <div className="relative w-full h-[600px] overflow-y-auto px-6 py-10 bg-gray-50">
       <div className="relative w-full flex flex-col items-center">
@@ -120,7 +114,8 @@ export default function LeadTimeline({ leadId }) {
                         )}`}
                         alt="avatar"
                         className="w-5 h-5 rounded-full"
-                      /> @ {timestamp}
+                      />{" "}
+                      @ {timestamp}
                     </div>
                   </div>
                 )}
@@ -166,8 +161,6 @@ export default function LeadTimeline({ leadId }) {
             </div>
           );
         })}
-
-
       </div>
     </div>
   );

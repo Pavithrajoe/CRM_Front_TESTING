@@ -21,7 +21,7 @@ import Commandpage from './pages/command';
 import TeamviewDashboard from './pages/dashboard/teamviewdashboard';
 import { TabProvider } from "./context/TabContext";
 import LeadDetailView from "../src/context/leaddetailsview";
-import AppLayout from "../src/Components/AppLayout";
+import AppLayout from '../src/Components/AppLayout';
 function App() {
   return (
     <TabProvider>
@@ -45,7 +45,6 @@ function App() {
           <Route path="commandpage" element={<Commandpage />} />
           <Route path="/leads" element={<LeadsDashboard />} />
           <Route path="/leadlistview" element={<LeadListViewPage />} />
-          <Route path="/leadcardview" element={<LeadCardViewPage />} />
           <Route path="/leadmanage" element={<LeadManagePage />} />
           <Route path="/leadtimeline" element={<LeadTimeline />} />
           <Route path='/allleadpage' element={<AllLeadsPage/>}/>

@@ -1,12 +1,12 @@
 import React from "react";
-import ProfileHeader from "../../Components/common/ProfileHeader"
-import TeamleadHeader from "../../Components/dashboard/teamlead/tlHeader"; 
+import ProfileHeader from "@/components/common/ProfileHeader"; 
+import TeamleadHeader from "@/components/dashboard/teamlead/tlHeader"; 
 import { ENDPOINTS  } from "../../api/constraints";
 import { useEffect, useState } from "react";
-import RemindersCard from "../../Components/dashboard/teamlead/tlremindercard";
-import LeadsTable from "../../Components/dashboard/teamlead/tlLeadcard";
-import LeadManagementCard from "../../Components/dashboard/teamlead/teamviewbarchart"; 
-import TeamKPIStats from "../../Components/dashboard/teamlead/teamKPIcard";
+import RemindersCard from "@/components/dashboard/teamlead/tlremindercard";
+import LeadsTable from "@/components/dashboard/teamlead/tlLeadcard";
+import LeadManagementCard from "@/components/dashboard/teamlead/teamviewbarchart"; 
+import TeamKPIStats from "@/components/dashboard/teamlead/teamKPIcard";
 
 const TeamviewDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);
@@ -76,7 +76,7 @@ const TeamviewDashboard = () => {
 
 // console.log("Dashboard Data:", dashboardData);
     if (dashboardData) {
-      console.log("✅ Dashboard Data updated:", dashboardData);
+      console.log("✅ Dashboard Data updated22:", dashboardData);
     }
 
 
@@ -90,17 +90,11 @@ const TeamviewDashboard = () => {
      const leadData = dashboardData?.details?.filter(item => item.bisConverted === false) || [];
      const dealCount = dashboardData?.details?.filter(item => item.bisConverted === true).length || 0;
 
+    const hotCount = dashboardData?.details?.filter(lead => lead.lead_potential?.clead_name === "HOT").length  || 0;
+     const coldCount = dashboardData?.details?.filter(lead => lead.lead_potential?.clead_name === "COLD").length || 0;
 
-    //  const hotCount = leads.filter(lead => lead.lead_status?.ilead_status_id === 1).length  || 0;
-    //  const warmCount = leads.filter(lead => lead.lead_status?.ilead_status_id === 2).length   || 0;
-    //  const coldCount = leads.filter(lead => lead.lead_status?.ilead_status_id === 3).length || 0;
 
-      // console.log("🔥 Hot Leads:", hotCount);
-      // console.log("🌤️ Warm Leads:", warmCount);
-      // console.log("❄️ Cold Leads:", coldCount);
-          
-     console.log("Lead Count:", leadCount);
-     console.log("Deal Count:", dealCount);
+     console.log("🔥 Hot Leads:", hotCount);
 
   return (
     <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen">
@@ -112,8 +106,8 @@ const TeamviewDashboard = () => {
 
       {/* Dashboard Content */}
       <div className="grid grid-cols-2 gap-6">
-        <LeadManagementCard   />
-        <TeamKPIStats leadCount={leadCount} dealCount={dealCount} />
+        <LeadManagementCard leads={leadData} />
+        <TeamKPIStats leadCount={leadCount} dealCount={dealCount} hotLeadCount ={hotCount} coldLeadCount ={coldCount} />
         <LeadsTable data={leadData} />
         <RemindersCard reminder_data ={reminder?.message} />
       </div>

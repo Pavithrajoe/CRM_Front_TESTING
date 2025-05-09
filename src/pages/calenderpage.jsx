@@ -1,7 +1,7 @@
 import React from "react";
 import ProfileHeader from "../Components/common/ProfileHeader";
 import CalendarView from "../Components/CalendarView";
-import GoogleMeet from "../../Components/GoogleMeet";
+import GoogleMeet from "../Components/GoogleMeet";
 
 const CalendarPage = () => {
   return (

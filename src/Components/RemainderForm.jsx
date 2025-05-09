@@ -2,16 +2,21 @@ import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { X } from "lucide-react";
-import { useParams } from "react-router-dom";
 import axios from "axios";
-const apiEndPoint = import.meta.env.VITE_API_URL;
+import { useParams } from "react-router-dom";
+
+
 const token = localStorage.getItem("token");
+
+  // const leadId = 9; // Replace with dynamic value if needed
 
 const ReminderForm = () => {
   const { leadId } = useParams();
   const [showForm, setShowForm] = useState(false);
-  const [reminderList, setReminderList] = useState([]);
+  const [isNewUser, setIsNewUser] = useState(true);
+  const [reminders, setReminders] = useState([]);
   const [users, setUsers] = useState([]);
+  const [reminderList, setReminderList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
@@ -21,120 +26,146 @@ const ReminderForm = () => {
     time: "",
     priority: "",
     assignt_to: "",
-    ilead_id: leadId,
+    ilead_id:Number( leadId),
   });
 
-  // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
-  const remindersPerPage = 5; // Limit to 5 reminders per page
-
   useEffect(() => {
-    // Fetch reminders from the API when the component mounts or leadId changes
-    getRemainder();
-  }, [leadId]);
-
-  useEffect(() => {
-    // Fetch users for the "Assign to" field
-    fetchUsers();
+    const newUserFlag = localStorage.getItem("isNewUser");
+    setIsNewUser(newUserFlag !== "false");
   }, []);
 
-  // Fetch users from the API
-  const fetchUsers = async () => {
+  useEffect(() => {
+    localStorage.setItem("isNewUser", isNewUser ? "true" : "false");
+  }, [isNewUser]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const validateForm = () => {
+    return form.title && form.content && form.reminderDate && form.time;
+  };
+
+  const handleSubmit = async (e, status) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      toast.error("Please fill out all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const data = { ...form, status };
+    const isoDateTime = new Date(`${form.reminderDate}T${form.time}`).toISOString();
+    data.reminderDate = isoDateTime;
+    data.assignt_to = Number(form.assignt_to);
+
     try {
-      const res = await axios.get(`${apiEndPoint}/users`, {
+      const response = await fetch(`${apiEndPoint}/reminder`, {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      console.log("The response:",response)
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(`Error: ${result.message || "Could not add reminder"}`);
+        return;
+      }
+
+      setForm({
+        title: "",
+        content: "",
+        reminderDate: "",
+        time: "",
+        priority: "",
+        assignt_to: "",
+        ilead_id: leadId,
+      });
+
+      toast.success(status === "submitted" ? "Reminder submitted" : "Saved as draft");
+      getReminder();
+
+    } catch (error) {
+      toast.error("Submission failed. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getReminder = async () => {
+    console.log("Lead id id:", leadId)
+    try {
+      const response = await fetch(`${apiEndPoint}/reminder/getremainder/${leadId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
+
+      const data = await response.json();
+      if (response.ok) {
+        setReminderList(data.message);
+      } else {
+        toast.error("Failed to fetch data");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(`${apiEndPoint}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.info("The users are in reminder",res)
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to load users", err);
     }
   };
 
-  // Fetch reminders for the given leadId
-  const getRemainder = async () => {
-    try {
-      const response = await fetch(
-        `${apiEndPoint}/reminder/getremainder/${leadId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      setReminderList(data.message);
-    } catch (error) {
-      toast.error("Failed to fetch reminders.");
-    }
-  };
-
-  // Pagination: Calculate which reminders to show based on the current page
-  const indexOfLastReminder = currentPage * remindersPerPage;
-  const indexOfFirstReminder = indexOfLastReminder - remindersPerPage;
-  const currentReminders = reminderList.slice(
-    indexOfFirstReminder,
-    indexOfLastReminder
-  );
-
-  // Handle page change
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Handle form input changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e, status) => {
-    e.preventDefault();
-    // Validation and API call for submitting the reminder
-  };
+  useEffect(() => {
+    getReminder();
+    fetchUsers();
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-gray-50 p-6">
       <ToastContainer position="top-right" autoClose={2000} />
+
       <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-        >
+        <button onClick={() => setShowForm(true)} className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800">
           + Add Reminder
         </button>
       </div>
 
-      {/* Reminder Listing */}
       <div className="flex flex-col divide-y divide-gray-200 bg-white rounded-md shadow-sm">
-        {currentReminders.length === 0 ? (
-          <div>No reminders found</div>
+        {reminderList.length === 0 ? (
+          <div className="text-center p-6">No reminders available.</div>
         ) : (
-          currentReminders.map((reminder) => (
-            <div key={reminder.iremainder_id} className="mb-5">
-              <div className="py-4 px-6 hover:bg-gray-50 transition duration-150">
-                <div className="flex justify-between">
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-800">
-                      Title: {reminder.cremainder_title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {reminder.cremainder_content}
-                    </p>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Created by:{" "}
-                      <span className="font-medium">{reminder.created_by}</span>
-                    </div>
+          reminderList.map((reminder) => (
+            <div key={reminder.iremainder_id} className="py-4 px-6 hover:bg-gray-50 transition duration-150">
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-md font-semibold text-gray-800">Title: {reminder.cremainder_title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{reminder.cremainder_content}</p>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Created by: <span className="font-medium">{reminder.created_by}</span> on <span className="font-medium">{new Date(reminder.dremainder_dt).toLocaleString()}</span>
                   </div>
-                  <div className="text-right text-sm text-gray-600">
-                    <p className="font-medium text-blue-700">{reminder.dremainder}</p>
-                  </div>
+                </div>
+                <div className="text-right text-sm text-gray-600">
+                  <p className="font-medium text-blue-700">{reminder.dremainder}</p>
                 </div>
               </div>
             </div>
@@ -142,70 +173,47 @@ const ReminderForm = () => {
         )}
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center mt-4">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-300 rounded-md text-gray-700 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="mx-4 text-sm text-gray-600">
-          Page {currentPage} of {Math.ceil(reminderList.length / remindersPerPage)}
-        </span>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === Math.ceil(reminderList.length / remindersPerPage)}
-          className="px-4 py-2 bg-gray-300 rounded-md text-gray-700 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-
-      {/* Form Modal */}
       {showForm && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40"
-          onClick={() => setShowForm(false)}
-        />
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-40 z-40" onClick={() => setShowForm(false)} />
+          <div className={`fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 ${showForm ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="p-6 h-full overflow-y-auto relative">
+              <button className="absolute top-4 right-4 text-gray-600 hover:text-black" onClick={() => setShowForm(false)}>
+                <X size={24} />
+              </button>
+              <h2 className="font-semibold text-lg mt-5 mb-4">New Reminder</h2>
+              <form onSubmit={(e) => handleSubmit(e, "submitted")}> 
+                <label className="block text-sm mb-2">Title *</label>
+                <input className="w-full border p-2 mb-4 rounded bg-gray-100" name="title" value={form.title} onChange={handleChange} maxLength={100} required />
+
+                <label className="block text-sm mb-2">Description *</label>
+                <textarea className="w-full border p-2 mb-4 rounded h-24 bg-gray-100" name="content" maxLength={300} value={form.content} onChange={handleChange} required></textarea>
+
+                <label className="block text-sm mb-2">Assign To</label>
+                <select name="assignt_to" className="border p-2 mb-4 rounded w-full bg-gray-100" value={form.assignt_to} onChange={handleChange} required>
+                  <option value="">Select User</option>
+                  {users.map((user) => (
+  <option key={user.iUser_id} value={user.iUser_id}>
+    {user.cFull_name}
+  </option>
+))}
+
+                </select>
+
+                <label className="block text-sm mb-2">Date *</label>
+                <input type="date" className="border p-2 mb-4 rounded w-full bg-gray-100" name="reminderDate" value={form.reminderDate} onChange={handleChange} required />
+
+                <label className="block text-sm mb-2">Time *</label>
+                <input type="time" className="border p-2 mb-4 rounded w-full bg-gray-100" name="time" value={form.time} onChange={handleChange} required />
+
+                <button type="submit" disabled={submitting} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                  {submitting ? "Saving..." : "Submit Reminder"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Slide-in Form */}
-      <div
-        className={`fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 ${
-          showForm ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="p-6 h-full overflow-y-auto relative">
-          <button
-            className="absolute top-4 right-4 text-gray-600 hover:text-black"
-            onClick={() => setShowForm(false)}
-          >
-            <X size={24} />
-          </button>
-
-          <h2 className="font-semibold text-lg mt-5 mb-4">New Reminder</h2>
-          <form onSubmit={(e) => handleSubmit(e, "submitted")}>
-            {/* Form fields */}
-            <button
-              type="button"
-              onClick={(e) => handleSubmit(e, "draft")}
-              className="bg-white border px-6 py-2 rounded disabled:opacity-50"
-              disabled={submitting}
-            >
-              Save as Draft
-            </button>
-            <button
-              type="submit"
-              className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
-              disabled={submitting}
-            >
-              Submit Reminder
-            </button>
-          </form>
-        </div>
-      </div>
     </div>
   );
 };

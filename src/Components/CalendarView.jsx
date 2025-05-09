@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Drawer, TextField, Button, Snackbar, Alert } from '@mui/material';
+import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS  } from "../api/constraints";
-import Loader from './common/Loader';
 
 // import ReminderForm from './src/Components/RemainderForm';
 // Dummy API functions (keep this the same)
@@ -74,21 +73,18 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer 
     console.log('Form submitted:', formData);
     const startTime = new Date(formData.devent_startdt).toISOString().split('.')[0] + 'Z';
     const user_data = localStorage.getItem("user");
-
-    console.log("The user data is :",user_data)
     const user_data_parsed = JSON.parse(user_data);
-    console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
+    console.log("User Data:", user_data_parsed.user.iUser_id); // Log the user data
     formData.devent_startdt = startTime;
-    formData.icreated_by = user_data_parsed.iUser_id;
-    formData.iupdated_by = user_data_parsed.iUser_id;
+    formData.icreated_by = user_data_parsed.user.iUser_id;
+    formData.iupdated_by = user_data_parsed.user.iUser_id;
 
     console.log('Form submitted after date:', formData);
 
     
 
     setLoading(true);
-    const  token = localStorage.getItem('token');
-    console.log(token);
+    const  token = localStorage.getItem("token");
     try {
       const response = await fetch(`${ENDPOINTS.CREATE_EVENT}`, {
           
@@ -197,6 +193,8 @@ const CalendarView = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [reminders, setReminders] = useState([]);
+    const [allReminder, setAllReminder] = useState([]);
+
 const [calendarEvents, setCalendarEvents] = useState([]);
 
 
@@ -212,10 +210,8 @@ const [calendarEvents, setCalendarEvents] = useState([]);
   // Define all functions being used
   const fetchReminders = async (date = selectedDate) => {
     const user_data = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
     const user_data_parsed = JSON.parse(user_data);
-    console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
+    console.log("User Data:", user_data_parsed.user.iUser_id); // Log the user data
 
     let dates = new Date(date);
 
@@ -246,19 +242,35 @@ const [calendarEvents, setCalendarEvents] = useState([]);
 
     setLoading(true);
     try {
-  console.log("Fetching reminders for date:", ENDPOINTS.FOLLOW_UP); // Log the date being fetched
-  console.log("Fetching token for date:", user_data_parsed.jwtToken); // Log the date being fetched
-
+  console.log("Fetching reminders for date:", ENDPOINTS.REMINDERS); // Log the date being fetched
   const response = await fetch(`${ENDPOINTS.FOLLOW_UP}?id=${user_data_parsed.iUser_id}&eventDate=${formattedDate}`, {
     method: 'GET',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${user_data_parsed.jwtToken}`
   }
 });
+
+
+//  const allReminder = await fetch(`${ENDPOINTS.REMINDERS}/`, {
+//     method: 'GET',
+//   headers: {
+//     'Content-Type': 'application/json',
+//     Authorization: `Bearer ${user_data_parsed.jwtToken}`
+//   }
+// });
+
+// console.log(allReminder);
+
+// const allReminderData = await allReminder.json(); // Parse the response body
+
 const data = await response.json(); // Parse the response body
 console.log("Parsed Response Data:", data); // Now you can see the actual JSON
         setReminders(data.reminders || []);
+
+
+                // setAllReminder(allReminderData || []);
+
         setCalendarEvents(data.calender_event || []);
       console.log("The reminder response is :", reminders); // Log the user data
 
@@ -355,39 +367,40 @@ console.log("Parsed Response Data:", data); // Now you can see the actual JSON
 
         </div>
 
-        {/* Draft Form */}
-        <div className="bg-white rounded-lg shadow-sm p-4 flex-1">
-          <h2 className="text-xl font-semibold mb-4">Draft Form</h2>
-          <div className="space-y-4">
+        
 
-            
-            {/* Example draft items */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-gray-800">Project Discussion</h3>
-                  <p className="text-sm text-gray-600 mt-1">Draft created on {new Date().toLocaleDateString()}</p>
-                </div>
-                <Button 
-                  size="small" 
-                  variant="contained" 
-                  style={{ backgroundColor: 'black' }}
-                  onClick={() => {
-                    // Set the draft item to edit and open the form
-                    setDraftToEdit({
-                      title: "Project Discussion",
-                      time: "3:00 PM",
-                      participants: "email@example.com"
-                    });
-                    setOpenDrawer(true);
-                  }}
-                >
-                  Continue Editing
-                </Button>
-              </div>
-            </div>
+        {/* Reminder History */}
+{/* <div className="bg-white rounded-lg shadow-sm p-4 flex-1">
+  <h2 className="text-xl font-semibold mb-4">Reminder History</h2>
+  <div className="space-y-4">
+    {allReminder && allReminder.length > 0 ? (
+      allReminder.map((reminder, index) => (
+        <div key={index} className="border border-gray-200 rounded-lg p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium text-gray-800">{reminder.title}</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Date: {new Date(reminder.dremainder_dt).toLocaleDateString()}
+              </p>
+              <p className="text-sm text-gray-600">Participants: {reminder.participants}</p>
+            </div> */}
+            {/* Optional actions */}
+            {/* <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={() => viewReminderDetails(reminder)}
+            >
+              View Details
+            </Button>
           </div>
         </div>
+      ))
+    ) : (
+      <p className="text-gray-500 text-sm">No reminders sent yet.</p>
+    )}
+  </div>
+</div> */}
+
       </div>
 
       {/* Right Side - Reminders */}
@@ -408,7 +421,7 @@ console.log("Parsed Response Data:", data); // Now you can see the actual JSON
         
         {loading ? (
           <div className="flex justify-center items-center h-40">
-            <Loader />
+            <CircularProgress />
           </div>
         ) : (
           <div className="space-y-6">

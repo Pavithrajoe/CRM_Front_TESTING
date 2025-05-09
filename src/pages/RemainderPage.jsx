@@ -1,5 +1,5 @@
 import React from "react";
-import RemainderForm from "@/components/RemainderForm";
+import RemainderForm from "../Components/RemainderForm";
 import { useParams } from "react-router-dom";
 
 const RemainderPage = () => {

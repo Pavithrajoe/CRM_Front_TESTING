@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+const apiEndPoint = import.meta.env.VITE_API_URL;
 
 const LeadForm = ({ onClose }) => {
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = ""; // ✅ Declare company_id
-  
+
   if (token) {
     try {
       const base64Url = token.split(".")[1];
@@ -18,62 +19,106 @@ const LeadForm = ({ onClose }) => {
       console.error("Token decode error:", error);
     }
   } else {
-    console.error("Invalid or missing JWT token"); // Log for debugging
+    console.error("Invalid or missing JWT token");
   }
 
   const [form, setForm] = useState({
+    iLeadpoten_id: "",
+    ileadstatus_id: "",
+    cindustry_id: "",
+    lead_source_id: 1,
+    ino_employee: 0,
     clead_name: "",
     cemail: "",
     corganization: "",
-    cwebsite:"www.com",
+    cwebsite: "www.com",
     icity: 1,
     iphone_no: "",
     cgender: 1,
     clogo: "logo.png",
-   
     clead_address1: "",
     clead_address2: "",
-    clead_address3: "", // Corrected default value
-
-    cservices: "",
-
-    ileadstatus_id: 2,
+    clead_address3: "",
+    cservices: "No services entered",
     clead_owner: userId,
     cresponded_by: userId,
-    ino_employee: 10,
-    icompany_id: company_id,
-    iLeadpoten_id: 1,
-    iuser_tags:userId,
-  });
-  
-  const [errors, setErrors] = useState({});
-  const [sameAsPhone, setSameAsPhone] = useState(false);
-  const [dropdownData, setDropdownData] = useState({
-    services: [],
-    sources: [],
-    employees: [],
-    leadStatuses: [],
-    statuses: [],
+    modified_by: userId,
   });
 
+  const [errors, setErrors] = useState({});
+  const [sameAsPhone, setSameAsPhone] = useState(false);
+  const [Potential, setPotential] = useState([]);
+  const [status, setStatus] = useState([]);
+  const [leadIndustry, setIndustry] = useState([]);
+
   useEffect(() => {
-    // Simulate API call to fetch dropdown values
-    const fetchDropdowns = async () => {
+    const leadPotential = async () => {
       try {
-        setDropdownData({
-          services: ["Web", "Mobile", "Design"],
-          sources: ["Google", "LinkedIn", "Referral"],
-          employees: ["Employee A", "Employee B", "Employee C"],
-          leadStatuses: [1, 2, 3],
-          statuses: [1, 2, 3],
+        const response = await fetch(`${apiEndPoint}/lead-potential`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
-      } catch (err) {
-        console.error("Failed to fetch dropdowns", err);
+
+        if (!response.ok) {
+          console.log("Can't fetch lead potential", response);
+        }
+
+        const data = await response.json();
+        setPotential(data);
+      } catch (e) {
+        console.log("Error in fetching lead potential", e);
       }
     };
 
-    fetchDropdowns();
-  }, []);
+    const leadStatus = async () => {
+      try {
+        const response = await fetch(`${apiEndPoint}/lead-status/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.log("Can't fetch lead status", response);
+        }
+
+        const data = await response.json();
+        setStatus(data);
+      } catch (e) {
+        console.log("Can't fetch lead status", e);
+      }
+    };
+
+    const leadIndustry = async () => {
+      try {
+        const response = await fetch(`${apiEndPoint}/lead-industry/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.log("Can't fetch lead industry", response);
+        }
+
+        const data = await response.json();
+        setIndustry(data);
+      } catch (e) {
+        console.log("Error in fetching lead industry", e);
+      }
+    };
+
+    leadStatus();
+    leadPotential();
+    leadIndustry();
+  }, [token]);
 
   const validateField = (name, value) => {
     let error = "";
@@ -140,52 +185,52 @@ const LeadForm = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const apiEndPoint = import.meta.env.VITE_API_URL;
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      console.error("Form validation errors:", validationErrors);
-      return;
-    }
+    // const validationErrors = validateForm();
+    // if (Object.keys(validationErrors).length > 0) {
+    //   setErrors(validationErrors);
+    //   console.error("Form validation errors:", validationErrors);
+    //   return;
+    // }
+
+    const formData = {
+      bactive: true,
+      cemail: form.cemail,
+      cgender: 1,
+      cimage: "noimg.png",
+      clead_address1: form.clead_address1,
+      clead_address2: form.clead_address2,
+      clead_address3: form.clead_address3,
+      clead_city: 1,
+      clead_name: form.clead_name,
+      clead_owner: userId,
+      clogo: "logo.png",
+      corganization: form.corganization,
+      cresponded_by: userId,
+      ileadstatus_id: Number(form.ileadstatus_id),
+      cindustry_id: Number(form.cindustry_id),
+    
+      iLeadpoten_id: Number(form.iLeadpoten_id),
+      cwebsite: "No website entered here",
+      dmodified_dt: new Date().toISOString(),
+      cservices: form.cservices,
+      ino_employee: 0,
+      icity: 1,
+      icompany_id: company_id,
+      lead_source_id: 1,
+      iphone_no: form.iphone_no,
+      iproject_value: 0,
+      modified_by: userId,
+      iuser_tags: userId,
+    };
 
     try {
-      // Merge form data with hardcoded parameters like userId, company_id, etc.
-      const formData = {
-        bactive:true,
-        cemail:form.cemail,
-     
-        cgender:1,
-        cimage:"noimg.png",
-        clead_address1: form.clead_address1,
-        clead_address2: form.clead_address2,
-        clead_address3:form.clead_address3,
-        clead_city: 1,
-        clead_name:form.clead_name,
-        clead_owner: userId,
-        clogo:"logo.png",
-        corganization:form.corganization,
-        cresponded_by: userId,
-        cservices:form.cservices,
-        cwebsite: "No website entered here",
-        cindustry_id: 1,
-        dmodified_dt: new Date().toISOString(),
-        iLeadpoten_id: 1,
-        icity: 1,
-        icompany_id: company_id,
-        ileadstatus_id: 2 ,
-        ino_employee: 0,  
-        iphone_no:form.iphone_no,
-        iproject_value: 0,
-        iuser_tags: userId,          // Add this field
-        modified_by: userId,    // Add this field
-      };
-      
-     console.log("entered User data:",formData)
       const res = await fetch(`${apiEndPoint}/lead`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", 
-          "Authorization": `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify(formData),
       });
 
@@ -197,7 +242,7 @@ const LeadForm = ({ onClose }) => {
         alert("Lead created successfully!");
         onClose();
       } else {
-        alert(res);
+        // alert(res);
       }
     } catch (error) {
       console.error("Submit error:", error);
@@ -218,18 +263,17 @@ const LeadForm = ({ onClose }) => {
         >
           <X size={20} />
         </button>
-        <h2 className="text-xl font-bold text-center">Enter the details to create the Lead</h2>
+        <h2 className="text-xl font-bold text-center">🚀 Let's Get Started - Create a New Lead</h2>
 
         {/* Customer Details Section */}
         <h3 className="text-lg font-semibold">Customer Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
+          {[ 
             { label: "Lead Name", name: "clead_name", required: true },
             { label: "Organization Name", name: "corganization", required: true },
             { label: "E-mail ID", name: "cemail", required: true },
             { label: "Mobile Number", name: "iphone_no", required: true },
-            { label: "WhatsApp Number", name: "whatsapp", required: true },
-            // { label: "Location", name: "clead_address3", required: true },
+            { label: "WhatsApp Number", name: "whatsapp", required: false },
             { label: "Address 1", name: "clead_address1", required: true },
             { label: "Address 2", name: "clead_address2", required: false },
             { label: "Address 3", name: "clead_address3", required: true },
@@ -264,46 +308,85 @@ const LeadForm = ({ onClose }) => {
         </div>
 
         {/* Lead Details Section */}
-        <h3 className="text-lg font-semibold">Lead Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { label: "Source", name: "source", options: dropdownData.sources },
-            { label: "Service", name: "cservices", options: dropdownData.services },
-          
-            { label: "Lead Status", name: "ileadstatus_id", options: dropdownData.leadStatuses },
-            { label: "Status", name: "status", options: dropdownData.statuses },
-          ].map(({ label, name, options }) => (
-            <div key={name}>
-              <label className="text-sm font-medium">
-                {label} <span className="text-red-500">*</span>
-              </label>
-              <select
-                name={name}
-                value={form[name]}
-                onChange={handleChange}
-                className="mt-1 w-full border px-3 py-2 rounded"
-              >
-                <option value="">Select {label}</option>
-                {options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-              {errors[name] && <p className="text-red-600 text-sm">{errors[name]}</p>}
-            </div>
-          ))}
-        </div>
+<div className="flex flex-wrap gap-4">
+
+  <div className="flex flex-col">
+    <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Lead potential:</label>
+    <select
+      name="iLeadpoten_id"
+      value={form.ileadpoten_id}
+      onChange={handleChange}
+      className="p-2 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-10 w-60"
+    >
+      <option value="">select potential </option>
+      {Potential.map((poten) => (
+        <option key={poten.ileadpoten_id} value={poten.ileadpoten_id}>
+          {poten.clead_name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="flex flex-col">
+    <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Lead status:</label>
+    <select
+      name="ileadstatus_id"
+      value={form.ileadstatus_id}
+      onChange={handleChange}
+      className="p-2 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition h-10 w-60"
+    >
+      <option value="">lead status</option>
+      {status.map((sts) => (
+        <option key={sts.ilead_status_id} value={sts.ilead_status_id}>
+          {sts.clead_name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="flex flex-col">
+    <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Industry:</label>
+    <select
+      name="cindustry_id"
+      value={form.cindustry_id}
+      onChange={handleChange}
+      className="p-2 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition h-10 w-60"
+    >
+      <option value="">Industry</option>
+      {leadIndustry.map((lIndustry) => (
+        <option key={lIndustry.iindustry_id} value={lIndustry.iindustry_id}>
+          {lIndustry.cindustry_name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="flex flex-col">
+    <label className="p-2 h-10 block text-sm font-medium text-gray-700 mb-1">Lead source:</label>
+    <select
+      name="leadsource_id"
+      value={form.leadsource_id}
+      onChange={handleChange}
+      className="p-2 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition h-10 w-60"
+    >
+      
+      <option value="">lead source</option>
+      <option value={1}>Office</option>
+    </select>
+  </div>
+
+</div>
+
 
         {/* Buttons */}
         <div className="flex justify-end gap-4 pt-4">
-          <button
+          {/* <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
           >
             Save as Draft
-          </button>
+          </button> */}
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -314,7 +397,6 @@ const LeadForm = ({ onClose }) => {
       </form>
     </div>
   );
-
 };
 
 export default LeadForm;

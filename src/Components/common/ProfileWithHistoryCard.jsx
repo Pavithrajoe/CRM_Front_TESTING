@@ -1,6 +1,6 @@
 import React from "react";
-import ProfileCard from "@/components/common/ProfileCard"; // adjust path
-import HistoryPage from "@/components/common/HistoryPage"; // adjust path
+import ProfileCard from "../../Components/common/ProfileCard"; // adjust path
+import HistoryPage from "../../Components/common/HistoryPage"; // adjust path
 
 const ProfileWithHistoryCard = () => {
   return (

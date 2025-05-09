@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
+import { FaEnvelope, FaPhone } from 'react-icons/fa';
 import { LayoutGrid, List } from 'lucide-react';
-import ProfileHeader from '@/components/common/ProfileHeader';
-import LeadForm from '@/components/LeadForm';
+import ProfileHeader from '../../Components/common/ProfileHeader';
+import LeadForm from '../../Components/LeadForm';
 import { ENDPOINTS } from '../../api/constraints';
 import Loader from '../../Components/common/Loader';
 
@@ -13,41 +13,37 @@ const LeadCardViewPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  const leadsPerPage = 9;
   const navigate = useNavigate();
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (page = 1, limit = 1000) => {
     const token = localStorage.getItem('token');
     const userData = JSON.parse(localStorage.getItem('user'));
 
     try {
-      setLoading(true);
-      const response = await fetch(
-        `${ENDPOINTS.BASE_URL_IS}/lead/user/${userData.iUser_id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error(`Failed to fetch leads: ${response.status}`);
+      const response = await fetch(`${ENDPOINTS.BASE_URL_IS}/lead/user/${userData.iUser_id}?page=${page}&limit=${limit}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
 
       const data = await response.json();
+      console.log("Fetched leads:", data);
 
       if (Array.isArray(data.details)) {
-        setAllLeads(data.details);
+        // Sort by dmodified_dt DESC
+        const sortedLeads = data.details.sort((a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt));
+        setAllLeads(sortedLeads);
       } else {
-        throw new Error('Invalid data format');
+        setAllLeads([]);
       }
-
-      setLoading(false);
     } catch (error) {
-      console.error('Error fetching leads:', error);
-      setError(error.message);
+      console.error('Fetch error:', error);
+      setAllLeads([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -56,168 +52,170 @@ const LeadCardViewPage = () => {
     fetchLeads();
   }, []);
 
-  const goToReminderPage = (ilead_id) => {
-    navigate(`/leaddetailview/${ilead_id}`);
+  const filteredLeads = allLeads.filter((lead) => {
+    const lower = searchTerm.toLowerCase();
+    return (
+      lead.clead_name?.toLowerCase().includes(lower) ||
+      lead.corganization?.toLowerCase().includes(lower) ||
+      lead.cemail?.toLowerCase().includes(lower) ||
+      lead.iphone_no?.toLowerCase().includes(lower)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const displayedLeads = filteredLeads.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'hot':
-        return 'bg-red-800 text-sm p-2 rounded-xl font-bold text-white';
-      case 'cold':
-        return 'bg-blue-800 text-sm p-2 rounded-sm font-bold text-white';
-      case 'warm':
-        return 'bg-yellow-500 text-sm p-2 rounded-xl font-bold text-white';
-      case 'new':
-        return 'bg-sky-500 p-2 text-sm rounded-xl font-bold text-white';
-      case 'contacted':
-        return 'bg-green-500 p-2 text-sm rounded-xl font-bold text-white';
-      case 'interested':
-        return 'bg-purple-500 p-2 text-sm rounded-xl font-bold text-white';
-      default:
-        return 'bg-gray-300 p-2 text-sm rounded-xl font-bold text-gray-700';
+      case 'hot': return 'bg-red-700 text-white';
+      case 'warm': return 'bg-yellow-500 text-white';
+      case 'cold': return 'bg-blue-700 text-white';
+      case 'new': return 'bg-sky-600 text-white';
+      case 'contacted': return 'bg-green-500 text-white';
+      case 'interested': return 'bg-purple-600 text-white';
+      default: return 'bg-gray-300 text-gray-700';
     }
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  // Frontend filtered leads
-  const filteredLeads = allLeads.filter((lead) =>
-    lead.clead_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.cemail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.corganization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.iphone_no?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const goToLeadDetail = (id) => {
+    navigate(`/leaddetailview/${id}`);
+  };
 
   return (
-    <div className="max-w-full mx-auto p-4 rounded-xl bg-white space-y-6 shadow-xl">
+    <div className="max-w-full mx-auto p-4 bg-white rounded-xl shadow space-y-6">
       <ProfileHeader />
 
-      <div className="flex justify-between items-center mb-6">
+      {/* Controls */}
+      <div className="flex justify-between items-center">
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
           placeholder="Search leads..."
-          className="border p-3 rounded-lg w-80 h-12 border-amber-800"
+          className="border border-amber-800 rounded-lg p-3 w-80"
         />
         <div className="flex gap-3">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-3 rounded ${viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-            title="Grid View"
-          >
-            <LayoutGrid size={20} />
+          <button onClick={() => setViewMode('grid')}
+           className={`p-3 rounded ${viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-200'}`}>
+            <LayoutGrid size={18} />
           </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-3 rounded-xl ${viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-            title="List View"
-          >
-            <List size={20} />
+          <button onClick={() => setViewMode('list')} 
+          className={`p-3 rounded ${viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-200'}`}>
+            <List size={18} />
           </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="p-3 bg-black text-white rounded-xl hover:bg-gray-800"
-          >
+          <button onClick={() => setShowForm(true)} className="bg-black text-white px-4 py-2 rounded hover:bg-gray-900">
             + Add Lead
           </button>
         </div>
       </div>
 
+      {/* Leads Display */}
       {loading ? (
         <Loader />
-      ) : error ? (
-        <div className="text-red-500 text-center">{error}</div>
       ) : filteredLeads.length === 0 ? (
-        <div className="text-gray-500 text-center">No leads found.</div>
+        <div className="text-center text-gray-500">No leads found.</div>
       ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-6'}>
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
           {viewMode === 'list' ? (
-            <div className="bg-white w-full rounded-lg shadow-md">
-              <div className="grid grid-cols-6 gap-16 p-4 font-semibold border-b bg-gray-100">
+            <div className="rounded shadow border">
+              <div className="grid grid-cols-6 gap-4 p-3 bg-gray-100 font-semibold text-sm">
                 <div>Name</div>
-                <div>Organisation</div>
+                <div>Org</div>
                 <div>Email</div>
                 <div>Phone</div>
                 <div>Modified</div>
                 <div>Status</div>
               </div>
-              {filteredLeads.map((lead) => (
+              {displayedLeads.map((lead) => (
                 <div
                   key={lead.ilead_id}
-                  className="grid grid-cols-6 gap-16 p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => goToReminderPage(lead.ilead_id)}
+                  onClick={() => goToLeadDetail(lead.ilead_id)}
+                  className="grid grid-cols-6 gap-4 p-3 border-t cursor-pointer hover:bg-gray-50 text-sm"
                 >
-                  <div>{lead.clead_name}</div>
-                  <div>{lead.corganization}</div>
-                  <div>{lead.cemail}</div>
-                  <div>{lead.iphone_no}</div>
-                  <div>{formatDate(lead.dmodified_dt)}</div>
+                  <div className='break-words'>{lead.clead_name}</div>
+                  <div className='break-words'>{lead.corganization}</div>
+                  <div className='break-words'>{lead.cemail}</div>
+                  <div className='break-words'>{lead.iphone_no}</div>
+                  <div className='break-words'>{formatDate(lead.dmodified_dt)}</div>
                   <div>
-                    <span className={getStatusColor(lead.lead_status?.clead_name)}>
-                      {lead.lead_status?.clead_name}
+                    <span className={`px-2 py-1 rounded text-xs ${getStatusColor(lead.lead_status?.clead_name)}`}>
+                      {lead.lead_status?.clead_name || 'N/A'}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            filteredLeads.map((lead) => (
+            displayedLeads.map((lead) => (
               <div
                 key={lead.ilead_id}
-                className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => goToReminderPage(lead.ilead_id)}
+                onClick={() => goToLeadDetail(lead.ilead_id)}
+                className="p-4 border rounded-xl shadow hover:shadow-lg transition"
               >
-                <h2 className="font-semibold text-lg mb-1">{lead.clead_name}</h2>
-                <p className="text-sm text-gray-600 mb-2">Organization: {lead.corganization || '-'}</p>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaEnvelope size={14} className="text-blue-500" />
-                  <p className="text-sm text-blue-600">{lead.cemail || '-'}</p>
+                <h2 className="text-lg font-semibold">{lead.clead_name}</h2>
+                <p className="text-sm text-gray-600 mb-2">Org: {lead.corganization || '-'}</p>
+                <div className="flex gap-2 items-center text-sm">
+                  <FaEnvelope className="text-blue-500" /> {lead.cemail || '-'}
                 </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaPhone size={14} className="text-gray-500" />
-                  <p className="text-sm">{lead.iphone_no || '-'}</p>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaUser size={14} className="text-purple-500" />
-                  <p className="text-sm text-purple-600">{lead.assignedTo || '-'}</p>
+                <div className="flex gap-2 items-center text-sm">
+                  <FaPhone className="text-gray-500" /> {lead.iphone_no || '-'}
                 </div>
                 <p className="text-sm mt-2">Last Modified: {formatDate(lead.dmodified_dt)}</p>
-                <div className={`mt-2 ${getStatusColor(lead.lead_status?.clead_name)} px-3 py-1 rounded-full text-xs font-semibold inline-block`}>
-                  {lead.lead_status?.clead_name || 'Unknown'}
-                </div>
+                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.lead_status?.clead_name)}`}>
+                  {lead.lead_status?.clead_name || 'N/A'}
+                </span>
               </div>
             ))
           )}
         </div>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-transparent mt-[-150px] z-50">
-          <div
-            className="bg-blur overflow-y-auto relative transform transition-transform duration-300 ease-in-out"
-            style={{ left: '10%', width: '80%', height: '100vh' }}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-6">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
           >
-            <div className="p-4 flex justify-end">
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              >
-                &times;
-              </button>
-            </div>
-            <div className="p-6 h-full">
-              <LeadForm onClose={() => setShowForm(false)} />
-            </div>
+            Prev
+          </button>
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-black text-white' : 'bg-gray-100'}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Lead Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-start pt-10 overflow-y-auto">
+          <div className="bg-white w-4/5 rounded-xl shadow-lg relative p-6">
+            {/* <button onClick={() => setShowForm(false)} className="absolute top-3 right-4 text-2xl">&times;</button> */}
+            <LeadForm onClose={() => { setShowForm(false); fetchLeads(); }} />
           </div>
         </div>
       )}

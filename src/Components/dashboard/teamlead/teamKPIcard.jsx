@@ -1,12 +1,11 @@
 import React from "react";
 import { Users } from "lucide-react";
-import { data } from "react-router-dom";
 
 
-export default function TeamKPIStats({ leadCount, dealCount }) {
+export default function TeamKPIStats({ leadCount, dealCount, hotLeadCount, coldLeadCount }) {
 
   const kpiData = [
-    {
+    { 
       title: "Leads Count",
       value: leadCount ,
       colorStart: "#6CCF00", // darker green
@@ -22,14 +21,14 @@ export default function TeamKPIStats({ leadCount, dealCount }) {
     },
     {
       title: "Hot Leads",
-      value: "No data",
+      value: hotLeadCount,
       colorStart: "#FF7043", // darker orange,
       colorEnd: "#FF5722",
       iconBg: "bg-orange-500",
     },
     {
       title: "Cold Leads",
-      value: "No data",
+      value: coldLeadCount,
       colorStart: "#1E88E5", // darker blue
       colorEnd: "#2196F3",
       iconBg: "bg-sky-500",

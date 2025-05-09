@@ -31,7 +31,7 @@ const TabManager = () => {
             }}
           >
             {tab.label}
-            {tab.path !== '/remainderpage' && (
+            {tab.path !== '/leads' && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

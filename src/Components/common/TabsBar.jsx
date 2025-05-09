@@ -4,7 +4,7 @@ import { Mail, Phone, Globe, MessageSquare } from 'lucide-react';
 
 
 const tabs = [
-  { name: 'History', path: '/history' },
+  // { name: 'History', path: '/history' },
   { name: 'Comments', path: '/Commandpage' },
   { name: 'Remainders', path: '/remainderpage' },
   { name: 'Analytics', path: '/analytics' },
@@ -79,7 +79,7 @@ export default function TabsBar() {
   return (
     <div className="flex flex-col w-full">
       {/* Tab Navigation Bar */}
-      <div className="flex w-full mt-[20px] ms-[390px]">
+      <div className="flex w-full ">
         <div className="flex items-center space-x-2">
           {tabs.map((tab) => (
             <NavLink

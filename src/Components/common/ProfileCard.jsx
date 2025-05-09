@@ -6,58 +6,118 @@ import {
   FiMapPin,
   FiUpload,
   FiSave,
+  FiEye,
+  FiX,
+  FiMove,
+  FiCodesandbox,
 } from "react-icons/fi";
-import { FaGlobe, FaLinkedin } from "react-icons/fa";
+import { TbWorld } from "react-icons/tb";
 import axios from "axios";
+import { useParams } from "react-router-dom";
+import Loader from "./Loader";
+
+const apiEndPoint = import.meta.env.VITE_API_URL;
 
 const ProfileCard = () => {
+  const { leadId } = useParams();
   const [history, setHistory] = useState([]);
-  const [profile, setProfile] = useState({
-    name: "Name",
-    Company: "Company",
-    phone: "98745 61230",
-    email: "juhdhd456@gmail.com",
-    address: "56, KKJ Nagar, Saravanampatti, Coimbatore-09",
-    Lead: "Lead",
-    Domain: "Domain",
-    leadStatus: "Hot Lead",
-    avatar: "https://i.pravatar.cc/100?img=5",
-    website: "https://company.com",
-    linkedin: "https://linkedin.com/company/example",
-    about: "Client is a leading software solutions provider.",
-  });
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [users, setUsers] = useState([]);
+
 
   useEffect(() => {
-    axios
-      .get("https://your-api.com/history")
-      .then((res) => setHistory(res.data))
-      .catch((err) => console.error("Failed to load history", err));
+    const fetchLeadDetails = async () => {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem("token");
 
-    axios
-      .get("https://your-api.com/profile")
-      .then((res) => setProfile(res.data))
-      .catch((err) => console.error("Failed to load profile", err));
-  }, []);
+      try {
+        const response = await axios.get(`${apiEndPoint}/lead/${leadId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        setProfile(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to load lead details", err);
+        setError("Failed to load lead details.");
+        setLoading(false);
+      }
+    };
+
+    const fetchHistory = async () => {
+      try {
+        const response = await axios.get(
+          `${apiEndPoint}/lead/${leadId}/history`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(localStorage.getItem("token") && {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              }),
+            },
+          }
+        );
+        setHistory(response.data);
+      } catch (err) {
+        console.error("Failed to load lead history", err);
+      }
+    };
+
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${apiEndPoint}/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("The user data are",res.data)
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Failed to load users", err);
+      }
+    };
+    if (leadId) {
+      fetchLeadDetails();
+      fetchHistory();
+      fetchUsers();
+    
+    }
+  }, [leadId]);
 
   const handleEditProfile = () => setIsEditing(!isEditing);
 
   const handleFieldChange = (e) => {
+    
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = () => {
-    axios
-      .put("https://your-api.com/profile", profile)
-      .then(() => {
-        alert("Profile saved successfully.");
-        setIsEditing(false);
-      })
-      .catch((err) => console.error("Failed to save profile", err));
+  const handleSaveProfile = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(`${apiEndPoint}/lead/${leadId}`, profile, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      alert("Profile saved successfully.");
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to save profile", err);
+      alert("Failed to save profile.");
+    }
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
@@ -65,28 +125,79 @@ const ProfileCard = () => {
 
       const formData = new FormData();
       formData.append("avatar", file);
+      const token = localStorage.getItem("token");
 
-      axios
-        .post("https://your-api.com/upload-avatar", formData)
-        .then(() => alert("Profile picture updated."))
-        .catch((err) => console.error("Failed to upload avatar", err));
+      try {
+        await axios.post(
+          `${apiEndPoint}/lead/${leadId}/upload-avatar`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        );
+        alert("Profile picture updated.");
+      } catch (err) {
+        console.error("Failed to upload avatar", err);
+        alert("Failed to upload avatar.");
+      }
     }
   };
 
+  const handleAssignLead = async (e) => {
+    
+    const userId = e.target.value;
+    const token = localStorage.getItem("token");
+    try {
+     const users= await axios.post(
+        `${apiEndPoint}/assigned-to`,
+        {iassigned_by:6, iassigned_to:Number( userId),ilead_id:Number(leadId) },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+     
+      alert("Lead assigned successfully.");
+    } catch (err) {
+      console.error("Failed to assign lead", err);
+      alert("Failed to assign lead.");
+    }
+  };
+
+  if (loading) return <Loader />;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!profile) return <div>No profile data found.</div>;
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    if (typeof value === "object") return JSON.stringify(value, null, 2);
+    return String(value);
+  };
+     
   return (
-    <div className="max-w-xl p-4 rounded-xl bg-white space-y-6 shadow">
-      <div className="flex items-start justify-between">
-        <h2 className="text-lg font-semibold">Profile</h2>
-        <button onClick={handleEditProfile}>
-          <FiEdit className="w-4 h-4 text-gray-600 hover:text-black" />
-        </button>
+    <div className="max-w-xl p-4 rounded-xl bg-white shadow space-y-6 relative">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Lead Details</h2>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowDetails(true)}>
+            <FiEye className="w-5 h-5 text-gray-600 hover:text-black" />
+          </button>
+          <button onClick={handleEditProfile}>
+            <FiEdit className="w-5 h-5 text-gray-600 hover:text-black" />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative min-w-[56px] min-h-[56px]">
+        <div className="relative w-14 h-14">
           <img
-            src={profile.avatar}
-            alt="Profile"
+            src={profile.avatar || "https://i.pravatar.cc/100?img=1"}
+            alt="Avatar"
             className="w-14 h-14 rounded-full object-cover"
           />
           <label className="absolute -bottom-2 -right-2 bg-white p-1 rounded-full shadow cursor-pointer">
@@ -103,130 +214,71 @@ const ProfileCard = () => {
           {isEditing ? (
             <input
               type="text"
-              name="name"
-              value={profile.name}
+              name="clead_name"
+              value={profile.clead_name || ""}
               onChange={handleFieldChange}
-              className="text-sm font-bold border border-gray-200 px-1 rounded"
+              className="text-sm font-bold border border-gray-300 px-2 py-1 rounded"
             />
           ) : (
-            <h3 className="text-sm font-bold">{profile.name}</h3>
+            <h3 className="text-sm font-bold">{profile.clead_name || "N/A"}</h3>
           )}
-          <p className="text-xs text-gray-500">
-            {isEditing ? (
-              <input
-                type="text"
-                name="organization"
-                value={profile.organization}
-                onChange={handleFieldChange}
-                className="text-xs border border-gray-200 px-1 rounded"
-              />
-            ) : (
-              profile.organization
-            )}
-          </p>
+          <p className="text-xs text-gray-500">{profile.corganization || "N/A"}</p>
         </div>
-        <span className="ml-auto mt-[60px] ms-[-40px] w- px-2 py-1 bg-[#FF5722] text-white text-xs rounded">
-          {profile.leadStatus}
-          
-        </span>
       </div>
 
       <div className="text-sm space-y-2">
         <div className="flex items-center gap-2">
-          <FiPhone className="w-4 h-4 text-gray-500" />
-          {isEditing ? (
-            <input
-              type="text"
-              name="phone"
-              value={profile.phone}
-              onChange={handleFieldChange}
-              className="text-sm border border-gray-200 px-1 rounded"
-            />
-          ) : (
-            <span>{profile.phone}</span>
-          )}
+          <FiPhone className="text-gray-500" />
+          {profile.iphone_no || "N/A"}
         </div>
         <div className="flex items-center gap-2">
-          <FiMail className="w-4 h-4 text-gray-500" />
-          {isEditing ? (
-            <input
-              type="email"
-              name="email"
-              value={profile.email}
-              onChange={handleFieldChange}
-              className="text-sm border border-gray-200 px-1 rounded"
-            />
-          ) : (
-            <span>{profile.email}</span>
-          )}
+          <FiMail className="text-gray-500" />
+          {profile.cemail || "N/A"}
         </div>
         <div className="flex items-start gap-2">
-          <FiMapPin className="w-4 h-4 text-gray-500 mt-1" />
-          {isEditing ? (
-            <textarea
-              name="address"
-              value={profile.address}
-              onChange={handleFieldChange}
-              className="text-sm resize-none border border-gray-200 px-1 rounded w-full"
-            />
-          ) : (
-            <span>{profile.address}</span>
-          )}
+          <FiMapPin className="text-gray-500 mt-1" />
+          {profile.caddress || "N/A"}
         </div>
-        <div className="flex items-center gap-2">
-          <FaGlobe className="w-4 h-4 text-gray-500" />
-          {isEditing ? (
-            <input
-              type="text"
-              name="website"
-              value={profile.website}
-              onChange={handleFieldChange}
-              className="text-sm border border-gray-200 px-1 rounded"
-            />
-          ) : (
-            <a
-              href={profile.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
-            >
-              {profile.website}
-            </a>
-          )}
+        <div className="flex items-start gap-2">
+          <TbWorld className="text-gray-500 mt-1" />
+          {profile.cwebsite || "N/A"}
         </div>
-        <div className="flex items-center gap-2">
-          <FaLinkedin className="w-4 h-4 text-gray-500" />
-          {isEditing ? (
-            <input
-              type="text"
-              name="linkedin"
-              value={profile.linkedin}
-              onChange={handleFieldChange}
-              className="text-sm border border-gray-200 px-1 rounded"
-            />
-          ) : (
-            <a
-              href={profile.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
-            >
-              LinkedIn
-            </a>
-          )}
+        <div className="flex items-start gap-2">
+          <FiMove className="text-gray-500 mt-1" />
+          {profile?.status || "N/A"}
         </div>
-        <div>
-          📝
-          {isEditing ? (
-            <textarea
-              name="about"
-              value={profile.about}
-              onChange={handleFieldChange}
-              className="text-sm w-full mt-1 border border-gray-200 px-1 rounded"
-            />
-          ) : (
-            <p className="text-sm text-gray-600 mt-1">{profile.about}</p>
-          )}
+
+        {/* Created At + Assign Dropdown */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-2">
+            <FiCodesandbox className="text-gray-500 mt-1" />
+            <span>{profile.dcreated_at || "N/A"}</span>
+          </div>
+
+          <div className="border-t border-gray-200 my-2"></div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="assignUser" className="text-sm font-medium text-gray-700">
+              Assign to:
+            </label>
+          <select
+
+  className="border border-gray-300 rounded px-2 py-1 text-sm text-black"
+  onChange={handleAssignLead}
+  defaultValue=""
+>
+  <option value="" disabled>
+    Select user
+  </option>
+  {users.map((user) => (
+    <option key={user.iUser_id} value={user.iUser_id} style={{color:"black"}}>
+     <span className="!text-red-200">{user.cUser_name}</span> 
+    </option>
+  ))}
+</select>
+
+
+          </div>
         </div>
       </div>
 
@@ -234,29 +286,61 @@ const ProfileCard = () => {
         <div className="flex justify-end space-x-2">
           <button
             onClick={handleSaveProfile}
-            className="bg-black text-white px-3 py-1 rounded flex items-center gap-1"
+            className="bg-black text-white px-4 py-1 rounded flex items-center gap-1"
           >
-            <FiSave className="w-4 h-4" /> Save
+            <FiSave className="w-4 h-4" />
+            Save
           </button>
           <button
             onClick={handleEditProfile}
-            className="bg-black text-white px-3 py-1 rounded"
+            className="bg-gray-300 text-black px-4 py-1 rounded"
           >
             Cancel
           </button>
         </div>
       )}
 
-      <div>
-        <ul className="space-y-1 max-h-40 overflow-hidden pr-1">
-          {history.map((item, index) => (
-            <li key={index} className="text-xs text-gray-600">
-              <span className="font-medium">Modified</span> {item.user}'s work
-              on {item.date} at {item.time}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {showDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl relative">
+            <button
+              onClick={() => setShowDetails(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-bold mb-4">Lead Full Details</h2>
+            <table className="w-full table-auto border">
+              <tbody>
+                {[
+                  ["clead_name", "Name"],
+                  ["corganization", "Organization"],
+                  ["cemail", "Email"],
+                  ["iphone_no", "Phone"],
+                  ["caddress", "Address"],
+                  ["clead_status", "Status"],
+                  ["ccity", "City"],
+                  ["cstate", "State"],
+                  ["ccountry", "Country"],
+                  ["csource", "Lead Source"],
+                  ["clead_owner", "Lead Owner"],
+                  ["created_at", "Created At"],
+                  ["updated_at", "Updated At"],
+                ]
+                  .filter(([key]) => profile[key])
+                  .map(([key, label]) => (
+                    <tr key={key} className="border-b">
+                      <td className="p-2 font-medium text-gray-600">{label}</td>
+                      <td className="p-2 text-gray-800 whitespace-pre-wrap">
+                        {formatValue(profile[key])}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

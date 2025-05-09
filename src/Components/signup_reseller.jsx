@@ -139,7 +139,7 @@ const LoginPage = () => {
     }`;
 
   return (
-    <div className="h-50vh w-full flex items-center py-4 justify-center bg-white px-4">
+    <div className="h-screen w-full flex items-center justify-center bg-white px-4">
       <div className="flex flex-col md:flex-row w-full max-w-[1200px] md:h-[640px] mt-[-40px] rounded-xl overflow-hidden">
         {/* Left Section */}
         <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,#2563eb,#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">

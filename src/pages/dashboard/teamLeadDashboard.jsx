@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { ENDPOINTS  } from "../../api/constraints";
 import ProfileHeader from "@/components/common/ProfileHeader";
 import TeamleadHeader from "@/components/dashboard/teamlead/tlHeader";
 import KPIStats from "@/components/dashboard/teamlead/tlKPIcards";
+
 import RemindersCard from "@/components/dashboard/teamlead/tlremindercard";
 import LeadsTable from "@/components/dashboard/teamlead/tlLeadcard";
 import DealsTable from "@/components/dashboard/teamlead/tlDealcard";
@@ -10,13 +12,50 @@ import ContactsTable from "@/components/dashboard/teamlead/tlcontactscard";
 
 const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
 
-  useEffect(() => {
+
+  useEffect(() => { 
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const userObj = JSON.parse(storedUser); // convert to JS  
+
+
+
+    console.log("Stored User:", userObj);
+    // Check if user is logged in
+  // Fetch dashboard data
+
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch(`${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userObj.jwtToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard data");
+        }
+
+        const data = await response.json();
+        console.log("Dashboard Data:", data);
+        setDashboardData(data);
+if (dashboardData) {
+  console.log("✅ Dashboard Data updated:", dashboardData);
+}
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
     }
+    fetchDashboardData();
+
   }, []);
+
+
+ 
+  
 
   return (
     <div className="flex mt-[-80px]">
@@ -39,10 +78,10 @@ const LeadsDashboard = () => {
 
         {/* Dashboard Content */}
         <div className="grid grid-cols-2 gap-6">
-          <KPIStats />
-          <RemindersCard />
-          <LeadsTable />
-          <DealsTable />
+        <KPIStats data={dashboardData?.details} />
+          <RemindersCard reminder_data={dashboardData?.details.reminders} />
+          <LeadsTable data={dashboardData?.details.leads} />
+          <DealsTable  data={dashboardData?.details.deals}/>
           {/* <OrganizationTable />
           <ContactsTable /> */}
         </div>

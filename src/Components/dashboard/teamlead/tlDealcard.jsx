@@ -7,23 +7,45 @@ const deals = [
   // ...other deals
 ];
 
-export default function DealsTable() {
+export default function DealsTable({data}) {
   const [search, setSearch] = useState("");
 
+
+  const deals = data?.map((item) => ({
+    id: item.ilead_id,
+    name: item.clead_name || "No Name",
+    status: item.lead_status?.clead_name || "Unknown",
+    assignedTo: item.clead_owner_name || "Unassigned",
+    modifiedBy: item.modified_by || "Unknown",
+    time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      day: "2-digit",
+      month: "short",
+    }), 
+    avatar: "/images/dashboard/grl.png",
+  })) || [];  
+
+  console.log("Deals Data:", deals); // Log the leads data to check its value
+
+
+
+
   const filteredDeals = useMemo(() => {
-    if (!search) return deals;
-    const term = search.toLowerCase();
-    return deals
-      .filter(deal =>
-        deal.name.toLowerCase().includes(term) ||
-        deal.assignedTo.toLowerCase().includes(term)
-      )
-      .sort((a, b) => {
-        const aIndex = a.name.toLowerCase().indexOf(term);
-        const bIndex = b.name.toLowerCase().indexOf(term);
-        return aIndex - bIndex;
-      });
-  }, [search]);
+      if (!deals.length) return [];
+      const term = search.toLowerCase();
+      return deals
+        .filter(deals =>
+          deals.name.toLowerCase().includes(term) ||
+          deals.assignedTo.toLowerCase().includes(term)
+        )
+        .sort((a, b) => {
+          const aName = a.name.toLowerCase().indexOf(term);
+          const bName = b.name.toLowerCase().indexOf(term);
+          return aName - bName;
+        });
+    }, [search, deals]); // 👈 add leads here
 
   return (
     <div className="bg-white rounded-md p-4 w-full max-w-full mx-auto">
@@ -47,7 +69,7 @@ export default function DealsTable() {
         <table className="min-w-full text-sm table-auto">
           <thead>
             <tr className="text-left text-black border-b">
-              <th className="py-2 px-2">S. No</th>
+              {/* <th className="py-2 px-2">S. No</th> */}
               <th className="py-2 px-2">Name</th>
               <th className="py-2 px-2">Status</th>
               <th className="py-2 px-2">Assigned To</th>
@@ -57,7 +79,7 @@ export default function DealsTable() {
           <tbody>
             {filteredDeals.map(deal => (
               <tr key={deal.id} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="py-2 px-2 whitespace-nowrap">{deal.id}</td>
+                {/* <td className="py-2 px-2 whitespace-nowrap">{deal.id}</td> */}
                 <td className="py-2 px-2 whitespace-nowrap truncate max-w-xs">{deal.name}</td>
                 <td className="py-2 px-2 whitespace-nowrap">
                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">

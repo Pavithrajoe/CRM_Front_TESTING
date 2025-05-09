@@ -19,8 +19,7 @@ const RemainderHistory = () => {
       <TabsBar />
       </div>
       <div className="flex px-2 gap-4">
-        {/* LEFT: Profile + History */}
-        <div className="w-[550px] h-100vh">
+        <div className="h-100vh">
           <ProfileWithHistoryCard />
         </div>
     <div className="w-full mx-auto mr-10 mt-[40px] shadow rounded bg-white">

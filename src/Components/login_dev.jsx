@@ -7,7 +7,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState(''); // ✅ Moved inside the component
+  const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
 
   const togglePassword = () => setShowPassword(prev => !prev);
@@ -32,11 +32,6 @@ const LoginPage = () => {
       setLoginError('Please enter your password.');
       return;
     }
-     
-
-   
-
-
 
     if (password.length < 6) {
       setLoginError('Password must be at least 6 characters long.');
@@ -52,25 +47,25 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      console.log(data);
+
+      if (response.ok && data.jwtToken) {
         localStorage.setItem('token', data.jwtToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('profileImage', data.user.cProfile_pic || '');
+        
+        console.log('Login successful');
         navigate('/leads');
       } else {
-        setLoginError('Login failed, please enter correct details');
+        setLoginError(data.message || 'Login failed, please enter correct details');
       }
-       
+
     } catch (error) {
       console.error("Login error:", error);
       setLoginError('Something went wrong. Please try again.');
     }
   };
-  const handleLogout = () => {
-    // When you want to log out or clear the token:
-      localStorage.removeItem('token');
-      console.log('Token removed from localStorage');
-      localStorage.removeItem('profileImage');
-      navigate('/login_dev'); 
-    };
+
   const LoginFailedAlert = ({ message }) => (
     <div className="flex items-center gap-3 bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-md mt-5 animate-shake">
       <FaTimesCircle className="text-xl text-red-600" />
@@ -135,7 +130,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 className="w-[150px] bg-black shadow-inner shadow-gray-50 text-white py-2 font-semibold rounded-md hover:bg-gray-900"
-               onClick={handleLogout} >
+              >
                 Login
               </button>
 
@@ -145,7 +140,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Waving Hand Animation */}
+      {/* Animations */}
       <style>
         {`
           @keyframes wave {

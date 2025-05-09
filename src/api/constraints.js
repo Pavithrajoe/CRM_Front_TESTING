@@ -6,14 +6,23 @@ export const BASE_URL = import.meta.env.VITE_API_URL;
 console.log("Base URL:", BASE_URL);
 
 // Define all API endpoints relative to BASE_URL
-export const ENDPOINTS = {
+export const ENDPOINTS = {  
+  BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,
   LEAD_STATUS: `${BASE_URL}/lead-status`,
   LEAD: `${BASE_URL}/lead`,
   USERS: `${BASE_URL}/users`,
-  FOLLOW_UP: `${BASE_URL}/follow-ups`,
+  FOLLOW_UP: `${BASE_URL}/calender-event`,
+  DASHBOARD_USER: `${BASE_URL}/lead/dashboard`,
+  CREATE_EVENT: `${BASE_URL}/calender-event`,
+  DASHBOARD_MANAGER: `${BASE_URL}/lead/manager`,
+  REMINDERS: `${BASE_URL}/reminder/get-rem`,
+
+
+
+
   // Add more endpoints here as needed
 };
 

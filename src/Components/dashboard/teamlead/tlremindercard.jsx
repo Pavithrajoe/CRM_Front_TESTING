@@ -1,29 +1,42 @@
 import React from "react";
 
-const reminders = [
-  {
-    id: 1,
-    name: "Kamalesh",
-    time: "12:30 PM",
-    remaining: "3 hrs Left",
-    avatar: "/public/images/dashboard/grl.png", // Replace with actual image path
-  },
-  {
-    id: 2,
-    name: "Kamalesh",
-    time: "12:30 PM",
-    remaining: "3 hrs Left",
-    avatar: "/public/images/dashboard/grl.png",
-  },
-  // Add more reminders or leave empty
-];
+export default function RemindersCard({ reminder_data }) {
+  const now = new Date();
 
-export default function RemindersCard() {
+  console.log("Reminder Data:", reminder_data); // Log the reminder_data prop to check its value
+
+  // Transform the data to format each reminder
+  const reminders = reminder_data?.map((reminder) => {
+    const target = new Date(reminder.dremainder_dt);
+    const timeRemainingMs = target - now;
+
+    let remainingText = "Reminder time passed";
+
+    if (timeRemainingMs > 0) {
+      const diffSec = Math.floor(timeRemainingMs / 1000);
+      const hours = Math.floor(diffSec / 3600);
+      const minutes = Math.floor((diffSec % 3600) / 60);
+      const seconds = diffSec % 60;
+
+      remainingText = `Time left: ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    return {
+      id: reminder.iremainder_id,
+      name: reminder.cremainder_title || "Untitled Reminder",
+      time: new Date(reminder.dremainder_dt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      remaining: remainingText,
+      avatar: "/images/dashboard/grl.png", // Adjust path as needed
+    };
+  }) || [];
+
   return (
     <div className="bg-white rounded-2xl p-6 w-full">
       <h2 className="text-xl font-semibold mb-4">Reminders</h2>
 
-      {/* fixed-height scroll container */}
       {reminders.length > 0 ? (
         <div className="space-y-4 max-h-[calc(4*4rem+3*1rem)] overflow-y-auto">
           {reminders.map(({ id, name, time, remaining, avatar }) => (

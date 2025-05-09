@@ -14,7 +14,7 @@ const Sidebar = () => {
     { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
-    { iconPath: '/images/nav/task.png', label: 'Remainder', route: '/remainderpage' },
+    // { iconPath: '/images/nav/task.png', label: 'Remainder', route: '/remainderpage' },
   ];
 
   const handleTabChange = (_, newValue) => {

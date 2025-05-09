@@ -1,42 +1,61 @@
 import React from "react";
 import { Users } from "lucide-react"; // optional icon from lucide-react
 
+
+
+export default function KPIStats(data) {
+
+// In future cases convert this into an function to fetch data from service class
+console.log("KPI Data:", data);  // Log the data prop to check its value
+const leads = data?.data?.leads || [];
+const follow_ups = data?.data?.reminders || [];
+const follow_ups_count = follow_ups?.length || 0;
+
+let hotCount = 0;
+let coldCount = 0;
+leads?.forEach(lead => {
+  const potential = lead.lead_potential?.clead_name;
+
+  if (potential === 'HOT') { //Change to hot 
+    hotCount++;
+  } else if (potential === 'COLD') { //Change to cold
+    coldCount++;
+  }
+}) || 0;
+
+
 const kpiData = [
   {
     title: "Hot Leads",
-    value: "2200",
+    value: hotCount,
     change: "+1.09%",
-    changeNote: "than last Month",
-    isPositive: true,
-    color: "text-orange-500",
+    changeNote: "till now",
+    color: "text-orange-500", 
   },
   {
     title: "Cold Leads",
-    value: "70.23%",
+    value: coldCount,
     change: "0.96%",
-    changeNote: "than last month",
-    isPositive: true,
+    changeNote: "till now",
     color: "text-yellow-500",
   },
   {
     title: "Follow- Up",
-    value: "800",
+    value:  follow_ups_count,
     change: "-0.2%",
-    changeNote: "than last month",
-    isPositive: false,
+    changeNote: "till now ",
     color: "text-sky-500",
   },
   {
-    title: "",
+    title: "",  
     value: "",
     change: "",
     changeNote: "",
-    isPositive: true,
     color: "",
   },
 ];
 
-export default function KPIStats() {
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {kpiData.map((kpi, index) => (
@@ -49,9 +68,9 @@ export default function KPIStats() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700">
-                    {kpi.title}
+                    {kpiData[index].title}
                   </h3>
-                  <p className="text-xl font-bold mt-1">{kpi.value}</p>
+                  <p className="text-xl font-bold mt-1">{kpiData[index].value}</p>
                 </div>
                 <div className={`text-2xl ${kpi.color}`}>
                   <Users className="w-6 h-6" />

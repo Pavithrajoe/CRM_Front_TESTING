@@ -3,7 +3,7 @@ import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
 import Comments from "@/components/commandshistory";
-import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
+//import ProfileWithHistoryCard from "@/components/common/ProfileWithHistoryCard"; 
 
 
 const Commandpage = () => {

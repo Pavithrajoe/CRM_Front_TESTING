@@ -1,38 +1,43 @@
 import React from "react";
 import { Users } from "lucide-react";
+import { data } from "react-router-dom";
 
-const kpiData = [
-  {
-    title: "Leads Count",
-    value: 2200,
-    colorStart: "#6CCF00", // darker green
-    colorEnd: "#3CB043",
-    iconBg: "bg-green-500",
-  },
-  {
-    title: "Deals Count",
-    value: 1800,
-    colorStart:  "#8E24AA", // darker purple
-    colorEnd: "#9C27B0",
-    iconBg: "bg-purple-500",
-  },
-  {
-    title: "Hot Leads",
-    value: 300,
-    colorStart: "#FF7043", // darker orange,
-    colorEnd: "#FF5722",
-    iconBg: "bg-orange-500",
-  },
-  {
-    title: "Cold Leads",
-    value: 150,
-    colorStart: "#1E88E5", // darker blue
-    colorEnd: "#2196F3",
-    iconBg: "bg-sky-500",
-  },
-];
 
-export default function TeamKPIStats() {
+export default function TeamKPIStats({ leadCount, dealCount }) {
+
+  const kpiData = [
+    {
+      title: "Leads Count",
+      value: leadCount ,
+      colorStart: "#6CCF00", // darker green
+      colorEnd: "#3CB043",
+      iconBg: "bg-green-500",
+    },
+    {
+      title: "Deals Count",
+      value: dealCount,
+      colorStart:  "#8E24AA", // darker purple
+      colorEnd: "#9C27B0",
+      iconBg: "bg-purple-500",
+    },
+    {
+      title: "Hot Leads",
+      value: "No data",
+      colorStart: "#FF7043", // darker orange,
+      colorEnd: "#FF5722",
+      iconBg: "bg-orange-500",
+    },
+    {
+      title: "Cold Leads",
+      value: "No data",
+      colorStart: "#1E88E5", // darker blue
+      colorEnd: "#2196F3",
+      iconBg: "bg-sky-500",
+    },
+  ];
+
+  
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {kpiData.map((kpi, index) => (

@@ -1,135 +1,169 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios';
-import { X } from "lucide-react"; // Optional: install lucide-react for the close icon
-
-const employees = [
-  { id: 1, name: "Shivakumar", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-  { id: 2, name: "Priya Mehra", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-  { id: 3, name: "Rahul Singh", avatar: "https://randomuser.me/api/portraits/men/12.jpg" },
-  { id: 4, name: "Sneha Reddy", avatar: "https://randomuser.me/api/portraits/women/65.jpg" },
-];
+import { X } from "lucide-react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+const apiEndPoint = import.meta.env.VITE_API_URL;
+const token = localStorage.getItem("token");
 
 const ReminderForm = () => {
+  const { leadId } = useParams();
   const [showForm, setShowForm] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(true);
-  const [reminders, setReminders] = useState([]);
+  const [reminderList, setReminderList] = useState([]);
+  const [users, setUsers] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
   const [form, setForm] = useState({
     title: "",
-    description: "",
-    date: "",
+    content: "",
+    reminderDate: "",
     time: "",
-    forMe: false,
-    followUp: false,
-    assignedTo: employees[0].id,
-    status: "",
+    priority: "",
+    assignt_to: "",
+    ilead_id: leadId,
   });
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const remindersPerPage = 5; // Limit to 5 reminders per page
+
   useEffect(() => {
-    const newUserFlag = localStorage.getItem("isNewUser");
-    setIsNewUser(newUserFlag !== "false");
+    // Fetch reminders from the API when the component mounts or leadId changes
+    getRemainder();
+  }, [leadId]);
+
+  useEffect(() => {
+    // Fetch users for the "Assign to" field
+    fetchUsers();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("isNewUser", isNewUser ? "true" : "false");
-  }, [isNewUser]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSubmit = async (status) => {
-    setSubmitting(true);
-    const data = { ...form, status };
-
+  // Fetch users from the API
+  const fetchUsers = async () => {
     try {
-      const response = await axios.post("https://your-api-url.com/reminders", data);
-      if (response.status === 200) {
-        toast.success(status === "submitted" ? "Successfully Submitted" : "Saved as Draft");
-
-        setReminders((prev) => [...prev, data]);
-        setTimeout(() => {
-          setShowForm(false);
-          setIsNewUser(false);
-          setForm({
-            title: "",
-            description: "",
-            date: "",
-            time: "",
-            forMe: false,
-            followUp: false,
-            assignedTo: employees[0].id,
-            status: "",
-          });
-          setSubmitting(false);
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to submit the form. Please try again.");
-      setSubmitting(false);
+      const res = await axios.get(`${apiEndPoint}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Failed to load users", err);
     }
   };
 
-  const selectedEmployee = employees.find((e) => e.id === parseInt(form.assignedTo));
+  // Fetch reminders for the given leadId
+  const getRemainder = async () => {
+    try {
+      const response = await fetch(
+        `${apiEndPoint}/reminder/getremainder/${leadId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      setReminderList(data.message);
+    } catch (error) {
+      toast.error("Failed to fetch reminders.");
+    }
+  };
+
+  // Pagination: Calculate which reminders to show based on the current page
+  const indexOfLastReminder = currentPage * remindersPerPage;
+  const indexOfFirstReminder = indexOfLastReminder - remindersPerPage;
+  const currentReminders = reminderList.slice(
+    indexOfFirstReminder,
+    indexOfLastReminder
+  );
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e, status) => {
+    e.preventDefault();
+    // Validation and API call for submitting the reminder
+  };
 
   return (
     <div className="relative min-h-screen bg-gray-50 p-6">
       <ToastContainer position="top-right" autoClose={2000} />
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
+        >
+          + Add Reminder
+        </button>
+      </div>
 
-      {reminders.length === 0 && isNewUser && !showForm ? (
-        <div className="border-dashed border-2 border-gray-300 rounded-lg p-6 text-center max-w-xl mx-auto mt-20">
-          <img src="/images/nav/calender.png" alt="No reminders" className="mx-auto mb-4 w-12" />
-          <p className="text-gray-700 font-medium mb-4">No reminders are<br />present at this time.</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-black text-white px-4 py-2 rounded-lg flex items-center justify-center mx-auto hover:bg-gray-800"
-          >
-            <span className="mr-2 text-xl font-bold">+</span> New Reminder
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-            >
-              + New Reminder
-            </button>
-          </div>
-
-          <div className="grid gap-4">
-            {reminders.map((item, index) => {
-              const assigned = employees.find(e => e.id === parseInt(item.assignedTo));
-              return (
-                <div key={index} className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-bold truncate">{item.title}</h3>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{item.status}</span>
+      {/* Reminder Listing */}
+      <div className="flex flex-col divide-y divide-gray-200 bg-white rounded-md shadow-sm">
+        {currentReminders.length === 0 ? (
+          <div>No reminders found</div>
+        ) : (
+          currentReminders.map((reminder) => (
+            <div key={reminder.iremainder_id} className="mb-5">
+              <div className="py-4 px-6 hover:bg-gray-50 transition duration-150">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-800">
+                      Title: {reminder.cremainder_title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {reminder.cremainder_content}
+                    </p>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Created by:{" "}
+                      <span className="font-medium">{reminder.created_by}</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
-                  <div className="mt-2 text-sm text-gray-500">
-                    Date: {item.date} | Time: {item.time}
-                  </div>
-                  <div className="flex items-center mt-2 gap-2 text-xs text-gray-500">
-                    <img src={assigned?.avatar} alt={assigned?.name} className="w-6 h-6 rounded-full" />
-                    Assigned: {assigned?.name}
+                  <div className="text-right text-sm text-gray-600">
+                    <p className="font-medium text-blue-700">{reminder.dremainder}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
-      {/* Overlay */}
+      {/* Pagination */}
+      <div className="flex justify-center items-center mt-4">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-300 rounded-md text-gray-700 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="mx-4 text-sm text-gray-600">
+          Page {currentPage} of {Math.ceil(reminderList.length / remindersPerPage)}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === Math.ceil(reminderList.length / remindersPerPage)}
+          className="px-4 py-2 bg-gray-300 rounded-md text-gray-700 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Form Modal */}
       {showForm && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40"
@@ -138,9 +172,12 @@ const ReminderForm = () => {
       )}
 
       {/* Slide-in Form */}
-      <div className={`fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 ${showForm ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        className={`fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 ${
+          showForm ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         <div className="p-6 h-full overflow-y-auto relative">
-          {/* Close Icon */}
           <button
             className="absolute top-4 right-4 text-gray-600 hover:text-black"
             onClick={() => setShowForm(false)}
@@ -148,116 +185,25 @@ const ReminderForm = () => {
             <X size={24} />
           </button>
 
-          {/* Right top Add Reminder button */}
-       
-
           <h2 className="font-semibold text-lg mt-5 mb-4">New Reminder</h2>
-
-          <label className="block text-sm mb-2">Project Title *</label>
-          <input
-            className="w-full border p-2 mb-4 rounded bg-[#EEEEEE]"
-            placeholder="Enter your project title"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            maxLength={100}
-          />
-
-          <label className="block text-sm mb-2">Description *</label>
-          <textarea
-            className="w-full border p-2 mb-4 rounded h-24 bg-[#EEEEEE]"
-            placeholder="Write your description here……"
-            name="description"
-            maxLength={300}
-            value={form.description}
-            onChange={handleChange}
-          />
-
-          <div className="flex flex-wrap gap-4">
-            <div className="w-full md:w-auto">
-              <label className="text-sm block mb-2">Assigned To</label>
-              <select
-                name="assignedTo"
-                className="border p-2 mb-2 rounded w-full bg-[#EEEEEE]"
-                value={form.assignedTo}
-                onChange={handleChange}
-              >
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
-              <div className="flex items-center mb-4 gap-2">
-                <img
-                  src={selectedEmployee.avatar}
-                  alt={selectedEmployee.name}
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="text-sm">{selectedEmployee.name}</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm block mb-2">Date *</label>
-              <input
-                type="date"
-                name="date"
-                className="border p-2 rounded w-40 bg-[#EEEEEE]"
-                value={form.date}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm block mb-2">Time *</label>
-              <input
-                type="time"
-                name="time"
-                className="border p-2 rounded w-28 bg-[#EEEEEE]"
-                value={form.time}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4 mt-4 mb-5">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="forMe"
-                checked={form.forMe}
-                onChange={handleChange}
-              />
-              For Me
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="followUp"
-                checked={form.followUp}
-                onChange={handleChange}
-              />
-              Follow Up
-            </label>
-          </div>
-
-          <div className="flex justify-center items-center gap-4">
+          <form onSubmit={(e) => handleSubmit(e, "submitted")}>
+            {/* Form fields */}
             <button
+              type="button"
+              onClick={(e) => handleSubmit(e, "draft")}
               className="bg-white border px-6 py-2 rounded disabled:opacity-50"
               disabled={submitting}
-              onClick={() => handleSubmit("draft")}
             >
               Save as Draft
             </button>
             <button
+              type="submit"
               className="bg-black text-white px-6 py-2 rounded disabled:opacity-50"
               disabled={submitting}
-              onClick={() => handleSubmit("submitted")}
             >
-              Submit
+              Submit Reminder
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>

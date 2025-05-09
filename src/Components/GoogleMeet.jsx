@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, TextField, Button, CircularProgress } from '@mui/material';
-
+import { Drawer, TextField, Button } from '@mui/material';
+import Loader from './common/Loader';
 const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, editingDraft }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -72,7 +72,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, editingDraft }
 
           <div className="flex justify-end">
             <Button variant="contained" color="primary" type="submit" disabled={loading}>
-              {loading ? <CircularProgress size={24} /> : 'Save Meet'}
+              {loading ? <Loader size={24} /> : 'Save Meet'}
             </Button>
           </div>
         </form>

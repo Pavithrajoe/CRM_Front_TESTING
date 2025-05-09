@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bell, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import LeadForm from '@/components/LeadForm';
+import LeadForm from '../LeadForm';
 import logo from './favicon.png';
 
 export default function ProfileHeader() {

@@ -14,7 +14,7 @@ import AllLeadsPage from './pages/dashboard/AllLeadsPage';
 import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
 import LeadManagePage from './pages/LeadManagePage';
 import LeadListViewPage from './pages/dashboard/LeadListView';
-import LeadCardViewPage from './pages/dashboard/LeadCardView';
+import LeadCardViewPage from './pages/dashboard/LeadcardView';
 import UserAnalyticsPage from './pages/user_analytics';
 import CalendarPage from './pages/calenderpage';
 import Commandpage from './pages/command';

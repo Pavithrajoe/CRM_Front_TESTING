@@ -1,0 +1,43 @@
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{0}: rebase (abort): returning to refs/heads/pre-production
+[33ma31aa22[m HEAD@{1}: rebase (continue): Latest change CS
+[33m17a7acd[m HEAD@{2}: pull origin pre-production --rebase (start): checkout 17a7acdf59913098b22018dd1c4b531cc168a790
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{3}: checkout: moving from main to pre-production
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{4}: commit: updated @ to ../ and ../../
+[33m61ea601[m HEAD@{5}: commit: Latest change CS
+[33m5c65cc4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{6}: Branch: renamed refs/heads/dev to refs/heads/main
+[33m5c65cc4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{8}: commit: Major version release from front-end
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{9}: checkout: moving from production to dev
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{10}: checkout: moving from dev to production
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{11}: checkout: moving from master to dev
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{12}: checkout: moving from production to master
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{13}: checkout: moving from dev to production
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{14}: commit: LAtest Changes and Final
+[33m19998fb[m HEAD@{15}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{16}: reset: moving to HEAD
+[33m19998fb[m HEAD@{17}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{18}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{19}: commit: NEw Commits
+[33mf15433c[m HEAD@{20}: commit (merge): Tool bar updates
+[33mfb46a1e[m HEAD@{21}: commit: Latest Version
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{22}: checkout: moving from master to dev
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{23}: pull origin master: Fast-forward
+[33m85c23cb[m HEAD@{24}: reset: moving to HEAD
+[33m85c23cb[m HEAD@{25}: pull origin master: Fast-forward
+[33mb359770[m HEAD@{26}: reset: moving to HEAD
+[33mb359770[m HEAD@{27}: pull origin master: Fast-forward
+[33mfb2aefc[m HEAD@{28}: reset: moving to HEAD
+[33mfb2aefc[m HEAD@{29}: pull origin master: Fast-forward
+[33m5dcf1cf[m HEAD@{30}: reset: moving to HEAD
+[33m5dcf1cf[m HEAD@{31}: checkout: moving from master to master
+[33m5dcf1cf[m HEAD@{32}: pull origin master: Fast-forward
+[33mcf24e1d[m HEAD@{33}: checkout: moving from master to master
+[33mcf24e1d[m HEAD@{34}: reset: moving to HEAD
+[33mcf24e1d[m HEAD@{35}: pull origin master: Fast-forward
+[33m302237d[m HEAD@{36}: reset: moving to HEAD
+[33m302237d[m HEAD@{37}: reset: moving to origin/master
+[33m302237d[m HEAD@{38}: reset: moving to origin/master
+[33m302237d[m HEAD@{39}: pull origin master: Fast-forward
+[33mfdb782f[m HEAD@{40}: reset: moving to HEAD
+[33mfdb782f[m HEAD@{41}: checkout: moving from master to master
+[33mfdb782f[m HEAD@{42}: checkout: moving from main to master
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{43}: clone: from https://github.com/Deepak-react/own_crm_frontend.git

@@ -1,0 +1,43 @@
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sat May 10 22:32:40 2025}: rebase (abort): returning to refs/heads/pre-production
+[33ma31aa22[m HEAD@{Sat May 10 22:29:21 2025}: rebase (continue): Latest change CS
+[33m17a7acd[m HEAD@{Sat May 10 12:42:01 2025}: pull origin pre-production --rebase (start): checkout 17a7acdf59913098b22018dd1c4b531cc168a790
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sat May 10 12:39:41 2025}: checkout: moving from main to pre-production
+[33m0fb76c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpre-production[m[33m, [m[1;31morigin/pre-production[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sat May 10 12:35:12 2025}: commit: updated @ to ../ and ../../
+[33m61ea601[m HEAD@{Sat May 10 00:29:39 2025}: commit: Latest change CS
+[33m5c65cc4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Fri May 9 20:04:05 2025}: Branch: renamed refs/heads/dev to refs/heads/main
+[33m5c65cc4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Fri May 9 20:01:51 2025}: commit: Major version release from front-end
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{Wed May 7 06:26:12 2025}: checkout: moving from production to dev
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{Wed May 7 06:25:44 2025}: checkout: moving from dev to production
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{Wed May 7 06:24:10 2025}: checkout: moving from master to dev
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{Wed May 7 06:23:27 2025}: checkout: moving from production to master
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{Wed May 7 06:22:23 2025}: checkout: moving from dev to production
+[33m73af38e[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{Wed May 7 06:19:05 2025}: commit: LAtest Changes and Final
+[33m19998fb[m HEAD@{Wed May 7 05:57:39 2025}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{Wed May 7 05:56:41 2025}: reset: moving to HEAD
+[33m19998fb[m HEAD@{Wed May 7 05:53:03 2025}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{Wed May 7 05:52:52 2025}: checkout: moving from dev to dev
+[33m19998fb[m HEAD@{Wed May 7 05:29:11 2025}: commit: NEw Commits
+[33mf15433c[m HEAD@{Wed May 7 05:28:56 2025}: commit (merge): Tool bar updates
+[33mfb46a1e[m HEAD@{Wed May 7 05:17:32 2025}: commit: Latest Version
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{Tue May 6 15:15:58 2025}: checkout: moving from master to dev
+[33m278711c[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{Tue May 6 15:09:21 2025}: pull origin master: Fast-forward
+[33m85c23cb[m HEAD@{Tue May 6 15:09:16 2025}: reset: moving to HEAD
+[33m85c23cb[m HEAD@{Tue May 6 11:41:47 2025}: pull origin master: Fast-forward
+[33mb359770[m HEAD@{Tue May 6 11:41:38 2025}: reset: moving to HEAD
+[33mb359770[m HEAD@{Mon May 5 19:17:03 2025}: pull origin master: Fast-forward
+[33mfb2aefc[m HEAD@{Mon May 5 19:16:49 2025}: reset: moving to HEAD
+[33mfb2aefc[m HEAD@{Mon May 5 11:03:05 2025}: pull origin master: Fast-forward
+[33m5dcf1cf[m HEAD@{Mon May 5 11:02:47 2025}: reset: moving to HEAD
+[33m5dcf1cf[m HEAD@{Mon May 5 11:02:24 2025}: checkout: moving from master to master
+[33m5dcf1cf[m HEAD@{Sun May 4 18:16:44 2025}: pull origin master: Fast-forward
+[33mcf24e1d[m HEAD@{Sun May 4 18:16:08 2025}: checkout: moving from master to master
+[33mcf24e1d[m HEAD@{Sun May 4 18:15:06 2025}: reset: moving to HEAD
+[33mcf24e1d[m HEAD@{Sun May 4 14:39:13 2025}: pull origin master: Fast-forward
+[33m302237d[m HEAD@{Sun May 4 14:38:56 2025}: reset: moving to HEAD
+[33m302237d[m HEAD@{Sat May 3 20:59:02 2025}: reset: moving to origin/master
+[33m302237d[m HEAD@{Sat May 3 20:57:45 2025}: reset: moving to origin/master
+[33m302237d[m HEAD@{Sat May 3 20:57:28 2025}: pull origin master: Fast-forward
+[33mfdb782f[m HEAD@{Sat May 3 20:57:21 2025}: reset: moving to HEAD
+[33mfdb782f[m HEAD@{Sat May 3 20:55:55 2025}: checkout: moving from master to master
+[33mfdb782f[m HEAD@{Sat May 3 18:51:22 2025}: checkout: moving from main to master
+[33m42c8530[m[33m ([m[1;31morigin/production[m[33m, [m[1;32mproduction[m[33m)[m HEAD@{Sat May 3 18:48:44 2025}: clone: from https://github.com/Deepak-react/own_crm_frontend.git

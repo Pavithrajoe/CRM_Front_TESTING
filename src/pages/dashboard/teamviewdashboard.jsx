@@ -1,12 +1,12 @@
 import React from "react";
-import ProfileHeader from "@/components/common/ProfileHeader"; 
-import TeamleadHeader from "@/components/dashboard/teamlead/tlHeader"; 
+import ProfileHeader from "../../Components/common/ProfileHeader"
+import TeamleadHeader from "../../Components/dashboard/teamlead/tlHeader"; 
 import { ENDPOINTS  } from "../../api/constraints";
 import { useEffect, useState } from "react";
-import RemindersCard from "@/components/dashboard/teamlead/tlremindercard";
-import LeadsTable from "@/components/dashboard/teamlead/tlLeadcard";
-import LeadManagementCard from "@/components/dashboard/teamlead/teamviewbarchart"; 
-import TeamKPIStats from "@/components/dashboard/teamlead/teamKPIcard";
+import RemindersCard from "../../Components/dashboard/teamlead/tlremindercard";
+import LeadsTable from "../../Components/dashboard/teamlead/tlLeadcard";
+import LeadManagementCard from "../../Components/dashboard/teamlead/teamviewbarchart"; 
+import TeamKPIStats from "../../Components/dashboard/teamlead/teamKPIcard";
 
 const TeamviewDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);

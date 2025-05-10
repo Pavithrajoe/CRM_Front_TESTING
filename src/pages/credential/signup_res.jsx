@@ -5,7 +5,7 @@ import LoginPage from "../../Components/signup_reseller";
 import SignupRe from ""
 function SignupRes() {
   return (
-  <SignupRe />
+  <LoginPage />
   )
 }
 

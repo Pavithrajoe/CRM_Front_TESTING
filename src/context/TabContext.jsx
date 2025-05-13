@@ -10,7 +10,7 @@ export const useTabs = () => {
 
 export const TabProvider = ({ children }) => {
   const [tabs, setTabs] = useState([
-    { path: '/leads', label: 'Home' },
+    // { path: '/leads', label: 'Home' },
   ]);
   const [activeTab, setActiveTab] = useState('/leads');
   const navigate = useNavigate(); // ← initialize router navigation

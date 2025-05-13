@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { X } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+const apiEndPoint = import.meta.env.VITE_API_URL;
 
 
 const token = localStorage.getItem("token");

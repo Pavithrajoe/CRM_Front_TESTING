@@ -8,33 +8,40 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const togglePassword = () => setShowPassword(prev => !prev);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoginError('');
+    setLoading(true);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10}$/;
 
     if (!email.trim()) {
       setLoginError('Please enter your email!');
+      setLoading(false);
       return;
     }
 
     if (!emailRegex.test(email) && !phoneRegex.test(email)) {
       setLoginError('Please enter a valid email address');
+      setLoading(false);
       return;
     }
 
     if (!password.trim()) {
       setLoginError('Please enter your password.');
+      setLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setLoginError('Password must be at least 6 characters long.');
+      setLoading(false);
       return;
     }
 
@@ -47,14 +54,10 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      console.log(data);
-
       if (response.ok && data.jwtToken) {
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
-        
-        console.log('Login successful');
         navigate('/leads');
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
@@ -64,6 +67,8 @@ const LoginPage = () => {
       console.error("Login error:", error);
       setLoginError('Something went wrong. Please try again.');
     }
+
+    setLoading(false);
   };
 
   const LoginFailedAlert = ({ message }) => (
@@ -129,15 +134,26 @@ const LoginPage = () => {
             <div className="flex flex-col justify-center items-center">
               <button
                 type="submit"
-                className="w-[150px] bg-black shadow-inner shadow-gray-50 text-white py-2 font-semibold rounded-md hover:bg-gray-900"
+                disabled={loading}
+                className={`w-[150px] flex justify-center items-center bg-black text-white py-2 font-semibold rounded-md hover:bg-gray-900 ${
+                  loading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                Login
+                {loading ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                ) : (
+                  'Login'
+                )}
               </button>
 
               {loginError && <LoginFailedAlert message={loginError} />}
             </div>
           </form>
         </div>
+        
       </div>
 
       {/* Animations */}
@@ -172,6 +188,10 @@ const LoginPage = () => {
           }
         `}
       </style>
+      
+<footer className="absolute bottom-4 w-full text-center text-sm text-gray-500">
+  © {new Date().getFullYear()}<a href='https://www.inklidox.com'> Inklidox Technologies · V0.1 </a>(Beta)
+</footer>
     </div>
   );
 };

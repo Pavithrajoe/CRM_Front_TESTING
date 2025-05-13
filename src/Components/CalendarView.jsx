@@ -74,10 +74,10 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer 
     const startTime = new Date(formData.devent_startdt).toISOString().split('.')[0] + 'Z';
     const user_data = localStorage.getItem("user");
     const user_data_parsed = JSON.parse(user_data);
-    console.log("User Data:", user_data_parsed.user.iUser_id); // Log the user data
+    console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
     formData.devent_startdt = startTime;
-    formData.icreated_by = user_data_parsed.user.iUser_id;
-    formData.iupdated_by = user_data_parsed.user.iUser_id;
+    formData.icreated_by = user_data_parsed.iUser_id;
+    formData.iupdated_by = user_data_parsed.iUser_id;
 
     console.log('Form submitted after date:', formData);
 
@@ -211,7 +211,7 @@ const [calendarEvents, setCalendarEvents] = useState([]);
   const fetchReminders = async (date = selectedDate) => {
     const user_data = localStorage.getItem("user");
     const user_data_parsed = JSON.parse(user_data);
-    console.log("User Data:", user_data_parsed.user.iUser_id); // Log the user data
+    console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
 
     let dates = new Date(date);
 

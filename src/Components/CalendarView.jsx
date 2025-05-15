@@ -97,7 +97,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer 
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to psot leads: ${response.status} , The error is ${JSON.stringify(response)}`);  
+        throw new Error(`Failed to post leads: ${response.status} , The error is ${JSON.stringify(response)}`);  
       }
 
       const data = await response.json();
@@ -242,27 +242,17 @@ const [calendarEvents, setCalendarEvents] = useState([]);
 
     setLoading(true);
     try {
+          const  token = localStorage.getItem("token");
+
   console.log("Fetching reminders for date:", ENDPOINTS.REMINDERS); // Log the date being fetched
   const response = await fetch(`${ENDPOINTS.FOLLOW_UP}?id=${user_data_parsed.iUser_id}&eventDate=${formattedDate}`, {
     method: 'GET',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${user_data_parsed.jwtToken}`
+    Authorization: `Bearer ${token}`
   }
 });
 
-
-//  const allReminder = await fetch(`${ENDPOINTS.REMINDERS}/`, {
-//     method: 'GET',
-//   headers: {
-//     'Content-Type': 'application/json',
-//     Authorization: `Bearer ${user_data_parsed.jwtToken}`
-//   }
-// });
-
-// console.log(allReminder);
-
-// const allReminderData = await allReminder.json(); // Parse the response body
 
 const data = await response.json(); // Parse the response body
 console.log("Parsed Response Data:", data); // Now you can see the actual JSON
@@ -368,38 +358,6 @@ console.log("Parsed Response Data:", data); // Now you can see the actual JSON
         </div>
 
         
-
-        {/* Reminder History */}
-{/* <div className="bg-white rounded-lg shadow-sm p-4 flex-1">
-  <h2 className="text-xl font-semibold mb-4">Reminder History</h2>
-  <div className="space-y-4">
-    {allReminder && allReminder.length > 0 ? (
-      allReminder.map((reminder, index) => (
-        <div key={index} className="border border-gray-200 rounded-lg p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-medium text-gray-800">{reminder.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Date: {new Date(reminder.dremainder_dt).toLocaleDateString()}
-              </p>
-              <p className="text-sm text-gray-600">Participants: {reminder.participants}</p>
-            </div> */}
-            {/* Optional actions */}
-            {/* <Button 
-              size="small" 
-              variant="outlined" 
-              onClick={() => viewReminderDetails(reminder)}
-            >
-              View Details
-            </Button>
-          </div>
-        </div>
-      ))
-    ) : (
-      <p className="text-gray-500 text-sm">No reminders sent yet.</p>
-    )}
-  </div>
-</div> */}
 
       </div>
 

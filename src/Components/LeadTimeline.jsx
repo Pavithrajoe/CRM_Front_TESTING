@@ -2,13 +2,6 @@ import React, { useEffect, useState } from "react";
 import { ENDPOINTS } from "../api/constraints";
 
 // Utility: Format timestamp to readable string
-const formatTimestamp = (isoString) => {
-  const date = new Date(isoString);
-  return date.toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-};
 
 const getActivityMessage = (activity) => {
   const { activitytype, data, user, performedbyid } = activity;
@@ -93,7 +86,7 @@ export default function LeadTimeline({ leadId }) {
           const isLeft = index % 2 === 0;
           const isLast = index === history.length - 1;
           const message = getActivityMessage(entry);
-          const timestamp = formatTimestamp(entry.activitytimestamp);
+    
           const performedBy = entry.performedbyid
             ? `User ${entry.performedbyid}`
             : "System";
@@ -104,8 +97,8 @@ export default function LeadTimeline({ leadId }) {
               <div className="w-1/2 flex justify-end pr-6">
                 {isLeft && (
                   <div className="bg-white border rounded-xl shadow p-4 w-80 z-10">
-                    <h3 className="font-semibold">Activity</h3>
-                    <p className="text-sm text-gray-600 mt-1">{message}</p>
+                    <h3 className="font-bold text-lg">Activity</h3>
+                    <p className="text-sm font-semibold text-gray-600 mt-1">{message}</p>
                     <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
                       <img
                         src={`https://ui-avatars.com/api/?name=${performedBy.replace(
@@ -115,7 +108,7 @@ export default function LeadTimeline({ leadId }) {
                         alt="avatar"
                         className="w-5 h-5 rounded-full"
                       />{" "}
-                      @ {timestamp}
+                    
                     </div>
                   </div>
                 )}
@@ -142,8 +135,8 @@ export default function LeadTimeline({ leadId }) {
               <div className="w-1/2 flex justify-start pl-6">
                 {!isLeft && (
                   <div className="bg-white border rounded-xl shadow p-4 w-80 z-10">
-                    <h3 className="font-semibold">Activity</h3>
-                    <p className="text-sm text-gray-600 mt-1">{message}</p>
+                    <h3 className="font-bold text-lg">Activity</h3>
+                    <p className="text-sm font-semibold text-gray-600 mt-1">{message}</p>
                     <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
                       <img
                         src={`https://ui-avatars.com/api/?name=${performedBy.replace(
@@ -153,7 +146,7 @@ export default function LeadTimeline({ leadId }) {
                         alt="avatar"
                         className="w-5 h-5 rounded-full"
                       />
-                      {performedBy} at {timestamp}
+                      {performedBy}
                     </div>
                   </div>
                 )}

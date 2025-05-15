@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Bell, Plus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-// import LeadForm from '@/components/LeadForm';
+import { useEffect, useRef, useState } from 'react';
+import { Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import LeadForm from '../LeadForm';
 import logo from './favicon.png';
 
@@ -14,6 +13,8 @@ export default function ProfileHeader() {
   const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
 
+  const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -66,17 +67,36 @@ export default function ProfileHeader() {
     document.body.style.overflow = 'auto';
   };
 
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
+      }
+
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="flex justify-end items-center gap-10 mb-6 relative">
-  <button
-  onClick={handleLeadFormOpen}
-  className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black bg-clip-padding focus:outline-none"
->
- 
-    
-    + Create Lead
-</button>
-
+      <button
+        onClick={handleLeadFormOpen}
+        className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black bg-clip-padding focus:outline-none"
+      >
+        + Create Lead
+      </button>
 
       {showLeadForm && (
         <div className="fixed inset-0 z-50 bg-white bg-opacity-50 flex justify-end items-start">
@@ -86,7 +106,7 @@ export default function ProfileHeader() {
         </div>
       )}
 
-      <div className="relative">
+      <div className="relative" ref={notificationRef}>
         <Bell
           onClick={toggleNotifications}
           className="w-10 h-10 border rounded-full p-2 text-blue-600 cursor-pointer"
@@ -118,7 +138,7 @@ export default function ProfileHeader() {
         )}
       </div>
 
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
@@ -134,7 +154,7 @@ export default function ProfileHeader() {
             type="file"
             accept="image/*"
             id="profile-upload"
-            onChange={() => {}} // disabled for now
+            onChange={() => {}} 
             className="hidden"
           />
           <div className="text-sm leading-tight">
@@ -148,14 +168,7 @@ export default function ProfileHeader() {
           <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-4 text-sm z-50">
             <div className="font-bold text-gray-800">{profile.name}</div>
             <div className="text-gray-500">Role: {userRole}</div>
-            {/* <div className="text-gray-500">Company: {profile.company}</div> */}
             <hr className="my-2" />
-            {/* <Link
-              to={`/profile-settings/${userId}`}
-              className="block text-blue-600 hover:underline mb-2"
-            >
-              Profile Settings
-            </Link> */}
             <button
               onClick={handleLogout}
               className="w-full text-left text-red-500 hover:text-red-600"

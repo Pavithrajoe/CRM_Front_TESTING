@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaPhone } from 'react-icons/fa';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Filter, RotateCw } from 'lucide-react';
 import ProfileHeader from '../../Components/common/ProfileHeader';
-import LeadForm from '../../Components/LeadForm';
-import { ENDPOINTS } from '../../api/constraints';
 import Loader from '../../Components/common/Loader';
+import { ENDPOINTS } from '../../api/constraints';
 
 const LeadCardViewPage = () => {
   const [allLeads, setAllLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
-  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const leadsPerPage = 9;
   const navigate = useNavigate();
 
   const fetchLeads = async (page = 1, limit = 1000) => {
+    setLoading(true);
     const token = localStorage.getItem('token');
     const userData = JSON.parse(localStorage.getItem('user'));
 
@@ -31,10 +33,7 @@ const LeadCardViewPage = () => {
       });
 
       const data = await response.json();
-      console.log("Fetched leads:", data);
-
       if (Array.isArray(data.details)) {
-        // Sort by dmodified_dt DESC
         const sortedLeads = data.details.sort((a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt));
         setAllLeads(sortedLeads);
       } else {
@@ -54,12 +53,21 @@ const LeadCardViewPage = () => {
 
   const filteredLeads = allLeads.filter((lead) => {
     const lower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       lead.clead_name?.toLowerCase().includes(lower) ||
       lead.corganization?.toLowerCase().includes(lower) ||
       lead.cemail?.toLowerCase().includes(lower) ||
-      lead.iphone_no?.toLowerCase().includes(lower)
-    );
+      lead.iphone_no?.toLowerCase().includes(lower);
+
+    const modifiedDate = new Date(lead.dmodified_dt);
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
+
+    const matchesDate = (from && to)
+      ? (modifiedDate >= from && modifiedDate <= to)
+      : true;
+
+    return matchesSearch && matchesDate;
   });
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
@@ -97,28 +105,89 @@ const LeadCardViewPage = () => {
       <ProfileHeader />
 
       {/* Controls */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap gap-4 justify-between items-center">
         <input
           type="text"
           value={searchTerm}
           onChange={handleSearchChange}
           placeholder="Search leads..."
-          className="border border-amber-800 rounded-lg p-3 w-80"
+          className="px-4 py-2 border border-gray-500 rounded-full placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <div className="flex gap-3">
-          <button onClick={() => setViewMode('grid')}
-           className={`p-3 rounded ${viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-200'}`}>
+
+        <div className="flex gap-3 items-center">
+          {/* Refresh Button */}
+          <button
+            onClick={() => fetchLeads()}
+            title="Refresh Leads"
+            className="p-3 rounded bg-gray-200 hover:bg-gray-300"
+          >
+            <RotateCw size={18} />
+          </button>
+
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-3 rounded ${viewMode === 'grid' ? 'bg-black text-white' : 'bg-gray-200'}`}
+          >
             <LayoutGrid size={18} />
           </button>
-          <button onClick={() => setViewMode('list')} 
-          className={`p-3 rounded ${viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-200'}`}>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-3 rounded ${viewMode === 'list' ? 'bg-black text-white' : 'bg-gray-200'}`}
+          >
             <List size={18} />
           </button>
-          <button onClick={() => setShowForm(true)} className="bg-black text-white px-4 py-2 rounded hover:bg-gray-900">
-            + Add Lead
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className={`p-3 rounded ${showFilterModal ? 'bg-black text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+          >
+            <Filter size={18} />
           </button>
         </div>
       </div>
+
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 space-y-4 w-full max-w-md">
+            <h2 className="text-lg font-semibold">Filter by Date</h2>
+            <label className="block text-sm">
+              From Date
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-400 rounded"
+              />
+            </label>
+            <label className="block text-sm">
+              To Date
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-400 rounded"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-200"
+                onClick={() => setShowFilterModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-black text-white"
+                onClick={() => {
+                  setCurrentPage(1);
+                  setShowFilterModal(false);
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Leads Display */}
       {loading ? (
@@ -143,11 +212,11 @@ const LeadCardViewPage = () => {
                   onClick={() => goToLeadDetail(lead.ilead_id)}
                   className="grid grid-cols-6 gap-4 p-3 border-t cursor-pointer hover:bg-gray-50 text-sm"
                 >
-                  <div className='break-words'>{lead.clead_name}</div>
-                  <div className='break-words'>{lead.corganization}</div>
-                  <div className='break-words'>{lead.cemail}</div>
-                  <div className='break-words'>{lead.iphone_no}</div>
-                  <div className='break-words'>{formatDate(lead.dmodified_dt)}</div>
+                  <div className="break-words">{lead.clead_name}</div>
+                  <div className="break-words">{lead.corganization}</div>
+                  <div className="break-words">{lead.cemail}</div>
+                  <div className="break-words">{lead.iphone_no}</div>
+                  <div className="break-words">{formatDate(lead.dmodified_dt)}</div>
                   <div>
                     <span className={`px-2 py-1 rounded text-xs ${getStatusColor(lead.lead_status?.clead_name)}`}>
                       {lead.lead_status?.clead_name || 'N/A'}
@@ -209,18 +278,9 @@ const LeadCardViewPage = () => {
           </button>
         </div>
       )}
-
-      {/* Lead Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-start pt-10 overflow-y-auto">
-          <div className="bg-white w-4/5 rounded-xl shadow-lg relative p-6">
-            {/* <button onClick={() => setShowForm(false)} className="absolute top-3 right-4 text-2xl">&times;</button> */}
-            <LeadForm onClose={() => { setShowForm(false); fetchLeads(); }} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
 export default LeadCardViewPage;
+

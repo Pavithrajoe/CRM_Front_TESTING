@@ -2,9 +2,11 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import ForgetPassword from "./Components/ForgetPassword";
+import { ToastProvider } from './context/ToastContext';
 import SuccessMessage from "./pages/credential/SuccessMessage";
 import VerifyCodePage from "./pages/credential/verify_code";
 import Login from './pages/credential/login';
+import { PopupProvider } from './context/PopupContext';
 import SignupRes from './pages/credential/signup_res';
 import LeadTimeline from "./Components/LeadTimeline";
 import HistoryPage from "./pages/history";
@@ -21,9 +23,14 @@ import Commandpage from './pages/command';
 import TeamviewDashboard from './pages/dashboard/teamviewdashboard';
 import { TabProvider } from "./context/TabContext";
 import LeadDetailView from "../src/context/leaddetailsview";
+import CreateUserForm from './Components/registerUser';
 import AppLayout from '../src/Components/AppLayout';
+
 function App() {
   return (
+        <PopupProvider>
+
+    <ToastProvider>
     <TabProvider>
       <Routes>
         {/* Public Routes */}
@@ -51,7 +58,7 @@ function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/companylist" element={<CompanyList />} />
           <Route path="/companypage" element={<CompanyPage />} />
-          <Route path="/analytics" element={<UserAnalyticsPage />} />"
+          <Route path="/analytics" element={<UserAnalyticsPage />} />
         {/* Lead Dashboard Routes */}
         <Route path="/leads" element={<LeadsDashboard />} />
         <Route path="/leadmanage" element={<LeadManagePage />} />
@@ -63,10 +70,14 @@ function App() {
 
   
           <Route path="/calenderpage" element={<CalendarPage />} />
+          <Route path="/users" element={<CreateUserForm />} />
           
 
       </Routes>
     </TabProvider>
+    </ToastProvider>
+        </PopupProvider>
+
   );
 }
 

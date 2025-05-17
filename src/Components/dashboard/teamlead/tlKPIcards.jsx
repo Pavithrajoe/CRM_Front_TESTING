@@ -28,22 +28,16 @@ const kpiData = [
   {
     title: "Hot Leads",
     value: hotCount,
-    change: "+1.09%",
-    changeNote: "till now",
     color: "text-orange-500", 
   },
   {
     title: "Cold Leads",
     value: coldCount,
-    change: "0.96%",
-    changeNote: "till now",
     color: "text-yellow-500",
   },
   {
     title: "Follow- Up",
     value:  follow_ups_count,
-    change: "-0.2%",
-    changeNote: "till now ",
     color: "text-sky-500",
   },
   {

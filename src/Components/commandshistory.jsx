@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { usePopup } from "../context/PopupContext";
+
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
@@ -17,6 +19,8 @@ const Comments = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const commentsPerPage = 4;
   const token = localStorage.getItem("token");
+  const { showPopup } = usePopup();
+
 
   useEffect(() => {
     if (token) {
@@ -47,7 +51,8 @@ const Comments = () => {
   const handleFormSubmission = async (e) => {
     e.preventDefault();
     if (!formData.comments.trim()) {
-      alert("😓 Comment cannot be empty!");
+      showPopup("Warning", "Comment cannot be empty!", "warning")
+      
       return;
     }
     try {
@@ -61,10 +66,11 @@ const Comments = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        alert(`😓 Couldn't add comment: ${data.e}`);
+        // alert(`😓 Couldn't add comment: ${data.e}`);
+        showPopup("Error", "Couldn't add comment!", "error")
         return;
       }
-      alert("🎉 Comment added successfully!");
+      showPopup("Success", "🎉 Comment added successfully!!", "success")
       setFormData({ comments: "", LeadId: leadId }); // ✅ Fixed hardcoded ID
       setShowForm(false);
       fetchComments();
@@ -107,10 +113,15 @@ const Comments = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        alert(`😓 Couldn't update comment: ${data}`);
+        console.log("Error:",data)
+        showPopup("Error", "Couldn't update comment!", "error")
+
         return;
       }
       alert("✅ Comment updated successfully!");
+      showPopup("Success", "✅ Comment updated successfully!!", "success")
+
+
       setEditingId(null);
       fetchComments();
     } catch (error) {

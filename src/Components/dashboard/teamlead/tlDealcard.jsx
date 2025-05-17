@@ -59,9 +59,7 @@ export default function DealsTable({data}) {
             onChange={e => setSearch(e.target.value)}
             className="border border-gray-800 rounded-full px-3 py-1 text-sm focus:outline-none flex-1 sm:flex-none"
           />
-          <a href="#" className="text-sm text-black hover:underline">
-            View All
-          </a>
+         
         </div>
       </div>
 

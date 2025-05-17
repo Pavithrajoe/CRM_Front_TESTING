@@ -24,10 +24,10 @@ export default function ProfileHeader() {
         const parsedUser = JSON.parse(userData);
         setProfile({
           name: parsedUser?.cFull_name || 'User',
-          email: parsedUser?.email || 'Not available',
-          team: parsedUser?.team || 'N/A'
+          email: parsedUser?.email || '',
+          team: parsedUser?.team || 'NA'
         });
-        setUserRole(parsedUser?.irole_id || 'N/A');
+        setUserRole(parsedUser?.irole_id || 'NA');
       } catch (error) {
         console.error('Error parsing user data from localStorage:', error);
       }
@@ -62,12 +62,16 @@ export default function ProfileHeader() {
     document.body.style.overflow = 'hidden';
   };
 
+  const createUser=()=>{
+    navigate('/users')
+  }
+
   const handleLeadFormClose = () => {
     setShowLeadForm(false);
     document.body.style.overflow = 'auto';
   };
 
-  // Close dropdowns on outside click
+ 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -98,13 +102,23 @@ export default function ProfileHeader() {
         + Create Lead
       </button>
 
-      {showLeadForm && (
-        <div className="fixed inset-0 z-50 bg-white bg-opacity-50 flex justify-end items-start">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-3/2 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-in-out slide-in-right">
-            <LeadForm onClose={handleLeadFormClose} />
-          </div>
-        </div>
-      )}
+     {showLeadForm && (
+  <div className="fixed inset-0 z-20 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white p-6 rounded-xl shadow-lg w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300 ease-in-out slide-in-right">
+      <LeadForm onClose={handleLeadFormClose} />
+    </div>
+  </div>
+)}
+
+ <button
+        onClick={createUser}
+        className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black bg-clip-padding focus:outline-none"
+      >
+        +  User
+      </button>
+
+
+
 
       <div className="relative" ref={notificationRef}>
         <Bell
@@ -158,14 +172,11 @@ export default function ProfileHeader() {
             className="hidden"
           />
           <div className="text-sm leading-tight">
-            <div className="font-semibold">{profile.name}</div>
-            <div className="text-gray-500 text-xs">{profile.email}</div>
-          </div>
           <div className="text-xl">▾</div>
         </div>
 
         {showDropdown && (
-          <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-4 text-sm z-50">
+          <div className="absolute right-0 mt-[180px] w-64 bg-white shadow-lg rounded-lg p-4 text-sm z-50">
             <div className="font-bold text-gray-800">{profile.name}</div>
             <div className="text-gray-500">Role: {userRole}</div>
             <hr className="my-2" />
@@ -176,7 +187,10 @@ export default function ProfileHeader() {
               Logout
             </button>
           </div>
-        )}
+        )}    <div className="font-semibold">{profile.name}</div>
+            <div className="text-gray-500 text-xs">{profile.email}</div>
+          </div>
+        
       </div>
     </div>
   );

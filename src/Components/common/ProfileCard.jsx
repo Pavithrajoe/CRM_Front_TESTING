@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { usePopup } from "../../context/PopupContext";
+
 import {
   FiEdit,
   FiPhone,
@@ -11,6 +13,7 @@ import {
   FiMove,
   FiCodesandbox,
 } from "react-icons/fi";
+
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -19,13 +22,15 @@ import Loader from "./Loader";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
 const ProfileCard = () => {
+  const { showPopup } = usePopup();
+
   const { leadId } = useParams();
   const [history, setHistory] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails,   setShowDetails] = useState(false);
   const [users, setUsers] = useState([]);
 
 
@@ -42,6 +47,7 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
+        console.log("The lead data is:",response.data )
         setProfile(response.data);
         setLoading(false);
       } catch (err) {
@@ -149,11 +155,15 @@ const ProfileCard = () => {
   const handleAssignLead = async (e) => {
     
     const userId = e.target.value;
+    const assigntoUserString = localStorage.getItem("user");
+
+    const assignedToUser = JSON.parse(assigntoUserString);
+    console.log('assigned to is:', assignedToUser.iUser_id);
     const token = localStorage.getItem("token");
     try {
      const users= await axios.post(
         `${apiEndPoint}/assigned-to`,
-        {iassigned_by:6, iassigned_to:Number( userId),ilead_id:Number(leadId) },
+        {iassigned_by:assignedToUser.iUser_id, iassigned_to:Number( userId),ilead_id:Number(leadId) },
         {
           headers: {
             "Content-Type": "application/json",
@@ -162,10 +172,10 @@ const ProfileCard = () => {
         }
       );
      
-      alert("Lead assigned successfully.");
+      showPopup("Success", "Lead assigned successfully.!", "success")
     } catch (err) {
       console.error("Failed to assign lead", err);
-      alert("Failed to assign lead.");
+      showPopup("Error", "Failed to assign lead.!", "error")
     }
   };
 
@@ -173,11 +183,23 @@ const ProfileCard = () => {
   if (error) return <div className="text-red-500">{error}</div>;
   if (!profile) return <div>No profile data found.</div>;
 
-  const formatValue = (value) => {
-    if (value === null || value === undefined) return "N/A";
-    if (typeof value === "object") return JSON.stringify(value, null, 2);
-    return String(value);
-  };
+  
+const formatValue = (value, key) => {
+  if (!value) return "N/A";
+
+  if (key === "dcreated_dt" || key === "dmodified_dt") {
+    const date = new Date(value);
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  return value;
+};
      
   return (
     <div className="max-w-xl p-4 rounded-xl bg-white shadow space-y-6 relative">
@@ -235,51 +257,51 @@ const ProfileCard = () => {
           <FiMail className="text-gray-500" />
           {profile.cemail || "N/A"}
         </div>
-        <div className="flex items-start gap-2">
-          <FiMapPin className="text-gray-500 mt-1" />
-          {profile.caddress || "N/A"}
-        </div>
-        <div className="flex items-start gap-2">
-          <TbWorld className="text-gray-500 mt-1" />
-          {profile.cwebsite || "N/A"}
-        </div>
-        <div className="flex items-start gap-2">
-          <FiMove className="text-gray-500 mt-1" />
-          {profile?.status || "N/A"}
-        </div>
+       <div className="flex items-start gap-2">   
+<FiMapPin className="text-gray-600 mt-1 w-6 h-6" />
+  <span>
+    {[
+      profile.clead_address1,
+      profile.clead_address2,
+      profile.clead_address3,
+    ]
+      .filter(Boolean)         // remove empty/null/undefined
+      .join(", ") || "N/A"}
+  </span>
+</div>
+       
 
         {/* Created At + Assign Dropdown */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-start gap-2">
-            <FiCodesandbox className="text-gray-500 mt-1" />
-            <span>{profile.dcreated_at || "N/A"}</span>
-          </div>
+
 
           <div className="border-t border-gray-200 my-2"></div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="assignUser" className="text-sm font-medium text-gray-700">
-              Assign to:
-            </label>
-          <select
+          <div className="flex items-center gap-3">
+              <label
+                htmlFor="assignUser"
+                className="text-sm font-medium text-gray-700 min-w-max">
+                Assign to:
+                </label>
 
-  className="border border-gray-300 rounded px-2 py-1 text-sm text-black"
-  onChange={handleAssignLead}
-  defaultValue=""
->
-  <option value="" disabled>
-    Select user
-  </option>
-  {users.map((user) => (
-    <option key={user.iUser_id} value={user.iUser_id} style={{color:"black"}}>
-     <span className="!text-red-200">{user.cUser_name}</span> 
-    </option>
-  ))}
-</select>
+                  <select
+                    id="assignUser"
+                    onChange={handleAssignLead}
+                    defaultValue=""
+                    className="block w-full sm:w-60 border border-gray-300 rounded-lg bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  >
+                    <option value="" disabled>
+                      -- Select user --
+                    </option>
+                    {users.map((user) => (
+                      <option key={user.iUser_id} value={user.iUser_id}>
+                        {user.cUser_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-
-          </div>
-        </div>
+            </div>
       </div>
 
       {isEditing && (
@@ -300,47 +322,50 @@ const ProfileCard = () => {
         </div>
       )}
 
-      {showDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl relative">
-            <button
-              onClick={() => setShowDetails(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-bold mb-4">Lead Full Details</h2>
-            <table className="w-full table-auto border">
-              <tbody>
-                {[
-                  ["clead_name", "Name"],
-                  ["corganization", "Organization"],
-                  ["cemail", "Email"],
-                  ["iphone_no", "Phone"],
-                  ["caddress", "Address"],
-                  ["clead_status", "Status"],
-                  ["ccity", "City"],
-                  ["cstate", "State"],
-                  ["ccountry", "Country"],
-                  ["csource", "Lead Source"],
-                  ["clead_owner", "Lead Owner"],
-                  ["created_at", "Created At"],
-                  ["updated_at", "Updated At"],
-                ]
-                  .filter(([key]) => profile[key])
-                  .map(([key, label]) => (
-                    <tr key={key} className="border-b">
-                      <td className="p-2 font-medium text-gray-600">{label}</td>
-                      <td className="p-2 text-gray-800 whitespace-pre-wrap">
-                        {formatValue(profile[key])}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+     {showDetails && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl relative">
+      <button
+        onClick={() => setShowDetails(false)}
+        className="absolute top-3 right-3 text-gray-600 hover:text-black"
+      >
+        <FiX className="w-5 h-5" />
+      </button>
+      <h2 className="text-lg font-bold mb-4">Lead Full Details</h2>
+      <table className="w-full table-auto border">
+        <tbody>
+                    {[
+              ["clead_name", "Name"],
+              ["corganization", "Organization"],
+              ["cemail", "Email"],
+              ["iphone_no", "Phone"],
+              ["clead_address1", "Address Line 1"],
+              ["clead_address2", "Address Line 2"],
+              ["clead_address3", "Address Line 3"],
+              // ["clead_city", "City"], // or use "icity" depending on your logic
+              // ["iLeadpoten_id", "Lead Potential ID"], // Replace with label if available
+              // ["ileadstatus_id", "Status ID"],         // Replace with label if available
+              // ["cindustry_id", "Industry ID"],         // Replace with label if available
+              // ["lead_source_id", "Source ID"],         // Replace with label if available
+              // ["clead_owner", "Lead Owner"],
+              ["dcreated_dt", "Created At"],
+              ["dmodified_dt", "Updated At"],
+            ]
+            .filter(([key]) => profile[key])
+            .map(([key, label]) => (
+              <tr key={key} className="border-b">
+                <td className="p-2 font-medium text-gray-600">{label}</td>
+                <td className="p-2 text-gray-800 whitespace-pre-wrap">
+          {formatValue(profile[key], key)}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

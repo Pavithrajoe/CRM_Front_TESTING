@@ -90,6 +90,16 @@ export default function LeadTimeline({ leadId }) {
           const performedBy = entry.performedbyid
             ? `User ${entry.performedbyid}`
             : "System";
+            
+            const date = new Date(entry.activitytimestamp);
+                        const humanReadable = date.toLocaleString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
 
           return (
             <div key={entry.id || index} className="flex w-full relative min-h-[120px]">
@@ -99,17 +109,14 @@ export default function LeadTimeline({ leadId }) {
                   <div className="bg-white border rounded-xl shadow p-4 w-80 z-10">
                     <h3 className="font-bold text-lg">Activity</h3>
                     <p className="text-sm font-semibold text-gray-600 mt-1">{message}</p>
-                    <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${performedBy.replace(
-                          " ",
-                          "+"
-                        )}`}
-                        alt="avatar"
-                        className="w-5 h-5 rounded-full"
-                      />{" "}
-                    
-                    </div>
+                   <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${performedBy.replace(" ", "+")}`}
+                      alt="avatar"
+                      className="w-5 h-5 rounded-full"
+                    />
+                    <span>{humanReadable}</span>
+                  </div>
                   </div>
                 )}
               </div>
@@ -146,7 +153,7 @@ export default function LeadTimeline({ leadId }) {
                         alt="avatar"
                         className="w-5 h-5 rounded-full"
                       />
-                      {performedBy}
+                    <span>{humanReadable}</span>
                     </div>
                   </div>
                 )}

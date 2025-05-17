@@ -46,7 +46,6 @@ console.log(data);
         <h2 className="font-semibold text-gray-700">Lead Management</h2>
         <div className="flex items-center space-x-2">
           <button className="text-sm border px-2 py-1 rounded-md border-gray-300 text-gray-600">This week</button>
-          <a href="#" className="text-sm text-blue-600 underline">View more</a>
         </div>
       </div>
 

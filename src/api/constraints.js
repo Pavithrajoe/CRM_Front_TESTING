@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,
   LEAD_STATUS: `${BASE_URL}/lead-status`,
+  LEAD_STATUS_ACTION : `${BASE_URL}/lead-status/action-logs`,
   LEAD: `${BASE_URL}/lead`,
   USERS: `${BASE_URL}/users`,
   FOLLOW_UP: `${BASE_URL}/calender-event`,
@@ -19,6 +20,15 @@ export const ENDPOINTS = {
   CREATE_EVENT: `${BASE_URL}/calender-event`,
   DASHBOARD_MANAGER: `${BASE_URL}/lead/manager`,
   REMINDERS: `${BASE_URL}/reminder/get-rem`,
+  LEAD_STATUS_UPDATE: `${BASE_URL}/lead`,
+  CONVERT_TO_DEAL: `${BASE_URL}/lead/convert-to-deal`,
+  USER_REMINDER:`${BASE_URL}/reminder/user-reminder`,
+  USER_CREATION: `${BASE_URL}/users`,
+  GET_USERS: `${BASE_URL}/users`,
+
+
+
+
 
 
 

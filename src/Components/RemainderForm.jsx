@@ -107,7 +107,7 @@ const ReminderForm = () => {
 
   const getReminder = async () => {
     try {
-      const response = await fetch(`${apiEndPoint}/reminder/getremainder/${leadId}`, {
+      const response = await fetch(`${apiEndPoint}/reminder/get-reminder/${leadId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -118,6 +118,7 @@ const ReminderForm = () => {
       const data = await response.json();
       if (response.ok) {
         setReminderList(data.message);
+        console.log(data.message);
       } else {
         toast.error("Failed to fetch data");
       }
@@ -142,11 +143,6 @@ const ReminderForm = () => {
     fetchUsers();
   }, []);
 
-  const getUserName = (userId) => {
-    const user = users.find((u) => u.iUser_id === userId);
-    return user ? user.cFull_name : "N/A";
-  };
-
   return (
     <div className="relative min-h-screen bg-gray-50 p-6">
       <ToastContainer position="top-right" autoClose={2000} />
@@ -167,13 +163,13 @@ const ReminderForm = () => {
                   <h3 className="text-md font-semibold text-gray-800">Title: {reminder.cremainder_title}</h3>
                   <p className="text-sm text-gray-600 mt-1">{reminder.cremainder_content}</p>
                   <div className="text-xs text-gray-500 mt-2">
-                    Created by: <span className="font-medium">{reminder.created_by}</span> on <span className="font-medium">{new Date(reminder.dremainder_dt).toLocaleString()}</span>
+                    Created by: <span className="font-medium">{reminder.created_by}</span> 
                   </div>
                   <div className="text-xs mt-1 text-gray-600">Priority: <span className="font-semibold">{reminder.priority || 'Normal'}</span></div>
-                  <div className="text-xs text-gray-600">Assigned to: <span className="font-semibold">{getUserName(reminder.assignt_to)}</span></div>
+                  <div className="text-xs text-gray-600">Assigned to: <span className="font-semibold">{reminder.assigned_to}</span></div>
                 </div>
                 <div className="text-right text-sm text-gray-600">
-                  <p className="font-medium text-blue-700">{new Date(reminder.dremainder).toLocaleString()}</p>
+                  <p className="font-medium text-blue-700">{new Date(reminder.dremainder_dt).toLocaleString()}</p>
                 </div>
               </div>
             </div>

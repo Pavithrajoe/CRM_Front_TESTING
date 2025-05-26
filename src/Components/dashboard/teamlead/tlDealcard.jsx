@@ -1,11 +1,5 @@
 import React, { useState, useMemo } from "react";
 
-const deals = [
-  { id: 1, name: "Mari Sudhir", status: "Contacted", assignedTo: "Shivakumar", modifiedBy: "Shivakumar", time: "01:00 PM on 24th Apr", avatar: "/public/images/dashboard/grl.png" },
-  { id: 2, name: "Deepak Kumar", status: "Contacted", assignedTo: "Shivakumar", modifiedBy: "Shivakumar", time: "01:00 PM on 24th Apr", avatar: "/public/images/dashboard/grl.png" },
-  { id: 3, name: "Vignesh", status: "Contacted", assignedTo: "Shivakumar", modifiedBy: "Shivakumar", time: "01:00 PM on 24th Apr", avatar: "/public/images/dashboard/grl.png" },
-  // ...other deals
-];
 
 export default function DealsTable({data}) {
   const [search, setSearch] = useState("");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
@@ -34,7 +34,7 @@ const LeadForm = ({ onClose }) => {
     cemail: "",
     corganization: "",
     cwebsite: "www.com",
-    icity: "", // Changed to empty string initially
+    icity: "",
     iphone_no: "",
     cgender: 1,
     clogo: "logo.png",
@@ -45,7 +45,7 @@ const LeadForm = ({ onClose }) => {
     cstate: "",
     cdistrict: "",
     cpincode: "",
-    ccountry: "", // Added country to the form state
+    ccountry: "",
     cservices: "No services entered",
     clead_owner: userId,
     clead_source: "",
@@ -69,8 +69,9 @@ const LeadForm = ({ onClose }) => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isAlertVisible, setIsAlertVisible] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [alertMessage, setAlertMessage] = useState("");
 
+  const cityDropdownRef = useRef(null); // Ref for the city dropdown
 
   // useEffect hook to fetch dropdown data on component mount
   useEffect(() => {
@@ -161,7 +162,12 @@ const LeadForm = ({ onClose }) => {
 
           if (!response.ok) {
             console.log(`Can't fetch details for city ID ${cityId}`, response);
-            setForm((prev) => ({ ...prev, cstate: "", cdistrict: "", ccountry: "" }));
+            setForm((prev) => ({
+              ...prev,
+              cstate: "",
+              cdistrict: "",
+              ccountry: "",
+            }));
             return;
           }
 
@@ -175,14 +181,29 @@ const LeadForm = ({ onClose }) => {
               ccountry: data.country || "",
             }));
           } else {
-            setForm((prev) => ({ ...prev, cstate: "", cdistrict: "", ccountry: "" }));
+            setForm((prev) => ({
+              ...prev,
+              cstate: "",
+              cdistrict: "",
+              ccountry: "",
+            }));
           }
         } catch (error) {
           console.error(`Error fetching details for city ID ${cityId}:`, error);
-          setForm((prev) => ({ ...prev, cstate: "", cdistrict: "", ccountry: "" }));
+          setForm((prev) => ({
+            ...prev,
+            cstate: "",
+            cdistrict: "",
+            ccountry: "",
+          }));
         }
       } else {
-        setForm((prev) => ({ ...prev, cstate: "", cdistrict: "", ccountry: "" }));
+        setForm((prev) => ({
+          ...prev,
+          cstate: "",
+          cdistrict: "",
+          ccountry: "",
+        }));
       }
     };
 
@@ -190,17 +211,40 @@ const LeadForm = ({ onClose }) => {
       fetchCityDetails(form.icity);
       const selectedCity = cities.find((city) => city.icity_id === form.icity);
       setSearchCity(selectedCity ? selectedCity.cCity_name : "");
-      setIsCityDropdownOpen(false);
     } else {
-      setForm((prev) => ({ ...prev, cstate: "", cdistrict: "", ccountry: "" }));
+      setForm((prev) => ({
+        ...prev,
+        cstate: "",
+        cdistrict: "",
+        ccountry: "",
+      }));
       setSearchCity("");
-      setIsCityDropdownOpen(false);
     }
   }, [form.icity, token, cities]);
 
+  // Handle clicks outside the city dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        cityDropdownRef.current &&
+        !cityDropdownRef.current.contains(event.target)
+      ) {
+        setIsCityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const validateField = (name, value) => {
     let error = "";
-    if ((name === "iphone_no" || name === "whatsapp") && !/^\d{10}$/.test(value)) {
+    if (
+      (name === "iphone_no" || name === "whatsapp") &&
+      !/^\d{10}$/.test(value)
+    ) {
       error = "Must be exactly 10 digits";
     }
     if (name === "cemail") {
@@ -267,12 +311,12 @@ const LeadForm = ({ onClose }) => {
       [name]: validateField(name, value),
     }));
 
-    // Clear dependent fields when city changes
+    // Clear dependent fields when city changes (handled by useEffect based on form.icity)
+    // No need to reset city details here as useEffect will handle it
     if (name === "icity") {
+      // Set the searchCity directly when a city is selected from the dropdown
       const selectedCity = cities.find((city) => city.icity_id === value);
       setSearchCity(selectedCity ? selectedCity.cCity_name : "");
-      setForm((prev) => ({ ...prev, icity: value, cstate: "", cdistrict: "", cpincode: "", ccountry: "" }));
-      setDistricts([]);
       setIsCityDropdownOpen(false);
     } else if (name === "searchCity") {
       // Handle changes to the search input
@@ -294,13 +338,18 @@ const LeadForm = ({ onClose }) => {
     if (!value) return;
 
     try {
-      const response = await fetch(`${apiEndPoint}/check-existing-lead`, { // Replace with your actual API endpoint
+      const response = await fetch(`${apiEndPoint}/check-existing-lead`, {
+        // Replace with your actual API endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ field: fieldName, value: value, company_id: company_id }),
+        body: JSON.stringify({
+          field: fieldName,
+          value: value,
+          company_id: company_id,
+        }),
       });
 
       if (!response.ok) {
@@ -310,15 +359,26 @@ const LeadForm = ({ onClose }) => {
 
       const data = await response.json();
       if (data.exists) {
-        const message = `This ${fieldName.replace('iphone_no', 'phone').replace('whatsapp', 'WhatsApp')} number already exists.`;
+        const message = `This ${fieldName
+          .replace("iphone_no", "phone")
+          .replace("whatsapp", "WhatsApp")} number already exists.`;
         setAlertMessage(message);
         setIsAlertVisible(true);
         setTimeout(() => {
           setIsAlertVisible(false);
         }, 3000);
-        setErrors(prev => ({ ...prev, [fieldName]: message }));
+        setErrors((prev) => ({ ...prev, [fieldName]: message }));
       } else {
-        setErrors(prev => ({ ...prev, [fieldName]: errors[fieldName] === `This ${fieldName.replace('iphone_no', 'phone').replace('whatsapp', 'WhatsApp')} number already exists.` ? undefined : errors[fieldName] }));
+        setErrors((prev) => ({
+          ...prev,
+          [fieldName]:
+            errors[fieldName] ===
+            `This ${fieldName
+              .replace("iphone_no", "phone")
+              .replace("whatsapp", "WhatsApp")} number already exists.`
+              ? undefined
+              : errors[fieldName],
+        }));
       }
     } catch (error) {
       console.error(`Error checking existing ${fieldName}:`, error);
@@ -329,13 +389,18 @@ const LeadForm = ({ onClose }) => {
     if (!email) return;
 
     try {
-      const response = await fetch(`${apiEndPoint}/check-existing-lead`, { // Replace with your actual API endpoint
+      const response = await fetch(`${apiEndPoint}/check-existing-lead`, {
+        // Replace with your actual API endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ field: "cemail", value: email, company_id: company_id }),
+        body: JSON.stringify({
+          field: "cemail",
+          value: email,
+          company_id: company_id,
+        }),
       });
 
       if (!response.ok) {
@@ -350,9 +415,18 @@ const LeadForm = ({ onClose }) => {
         setTimeout(() => {
           setIsAlertVisible(false);
         }, 3000);
-        setErrors(prev => ({ ...prev, cemail: "This email address already exists." }));
+        setErrors((prev) => ({
+          ...prev,
+          cemail: "This email address already exists.",
+        }));
       } else {
-        setErrors(prev => ({ ...prev, cemail: errors.cemail === "This email address already exists." ? undefined : errors.cemail }));
+        setErrors((prev) => ({
+          ...prev,
+          cemail:
+            errors.cemail === "This email address already exists."
+              ? undefined
+              : errors.cemail,
+        }));
       }
     } catch (error) {
       console.error("Error checking existing email:", error);
@@ -383,9 +457,12 @@ const LeadForm = ({ onClose }) => {
       });
       // Optionally check if the phone number already exists and apply the error to WhatsApp as well
       if (errors.iphone_no && !errors.whatsapp) {
-        setErrors(prev => ({ ...prev, whatsapp: errors.iphone_no }));
-      } else if (!errors.iphone_no && errors.whatsapp === `This whatsapp number already exists.`) {
-        setErrors(prev => ({ ...prev, whatsapp: undefined }));
+        setErrors((prev) => ({ ...prev, whatsapp: errors.iphone_no }));
+      } else if (
+        !errors.iphone_no &&
+        errors.whatsapp === `This whatsapp number already exists.`
+      ) {
+        setErrors((prev) => ({ ...prev, whatsapp: undefined }));
       }
     }
   };
@@ -449,7 +526,8 @@ const LeadForm = ({ onClose }) => {
         setIsAlertVisible(false);
       }, 3000);
       setErrors(validationErrors); // Update the error state to show individual field errors
-      setLoadingreturn;
+      setLoading(false); // Make sure to set loading to false here
+      return;
     }
 
     try {
@@ -504,7 +582,7 @@ const LeadForm = ({ onClose }) => {
           onClose();
         }, 3000);
       } else {
-        setPopupMessage(`Failed to create lead`);
+        setPopupMessage(`The email or mobile number you entered is Duplicate`);
         setIsPopupVisible(true);
         setTimeout(() => {
           setIsPopupVisible(false);
@@ -542,7 +620,7 @@ const LeadForm = ({ onClose }) => {
       const data = await response.json();
       console.log("source data:", data);
 
-      // Access the 'data' array from// the response
+      // Access the 'data' array from the response
       if (data && Array.isArray(data.data)) {
         setSource(data.data);
       } else {
@@ -557,53 +635,53 @@ const LeadForm = ({ onClose }) => {
 
   console.log("source details:", source);
   const popupStyle = {
-    position: 'fixed',
-    bottom: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: popupMessage.includes("Failed") ? '#dc3545' : '#28a745',
-    color: 'white',
-    padding: '16px 24px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    position: "fixed",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#28a745",
+    color: "white",
+    padding: "16px 24px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     zIndex: 50,
     opacity: 1,
-    transition: 'opacity 0.3s ease-in-out',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    transition: "opacity 0.3s ease-in-out",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
   };
 
   const closeButtonStyle = {
-    background: 'none',
-    border: 'none',
-    color: 'white',
-    fontSize: '1em',
-    cursor: 'pointer',
-    marginLeft: '16px',
+    background: "none",
+    border: "none",
+    color: "white",
+    fontSize: "1em",
+    cursor: "pointer",
+    marginLeft: "16px",
   };
 
   const alertStyle = {
-    position: 'fixed',
-    top: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-    padding: '16px 24px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    position: "fixed",
+    top: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "#f8d7da",
+    color: "#721c24",
+    padding: "16px 24px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     zIndex: 50,
     opacity: 1,
-    transition: 'opacity 0.3s ease-in-out',
-    textAlign: 'center',
+    transition: "opacity 0.3s ease-in-out",
+    textAlign: "center",
   };
 
   return (
     <div className="relative inset-0 bg-blur flex justify-center items-start pt-10 overflow-y-hiddden z-50">
       <form
         onSubmit={handleSubmit}
-        className="relative bg-transparent w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-2 space-y-6"
+        className="relative bg-white w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-2 space-y-6"
       >
         <button
           type="button"
@@ -612,7 +690,9 @@ const LeadForm = ({ onClose }) => {
         >
           <X size={20} />
         </button>
-        <h2 className="text-xl font-bold text-center">🚀 Let's Get Started - Create a New Lead</h2>
+        <h2 className="text-xl font-bold text-center">
+          🚀 Let's Get Started - Create a New Lead
+        </h2>
 
         {/* Customer Details Section */}
         <h3 className="text-lg font-semibold">Customer Details</h3>
@@ -628,11 +708,9 @@ const LeadForm = ({ onClose }) => {
             { label: "Address 3", name: "clead_address3", required: false },
             {
               label: "City",
-              name: "searchCity", // Changed name to searchCity to control the input
+              name: "icity", // Keep the name as icity for the form state
               type: "searchable-select",
-              options: filteredCities.map((city) => ({ value: city.icity_id, label: city.cCity_name })),
               required: true,
-              value: cities.find(c => c.icity_id === form.icity)?.cCity_name || "", // Display selected city name
             },
             {
               label: "Country",
@@ -654,20 +732,24 @@ const LeadForm = ({ onClose }) => {
             },
 
             { label: "Pincode", name: "cpincode", required: false },
-          ].map(({ label, name, required, type, options, value, readOnly }) => (
+          ].map(({ label, name, required, type, value, readOnly }) => (
             <div key={name}>
               <label className="text-sm font-medium">
                 {label} {required && <span className="text-red-500">*</span>}
               </label>
               {type === "searchable-select" ? (
-                <div className="relative">
+                <div className="relative" ref={cityDropdownRef}>
                   <input
                     type="text"
                     placeholder={`Search ${label.toLowerCase()}`}
                     className="mt-1 w-full border px-3 py-2 rounded"
                     value={searchCity} // Use searchCity state
-                    onChange={handleChange} // Handle search input changes
+                    onChange={handleSearchCity} // Handle search input changes
                     onFocus={() => setIsCityDropdownOpen(true)}
+                    onBlur={() => {
+                        // Delay hiding the dropdown to allow click events on dropdown items
+                        setTimeout(() => setIsCityDropdownOpen(false), 100);
+                      }}
                   />
                   {isCityDropdownOpen && filteredCities.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
@@ -678,6 +760,7 @@ const LeadForm = ({ onClose }) => {
                             setForm({ ...form, icity: city.icity_id });
                             setSearchCity(city.cCity_name);
                             setIsCityDropdownOpen(false);
+                            setErrors((prev) => ({ ...prev, icity: undefined })); // Clear city error on selection
                           }}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         >
@@ -700,7 +783,9 @@ const LeadForm = ({ onClose }) => {
                   readOnly={readOnly}
                 />
               )}
-              {errors[name] && <p className="text-red-600 text-sm">{errors[name]}</p>}
+              {errors[name] && (
+                <p className="text-red-600 text-sm">{errors[name]}</p>
+              )}
               {name === "iphone_no" && (
                 <label className="inline-flex items-center mt-2">
                   <input
@@ -719,7 +804,9 @@ const LeadForm = ({ onClose }) => {
         {/* Lead Details Section */}
         <div className="flex flex-wrap gap-4">
           <div className="flex flex-col">
-            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Lead potential:</label>
+            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">
+              Lead potential:
+            </label>
             <select
               name="iLeadpoten_id"
               value={form.iLeadpoten_id}
@@ -733,10 +820,15 @@ const LeadForm = ({ onClose }) => {
                 </option>
               ))}
             </select>
+            {errors.iLeadpoten_id && (
+              <p className="text-red-600 text-sm">{errors.iLeadpoten_id}</p>
+            )}
           </div>
 
           <div className="flex flex-col">
-            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Lead status:</label>
+            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">
+              Lead status:
+            </label>
             <select
               name="ileadstatus_id"
               value={form.ileadstatus_id}
@@ -750,10 +842,15 @@ const LeadForm = ({ onClose }) => {
                 </option>
               ))}
             </select>
+            {errors.ileadstatus_id && (
+              <p className="text-red-600 text-sm">{errors.ileadstatus_id}</p>
+            )}
           </div>
 
           <div className="flex flex-col">
-            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">Industry:</label>
+            <label className="h-10 p-2 block text-sm font-medium text-gray-700 mb-1">
+              Industry:
+            </label>
             <select
               name="cindustry_id"
               value={form.cindustry_id}
@@ -767,49 +864,69 @@ const LeadForm = ({ onClose }) => {
                 </option>
               ))}
             </select>
+            {errors.cindustry_id && (
+              <p className="text-red-600 text-sm">{errors.cindustry_id}</p>
+            )}
           </div>
 
           <div className="flex flex-col">
-            <label className="p-2 h-10 block text-sm font-medium text-gray-700 mb-1">Lead source:</label>
+            <label className="p-2 h-10 block text-sm font-medium text-gray-700 mb-1">
+              Lead source:
+            </label>
             <select
-              name="lead_source_id" // Corrected name to match form state
+              name="lead_source_id"
               value={form.lead_source_id}
               onChange={handleChange}
               className="p-2 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition h-10 w-60"
             >
               <option value="">lead source</option>
-              {source && source.map((src) => ( // Map through the fetched source data
-                <option key={src.source_id} value={src.source_id}>
-                  {src.source_name}
-                </option>
-              ))}
+              {source &&
+                source.map((src) => (
+                  <option key={src.source_id} value={src.source_id}>
+                    {src.source_name}
+                  </option>
+                ))}
             </select>
+            {errors.lead_source_id && (
+              <p className="text-red-600 text-sm">{errors.lead_source_id}</p>
+            )}
           </div>
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end gap-4 pt-4">
-          {/* <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
-          >
-            Save as Draft
-          </button> */}
           <button
-            onClick={handleSubmit}
-            disabled={loading || Object.keys(errors).some(key => errors[key])}
+            type="submit" // Changed to submit
+            disabled={loading || Object.keys(errors).some((key) => errors[key])}
             className={`w-[150px] flex justify-center items-center bg-black text-white py-2 font-semibold rounded-md hover:bg-gray-900 ${
-              loading || Object.keys(errors).some(key => errors[key]) ? 'opacity-70 cursor-not-allowed' : ''
+              loading || Object.keys(errors).some((key) => errors[key])
+                ? "opacity-70 cursor-not-allowed"
+                : ""
             }`}
           >
             {loading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
               </svg>
             ) : (
-              'Create Lead'
+              "Create Lead"
             )}
           </button>
         </div>

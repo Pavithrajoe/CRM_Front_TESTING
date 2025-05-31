@@ -8,12 +8,12 @@ import {
 } from "@mui/material";
 
 import { ENDPOINTS } from "../../api/constraints";
-import ProfileHeader from "@/components/common/ProfileHeader";
-import TeamleadHeader from "@/components/dashboard/teamlead/tlHeader";
-import KPIStats from "@/components/dashboard/teamlead/tlKPIcards";
-import RemindersCard from "@/components/dashboard/teamlead/tlremindercard";
-import LeadsTable from "@/components/dashboard/teamlead/tlLeadcard";
-import DealsTable from "@/components/dashboard/teamlead/tlDealcard";
+import ProfileHeader from "@/Components/common/ProfileHeader";
+import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
+import KPIStats from "@/Components/dashboard/teamlead/tlKPIcards";
+import RemindersCard from "@/Components/dashboard/teamlead/tlremindercard";
+import LeadsTable from "@/Components/dashboard/teamlead/tlLeadcard";
+import DealsTable from "@/Components/dashboard/teamlead/tlDealcard";
 
 const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
@@ -94,27 +94,91 @@ const LeadsDashboard = () => {
       </main>
 
       {/* First Login Feature Popup */}
-      <Dialog open={showPopup}>
-        <DialogTitle>🚀 Welcome to the New Dashboard!</DialogTitle>
-        <DialogContent>
-          <p className="text-gray-800">
-            🎉 Here are some of the new features:
-            <ul className="list-disc pl-5 mt-2">
-              <li>🔍 Improved Lead & Deal Tracking</li>
-              <li>📅 Smart Reminders with Alerts</li>
-              <li>📊 Enhanced KPI Insights</li>
-              <li>⚡ Faster performance and UI upgrades</li>
-              <li>🎙️Voice to Text Functionality</li>
+    <Dialog
+  open={showPopup}
+  onClose={() => setShowPopup(false)}
+  PaperProps={{
+    sx: {
+      borderRadius: 3,              // larger rounded corners (24px)
+      boxShadow: '0 10px 30px rgba(0,0,0,0.1)',  // soft shadow
+      padding: 2,
+      minWidth: { xs: '280px', sm: '320px', md: '400px' },
+      bgcolor: '#F9F9F9',           // very light gray background
+    },
+  }}
+>
+  <DialogTitle
+    sx={{
+      fontWeight: 600,
+      fontSize: '1.25rem',
+      color: '#1C1C1E',             // dark text, close to iOS style
+      textAlign: 'center',
+      pb: 0,
+      pt: 2,
+      userSelect: 'none',
+    }}
+  >
+    🎉 🎉 Welcome to the New Dashboard! 🎉 🎉
+  </DialogTitle>
 
-            </ul>
-          </p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPopup(false)} variant="contained">
-            Got it!
-          </Button>
-        </DialogActions>
-      </Dialog>
+  <DialogContent
+    dividers
+    sx={{
+      fontSize: '0.9rem',
+      color: '#3C3C4399',           // subtle gray text
+      lineHeight: 1.5,
+      pt: 1,
+      pb: 2,
+      '& ul': {
+        paddingLeft: 3,
+        marginTop: 1,
+        listStyleType: 'disc',
+        '& li': {
+          marginBottom: 1,
+          userSelect: 'none',
+        },
+      },
+    }}
+  >
+    🎉 Here are some of the new features:
+    <ul>
+      <li>🔍 Improved Lead & Deal Tracking</li>
+      <li>📅 Smart Reminders with Alerts</li>
+      <li>📊 Enhanced KPI Insights</li>
+      <li>⚡ Faster performance and UI upgrades</li>
+      <li>🎙️ Voice to Text Functionality</li>
+    </ul>
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      justifyContent: 'center',
+      pb: 2,
+      pt: 0,
+    }}
+  >
+    <Button
+      onClick={() => setShowPopup(false)}
+      variant="contained"
+      sx={{
+        bgcolor: '#007AFF',     // iOS blue button
+        color: 'white',
+        fontWeight: 600,
+        borderRadius: '9999px', // pill shape
+        textTransform: 'none',
+        px: 4,
+        py: 1.5,
+        boxShadow: '0 4px 8px rgba(0, 122, 255, 0.3)',
+        '&:hover': {
+          bgcolor: '#005BBB',
+          boxShadow: '0 6px 12px rgba(0, 91, 187, 0.4)',
+        },
+      }}
+    >
+      Got it!
+    </Button>
+  </DialogActions>
+</Dialog>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Tabs, Tab, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import ProfileCard from '../Components/common/ProfileCard';
 import Comments from '../Components/commandshistory';
 import RemainderPage from '../pages/RemainderPage';
@@ -17,9 +17,9 @@ const LeadDetailView = () => {
   const [isDeal, setIsDeal] = useState(false);
   const [isLost, setIsLost] = useState(true); // true means active, false means lost
   const { showPopup } = usePopup();
+  const [leadData, setLeadData] = useState(null);
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
-  const [leadData, setLeadData] = useState(null);
 
   const convertToDeal = async () => {
     try {
@@ -113,33 +113,44 @@ const LeadDetailView = () => {
           <StatusBar leadId={leadId} leadData={leadData} />
         </div>
 
-        {/* Tabs and Convert Button */}
-        <div className="flex items-center justify-between mb-2">
-          <Tabs value={tabIndex} onChange={handleTabChange} aria-label="Lead Tabs">
-            <Tab label="Activity" />
-            <Tab label="Comments" />
-            <Tab label="Reminders" />
-          </Tabs>
+        {/* Cupertino-style Tabs and Actions */}
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4 mb-4 w-full overflow-x-hidden">
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
+            {["Activity", "Comments", "Reminders"].map((label, idx) => (
+              <button
+                key={label}
+                onClick={() => handleTabChange(null, idx)}
+                className={`px-5 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
+                  tabIndex === idx
+                    ? "bg-white shadow text-blue-600"
+                    : "text-gray-500 hover:bg-white hover:text-blue-600"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          {/* Show Convert button only if not a deal and not lost */}
-          {!loading && !isDeal && isLost && (
-            <button
-              className="bg-black border border-gray-300 hover:bg-gray-700 text-white font-semibold py-2 px-5 rounded-md shadow ml-4"
-              onClick={convertToDeal}
-            >
-              Convert
-            </button>
-          )}
-
-          {/* Show Lost button only if lead is active */}
-          {!loading && isLost && (
-            <button
-              className="bg-red-500 border ms-[-330px] border-red-300 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-md shadow ml-4"
-              onClick={lostLead}
-            >
-              Lost
-            </button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex gap-3 flex-wrap">
+            {!loading && !isDeal && isLost && (
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
+                onClick={convertToDeal}
+              >
+                Convert
+              </button>
+            )}
+            {!loading && isLost && (
+              <button
+                className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
+                onClick={lostLead}
+              >
+                Lost
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tab Panels */}

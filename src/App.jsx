@@ -28,6 +28,7 @@ import AppLayout from '../src/Components/AppLayout';
 
 function App() {
   return (
+    <>
         <PopupProvider>
 
     <ToastProvider>
@@ -78,6 +79,8 @@ function App() {
     </ToastProvider>
         </PopupProvider>
 
+
+</>
   );
 }
 

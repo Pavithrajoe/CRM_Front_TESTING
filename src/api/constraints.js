@@ -26,6 +26,9 @@ export const ENDPOINTS = {
   USER_CREATION: `${BASE_URL}/users`,
   GET_USERS: `${BASE_URL}/users`,
   CONVERT_TO_LOST: `${BASE_URL}/lead`,
+   EXPORT_LEADS: `${BASE_URL}/lead/download`,
+  LOST_LEADS: `${BASE_URL}/reports/lost-leads`,
+  STAGE_LEADS: `${BASE_URL}/reports/sales-stage-leads`,
 
 
 

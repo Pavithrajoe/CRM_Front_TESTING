@@ -96,6 +96,18 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
               className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             />
           </div>
+            <div>
+            <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">Website:</label>
+            <input
+              type="text"
+              id="cwebsite"
+              name="cwebsite"
+              value={formData.cwebsite || ""}
+              onChange={handleFieldChange}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            />
+          </div>
+          
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={handleSave}
@@ -412,9 +424,20 @@ const ProfileCard = () => {
           <span>{profile.caddress || "N/A"}</span>
         </div>
         <div className="flex items-start gap-3">
-          <TbWorld className="text-gray-500 w-5 h-5 mt-1" />
-          <span>{profile.cwebsite || "N/A"}</span>
-        </div>
+  <TbWorld className="text-gray-500 w-5 h-5 mt-1" />
+  {profile.cwebsite ? (
+    <a
+      href={profile.cwebsite.startsWith('http') ? profile.cwebsite : `https://${profile.cwebsite}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline"
+    >
+      {profile.cwebsite}
+    </a>
+  ) : (
+    <span>N/A</span>
+  )}
+</div>
         <div className="flex items-start gap-3">
           <FiMove className="text-gray-500 w-5 h-5 mt-1" />
           <span>{profile?.status || "N/A"}</span>
@@ -562,25 +585,24 @@ const ProfileCard = () => {
       key={file?.id || i}
       className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex justify-between items-center"
     >
-      <div>
+      {/* <div>
         <span className="font-medium truncate max-w-[80%]">
           {filename || "Unnamed file"}
         </span>
         <span className="ml-2 text-xs text-gray-500">({extension})</span>
-      </div>
+      </div> */}
 
-      {file?.url ? (
-        <a
-          href={file.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:underline text-xs sm:text-sm flex items-center gap-1"
-        >
-          <FiEye size={16} /> View
-        </a>
-      ) : (
-        <span className="text-red-400 text-xs">No URL</span>
-      )}
+     {file?.url && (
+  <a
+    href={file.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-500 hover:underline text-xs sm:text-sm flex items-center gap-1"
+  >
+    <FiEye size={16} /> View
+  </a>
+)}
+
     </div>
   );
 })}

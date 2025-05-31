@@ -33,7 +33,7 @@ const LeadForm = ({ onClose }) => {
     clead_name: "",
     cemail: "",
     corganization: "",
-    cwebsite: "www.com",
+    cwebsite: "",
     icity: "",
     iphone_no: "",
     cgender: 1,
@@ -756,7 +756,7 @@ const LeadForm = ({ onClose }) => {
               readOnly: true,
             },
 
-            { label: "Pincode", name: "cpincode", required: false, readOnly: true },
+            { label: "Pincode", name: "cpincode", required: false },
           ].map(({ label, name, required, type, value, readOnly }) => {
             if (type === "searchable-select-city") { 
               return (

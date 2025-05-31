@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LeadCardView from './LeadcardView';
-import LeadForm from '@/components/LeadForm';
+import LeadForm from '@/Components/LeadForm';
 
 const AllLeadsPage = () => {
   const [leads, setLeads] = useState([]);

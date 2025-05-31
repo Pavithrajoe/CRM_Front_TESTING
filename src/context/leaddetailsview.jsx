@@ -97,7 +97,7 @@ const LeadDetailView = () => {
   }, [leadId]);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
       {/* Left Column */}
       <div className="w-full md:w-1/3 lg:w-1/4 p-4">
         <div className="sticky top-4 z-10">

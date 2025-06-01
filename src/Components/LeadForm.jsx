@@ -703,23 +703,25 @@ const LeadForm = ({ onClose }) => {
   };
 
   return (
-    <div className="relative inset-0 bg-blur flex justify-center items-start pt-10 overflow-y-hiddden z-50">
+     <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-start pt-10 z-50 overflow-y-auto hide-scrollbar">
       <form
         onSubmit={handleSubmit}
-        className="relative bg-white w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-2 space-y-6"
+        className="relative bg-white w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-6 space-y-6"
       >
+        {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-red-500"
         >
-          <X size={20} />
+          <X size={24} />
         </button>
-        <h2 className="text-xl font-bold text-center">
+
+        <h2 className="text-2xl font-bold text-center">
           🚀 Let's Get Started - Create a New Lead
         </h2>
 
-        {/* Customer Details Section */}
+        {/* Customer Details */}
         <h3 className="text-lg font-semibold">Customer Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
@@ -732,33 +734,14 @@ const LeadForm = ({ onClose }) => {
             { label: "Address 2", name: "clead_address2", required: false },
             { label: "Website", name: "cwebsite", required: false },
             {
-              label: "City",
-              name: "icity", // Keep the name as icity for the form state
-              type: "searchable-select-city", // Custom type for city
-              required: true,
+              label: "City", name: "icity", type: "searchable-select-city", required: true,
             },
-            {
-              label: "Country",
-              name: "ccountry",
-              value: form.ccountry,
-              readOnly: true,
-            },
-            {
-              label: "State",
-              name: "cstate",
-              value: form.cstate,
-              readOnly: true,
-            },
-            {
-              label: "District",
-              name: "cdistrict",
-              value: form.cdistrict,
-              readOnly: true,
-            },
-
+            { label: "Country", name: "ccountry", value: form.ccountry, readOnly: true },
+            { label: "State", name: "cstate", value: form.cstate, readOnly: true },
+            { label: "District", name: "cdistrict", value: form.cdistrict, readOnly: true },
             { label: "Pincode", name: "cpincode", required: false },
           ].map(({ label, name, required, type, value, readOnly }) => {
-            if (type === "searchable-select-city") { 
+            if (type === "searchable-select-city") {
               return (
                 <div key={name}>
                   <label className="text-sm font-medium">
@@ -768,13 +751,13 @@ const LeadForm = ({ onClose }) => {
                     <input
                       type="text"
                       placeholder={`Search ${label.toLowerCase()}`}
-                      className="w-full border px-3 py-2 rounded pr-10"
-                      value={searchCity} 
-                      onChange={(e) => handleChange({ target: { name: "searchCity", value: e.target.value } })} 
-                      onBlur={() => {
-                          
-                          setTimeout(() => setIsCityDropdownOpen(false), 100);
-                        }}
+                      className="w-full border px-3 py-2 rounded pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={searchCity}
+                      onChange={(e) =>
+                        handleChange({ target: { name: "searchCity", value: e.target.value } })
+                      }
+                      onBlur={() => setTimeout(() => setIsCityDropdownOpen(false), 100)}
+                      onFocus={() => setIsCityDropdownOpen(true)}
                     />
                     {isCityDropdownOpen && filteredCities.length > 0 && (
                       <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
@@ -782,10 +765,9 @@ const LeadForm = ({ onClose }) => {
                           <div
                             key={city.icity_id}
                             onClick={() => {
-                              setForm({ ...form, icity: city.icity_id });
+                              handleChange({ target: { name: "icity", value: city.icity_id } });
                               setSearchCity(city.cCity_name);
                               setIsCityDropdownOpen(false);
-                              setErrors((prev) => ({ ...prev, icity: undefined })); // Clear city error on selection
                             }}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           >
@@ -795,177 +777,169 @@ const LeadForm = ({ onClose }) => {
                       </div>
                     )}
                   </div>
-                  {errors.icity && <p className="text-red-600 text-sm">{errors.icity}</p>}
+                  {errors.icity && (
+                    <p className="text-red-600 text-sm">{errors.icity}</p>
+                  )}
+                </div>
+              );
+            } else {
+              return (
+                <div key={name}>
+                  <label className="text-sm font-medium">
+                    {label} {required && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    name={name}
+                    value={value !== undefined ? value : form[name]}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                    className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    disabled={name === "whatsapp" && sameAsPhone}
+                    readOnly={readOnly}
+                  />
+                  {errors[name] && (
+                    <p className="text-red-600 text-sm">{errors[name]}</p>
+                  )}
+                  {name === "iphone_no" && (
+                    <label className="inline-flex items-center mt-2">
+                      <input
+                        type="checkbox"
+                        checked={sameAsPhone}
+                        onChange={toggleSame}
+                        className="mr-2"
+                      />
+                      WhatsApp same as phone
+                    </label>
+                  )}
                 </div>
               );
             }
-             else {
-            return(
-            <div key={name}>
-              <label className="text-sm font-medium">
-                {label} {required && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name={name}
-                value={value !== undefined ? value : form[name]}
-                onChange={handleChange}
-                onBlur={handleBlur} // Added onBlur for checking existing
-                placeholder={`Enter ${label.toLowerCase()}`}
-                className="mt-1 w-full border px-3 py-2 rounded"
-                disabled={name === "whatsapp" && sameAsPhone}
-                readOnly={readOnly}
-              />
-              {errors[name] && (
-                <p className="text-red-600 text-sm">{errors[name]}</p>
-              )}
-              {name === "iphone_no" && (
-                <label className="inline-flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    checked={sameAsPhone}
-                    onChange={toggleSame}
-                    className="mr-2"
-                  />
-                  WhatsApp same as phone
-                </label>
-              )}
-            </div>
-          )}
           })}
         </div>
 
         {/* Lead Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Lead potential */}
-          <div className="flex flex-col relative" ref={potentialDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lead potential:</label>
-            <input
-              type="text"
-              placeholder="Search potential..."
-              className="mt-1 w-full border px-3 py-2 rounded pr-10"
-              value={searchPotential}
-              onChange={(e) => handleChange({ target: { name: "searchPotential", value: e.target.value } })}
-              onFocus={() => setIsPotentialDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsPotentialDropdownOpen(false), 100)}
-            />
-            {isPotentialDropdownOpen && filteredPotential.length > 0 && (
-              <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                {filteredPotential.map((poten) => (
-                  <div
-                    key={poten.ileadpoten_id}
-                    onClick={() => handleSelectDropdownItem("iLeadpoten_id", poten.ileadpoten_id, poten.clead_name, setSearchPotential, setIsPotentialDropdownOpen)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {poten.clead_name}
+          {[
+            {
+              label: "Lead potential",
+              ref: potentialDropdownRef,
+              inputName: "searchPotential",
+              searchValue: searchPotential,
+              setSearch: setSearchPotential,
+              open: isPotentialDropdownOpen,
+              setOpen: setIsPotentialDropdownOpen,
+              list: filteredPotential,
+              keyField: "ileadpoten_id",
+              displayField: "clead_name",
+              formField: "iLeadpoten_id",
+              error: errors.iLeadpoten_id,
+            },
+            {
+              label: "Lead status",
+              ref: statusDropdownRef,
+              inputName: "searchStatus",
+              searchValue: searchStatus,
+              setSearch: setSearchStatus,
+              open: isStatusDropdownOpen,
+              setOpen: setIsStatusDropdownOpen,
+              list: filteredStatus,
+              keyField: "ilead_status_id",
+              displayField: "clead_name",
+              formField: "ileadstatus_id",
+              error: errors.ileadstatus_id,
+            },
+            {
+              label: "Industry",
+              ref: industryDropdownRef,
+              inputName: "searchIndustry",
+              searchValue: searchIndustry,
+              setSearch: setSearchIndustry,
+              open: isIndustryDropdownOpen,
+              setOpen: setIsIndustryDropdownOpen,
+              list: filteredIndustry,
+              keyField: "iindustry_id",
+              displayField: "cindustry_name",
+              formField: "cindustry_id",
+              error: errors.cindustry_id,
+            },
+            {
+              label: "Lead source",
+              ref: sourceDropdownRef,
+              inputName: "searchSource",
+              searchValue: searchSource,
+              setSearch: setSearchSource,
+              open: isSourceDropdownOpen,
+              setOpen: setIsSourceDropdownOpen,
+              list: filteredSource,
+              keyField: "source_id",
+              displayField: "source_name",
+              formField: "lead_source_id",
+              error: errors.lead_source_id,
+            },
+          ].map(
+            ({
+              label,
+              ref,
+              inputName,
+              searchValue,
+              setSearch,
+              open,
+              setOpen,
+              list,
+              keyField,
+              displayField,
+              formField,
+              error,
+            }) => (
+              <div className="flex flex-col relative" key={formField} ref={ref}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}:</label>
+                <input
+                  type="text"
+                  placeholder={`Search ${label.toLowerCase()}...`}
+                  className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={searchValue}
+                  onChange={(e) =>
+                    handleChange({ target: { name: inputName, value: e.target.value } })
+                  }
+                  onFocus={() => setOpen(true)}
+                  onBlur={() => setTimeout(() => setOpen(false), 100)}
+                />
+                {open && list.length > 0 && (
+                  <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
+                    {list.map((item) => (
+                      <div
+                        key={item[keyField]}
+                        onClick={() =>
+                          handleSelectDropdownItem(
+                            formField,
+                            item[keyField],
+                            item[displayField],
+                            setSearch,
+                            setOpen
+                          )
+                        }
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {item[displayField]}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+                {error && <p className="text-red-600 text-sm">{error}</p>}
               </div>
-            )}
-            {errors.iLeadpoten_id && (
-              <p className="text-red-600 text-sm">{errors.iLeadpoten_id}</p>
-            )}
-          </div>
-
-          {/* Lead status */}
-          <div className="flex flex-col relative" ref={statusDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lead status:</label>
-            <input
-              type="text"
-              placeholder="Search status..."
-              className="mt-1 w-full border px-3 py-2 rounded pr-10"
-              value={searchStatus}
-              onChange={(e) => handleChange({ target: { name: "searchStatus", value: e.target.value } })}
-              onFocus={() => setIsStatusDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsStatusDropdownOpen(false), 100)}
-            />
-            {isStatusDropdownOpen && filteredStatus.length > 0 && (
-              <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                {filteredStatus.map((sts) => (
-                  <div
-                    key={sts.ilead_status_id}
-                    onClick={() => handleSelectDropdownItem("ileadstatus_id", sts.ilead_status_id, sts.clead_name, setSearchStatus, setIsStatusDropdownOpen)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {sts.clead_name}
-                  </div>
-                ))}
-              </div>
-            )}
-            {errors.ileadstatus_id && (
-              <p className="text-red-600 text-sm">{errors.ileadstatus_id}</p>
-            )}
-          </div>
-
-          {/* Industry */}
-          <div className="flex flex-col relative" ref={industryDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Industry:</label>
-            <input
-              type="text"
-              placeholder="Search industry..."
-              className="mt-1 w-full border px-3 py-2 rounded pr-10"
-              value={searchIndustry}
-              onChange={(e) => handleChange({ target: { name: "searchIndustry", value: e.target.value } })}
-              onFocus={() => setIsIndustryDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsIndustryDropdownOpen(false), 100)}
-            />
-            {isIndustryDropdownOpen && filteredIndustry.length > 0 && (
-              <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                {filteredIndustry.map((lIndustry) => (
-                  <div
-                    key={lIndustry.iindustry_id}
-                    onClick={() => handleSelectDropdownItem("cindustry_id", lIndustry.iindustry_id, lIndustry.cindustry_name, setSearchIndustry, setIsIndustryDropdownOpen)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {lIndustry.cindustry_name}
-                  </div>
-                ))}
-              </div>
-            )}
-            {errors.cindustry_id && (
-              <p className="text-red-600 text-sm">{errors.cindustry_id}</p>
-            )}
-          </div>
-
-          {/* Lead source */}
-          <div className="flex flex-col relative" ref={sourceDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lead source:</label>
-            <input
-              type="text"
-              placeholder="Search source..."
-              className="mt-1 w-full border px-3 py-2 rounded pr-10"
-              value={searchSource}
-              onChange={(e) => handleChange({ target: { name: "searchSource", value: e.target.value } })}
-              onFocus={() => setIsSourceDropdownOpen(true)}
-              onBlur={() => setTimeout(() => setIsSourceDropdownOpen(false), 100)}
-            />
-           
-            {isSourceDropdownOpen && filteredSource.length > 0 && (
-              <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                {filteredSource.map((src) => (
-                  <div
-                    key={src.source_id}
-                    onClick={() => handleSelectDropdownItem("lead_source_id", src.source_id, src.source_name, setSearchSource, setIsSourceDropdownOpen)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {src.source_name}
-                  </div>
-                ))}
-              </div>
-            )}
-            {errors.lead_source_id && (
-              <p className="text-red-600 text-sm">{errors.lead_source_id}</p>
-            )}
-          </div>
+            )
+          )}
         </div>
-       
 
-        {/* Buttons */}
+        {/* Submit Button */}
         <div className="flex justify-end gap-4 pt-4">
           <button
             type="submit"
             disabled={loading || Object.keys(errors).some((key) => errors[key])}
-            className={`w-[150px] flex justify-center items-center bg-black text-white py-2 font-semibold rounded-md hover:bg-gray-900 ${loading || Object.keys(errors).some((key) => errors[key])
+            className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md hover:bg-blue-700 transition ${
+              loading || Object.keys(errors).some((key) => errors[key])
                 ? "opacity-70 cursor-not-allowed"
                 : ""
             }`}
@@ -996,24 +970,24 @@ const LeadForm = ({ onClose }) => {
             )}
           </button>
         </div>
+
+        {/* Validation Alert */}
+        {isAlertVisible && (
+          <div style={alertStyle}>
+            <span>{alertMessage}</span>
+          </div>
+        )}
+
+        {/* Popup Message */}
+        {isPopupVisible && (
+          <div style={popupStyle}>
+            <span>{popupMessage}</span>
+            <button onClick={() => setIsPopupVisible(false)} style={closeButtonStyle}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
       </form>
-
-      {/* Alert Message for Validation Errors */}
-      {isAlertVisible && (
-        <div style={alertStyle}>
-          <span>{alertMessage}</span>
-        </div>
-      )}
-
-      {/* Alert Popup Message for Success/Failure */}
-      {isPopupVisible && (
-        <div style={popupStyle}>
-          <span>{popupMessage}</span>
-          <button onClick={() => setIsPopupVisible(false)} style={closeButtonStyle}>
-            <X size={16} />
-          </button>
-        </div>
-      )}
     </div>
   );
 };

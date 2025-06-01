@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import LeadForm from '../LeadForm';
 import logo from './favicon.png';
 import axios from 'axios';
+import { ENDPOINTS } from '../../api/constraints';
 
 const LAST_UNREAD_COUNT_KEY = 'lastUnreadCountForBell';
 const POLLING_INTERVAL_MS = 30000;
@@ -81,7 +82,7 @@ export default function ProfileHeader() {
     }
 
     try {
-      const res = await axios.get(`http://192.168.0.134:3000/api/notifications`, {
+      const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}notifications`, {
         headers: {
           Authorization: `Bearer ${currentToken}`,
         },

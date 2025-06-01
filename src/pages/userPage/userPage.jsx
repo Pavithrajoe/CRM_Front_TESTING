@@ -8,7 +8,7 @@ import {
   FaBars,
 } from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
-
+import { ENDPOINTS } from "../../api/constraints";
 const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -32,7 +32,7 @@ const UserPage = () => {
       const companyId = getCompanyId();
       if (!companyId) return alert("No company ID found in token");
       try {
-        const response = await fetch("http://192.168.0.134:3000/api/users", {
+        const response = await fetch(`${ENDPOINTS}users`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (!response.ok) throw new Error("Failed to fetch users");

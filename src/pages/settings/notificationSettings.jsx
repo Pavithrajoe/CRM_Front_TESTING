@@ -16,7 +16,7 @@ const NotificationSettings = () => {
   };
 
   const handleSave = () => {
-    console.log('Saved settings:', settings);
+   // console.log('Saved settings:', settings);
     // Add API integration here
     alert("Notification settings saved successfully!");
   };

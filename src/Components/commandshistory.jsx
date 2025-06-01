@@ -102,24 +102,47 @@ const Comments = () => {
   };
 
   const handleFormSubmission = async (e) => {
-    e.preventDefault();
-    if (!formData.comments.trim()) return showPopup("Warning", "Comment cannot be empty!", "warning");
-    try {
-      const response = await fetch(`${apiEndPoint}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, LeadId: Number(leadId) }),
-      });
-      const data = await response.json();
-      if (!response.ok) return showPopup("Error", data.message || "Enter More Character", "error");
-      showPopup("Success", "🎉 Comment added successfully!!", "success");
-      setFormData({ comments: "", LeadId: leadId });
-      setShowForm(false);
-      fetchComments();
-    } catch (error) {
-      showPopup("Error", "Failed to add comment due to network error.", "error");
+  e.preventDefault();
+
+  // Validate comment is not empty or whitespace only
+  if (!formData.comments.trim()) {
+    return showPopup("Warning", "Comment cannot be empty!", "warning");
+  }
+
+  try {
+    const response = await fetch(`${apiEndPoint}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        comments: formData.comments,
+        LeadId: Number(leadId),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return showPopup("Error", data.message || "Failed to add comment.", "error");
     }
-  };
+
+    showPopup("Success", "🎉 Comment added successfully!", "success");
+
+    // Clear only comments field, keep LeadId as is or reset if needed
+    setFormData((prev) => ({ ...prev, comments: "" }));
+
+    setShowForm(false);
+
+    // Refresh comments list after successful submission
+    fetchComments();
+
+  } catch (error) {
+    showPopup("Error", "Failed to add comment due to network error.", "error");
+  }
+};
+
 
   const handleSaveEdit = async (id) => {
     if (!editText.comments.trim()) return showPopup("Warning", "Edited comment cannot be empty!", "warning");

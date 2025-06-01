@@ -29,8 +29,8 @@ const token = localStorage.getItem("token")
     const fetchUsers = async () => {
         if (isUserOptionsLoaded) return;
         setIsUserLoading(true);
-        console.log('Fetching users from:', ENDPOINTS.GET_USERS);
-        console.log('Using token:', token);
+      //  console.log('Fetching users from:', ENDPOINTS.GET_USERS);
+  //      console.log('Using token:', token);
         try {
             const response = await fetch(ENDPOINTS.GET_USERS, {
                 method: 'GET',
@@ -39,7 +39,7 @@ const token = localStorage.getItem("token")
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Response status:', response);
+           // console.log('Response status:', response);
 
             if (!response.ok) {
                 let errorText = '';
@@ -54,7 +54,7 @@ const token = localStorage.getItem("token")
                 );
             }
             const data = await response.json();
-            console.log('Successfully fetched users:', data);
+           // console.log('Successfully fetched users:', data);
             setUserOptions(data);
             setIsUserOptionsLoaded(true);
         } catch (error) {
@@ -133,9 +133,9 @@ const token = localStorage.getItem("token")
             cProfile_pic: formData.image,
         };
 
-        console.log('Submitting data:', payload);
-        console.log('API URL:', ENDPOINTS.USER_CREATION);
-        console.log('Using token:', token);
+       // console.log('Submitting data:', payload);
+       // console.log('API URL:', ENDPOINTS.USER_CREATION);
+       // console.log('Using token:', token);
 
         try {
             const response = await fetch(ENDPOINTS.USER_CREATION, {
@@ -147,7 +147,7 @@ const token = localStorage.getItem("token")
                 body: JSON.stringify(payload),
             });
 
-            console.log('Create User Response:', response);
+          //  console.log('Create User Response:', response);
 
             if (!response.ok) {
                 let errorText = 'Failed to create user';
@@ -178,7 +178,7 @@ const token = localStorage.getItem("token")
             }
 
             const responseData = await response.json();
-            console.log('User created successfully:', responseData.details);
+           // console.log('User created successfully:', responseData.details);
             setSubmissionMessage('User created successfully!');
             setFormData({
                 employeeName: '',

@@ -16,7 +16,7 @@ const TeamviewDashboard = () => {
       const storedUser = localStorage.getItem("user");
       const userObj = JSON.parse(storedUser);
     
-      console.log("Stored User:", userObj);
+    //  console.log("Stored User:", userObj);
     
       const fetchDashboardData = async () => {
         try {
@@ -33,7 +33,7 @@ const TeamviewDashboard = () => {
           }
     
           const data = await response.json();
-          console.log("Teams dashboard Data:", data);
+        //  console.log("Teams dashboard Data:", data);
           setDashboardData(data);
     
         } catch (error) {
@@ -43,7 +43,7 @@ const TeamviewDashboard = () => {
 
 
       const fetchReminders = async () => {
-        console.log("Fetching reminders...",ENDPOINTS.REMINDERS);
+      //  console.log("Fetching reminders...",ENDPOINTS.REMINDERS);
         try {
           const response = await fetch(`${ENDPOINTS.REMINDERS}`, {
             method: "GET",
@@ -58,7 +58,7 @@ const TeamviewDashboard = () => {
           }
     
           const data = await response.json();
-          console.log("Teams dashboard Data for reminder:", data);
+         // console.log("Teams dashboard Data for reminder:", data);
           setReminderData(data);
     
         } catch (error) {
@@ -95,7 +95,7 @@ const dealCount = leads.filter(item => item.bisConverted === true).length;
 const hotCount = leads.filter(lead => lead.lead_potential?.clead_name === "HOT").length;
 const coldCount = leads.filter(lead => lead.lead_potential?.clead_name === "COLD").length;
 
-     console.log("🔥 Hot Leads:", hotCount);
+   //  console.log("🔥 Hot Leads:", hotCount);
 
   return (
     <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen">

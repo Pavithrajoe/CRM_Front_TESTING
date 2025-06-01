@@ -20,7 +20,7 @@ export default function SmtpSettings() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token found');
 
-      console.log('📡 Sending GET request to backend with token...');
+      //console.log('📡 Sending GET request to backend with token...');
       const res = await fetch(`${ENDPOINTS.BASE_URL_IS}/smtp-settings/company-smtp`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -113,7 +113,7 @@ const handleSubmit = async (e) => {
     }
 
     const result = await response.json();
-    console.log(`✅ SMTP settings ${isUpdate ? 'updated' : 'created'}:`, result);
+   // console.log(`✅ SMTP settings ${isUpdate ? 'updated' : 'created'}:`, result);
     alert(`SMTP settings ${isUpdate ? 'updated' : 'created'} successfully!`);
     await loadData(); 
   } catch (error) {

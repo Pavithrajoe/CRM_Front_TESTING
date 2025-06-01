@@ -15,7 +15,7 @@ const LeadForm = ({ onClose }) => {
       const payload = JSON.parse(atob(base64));
       userId = payload.user_id;
       company_id = payload.company_id;
-      console.log("Logged in User ID:", userId, company_id);
+     // console.log("Logged in User ID:", userId, company_id);
     } catch (error) {
       console.error("Token decode error:", error);
     }
@@ -131,7 +131,7 @@ const LeadForm = ({ onClose }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("city response:", response);
+     // console.log("city response:", response);
 
       if (!response.ok) {
         alert("Can't fetch cities, there was an error.");
@@ -139,13 +139,13 @@ const LeadForm = ({ onClose }) => {
       }
 
       const data = await response.json();
-      console.log("city data:", data);
+     // console.log("city data:", data);
 
       if (data && Array.isArray(data.cities)) {
         setCities(data.cities);
         setFilteredCities(data.cities); // Initialize filtered cities
       } else {
-        console.error("Invalid city data format:", data);
+       // console.error("Invalid city data format:", data);
         alert("Invalid city data received.");
       }
     } catch (e) {
@@ -179,7 +179,7 @@ const LeadForm = ({ onClose }) => {
           });
 
           if (!response.ok) {
-            console.log(`Can't fetch details for city ID ${cityId}`, response);
+           // console.log(`Can't fetch details for city ID ${cityId}`, response);
             setForm((prev) => ({
               ...prev,
               cstate: "",
@@ -190,7 +190,7 @@ const LeadForm = ({ onClose }) => {
           }
 
           const data = await response.json();
-          console.log(`City details for ID ${cityId}:`, data);
+         // console.log(`City details for ID ${cityId}:`, data);
           if (data) {
             setForm((prev) => ({
               ...prev,
@@ -209,7 +209,7 @@ const LeadForm = ({ onClose }) => {
             }));
           }
         } catch (error) {
-          console.error(`Error fetching details for city ID ${cityId}:`, error);
+        //  console.error(`Error fetching details for city ID ${cityId}:`, error);
           setForm((prev) => ({
             ...prev,
             cstate: "",
@@ -397,7 +397,7 @@ const LeadForm = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        console.error(`Error checking existing ${fieldName}:`, response);
+        //console.error(`Error checking existing ${fieldName}:`, response);
         return;
       }
 
@@ -605,7 +605,7 @@ const LeadForm = ({ onClose }) => {
         lead_source_id: Number(form.lead_source_id),
       };
 
-      console.log("Form submitted:", formData);
+     // console.log("Form submitted:", formData);
       const res = await fetch(`${apiEndPoint}/lead`, {
         method: "POST",
         headers: {
@@ -616,7 +616,7 @@ const LeadForm = ({ onClose }) => {
       });
 
       const resData = await res.json();
-      console.info("Server response:", resData);
+     // console.info("Server response:", resData);
 
       if (res.ok) {
         setPopupMessage("Lead created successfully!");
@@ -658,7 +658,7 @@ const LeadForm = ({ onClose }) => {
   );
 
 
-  console.log("source details:", source);
+ // console.log("source details:", source);
   const popupStyle = {
     position: "fixed",
     bottom: "20px",

@@ -36,8 +36,8 @@ const CompanyForm = ({ initialData, onClose }) => {
     const method = initialData ? 'PUT' : 'POST';
     const url = initialData ? `${API_URL}/${initialData.iCompany_id}` : API_URL;
 
-    console.log('Submitting company data:', formData);
-    console.log('Form submitted:', formData);
+  //  console.log('Submitting company data:', formData);
+   // console.log('Form submitted:', formData);
 
     await fetch(url, {
       method,
@@ -46,7 +46,7 @@ const CompanyForm = ({ initialData, onClose }) => {
     })
       .then(res => res.json())
       .then(data => {
-        console.log(`${method} success:`, data);
+       // console.log(`${method} success:`, data);
         onClose();
       })
       .catch(err => console.error(`${method} error:`, err));

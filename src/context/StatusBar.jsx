@@ -162,7 +162,7 @@ const StatusBar = ({ leadId, leadData }) => {
         },
       });
 
-      console.log("POST Success:", response.data);
+     // console.log("POST Success:", response.data);
     } catch (error) {
       console.error("POST Error:", error?.response?.data?.message || error.message);
     }

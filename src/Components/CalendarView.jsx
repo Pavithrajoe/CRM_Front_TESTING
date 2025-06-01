@@ -83,7 +83,7 @@ const [formData, setFormData] = useState(initialFormData);
  formData.devent_end = startTime; // Same as start, adjust if needed
  formData.dupdated_at = new Date().toISOString().split('.')[0] + 'Z';
 
- console.log('Form data ready for submission:', formData);
+ //console.log('Form data ready for submission:', formData);
 
  setLoading(true);
  const token = localStorage.getItem("token");
@@ -243,7 +243,7 @@ const [calendarEvents, setCalendarEvents] = useState([]);
  const fetchReminders = async (date = selectedDate) => {
  const user_data = localStorage.getItem("user");
  const user_data_parsed = JSON.parse(user_data);
- console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
+ //console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
 
  let dates = new Date(date);
 
@@ -262,14 +262,14 @@ let formattedDate = utcDate.toISOString(); // e.g. "2025-05-08T00:00:00.000Z"
 // Optional: remove milliseconds
 formattedDate = formattedDate.replace('.000', '');
 
-console.log(formattedDate); // → "2025-05-08T00:00:00Z"
-console.log("new date is", new Date())
+//console.log(formattedDate); // → "2025-05-08T00:00:00Z"
+//console.log("new date is", new Date())
  
  setLoading(true);
  try {
  const token = localStorage.getItem("token");
 
- console.log("Fetching reminders for date:", ENDPOINTS.REMINDERS); // Log the date being fetched
+ //console.log("Fetching reminders for date:", ENDPOINTS.REMINDERS); // Log the date being fetched
  const response = await fetch(`${ENDPOINTS.FOLLOW_UP}?id=${user_data_parsed.iUser_id}&eventDate=${formattedDate}`, {
  method: 'GET',
  headers: {
@@ -280,13 +280,13 @@ console.log("new date is", new Date())
 
 
 const data = await response.json(); // Parse the response body
-console.log("Parsed Response Data:", data); // Now you can see the actual JSON
+//console.log("Parsed Response Data:", data); // Now you can see the actual JSON
  setReminders(data.reminders || []);
 
  // setAllReminder(allReminderData || []);
 
  setCalendarEvents(data.calender_event || []);
- console.log("The reminder response is :", reminders); // Log the user data
+ //console.log("The reminder response is :", reminders); // Log the user data
 
  } catch (error) {
  setSnackbar({
@@ -335,7 +335,7 @@ console.log("Parsed Response Data:", data); // Now you can see the actual JSON
  }
 
  const data=await response.json();
- console.log("reminder data",data)
+ //console.log("reminder data",data)
  const reminderLists=data.data;
  setReminderList(reminderLists)
  } catch (e) {
@@ -412,7 +412,7 @@ const currentReminders = remindersToShow.slice(indexOfFirstReminder, indexOfLast
  UserReminder();
 
  }, [selectedDate]);
- console.log("Reminder list",reminderList)
+ //console.log("Reminder list",reminderList)
  return (
  <div>
 <div className="flex w-full p-8  rounded-xl ">

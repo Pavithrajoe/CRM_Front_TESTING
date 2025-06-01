@@ -82,7 +82,7 @@ export default function ProfileHeader() {
     }
 
     try {
-      const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}notifications`, {
+      const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}/notifications`, {
         headers: {
           Authorization: `Bearer ${currentToken}`,
         },

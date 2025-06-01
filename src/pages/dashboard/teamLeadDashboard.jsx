@@ -53,7 +53,7 @@ const LeadsDashboard = () => {
 
         const data = await response.json();
         setDashboardData(data);
-        console.log("✅ Dashboard Data:", data);
+       // console.log("✅ Dashboard Data:", data);
       } catch (error) {
         console.error("❌ Error fetching dashboard data:", error);
       }
@@ -118,37 +118,46 @@ const LeadsDashboard = () => {
       userSelect: 'none',
     }}
   >
-    🎉 🎉 Welcome to the New Dashboard! 🎉 🎉
+    🎉 OCRM V1.5 is here ! 🎉 
   </DialogTitle>
 
-  <DialogContent
-    dividers
-    sx={{
-      fontSize: '0.9rem',
-      color: '#3C3C4399',           // subtle gray text
-      lineHeight: 1.5,
-      pt: 1,
-      pb: 2,
-      '& ul': {
-        paddingLeft: 3,
-        marginTop: 1,
-        listStyleType: 'disc',
-        '& li': {
-          marginBottom: 1,
-          userSelect: 'none',
+<DialogContent
+  dividers
+  sx={{
+    fontSize: '0.95rem',
+    color: '#3C3C4399',
+    lineHeight: 1.6,
+    pt: 2,
+    pb: 3,
+    '& ul': {
+      paddingLeft: 3,
+      marginTop: 1.5,
+      listStyleType: 'none',
+      '& li': {
+        position: 'relative',
+        paddingLeft: '1.8em',
+        marginBottom: 1.2,
+        userSelect: 'none',
+        '&::before': {
+          content: '"•"',
+          position: 'absolute',
+          left: 0,
+          color: '#1976d2',
+          fontWeight: 'bold',
         },
       },
-    }}
-  >
-    🎉 Here are some of the new features:
-    <ul>
-      <li>🔍 Improved Lead & Deal Tracking</li>
-      <li>📅 Smart Reminders with Alerts</li>
-      <li>📊 Enhanced KPI Insights</li>
-      <li>⚡ Faster performance and UI upgrades</li>
-      <li>🎙️ Voice to Text Functionality</li>
-    </ul>
-  </DialogContent>
+    },
+  }}
+>
+  <ul>
+    <li>🔍 Improved Lead & Deal Tracking</li>
+    <li>📅 Smart Reminders with Alerts</li>
+    <li>📊 Enhanced KPI Insights</li>
+    <li>⚡ Blazing-fast Performance and UI Upgrades</li>
+    <li>🎙️ Voice-to-Text for Effortless Logging</li>
+  </ul>
+</DialogContent>
+
 
   <DialogActions
     sx={{

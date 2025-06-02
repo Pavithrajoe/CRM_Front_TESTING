@@ -73,11 +73,9 @@ export default function ProfileHeader() {
 
     const currentToken = localStorage.getItem('token');
     if (!currentUserId || !currentToken) {
-      // If no user or token, reset all notification states EXCEPT the acknowledged count in localStorage
       setDisplayedNotifications([]);
       setBellNotificationCount(0);
-      lastAcknowledgedUnreadCount.current = parseInt(localStorage.getItem(LAST_UNREAD_COUNT_KEY) || '0', 10); // Re-read persisted count
-      // DO NOT localStorage.setItem(LAST_UNREAD_COUNT_KEY, '0'); here
+      lastAcknowledgedUnreadCount.current = parseInt(localStorage.getItem(LAST_UNREAD_COUNT_KEY) || '0', 10);
       return;
     }
 
@@ -152,46 +150,11 @@ export default function ProfileHeader() {
     });
   };
 
-  // const markNotificationAsRead = async (notificationId) => {
-  //   const currentToken = localStorage.getItem('token');
-  //   if (!currentToken) return;
-
-  //   try {
-  //     setDisplayedNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-
-  //     lastAcknowledgedUnreadCount.current = Math.max(0, lastAcknowledgedUnreadCount.current - 1);
-  //     localStorage.setItem(LAST_UNREAD_COUNT_KEY, String(lastAcknowledgedUnreadCount.current));
-
-  //     await axios.put(
-  //       `http://192.168.0.134:3000/api/notifications/mark-read`,
-  //       { notificationIds: [notificationId] },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${currentToken}`,
-  //         },
-  //       }
-  //     );
-
-  //     fetchUnreadTodayNotifications();
-  //   } catch (err) {
-  //     console.error(`Error marking notification ${notificationId} as read:`, err);
-  //     fetchUnreadTodayNotifications();
-  //   }
-  // };
-
   const handleLogout = () => {
-    // Only clear the user and token from localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    // Do NOT clear LAST_UNREAD_COUNT_KEY here to preserve it across sessions.
-    // Do NOT call localStorage.clear();
-
-    // Immediately reset notification-related states for visual feedback on the current component
     setBellNotificationCount(0);
     setDisplayedNotifications([]);
-    // lastAcknowledgedUnreadCount.current is not reset here as it's meant to persist in localStorage
-
-    // Navigate to the login page
     navigate('/');
   };
 
@@ -199,110 +162,122 @@ export default function ProfileHeader() {
     navigate('/create-user');
   };
 
+  const viewAllNotifications = () => {
+    setShowNotifications(false);
+    navigate('/notifications');
+  };
+
   return (
-     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
-    <button
-      onClick={handleLeadFormOpen}
-      className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
-    >
-      + Create Lead
-    </button>
-
-    {showLeadForm && (
-      <div className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center">
-        <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
-          <LeadForm onClose={handleLeadFormClose} />
-        </div>
-      </div>
-    )}
-
-    {profile.role && String(profile.role).toLowerCase() === 'reseller' && (
+    <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
       <button
-        onClick={createUser}
+        onClick={handleLeadFormOpen}
         className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
       >
-        + User
+        + Create Lead
       </button>
-    )}
 
-    <div className="relative" ref={notificationRef}>
-      <Bell
-        onClick={toggleNotificationsPanel}
-        className="w-10 h-10 border border-gray-300 rounded-full p-2 text-blue-600 cursor-pointer bg-white shadow hover:bg-gray-100 transition"
-      />
-      {bellNotificationCount > 0 && (
-        <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
-          {bellNotificationCount}
-        </span>
-      )}
-
-      {showNotifications && (
-        <div className="absolute right-0 mt-2 w-80 max-h-60 overflow-y-auto bg-white shadow-2xl rounded-2xl p-4 text-sm z-20 border border-gray-200 transition-all duration-300">
-          <div className="flex justify-between items-center mb-2">
-            <div className="font-semibold text-gray-700">Today's Notifications</div>
-            <X
-              className="w-5 h-5 cursor-pointer text-gray-400 hover:text-gray-600"
-              onClick={() => setShowNotifications(false)}
-            />
+      {showLeadForm && (
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center">
+          <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
+            <LeadForm onClose={handleLeadFormClose} />
           </div>
-          {displayedNotifications.length === 0 ? (
-            <div className="text-gray-400">No new notifications for today.</div>
-          ) : (
-            <ul className="space-y-3">
-              {displayedNotifications.map((note) => (
-                <li
-                  key={note.id}
-                  className="flex justify-between items-start bg-blue-50 p-3 rounded-2xl shadow-sm text-gray-700"
-                >
-                  <span>{note.message || note.title || 'New Notification'}</span>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
-    </div>
 
-    {/* Profile Dropdown */}
-    <div className="relative" ref={dropdownRef}>
-      <div
-        className="flex items-center gap-2 cursor-pointer"
-        onClick={() => setShowDropdown(!showDropdown)}
-      >
-        <label htmlFor="profile-upload">
-          <img
-            src={profile.cProfile_pic || logo}
-            alt="avatar"
-            className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow"
-          />
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          id="profile-upload"
-          onChange={() => { }}
-          className="hidden"
+      {profile.role && String(profile.role).toLowerCase() === 'reseller' && (
+        <button
+          onClick={createUser}
+          className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
+        >
+          + User
+        </button>
+      )}
+
+      <div className="relative" ref={notificationRef}>
+        <Bell
+          onClick={toggleNotificationsPanel}
+          className="w-10 h-10 border border-gray-300 rounded-full p-2 text-blue-600 cursor-pointer bg-white shadow hover:bg-gray-100 transition"
         />
-        <div className="text-xl text-gray-600">▾</div>
+        {bellNotificationCount > 0 && (
+          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
+            {bellNotificationCount}
+          </span>
+        )}
+
+        {showNotifications && (
+          <div className="absolute right-0 mt-2 w-80 max-h-60 overflow-y-auto bg-white shadow-2xl rounded-2xl p-4 text-sm z-20 border border-gray-200 transition-all duration-300">
+            <div className="flex justify-between items-center mb-2">
+              <div className="font-semibold text-gray-700">Today's Notifications</div>
+              <X
+                className="w-5 h-5 cursor-pointer text-gray-400 hover:text-gray-600"
+                onClick={() => setShowNotifications(false)}
+              />
+            </div>
+            {displayedNotifications.length === 0 ? (
+              <div className="text-gray-400">No new notifications for today.</div>
+            ) : (
+              <>
+                <ul className="space-y-3 mb-2">
+                  {displayedNotifications.map((note) => (
+                    <li
+                      key={note.id}
+                      className="flex justify-between items-start bg-blue-50 p-3 rounded-2xl shadow-sm text-gray-700"
+                    >
+                      <span>{note.message || note.title || 'New Notification'}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={viewAllNotifications}
+                  className="w-full mt-2 py-2 text-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+                >
+                  View All
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {showDropdown && (
-        <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
-          <div className="font-semibold text-gray-900">{profile.name}</div>
-          <div className="text-gray-500">{profile.email}</div>
-          <div className="text-gray-500">Role: {profile.role}</div>
-          {profile.companyName && (
-            <div className="text-gray-500">Company: {profile.companyName}</div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full text-center mt-5 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"
-          >
-            Logout
-          </button>
+      <div className="relative" ref={dropdownRef}>
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => setShowDropdown(!showDropdown)}
+        >
+          <label htmlFor="profile-upload">
+            <img
+              src={profile.cProfile_pic || logo}
+              alt="avatar"
+              className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow"
+            />
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            id="profile-upload"
+            onChange={() => { }}
+            className="hidden"
+          />
+          <div className="text-xl text-gray-600">▾</div>
         </div>
-      )}
+
+        {showDropdown && (
+          <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
+            <div className="font-semibold text-gray-900">{profile.name}</div>
+            <div className="text-gray-500">{profile.email}</div>
+            <div className="text-gray-500">Role: {profile.role}</div>
+            {profile.companyName && (
+              <div className="text-gray-500">Company: {profile.companyName}</div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="w-full text-center mt-5 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
   );
 }

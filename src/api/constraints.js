@@ -31,6 +31,8 @@ export const ENDPOINTS = {
   STAGE_LEADS: `${BASE_URL}/reports/sales-stage-leads`,
     COMPANY_GET: `${BASE_URL}/lead/company-dashboard/`,
     USER_GET: `${BASE_URL}/users`,
+      NOTIFICATIONS: `${BASE_URL}/notifications`,
+
 
 
 

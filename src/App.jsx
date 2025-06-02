@@ -26,7 +26,7 @@ import { TabProvider } from "./context/TabContext";
 import LeadDetailView from "./context/leaddetailsview";
 import CreateUserForm from "./Components/registerUser";
 import AppLayout from "./Components/AppLayout";
-
+import CompanyDashboard from './pages/dashboard/companydashboard';
 import SettingsPage from "./pages/settings/settingsPage";
 import AccountSettings from "./pages/settings/accountSettings";
 import NotificationSettings from "./pages/settings/notificationSettings";
@@ -38,6 +38,7 @@ import UserPage from "./pages/userPage/userPage";
 import LostLeadReportPage from './Components/reports/LeadLostReport';
 import SalesByStageReportPage from './Components/reports/salesByStageReport';
 import CardsPage from './Components/reports/reports';
+import NotificationPage from "./pages/notification"; 
 
 function App() {
   return (
@@ -54,11 +55,14 @@ function App() {
 
             {/* Protected Routes with Layout */}
             <Route element={<AppLayout />}>
+                <Route path="/notifications" element={<NotificationPage />} />
+
               <Route path="calenderpage" element={<CalendarPage />} />
                 <Route path="/reportpage" element={<CardsPage />} />
-          <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
-
-          <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
+                <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
+                <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
+                <Route path="/companydashboard" element={<CompanyDashboard />} />
+               <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
               <Route path="userpage" element={<UserPage />} />
               <Route path="commandpage" element={<Commandpage />} />
               <Route path="users" element={<CreateUserForm />} />

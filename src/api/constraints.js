@@ -29,6 +29,10 @@ export const ENDPOINTS = {
    EXPORT_LEADS: `${BASE_URL}/lead/download`,
   LOST_LEADS: `${BASE_URL}/reports/lost-leads`,
   STAGE_LEADS: `${BASE_URL}/reports/sales-stage-leads`,
+    COMPANY_GET: `${BASE_URL}/lead/company-dashboard/`,
+    USER_GET: `${BASE_URL}/users`,
+
+
 
 
 

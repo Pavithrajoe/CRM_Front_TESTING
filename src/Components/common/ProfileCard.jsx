@@ -19,6 +19,7 @@ import Loader from "./Loader"; // Assuming Loader is already styled appropriatel
 import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
+import { Snackbar, Alert } from '@mui/material';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
@@ -144,7 +145,14 @@ const ProfileCard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false); // Renamed for clarity
-
+const [snackbar, setSnackbar] = useState({
+  open: false,
+  message: '',
+  severity: 'success', // can be 'error', 'info', 'warning', 'success'
+});
+const handleSnackbarClose = () => {
+  setSnackbar((prev) => ({ ...prev, open: false }));
+};
   useEffect(() => {
     const fetchLeadDetails = async () => {
       setLoading(true);
@@ -167,7 +175,6 @@ const ProfileCard = () => {
       }
     };
 
-    
 
     const fetchUsers = async () => {
       try {
@@ -244,7 +251,12 @@ const ProfileCard = () => {
       ]);
     } catch (err) {
       console.error("Failed to save profile", err);
-      alert("Failed to save profile.");
+      //alert("Failed to save profile.");
+      setSnackbar({
+  open: true,
+  message: "Failed to save profile.",
+  severity: "warning",
+});
     }
   };
 
@@ -306,12 +318,17 @@ const handleAssignLead = async (e) => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: Bearer `${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       
-      alert("Lead assigned successfully.");
+   //  alert("Lead assigned successfully.");
+         setSnackbar({
+  open: true,
+  message: "Lead assigned successfully.",
+  severity: "success",
+});
         
        const userString = localStorage.getItem('user'); // Read userString inside useEffect
        console.log("user data", userString)
@@ -337,12 +354,13 @@ console.log("Assigned Email:", assignedTomail);
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         userName: userName,
         time: new Date().toLocaleString(), // Friendly timestamp
         leadName: profile.clead_name ,
-        leadURL: `https://crm.inklidox.com/leaddetailview/${leadId}`,
+        leadURL: `${apiEndPoint}/leaddetailview/${leadId}`,
         mailId: assignedTomail,
       })
     });
@@ -571,7 +589,16 @@ console.log("Assigned Email:", assignedTomail);
 
           </div>
         </div>
-
+<Snackbar
+  open={snackbar.open}
+  autoHideDuration={4000}
+  onClose={handleSnackbarClose}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+>
+  <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+    {snackbar.message}
+  </Alert>
+</Snackbar>
         <Dialog open={isAttachmentModalOpen} onClose={() => setIsAttachmentModalOpen(false)} className="relative z-50">
           <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">

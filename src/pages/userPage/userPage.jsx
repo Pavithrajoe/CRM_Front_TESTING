@@ -9,6 +9,8 @@ import {
 } from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
+import CreateUserForm from "../../Components/registerUser";
+
 const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -16,49 +18,76 @@ const UserPage = () => {
   const [view, setView] = useState("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const usersPerPage = 6;
 
   const getCompanyId = () => {
     const token = localStorage.getItem("token");
     if (!token) return null;
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64));
-    return payload.company_id;
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(base64));
+      return payload.company_id;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
   };
 
   useEffect(() => {
     const fetchUsers = async () => {
       const companyId = getCompanyId();
-      if (!companyId) return alert("No company ID found in token");
+      if (!companyId) {
+        console.warn("No company ID found in token. Cannot fetch users.");
+        return;
+      }
+
       try {
-        const response = await fetch(`${ENDPOINTS}users`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        const response = await fetch(ENDPOINTS.USER_GET, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
         });
-        if (!response.ok) throw new Error("Failed to fetch users");
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
         const data = await response.json();
-        const companyUsers = data.filter((user) => user.iCompany_id === companyId);
+        console.log("Raw API response data:", data);
+
+        const companyUsers = data.filter(
+          (user) => user.iCompany_id === companyId
+        );
+        console.log("Users filtered by company ID:", companyUsers);
+
         setUsers(companyUsers);
         setFiltered(companyUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
+
     fetchUsers();
   }, []);
 
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
+
     const filteredUsers = users.filter(
       (user) =>
         user.cFull_name.toLowerCase().includes(value) ||
         user.cEmail.toLowerCase().includes(value) ||
-        user.cUser_name.toLowerCase().includes(value) ||
-        user.irole_id.toLowerCase().includes(value) ||
-        user.icity?.toLowerCase().includes(value) ||
-        user.cjob_title.toLowerCase().includes(value)
+        user.cUser_name?.toLowerCase().includes(value) ||
+        user.role?.cRole_name?.toLowerCase().includes(value) ||
+        user.cjob_title?.toLowerCase().includes(value) ||
+        user.cCity?.toLowerCase().includes(value)
     );
+
     setFiltered(filteredUsers);
     setCurrentPage(1);
   };
@@ -66,16 +95,31 @@ const UserPage = () => {
   const handleSort = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
     setSortOrder(newOrder);
+
     const sortedUsers = [...filtered].sort((a, b) =>
       newOrder === "asc"
         ? a.cFull_name.localeCompare(b.cFull_name)
         : b.cFull_name.localeCompare(a.cFull_name)
     );
+
     setFiltered(sortedUsers);
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(filtered.length / usersPerPage);
+  const handleCreateUserClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    // You might want to re-fetch users here if a user was added/updated
+    // const companyId = getCompanyId();
+    // if (companyId) {
+    //   fetchUsers(); // Re-fetch all users to update the list
+    // }
+  };
+
+  const totalPages = Math.ceil(filtered.length / usersPerPage); // Corrected from UserPage to usersPerPage
   const startIndex = (currentPage - 1) * usersPerPage;
   const displayedUsers = filtered.slice(startIndex, startIndex + usersPerPage);
 
@@ -83,6 +127,7 @@ const UserPage = () => {
     <div className="p-6 bg-gradient-to-b from-slate-100 to-white min-h-screen rounded-3xl shadow-inner font-sans text-gray-800">
       <ProfileHeader />
 
+      {/* Search & View Controls */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <input
           type="text"
@@ -91,10 +136,18 @@ const UserPage = () => {
           onChange={handleSearch}
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
+        <button
+          onClick={handleCreateUserClick}
+          className="relative inline-flex items-center ms-[320px] gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black"
+        >
+          + User
+        </button>
+
         <div className="flex gap-3 items-center">
           <button
             onClick={handleSort}
-            className="px-4 py-2 rounded-xl text-sm bg-white border border-gray-300 shadow hover:bg-gray-50 transition-all"
+            // Add a fixed width or min-width to prevent shifting
+            className="px-4 py-2 rounded-xl text-sm bg-white border border-gray-300 shadow hover:bg-gray-50 transition-all w-32" // Added w-32 (example fixed width)
           >
             ↕ Sort ({sortOrder})
           </button>
@@ -117,124 +170,117 @@ const UserPage = () => {
         </div>
       </div>
 
-      {/* Grid View */}
+      {/* Conditional Rendering for Grid or List View */}
       {view === "grid" ? (
-       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-  {displayedUsers.map((user) => (
-    <div
-      key={user.iUser_id}
-      className="bg-white rounded-3xl shadow-md hover:shadow-lg transition-all border border-gray-100 p-6"
-    >
-      <div className="flex items-center gap-4 mb-4">
-        <img
-          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user.cFull_name
-          )}&background=random&color=fff&rounded=true`}
-          alt="Profile"
-          className="w-14 h-14 rounded-full object-cover"
-        />
-        <div className="flex flex-1 items-center justify-between min-w-0">
-          <h2 className="text-lg font-semibold text-gray-800 truncate">
-            {user.cFull_name}
-          </h2>
-
-          {user.role?.cRole_name && (
-            <span
-              className={`ml-4 px-3 py-1  rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-                user.role.cRole_name === "Administrator"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-blue-100 text-blue-700"
-              }`}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {displayedUsers.map((user) => (
+            <div
+              key={user.iUser_id}
+              className="bg-white rounded-3xl shadow-md hover:shadow-lg transition-all border border-gray-100 p-6"
             >
-              {user.role.cRole_name}
-            </span>
-          )}
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.cFull_name
+                  )}&background=random&color=fff&rounded=true`}
+                  alt="Profile"
+                  className="w-14 h-14 rounded-full object-cover"
+                />
+                <div className="flex flex-1 items-center justify-between min-w-0">
+                  <h2 className="text-lg font-semibold text-gray-800 truncate">
+                    {user.cFull_name}
+                  </h2>
+                 
+                  {user.role?.cRole_name && (
+                    <span
+                      className={`ml-4 px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
+                        user.role.cRole_name === "Administrator"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {user.role.cRole_name}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p className="flex items-center gap-2">
+                  <FaEnvelope className="text-blue-500" /> {user.cEmail}
+                </p>
+                <p className="flex items-center gap-2">
+                  <FaCrown className="text-purple-500" /> {user.cjob_title || "N/A"}
+                </p>
+                <p className="flex items-center gap-2">
+                  <FaCity className="text-gray-500" /> {user.company.cCompany_name
+ || "N/A"}
+                </p>
+                <div className="pt-2">
+                  {user.role ? (
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
+                        user.bactive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {user.bactive ? "Active" : "Disabled"}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">Role not assigned</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-      <div className="text-sm text-gray-700 space-y-1">
-        <p className="flex items-center gap-2">
-          <FaEnvelope className="text-blue-500" /> {user.cEmail}
-        </p>
-        <p className="flex items-center gap-2">
-          <FaCrown className="text-purple-500" /> {user.cjob_title || "N/A"}
-        </p>
-        <p className="flex items-center gap-2">
-          <FaIdCard className="text-green-500" /> {user.irole_id || "N/A"}
-        </p>
-<div className="pt-2">
-          <span
-  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-    user.role.bactive
-      ? "bg-red-100 text-red-700"
-      : "bg-green-100 text-green-700"
-  }`}
->
-  {user.role.bactive ? "Disabled" : "Active"}
-</span></div>
-      </div>
-    </div>
-  ))}
-</div>
-
       ) : (
         // List View
-       <div className="rounded-3xl shadow border border-gray-100 overflow-hidden">
-  <div className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 bg-gray-100 font-semibold text-gray-600 text-center text-sm">
-    <div>Profile</div>
-    <div>Name</div>
-    <div>Role</div>
-    <div>Email</div>
-    <div>Phone</div>
-    <div>Address</div>
-  </div>
-  {displayedUsers.map((user) => (
-    <div
-      key={user.iUser_id}
-      className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50"
-    >
-      {/* Profile Picture */}
-      <div className="flex justify-center">
-        <img
-          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user.cFull_name
-          )}&background=random&color=fff&rounded=true`}
-          alt="Profile"
-          className="w-10 h-10 rounded-full object-cover"
-        />
-      </div>
-
-      {/* Name */}
-      <div className="truncate">{user.cFull_name}</div>
-
-      {/* Role with badge */}
-      <div className="flex justify-center">
-        {user.role?.cRole_name ? (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-              user.role.cRole_name === "Administrator"
-                ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
-            }`}
-          >
-            {user.role.cRole_name}
-          </span>
-        ) : (
-          <span className="text-gray-400">N/A</span>
-        )}
-      </div>
-
-      {/* Email */}
-      <div className="truncate">{user.cEmail}</div>
-
-      {/* Phone */}
-      <div>{user.cPhone || "Nil"}</div>
-
-      {/* Address */}
-      <div className="truncate">{user.cAddress || "Nil"}</div>
-    </div>
-  ))}
-</div>
-
+        <div className="rounded-3xl shadow border border-gray-100 overflow-hidden">
+          <div className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 bg-gray-100 font-semibold text-gray-600 text-center text-sm">
+            <div>Profile</div>
+            <div>Name</div>
+            <div>Role</div>
+            <div>Email</div>
+            <div>Phone</div>
+            <div>Address</div>
+          </div>
+          {displayedUsers.map((user) => (
+            <div
+              key={user.iUser_id}
+              className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50"
+            >
+              <div className="flex justify-center">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.cFull_name
+                  )}&background=random&color=fff&rounded=true`}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              </div>
+              <div className="truncate">{user.cFull_name}</div>
+              <div className="flex justify-center">
+                {user.role?.cRole_name ? (
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                      user.role.cRole_name === "Administrator"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {user.role.cRole_name}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">N/A</span>
+                )}
+              </div>
+              <div className="truncate">{user.cEmail}</div>
+              <div>{user.cPhone || "Nil"}</div>
+              <div className="truncate">{user.cAddress || "Nil"}</div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Pagination */}
@@ -267,6 +313,25 @@ const UserPage = () => {
           >
             Next
           </button>
+        </div>
+      )}
+
+      {/* User Creation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
+          <div
+            className={`relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl transform transition-transform duration-300 ease-out ${
+              isModalOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+            }`}
+          >
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-white hover:text-gray-800 text-2xl"
+            >
+              &times;
+            </button>
+            <CreateUserForm onClose={closeModal} />
+          </div>
         </div>
       )}
     </div>

@@ -279,32 +279,78 @@ const ProfileCard = () => {
     }
   };
 
-  const handleAssignLead = async (e) => {
+const handleAssignLead = async (e) => {
     const userId = e.target.value;
+    console.log("user id ",userId)
     const token = localStorage.getItem("token");
+     let assignedUser = null;
+      if (token) {
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = atob(base64Payload);
+        const payloadObject = JSON.parse(decodedPayload);
+        assignedUser = payloadObject.user_id;
+      }
+
+
+      
+        //user name 
+   
     try {
       await axios.post(
         `${apiEndPoint}/assigned-to`,
         {
-          iassigned_by: 6, // This seems like a hardcoded value, consider making it dynamic
+          iassigned_by: assignedUser, 
           iassigned_to: Number(userId),
           ilead_id: Number(leadId),
         },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: Bearer `${token}`,
           },
         }
       );
+      
       alert("Lead assigned successfully.");
+        
+       const userString = localStorage.getItem('user'); // Read userString inside useEffect
+       console.log("user data", userString)
+let userName=null;
+    if (userString) {
 
+        const userObject = JSON.parse(userString);
+          userName=userObject.cFull_name 
+      }else{
+        console.log("no user name ")
+        return ;
+      }
+
+
+      
+         // 📨 Send mail to assigned user
+    const selectedUser = users.find(user => user.iUser_id ===  Number(userId));
+    const assignedTomail = selectedUser?.cEmail;
+      console.log("Selected User:", selectedUser);
+console.log("Assigned Email:", assignedTomail);
+
+    await fetch(`${apiEndPoint}/assigned-to-mail`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userName: userName,
+        time: new Date().toLocaleString(), // Friendly timestamp
+        leadName: profile.clead_name ,
+        leadURL: `https://crm.inklidox.com/leaddetailview/${leadId}`,
+        mailId: assignedTomail,
+      })
+    });
     } catch (err) {
-      console.error("Failed to assign lead", err);
+     // console.error("Failed to assign lead", err);
       alert("Failed to assign lead.");
     }
   };
-
 
   // Dropzone onDrop handler
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

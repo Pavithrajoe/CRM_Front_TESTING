@@ -27,8 +27,8 @@ export default function KPIStats(data) {
       else if (potential === "COLD") cold++;
 
       if (status === "Won") won++;
-      // Use 'beactive' or 'active' for lost check
-      if (!lead.active === "Lost") lost++;
+      
+      if (lead.bactive === false) lost++;
       console.log("Leads:", leads);
 
     });

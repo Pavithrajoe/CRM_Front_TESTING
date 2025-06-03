@@ -10,6 +10,7 @@ import {
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const UserPage = () => {
   const [users, setUsers] = useState([]);
@@ -20,6 +21,7 @@ const UserPage = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const usersPerPage = 6;
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const getCompanyId = () => {
     const token = localStorage.getItem("token");
@@ -112,11 +114,10 @@ const UserPage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    // You might want to re-fetch users here if a user was added/updated
-    // const companyId = getCompanyId();
-    // if (companyId) {
-    //   fetchUsers(); // Re-fetch all users to update the list
-    // }
+  };
+
+const goToLeadsPage = (userId) => {
+      navigate(`/userprofile/${userId}`); // Navigate to the user profile with the specific ID
   };
 
   const totalPages = Math.ceil(filtered.length / usersPerPage); // Corrected from UserPage to usersPerPage
@@ -136,13 +137,12 @@ const UserPage = () => {
           onChange={handleSearch}
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
-      
         <button
-        onClick={handleCreateUserClick}
-        className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
-      >
-        + User
-      </button>
+          onClick={handleCreateUserClick}
+          className="relative inline-flex items-center ms-[320px] gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black"
+        >
+          + User
+        </button>
 
         <div className="flex gap-3 items-center">
           <button
@@ -177,7 +177,8 @@ const UserPage = () => {
           {displayedUsers.map((user) => (
             <div
               key={user.iUser_id}
-              className="bg-white rounded-3xl shadow-md hover:shadow-lg transition-all border border-gray-100 p-6"
+              className="bg-white rounded-3xl shadow-md hover:shadow-lg transition-all border border-gray-100 p-6 cursor-pointer"
+              onClick={() => goToLeadsPage(user.iUser_id)} // Added onClick to navigate
             >
               <div className="flex items-center gap-4 mb-4">
                 <img
@@ -191,7 +192,7 @@ const UserPage = () => {
                   <h2 className="text-lg font-semibold text-gray-800 truncate">
                     {user.cFull_name}
                   </h2>
-                 
+
                   {user.role?.cRole_name && (
                     <span
                       className={`ml-4 px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
@@ -213,19 +214,18 @@ const UserPage = () => {
                   <FaCrown className="text-purple-500" /> {user.cjob_title || "N/A"}
                 </p>
                 <p className="flex items-center gap-2">
-                  <FaCity className="text-gray-500" /> {user.company.cCompany_name
- || "N/A"}
+                  <FaCity className="text-gray-500" /> {user.company.cCompany_name || "N/A"}
                 </p>
                 <div className="pt-2">
                   {user.role ? (
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-                        user.bactive
+                        user.role.bactive
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {user.bactive ? "Active" : "Disabled"}
+                      {user.role.bactive ? "Active" : "Disabled"}
                     </span>
                   ) : (
                     <span className="text-gray-400 text-xs">Role not assigned</span>
@@ -249,7 +249,8 @@ const UserPage = () => {
           {displayedUsers.map((user) => (
             <div
               key={user.iUser_id}
-              className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50"
+              className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50 cursor-pointer"
+              onClick={() => goToLeadsPage(user.iUser_id)} // Added onClick to navigate
             >
               <div className="flex justify-center">
                 <img

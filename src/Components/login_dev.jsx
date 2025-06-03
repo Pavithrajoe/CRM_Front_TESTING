@@ -94,7 +94,10 @@ const LoginPage = () => {
         {/* Right Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 bg-white">
           <div className="text-center mb-6">
-            <div className="text-3xl font-semibold text-gray-800 mb-1">👋 Hey There!</div>
+            <h2 className="text-xl font-medium text-center text-gray-900">
+            <span className="animate-waving-hand inline-block">👋</span> Hey There!
+            </h2>
+
             <div className="text-lg text-gray-500 font-medium">Sign into your account</div>
           </div>
 
@@ -125,13 +128,13 @@ const LoginPage = () => {
                   onClick={togglePassword}
                   className="absolute top-2/4 right-3 -translate-y-1/2 text-gray-500"
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <FaEye /> : <FaEyeSlash /> }
                 </button>
               </div>
             </div>
 
             <div className="text-right">
-              <a href="#" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
+              <a href="/forgetpassword" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
             </div>
 
             <div className="flex flex-col items-center">
@@ -157,19 +160,38 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <style>{`
-        @keyframes shake {
-          0% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          50% { transform: translateX(4px); }
-          75% { transform: translateX(-4px); }
-          100% { transform: translateX(0); }
-        }
+       {/* Animations */}
+   <style>{`
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+  }
 
-        .animate-shake {
-          animation: shake 0.4s ease-in-out;
-        }
-      `}</style>
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes wave {
+    0% { transform: rotate(0.0deg); }
+    10% { transform: rotate(14.0deg); }
+    20% { transform: rotate(-8.0deg); }
+    30% { transform: rotate(14.0deg); }
+    40% { transform: rotate(-4.0deg); }
+    50% { transform: rotate(10.0deg); }
+    60% { transform: rotate(0.0deg); }
+    100% { transform: rotate(0.0deg); }
+  }
+
+  .animate-waving-hand {
+    display: inline-block;
+    transform-origin: 70% 70%;
+    animation: wave 2s infinite;
+  }
+`}</style>
+
 
       <footer className="absolute bottom-4 text-center w-full text-gray-400 text-sm">
         © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · V1.5
@@ -177,5 +199,6 @@ const LoginPage = () => {
     </div>
   );
 };
+
 
 export default LoginPage;

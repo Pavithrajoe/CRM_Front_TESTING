@@ -15,10 +15,11 @@ const Sidebar = () => {
     { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
-    { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
     { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
-    { iconPath: '/images/nav/users.png', label: 'Users', route: '/userpage' },
     { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },
+    { iconPath: '/images/nav/users.png', label: 'Users', route: '/userpage' },
+    { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
+
   ];
 
   useEffect(() => {

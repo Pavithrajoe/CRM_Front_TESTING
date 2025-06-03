@@ -39,12 +39,19 @@ import LostLeadReportPage from './Components/reports/LeadLostReport';
 import SalesByStageReportPage from './Components/reports/salesByStageReport';
 import CardsPage from './Components/reports/reports';
 import NotificationPage from "./pages/notification"; 
+import TerritoryLeadsAnalytics from "./Components/reports/TerritoryLeads";
+import UpdatePassword from "./Components/UpdatePassword";
+import { UserProvider } from "./context/UserContext";
+import UserProfile from "./pages/userProfile";
+              
 
 function App() {
   return (
     <PopupProvider>
       <ToastProvider>
         <TabProvider>
+          <UserProvider>
+
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
@@ -52,11 +59,12 @@ function App() {
             <Route path="/success" element={<SuccessMessage />} />
             <Route path="/verify" element={<VerifyCodePage />} />
             <Route path="/signupres" element={<SignupRes />} />
-
+            <Route path="/UpdatePassword" element={<UpdatePassword/>}/>
             {/* Protected Routes with Layout */}
             <Route element={<AppLayout />}>
                 <Route path="/notifications" element={<NotificationPage />} />
-
+              <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
+              <Route path="userprofile/:userId" element={<UserProfile />}/>
               <Route path="calenderpage" element={<CalendarPage />} />
                 <Route path="/reportpage" element={<CardsPage />} />
                 <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
@@ -90,6 +98,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+       </UserProvider>
         </TabProvider>
       </ToastProvider>
     </PopupProvider>

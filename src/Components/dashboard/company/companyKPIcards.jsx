@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Briefcase, IndianRupee, UserPlus, Users } from 'lucide-react';
+import { Briefcase, IndianRupee, Link, UserPlus, Users } from 'lucide-react';
 import { ENDPOINTS } from '../../../api/constraints'; 
+import { useNavigate } from 'react-router-dom';
 
 const CompanyKPICards = () => {
+    const navigate = useNavigate();
+
 const [data, setData] = useState({});
+
   const [error, setError] = useState(null);
 
   const getCompanyIdAndToken = () => {
@@ -34,6 +38,7 @@ const [data, setData] = useState({});
             Authorization: `Bearer ${authData.token}`,
           },
         });
+        console.log('Fetching Company KPI Data:', response);
 
         if (!response.ok) throw new Error('Failed to fetch data');
 
@@ -53,19 +58,27 @@ const [data, setData] = useState({});
 
   if (error) return <div>Error: {error}</div>;
 
+
   return (
     <>
-      <div className="bg-white p-4 rounded-lg shadow border">
-        <div className="flex justify-between items-start">
-          <p className="text-sm font-bold text-gray-900">Total Leads</p>
-          <div className="bg-blue-100 text-blue-600 rounded-full p-2">
-            <UserPlus className="w-4 h-4" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-bold mt-2">{data.totalLeads ?? 0}</h2>
-      </div>
 
-      <div className="bg-white p-4 rounded-lg shadow border">
+     <div
+  className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
+  onClick={() => navigate('/leads')} 
+>
+  <div className="flex justify-between items-start">
+    <p className="text-sm font-bold text-gray-900">Total Leads</p>
+    <div className="bg-blue-100 text-blue-600 rounded-full p-2">
+      <UserPlus className="w-4 h-4" />
+    </div>
+  </div>
+  <h2 className="text-2xl font-bold mt-2">{data.totalLeads ?? 0}</h2>
+</div>
+
+     <div
+  className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
+  onClick={() => navigate('/leads')} 
+>
         <div className="flex justify-between items-start">
           <p className="text-sm font-bold text-gray-900">Total Deals</p>
           <div className="bg-blue-100 text-blue-600 rounded-full p-2">
@@ -76,15 +89,18 @@ const [data, setData] = useState({});
 
       </div>
 
-       <a href='/userpage'><div className="bg-white p-4 rounded-lg shadow border">
-       <div className="flex justify-between items-start">
+      <div
+  className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
+  onClick={() => navigate('/userpage')} 
+>
+        <div className="flex justify-between items-start">
           <p className="text-sm font-bold text-gray-900">Total Users</p>
           <div className="bg-blue-100 text-blue-600 rounded-full p-2">
             <Users className="w-4 h-4" />
           </div>
-        </div> 
+        </div>
         <h2 className="text-2xl font-bold mt-2">{data.total_users ?? 0}</h2>
-      </div></a>
+      </div>
 
       <div className="bg-white p-4 rounded-lg shadow border">
         <div className="flex justify-between items-start">
@@ -95,16 +111,6 @@ const [data, setData] = useState({});
         </div>
         <h2 className="text-2xl font-bold mt-2">₹{data.totalRevenue ?? 0}</h2>
       </div>
-        <div className="bg-white p-4 rounded-lg shadow border">
-        <div className="flex justify-between items-start">
-          <p className="text-sm font-bold text-gray-900">Lost Count</p>
-          <div className="bg-blue-100 text-blue-600 rounded-full p-2">
-            <Users className="w-4 h-4" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-bold mt-2">{data.lostLeads ?? 0}</h2>
-      </div>
-      
     </>
   );
 };

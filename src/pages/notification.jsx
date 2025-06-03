@@ -21,23 +21,52 @@ const NotificationPage = () => {
   }
 
   useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
     const savedReads = JSON.parse(localStorage.getItem("readNotifications") || "[]");
     setReadIds(new Set(savedReads));
+  }, []);
 
+  const showPushNotification = (title, message) => {
+    if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
+      new Notification(title, {
+        body: message,
+        icon: "/icon.png", // Optional: replace with your app icon
+      });
+    }
+  };
+
+  const fetchNotifications = async () => {
     if (!userId || !token) return;
 
-    axios
-      .get(`${ENDPOINTS.NOTIFICATIONS}`, {
+    try {
+      const res = await axios.get(`${ENDPOINTS.NOTIFICATIONS}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const sorted = res.data.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        setNotifications(sorted);
-      })
-      .catch((err) => console.error("Error fetching notifications", err));
-  }, [userId, token]);
+      });
+
+      const sorted = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      const existingIds = new Set(notifications.map((n) => n.id));
+      const newOnes = sorted.filter((n) => !existingIds.has(n.id));
+
+      newOnes.forEach((n) => showPushNotification(n.title, n.message));
+      setNotifications(sorted);
+    } catch (err) {
+      console.error("Error fetching notifications", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications(); // initial load
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10000); // every 10s
+
+    return () => clearInterval(interval);
+  }, [userId, token, notifications]);
 
   const markAsRead = (id) => {
     const updated = new Set(readIds);
@@ -95,9 +124,7 @@ const NotificationPage = () => {
                   markAsRead(item.id);
                 }}
                 className={`cursor-pointer transition hover:shadow-md hover:scale-[1.01] duration-200 px-4 py-3 rounded-xl border ${
-                  isUnread
-                    ? "bg-blue-50 border-blue-200"
-                    : "bg-white border-gray-200"
+                  isUnread ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
@@ -121,30 +148,30 @@ const NotificationPage = () => {
       className="p-6 bg-[#f7f8fa] min-h-screen font-sans"
       style={{
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',borderRadius:'10px'
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        borderRadius: "10px",
       }}
     >
       <div className="flex items-center gap-3 mb-6">
-  <button
-    onClick={() => window.history.back()}
-    className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 transition"
-  >
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-    <span>Back</span>
-  </button>
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 transition"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
 
- 
-</div>
- <h1 className="text-[22px] font-medium text-gray-900 tracking-tight">Notifications</h1>
+      <h1 className="text-[22px] font-medium text-gray-900 tracking-tight">Notifications</h1>
 
       {notifications.length === 0 ? (
         <p className="text-center text-gray-500 mt-20 text-sm italic">
@@ -158,7 +185,6 @@ const NotificationPage = () => {
         </div>
       )}
 
-      {/* Modal */}
       {selectedNotification && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
@@ -169,7 +195,9 @@ const NotificationPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-800">{selectedNotification.title}</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                {selectedNotification.title}
+              </h2>
               <button
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => setSelectedNotification(null)}

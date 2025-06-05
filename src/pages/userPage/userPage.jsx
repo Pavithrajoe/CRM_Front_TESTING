@@ -41,7 +41,7 @@ const UserPage = () => {
     const fetchUsers = async () => {
       const companyId = getCompanyId();
       if (!companyId) {
-        console.warn("No company ID found in token. Cannot fetch users.");
+    //    console.warn("No company ID found in token. Cannot fetch users.");
         return;
       }
 
@@ -59,12 +59,12 @@ const UserPage = () => {
         }
 
         const data = await response.json();
-        console.log("Raw API response data:", data);
+       // console.log("Raw API response data:", data);
 
         const companyUsers = data.filter(
           (user) => user.iCompany_id === companyId
         );
-        console.log("Users filtered by company ID:", companyUsers);
+      //  console.log("Users filtered by company ID:", companyUsers);
 
         setUsers(companyUsers);
         setFiltered(companyUsers);

@@ -64,7 +64,7 @@ const LoginPage = () => {
       }
 
     } catch (error) {
-      console.error("Login error:", error);
+     // console.error("Login error:", error);
       setLoginError('Something went wrong. Please try again.');
     }
 

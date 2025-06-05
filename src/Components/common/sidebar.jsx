@@ -46,12 +46,12 @@ const Sidebar = () => {
           );
         }
       } catch (error) {
-        console.error("Error decoding token:", error);
+       // console.error("Error decoding token:", error);
         setUserRoleId(null);
         setMenuItems([]);
       }
     } else {
-      console.log("No access token found in localStorage.");
+     // console.log("No access token found in localStorage.");
       setUserRoleId(null);
       setMenuItems([]);
     }

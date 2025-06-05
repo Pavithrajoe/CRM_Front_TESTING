@@ -9,7 +9,7 @@ export default function KPIStats(data) {
   const [lostCount, setLostCount] = useState(0);
 
   const leads = data?.data?.leads || [];
-  console.log(" data:", data);
+ // console.log(" data:", data);
 
   useEffect(() => {
     let hot = 0,
@@ -29,7 +29,7 @@ export default function KPIStats(data) {
       if (status === "Won") won++;
       
       if (lead.bactive === false) lost++;
-      console.log("Leads:", leads);
+     // console.log("Leads:", leads);
 
     });
 

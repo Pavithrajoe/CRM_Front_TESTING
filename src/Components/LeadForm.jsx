@@ -15,12 +15,12 @@ const LeadForm = ({ onClose }) => {
       const payload = JSON.parse(atob(base64));
       userId = payload.user_id;
       company_id = payload.company_id;
-      // console.log("Logged in User ID:", userId, company_id);
+      // // console.log("Logged in User ID:", userId, company_id);
     } catch (error) {
-      console.error("Token decode error:", error);
+      // console.error("Token decode error:", error);
     }
   } else {
-    console.error("Invalid or missing JWT token");
+    // console.error("Invalid or missing JWT token");
   }
 
   // Initialize form state with default values
@@ -99,14 +99,14 @@ const LeadForm = ({ onClose }) => {
         });
 
         if (!response.ok) {
-          console.log(`Can't fetch ${errorMessage}`, response);
+          // console.log(`Can't fetch ${errorMessage}`, response);
         }
 
         const rawData = await response.json();
         const processedData = transform(rawData); // Apply transformation
         setter(processedData);
       } catch (e) {
-        console.log(`Error in fetching ${errorMessage}`, e);
+        // console.log(`Error in fetching ${errorMessage}`, e);
       }
     },
     [token]
@@ -131,7 +131,7 @@ const LeadForm = ({ onClose }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      // console.log("city response:", response);
+      // // console.log("city response:", response);
 
       if (!response.ok) {
         alert("Can't fetch cities, there was an error.");
@@ -139,17 +139,17 @@ const LeadForm = ({ onClose }) => {
       }
 
       const data = await response.json();
-      // console.log("city data:", data);
+      // // console.log("city data:", data);
 
       if (data && Array.isArray(data.cities)) {
         setCities(data.cities);
         setFilteredCities(data.cities); // Initialize filtered cities
       } else {
-        // console.error("Invalid city data format:", data);
+        // // console.error("Invalid city data format:", data);
         alert("Invalid city data received.");
       }
     } catch (e) {
-      console.log("Error in fetching cities:", e);
+      // console.log("Error in fetching cities:", e);
       alert("Error fetching cities.");
     }
   };
@@ -185,7 +185,7 @@ const LeadForm = ({ onClose }) => {
           });
 
           if (!response.ok) {
-            // console.log(`Can't fetch details for city ID ${cityId}`, response);
+            // // console.log(`Can't fetch details for city ID ${cityId}`, response);
             setForm((prev) => ({
               ...prev,
               cstate: "",
@@ -196,7 +196,7 @@ const LeadForm = ({ onClose }) => {
           }
 
           const data = await response.json();
-          // console.log(`City details for ID ${cityId}:`, data);
+          // // console.log(`City details for ID ${cityId}:`, data);
           if (data) {
             setForm((prev) => ({
               ...prev,
@@ -215,7 +215,7 @@ const LeadForm = ({ onClose }) => {
             }));
           }
         } catch (error) {
-          // console.error(`Error fetching details for city ID ${cityId}:`, error);
+          // // console.error(`Error fetching details for city ID ${cityId}:`, error);
           setForm((prev) => ({
             ...prev,
             cstate: "",
@@ -421,7 +421,7 @@ const LeadForm = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        //console.error(`Error checking existing ${fieldName}:`, response);
+        //// console.error(`Error checking existing ${fieldName}:`, response);
         // Do not return, allow the form to proceed if API check fails but field is valid
         return;
       }
@@ -451,7 +451,7 @@ const LeadForm = ({ onClose }) => {
         });
       }
     } catch (error) {
-      console.error(`Error checking existing ${fieldName}:`, error);
+     // // console.error(`Error checking existing ${fieldName}:`, error);
     }
   };
 
@@ -584,7 +584,7 @@ const LeadForm = ({ onClose }) => {
         whatsapp_number: form. whatsapp_number, // Include whatsapp number
       };
 
-      // console.log("Form submitted:", formData);
+      // // console.log("Form submitted:", formData);
       const res = await fetch(`${apiEndPoint}/lead`, {
         method: "POST",
         headers: {
@@ -595,7 +595,7 @@ const LeadForm = ({ onClose }) => {
       });
 
       const resData = await res.json();
-      // console.info("Server response:", resData);
+      // // console.info("Server response:", resData);
 
       if (res.ok) {
         setPopupMessage("Lead created successfully!");
@@ -614,7 +614,7 @@ const LeadForm = ({ onClose }) => {
         }, 3000);
       }
     } catch (error) {
-      console.error("Submit error:", error);
+      // console.error("Submit error:", error);
       setPopupMessage("Failed to create lead due to a network error.");
       setIsPopupVisible(true);
       setTimeout(() => {
@@ -638,7 +638,7 @@ const LeadForm = ({ onClose }) => {
     item.source_name.toLowerCase().includes(searchSource.toLowerCase())
   );
 
-  // console.log("source details:", source);
+  // // console.log("source details:", source);
   const popupStyle = {
     position: "fixed",
     bottom: "20px",

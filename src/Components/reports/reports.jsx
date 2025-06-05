@@ -89,7 +89,7 @@ const CardsPage = () => {
             />
             <button
               type="button"
-              onClick={() => console.log("Searching for:", query)}
+          onClick={() => console.log("Searching for:", query)}
               className="absolute right-3 top-2.5 text-sm text-blue-500 hover:text-blue-700"
             >
               Search

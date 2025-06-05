@@ -88,7 +88,7 @@ const ReminderForm = () => {
     }
 
     mic.onstart = () => {
-      console.log("Mics on");
+      //console.log("Mics on");
     };
 
     mic.onresult = (event) => {

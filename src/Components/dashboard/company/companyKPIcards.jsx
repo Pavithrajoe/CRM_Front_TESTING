@@ -38,17 +38,17 @@ const [data, setData] = useState({});
             Authorization: `Bearer ${authData.token}`,
           },
         });
-        console.log('Fetching Company KPI Data:', response);
+        //console.log('Fetching Company KPI Data:', response);
 
         if (!response.ok) throw new Error('Failed to fetch data');
 
         const result = await response.json();
-        console.log('Company KPI API Response:', result);
+       // console.log('Company KPI API Response:', result);
 
         // If the result is an object and you don't need filtering
         setData(result.data);
       } catch (err) {
-        console.error('API Error:', err);
+      //  console.error('API Error:', err);
         setError(err.message);
       }
     };

@@ -34,7 +34,7 @@ const LeadCardViewPage = () => {
         },
       });
       const data = await res.json();
-      console.log('Leads Data:', data);
+    //  console.log('Leads Data:', data);
       const sorted = (Array.isArray(data.details) ? data.details : []).sort(
         (a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt)
       );
@@ -58,7 +58,7 @@ const LeadCardViewPage = () => {
         },
       });
       const data = await res.json();
-      console.log('Deals Data:', data);
+    //  console.log('Deals Data:', data);
       setDeals(data);
     } catch (err) {
       setDeals([]);

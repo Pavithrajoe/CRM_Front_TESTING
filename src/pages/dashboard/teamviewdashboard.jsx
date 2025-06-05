@@ -76,12 +76,12 @@ const TeamviewDashboard = () => {
 
 // console.log("Dashboard Data:", dashboardData);
     if (dashboardData) {
-      console.log("✅ Dashboard Data updated22:", dashboardData);
+     // console.log("✅ Dashboard Data updated22:", dashboardData);
     }
 
 
     if (reminder) {
-      console.log("✅ Reminder Data updated:", reminder.message);
+    //  console.log("✅ Reminder Data updated:", reminder.message);
     }
 
 

@@ -50,7 +50,7 @@ const PotentialChart = () => {
 
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error(`API Error - Status: ${response.status}, Body: ${errorBody}`);
+        //  console.error(`API Error - Status: ${response.status}, Body: ${errorBody}`);
           throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
         }
 

@@ -220,12 +220,12 @@ const goToLeadsPage = (userId) => {
                   {user.role ? (
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-                        user.role.bactive
+                        user.bactive
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {user.role.bactive ? "Active" : "Disabled"}
+                      {user.bactive ? "Active" : "Disabled"}
                     </span>
                   ) : (
                     <span className="text-gray-400 text-xs">Role not assigned</span>

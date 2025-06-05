@@ -23,6 +23,7 @@ export default function ProfileHeader() {
   const [showLeadForm, setShowLeadForm] = useState(false);
 
   const lastAcknowledgedUnreadCount = useRef(0);
+  const hasPushedNotification = useRef(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
@@ -45,13 +46,16 @@ export default function ProfileHeader() {
         setProfile({ name: '', email: '', role: '', companyName: '' });
       }
     }
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }, []);
 
   const isToday = useCallback((dateString) => {
     if (!dateString) return false;
     const today = new Date();
     const notificationDate = new Date(dateString);
-
     return (
       notificationDate.getDate() === today.getDate() &&
       notificationDate.getMonth() === today.getMonth() &&
@@ -62,12 +66,13 @@ export default function ProfileHeader() {
   const fetchUnreadTodayNotifications = useCallback(async () => {
     const currentUserString = localStorage.getItem('user');
     let currentUserId = null;
+
     if (currentUserString) {
       try {
         const userObject = JSON.parse(currentUserString);
         currentUserId = userObject.iUser_id;
       } catch (e) {
-        console.error("Error parsing user object for notifications:", e);
+        console.error('Error parsing user object for notifications:', e);
       }
     }
 
@@ -87,7 +92,6 @@ export default function ProfileHeader() {
       });
 
       const data = res.data;
-
       const unreadTodayNotifications = data
         .filter((n) => {
           const notificationUserId = n.userId || n.user_id;
@@ -101,12 +105,30 @@ export default function ProfileHeader() {
 
       setDisplayedNotifications(unreadTodayNotifications);
 
-      if (!showNotifications) {
-        const currentUnreadTotal = unreadTodayNotifications.length;
-        const newNotifications = currentUnreadTotal - lastAcknowledgedUnreadCount.current;
-        setBellNotificationCount(Math.max(0, newNotifications));
-      }
+      const currentUnreadTotal = unreadTodayNotifications.length;
+      const newNotifications = currentUnreadTotal - lastAcknowledgedUnreadCount.current;
 
+      if (!showNotifications && newNotifications > 0) {
+        setBellNotificationCount(Math.max(0, newNotifications));
+
+        // Push Notification (always, even if tab is focused)
+        if (Notification.permission === 'granted' && !hasPushedNotification.current) {
+          const latest = unreadTodayNotifications[0];
+          const notif = new Notification('🔔 New Notification', {
+            body: latest.message || latest.title || 'You have a new update',
+            icon: `${window.location.origin}/favicon.png`,
+          });
+
+          notif.onclick = () => {
+            window.focus();
+          };
+
+          hasPushedNotification.current = true;
+          setTimeout(() => {
+            hasPushedNotification.current = false;
+          }, 10000);
+        }
+      }
     } catch (err) {
       console.error('Error fetching notifications:', err);
       setDisplayedNotifications([]);
@@ -158,10 +180,7 @@ export default function ProfileHeader() {
     navigate('/');
   };
 
-  const createUser = () => {
-    navigate('/create-user');
-  };
-
+  const createUser = () => navigate('/create-user');
   const viewAllNotifications = () => {
     setShowNotifications(false);
     navigate('/notifications');
@@ -184,7 +203,7 @@ export default function ProfileHeader() {
         </div>
       )}
 
-      {profile.role && String(profile.role).toLowerCase() === 'reseller' && (
+      {profile.role?.toLowerCase() === 'reseller' && (
         <button
           onClick={createUser}
           className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
@@ -255,7 +274,7 @@ export default function ProfileHeader() {
             type="file"
             accept="image/*"
             id="profile-upload"
-            onChange={() => { }}
+            onChange={() => {}}
             className="hidden"
           />
           <div className="text-xl text-gray-600">▾</div>

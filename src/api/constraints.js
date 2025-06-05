@@ -3,7 +3,7 @@
 // Load the base API URL from the .env file
 export const BASE_URL = import.meta.env.VITE_API_URL;
 
-console.log("Base URL:", BASE_URL);
+//console.log("Base URL:", BASE_URL);
 
 // Define all API endpoints relative to BASE_URL
 export const ENDPOINTS = {  
@@ -36,6 +36,8 @@ export const ENDPOINTS = {
   FEEDBACK: `${BASE_URL}/reports/feedback`,
   FORGOT_PASSWORD: `${BASE_URL}/forgot-password`,
   UPDATE_PASSWORD: `${BASE_URL}/update-password`,
+  GET_DEALS: `${BASE_URL}/lead/deals`,
+  DEMO_MAIL: `${BASE_URL}/sentmail`,
 
 
 

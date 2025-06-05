@@ -7,98 +7,116 @@ const PotentialChart = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const COLORS = ['#2E8B57', '#FF9800', '#03A9F4', '#FF5722']; 
+
+
   const getCompanyIdAndToken = () => {
     const token = localStorage.getItem('token');
-    if (!token) return null;
+    if (!token) {
+      console.warn('No token found in localStorage.');
+      return null;
+    }
     try {
-      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(atob(base64));
       return { token, companyId: payload.company_id };
     } catch (err) {
-      console.error('Invalid token format:', err);
+      console.error('Error decoding token:', err);
       return null;
     }
   };
 
+ 
   useEffect(() => {
     const fetchData = async () => {
-      const auth = getCompanyIdAndToken();
-      if (!auth) {
-        setError('Login required.');
+      const authData = getCompanyIdAndToken();
+      if (!authData) {
+        setError('Authentication data missing. Please log in.');
         setLoading(false);
         return;
       }
 
       try {
+
         const response = await fetch(`${ENDPOINTS.COMPANY_GET}`, {
           headers: {
-            Authorization: `Bearer ${auth.token}`,
+            Authorization: `Bearer ${authData.token}`,
             'Content-Type': 'application/json',
           },
         });
 
+
         if (!response.ok) {
           const errorBody = await response.text();
-          throw new Error(`API error: ${response.status} - ${errorBody}`);
+          console.error(`API Error - Status: ${response.status}, Body: ${errorBody}`);
+          throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
         }
 
         const result = await response.json();
-        const distribution = result?.data?.leadPotentialDistribution || {};
 
-        const parsePercent = (val) => {
-          if (typeof val === 'string') return parseFloat(val.replace('%', '')) || 0;
-          if (typeof val === 'number') return val;
-          return 0;
-        };
+        // Extract the main 'data' object from the API result
+        const dataFromApi = result?.data || {};
 
+        // Extract lead potential distribution and lost leads counts
+        const distribution = dataFromApi?.leadPotentialDistribution || {};
         const hotCount = distribution.hot || 0;
         const warmCount = distribution.warm || 0;
         const coldCount = distribution.cold || 0;
-        const lostCount = distribution.lostLeads || 0;
+        // lostLeads is directly under dataFromApi, not leadPotentialDistribution
+        const lostCount = dataFromApi.lostLeads || 0;
 
-        const percentages = distribution.percentages || {};
+        // Calculate the total count for all categories to determine percentages
+        const totalChartableLeads = hotCount + warmCount + coldCount + lostCount;
 
+        // Helper function to calculate percentage for each lead type
+        const calculatePercentage = (count) => {
+          if (totalChartableLeads === 0) return 0;
+          return (count / totalChartableLeads) * 100;
+        };
+
+        // Format data for the Recharts PieChart
         const formattedData = [
           {
             name: 'Hot Lead',
-            value: parsePercent(percentages.hot),
+            value: calculatePercentage(hotCount),
             count: hotCount,
-            percent: typeof percentages.hot === 'string' ? percentages.hot : `${parsePercent(percentages.hot)}%`,
+            percent: `${calculatePercentage(hotCount).toFixed(2)}%`,
           },
           {
             name: 'Warm Lead',
-            value: parsePercent(percentages.warm),
+            value: calculatePercentage(warmCount),
             count: warmCount,
-            percent: typeof percentages.warm === 'string' ? percentages.warm : `${parsePercent(percentages.warm)}%`,
+            percent: `${calculatePercentage(warmCount).toFixed(2)}%`,
           },
           {
             name: 'Cold Lead',
-            value: parsePercent(percentages.cold),
+            value: calculatePercentage(coldCount),
             count: coldCount,
-            percent: typeof percentages.cold === 'string' ? percentages.cold : `${parsePercent(percentages.cold)}%`,
+            percent: `${calculatePercentage(coldCount).toFixed(2)}%`,
           },
           {
             name: 'Lost Lead',
-            value: parsePercent(percentages.lostLeads),
+            value: calculatePercentage(lostCount),
             count: lostCount,
-            percent: typeof percentages.lostLeads === 'string' ? percentages.lostLeads : `${parsePercent(percentages.lostLeads)}%`,
+            percent: `${calculatePercentage(lostCount).toFixed(2)}%`,
           },
         ];
 
         setChartData(formattedData);
+        setLoading(false);
       } catch (err) {
-        console.error('Data fetch error:', err);
+        console.error('API Error during fetch:', err);
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, []); // Empty dependency array means this effect runs once on mount
 
-  const COLORS = ['#FF5722', '#FF9800', '#03A9F4', '#9E9E9E'];
-
+  // Custom Tooltip component for the Pie Chart
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const { name, count, percent } = payload[0].payload;
@@ -113,32 +131,40 @@ const PotentialChart = () => {
     return null;
   };
 
-  const totalLeads = chartData.reduce((sum, item) => sum + (item.count || 0), 0);
-  const hasValidData = chartData.some(item => item.value > 0);
-
+  // Display loading state
   if (loading) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow border flex justify-center items-center h-64">
+      <div className="bg-white p-4 rounded-lg shadow border h-[50px] flex items-center justify-center">
         <p>Loading chart data...</p>
       </div>
     );
   }
 
+  // Display error state
   if (error) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow border text-red-600 flex justify-center items-center h-64">
-        <p>Error loading chart: {error}</p>
+      <div className="bg-white p-4 rounded-lg shadow border h-full flex items-center justify-center text-red-600">
+        <p>Error loading data: {error}</p>
       </div>
     );
   }
 
-  return (
-    <div className="bg-white p-4 rounded-lg shadow border flex flex-col h-full">
-      <h2 className="text-lg font-semibold mb-2 text-center">Potential Card</h2>
-      <p className="text-sm text-gray-500 text-center mb-4">Total Leads: {totalLeads}</p>
+  // Calculate total leads displayed in the chart for the header
+  const totalLeadsDisplayed = chartData.reduce((sum, item) => sum + item.count, 0);
 
+  // Check if there's valid data to display the chart
+  const hasValidChartData = chartData.some(item => item.value > 0);
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow border h-full flex flex-col">
+      <h2 className="text-lg font-semibold mb-2">Lead Status Distribution</h2>
+      <p className="text-sm text-gray-500 mb-4 text-center">
+        Total Leads: {totalLeadsDisplayed}
+      </p>
+
+     
       <div className="flex-grow flex items-center justify-center">
-        {hasValidData ? (
+        {hasValidChartData ? (
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -151,29 +177,32 @@ const PotentialChart = () => {
                 outerRadius={100}
                 paddingAngle={5}
                 dataKey="value"
+                label={({ name,}) =>
+                  `${name} `
+                }
                 labelLine={false}
-                label={({ name }) => name}
               >
-                {chartData.map((entry, idx) => (
-                  <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500">No data available to render chart.</p>
+          <p className="text-gray-500">No lead potential data available to display chart.</p>
         )}
       </div>
 
-      <div className="flex justify-center flex-wrap gap-4 mt-4">
-        {chartData.map((entry, idx) => (
-          <div key={entry.name} className="flex items-center space-x-2">
-            <span
+      {/* Custom Legend */}
+      <div className="flex flex-wrap justify-center gap-6 mt-4">
+        {chartData.map((entry, index) => (
+          <div key={entry.name} className="flex items-center gap-2">
+            <div
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-            ></span>
-            <span className="text-sm text-gray-700">
+              style={{ backgroundColor: COLORS[index % COLORS.length] }}
+            ></div>
+            <span className="text-sm">
               {entry.name} ({entry.count} | {entry.percent})
             </span>
           </div>

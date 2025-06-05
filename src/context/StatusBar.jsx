@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle } from 'lucide-react'; // Install lucide-react if not already
-
+import { CheckCircle, Circle } from 'lucide-react';
 import {
-  Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
+  Button,
+  Autocomplete,
 } from '@mui/material';
 import { useToast } from '../context/ToastContext';
 import Confetti from 'react-confetti';
-import axios from "axios";
+import axios from 'axios';
 import { ENDPOINTS } from '../api/constraints';
 
 const mandatoryInputStages = ['Proposal', 'Demo', 'Won'];
@@ -20,21 +25,22 @@ const StatusBar = ({ leadId, leadData }) => {
   const [dialogValue, setDialogValue] = useState('');
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [users, setUsers] = useState([]);
   const { showToast } = useToast();
 
   const fetchStages = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch stages");
+        throw new Error(errorData.message || 'Failed to fetch stages');
       }
 
       const data = await response.json();
@@ -48,7 +54,26 @@ const StatusBar = ({ leadId, leadData }) => {
       setStages(formattedStages);
     } catch (err) {
       console.error(err);
-      setError(err.message || "Unable to fetch stage data");
+      setError(err.message || 'Unable to fetch stage data');
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${ENDPOINTS.USERS}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch users');
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
     }
   };
 
@@ -63,6 +88,7 @@ const StatusBar = ({ leadId, leadData }) => {
   useEffect(() => {
     const init = async () => {
       await fetchStages();
+      await fetchUsers();
     };
     init();
   }, []);
@@ -90,17 +116,20 @@ const StatusBar = ({ leadId, leadData }) => {
 
   const updateStage = async (newIndex, statusId) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`, {
-        method: 'PUT',
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
 
       if (!response.ok) {
-        alert("Failed to update status");
+        alert('Failed to update status');
         return;
       }
 
@@ -110,13 +139,13 @@ const StatusBar = ({ leadId, leadData }) => {
       }
     } catch (e) {
       console.error(e);
-      alert("Error updating status");
+      alert('Error updating status');
     }
   };
 
   const handleDialogSave = async () => {
     if (!dialogValue) {
-      alert("Please enter a value before continuing.");
+      alert('Please enter a value before continuing.');
       return;
     }
 
@@ -126,8 +155,8 @@ const StatusBar = ({ leadId, leadData }) => {
     await updateStage(dialogStageIndex, statusId);
 
     try {
-      const token = localStorage.getItem("token");
-      const userId = localStorage.getItem("user");
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('user');
       const userData = JSON.parse(userId);
 
       let requestBody;
@@ -146,25 +175,16 @@ const StatusBar = ({ leadId, leadData }) => {
           iamount: Number(dialogValue),
           ilead_id: parseInt(leadId),
         };
-      } else {
-        requestBody = {
-          caction: stageName,
-          iaction_doneby: userData.iUser_id,
-          iamount: dialogValue,
-          ilead_id: parseInt(leadId),
-        };
       }
 
-      const response = await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, requestBody, {
+      await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, requestBody, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-
-     // console.log("POST Success:", response.data);
     } catch (error) {
-      console.error("POST Error:", error?.response?.data?.message || error.message);
+      console.error('POST Error:', error?.response?.data?.message || error.message);
     }
 
     setOpenDialog(false);
@@ -172,93 +192,126 @@ const StatusBar = ({ leadId, leadData }) => {
     setDialogStageIndex(null);
   };
 
-// Inside your component return
-return (
-  <div className="w-full px-4 py-6">
-    <div className="flex items-center justify-between relative">
-      {stages.map((stage, index) => {
-        const isCompleted = index < currentStageIndex;
-        const isActive = index === currentStageIndex;
-        const isClickable = index > currentStageIndex;
+  return (
+    <div className="w-full px-4 py-6">
+      <div className="flex items-center justify-between relative">
+        {stages.map((stage, index) => {
+          const isCompleted = index < currentStageIndex;
+          const isActive = index === currentStageIndex;
+          const isClickable = index > currentStageIndex;
 
-        return (
-          <div key={stage.id} className="flex flex-col items-center flex-1">
-            <div
-              onClick={() => handleStageClick(index, stage.id)}
-              className={`relative flex items-center justify-center w-10 h-10 rounded-full 
-                ${isCompleted ? 'bg-green-600 text-white' :
-                isActive ? 'bg-blue-600 text-white' :
-                isClickable ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-                transition-colors duration-200`}
-            >
-              {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
-            </div>
-            <span className="mt-2 text-sm text-center">{stage.name}</span>
-
-            {/* Connector line */}
-            {index !== stages.length - 1 && (
-              <div className="absolute top-5 left-1/2 w-full h-1 -z-10">
-                <div className={`h-full transition-all duration-300
-                  ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}
-                `} />
+          return (
+            <div key={stage.id} className="flex flex-col items-center flex-1">
+              <div
+                onClick={() => handleStageClick(index, stage.id)}
+                className={`relative flex items-center justify-center w-10 h-10 rounded-full 
+                  ${
+                    isCompleted
+                      ? 'bg-green-600 text-white'
+                      : isActive
+                      ? 'bg-blue-600 text-white'
+                      : isClickable
+                      ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }
+                  transition-colors duration-200`}
+              >
+                {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
               </div>
-            )}
-          </div>
-        );
-      })}
+              <span className="mt-2 text-sm text-center">{stage.name}</span>
+
+              {index !== stages.length - 1 && (
+                <div className="absolute top-5 left-1/2 w-full h-1 -z-10">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      isCompleted ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            padding: 2,
+            minWidth: 360,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.4rem' }}>
+          {stages[dialogStageIndex]?.name === 'Demo'
+            ? 'Demo - Enter Name'
+            : `${stages[dialogStageIndex]?.name} - Enter Value`}
+        </DialogTitle>
+
+
+        <DialogContent sx={{ width: '100%', maxWidth: 500 }}>
+          {stages[dialogStageIndex]?.name === 'Demo' ? (
+            <Autocomplete
+              fullWidth
+              options={users}
+              getOptionLabel={(option) => option.cFull_name || ''}
+              value={users.find(user => user.cFull_name === dialogValue) || null}
+              onChange={(event, newValue) => {
+                setDialogValue(newValue?.cFull_name || '');
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Name"
+                  variant="outlined"
+                  fullWidth
+                  sx={{
+                    mt: 1,
+                    '& .MuiOutlinedInput-root': {
+                      overflow: 'visible',
+                    },
+                  }}
+                />
+              )}
+            />
+
+          ) : (
+            <TextField
+              fullWidth
+              variant="outlined"
+              value={dialogValue}
+              onChange={(e) => setDialogValue(e.target.value)}
+              label="Enter Value"
+              type="number"
+              sx={{
+                mt: 1,
+                '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+              }}
+            />
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleDialogSave} variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confetti for "Won" */}
+      {showConfetti && <Confetti />}
     </div>
-
-    {/* Dialog */}
-<Dialog
-  open={openDialog}
-  onClose={() => setOpenDialog(false)}
-  PaperProps={{
-    sx: {
-      borderRadius: 3,
-      padding: 2,
-      minWidth: 360,
-    },
-  }}
->
-  <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-    {stages[dialogStageIndex]?.name} – Enter Value
-  </DialogTitle>
-
-  <DialogContent>
-    <TextField
-      fullWidth
-      variant="outlined"
-      value={dialogValue}
-      onChange={(e) => setDialogValue(e.target.value)}
-      label="Required Value"
-      type={
-        ['Proposal', 'Won'].includes(stages[dialogStageIndex]?.name)
-          ? 'number'
-          : 'text'
-      }
-      sx={{
-        mt: 1,
-        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-          WebkitAppearance: 'none',
-          margin: 0,
-        },
-      }}
-    />
-  </DialogContent>
-
-  <DialogActions>
-    <Button onClick={() => setOpenDialog(false)} color="inherit">
-      Cancel
-    </Button>
-    <Button onClick={handleDialogSave} variant="contained">
-      Save
-    </Button>
-  </DialogActions>
-</Dialog>
-    {/* Confetti for "Won" */}
-    {showConfetti && <Confetti />}
-  </div>
-);
+  );
 };
 
 export default StatusBar;

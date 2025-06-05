@@ -43,7 +43,7 @@ import TerritoryLeadsAnalytics from "./Components/reports/TerritoryLeads";
 import UpdatePassword from "./Components/UpdatePassword";
 import { UserProvider } from "./context/UserContext";
 import UserProfile from "./pages/userProfile";
-              
+import RequestDemo from "./Components/request_demo.jsx";
 
 function App() {
   return (
@@ -55,6 +55,8 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
+            <Route path="/request-demo" element={<RequestDemo />} />
+
             <Route path="/forgetpassword" element={<ForgetPassword />} />
             <Route path="/success" element={<SuccessMessage />} />
             <Route path="/verify" element={<VerifyCodePage />} />

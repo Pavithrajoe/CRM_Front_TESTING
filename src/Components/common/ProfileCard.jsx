@@ -1,6 +1,17 @@
-
 import React, { useEffect, useState } from "react";
-import { FiEdit, FiPhone, FiMail, FiMapPin, FiUpload, FiSave, FiEye, FiX, FiMove, FiCodesandbox, FiCamera,} from "react-icons/fi";
+import {
+  FiEdit,
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiUpload,
+  FiSave,
+  FiEye,
+  FiX,
+  FiMove,
+  FiCodesandbox,
+  FiCamera,
+} from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -21,7 +32,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   }, [profile]);
 
- // console.log("Form Data in EditProfileForm:", formData);
+  console.log("Form Data in EditProfileForm:", formData);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -165,7 +176,6 @@ const ProfileCard = () => {
   const [assignedToList, setAssignedToList] = useState([]);
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
 
-  // Function to get user ID from JWT token
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -246,7 +256,7 @@ const ProfileCard = () => {
       const res = await axios.get(`${apiEndPoint}/assigned-to/${leadId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Sort the list by dcreate_dt in descending order (latest first)
+      
       const sortedList = res.data.sort(
         (a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt)
       );
@@ -329,18 +339,19 @@ const ProfileCard = () => {
   const handleAssignLead = async (e) => {
     const userId = e.target.value;
     const token = localStorage.getItem("token");
-    const loggedInUserId = getUserIdFromToken(); // Get the logged-in user's ID dynamically
+    const loggedInUserId = getUserIdFromToken(); 
 
     if (!loggedInUserId) {
+
       alert("User not logged in or token invalid.");
       return;
     }
-
+   console.log("logged user",loggedInUserId)
     try {
       await axios.post(
         `${apiEndPoint}/assigned-to`,
         {
-          iassigned_by: loggedInUserId, // Use the dynamically obtained user ID
+          iassigned_by: loggedInUserId, 
           iassigned_to: Number(userId),
           ilead_id: Number(leadId),
         },
@@ -352,7 +363,7 @@ const ProfileCard = () => {
         }
       );
       alert("Lead assigned successfully.");
-      fetchAssignedToList(); // Re-fetch the assigned to list to update the display
+      fetchAssignedToList();
     } catch (err) {
       console.error("Failed to assign lead", err);
       alert("Failed to assign lead.");
@@ -375,7 +386,7 @@ const ProfileCard = () => {
 
   const handleFileUpload = async () => {
     const token = localStorage.getItem("token");
-    const userId = getUserIdFromToken(); // Get the logged-in user's ID dynamically
+    const userId = getUserIdFromToken(); 
 
     if (!userId) {
       alert("User not logged in or token invalid.");
@@ -829,7 +840,6 @@ const ProfileCard = () => {
                     <span className="font-medium">Created At:</span>{" "}
                     {profile.corganization || "N/A"}
                   </span>{" "}
-                  {/* This seems to be a placeholder; ideally it should be profile.created_at */}
                 </div>
               </div>
 

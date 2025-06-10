@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { ENDPOINTS } from "../api/constraints";
-import { FaFacebookF, FaTwitter, FaInstagram, FaRedditAlien, FaGamepad } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
+  FaYoutube,
+  FaLinkedinIn,
+} from "react-icons/fa";
 
 const RequestDemo = () => {
   const [formData, setFormData] = useState({
@@ -83,7 +89,7 @@ const RequestDemo = () => {
   return (
     <div className="min-h-screen bg-[#f2f2f7] flex flex-col items-center justify-center px-4 py-12 font-[system-ui]">
       <div className="bg-white/70 backdrop-blur-md rounded-[28px] shadow-xl flex flex-col md:flex-row w-full max-w-6xl overflow-hidden border border-gray-100">
-        
+
         {/* Left Panel */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-between">
           <div className="text-center mb-10">
@@ -118,11 +124,19 @@ const RequestDemo = () => {
               Follow us on
             </p>
             <div className="flex justify-center gap-6 text-[20px] text-gray-400">
-              <FaFacebookF className="hover:text-blue-600 transition-all duration-150" />
-              <FaTwitter className="hover:text-sky-500 transition-all duration-150" />
-              <FaInstagram className="hover:text-pink-500 transition-all duration-150" />
-              <FaRedditAlien className="hover:text-orange-500 transition-all duration-150" />
-              <FaGamepad className="hover:text-indigo-500 transition-all duration-150" />
+              <a href="https://www.linkedin.com/company/inklidox-technologies-private-limited/?trk=public_post_follow-view-profile" target="_blank" rel="noopener noreferrer">
+                <FaLinkedinIn className="hover:text-blue-700 transition-all duration-150" />
+              </a>
+              <a href="https://www.instagram.com/inklidox_technologies/?igsh=M3F3eThuZDY2NzR5#" target="_blank" rel="noopener noreferrer">
+                <FaInstagram className="hover:text-pink-500 transition-all duration-150" />
+              </a>
+              <a href="https://www.youtube.com/@InklidoxTechnologies" target="_blank" rel="noopener noreferrer">
+                <FaYoutube className="hover:text-red-600 transition-all duration-150" />
+              </a>
+              <a href="https://x.com/inklidox" target="_blank" rel="noopener noreferrer">
+                <FaTwitter className="hover:text-sky-500 transition-all duration-150" />
+              </a>
+              {/* <FaFacebookF className="hover:text-blue-600 transition-all duration-150 cursor-default" /> */}
             </div>
           </div>
         </div>

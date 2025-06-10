@@ -133,7 +133,7 @@ const LoginPage = () => {
             </div>
 
             <div className="text-right">
-              <a href="#" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
+              <a href="/forgetpassword" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
             </div>
 
             <div className="flex flex-col items-center">

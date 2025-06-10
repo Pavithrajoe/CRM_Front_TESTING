@@ -12,14 +12,14 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const fullMenuItems = [
-    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
+    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' }, // Original Home route
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
-    { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
-    { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },
-    { iconPath: '/images/nav/users.png', label: 'Users', route: '/userpage' },
     { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
-
+    { iconPath: '/images/nav/reports.png', label: 'Report', route:'/reportpage' },
+    { iconPath: '/images/nav/users.png', label: 'Users', route: '/userpage' },
+    {iconPath: '/images/nav/company.png' , label: 'Company', route: '/companydashboard'},
+    // {iconPath: '/images/nav/Support.png' , label: 'Support', route: '/supportpage'}, // Assuming you have a support route based on your filter
   ];
 
   useEffect(() => {
@@ -33,12 +33,25 @@ const Sidebar = () => {
         const roleIdFromToken = payload.role_id;
         setUserRoleId(roleIdFromToken);
 
-        // Apply dynamic menu filtering
         if (roleIdFromToken === 1) {
-          // Full access
           setMenuItems(fullMenuItems);
-        } else {
-          // Restricted access
+        }
+        else if (roleIdFromToken === 3) {
+          // Define menu items for role 3, explicitly setting 'Home' to '/reseller_dashboard'
+          const resellerMenuItems = [
+            { iconPath: '/images/nav/home.png', label: 'Home', route: '/reseller_dashboard' }, // Modified Home route
+            { iconPath: '/images/nav/company.png', label: 'Company', route: '/companydashboard' }, // Keep existing Company route if needed
+            { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
+            { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
+            { iconPath: '/images/nav/support.png', label: 'Support', route: '/supportpage' }, // Ensure this exists if you are filtering by it
+          ];
+          setMenuItems(resellerMenuItems);
+
+          // Initial navigation and opening of the tab for reseller dashboard
+          navigate('/reseller_dashboard');
+          openTab('/reseller_dashboard', 'Home'); // Ensure this is active and correct
+        }
+        else {
           setMenuItems(
             fullMenuItems.filter(item =>
               ['Home', 'Lead', 'Calendar', 'Reports'].includes(item.label)
@@ -46,16 +59,16 @@ const Sidebar = () => {
           );
         }
       } catch (error) {
-       // console.error("Error decoding token:", error);
+        console.error("Error decoding token:", error);
         setUserRoleId(null);
         setMenuItems([]);
       }
     } else {
-     // console.log("No access token found in localStorage.");
+      console.log("No access token found in localStorage.");
       setUserRoleId(null);
       setMenuItems([]);
     }
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleTabChange = (_, newValue) => {
     if (activeTab !== newValue) {

@@ -514,7 +514,7 @@ const LeadForm = ({ onClose }) => {
     if (!form.clead_name) newErrors.clead_name = "Lead Name is required";
     if (!form.corganization) newErrors.corganization = "Organization Name is required";
     if (!form.iphone_no) newErrors.iphone_no = "Mobile Number is required";
-    if (!form.clead_address1) newErrors.clead_address1 = "Address 1 is required";
+    // if (!form.clead_address1) newErrors.clead_address1 = "Address 1 is required";
     if (!form.icity) newErrors.icity = "City is required";
     if (!form.iLeadpoten_id) newErrors.iLeadpoten_id = "Lead Potential is required";
     if (!form.ileadstatus_id) newErrors.ileadstatus_id = "Lead Status is required";

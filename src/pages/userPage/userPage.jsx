@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaCrown,
   FaEnvelope,
@@ -10,7 +10,7 @@ import {
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 const UserPage = () => {
   const [users, setUsers] = useState([]);
@@ -21,7 +21,7 @@ const UserPage = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const usersPerPage = 6;
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const getCompanyId = () => {
     const token = localStorage.getItem("token");
@@ -37,44 +37,46 @@ const UserPage = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const companyId = getCompanyId();
-      if (!companyId) {
-    //    console.warn("No company ID found in token. Cannot fetch users.");
-        return;
-      }
+  const fetchUsers = useCallback(async () => {
+    const companyId = getCompanyId();
+    if (!companyId) {
+      console.warn("No company ID found in token. Cannot fetch users.");
+      return;
+    }
 
-      try {
-        const response = await fetch(ENDPOINTS.USER_GET, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        });
+    try {
+      const response = await fetch(ENDPOINTS.USER_GET, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const data = await response.json();
-       // console.log("Raw API response data:", data);
-
-        const companyUsers = data.filter(
-          (user) => user.iCompany_id === companyId
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`
         );
-      //  console.log("Users filtered by company ID:", companyUsers);
-
-        setUsers(companyUsers);
-        setFiltered(companyUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
       }
-    };
 
-    fetchUsers();
+      const data = await response.json();
+      console.log("Raw API response data:", data);
+
+      const companyUsers = data.filter(
+        (user) => user.iCompany_id === companyId
+      );
+      console.log("Users filtered by company ID:", companyUsers);
+
+      setUsers(companyUsers);
+      setFiltered(companyUsers); // Also update filtered users
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
@@ -84,6 +86,7 @@ const UserPage = () => {
       (user) =>
         user.cFull_name.toLowerCase().includes(value) ||
         user.cEmail.toLowerCase().includes(value) ||
+        user.cCompany_name?.toLowerCase().includes(value) ||
         user.cUser_name?.toLowerCase().includes(value) ||
         user.role?.cRole_name?.toLowerCase().includes(value) ||
         user.cjob_title?.toLowerCase().includes(value) ||
@@ -114,13 +117,14 @@ const UserPage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    fetchUsers(); // Re-fetch users after the modal is closed to get the updated list
   };
 
-const goToLeadsPage = (userId) => {
-      navigate(`/userprofile/${userId}`); // Navigate to the user profile with the specific ID
+  const goToLeadsPage = (userId) => {
+    navigate(`/userprofile/${userId}`); // Navigate to the user profile with the specific ID
   };
 
-  const totalPages = Math.ceil(filtered.length / usersPerPage); // Corrected from UserPage to usersPerPage
+  const totalPages = Math.ceil(filtered.length / usersPerPage);
   const startIndex = (currentPage - 1) * usersPerPage;
   const displayedUsers = filtered.slice(startIndex, startIndex + usersPerPage);
 
@@ -147,8 +151,7 @@ const goToLeadsPage = (userId) => {
         <div className="flex gap-3 items-center">
           <button
             onClick={handleSort}
-            // Add a fixed width or min-width to prevent shifting
-            className="px-4 py-2 rounded-xl text-sm bg-white border border-gray-300 shadow hover:bg-gray-50 transition-all w-32" // Added w-32 (example fixed width)
+            className="px-4 py-2 rounded-xl text-sm bg-white border border-gray-300 shadow hover:bg-gray-50 transition-all w-32"
           >
             ↕ Sort ({sortOrder})
           </button>
@@ -178,7 +181,7 @@ const goToLeadsPage = (userId) => {
             <div
               key={user.iUser_id}
               className="bg-white rounded-3xl shadow-md hover:shadow-lg transition-all border border-gray-100 p-6 cursor-pointer"
-              onClick={() => goToLeadsPage(user.iUser_id)} // Added onClick to navigate
+              onClick={() => goToLeadsPage(user.iUser_id)}
             >
               <div className="flex items-center gap-4 mb-4">
                 <img
@@ -211,26 +214,29 @@ const goToLeadsPage = (userId) => {
                   <FaEnvelope className="text-blue-500" /> {user.cEmail}
                 </p>
                 <p className="flex items-center gap-2">
-                  <FaCrown className="text-purple-500" /> {user.cjob_title || "N/A"}
+                  <FaCrown className="text-purple-500" />{" "}
+                  {user.cjob_title || "N/A"}
                 </p>
                 <p className="flex items-center gap-2">
-                  <FaCity className="text-gray-500" /> {user.company.cCompany_name || "N/A"}
+                  <FaCity className="text-gray-500" />{" "}
+                  {user.company.cCompany_name || "N/A"}
                 </p>
-                <div className="pt-2">
-                  {user.role ? (
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-                        user.bactive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.bactive ? "Active" : "Disabled"}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">Role not assigned</span>
-                  )}
-                </div>
+               <div className="pt-2">
+  {user.role ? (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
+        user.bactive
+          ? "bg-green-100 text-green-700"
+          : "bg-red-100 text-red-700"
+      }`}
+    >
+      {user.bactive ? "Active" : "Inactive"}
+    </span>
+  ) : (
+    <span className="text-gray-400 text-xs">Role not assigned</span>
+  )}
+</div>
+
               </div>
             </div>
           ))}
@@ -243,14 +249,14 @@ const goToLeadsPage = (userId) => {
             <div>Name</div>
             <div>Role</div>
             <div>Email</div>
-            <div>Phone</div>
-            <div>Address</div>
+            <div>Job Title</div>
+            <div>Company</div>
           </div>
           {displayedUsers.map((user) => (
             <div
               key={user.iUser_id}
               className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50 cursor-pointer"
-              onClick={() => goToLeadsPage(user.iUser_id)} // Added onClick to navigate
+              onClick={() => goToLeadsPage(user.iUser_id)}
             >
               <div className="flex justify-center">
                 <img
@@ -278,8 +284,10 @@ const goToLeadsPage = (userId) => {
                 )}
               </div>
               <div className="truncate">{user.cEmail}</div>
-              <div>{user.cPhone || "Nil"}</div>
-              <div className="truncate">{user.cAddress || "Nil"}</div>
+              <div>{user.cjob_title || "Nil"}</div>
+              <div className="truncate">
+                {user.company.cCompany_name || "Nil"}
+              </div>
             </div>
           ))}
         </div>

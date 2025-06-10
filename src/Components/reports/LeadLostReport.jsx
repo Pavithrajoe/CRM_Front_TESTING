@@ -9,6 +9,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { FaArrowLeft } from "react-icons/fa"; // Import a back arrow icon from react-icons
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -16,6 +18,7 @@ export default function LostLeadReports() {
   const [listData, setListData] = useState({});
   const [loading, setLoading] = useState(true);
   const [barData, setBarData] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,66 +128,98 @@ export default function LostLeadReports() {
         gap: 24,
       }}
     >
+      {/* Header with Back Button and Title */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+        <button
+          onClick={() => navigate("/reportpage")} // Navigate to /reportpage
+          style={{
+            color: "#6B7280", // Equivalent to text-gray-600
+            padding: "8px", // Equivalent to p-2
+            borderRadius: "9999px", // Equivalent to rounded-full
+            marginRight: "16px", // Equivalent to mr-4
+            fontSize: "24px", // Equivalent to text-2xl
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease", // Equivalent to transition-colors
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} // Equivalent to hover:bg-gray-200
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft /> {/* Back arrow icon */}
+        </button>
+        <h2 style={{ fontSize: 28, fontWeight: 700, color: "#1c1c1e" }}> {/* Strong and bold title */}
+          Lost Lead Reports
+        </h2>
+      </div>
+
       {/* Cards and Chart Side-by-Side */}
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-        {/* Left Side - Cards */}
-       {/* Left Side - Card Container Box */}
-<div
-  style={{
-    flex: 1,
-    background: "white",
-    borderRadius: 20,
-    padding: 24,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 16,
-  }}
->
-  {cardData.map((card, idx) => (
-    <div
-      key={idx}
-      style={{
-        background: "rgba(255, 255, 255, 0.75)",
-        backdropFilter: "blur(12px)",
-        borderRadius: 16,
-        padding: "20px 16px",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: 100,
-        transition: "transform 0.2s ease",
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-    >
-      <div
-        style={{
-          fontSize: 14,
-          fontWeight: 500,
-          color: "#333",
-          opacity: 0.75,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-        }}
-      >
-        {card.title}
-      </div>
-      <div
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-          color: "#111",
-          marginTop: 6,
-        }}
-      >
-        {card.value}
-      </div>
-    </div>
-  ))}
-</div>
+        {/* Left Side - Card Container Box */}
+        <div
+          style={{
+            flex: 1,
+            background: "white",
+            borderRadius: 20,
+            padding: 24,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 16,
+          }}
+        >
+          {cardData.map((card, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: "rgba(255, 255, 255, 0.75)",
+                backdropFilter: "blur(12px)",
+                borderRadius: 16,
+                padding: "20px 16px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: 100,
+                transition: "transform 0.2s ease",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.02)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#333",
+                  opacity: 0.75,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {card.title}
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: "#111",
+                  marginTop: 6,
+                }}
+              >
+                {card.value}
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* Right Side - Bar Chart */}
         <div
@@ -217,7 +252,9 @@ export default function LostLeadReports() {
           padding: 24,
         }}
       >
-        <h3 style={{ marginBottom: 16, fontSize: 20, fontWeight: 600, color: "#1c1c1e" }}>
+        <h3
+          style={{ marginBottom: 16, fontSize: 20, fontWeight: 600, color: "#1c1c1e" }}
+        >
           Lost Leads
         </h3>
 
@@ -228,7 +265,13 @@ export default function LostLeadReports() {
             <table className="w-full border-collapse text-sm text-gray-800">
               <thead>
                 <tr style={{ backgroundColor: "#f2f2f7", textAlign: "left" }}>
-                  {["Lead Name", "Lead Owner", "Service", "Value", "Reason"].map((header) => (
+                  {[
+                    "Lead Name",
+                    "Lead Owner",
+                    "Service",
+                    "Value",
+                    "Reason",
+                  ].map((header) => (
                     <th
                       key={header}
                       className={`px-4 py-3 font-medium ${
@@ -257,7 +300,9 @@ export default function LostLeadReports() {
                       <td className="px-4 py-3 text-right font-semibold text-blue-600">
                         ₹{lead.value}
                       </td>
-                      <td className="px-4 py-3 text-red-500 font-medium">{lead.reason}</td>
+                      <td className="px-4 py-3 text-red-500 font-medium">
+                        {lead.reason}
+                      </td>
                     </tr>
                   ))
                 ) : (

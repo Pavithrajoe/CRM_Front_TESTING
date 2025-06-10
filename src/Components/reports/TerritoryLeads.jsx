@@ -12,7 +12,8 @@ import {
 import { Bar, Pie } from "react-chartjs-2";
 import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react";
 import { Listbox } from "@headlessui/react";
-import { FaRupeeSign } from "react-icons/fa";
+import { FaRupeeSign, FaArrowLeft } from "react-icons/fa"; // Import FaArrowLeft
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement);
 
@@ -21,6 +22,7 @@ const TerritoryLeadsAnalytics = () => {
   const [territory, setTerritory] = useState("All Territories");
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10;
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchData = async () => {
@@ -148,7 +150,16 @@ const TerritoryLeadsAnalytics = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto font-[system-ui]">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Territory-Based Analytics</h1>
+      <div className="flex items-center mb-6">
+        <button
+          onClick={() => navigate("/reportpage")} // Navigate to /reportpage
+          className="text-gray-600 hover:text-gray-900 mr-4 text-2xl p-2 rounded-full hover:bg-gray-200 transition-colors"
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft /> {/* Back arrow icon */}
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900 text-center">Territory-Based Analytics</h1>
+      </div>
 
       <div className="mb-8 flex justify-center">
         <Listbox value={territory} onChange={(value) => {

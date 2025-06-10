@@ -9,8 +9,10 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from "chart.js";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { FaArrowLeft } from "react-icons/fa"; // Import a back arrow icon from react-icons
 
 ChartJS.register(
   CategoryScale,
@@ -38,6 +40,7 @@ export default function SalesByStageReport() {
   const [tableData, setTableData] = useState([]);
   const [chartData, setChartData] = useState({ labels: [], datasets: [] });
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,7 +66,7 @@ export default function SalesByStageReport() {
           "Qualification",
           "Follow-up",
           "Negotiation",
-          "Won"
+          "Won",
         ];
 
         const transformedData = stages.map((stage) => {
@@ -71,7 +74,7 @@ export default function SalesByStageReport() {
             totalLeads: 0,
             totalValue: 0,
             avgDays: 0,
-            leads: []
+            leads: [],
           };
           return {
             stage,
@@ -93,7 +96,7 @@ export default function SalesByStageReport() {
                 ? 100
                 : Math.round(
                     (stageData.totalLeads / (data.New?.totalLeads || 1)) * 50
-                  )
+                  ),
           };
         });
 
@@ -108,9 +111,9 @@ export default function SalesByStageReport() {
               borderColor: "#0A84FF",
               backgroundColor: "#D6ECFF",
               fill: false,
-              tension: 0.4
-            }
-          ]
+              tension: 0.4,
+            },
+          ],
         });
       } catch (error) {
         console.error("Error fetching report data:", error);
@@ -151,9 +154,18 @@ export default function SalesByStageReport() {
   return (
     <div className="flex min-h-screen bg-[#F9FAFB] text-gray-800">
       <div className="flex-1 p-6 md:p-10">
-        <h2 className="text-3xl font-semibold mb-8 text-gray-900">
-          Opportunity Summary by Sales Stage
-        </h2>
+        <div className="flex items-center mb-8">
+          <button
+            onClick={() => navigate("/reportpage")} // Navigate to /reportpage
+            className="text-gray-600 hover:text-gray-900 mr-4 text-2xl p-2 rounded-full hover:bg-gray-200 transition-colors"
+            aria-label="Back to reports"
+          >
+            <FaArrowLeft /> {/* Back arrow icon */}
+          </button>
+          <h2 className="text-3xl font-bold text-gray-900"> {/* Added font-bold */}
+            Opportunity Summary by Sales Stage
+          </h2>
+        </div>
 
         {/* Top Section */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -172,7 +184,9 @@ export default function SalesByStageReport() {
                 <p className="text-sm font-medium text-green-800">
                   Total Lead Value
                 </p>
-                <h3 className="text-2xl font-bold">₹{totalValue.toLocaleString()}</h3>
+                <h3 className="text-2xl font-bold">
+                  ₹{totalValue.toLocaleString()}
+                </h3>
               </CardContent>
             </Card>
             <Card className="bg-[#FEF3C7]">
@@ -180,7 +194,9 @@ export default function SalesByStageReport() {
                 <p className="text-sm font-medium text-yellow-800">
                   Pipeline Value
                 </p>
-                <h3 className="text-2xl font-bold">₹{weightedPipelineValue.toLocaleString()}</h3>
+                <h3 className="text-2xl font-bold">
+                  ₹{weightedPipelineValue.toLocaleString()}
+                </h3>
               </CardContent>
             </Card>
             <Card className="bg-[#E9D5FF]">

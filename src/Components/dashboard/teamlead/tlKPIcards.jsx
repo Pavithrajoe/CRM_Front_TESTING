@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 export default function KPIStats(data) {
   const [hotCount, setHotCount] = useState(0);
@@ -8,54 +9,101 @@ export default function KPIStats(data) {
   const [totalCount, setTotalCount] = useState(0);
   const [lostCount, setLostCount] = useState(0);
 
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentToken, setCurrentToken] = useState(null);
+  const [error, setError] = useState(null); 
+  const [loading, setLoading] = useState(true); 
+
+  
+  useEffect(() => {
+    let extractedUserId = null;
+    let tokenFromStorage = null;
+
+    try {
+      tokenFromStorage = localStorage.getItem('token');
+      console.log("Token from localStorage:", tokenFromStorage);
+      if (tokenFromStorage) {
+        const decodedToken = jwtDecode(tokenFromStorage);
+        extractedUserId = decodedToken.user_id;
+        console.log("Extracted User ID:", extractedUserId);
+        if (!extractedUserId) {
+          throw new Error("User ID not found in token.");
+        }
+      } else {
+        throw new Error("Authentication token not found in local storage.");
+      }
+    } catch (e) {
+      console.error("Error retrieving or decoding token:", e);
+      setError(`Authentication error: ${e.message}. Please log in again.`);
+      setLoading(false); 
+      return;
+    }
+
+    if (extractedUserId && tokenFromStorage) {
+      setCurrentUserId(extractedUserId);
+      setCurrentToken(tokenFromStorage);
+      setLoading(false); 
+    } else {
+      setError("User ID or authentication token is missing after processing.");
+      setLoading(false);
+    }
+  }, []);
+
   const leads = data?.data?.leads || [];
- // console.log(" data:", data);
 
   useEffect(() => {
     let hot = 0,
       warm = 0,
       cold = 0,
       won = 0,
-      lost = 0;
+      lost = 0,
+      deals = 0; 
 
     leads.forEach((lead) => {
-      const potential = lead.lead_potential?.clead_name;
-      const status = lead.lead_status?.clead_name;
+      if (lead.bactive === false) {
+        lost++;
+      }
 
-      if (potential === "HOT") hot++;
-      else if (potential === "WARM") warm++;
-      else if (potential === "COLD") cold++;
+      if (lead.bactive === true) {
+        const potential = lead.lead_potential?.clead_name;
+        const status = lead.lead_status?.clead_name;
 
-      if (status === "Won") won++;
-      
-      if (lead.bactive === false) lost++;
-     // console.log("Leads:", leads);
+        if (potential === "HOT") hot++;
+        else if (potential === "WARM") warm++;
+        else if (potential === "COLD") cold++;
 
+        if (status === "Won") won++;
+
+        //  for Total Leads
+        if (lead.bisConverted === false) {
+          deals++;
+        }
+      }
     });
 
     setHotCount(hot);
     setWarmCount(warm);
     setColdCount(cold);
     setWonCount(won);
-    setTotalCount(leads.length);
+    setTotalCount(deals); 
     setLostCount(lost);
   }, [leads]);
 
   const kpiData = [
     {
-      title: "Hot Leads",
+      title: "Hot",
       value: hotCount,
       color: "text-red-500",
       bg: "/illustrations/hot.svg",
     },
     {
-      title: "Warm Leads",
+      title: "Warm",
       value: warmCount,
       color: "text-orange-500",
       bg: "/illustrations/warm.svg",
     },
     {
-      title: "Cold Leads",
+      title: "Cold",
       value: coldCount,
       color: "text-blue-500",
       bg: "/illustrations/cold.svg",
@@ -67,6 +115,22 @@ export default function KPIStats(data) {
       bg: "/illustrations/win.svg",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="text-center text-gray-400 py-8 text-lg font-medium">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 py-8 text-lg font-medium">
+        {error}
+      </div>
+    );
+  }
 
   if (leads.length === 0) {
     return (
@@ -82,20 +146,20 @@ export default function KPIStats(data) {
         {/* Top two small cards */}
         <div className="grid grid-cols-2 gap-6">
           <div className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm">
-            <h3 className="text-xs font-semibold text-gray-600 mb-1 tracking-tight">
-              Total Leads
+            <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
+               Total Leads
             </h3>
             <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
           </div>
           <div className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm">
-            <h3 className="text-xs font-semibold text-gray-600 mb-1 tracking-tight">
+            <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
               Total Lost
             </h3>
             <p className="text-2xl font-bold text-gray-900">{lostCount}</p>
           </div>
         </div>
 
-        {/* Main KPI cards */}
+        {/* Other KPI cards */}
         <div className="grid grid-cols-2 grid-rows-2 gap-6">
           {kpiData.map((kpi, index) => (
             <div

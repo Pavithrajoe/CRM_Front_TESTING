@@ -36,7 +36,7 @@ export default function TeamleadHeader() {
             isTeam ? 'bg-black text-white' : 'text-black'
           }`}
         >
-          Team
+          Team Profile
         </button>
       </div>
     </div>

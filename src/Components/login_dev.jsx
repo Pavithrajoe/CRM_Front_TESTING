@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEye, FaEyeSlash, FaTimesCircle } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ENDPOINTS } from '../api/constraints';
 
 const LoginPage = () => {
@@ -9,7 +9,19 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showTopCard, setShowTopCard] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+  const handleResize = () => {
+    setShowTopCard(window.innerWidth <= 767);
+  };
+
+  handleResize(); 
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 
   const togglePassword = () => setShowPassword(prev => !prev);
 
@@ -62,9 +74,7 @@ const LoginPage = () => {
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
       }
-
     } catch (error) {
-     // console.error("Login error:", error);
       setLoginError('Something went wrong. Please try again.');
     }
 
@@ -80,9 +90,16 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 relative">
-      <div className="w-full max-w-[1100px] bg-white rounded-3xl shadow-xl flex flex-col md:flex-row overflow-hidden">
-        
-        {/* Left illustration */}
+      {/* Top Card - Shown Initially */}
+      {showTopCard && (
+        <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-white border border-blue-300 text-blue-800 px-5 py-4 rounded-xl shadow-md text-sm font-medium z-50">
+          <p className="mb-2"> Login from your desktop or laptop for a better experience.</p>
+          
+        </div>
+      )}
+
+      <div className={`w-full max-w-[1100px] bg-white rounded-3xl shadow-xl flex flex-col md:flex-row overflow-hidden transition-all duration-300 ${showTopCard ? 'blur-sm pointer-events-none select-none' : ''}`}>
+        {/* Left Image */}
         <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-500 to-indigo-600 flex justify-center items-center p-6">
           <img
             src="/images/login/login.png"
@@ -102,13 +119,13 @@ const LoginPage = () => {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="text-gray-600 text-sm font-medium block mb-1">Email or Phone</label>
+              <label className="text-gray-600 text-sm font-medium block mb-1">Email </label>
               <input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="example@domain.com or 9876543210"
+                placeholder="example@domain.com"
               />
             </div>
 
@@ -133,7 +150,9 @@ const LoginPage = () => {
             </div>
 
             <div className="text-right">
-              <a href="/forgetpassword" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
+              <Link to="/forgetpassword" className="text-sm text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
             </div>
 
             <div className="flex flex-col items-center">
@@ -154,14 +173,13 @@ const LoginPage = () => {
                 )}
               </button>
 
-              {/* Request Demo Button */}
               <button
-  type="button"
-  onClick={() => window.open('/request-demo', '_blank')}
-  className="mt-4 text-sm text-blue-600 hover:underline"
->
-  Request a Demo
-</button>
+                type="button"
+                onClick={() => window.open('/request-demo', '_blank')}
+                className="mt-4 text-sm text-blue-600 hover:underline"
+              >
+                Request a Demo
+              </button>
 
               {loginError && <LoginFailedAlert message={loginError} />}
             </div>

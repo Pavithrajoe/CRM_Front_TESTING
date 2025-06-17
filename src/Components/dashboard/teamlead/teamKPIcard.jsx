@@ -1,41 +1,186 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Users } from "lucide-react";
+import { ENDPOINTS } from "../../../api/constraints";
+import { jwtDecode } from "jwt-decode";
+
+export default function TeamKPIStats() {
+  const [leadCount, setLeadCount] = useState(0);
+  const [dealCount, setDealCount] = useState(0);
+  const [hotLeadCount, setHotLeadCount] = useState(0);
+  const [coldLeadCount, setColdLeadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentToken, setCurrentToken] = useState(null);
+
+  useEffect(() => {
+    let extractedUserId = null;
+    let tokenFromStorage = null;
+
+    try {
+      tokenFromStorage = localStorage.getItem('token');
+      if (tokenFromStorage) {
+        const decodedToken = jwtDecode(tokenFromStorage);
+        extractedUserId = decodedToken.user_id;
+
+        if (!extractedUserId) {
+          throw new Error("User ID (user_id) not found in decoded token payload.");
+        }
+      } else {
+        throw new Error("Authentication token not found in local storage. Please log in.");
+      }
+    } catch (e) {
+      console.error("Error retrieving or decoding token in TeamKPIStats:", e);
+      setError(`Authentication error: ${e.message}`);
+      setLoading(false);
+      return;
+    }
+
+    if (extractedUserId && tokenFromStorage) {
+      setCurrentUserId(extractedUserId);
+      setCurrentToken(tokenFromStorage);
+    } else {
+      setError("Failed to obtain valid user ID or authentication token.");
+      setLoading(false);
+    }
+  }, []); 
+
+  const fetchTeamKPIs = useCallback(async () => {
+    if (!currentUserId || !currentToken) {
+      setLoading(false);
+      return;
+    }
+
+    const apiUrl = `${ENDPOINTS.TEAM_KPI}/${currentUserId}`;
+
+    try {
+      setLoading(true);
+      setError(null); 
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
+      }
+
+      const data = await response.json();
+      //console.log("API response data for TEAM_KPI:", data);
+
+      const leadsArray = data.details?.lead;
+      const subordinatesArray = data.details?.subordinates;
+
+      if (Array.isArray(leadsArray) && Array.isArray(subordinatesArray)) {
+        const activeSubordinateIds = new Set(
+          subordinatesArray
+            .filter(sub => sub.bactive === true)
+            .map(sub => sub.iUser_id)
+        );
+
+        //console.log("Active Subordinate IDs:", Array.from(activeSubordinateIds));
 
 
-export default function TeamKPIStats({ leadCount, dealCount, hotLeadCount, coldLeadCount }) {
+        const filteredLeads = leadsArray.filter(lead =>
+          lead.bactive === true &&
+          activeSubordinateIds.has(lead.clead_owner)
+        );
+
+        //console.log("Filtered Leads (Lead active & Owner active):", filteredLeads);
+
+
+        const totalLeadsCount = filteredLeads.length;
+        const convertedDealsCount = filteredLeads.filter(
+          (lead) => lead.bisConverted === true
+        ).length;
+        const hotLeadsCount = filteredLeads.filter(
+          (lead) =>
+            lead.lead_potential &&
+            lead.lead_potential.clead_name === "HOT" &&
+            lead.bisConverted === false
+        ).length;
+        const coldLeadsCount = filteredLeads.filter(
+          (lead) =>
+            lead.lead_potential &&
+            lead.lead_potential.clead_name === "COLD" &&
+            lead.bisConverted === false
+        ).length;
+
+        setLeadCount(totalLeadsCount);
+        setDealCount(convertedDealsCount);
+        setHotLeadCount(hotLeadsCount);
+        setColdLeadCount(coldLeadsCount);
+        setError(null);
+      } else {
+        console.warn("API response for TEAM_KPI did not contain expected 'details.lead' or 'details.subordinates' arrays.");
+        setLeadCount(0);
+        setDealCount(0);
+        setHotLeadCount(0);
+        setColdLeadCount(0);
+        setError("API response for KPIs did not contain expected lead or subordinate data.");
+      }
+    } catch (err) {
+      console.error("Error fetching team KPIs:", err);
+      setError(`Failed to fetch data: ${err.message}`);
+      setLeadCount(0);
+      setDealCount(0);
+      setHotLeadCount(0);
+      setColdLeadCount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId, currentToken]);
+
+
+  useEffect(() => {
+    if (currentUserId && currentToken) {
+      fetchTeamKPIs();
+    }
+  }, [currentUserId, currentToken, fetchTeamKPIs]);
 
   const kpiData = [
-    { 
-      title: "Leads Count",
-      value: leadCount ,
-      colorStart: "#6CCF00", // darker green
+    {
+      title: "Active Leads",
+      value: leadCount,
+      colorStart: "#6CCF00",
       colorEnd: "#3CB043",
       iconBg: "bg-green-500",
     },
     {
-      title: "Deals Count",
+      title: "Converted Deals",
       value: dealCount,
-      colorStart:  "#8E24AA", // darker purple
+      colorStart: "#8E24AA",
       colorEnd: "#9C27B0",
       iconBg: "bg-purple-500",
     },
     {
-      title: "Hot Leads",
+      title: "Hot Leads (Active)",
       value: hotLeadCount,
-      colorStart: "#FF7043", // darker orange,
+      colorStart: "#FF7043",
       colorEnd: "#FF5722",
       iconBg: "bg-orange-500",
     },
     {
-      title: "Cold Leads",
+      title: "Cold Leads (Active)",
       value: coldLeadCount,
-      colorStart: "#1E88E5", // darker blue
+      colorStart: "#1E88E5",
       colorEnd: "#2196F3",
       iconBg: "bg-sky-500",
     },
   ];
 
-  
+  if (loading) {
+    return <div className="text-center p-4 text-gray-700">Loading KPIs...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-4 text-red-500">Error: {error}</div>;
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -44,7 +189,6 @@ export default function TeamKPIStats({ leadCount, dealCount, hotLeadCount, coldL
           key={index}
           className="relative bg-white rounded-xl border shadow-sm p-4 overflow-hidden h-[160px]"
         >
-          {/* Top Content */}
           <div className="flex justify-between items-start relative z-10">
             <div>
               <h3 className="text-sm text-gray-600">{kpi.title}</h3>
@@ -54,8 +198,7 @@ export default function TeamKPIStats({ leadCount, dealCount, hotLeadCount, coldL
               <Users className="text-white w-5 h-5" />
             </div>
           </div>
-
-          {/* Stylish Wave */}
+        
           <div className="absolute bottom-0 left-0 w-full h-[80px] z-0">
             <svg
               viewBox="0 0 500 150"

@@ -44,6 +44,12 @@ import UpdatePassword from "./Components/UpdatePassword";
 import { UserProvider } from "./context/UserContext";
 import UserProfile from "./pages/userProfile";
 import RequestDemo from "./Components/request_demo.jsx";
+import FirstResponseTimeReport from "./Components/reports/first-response.jsx";
+// import ProspectsEngagedReport from './Components/reports/ProspectsEngagedReport';
+import ProspectsEngagedReport from './Components/reports/ProspectsEngagedReport';
+import SalesPipelineAnalysis from "./Components/reports/Sales_pipeline_analysis.jsx";
+import CompanyLeads from "./Components/reports/company_leads";  
+import LeadOwnerEfficency from "./Components/reports/lead_owner_efficiency";
 
 function App() {
   return (
@@ -76,7 +82,11 @@ function App() {
               <Route path="userpage" element={<UserPage />} />
               <Route path="commandpage" element={<Commandpage />} />
               <Route path="users" element={<CreateUserForm />} />
-
+              <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
+              <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
+            <Route path="/company-leads" element={<CompanyLeads />} />
+             <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
+              <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis/>}/>
               <Route path="leads" element={<LeadsDashboard />} />
               <Route path="leadlistview" element={<LeadListViewPage />} />
               <Route path="leadcardview" element={<LeadCardViewPage />} />
@@ -89,7 +99,7 @@ function App() {
               <Route path="analytics" element={<UserAnalyticsPage />} />
               <Route path="teamview" element={<TeamviewDashboard />} />
               <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
-
+              <Route path="/first-response" element={<FirstResponseTimeReport/>}/>
               <Route path="settingspage" element={<SettingsPage />}>
                 <Route path="account" element={<AccountSettings />} />
                 <Route path="notification" element={<NotificationSettings />} />

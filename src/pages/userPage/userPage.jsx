@@ -3,7 +3,6 @@ import {
   FaCrown,
   FaEnvelope,
   FaCity,
-  FaIdCard,
   FaTh,
   FaBars,
 } from "react-icons/fa";
@@ -30,7 +29,7 @@ const UserPage = () => {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const payload = JSON.parse(atob(base64));
-      return payload.company_id;
+      return payload.company_id || payload.iCompany_id;
     } catch (error) {
       console.error("Error decoding token:", error);
       return null;
@@ -60,15 +59,9 @@ const UserPage = () => {
       }
 
       const data = await response.json();
-      console.log("Raw API response data:", data);
-
-      const companyUsers = data.filter(
-        (user) => user.iCompany_id === companyId
-      );
-      console.log("Users filtered by company ID:", companyUsers);
-
+      const companyUsers = data.filter((user) => user.iCompany_id === companyId);
       setUsers(companyUsers);
-      setFiltered(companyUsers); // Also update filtered users
+      setFiltered(companyUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -81,7 +74,6 @@ const UserPage = () => {
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
-
     const filteredUsers = users.filter(
       (user) =>
         user.cFull_name.toLowerCase().includes(value) ||
@@ -92,7 +84,6 @@ const UserPage = () => {
         user.cjob_title?.toLowerCase().includes(value) ||
         user.cCity?.toLowerCase().includes(value)
     );
-
     setFiltered(filteredUsers);
     setCurrentPage(1);
   };
@@ -100,29 +91,22 @@ const UserPage = () => {
   const handleSort = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
     setSortOrder(newOrder);
-
     const sortedUsers = [...filtered].sort((a, b) =>
       newOrder === "asc"
         ? a.cFull_name.localeCompare(b.cFull_name)
         : b.cFull_name.localeCompare(a.cFull_name)
     );
-
     setFiltered(sortedUsers);
     setCurrentPage(1);
   };
 
-  const handleCreateUserClick = () => {
-    setIsModalOpen(true);
-  };
-
+  const handleCreateUserClick = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
-    fetchUsers(); // Re-fetch users after the modal is closed to get the updated list
+    fetchUsers();
   };
 
-  const goToLeadsPage = (userId) => {
-    navigate(`/userprofile/${userId}`); // Navigate to the user profile with the specific ID
-  };
+  const goToLeadsPage = (userId) => navigate(`/userprofile/${userId}`);
 
   const totalPages = Math.ceil(filtered.length / usersPerPage);
   const startIndex = (currentPage - 1) * usersPerPage;
@@ -131,8 +115,6 @@ const UserPage = () => {
   return (
     <div className="p-6 bg-gradient-to-b from-slate-100 to-white min-h-screen rounded-3xl shadow-inner font-sans text-gray-800">
       <ProfileHeader />
-
-      {/* Search & View Controls */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <input
           type="text"
@@ -147,7 +129,6 @@ const UserPage = () => {
         >
           + User
         </button>
-
         <div className="flex gap-3 items-center">
           <button
             onClick={handleSort}
@@ -174,7 +155,7 @@ const UserPage = () => {
         </div>
       </div>
 
-      {/* Conditional Rendering for Grid or List View */}
+      {/* Grid or List View */}
       {view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {displayedUsers.map((user) => (
@@ -195,7 +176,6 @@ const UserPage = () => {
                   <h2 className="text-lg font-semibold text-gray-800 truncate">
                     {user.cFull_name}
                   </h2>
-
                   {user.role?.cRole_name && (
                     <span
                       className={`ml-4 px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
@@ -214,35 +194,25 @@ const UserPage = () => {
                   <FaEnvelope className="text-blue-500" /> {user.cEmail}
                 </p>
                 <p className="flex items-center gap-2">
-                  <FaCrown className="text-purple-500" />{" "}
-                  {user.cjob_title || "N/A"}
+                  <FaCrown className="text-purple-500" /> {user.cjob_title || "N/A"}
                 </p>
                 <p className="flex items-center gap-2">
-                  <FaCity className="text-gray-500" />{" "}
-                  {user.company.cCompany_name || "N/A"}
+                  <FaCity className="text-gray-500" /> {user.company?.cCompany_name || "N/A"}
                 </p>
-               <div className="pt-2">
-  {user.role ? (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
-        user.bactive
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
-      }`}
-    >
-      {user.bactive ? "Active" : "Inactive"}
-    </span>
-  ) : (
-    <span className="text-gray-400 text-xs">Role not assigned</span>
-  )}
-</div>
-
+                <div className="pt-2">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
+                      user.bactive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {user.bactive ? "Active" : "Inactive"}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        // List View
         <div className="rounded-3xl shadow border border-gray-100 overflow-hidden">
           <div className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 bg-gray-100 font-semibold text-gray-600 text-center text-sm">
             <div>Profile</div>
@@ -285,9 +255,7 @@ const UserPage = () => {
               </div>
               <div className="truncate">{user.cEmail}</div>
               <div>{user.cjob_title || "Nil"}</div>
-              <div className="truncate">
-                {user.company.cCompany_name || "Nil"}
-              </div>
+              <div className="truncate">{user.company?.cCompany_name || "Nil"}</div>
             </div>
           ))}
         </div>
@@ -329,18 +297,15 @@ const UserPage = () => {
       {/* User Creation Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
-          <div
-            className={`relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl transform transition-transform duration-300 ease-out ${
-              isModalOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-            }`}
-          >
+          <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 text-white hover:text-gray-800 text-2xl"
             >
               &times;
             </button>
-            <CreateUserForm onClose={closeModal} />
+            <CreateUserForm on
+            Close={closeModal} />
           </div>
         </div>
       )}

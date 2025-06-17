@@ -38,6 +38,30 @@ export const ENDPOINTS = {
   UPDATE_PASSWORD: `${BASE_URL}/update-password`,
   GET_DEALS: `${BASE_URL}/lead/deals`,
   DEMO_MAIL: `${BASE_URL}/sentmail`,
+  TEAM_KPI: `${BASE_URL}/lead/manager`,
+  GET_SETTINGS: `${BASE_URL}/general-setting/info`,
+  GET_PARAMS_TARGET: `${BASE_URL}/user-target/get-user-target`,
+  GET_ASSIGN: `${BASE_URL}/assigned-to`,
+  GET_METRICS_TARGET: `${BASE_URL}/user-target`,
+  GET_USER_HISTORY: `${BASE_URL}/user-target/user-activity-history`,
+  UPDATE_PASSWORD: `${BASE_URL}/update-password`,
+  LEAD_CONVERSION: `${BASE_URL}/reports/get-conversion-time`,
+  ACTIVITY_HISTORY: `${BASE_URL}/user-target/user-activity-data`,
+  GENERAL_SETTINGS_UPDATE: `${BASE_URL}/general-setting/edit`,
+  USER_ACHIEVEMENTS: `${BASE_URL}/user-target/user-achievements`,
+  USER_POST: `${BASE_URL}/user-target`,
+  PROSPECTS_LOST_LEADS:`${BASE_URL}/reports/prospects-lost-leads/`,
+  //sales pipline analysis api 
+   SALES_PIPLINE_ANALYSIS:`${BASE_URL}/reports/sales-pipline-report/`,
+   //first response for the lead
+   FIRST_RESPONSE_FOR_LEAD:`${BASE_URL}/reports/first-response-time/`,
+   //company leads 
+      COMPANY_LEADS:`${BASE_URL}/reports/company-all-leads/`,
+   //lead owner first response 
+   LEAD_OWNER_FIRST_RES:`${BASE_URL}/reports/lead-owner-efficiency/`,
+   MANAGER_REMINDER: `${BASE_URL}/lead/manager`,
+
+
 
 
 

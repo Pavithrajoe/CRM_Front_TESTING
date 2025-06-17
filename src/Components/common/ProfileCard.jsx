@@ -527,6 +527,16 @@ const ProfileCard = () => {
             LOST LEAD
           </div>
         )}
+  {/* New "Remarks" Section for Website Lead */}
+        {profile.website_lead === true && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm mt-5 text-sm text-yellow-800 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+            </svg>
+            <p className="font-semibold">This is a Website Lead.</p>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5">
           <label
@@ -843,6 +853,18 @@ const ProfileCard = () => {
                 </div>
               </div>
 
+              {/* Display Website Lead status in full details as well */}
+              {profile.website_lead === true && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm text-sm mt-10 text-yellow-800 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                  </svg>
+                  <p className="font-semibold">This lead originated from the website.</p>
+                </div>
+              )}
+            </div>
+
               {/* <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-8 mb-4 border-t pt-4 border-gray-100">
                 Profile Update History
               </h3> */}
@@ -891,7 +913,7 @@ const ProfileCard = () => {
                 )}
               </div>
             </div>
-          </div>
+        
         )}
       </div>
     </div>

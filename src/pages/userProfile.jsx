@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-// import { ENDPOINTS } from '../../api/constraints';
 import { ENDPOINTS } from '../api/constraints';
-// import ProfileHeader from '../../Components/common/ProfileHeader';
 import ProfileHeader from '../Components/common/ProfileHeader';
 import SettingsPage from './userPage/settingsPage';
 import HistoryDashboard from './userPage/historyPage';
-// import HistoryDashboard from '../userPage/historyPage';
-// import AcheivementDashboard from '../userPage/acheivementPage';
-import AchievementDashboard from './userPage/acheivementPage';
+import TargetDashboard from './userPage/targetPage';
+import AcheivementDashboard from './userPage/acheivementPage';
 import axios from 'axios';
 
 import {
@@ -296,8 +293,8 @@ const UserProfile = () => {
       <div className="flex mt-[-40px] flex-col md:flex-row gap-6 p-6 flex-grow overflow-hidden items-start">
         {/* Profile Card - Left Section */}
         <div className="w-full md:w-80 lg:w-96 bg-white p-6 rounded-xl shadow relative
-                               flex-shrink-0
-                               h-fit max-h-[calc(100vh-140px)] overflow-y-auto">
+                                 flex-shrink-0
+                                 h-fit max-h-[calc(100vh-140px)] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">About</h2>
             <button onClick={openForm} className="text-gray-600 hover:text-gray-800 transition-colors duration-200">
@@ -305,18 +302,22 @@ const UserProfile = () => {
             </button>
           </div>
 
-          <div className="flex flex-col items-center gap-4 mb-6 md:flex-row md:items-start md:gap-4">
-            <img
-              src={user.cProfile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.cFull_name)}&background=random&color=fff&rounded=true`}
-              alt={`${user.cFull_name}'s avatar`}
-              className="w-20 h-20 rounded-full border border-gray-200 object-cover"
-            />
+          <div className="flex flex-col items-center gap-6 mb-6 md:flex-row md:items-start md:gap-4">
+          <div className="flesx justify-center">
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user.cFull_name
+                  )}&background=random&color=fff&rounded=true`}
+                  alt="Profile"
+                  className="w-15 h-15 rounded-full object-cover"
+                />
+              </div>
             <div className="flex flex-col items-center md:items-start">
               <h3 className="text-2xl font-semibold text-gray-900">{user.cFull_name}</h3>
               {/* Ensure user.bactive is defined before attempting to use it */}
               {user.bactive !== undefined ? (
                 <span
-                  className={`px-3 py-1 mt-1 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
+                  className={`px-2 py-1 mt-4 rounded-full text-xs font-semibold capitalize flex-shrink-0 ${
                     user.bactive
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
@@ -378,8 +379,7 @@ const UserProfile = () => {
             {activeTab === 'Target' && (
               <div className="h-full overflow-y-auto">
                 <div className="p-4 bg-white rounded-xl shadow-md">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Target Dashboard (Coming Soon!)</h3>
-                    <p className="text-gray-600">This section will display user targets and performance metrics.</p>
+                   <TargetDashboard userId={userId} /> 
                 </div>
               </div>
             )}
@@ -390,7 +390,7 @@ const UserProfile = () => {
             )}
             {activeTab === 'Settings' && (
               <div className="h-full overflow-y-auto">
-                <SettingsPage userId={userId} />
+                <SettingsPage userId={userId} /> 
               </div>
             )}
             {activeTab === 'Achievement' && (

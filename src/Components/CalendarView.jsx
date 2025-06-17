@@ -4,7 +4,6 @@ import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@m
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
-import { ImCross } from "react-icons/im";
 import Slide from '@mui/material/Slide';
 
 
@@ -32,8 +31,8 @@ const dummyApi = {
   })
 };
 
-// MeetFormDrawer Component (keep this the same)
-const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer, setSnackbar }) => {
+// MeetFormDrawer Component
+const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar }) => { 
   const initialFormData = {
     ctitle: '',
     devent_startdt: '',
@@ -41,7 +40,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
     icreated_by: '',
     iupdated_by: '',
     devent_end: '',
-    dupdated_at: new Date().toISOString().split('.')[0] + 'Z'
+    dupdated_at: new Date().toISOString().split('.')[0] + 'Z',
+    recurring_task: ''
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -52,15 +52,14 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
     const startDate = new Date(formData.devent_startdt);
     const now = new Date();
 
-    // Check if the selected start date is in the past
+    
     if (startDate < now.setSeconds(0, 0)) {
       setSnackbar({
         open: true,
         message: 'ℹ️ Please select a future date and time!',
-
         severity: 'info'
       });
-      return; // Prevent submission
+      return; 
     }
 
     const startTime = startDate.toISOString().split('.')[0] + 'Z';
@@ -70,10 +69,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
     formData.devent_startdt = startTime;
     formData.icreated_by = user_data_parsed.iUser_id;
     formData.iupdated_by = user_data_parsed.iUser_id;
-    formData.devent_end = startTime; // Same as start, adjust if needed
+    formData.devent_end = startTime; 
     formData.dupdated_at = new Date().toISOString().split('.')[0] + 'Z';
-
-    //console.log('Form data ready for submission:', formData);
 
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -103,7 +100,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
         message: '✅ Reminder created successfully!',
         severity: 'success',
       });
-
+      onCreated(); 
+      onClose();
 
 
     } catch (error) {
@@ -184,6 +182,22 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
               />
             </div>
 
+            {/* Recurring Task Dropdown */}
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Recurring Task</label>
+              <select
+                name="recurring_task" 
+                value={formData.recurring_task} 
+                onChange={(e) => setFormData({ ...formData, recurring_task: e.target.value })} 
+                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              >
+                <option value="">None</option> 
+                <option value="Quarter">Quarter</option>
+                <option value="Half_year">Half-year</option>
+                <option value="Year">Year</option>
+              </select>
+            </div>
+
             {/* Submit */}
             <div className="flex justify-center mt-6">
               <button
@@ -197,20 +211,15 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setOpenDrawer,
         </div>
       </div>
     </Drawer>
-
-
   );
 };
 
 const CalendarView = () => {
   const [msg, setMsg] = useState('');
   const [reminderList, setReminderList] = useState([])
-  // State declarations for all variables being used
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [reminders, setReminders] = useState([]);
-  const [allReminder, setAllReminder] = useState([]);
-
   const [calendarEvents, setCalendarEvents] = useState([]);
 
 
@@ -221,13 +230,12 @@ const CalendarView = () => {
     message: '',
     severity: 'success'
   });
-  const [draftToEdit, setDraftToEdit] = useState(null); // For editing drafts
+  // const [draftToEdit, setDraftToEdit] = useState(null); // Not used, can be removed if not planned for future use
 
-  // Define all functions being used
+
   const fetchReminders = async (date = selectedDate) => {
     const user_data = localStorage.getItem("user");
     const user_data_parsed = JSON.parse(user_data);
-    //console.log("User Data:", user_data_parsed.iUser_id); // Log the user data
 
     let dates = new Date(date);
 
@@ -235,12 +243,11 @@ const CalendarView = () => {
     let utcDate = new Date(Date.UTC(
       dates.getUTCFullYear(),
       dates.getUTCMonth(),
-      dates.getUTCDate() + 1, // adjust if needed
+      dates.getUTCDate() + 1, 
       0, 0, 0 // 12:00 AM UTC
     ));
 
     // Step 3: Convert to ISO string
-
     let formattedDate = utcDate.toISOString(); // e.g. "2025-05-08T00:00:00.000Z"
 
     // Optional: remove milliseconds
@@ -250,7 +257,6 @@ const CalendarView = () => {
     try {
       const token = localStorage.getItem("token");
 
-      //console.log("Fetching reminders for date:", ENDPOINTS.REMINDERS); // Log the date being fetched
       const response = await fetch(`${ENDPOINTS.FOLLOW_UP}?id=${user_data_parsed.iUser_id}&eventDate=${formattedDate}`, {
         method: 'GET',
         headers: {
@@ -258,7 +264,6 @@ const CalendarView = () => {
           Authorization: `Bearer ${token}`
         }
       });
-
 
       const data = await response.json();
       setReminders(data.reminders || []);
@@ -300,17 +305,13 @@ const CalendarView = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         }
-
-      }
-
-      )
+      });
 
       if (!response.ok) {
         setMsg("Error in fetching user reminder")
       }
 
       const data = await response.json();
-      //console.log("reminder data",data)
       const reminderLists = data.data;
       setReminderList(reminderLists)
     } catch (e) {
@@ -321,7 +322,7 @@ const CalendarView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [showEnded, setShowEnded] = useState(false); // toggle view
+  const [showEnded, setShowEnded] = useState(false); 
 
   // Parse "yyyy-mm-dd" to JS Date (start of day)
   const parseDate = (dateStr) => {
@@ -332,11 +333,11 @@ const CalendarView = () => {
     return d;
   };
 
-  // Today's date at start of day
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Filter reminders by search and date range
+
   const filteredReminders = reminderList.filter((reminder) => {
     const searchMatch =
       (reminder?.cremainder_content?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -348,7 +349,7 @@ const CalendarView = () => {
     const from = parseDate(fromDate);
     const to = parseDate(toDate);
 
-    if (to) to.setHours(23, 59, 59, 999); // include whole day
+    if (to) to.setHours(23, 59, 59, 999); 
 
     const dateMatch =
       (!from || reminderDate >= from) && (!to || reminderDate <= to);
@@ -356,7 +357,7 @@ const CalendarView = () => {
     return searchMatch && dateMatch;
   });
 
-  // Separate upcoming and ended reminders
+
   const upcomingReminders = filteredReminders.filter(reminder => {
     const reminderDate = new Date(reminder.dremainder_dt);
     reminderDate.setHours(0, 0, 0, 0);
@@ -369,7 +370,7 @@ const CalendarView = () => {
     return reminderDate < today;
   });
 
-  // Choose which reminders to show based on toggle
+
   const remindersToShow = showEnded ? endedReminders : upcomingReminders;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -378,12 +379,18 @@ const CalendarView = () => {
   const indexOfLastReminder = currentPage * remindersPerPage;
   const indexOfFirstReminder = indexOfLastReminder - remindersPerPage;
   const currentReminders = remindersToShow.slice(indexOfFirstReminder, indexOfLastReminder);
+
+  
+  const handleReminderCreated = () => {
+    fetchReminders(); 
+    UserReminder();   
+  };
+
   useEffect(() => {
     fetchReminders();
     UserReminder();
-
   }, [selectedDate]);
-  //console.log("Reminder list",reminderList)
+
   return (
     <div>
       <div className="flex w-full p-8 rounded-xl ">
@@ -411,7 +418,7 @@ const CalendarView = () => {
                   <span className="text-xl font-semibold text-gray-800">
                     {date.toLocaleString('default', { month: 'long' })} {date.getFullYear()}
                   </span>
-                  {/* Removed custom onClick for navigation. React-Calendar handles this internally */}
+                
                   <FaChevronRight
                     className="text-gray-600 hover:text-black cursor-pointer transition"
                     onClick={() => setSelectedDate(prevDate => {
@@ -438,7 +445,7 @@ const CalendarView = () => {
                 className="w-[180px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
               >
                 <FaPlus className="mr-2" />
-                Create Reminder
+                Create Reminder 
               </button>
 
               <button
@@ -553,11 +560,11 @@ const CalendarView = () => {
 
         {/* Meet Form Drawer */}
         <MeetFormDrawer
-          setOpenDrawer={setOpenDrawer}
           open={openDrawer}
           onClose={() => setOpenDrawer(false)}
           selectedDate={selectedDate}
           setSnackbar={setSnackbar}
+          onCreated={handleReminderCreated} 
         />
 
         {/* Snackbar for Notifications */}
@@ -728,8 +735,6 @@ const CalendarView = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-
-
     </div>
   );
 };

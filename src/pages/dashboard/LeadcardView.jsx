@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaGlobe } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaGlobe,FaCrown } from 'react-icons/fa';
 import { LayoutGrid, List, Filter, RotateCw } from 'lucide-react';
 import ProfileHeader from '../../Components/common/ProfileHeader';
 import Loader from '../../Components/common/Loader';
@@ -20,7 +20,7 @@ const LeadCardViewPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     const navigate = useNavigate();
-    const leadsPerPage = 9;
+    const leadsPerPage = 12;
 
     // Fetch Leads
     const fetchLeads = useCallback(async () => {
@@ -33,7 +33,6 @@ const LeadCardViewPage = () => {
             if (!user || !user.iUser_id) {
                 console.error("User ID not found in local storage. Cannot fetch leads.");
                 setLoading(false);
-                // navigate('/login');
                 return;
             }
 
@@ -45,8 +44,11 @@ const LeadCardViewPage = () => {
                 },
             });
 
+            console.log("Leads Response", res);
+
             if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
+                const errorData = await res.text();
+                throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
             }
 
             const data = await res.json();
@@ -68,8 +70,12 @@ const LeadCardViewPage = () => {
         try {
             const token = localStorage.getItem('token');
             if (token) {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                //console.log("Token Details",payload);
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    console.log("Token Details", payload);
+                } catch (e) {
+                    console.error("Failed to decode token payload:", e);
+                }
             }
             const res = await fetch(ENDPOINTS.GET_DEALS, {
                 headers: {
@@ -79,11 +85,12 @@ const LeadCardViewPage = () => {
             });
 
             if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
+                const errorData = await res.text();
+                throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
             }
 
             const data = await res.json();
-            setDeals(data);
+            setDeals(Array.isArray(data) ? data : data.details || []);
         } catch (err) {
             console.error("Failed to fetch deals:", err);
             setDeals([]);
@@ -102,31 +109,19 @@ const LeadCardViewPage = () => {
             if (!user || !user.iUser_id) {
                 console.error("User ID not found in local storage. Cannot fetch assigned leads.");
                 setLoading(false);
-                // navigate('/login');
                 return;
             }
             const iUserId = user.iUser_id;
+            console.log("Fetching assigned leads for User ID:", iUserId);
+            console.log("Token for fetching assigned leads:", token);   
 
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    console.log("Token Details", payload);
-                } catch (e) {
-                    console.error("Failed to decode token payload:", e);
-                }
-            }
-
-            const res = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}`, {
-                method: 'POST',
+            const res = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${iUserId}`, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    userId: iUserId,
-                }),
             });
-
             console.log("Assigned Leads Response", res);
 
             if (!res.ok) {
@@ -135,30 +130,74 @@ const LeadCardViewPage = () => {
             }
 
             const data = await res.json();
-
+            console.log("Raw assigned leads data:", data); 
             const leadsAssigned = Array.isArray(data.data?.leadsAssigned) ? data.data.leadsAssigned : [];
-            const resultLeads = Array.isArray(data.data?.result) ? data.data.result : [];
-
+            const assignedEntries = Array.isArray(data.data?.assignedEntries) ? data.data.assignedEntries : [];
             const leadsAssignedMap = new Map(leadsAssigned.map(lead => [lead.ilead_id, lead]));
+            const mergedLeads = assignedEntries.map(assigned => {
+            const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
 
-            const mergedLeads = resultLeads.map(assigned => {
-                const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
+                let statusDisplay = 'N/A';
+                let statusColor = 'bg-gray-300 text-gray-700';
+
+                if (correspondingLead) {
+                    const isConverted = correspondingLead.bisconverted === true || correspondingLead.bisconverted === 'true';
+                    const isActive = correspondingLead.bactive === true || correspondingLead.bactive === 'true';
+                    const isWebsite = correspondingLead.website_lead === true || correspondingLead.website_lead === 'true';
+
+                    if (isConverted) {
+                        statusDisplay = 'Deal';
+                        statusColor = 'bg-green-100 text-green-700';
+                    } else if (!isActive && !isConverted) { 
+                        statusDisplay = 'Lost';
+                        statusColor = 'bg-red-100 text-red-700';
+                    } else if (isWebsite) {
+                        statusDisplay = 'Website Lead';
+                        statusColor = 'bg-blue-100 text-blue-700';
+                    } else { 
+                        statusDisplay = 'Lead';
+                        statusColor = 'bg-indigo-100 text-indigo-700';
+                    }
+                } else {
+                    const isConverted = assigned.bisconverted === true || assigned.bisconverted === 'true';
+                    const isActive = assigned.bactive === true || assigned.bactive === 'true';
+                    const isWebsite = assigned.website_lead === true || assigned.website_lead === 'true';
+
+                    if (isConverted) {
+                        statusDisplay = 'Deal';
+                        statusColor = 'bg-green-100 text-green-700';
+                    } else if (!isActive && !isConverted) {
+                        statusDisplay = 'Lost';
+                        statusColor = 'bg-red-100 text-red-700';
+                    } else if (isWebsite) {
+                        statusDisplay = 'Website Lead';
+                        statusColor = 'bg-blue-100 text-blue-700';
+                    } else {
+                        statusDisplay = 'Lead';
+                        statusColor = 'bg-indigo-100 text-indigo-700';
+                    }
+                }
+
                 return {
-                    ...assigned,
-                    ...(correspondingLead || {}),
+                    ...assigned, 
+                    ...(correspondingLead || {}), 
                     dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
                     dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
-                    cassigned_by_name: assigned.iassigned_by,
                     clead_name: correspondingLead?.clead_name || 'N/A',
                     corganization: correspondingLead?.corganization || 'N/A',
                     cemail: correspondingLead?.cemail || 'N/A',
                     iphone_no: correspondingLead?.iphone_no || 'N/A',
-                    lead_status: correspondingLead?.lead_status,
-                    bactive: correspondingLead?.bactive,
-                    bisconverted: correspondingLead?.bisconverted,
-                    website_lead: correspondingLead?.website_lead,
+                    statusDisplay: statusDisplay,
+                    statusColor: statusColor,
+                    lead_status: correspondingLead?.lead_status || assigned.lead_status,
+                    bactive: correspondingLead?.bactive || assigned.bactive,
+                    bisconverted: correspondingLead?.bisconverted || assigned.bisconverted,
+                    website_lead: correspondingLead?.website_lead || assigned.website_lead,
+                    iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || 'N/A'
                 };
-            });
+            }).filter(lead => lead.bactive === true || lead.bactive === 'true');
+
+            console.log("Merged assigned leads:", mergedLeads); 
 
             const sortedAssigned = mergedLeads.sort(
                 (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt)
@@ -173,12 +212,12 @@ const LeadCardViewPage = () => {
     }, []);
 
     useEffect(() => {
+        setCurrentPage(1);
         if (selectedFilter === 'deals') {
             fetchDeals();
         } else if (selectedFilter === 'assignedToMe') {
             fetchAssignedLeads();
-        }
-        else {
+        } else {
             fetchLeads();
         }
     }, [selectedFilter, fetchLeads, fetchDeals, fetchAssignedLeads]);
@@ -197,8 +236,16 @@ const LeadCardViewPage = () => {
                 return 'bg-green-500 text-white';
             case 'interested':
                 return 'bg-purple-600 text-white';
+            case 'won': 
+            case 'closed won':
+                return 'bg-green-700 text-white';
+            case 'lost': 
+            case 'closed lost':
+                return 'bg-red-700 text-white';
+            case 'pending':
+                return 'bg-orange-500 text-white';
             default:
-                return 'bg-yellow-300 text-gray-700';
+                return 'bg-gray-300 text-gray-700';
         }
     };
 
@@ -212,48 +259,72 @@ const LeadCardViewPage = () => {
             : '-';
 
     const isWithinDateRange = (date) => {
-        if (!date) return false;
+        if (!date) return true; 
         const d = new Date(date);
         const from = fromDate ? new Date(fromDate) : null;
         const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
+
         return (!from || d >= from) && (!to || d <= to);
     };
 
-    const filteredLeads = allLeads.filter((lead) => {
-        const match = (text) => text?.toLowerCase().includes(searchTerm.toLowerCase());
+    const applyFilters = useCallback((data, isAssigned = false, isDeal = false) => {
+    return data.filter((item) => {
+        const match = (text) => String(text)?.toLowerCase().includes(searchTerm.toLowerCase());
+
         const matchesSearch =
-            match(lead.clead_name) || match(lead.corganization) || match(lead.cemail) || match(lead.iphone_no);
-        const matchesDate = isWithinDateRange(lead.dmodified_dt);
+            match(item.clead_name || item.cdeal_name) ||
+            match(item.corganization || item.c_organization) ||
+            match(item.cemail || item.c_email) ||
+            match(item.iphone_no || item.c_phone) ||
+            (isAssigned && match(item.iassigned_by_name)) ||
+            (isAssigned && match(item.statusDisplay));
 
-        const isActiveLead = (lead.bactive === true || lead.bactive === 'true') &&
-            !(lead.bisconverted === true || lead.bisconverted === 'true');
-        const isWebsiteLead = lead.website_lead === true || lead.website_lead === 'true';
+        let dateToFilter = item.dmodified_dt || item.d_modified_date;
+        if (isAssigned) {
+            dateToFilter = item.dmodified_dt || item.dupdate_dt || item.dcreate_dt;
+        }
+        const matchesDate = isWithinDateRange(dateToFilter);
 
-        let matchesFilter = false;
-        if (selectedFilter === 'all') matchesFilter = true;
-        else if (selectedFilter === 'leads') matchesFilter = isActiveLead;
-        else if (selectedFilter === 'websiteLeads') matchesFilter = isWebsiteLead;
+        if (!isAssigned && !isDeal) {
+            const isActiveLead = (item.bactive === true || item.bactive === 'true') &&
+                !(item.bisconverted === true || item.bisconverted === 'true');
+            const isWebsiteLead = item.website_lead === true || item.website_lead === 'true';
+            const isLostLead = item.bactive === false || item.bactive === 'false';
 
-        return matchesSearch && matchesDate && matchesFilter;
+            let matchesFilter = false;
+            if (selectedFilter === 'all') matchesFilter = true;
+            else if (selectedFilter === 'leads') matchesFilter = isActiveLead;
+            else if (selectedFilter === 'websiteLeads') matchesFilter = isWebsiteLead && (item.bactive === true || item.bactive === 'true');
+            else if (selectedFilter === 'lost') matchesFilter = isLostLead;
+
+            return matchesSearch && matchesDate && matchesFilter;
+        }
+
+        
+        if (isDeal) {
+            if (selectedFilter === 'lost') {
+                const isLostDeal =
+                    (item.bisconverted === true || item.bisconverted === 'true') &&
+                    (item.bactive === false || item.bactive === 'false');
+                return matchesSearch && matchesDate && isLostDeal;
+            }
+
+            return matchesSearch && matchesDate;
+        }
+
+        return matchesSearch && matchesDate;
     });
+}, [searchTerm, fromDate, toDate, isWithinDateRange, selectedFilter]);
+
+
 
     let dataToDisplay = [];
     if (selectedFilter === 'deals') {
-        dataToDisplay = deals;
+        dataToDisplay = applyFilters(deals, false, true); 
     } else if (selectedFilter === 'assignedToMe') {
-        dataToDisplay = assignedLeads.filter(assignedLead => {
-            const match = (text) => text?.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesSearch =
-                match(assignedLead.clead_name) ||
-                match(assignedLead.corganization) ||
-                match(assignedLead.cemail) ||
-                match(assignedLead.iphone_no);
-            const matchesDate = isWithinDateRange(assignedLead.dmodified_dt || assignedLead.dupdate_dt || assignedLead.dcreate_dt);
-            return matchesSearch && matchesDate;
-        });
-    }
-    else {
-        dataToDisplay = filteredLeads;
+        dataToDisplay = applyFilters(assignedLeads, true, false); 
+    } else {
+        dataToDisplay = applyFilters(allLeads, false, false);
     }
 
     const totalPages = Math.ceil(dataToDisplay.length / leadsPerPage);
@@ -261,12 +332,22 @@ const LeadCardViewPage = () => {
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
-        setCurrentPage(1);
+        setCurrentPage(1); 
     };
 
     const handleFilterApply = () => {
+        setCurrentPage(1); 
+        setShowFilterModal(false);
+    };
+
+    const handleResetFilters = () => {
+        setFromDate('');
+        setToDate('');
+        setSearchTerm('');
+        setSelectedFilter('all'); 
         setCurrentPage(1);
         setShowFilterModal(false);
+        fetchLeads();
     };
 
     const goToDetail = (id) => {
@@ -323,31 +404,48 @@ const LeadCardViewPage = () => {
 
             {/* Filter Options */}
             <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
-                {['all', 'leads', 'websiteLeads', 'deals', 'assignedToMe'].map((filterKey) => (
+                {['all', 'leads', 'deals', 'websiteLeads', 'assignedToMe','lost' ].map((filterKey) => ( 
                     <button
-                        key={filterKey}
-                        onClick={() => {
-                            setSelectedFilter(filterKey);
-                            setCurrentPage(1);
-                        }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                            selectedFilter === filterKey
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                    >
-                        {filterKey === 'all'
-                            ? 'All Leads'
-                            : filterKey === 'leads'
-                                ? 'Leads'
-                                : filterKey === 'websiteLeads'
-                                    ? 'Website Leads'
-                                    : filterKey === 'deals'
-                                        ? 'Deals'
-                                        : 'Assigned to Me'}
-                    </button>
+  key={filterKey}
+  onClick={() => {
+    setSelectedFilter(filterKey);
+    setSearchTerm('');
+    setFromDate('');
+    setToDate('');
+    setCurrentPage(1);
+  }}
+  aria-pressed={selectedFilter === filterKey}
+  title={
+    filterKey === 'websiteLeads' ? 'Website-generated leads' :
+    filterKey === 'lost' ? 'Lost leads' :
+    filterKey === 'assignedToMe' ? 'Leads assigned to you' :
+    undefined
+  }
+  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500
+    ${
+      selectedFilter === filterKey
+        ? filterKey === 'lost'
+          ? 'bg-red-600 text-white'
+          : 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+    }`}
+>
+  {filterKey === 'all' && 'All Leads'}
+  {filterKey === 'leads' && 'Leads'}
+  {filterKey === 'websiteLeads' && (
+    <>
+      Website Leads <FaCrown className="inline text-yellow-500" size={18} />
+    </>
+  )}
+  {filterKey === 'deals' && 'Deals'}
+  {filterKey === 'lost' && 'Lost'}
+  {filterKey === 'assignedToMe' && 'Assigned to Me'}
+</button>
+
                 ))}
             </div>
+
 
             {/* Filter Modal */}
             {showFilterModal && (
@@ -374,12 +472,18 @@ const LeadCardViewPage = () => {
                         </label>
                         <div className="flex justify-end gap-2">
                             <button
+                                onClick={handleResetFilters}
+                                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
+                            >
+                                Reset
+                            </button>
+                            <button
                                 onClick={() => setShowFilterModal(false)}
-                                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700"
+                                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
                             >
                                 Cancel
                             </button>
-                            <button onClick={handleFilterApply} className="px-4 py-2 rounded-full bg-blue-600 text-white">
+                            <button onClick={handleFilterApply} className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">
                                 Apply
                             </button>
                         </div>
@@ -387,43 +491,48 @@ const LeadCardViewPage = () => {
                 </div>
             )}
 
-            
             {loading ? (
                 <Loader />
             ) : dataToDisplay.length === 0 ? (
-                <div className="text-center text-gray-500 text-sm sm:text-base">No {selectedFilter === 'deals' ? 'deals' : selectedFilter === 'assignedToMe' ? 'assigned leads' : 'leads'} found.</div>
+                <div className="text-center text-gray-500 text-sm sm:text-base py-8">
+                    No {selectedFilter === 'deals' ? 'deals' : selectedFilter === 'assignedToMe' ? 'assigned leads' : 'leads'} found.
+                </div>
             ) : (
                 <>
                     {viewMode === 'list' && (
-                        // List View
+                       // List View
                         <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200">
-                            <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-7' : 'grid-cols-6'}`}>
+                            <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}>
+                                
                                 <div>Name</div>
                                 <div>Org</div>
-                                
                                 <div className="min-w-[120px]">Email</div>
                                 <div>Phone</div>
                                 {selectedFilter === 'assignedToMe' && (
                                     <>
                                         <div>Assigned by</div>
                                         <div>Created at</div>
+                                        <div>Updated at</div>
                                     </>
                                 )}
                                 <div>Modified</div>
+                                {selectedFilter === 'assignedToMe' && (
+                                    <div>Status</div>
+                                )}
                                 {selectedFilter !== 'assignedToMe' && (
                                     <div>Status</div>
                                 )}
                             </div>
                             {displayedData.map((item) => (
                                 <div
-                                    key={item.ilead_id || item.i_deal_id}
+                                    key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}`}
                                     onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
-                                    className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-7' : 'grid-cols-6'}`}
+                                    className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}
                                 >
-                                    <div>{item.clead_name || item.cdeal_name}</div>
-                                    <div>{item.corganization || item.c_organization}</div>
-                                    
-                                    <div className="relative group overflow-visible"> 
+                                    <div>{item.clead_name || item.cdeal_name || 'N/A'}</div>
+                                    <div>{item.corganization || item.c_organization || 'N/A'}</div>
+
+                                    <div className="relative group overflow-visible">
                                         <span className="block truncate">
                                             {item.cemail || item.c_email || '-'}
                                         </span>
@@ -433,15 +542,25 @@ const LeadCardViewPage = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div>{item.iphone_no || item.c_phone}</div>
+                                    <div>{item.iphone_no || item.c_phone || '-'}</div>
                                     {selectedFilter === 'assignedToMe' && (
                                         <>
-                                            <div>{item.iassigned_by || '-'}</div>
+                                            <div>{item.iassigned_by_name || 'N/A'}</div> 
                                             <div>{formatDate(item.dcreate_dt)}</div>
+                                            <div>{formatDate(item.dupdate_dt)}</div> 
                                         </>
                                     )}
-                                    <div>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
-                                    {selectedFilter !== 'assignedToMe' && (
+                                    <div>{formatDate(item.dmodified_dt || item.d_modified_date )}</div>
+                                    
+                                    {selectedFilter === 'assignedToMe' ? (
+                                        <div>
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-xs ${item.statusColor}`}
+                                            >
+                                                {item.statusDisplay}
+                                            </span>
+                                        </div>
+                                    ) : (
                                         <div>
                                             <span
                                                 className={`px-3 py-1 rounded-full text-xs ${
@@ -458,24 +577,25 @@ const LeadCardViewPage = () => {
                     )}
 
                     {viewMode === 'grid' && (
-                        // Grid View 
+                        // Grid View
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                             {displayedData.map((item) => {
                                 const isDeal = selectedFilter === 'deals';
                                 const isConverted = item.bisconverted === true || item.bisconverted === 'true';
                                 const isLost = item.bactive === false || item.bactive === 'false';
-                                const isActiveLead = !isDeal && (item.bactive === true || item.bactive === 'true') && !isConverted;
+                                const isActiveLead = (item.bactive === true || item.bactive === 'true') && !isConverted;
                                 const isWebsiteLead = item.website_lead === true || item.website_lead === 'true';
+                                
 
                                 return (
                                     <div
-                                        key={item.ilead_id || item.i_deal_id}
+                                        key={item.ilead_id || item.i_deal_id || `assigned-grid-${item.cemail}-${item.iphone_no}`} 
                                         onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
                                         className="p-5 rounded-2xl border border-gray-200 bg-white shadow-md hover:shadow-lg transition cursor-pointer space-y-2"
                                     >
                                         <div className="flex items-center justify-between flex-wrap gap-2">
                                             <h2 className="text-lg font-semibold text-gray-800 truncate max-w-[70%]">
-                                                {item.clead_name || item.cdeal_name}
+                                                {item.clead_name || item.cdeal_name || 'N/A'}
                                             </h2>
                                             {isDeal ? (
                                                 <span
@@ -485,11 +605,31 @@ const LeadCardViewPage = () => {
                                                 >
                                                     {item.lead_status?.clead_name || item.c_deal_status_name || 'N/A'}
                                                 </span>
+                                            ) : selectedFilter === 'assignedToMe' ? (
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${item.statusColor}`}
+                                                >
+                                                    {item.statusDisplay}
+                                                </span>
                                             ) : (
-                                                <div className="flex flex-wrap gap-1 items-center">
+                                                <div className="flex flex-wrap gap-3 items-center">
                                                     {isLost && (
                                                         <span className="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold whitespace-nowrap">
                                                             Lost
+                                                        </span>
+                                                    )}
+                                                    {isWebsiteLead && (
+                                                        <span className="px-3 py-1  text-blue-700 text-xs  flex items-center whitespace-nowrap">
+                                                            <FaGlobe size={15} /> 
+                                                        </span>
+                                                    )}
+                                                    {!isLost && !isConverted && !isWebsiteLead && (
+                                                        <span
+                                                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                                                                item.lead_status?.clead_name
+                                                            )}`}
+                                                        >
+                                                            {item.lead_status?.clead_name ||  item.c_deal_status_name }
                                                         </span>
                                                     )}
                                                     {isConverted && (
@@ -497,87 +637,60 @@ const LeadCardViewPage = () => {
                                                             Deal
                                                         </span>
                                                     )}
-                                                    {isActiveLead && (
-                                                        <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold whitespace-nowrap">
-                                                            Lead
-                                                        </span>
-                                                    )}
-                                                    {isWebsiteLead && (
-                                                        <span className="px-2 py-1 text-blue-700" title="Website Lead">
-                                                            <FaGlobe />
-                                                        </span>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
-                                        <p className="text-sm text-gray-500 truncate">Org: {item.corganization || item.c_organization || '-'}</p>
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 truncate overflow-hidden">
-                                            <FaEnvelope className="flex-shrink-0" />
-                                            <span className="truncate">{item.cemail || item.c_email || '-'}</span>
+
+                                        <p className="text-gray-600 text-sm truncate">
+                                            {item.corganization || item.c_organization || 'No Organization'}
+                                        </p>
+                                        <div className="flex items-center text-gray-700 text-sm">
+                                            <FaEnvelope className="mr-2 text-gray-500" />
+                                            <span className="truncate">
+                                                {item.cemail || item.c_email || 'N/A'}
+                                            </span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 truncate overflow-hidden">
-                                            <FaPhone className="flex-shrink-0" />
-                                            <span className="truncate">{item.iphone_no || item.c_phone || '-'}</span>
+                                        <div className="flex items-center text-gray-700 text-sm">
+                                            <FaPhone className="mr-2 text-gray-500" />
+                                            {item.iphone_no || item.c_phone || 'N/A'}
                                         </div>
                                         {selectedFilter === 'assignedToMe' && (
-                                            <>
-                                                <p className="text-sm text-gray-500 whitespace-nowrap">
-                                                    Assigned by: {item.iassigned_by || '-'}
-                                                </p>
-                                                <p className="text-sm text-gray-500 whitespace-nowrap">
-                                                    Created at: {formatDate(item.dcreate_dt)}
-                                                </p>
-                                            </>
+                                            <div className="text-sm text-gray-600">
+                                                Assigned by: <span className="font-medium">{item.iassigned_by_name || 'N/A'}</span>
+                                            </div>
                                         )}
-                                        <p className="text-sm text-gray-500 whitespace-nowrap">
-                                            Last Modified: {formatDate(item.dmodified_dt || item.d_modified_date || item.dupdate_dt || item.dcreate_dt)}
-                                        </p>
-                                        {!isDeal && selectedFilter !== 'assignedToMe' && (
-                                            <span
-                                                className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(
-                                                    item.lead_status?.clead_name
-                                                )}`}
-                                            >
-                                                {item.lead_status?.clead_name || 'N/A'}
-                                            </span>
-                                        )}
+                                        <div className="text-sm text-gray-600">
+                                            Last Modified: {formatDate(item.dmodified_dt || item.d_modified_date)}
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
                     )}
-                </>
-            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex flex-wrap justify-center gap-2 mt-6">
-                    <button
-                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 rounded-full bg-gray-200 disabled:opacity-50 text-sm"
-                    >
-                        Prev
-                    </button>
-                    {[...Array(totalPages)].map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setCurrentPage(i + 1)}
-                            className={`px-3 py-1 rounded-full text-sm ${
-                                currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-100'
-                            }`}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-                    <button
-                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 rounded-full bg-gray-200 disabled:opacity-50 text-sm"
-                    >
-                        Next
-                    </button>
-                </div>
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center space-x-2 mt-6">
+                            <button
+                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-gray-700">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

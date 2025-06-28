@@ -54,7 +54,7 @@ const Comments = () => {
         setFormData((prev) => ({ ...prev, comments: transcript }));
       };
       mic.onerror = (event) => {
-        console.error("Speech Recognition Error:", event.error);
+        // console.error("Speech Recognition Error:", event.error);
         setIsListening(false);
       };
     };

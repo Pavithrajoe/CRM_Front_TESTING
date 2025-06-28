@@ -422,12 +422,12 @@ export default function CompanyMaster() {
         // Check if decoded companyId or userId are missing
         // Skip this check for masters explicitly configured to not need companyId (like Sub-Industries in your config)
         if (!masterItem.skipCompanyIdInjection && (companyId === null || companyId === undefined)) {
-            console.warn("Cannot open master modal: Company ID missing after token decode.");
+            // console.warn("Cannot open master modal: Company ID missing after token decode.");
             setAuthError("Missing company ID. Please ensure your token is valid.");
             return;
         }
         if (userId === null || userId === undefined) {
-            console.warn("Cannot open master modal: User ID missing after token decode.");
+            // console.warn("Cannot open master modal: User ID missing after token decode.");
             setAuthError("Missing user ID. Please ensure your token is valid.");
             return;
         }

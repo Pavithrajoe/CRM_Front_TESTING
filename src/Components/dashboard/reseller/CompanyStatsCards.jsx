@@ -14,7 +14,7 @@ const CompanyStatsCards = () => {
 
   const getUserInfoFromToken = () => {
     const token = localStorage.getItem('token');
-    console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
+    // console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
 
     if (!token) {
       return { userIdFromToken: null, roleId: null }; 
@@ -22,7 +22,7 @@ const CompanyStatsCards = () => {
 
     try {
       const decoded = jwtDecode(token);
-      console.log('Decoded token payload:', decoded);
+      // console.log('Decoded token payload:', decoded);
 
       return {
         userIdFromToken: decoded?.user_id || null,
@@ -38,22 +38,22 @@ const CompanyStatsCards = () => {
     const fetchCompanyStats = async () => {
       const { userIdFromToken, roleId } = getUserInfoFromToken();
 
-      console.log('Extracted User ID from Token (for filtering):', userIdFromToken);
-      console.log('Extracted Role ID:', roleId);
+      // console.log('Extracted User ID from Token (for filtering):', userIdFromToken);
+      // console.log('Extracted Role ID:', roleId);
 
       if (!userIdFromToken || roleId !== 3) {
-        console.warn('User is not a reseller (role_id !== 3) or User ID from token is missing. Skipping company stats fetch.');
+        // console.warn('User is not a reseller (role_id !== 3) or User ID from token is missing. Skipping company stats fetch.');
         return;
       }
 
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          console.error('No authentication token found before making API call.');
+          // console.error('No authentication token found before making API call.');
           return;
         }
 
-        console.log(`Attempting to fetch from: ${ENDPOINTS.COMPANY} with Authorization header.`);
+        // console.log(`Attempting to fetch from: ${ENDPOINTS.COMPANY} with Authorization header.`);
         const res = await fetch(ENDPOINTS.COMPANY, {
           method: 'GET',
           headers: {
@@ -64,21 +64,21 @@ const CompanyStatsCards = () => {
 
         if (!res.ok) {
           const errorText = await res.text();
-          console.error(`HTTP error! Status: ${res.status}, Message: ${errorText}`);
+          // console.error(`HTTP error! Status: ${res.status}, Message: ${errorText}`);
           throw new Error(`Failed to fetch company stats: ${res.status} ${res.statusText}`);
         }
 
         const result = await res.json();
-        console.log('API response for companies:', result);
+        // console.log('API response for companies:', result);
 
         if (result && Array.isArray(result)) {
           const companies = result;
-          console.log('Processing companies array:', companies);
+          // console.log('Processing companies array:', companies);
 
           const relevantCompanies = companies.filter(
             (company) => company.ireseller_admin_id === userIdFromToken
           );
-          console.log('Filtered companies (relevant to this reseller_admin_id):', relevantCompanies);
+          // console.log('Filtered companies (relevant to this reseller_admin_id):', relevantCompanies);
 
           const total = relevantCompanies.length;
           const active = relevantCompanies.filter((company) => company.bactive).length;
@@ -90,11 +90,11 @@ const CompanyStatsCards = () => {
             inactiveCompanies: inactive,
           });
         } else {
-          console.warn('API response is not a direct array as expected:', result);
+          // console.warn('API response is not a direct array as expected:', result);
           setStats({ totalCompanies: 0, activeCompanies: 0, inactiveCompanies: 0 });
         }
       } catch (err) {
-        console.error('Failed to fetch company stats due to network or processing error:', err);
+        // console.error('Failed to fetch company stats due to network or processing error:', err);
       }
     };
 

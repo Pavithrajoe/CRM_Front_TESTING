@@ -24,7 +24,7 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
 );
 
 function AcheivementDashboard({ userId }) {
-    console.log("AcheivementDashboard: Received userId prop:", userId);
+    // console.log("AcheivementDashboard: Received userId prop:", userId);
 
     const { users } = useContext(UserContext);
     const currentUser = users ? users.find(user => user.iUser_id === userId) : null;
@@ -98,7 +98,7 @@ function AcheivementDashboard({ userId }) {
                      url.searchParams.append('timeFilter', 'all-time'); // Explicitly send 'all-time'
                 }
                 
-                console.log(`Fetching achievements from: ${url.toString()} for User ID: ${userId} with filter: ${selectedTimeFilter}`);
+                // console.log(`Fetching achievements from: ${url.toString()} for User ID: ${userId} with filter: ${selectedTimeFilter}`);
 
                 const response = await fetch(url.toString(), {
                     method: 'GET',
@@ -114,7 +114,7 @@ function AcheivementDashboard({ userId }) {
                 }
 
                 const data = await response.json();
-                console.log("Fetched achievement data:", data);
+                // console.log("Fetched achievement data:", data);
 
                 setAchievements({
                     totalLeadClosed: data.totalLeadClosed || 0,
@@ -138,7 +138,7 @@ function AcheivementDashboard({ userId }) {
         if (userId) {
             fetchAchievements();
         } else {
-            console.warn("AcheivementDashboard: userId prop is not available yet, skipping fetch.");
+            // console.warn("AcheivementDashboard: userId prop is not available yet, skipping fetch.");
             setLoading(false);
         }
     }, [userId, selectedTimeFilter]); // *** Dependency now includes selectedTimeFilter ***

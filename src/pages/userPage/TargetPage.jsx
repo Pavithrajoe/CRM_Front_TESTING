@@ -94,7 +94,7 @@ const TargetDashboard = ({ userId }) => {
       });
 
       const metricsArray = Array.isArray(response.data) ? response.data : [];
-      console.log("1. Raw data received from API:", metricsArray);
+      // console.log("1. Raw data received from API:", metricsArray);
 
       const formattedMetrics = metricsArray.map((metric, index) => {
         const target = parseFloat(metric.bsales_value || 0);

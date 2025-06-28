@@ -123,7 +123,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
-      console.log('Validation failed', errors);
+      // console.log('Validation failed', errors);
       return; // Stop submission if validation fails
     }
 
@@ -159,7 +159,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.error('API Error Response:', errorData); // Log full error response
+        // console.error('API Error Response:', errorData); // Log full error response
         if (errorData.message?.includes('unique constraint') || errorData.error?.includes('unique constraint')) {
           setErrors({ email: 'Email already exists' });
           return;

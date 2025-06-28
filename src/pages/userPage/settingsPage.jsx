@@ -151,7 +151,7 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
-      console.log("General settings data received from API on page load/after save:", data);
+      // console.log("General settings data received from API on page load/after save:", data);
 
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       

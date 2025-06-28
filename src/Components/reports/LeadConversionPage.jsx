@@ -30,7 +30,7 @@ const LeadConversionPage = () => {
     setError(null);
 
     // Log token and companyId to check if they are available
-    console.log("Fetching data with:", { token: token ? "Available" : "Missing", companyId });
+    // console.log("Fetching data with:", { token: token ? "Available" : "Missing", companyId });
 
     if (!token || !companyId) {
       setError("Missing authentication token or company ID. Please ensure you are logged in and have a company ID.");
@@ -46,15 +46,15 @@ const LeadConversionPage = () => {
         },
       });
       // Log the full API response for inspection
-      console.log("API Response:", response.data);
+      // console.log("API Response:", response.data);
 
 
       if (response.data) { // Check if response.data exists
         setData(response.data);
-        console.log("Data set successfully:", response.data);
+        // console.log("Data set successfully:", response.data);
       } else {
         setError("API response was empty or did not contain expected data.");
-        console.error("API response missing 'data' property at top level:", response.data);
+        // console.error("API response missing 'data' property at top level:", response.data);
       }
     } catch (err) {
       // Log the actual error for debugging purposes
@@ -84,9 +84,9 @@ const LeadConversionPage = () => {
   const { metrics, data: apiData = {} } = data; // Renaming 'data' to 'apiData' to avoid conflict with state 'data'
   const { dealConversion = [], lostLeads = [] } = apiData; // Destructure dealConversion and lostLeads from apiData
 
-  console.log("Metrics data available for display:", metrics);
-  console.log("Deal Conversion data available for display:", dealConversion);
-  console.log("Lost Leads data available for display:", lostLeads);
+  // console.log("Metrics data available for display:", metrics);
+  // console.log("Deal Conversion data available for display:", dealConversion);
+  // console.log("Lost Leads data available for display:", lostLeads);
 
 
   // --- Chart Data ---

@@ -35,14 +35,14 @@ function HistoryDashboard({ userId }) {
                 return;
             }
 
-            console.log(`HistoryDashboard: Initiating API call to ${ENDPOINTS.ACTIVITY_HISTORY}/${userId}`);
+            // console.log(`HistoryDashboard: Initiating API call to ${ENDPOINTS.ACTIVITY_HISTORY}/${userId}`);
 
             try {
                 const response = await axios.get(`${ENDPOINTS.ACTIVITY_HISTORY}/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
+                // console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
 
                 setSummaryMetrics({
                     totalLogsByUser: response.data.totalLogsByUser || 0,

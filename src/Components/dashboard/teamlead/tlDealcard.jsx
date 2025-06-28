@@ -90,7 +90,7 @@ export default function DealsTable() {
 
   const deals = useMemo(() => {
     if (!Array.isArray(dealsData)) {
-      console.warn("dealsData is not an array:", dealsData);
+      // console.warn("dealsData is not an array:", dealsData);
       return [];
     }
 

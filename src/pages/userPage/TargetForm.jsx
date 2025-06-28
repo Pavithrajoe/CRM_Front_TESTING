@@ -165,8 +165,8 @@ export default function SalesForm({ onClose }) {
             createdBy: parseInt(formData.createdBy),
         };
 
-        console.log('Sending sales data to API:', ENDPOINTS.USER_POST, requestBody);
-        console.log('Using token:', token);
+        // console.log('Sending sales data to API:', ENDPOINTS.USER_POST, requestBody);
+        // console.log('Using token:', token);
 
         try {
             const response = await fetch(ENDPOINTS.USER_POST, {
@@ -178,7 +178,7 @@ export default function SalesForm({ onClose }) {
                 body: JSON.stringify(requestBody), // Use the directly constructed object
             });
 
-            console.log('API Response Status:', response.status);
+            // console.log('API Response Status:', response.status);
 
             if (!response.ok) {
                 let errorText = 'Failed to submit sales data.';
@@ -196,7 +196,7 @@ export default function SalesForm({ onClose }) {
             }
 
             const responseData = await response.json();
-            console.log('Sales data submitted successfully:', responseData);
+            // console.log('Sales data submitted successfully:', responseData);
 
             setSubmissionMessage(responseData.result?.Message || 'Sales data submitted successfully!');
             

@@ -117,7 +117,7 @@ export default function TeamKPIStats() {
         setColdLeadCount(coldLeadsCount);
         setError(null);
       } else {
-        console.warn("API response for TEAM_KPI did not contain expected 'details.lead' or 'details.subordinates' arrays.");
+        // console.warn("API response for TEAM_KPI did not contain expected 'details.lead' or 'details.subordinates' arrays.");
         setLeadCount(0);
         setDealCount(0);
         setHotLeadCount(0);

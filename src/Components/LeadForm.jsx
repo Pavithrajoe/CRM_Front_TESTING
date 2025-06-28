@@ -110,7 +110,7 @@ const LeadForm = ({ onClose }) => {
   const fetchDropdownData = useCallback(
     async (endpoint, setter, errorMessage, transform = (data) => data) => {
       try {
-        console.log(`Calling API: ${apiEndPoint}/${endpoint}`);
+        // console.log(`Calling API: ${apiEndPoint}/${endpoint}`);
 
         const response = await fetch(`${apiEndPoint}/${endpoint}`, {
           method: "GET",
@@ -120,16 +120,16 @@ const LeadForm = ({ onClose }) => {
           },
         });
 
-        console.log(`Fetched ${endpoint}: Status ${response.status}`);
+        // console.log(`Fetched ${endpoint}: Status ${response.status}`);
 
         if (!response.ok) {
-          console.log(`Can't fetch ${errorMessage}. Status: ${response.status}`);
+          // console.log(`Can't fetch ${errorMessage}. Status: ${response.status}`);
           setter([]);
           return;
         }
 
         const rawData = await response.json();
-        console.log(`Data from ${endpoint}:`, rawData);
+        // console.log(`Data from ${endpoint}:`, rawData);
 
         const processedData = transform(rawData);
         setter(processedData);
@@ -200,7 +200,7 @@ const LeadForm = ({ onClose }) => {
     // Custom fetch for Industry and Sub-Industry - combined response
     const fetchIndustryAndSubIndustry = async () => {
       try {
-        console.log(`Calling API: ${apiEndPoint}/lead-industry/company-industry`);
+        // console.log(`Calling API: ${apiEndPoint}/lead-industry/company-industry`);
         const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
           method: "GET",
           headers: {
@@ -209,7 +209,7 @@ const LeadForm = ({ onClose }) => {
           },
         });
 
-        console.log(`Fetched lead-industry/company-industry: Status ${response.status}`);
+        // console.log(`Fetched lead-industry/company-industry: Status ${response.status}`);
 
         if (!response.ok) {
           console.error(`Can't fetch lead industry and sub-industry. Status: ${response.status}`);
@@ -219,7 +219,7 @@ const LeadForm = ({ onClose }) => {
         }
 
         const rawData = await response.json();
-        console.log(`Data from lead-industry/company-industry:`, rawData);
+        // console.log(`Data from lead-industry/company-industry:`, rawData);
 
         // Process both industries and sub-industries from same response
         setIndustry(rawData.response?.industry || []);

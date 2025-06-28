@@ -88,7 +88,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
     // Memoize fetchItems to prevent unnecessary re-creations
     const fetchItems = useCallback(async () => {
         if (!master || !master.get) {
-            console.warn("Master configuration or GET endpoint is missing. Cannot fetch items.");
+            // console.warn("Master configuration or GET endpoint is missing. Cannot fetch items.");
             return;
         }
 
@@ -151,7 +151,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
     // Fetch all lead source items for filtering purposes
     const fetchAllLeadSourceItems = useCallback(async () => {
         if (!leadSourceConfig || !leadSourceConfig.get) {
-            console.warn("LEAD_SOURCE configuration or GET endpoint is missing. Cannot fetch all lead source items.");
+            // console.warn("LEAD_SOURCE configuration or GET endpoint is missing. Cannot fetch all lead source items.");
             return;
         }
         setIsLoadingAllLeadSourceItems(true);
@@ -204,7 +204,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
 
                 if (Array.isArray(parents)) {
                     setParentOptions(parents);
-                    console.log("Fetched Parent Options for dropdown:", parents); // DEBUG
+                    // console.log("Fetched Parent Options for dropdown:", parents); // DEBUG
                 } else {
                     setParentOptions([]);
                     toast.warn(`Could not load parent options for ${master.title}. Check parentMasterConfig.responseKey.`);
@@ -299,7 +299,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
                 }
 
             }
-            console.log("FormData after selectedItemForEdit:", newFormData); // DEBUG
+            // console.log("FormData after selectedItemForEdit:", newFormData); // DEBUG
         } else {
             // For new entries, initialize from basePostPayload
             newFormData = { ...master.basePostPayload };
@@ -337,7 +337,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             } else if (name === 'parentLeadSourceId') { // For the new filtered lead source dropdown
                  newValue = value === '' ? null : Number(value);
             }
-            console.log(`handleChange: Name=${name}, Value=${value}, NewValueInState=${newValue}`); // DEBUG
+            // console.log(`handleChange: Name=${name}, Value=${value}, NewValueInState=${newValue}`); // DEBUG
             return {
                 ...prev,
                 [name]: newValue,
@@ -448,7 +448,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             }
         }
         
-        console.log("Final Payload for API:", payload); // DEBUG
+        // console.log("Final Payload for API:", payload); // DEBUG
         try {
             const token = localStorage.getItem('token');
             const headers = { 'Content-Type': 'application/json' };
@@ -584,8 +584,8 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             // Determine if payload needs to be sent in the body
             const sendPayloadInBody = master.idLocation === 'body'; // Now strictly relies on idLocation being 'body'
 
-            console.log("DELETE Request - URL:", url); // DEBUG
-            console.log("DELETE Request - Payload (if body expected):", sendPayloadInBody ? deletePayload : "N/A - Query/Params Expected"); // DEBUG
+            // console.log("DELETE Request - URL:", url); // DEBUG
+            // console.log("DELETE Request - Payload (if body expected):", sendPayloadInBody ? deletePayload : "N/A - Query/Params Expected"); // DEBUG
 
             if (sendPayloadInBody) {
                 if (Object.keys(deletePayload).length === 0) {
@@ -860,7 +860,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                     ) : (
                                         <ul className="space-y-2">
                                             {existingItems.map(item => {
-                                                console.log(`Rendering flat item (Master: ${master.title}):`, item); // DEBUG: Log each item
+                                                // console.log(`Rendering flat item (Master: ${master.title}):`, item); // DEBUG: Log each item
                                                 return (
                                                 <li
                                                     key={item[master.idKey]}
@@ -954,7 +954,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                             ))}
                                         </select>
                                     )}
-                                     {console.log("Current Parent Dropdown Value:", formData[formParentKey])} {/* DEBUG: Check selected parent ID */}
+                                     {/* {console.log("Current Parent Dropdown Value:", formData[formParentKey])} DEBUG: Check selected parent ID */}
                                 </div>
                             )}
 
@@ -1011,7 +1011,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />
-                                     {console.log("Current Order ID Value:", formData.orderId)} {/* DEBUG: Check current orderId in form */}
+                                     {/* {console.log("Current Order ID Value:", formData.orderId)} DEBUG: Check current orderId in form */}
                                 </div>
                             )}
                             {/* ############################################################# */}

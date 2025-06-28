@@ -15,11 +15,11 @@ export default function RemindersCard() {
 
     try {
       tokenFromStorage = localStorage.getItem('token');
-      console.log("Token from localStorage:", tokenFromStorage);
+      // console.log("Token from localStorage:", tokenFromStorage);
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
         extractedUserId = decodedToken.user_id;
-        console.log("Extracted User ID:", extractedUserId);
+        // console.log("Extracted User ID:", extractedUserId);
         if (!extractedUserId) {
           throw new Error("User ID not found in token.");
         }
@@ -62,7 +62,7 @@ export default function RemindersCard() {
           Authorization: `Bearer ${currentToken}`,
         },
       });
-      console.log("Reminder response :", response);
+      // console.log("Reminder response :", response);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
@@ -70,7 +70,7 @@ export default function RemindersCard() {
       }
 
       const result = await response.json();
-      console.log("Fetched data:", result); 
+      // console.log("Fetched data:", result); 
 
       
       const usersReminders = result.details?.usersReminder || [];

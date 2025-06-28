@@ -20,7 +20,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   }, [profile]);
 
-  console.log("Form Data in EditProfileForm:", formData);
+  // console.log("Form Data in EditProfileForm:", formData);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -170,7 +170,7 @@ const ProfileCard = () => {
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
     
-    console.log("Token", token);
+    // console.log("Token", token);
     if (token) {
       try {
         const base64Payload = token.split(".")[1];
@@ -200,7 +200,7 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        console.log("API Response for Lead Details:", response.data);
+        // console.log("API Response for Lead Details:", response.data);
         setProfile(response.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
@@ -233,7 +233,7 @@ const ProfileCard = () => {
   const handleNotifyLead = (event) => {
     const userId = event.target.value === "" ? null : event.target.value;
     setSelectedNotifyToUser(userId);
-    console.log("Selected user for notification:", userId); 
+    // console.log("Selected user for notification:", userId); 
   };
 
   const fetchAttachments = async () => {
@@ -365,8 +365,8 @@ const ProfileCard = () => {
     return;
   }
 
-  console.log("logged user", loggedInUserId);
-  console.log("User to assign lead to:", userIdToAssign);
+  // console.log("logged user", loggedInUserId);
+  // console.log("User to assign lead to:", userIdToAssign);
 
   try {
     await axios.post(
@@ -399,7 +399,7 @@ const ProfileCard = () => {
         notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
       };
 
-      console.log("Mail Payload:", mailPayload); 
+      // console.log("Mail Payload:", mailPayload); 
 
       try {
         await axios.post(
@@ -412,7 +412,7 @@ const ProfileCard = () => {
             },
           }
         );
-        console.log("Notification email sent successfully.");
+        // console.log("Notification email sent successfully.");
       } catch (mailErr) {
         console.error("Failed to send notification email:", mailErr);
       }
@@ -442,7 +442,7 @@ const ProfileCard = () => {
 
   const handleFileUpload = async () => {
     const token = localStorage.getItem("token");
-    console.log("Token", token);
+    // console.log("Token", token);
     const userId = getUserIdFromToken();
 
     if (!userId) {

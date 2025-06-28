@@ -71,7 +71,7 @@ const LeadDetailView = () => {
         const payloadObject = JSON.parse(decodedPayload);
         userId = payloadObject.user_id;
       } else {
-        console.log("No token found.");
+        // console.log("No token found.");
         return;
       }
 
@@ -168,14 +168,14 @@ const LeadDetailView = () => {
         return;
       }
 
-      console.log("Mail Sent:", resData);
+      // console.log("Mail Sent:", resData);
       showPopup("Success", "Email sent successfully!", "success");
       setIsMailOpen(false);
       setSentTo("");
       setMailSubject("");
       setMailContent("");
     } catch (error) {
-      console.error("Error sending mail:", error);
+      // console.error("Error sending mail:", error);
       showPopup("Error", "Something went wrong while sending email", "error");
     }
   };

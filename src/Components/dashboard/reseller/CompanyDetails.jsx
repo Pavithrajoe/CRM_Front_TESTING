@@ -27,7 +27,7 @@ const CompanyDetails = () => {
   const getUserInfoFromToken = () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.warn('No token found in localStorage.');
+      // console.warn('No token found in localStorage.');
       return { userIdFromToken: null, roleId: null };
     }
     try {
@@ -51,7 +51,7 @@ const CompanyDetails = () => {
       const { userIdFromToken, roleId } = getUserInfoFromToken();
 
       if (!userIdFromToken || roleId !== 3) {
-        console.warn('User is not a reseller (role_id !== 3) or User ID from token is missing. Cannot fetch company details.');
+        // console.warn('User is not a reseller (role_id !== 3) or User ID from token is missing. Cannot fetch company details.');
         setError('Unauthorized: You must be a reseller to view company details.');
         setLoading(false);
         setAllCompanies([]);
@@ -88,7 +88,7 @@ const CompanyDetails = () => {
           );
           setAllCompanies(relevantCompanies);
         } else {
-          console.warn('API response is not a direct array as expected in CompanyDetails:', result);
+          // console.warn('API response is not a direct array as expected in CompanyDetails:', result);
           setAllCompanies([]);
         }
       } catch (err) {

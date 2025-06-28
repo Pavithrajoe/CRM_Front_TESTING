@@ -12,28 +12,27 @@ import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; 
-
-// --- MessageBubble Component is now completely removed ---
+import "react-quill/dist/quill.snow.css";
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
-  const [tabIndex, setTabIndex] = useState(0); 
+  const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
-  const [isLost, setIsLost] = useState(true);
+  const [isLost, setIsLost] = useState(false);
   const [leadData, setLeadData] = useState(null);
-  const [leadLostDescription, setLeadLostDescription] = useState("");
   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
+  const [lostReasons, setLostReasons] = useState([]);
+  const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
   const { showPopup } = usePopup();
 
-  // Email states (original and unchanged, with layout fixes applied to the modal)
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
   const [mailContent, setMailContent] = useState("");
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
+  const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
   const convertToDeal = async () => {
     try {
@@ -59,7 +58,6 @@ const LeadDetailView = () => {
   };
 
   const handleLostClick = () => setLeadLostDescriptionTrue(true);
-  const descriptionValueChange = (e) => setLeadLostDescription(e.target.value);
 
   const lostLead = async () => {
     try {
@@ -71,7 +69,11 @@ const LeadDetailView = () => {
         const payloadObject = JSON.parse(decodedPayload);
         userId = payloadObject.user_id;
       } else {
-        // console.log("No token found.");
+        return;
+      }
+
+      if (!selectedLostReasonId) {
+        showPopup("Error", "Please select a reason for marking as lost.", "error");
         return;
       }
 
@@ -84,7 +86,7 @@ const LeadDetailView = () => {
         body: JSON.stringify({
           action: "Lost",
           userId,
-          description: leadLostDescription,
+          LeadLostReasonId: parseInt(selectedLostReasonId),
         }),
       });
 
@@ -98,14 +100,13 @@ const LeadDetailView = () => {
         "Sometimes a 'no' is just redirection to a better opportunity 🔁✨",
         "Losses are lessons in disguise 📘 Next one’s yours!",
         "Strong minds build from setbacks 🧠💥 You got this!",
-        "This one’s gone. But hey, champions always bounce back 🔥🏆",
+        "This one’s gone. But hey, champions always bounce back 🏆🔥",
       ];
       const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
       showPopup("Info", `Lead updated as lost. ${randomQuote}`, "info");
-      setIsLost(false);
-      setLeadLostDescription("");
       setLeadLostDescriptionTrue(false);
+      setSelectedLostReasonId("");
     } catch (error) {
       console.error("Error marking lead as lost:", error);
     }
@@ -116,34 +117,6 @@ const LeadDetailView = () => {
     await lostLead();
   };
 
-  useEffect(() => {
-    const fetchLeadData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${ENDPOINTS.LEAD}/${leadId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch lead data");
-
-        const data = await response.json();
-        setLeadData(data);
-        setIsDeal(data.bisConverted);
-        setIsLost(data.bactive);
-      } catch (error) {
-        console.error("Error fetching lead data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeadData();
-  }, [leadId]);
-
-  // Email sending logic (unchanged)
   const sendEmail = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -168,54 +141,91 @@ const LeadDetailView = () => {
         return;
       }
 
-      // console.log("Mail Sent:", resData);
       showPopup("Success", "Email sent successfully!", "success");
       setIsMailOpen(false);
       setSentTo("");
       setMailSubject("");
       setMailContent("");
     } catch (error) {
-      // console.error("Error sending mail:", error);
+      console.error("Error sending mail:", error);
       showPopup("Error", "Something went wrong while sending email", "error");
     }
   };
 
-  // Quill modules for toolbar options - NOW WITH FONT AND SIZE OPTIONS
+  useEffect(() => {
+    const fetchLeadData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch lead data");
+
+        const data = await response.json();
+        setLeadData(data);
+        setIsDeal(data.bisConverted);
+        setIsLost(data.bactive);
+      } catch (error) {
+        console.error("Error fetching lead data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchLostReasons = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        if (!response.ok) throw new Error("Failed to fetch lost reasons");
+        const data = await response.json();
+        setLostReasons(data.data);
+      } catch (error) {
+        console.error("Error fetching lost reasons:", error);
+      }
+    };
+
+    fetchLeadData();
+    fetchLostReasons();
+  }, [leadId]);
+
   const modules = {
     toolbar: [
-      [{ 'header': [1, 2, false] }],
-      [{ 'font': [] }], // Added font family selection
-      [{ 'size': ['small', false, 'large', 'huge'] }], // Added font size selection
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      ['link'],
-      [{ 'color': [] }, { 'background': [] }],
-      ['clean']
+      [{ header: [1, 2, false] }],
+      [{ font: [] }],
+      [{ size: ["small", false, "large", "huge"] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link"],
+      [{ color: [] }, { background: [] }],
+      ["clean"],
     ],
   };
 
   const formats = [
-    'header',
-    'font', // Added 'font' to formats
-    'size', // Added 'size' to formats
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet',
-    'link',
-    'color', 'background'
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "link",
+    "color",
+    "background",
   ];
-
-  // Function to open external WhatsApp chat (kept)
-  const openExternalWhatsAppChat = () => {
-    if (leadData?.sphone) {
-      const phoneNumber = leadData.sphone.replace(/\D/g, '');
-      const message = `Hello ${leadData?.sname || 'there'}, regarding your lead: ${leadId}.`;
-      const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
-    } else {
-      showPopup("Info", "No phone number available for this lead.", "info");
-    }
-  };
-
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
@@ -238,13 +248,14 @@ const LeadDetailView = () => {
 
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4 mb-4 w-full overflow-x-hidden">
           <div className="flex flex-wrap gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
-            {/* Tabs are Activity, Comments, Reminders */}
             {["Activity", "Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
                 className={`px-5 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx ? "bg-white shadow text-blue-600" : "text-gray-500 hover:bg-white hover:text-blue-600"
+                  tabIndex === idx
+                    ? "bg-white shadow text-blue-600"
+                    : "text-gray-500 hover:bg-white hover:text-blue-600"
                 }`}
               >
                 {label}
@@ -252,37 +263,38 @@ const LeadDetailView = () => {
             ))}
           </div>
 
-          <div className="flex gap-4 flex-wrap">
-            {/* Email Button */}
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => setIsMailOpen(true)}
               className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1"
               title="Email"
             >
-              <MdEmail size={20} />
+              <MdEmail size={20} /> Email
             </button>
-            {/* Call Button */}
-            {/* <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1" title="Call">
-              <FaPhone size={18} />
-            </button> */}
-            {/* External WhatsApp Integration Button */}
-            {/* <button
-              onClick={openExternalWhatsAppChat}
-              className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1"
-              title="Open WhatsApp App"
-            >
-              <FaWhatsapp size={20} />
+
+            {/* <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
+              <FaPhone size={18} /> Call
+            </button>
+
+            <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
+              <FaWhatsapp size={20} /> WhatsApp
             </button> */}
 
             {!loading && !isDeal && isLost && (
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition" onClick={convertToDeal}>
-                Convert
-              </button>
-            )}
-            {!loading && isLost && (
-              <button className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition" onClick={handleLostClick}>
-                Lost
-              </button>
+              <>
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
+                  onClick={convertToDeal}
+                >
+                  Convert
+                </button>
+                <button
+                  className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
+                  onClick={handleLostClick}
+                >
+                  Lost
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -300,14 +312,40 @@ const LeadDetailView = () => {
             <h2 className="text-xl font-bold mb-4">Why mark this lead as Lost?</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block font-medium">Description</label>
-                <textarea name="description" value={leadLostDescription} onChange={descriptionValueChange} className="w-full border px-3 py-2 rounded resize-none min-h-[90px]" required />
+                <label htmlFor="lostReason" className="block font-medium mb-1">
+                  Pick the reason for marking this lead as Lost:
+                </label>
+                <select
+                  id="lostReason"
+                  name="lostReason"
+                  value={selectedLostReasonId}
+                  onChange={handleReasonChange}
+                  className="w-full border px-3 py-2 rounded-md"
+                  required
+                >
+                  <option value="">Select a reason</option>
+                  {lostReasons.map((reason) => (
+                    <option
+                      key={reason.ilead_lost_reason_id}
+                      value={reason.ilead_lost_reason_id}
+                    >
+                      {reason.cLeadLostReason}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setLeadLostDescriptionTrue(false)} className="bg-gray-300 px-4 py-2 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => setLeadLostDescriptionTrue(false)}
+                  className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-full">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
                   Submit
                 </button>
               </div>
@@ -316,13 +354,12 @@ const LeadDetailView = () => {
         </div>
       )}
 
-      {/* Email Modal - Layout fixed for button overlap and alignment (retained) */}
       {isMailOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          style={{ backdropFilter: 'blur(8px)' }}
+          style={{ backdropFilter: "blur(8px)" }}
         >
-          <div className="bg-white p-6 rounded-xl h-[90vh] shadow-xl w-[90%] max-w-[700px] flex flex-col">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-[90%] max-w-[600px] flex flex-col">
             <h2 className="text-xl font-bold mb-4"> 📩 Send Your Mail</h2>
             <form
               onSubmit={(e) => {
@@ -333,28 +370,49 @@ const LeadDetailView = () => {
             >
               <div>
                 <label className="block font-medium">To</label>
-                <input type="email" className="w-full border px-3 py-2 rounded-xl" value={sentTo} onChange={(e) => setSentTo(e.target.value)} required />
+                <input
+                  type="email"
+                  className="w-full border px-3 py-2 rounded-xl"
+                  value={sentTo}
+                  onChange={(e) => setSentTo(e.target.value)}
+                  required
+                />
               </div>
               <div>
                 <label className="block font-medium">Subject</label>
-                <input type="text" className="w-full border px-3 py-2 rounded-xl" value={mailSubject} onChange={(e) => setMailSubject(e.target.value)} required />
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded-xl"
+                  value={mailSubject}
+                  onChange={(e) => setMailSubject(e.target.value)}
+                  required
+                />
               </div>
               <div className="flex-grow flex flex-col min-h-0">
                 <label className="block font-medium mb-1">Message</label>
-                <ReactQuill
-                  theme="snow"
-                  value={mailContent}
-                  onChange={setMailContent}
-                  modules={modules} // Updated modules with more font options
-                  formats={formats} // Updated formats
-                  className="bg-white flex-grow rounded-xl overflow-hidden custom-quill-editor"
-                />
+                <div className="border rounded-xl overflow-hidden">
+                  <ReactQuill
+                    theme="snow"
+                    value={mailContent}
+                    onChange={setMailContent}
+                    modules={modules}
+                    formats={formats}
+                    className="h-[200px] overflow-y-auto"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-2 mt-4">
-                <button type="button" onClick={() => setIsMailOpen(false)} className="bg-gray-700 px-4 py-2 rounded-full text-white">
+                <button
+                  type="button"
+                  onClick={() => setIsMailOpen(false)}
+                  className="bg-gray-700 px-4 py-2 rounded-full text-white"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="bg-blue-900 text-white px-4 py-2 rounded-full">
+                <button
+                  type="submit"
+                  className="bg-blue-900 text-white px-4 py-2 rounded-full"
+                >
                   Send
                 </button>
               </div>

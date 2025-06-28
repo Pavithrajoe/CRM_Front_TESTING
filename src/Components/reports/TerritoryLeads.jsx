@@ -149,7 +149,7 @@ const TerritoryLeadsAnalytics = () => {
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto font-[system-ui]">
+    <div className="p-4  mx-auto font-[system-ui]">
       <div className="flex items-center mb-6">
         <button
           onClick={() => navigate("/reportpage")} // Navigate to /reportpage

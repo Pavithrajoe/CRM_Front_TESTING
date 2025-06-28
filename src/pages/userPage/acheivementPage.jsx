@@ -169,7 +169,7 @@ function AcheivementDashboard({ userId }) {
 
     return (
         <div className="min-h-screen p-5 text-gray-800 bg-gray-50">
-            <div className="dashboard-container max-w-6xl mx-auto p-8 rounded-lg bg-white shadow-xl border border-gray-200">
+            <div className="dashboard-container mx-auto p-8 rounded-lg bg-white shadow-xl border border-gray-200">
                 
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">Your Achievements</h2>
 
@@ -266,7 +266,7 @@ function AcheivementDashboard({ userId }) {
                         <thead>
                             <tr className="bg-gray-50">
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">S.No</th>
-                                <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">User ID</th>
+                                {/* <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">User ID</th> */}
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Project Values</th>
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Created Date</th>
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Conversion Time</th> 
@@ -279,9 +279,9 @@ function AcheivementDashboard({ userId }) {
                                         <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {index + 1}
                                         </td>
-                                        <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                        {/* <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {userId}
-                                        </td>
+                                        </td> */}
                                         <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatCurrency(row.iproject_value)}
                                         </td>

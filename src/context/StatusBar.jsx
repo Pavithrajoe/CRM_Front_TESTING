@@ -14,13 +14,12 @@ import Confetti from 'react-confetti';
 import axios from 'axios';
 import { ENDPOINTS } from '../api/constraints';
 
-const mandatoryInputStages = ['Proposal', 'Demo', 'Won'];
+const mandatoryInputStages = ['Proposal', 'Won'];
 
 const StatusBar = ({ leadId, leadData }) => {
   const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [error, setError] = useState(null);
-
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogValue, setDialogValue] = useState('');
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
@@ -37,18 +36,19 @@ const StatusBar = ({ leadId, leadData }) => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch stages');
       }
-
       const data = await response.json();
-      const formattedStages = Array.isArray(data)
-        ? data.map(item => ({
-            id: item.ilead_status_id,
-            name: item.clead_name,
-          }))
+      const formattedStages = Array.isArray(data.response)
+        ? data.response
+            .map(item => ({
+              id: item.ilead_status_id,
+              name: item.clead_name,
+              order: item.orderId || 9999,
+            }))
+            .sort((a, b) => a.order - b.order)
         : [];
 
       setStages(formattedStages);
@@ -67,9 +67,7 @@ const StatusBar = ({ leadId, leadData }) => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-
       if (!response.ok) throw new Error('Failed to fetch users');
-
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -77,11 +75,13 @@ const StatusBar = ({ leadId, leadData }) => {
     }
   };
 
-  const fetchCurrentStage = async () => {
-    const currentStatusId = leadData.ileadstatus_id;
-    const index = stages.findIndex(stage => stage.id === currentStatusId);
-    if (index !== -1) {
-      setCurrentStageIndex(index);
+  const fetchCurrentStage = () => {
+    if (leadData && stages.length > 0) {
+      const currentStatusId = leadData.ileadstatus_id;
+      const index = stages.findIndex(stage => stage.id === currentStatusId);
+      if (index !== -1) {
+        setCurrentStageIndex(index);
+      }
     }
   };
 
@@ -94,18 +94,35 @@ const StatusBar = ({ leadId, leadData }) => {
   }, []);
 
   useEffect(() => {
-    if (stages.length > 0) {
+    if (stages.length > 0 && leadData) {
       fetchCurrentStage();
     }
-  }, [stages]);
+  }, [stages, leadData]);
 
   const handleStageClick = async (clickedIndex, statusId) => {
-    if (clickedIndex <= currentStageIndex) return;
+    if (clickedIndex <= currentStageIndex) {
+      showToast('info', 'Cannot go back or re-select current stage.');
+      return;
+    }
 
-    const stageName = stages[clickedIndex].name;
+    const stageName = stages[clickedIndex]?.name;
+    setDialogStageIndex(clickedIndex);
 
-    if (mandatoryInputStages.includes(stageName)) {
-      setDialogStageIndex(clickedIndex);
+    if (stageName?.toLowerCase().includes('demo')) {
+      setDialogValue({
+        demoSessionType: '',
+        demoSessionStartTime: '',
+        demoSessionEndTime: '',
+        notes: '',
+        place: '',
+        demoSessionAttendees: [],
+      });
+      setOpenDialog(true);
+      return;
+    }
+
+    if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
+      setDialogValue('');
       setOpenDialog(true);
       return;
     }
@@ -127,73 +144,109 @@ const StatusBar = ({ leadId, leadData }) => {
           },
         }
       );
-
       if (!response.ok) {
-        alert('Failed to update status');
-        return;
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update status');
       }
-
       setCurrentStageIndex(newIndex);
-      if (stages[newIndex].name === 'Won') {
+      showToast('success', 'Lead status updated successfully!');
+      if (stages[newIndex].name?.toLowerCase() === 'won') {
         setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
       }
     } catch (e) {
-      console.error(e);
-      alert('Error updating status');
+      console.error('Error updating status:', e);
+      showToast('error', e.message || 'Error updating status');
     }
   };
 
   const handleDialogSave = async () => {
-    if (!dialogValue) {
-      alert('Please enter a value before continuing.');
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('user');
+    let userData = null;
+    try {
+      userData = JSON.parse(userId);
+    } catch (e) {
+      console.error("Failed to parse user data from localStorage", e);
+      showToast('error', 'User data not found. Please log in again.');
+      setOpenDialog(false);
       return;
     }
 
     const stageName = stages[dialogStageIndex]?.name;
     const statusId = stages[dialogStageIndex].id;
 
-    await updateStage(dialogStageIndex, statusId);
-
     try {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('user');
-      const userData = JSON.parse(userId);
+      if (stageName?.toLowerCase().includes('demo')) {
+        if (
+          !dialogValue.demoSessionType ||
+          !dialogValue.demoSessionStartTime ||
+          !dialogValue.demoSessionEndTime ||
+          !dialogValue.place ||
+          !dialogValue.notes ||
+          (dialogValue.demoSessionAttendees?.length === 0)
+        ) {
+          showToast('error', 'Please fill all mandatory demo details.');
+          return;
+        }
 
-      let requestBody;
-
-      if (stageName === 'Demo') {
-        requestBody = {
-          caction: dialogValue,
-          iaction_doneby: userData.iUser_id,
-          iamount: null,
-          ilead_id: parseInt(leadId),
+        const requestBody = {
+          demoSessionType: dialogValue.demoSessionType,
+          demoSessionStartTime: new Date(dialogValue.demoSessionStartTime).toISOString(),
+          demoSessionEndTime: new Date(dialogValue.demoSessionEndTime).toISOString(),
+          notes: dialogValue.notes,
+          place: dialogValue.place,
+          leadId: parseInt(leadId),
+          demoSessionAttendees: dialogValue.demoSessionAttendees.map(u => ({
+            attendeeId: u.iUser_id,
+          })),
         };
-      } else if (['Proposal', 'Won'].includes(stageName)) {
-        requestBody = {
+
+        await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, requestBody, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        showToast('success', 'Demo session details saved!');
+      } else if (['proposal', 'won'].includes(stageName?.toLowerCase())) {
+        const amount = parseFloat(dialogValue);
+        if (isNaN(amount) || amount <= 0) {
+          showToast('error', 'Please enter a valid positive amount.');
+          return;
+        }
+
+        const requestBody = {
           caction: stageName,
           iaction_doneby: userData.iUser_id,
-          iamount: Number(dialogValue),
+          iamount: amount,
           ilead_id: parseInt(leadId),
         };
+
+        await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, requestBody, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        showToast('success', `${stageName} details saved!`);
       }
 
-      await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, requestBody, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      await updateStage(dialogStageIndex, statusId);
     } catch (error) {
       console.error('POST Error:', error?.response?.data?.message || error.message);
+      showToast('error', error?.response?.data?.message || 'Failed to save details.');
+    } finally {
+      setOpenDialog(false);
+      setDialogValue('');
+      setDialogStageIndex(null);
     }
-
-    setOpenDialog(false);
-    setDialogValue('');
-    setDialogStageIndex(null);
   };
 
   return (
     <div className="w-full px-4 py-6">
+      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+
       <div className="flex items-center justify-between relative">
         {stages.map((stage, index) => {
           const isCompleted = index < currentStageIndex;
@@ -219,16 +272,6 @@ const StatusBar = ({ leadId, leadData }) => {
                 {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
               </div>
               <span className="mt-2 text-sm text-center">{stage.name}</span>
-
-              {index !== stages.length - 1 && (
-                <div className="absolute top-5 left-1/2 w-full h-1 -z-10">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      isCompleted ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                  />
-                </div>
-              )}
             </div>
           );
         })}
@@ -238,47 +281,111 @@ const StatusBar = ({ leadId, leadData }) => {
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            padding: 2,
-            minWidth: 360,
-          },
-        }}
+        PaperProps={{ sx: { borderRadius: 3, padding: 2, minWidth: 360 } }}
       >
         <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.4rem' }}>
-          {stages[dialogStageIndex]?.name === 'Demo'
-            ? 'Demo - Enter Name'
+          {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo')
+            ? 'Demo - Enter Details'
             : `${stages[dialogStageIndex]?.name} - Enter Value`}
         </DialogTitle>
 
-
         <DialogContent sx={{ width: '100%', maxWidth: 500 }}>
-          {stages[dialogStageIndex]?.name === 'Demo' ? (
-            <Autocomplete
-              fullWidth
-              options={users}
-              getOptionLabel={(option) => option.cFull_name || ''}
-              value={users.find(user => user.cFull_name === dialogValue) || null}
-              onChange={(event, newValue) => {
-                setDialogValue(newValue?.cFull_name || '');
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Name"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    mt: 1,
-                    '& .MuiOutlinedInput-root': {
-                      overflow: 'visible',
-                    },
-                  }}
-                />
-              )}
-            />
+          {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo') ? (
+            <>
+              <Autocomplete
+                fullWidth
+                options={['Online', 'Offline']}
+                value={dialogValue.demoSessionType || null}
+                onChange={(event, newValue) =>
+                  setDialogValue(prev => ({ ...prev, demoSessionType: newValue }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Session Type"
+                    variant="outlined"
+                    sx={{ mt: 2 }}
+                    required
+                  />
+                )}
+              />
 
+              <TextField
+                label="Start Time"
+                type="datetime-local"
+                fullWidth
+                value={dialogValue.demoSessionStartTime || ''}
+                onChange={(e) =>
+                  setDialogValue(prev => ({ ...prev, demoSessionStartTime: e.target.value }))
+                }
+                sx={{ mt: 2 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              />
+
+              <TextField
+                label="End Time"
+                type="datetime-local"
+                fullWidth
+                value={dialogValue.demoSessionEndTime || ''}
+                onChange={(e) =>
+                  setDialogValue(prev => ({ ...prev, demoSessionEndTime: e.target.value }))
+                }
+                sx={{ mt: 2 }}
+                InputLabelProps={{ shrink: true }}
+                required
+              />
+
+              <TextField
+                label="Notes"
+                fullWidth
+                multiline
+                rows={2}
+                value={dialogValue.notes || ''}
+                onChange={(e) => setDialogValue(prev => ({ ...prev, notes: e.target.value }))}
+                sx={{ mt: 2 }}
+                required
+              />
+
+              <TextField
+                label={dialogValue.demoSessionType === 'Online' ? 'Meeting Link' : 'Place'}
+                fullWidth
+                value={dialogValue.place || ''}
+                onChange={(e) => setDialogValue(prev => ({ ...prev, place: e.target.value }))}
+                sx={{ mt: 2 }}
+                required
+              />
+
+              <Autocomplete
+                multiple
+                options={users}
+                getOptionLabel={(option) => option.cFull_name || ''}
+                isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+                value={
+                  (dialogValue.demoSessionAttendees || []).map(selected =>
+                    users.find(user => user.iUser_id === selected.iUser_id) || selected
+                  )
+                }
+                onChange={(event, newValue) =>
+                  setDialogValue(prev => ({ ...prev, demoSessionAttendees: newValue }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Attendees"
+                    variant="outlined"
+                    required
+                    error={dialogValue.demoSessionAttendees?.length === 0}
+                    helperText={
+                      dialogValue.demoSessionAttendees?.length === 0
+                        ? 'Please select at least one attendee'
+                        : ''
+                    }
+                    sx={{ mt: 2 }}
+                  />
+                )}
+              />
+            </>
           ) : (
             <TextField
               fullWidth
@@ -287,13 +394,8 @@ const StatusBar = ({ leadId, leadData }) => {
               onChange={(e) => setDialogValue(e.target.value)}
               label="Enter Value"
               type="number"
-              sx={{
-                mt: 1,
-                '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0,
-                },
-              }}
+              sx={{ mt: 1 }}
+              required
             />
           )}
         </DialogContent>
@@ -308,7 +410,6 @@ const StatusBar = ({ leadId, leadData }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Confetti for "Won" */}
       {showConfetti && <Confetti />}
     </div>
   );

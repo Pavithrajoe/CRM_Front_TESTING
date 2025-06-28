@@ -3,23 +3,29 @@ import { useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useTabs } from '../../context/TabContext';
 import { Tabs, Tab, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import Tooltip from '@mui/material/Tooltip';  
+
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [userRoleId, setUserRoleId] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const { tabs, activeTab, openTab, closeTab } = useTabs();
   const navigate = useNavigate();
 
   const fullMenuItems = [
-    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' }, // Original Home route
+    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
+    { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
+    // { iconPath: '/images/nav/chat.png', label: 'Chat', route: '/chat/chathome' },
+    { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },
+    { iconPath: '/images/nav/userss.png', label: 'Users', route: '/userpage' },
+    // { iconPath: '/images/nav/Support.png', label: 'Support' },
+    {iconPath: '/images/nav/masters.png' , label: 'Masters', route: '/companymaster'},
     { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
-    { iconPath: '/images/nav/reports.png', label: 'Report', route:'/reportpage' },
-    { iconPath: '/images/nav/users.png', label: 'Users', route: '/userpage' },
-    {iconPath: '/images/nav/company.png' , label: 'Company', route: '/companydashboard'},
-    // {iconPath: '/images/nav/Support.png' , label: 'Support', route: '/supportpage'}, // Assuming you have a support route based on your filter
+
+
   ];
 
   useEffect(() => {
@@ -33,42 +39,34 @@ const Sidebar = () => {
         const roleIdFromToken = payload.role_id;
         setUserRoleId(roleIdFromToken);
 
+        // filtering
         if (roleIdFromToken === 1) {
+          // Full access
           setMenuItems(fullMenuItems);
-        }
-        else if (roleIdFromToken === 3) {
-          // Define menu items for role 3, explicitly setting 'Home' to '/reseller_dashboard'
-          const resellerMenuItems = [
-            { iconPath: '/images/nav/home.png', label: 'Home', route: '/reseller_dashboard' }, // Modified Home route
-            { iconPath: '/images/nav/company.png', label: 'Company', route: '/companydashboard' }, // Keep existing Company route if needed
-            { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
-            { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
-            { iconPath: '/images/nav/support.png', label: 'Support', route: '/supportpage' }, // Ensure this exists if you are filtering by it
-          ];
-          setMenuItems(resellerMenuItems);
-
-          // Initial navigation and opening of the tab for reseller dashboard
-          navigate('/reseller_dashboard');
-          openTab('/reseller_dashboard', 'Home'); // Ensure this is active and correct
+        } else if (roleIdFromToken === 3) {
+          setMenuItems(fullMenuItems.filter(item =>
+              ['Home', 'Organisation', 'Reports', 'Chat', 'Settings','Support'].includes(item.label)
+            ));
         }
         else {
+          // Restricted access
           setMenuItems(
             fullMenuItems.filter(item =>
-              ['Home', 'Lead', 'Calendar', 'Reports'].includes(item.label)
+              ['Home', 'Lead', 'Calendar', 'Reports', 'Chat'].includes(item.label)
             )
           );
         }
       } catch (error) {
-        console.error("Error decoding token:", error);
+       // console.error("Error decoding token:", error);
         setUserRoleId(null);
         setMenuItems([]);
       }
     } else {
-      console.log("No access token found in localStorage.");
+     // console.log("No access token found in localStorage.");
       setUserRoleId(null);
       setMenuItems([]);
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const handleTabChange = (_, newValue) => {
     if (activeTab !== newValue) {
@@ -100,7 +98,7 @@ const Sidebar = () => {
         <div className="flex flex-col items-center py-4 space-y-2">
           {menuItems.length > 0 ? (
             menuItems.map(item => (
-              <div
+             <div
                 key={item.route}
                 onClick={() => {
                   navigate(item.route);
@@ -110,11 +108,39 @@ const Sidebar = () => {
                   activeTab === item.route ? 'bg-blue-100 font-semibold text-blue-600' : ''
                 }`}
               >
-                <div className="flex items-center justify-center w-8">
-                  <img src={item.iconPath} alt={item.label} className="w-5 h-5 object-contain" />
-                </div>
+                <Tooltip
+                  title={isCollapsed ? item.label : ''}
+                  placement="right"
+                  componentsProps={{
+                    tooltip: {
+                      sx: {
+                        backgroundColor: '#374151', 
+                        color: '#fff',             
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.1em',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)', 
+                      }
+                    },
+                    arrow: {
+                      sx: {
+                        color: '#374151', 
+                      }
+                    }
+                  }}
+                  arrow
+                >
+                  <div className="flex items-center justify-center w-8">
+                    <img src={item.iconPath} alt={item.label} className="w-5 h-5 object-contain" />
+                  </div>
+                </Tooltip>
+
+
                 {!isCollapsed && <span className="ml-3 text-sm font-medium">{item.label}</span>}
               </div>
+
             ))
           ) : (
             <p className="text-gray-400 text-sm mt-4">No menu available for your role.</p>

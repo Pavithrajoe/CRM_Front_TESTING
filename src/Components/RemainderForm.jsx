@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { X, Search } from "lucide-react";
+import { X, Search, Filter } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
@@ -24,8 +24,6 @@ const ReminderForm = () => {
   const [reminderList, setReminderList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [filterTime, setFilterTime] = useState("");
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [assignToMe, setAssignToMe] = useState(false);
@@ -36,13 +34,17 @@ const ReminderForm = () => {
   const [isListeningContent, setIsListeningContent] = useState(false);
   const [noteContent, setNoteContent] = useState(null);
 
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     content: "",
     reminderDate: "",
     time: "",
     priority: "Normal",
-    assignt_to: "", // This will hold the iUser_id
+    assignt_to: "",
     ilead_id: Number(leadId),
   });
 
@@ -65,24 +67,21 @@ const ReminderForm = () => {
   }, []);
 
   useEffect(() => {
-    const targetField = isListeningTitle ? "title" : isListeningContent ? "content" : null;
+    const targetField = isListeningTitle
+      ? "title"
+      : isListeningContent
+      ? "content"
+      : null;
 
     if (targetField) {
       mic.start();
       mic.onend = () => {
-        console.log(`continue listening for ${targetField}..`);
         if (isListeningTitle || isListeningContent) mic.start();
       };
     } else {
       mic.stop();
-      mic.onend = () => {
-        console.log("Stopped Mic");
-      };
+      mic.onend = () => {};
     }
-
-    mic.onstart = () => {
-      //console.log("Mics on");
-    };
 
     mic.onresult = (event) => {
       const transcript = Array.from(event.results)
@@ -106,7 +105,6 @@ const ReminderForm = () => {
     };
 
     mic.onerror = (event) => {
-      console.error(event.error);
       toast.error(`Speech recognition error: ${event.error}`);
       setIsListeningTitle(false);
       setIsListeningContent(false);
@@ -167,7 +165,9 @@ const ReminderForm = () => {
 
   const validateForm = () => {
     if (!form.title || !form.content || !form.reminderDate || !form.time) {
-      toast.error("Please fill in all required fields (Title, Description, Date, Time).");
+      toast.error(
+        "Please fill in all required fields (Title, Description, Date, Time)."
+      );
       return false;
     }
     const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
@@ -185,7 +185,9 @@ const ReminderForm = () => {
 
     setSubmitting(true);
     const data = { ...form, status };
-    data.reminderDate = new Date(`${form.reminderDate}T${form.time}`).toISOString();
+    data.reminderDate = new Date(
+      `${form.reminderDate}T${form.time}`
+    ).toISOString();
     data.assignt_to = Number(form.assignt_to);
 
     try {
@@ -199,8 +201,9 @@ const ReminderForm = () => {
       });
 
       const result = await response.json();
-      if (!response.ok) {
-        toast.error(`Error: ${result.message || "Could not add reminder"}`);
+      
+      if (!response.ok || (result.data && result.data.error)) {
+        toast.error(`Error: ${result.data?.error || result.message || "Could not add reminder"}`);
         return;
       }
 
@@ -210,13 +213,15 @@ const ReminderForm = () => {
         reminderDate: "",
         time: "",
         priority: "Normal",
-        assignt_to: "", // Reset assignt_to
+        assignt_to: "",
         ilead_id: Number(leadId),
       });
       setNoteTitle(null);
       setNoteContent(null);
       setAssignToMe(false);
-      toast.success(status === "submitted" ? "Reminder submitted" : "Saved as draft");
+      toast.success(
+        status === "submitted" ? "Reminder submitted" : "Saved as draft"
+      );
       getReminder();
       setShowForm(false);
     } catch (err) {
@@ -228,13 +233,16 @@ const ReminderForm = () => {
 
   const getReminder = async () => {
     try {
-      const response = await fetch(`${apiEndPoint}/reminder/get-reminder/${leadId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${apiEndPoint}/reminder/get-reminder/${leadId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -263,35 +271,39 @@ const ReminderForm = () => {
     fetchUsers();
   }, []);
 
+  const applyFilters = useCallback(() => {
+    setReminderList((prev) => [...prev]);
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFromDate("");
+    setToDate("");
+    setReminderList((prev) => [...prev]);
+  }, []);
+
   const filteredReminders = reminderList.filter((reminder) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();
+  const matchesSearch =
+    reminder.cremainder_title.toLowerCase().includes(lowerCaseSearchTerm) ||
+    reminder.cremainder_content.toLowerCase().includes(lowerCaseSearchTerm) ||
+    reminder.priority.toLowerCase().includes(lowerCaseSearchTerm) ||
+    reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
 
-    // Combined search for title, description, priority, and assigned user
-    const matchesSearch =
-      reminder.cremainder_title.toLowerCase().includes(lowerCaseSearchTerm) ||
-      reminder.cremainder_content.toLowerCase().includes(lowerCaseSearchTerm) ||
-      reminder.priority.toLowerCase().includes(lowerCaseSearchTerm) ||
-      reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm); // Assuming assigned_to is a string for search
-
-    // Date filtering
     const reminderDate = new Date(reminder.dremainder_dt);
-    const matchesDate = filterDate
-      ? reminderDate.toISOString().slice(0, 10) === filterDate
-      : true;
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
 
-    // Time filtering
-    const matchesTime = filterTime
-      ? reminderDate.toTimeString().slice(0, 5) === filterTime
-      : true;
+    const matchesDate =
+      (!from || reminderDate >= from) && (!to || reminderDate <= to);
 
-    return matchesSearch && matchesDate && matchesTime;
+    return matchesSearch && matchesDate;
   });
+
 
   return (
     <div className="relative min-h-screen bg-[#f8f8f8] p-6 font-sans text-base leading-relaxed text-gray-900">
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Search & Filters */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm">
           <Search className="text-gray-500" size={18} />
@@ -303,20 +315,13 @@ const ReminderForm = () => {
             className="bg-transparent outline-none text-sm font-medium"
           />
         </div>
-
         <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="border border-gray-300 rounded-full px-3 py-1 text-sm bg-white shadow-sm"
-          />
-          <input
-            type="time"
-            value={filterTime}
-            onChange={(e) => setFilterTime(e.target.value)}
-            className="border border-gray-300 rounded-full px-3 py-1 text-sm bg-white shadow-sm"
-          />
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700"
+          >
+            <Filter size={20}  color="white"/>
+          </button>
           <button
             onClick={() => setShowForm(true)}
             className="bg-blue-600 text-white px-5 py-2 rounded-full shadow-md hover:bg-blue-700 transition"
@@ -325,6 +330,58 @@ const ReminderForm = () => {
           </button>
         </div>
       </div>
+
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
+            <label className="block text-sm text-gray-700">
+              From
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+              />
+            </label>
+            <label className="block text-sm text-gray-700">
+              To
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  resetFilters();
+                  setShowFilterModal(false);
+                }}
+                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  applyFilters();
+                  setShowFilterModal(false);
+                }}
+                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reminder List */}
       <div className="flex flex-col divide-y divide-gray-200 bg-white rounded-3xl shadow-md overflow-hidden">
@@ -362,9 +419,18 @@ const ReminderForm = () => {
                   </div>
                 </div>
                 <div className="text-right text-sm text-gray-600 whitespace-nowrap">
-                  <p className="font-medium text-blue-700">
-                    {new Date(reminder.dremainder_dt).toLocaleString()}
-                  </p>
+                 <p className="font-medium text-blue-700">
+                  {(() => {
+                    const d = new Date(reminder.dremainder_dt);
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0'); 
+                    const year = d.getFullYear();
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    const seconds = String(d.getSeconds()).padStart(2, '0');
+                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                  })()}
+                </p>
                 </div>
               </div>
             </div>

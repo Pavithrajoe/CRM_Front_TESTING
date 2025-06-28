@@ -7,12 +7,12 @@ export default function LeadsTable() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsData, setLeadsData] = useState([]);
+  const [subordinatesData, setSubordinatesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
   const leadsPerPage = 8;
-  const [usersMap, setUsersMap] = useState({}); 
 
   const navigate = useNavigate();
 
@@ -22,15 +22,10 @@ export default function LeadsTable() {
 
     try {
       tokenFromStorage = localStorage.getItem('token');
-      
-      //console.log("Token from localStorage (LeadsTable):", tokenFromStorage);
 
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
-        //console.log("Decoded Token Payload (LeadsTable):", decodedToken);
-
         extractedUserId = decodedToken.user_id;
-        //console.log("Extracted User ID (LeadsTable):", extractedUserId);
 
         if (!extractedUserId) {
           throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -54,7 +49,7 @@ export default function LeadsTable() {
     }
   }, []);
 
-  const fetchLeads = useCallback(async () => {
+  const fetchLeadsAndSubordinates = useCallback(async () => {
     if (!currentUserId || !currentToken) {
       setLoading(false);
       return;
@@ -63,7 +58,6 @@ export default function LeadsTable() {
     setLoading(true);
     setError(null);
     try {
-      
       const response = await fetch(`${ENDPOINTS.TEAM_LEAD}/${currentUserId}`, {
         method: "GET",
         headers: {
@@ -71,64 +65,84 @@ export default function LeadsTable() {
           'Content-Type': 'application/json'
         }
       });
-      // console.log("Response status (LeadsTable fetch):", response); // For debugging
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
         throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
       }
       const result = await response.json();
-      setLeadsData(result.details || []);
+
+      setLeadsData(result.details?.lead || []);
+      setSubordinatesData(result.details?.subordinates || []);
+
     } catch (err) {
-      console.error("Error fetching leads:", err);
-      setError(`Failed to fetch leads: ${err.message}. Please try again later.`);
+      console.error("Error fetching leads and subordinates:", err);
+      setError(`Failed to fetch data: ${err.message}. Please try again later.`);
       setLeadsData([]);
+      setSubordinatesData([]);
     } finally {
       setLoading(false);
     }
   }, [currentUserId, currentToken]);
 
   useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+    fetchLeadsAndSubordinates();
+  }, [fetchLeadsAndSubordinates]);
+
+  const activeSubordinatesMap = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(subordinatesData)) {
+      subordinatesData.forEach(sub => {
+        if (sub.bactive === true) {
+          map.set(sub.iUser_id, true);
+        }
+      });
+    }
+    return map;
+  }, [subordinatesData]);
 
   const leads = useMemo(() => {
-    return leadsData.map((item) => ({
-      id: item.ilead_id,
-      name: item.clead_name || "No Name",
-      status: item.lead_status?.clead_name || "Unknown",
-      assignedTo: item.user?.cFull_name || "Unassigned",
-      modifiedBy: item.modified_by,
-      time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        day: "2-digit",
-        month: "short",
-      }),
-      avatar: "/images/dashboard/grl.png",
-      bactive: item.bactive, 
-    }));
-  }, [leadsData]);
+    return leadsData
+      .filter(item => {
+        const isLeadActive = item.bactive === true;
+        const isOwnerActive = activeSubordinatesMap.has(item.clead_owner);
+
+        return isLeadActive && isOwnerActive;
+      })
+      .map((item) => ({
+        id: item.ilead_id,
+        name: item.clead_name || "No Name",
+        status: item.lead_status?.clead_name || "Unknown",
+        assignedTo: item.user?.cFull_name || "Unassigned", // User who is the owner
+        modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
+        time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          day: "2-digit",
+          month: "short",
+        }),
+        avatar: "/images/dashboard/grl.png", 
+      }));
+  }, [leadsData, activeSubordinatesMap]); 
 
   const filteredLeads = useMemo(() => {
     const term = search.toLowerCase();
-    return leads
+    return leads 
       .filter(
         (lead) =>
-          lead.bactive === true &&
-          (lead.name.toLowerCase().includes(term) ||
+          lead.name.toLowerCase().includes(term) ||
           lead.assignedTo.toLowerCase().includes(term) ||
-          lead.status.toLowerCase().includes(term))
+          lead.status.toLowerCase().includes(term)
       )
       .sort((a, b) => {
-        const aMatches = a.name.toLowerCase().includes(term) || a.assignedTo.toLowerCase().includes(term);
-        const bMatches = b.name.toLowerCase().includes(term) || b.assignedTo.toLowerCase().includes(term);
+        const aMatches = a.name.toLowerCase().includes(term) || a.assignedTo.toLowerCase().includes(term) || a.status.toLowerCase().includes(term);
+        const bMatches = b.name.toLowerCase().includes(term) || b.assignedTo.toLowerCase().includes(term) || b.status.toLowerCase().includes(term);
         if (aMatches && !bMatches) return -1;
         if (!aMatches && bMatches) return 1;
-        return 0;
+        return 0; 
       });
-  }, [search, leads]);
+  }, [search, leads]); 
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const currentLeads = filteredLeads.slice(
@@ -161,18 +175,11 @@ export default function LeadsTable() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setCurrentPage(1);
+              setCurrentPage(1); 
             }}
             className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 placeholder-gray-400
               focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
           />
-          {/* <a
-            href="/leadcardview"
-            className="text-blue-600 font-semibold hover:text-blue-700 flex items-center rounded-full px-4 py-2
-              ring-1 ring-blue-300 hover:ring-400 transition"
-          >
-            View All
-          </a> */}
         </div>
       </div>
 
@@ -241,7 +248,7 @@ export default function LeadsTable() {
             ) : (
               <tr>
                 <td colSpan={4} className="py-8 text-center text-gray-400">
-                  No active leads found
+                  No active leads found for active users.
                 </td>
               </tr>
             )}

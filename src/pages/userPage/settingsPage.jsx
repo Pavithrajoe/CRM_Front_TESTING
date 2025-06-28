@@ -328,7 +328,7 @@ const SettingsPage = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-100 min-h-screen">
-      <div className="bg-white p-6 md:p-8 space-y-5 rounded-xl shadow-xl max-w-5xl w-full mx-auto border border-gray-200">
+      <div className="bg-white p-6 md:p-8 space-y-5 rounded-xl shadow-xl w-full mx-auto border border-gray-200">
         
         {/* User Profile Settings Section */}
         <section className="mb-8 pb-6 border-b space-y-5 border-gray-200">

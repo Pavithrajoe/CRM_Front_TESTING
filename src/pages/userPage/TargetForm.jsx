@@ -302,7 +302,7 @@ export default function SalesForm({ onClose }) {
 
                         {/* Assigned To (User ID) - Dropdown */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">Assigned To (User ID) *</label>
+                            <label className="block text-sm font-medium mb-1">Assigned To*</label>
                             <select
                                 name="assignedTo"
                                 value={formData.assignedTo}
@@ -313,7 +313,7 @@ export default function SalesForm({ onClose }) {
                                 <option value="">Select User</option>
                                 {companyUsers.map((user) => (
                                     <option key={user.iUser_id} value={user.iUser_id}>
-                                        {user.cFull_name} ({user.iUser_id})
+                                        {user.cFull_name} 
                                     </option>
                                 ))}
                             </select>
@@ -324,7 +324,7 @@ export default function SalesForm({ onClose }) {
 
                         {/* Assigned By (User ID) - Dropdown */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">Assigned By (User ID) *</label>
+                            <label className="block text-sm font-medium mb-1">Assigned By *</label>
                             <select
                                 name="assignedBy"
                                 value={formData.assignedBy}
@@ -335,7 +335,7 @@ export default function SalesForm({ onClose }) {
                                 <option value="">Select User</option>
                                 {companyUsers.map((user) => (
                                     <option key={user.iUser_id} value={user.iUser_id}>
-                                        {user.cFull_name} ({user.iUser_id})
+                                        {user.cFull_name} 
                                     </option>
                                 ))}
                             </select>
@@ -346,7 +346,7 @@ export default function SalesForm({ onClose }) {
 
                         {/* Created By (User ID) - Dropdown */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">Created By (User ID) *</label>
+                            <label className="block text-sm font-medium mb-1">Created By *</label>
                             <select
                                 name="createdBy"
                                 value={formData.createdBy}
@@ -357,7 +357,7 @@ export default function SalesForm({ onClose }) {
                                 <option value="">Select User</option>
                                 {companyUsers.map((user) => (
                                     <option key={user.iUser_id} value={user.iUser_id}>
-                                        {user.cFull_name} ({user.iUser_id})
+                                        {user.cFull_name}
                                     </option>
                                 ))}
                             </select>

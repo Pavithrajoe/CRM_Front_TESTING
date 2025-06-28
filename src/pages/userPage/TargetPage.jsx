@@ -1,28 +1,30 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
 import goalIcon from '../../../public/images/nav/target.png';
-// Import your provided SalesForm component
-import SalesForm from '../userPage/TargetForm'; // Ensure this path is correct!
+import SalesForm from '../userPage/TargetForm';
 
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
-// Custom Tooltip component for better UI
+// Custom Tooltip component for the Bar Chart
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="custom-tooltip p-3 bg-white border border-gray-300 rounded-lg shadow-lg">
-        <p className="label text-gray-800 font-semibold mb-1">{`Day: ${label}`}</p>
-        <p className="intro text-blue-600">{`Target Value: ${payload[0].value}`}</p>
-        <p className="desc text-gray-500 text-sm mt-1">Achieve your goals!</p>
+        <p className="label text-gray-800 font-semibold mb-1">{label}</p>
+        <p className="intro text-blue-600">{`Total Target: ₹${payload.find(p => p.dataKey === 'targetValue')?.value.toLocaleString('en-IN') || 0}`}</p>
+        <p className="intro text-green-600">{`Total Achieved: ₹${payload.find(p => p.dataKey === 'achievedValue')?.value.toLocaleString('en-IN') || 0}`}</p>
+        <p className="intro text-purple-600">{`Completion: ${payload.find(p => p.dataKey === 'completion')?.value || 0}%`}</p>
+        <p className="desc text-gray-500 text-sm mt-1">Monthly performance overview</p>
       </div>
     );
   }
   return null;
 };
 
+// Helper function to format dates for API calls
 const formatDateForAPI = (date, isEndOfDay = false) => {
   if (!date) return '';
   const year = date.getFullYear();
@@ -37,145 +39,167 @@ const formatDateForAPI = (date, isEndOfDay = false) => {
 const TargetDashboard = ({ userId }) => {
   const [summaryData, setSummaryData] = useState({
     salesTarget: 0,
-    leadConversionTarget: 0,
-    achievementRate: 0,
-    pipelineValueTarget: 0,
+    achievedValue: 0,
+    completionRate: 0,
+    targetsAssigned: 0,
   });
+
+  const [targetTrendsData, setTargetTrendsData] = useState([]);
   const [tableMetrics, setTableMetrics] = useState([]);
 
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingTable, setLoadingTable] = useState(true);
   const [overallError, setOverallError] = useState(null);
-
   const [showAddTargetModal, setShowAddTargetModal] = useState(false);
 
-  const [selectedFromDate, setSelectedFromDate] = useState(() => {
+  // selectedFromDate, selectedToDate, and selectedTargetId are no longer actively used for filtering
+  // but kept for initial state if they are default values for API calls
+  const [selectedFromDate] = useState(() => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    return formatDateForAPI(firstDayOfMonth);
+    return firstDayOfMonth;
   });
 
-  const [selectedToDate, setSelectedToDate] = useState(() => {
+  const [selectedToDate] = useState(() => {
     const today = new Date();
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    return formatDateForAPI(lastDayOfMonth, true);
+    return lastDayOfMonth;
   });
 
-  const [selectedTargetId, setSelectedTargetId] = useState(4);
-
-  const targetTrendsData = useMemo(() => [
-    { day: 'Monday', value: 30 },
-    { day: 'Tuesday', value: 20 },
-    { day: 'Wednesday', value: 35 },
-    { day: 'Thursday', value: 18 },
-    { day: 'Friday', value: 45 },
-    { day: 'Saturday', value: 22 },
-    { day: 'Sunday', value: 30 },
-  ], []);
-
-  const fetchUserTarget = useCallback(async () => {
-    setLoadingSummary(true);
-    const token = localStorage.getItem("token");
-    if (!userId || !token) {
-      setOverallError("Authentication error. Please log in again.");
-      setLoadingSummary(false);
-      return;
-    }
-
-    try {
-      const response = await axios.get(ENDPOINTS.GET_PARAMS_TARGET, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          userId,
-          fromDate: selectedFromDate,
-          toDate: selectedToDate,
-          targetId: selectedTargetId,
-        }
-      });
-      console.log("raw card response:", response.data);
-
-      let fetchedTarget = {};
-      if (response.data.fetchTargetValue) {
-        fetchedTarget = response.data.fetchTargetValue;
-      } else if (response.data.result && response.data.result.fetchTargetValue) {
-        fetchedTarget = response.data.result.fetchTargetValue;
-      } else if (Array.isArray(response.data) && response.data.length > 0) {
-        fetchedTarget = response.data[0];
-      }
-
-      const salesTargetValue = parseFloat(fetchedTarget?.bsales_value || 0);
-      const totalAchievedAmountValue = parseFloat(response.data.totalAchievedAmount || 0);
-      const targetPercentageValue = parseFloat(response.data.targetPercentage || 0);
-      const resultCount = Array.isArray(response.data.result) ? response.data.result.length : 0;
-
-      setSummaryData({
-        salesTarget: salesTargetValue,
-        pipelineValueTarget: totalAchievedAmountValue,
-        leadConversionTarget: targetPercentageValue,
-        achievementRate: resultCount,
-      });
-
-    } catch (error) {
-      console.error("Error fetching user target:", error);
-    } finally {
-      setLoadingSummary(false);
-    }
-  }, [userId, selectedFromDate, selectedToDate, selectedTargetId]);
+  const [selectedTargetId] = useState(4); // Example default value
 
   const fetchTargetMetrics = useCallback(async () => {
     setLoadingTable(true);
+    setLoadingSummary(true);
+
     const token = localStorage.getItem("token");
     if (!userId || !token) {
       setOverallError("Authentication error. Please log in again.");
+      setLoadingSummary(false);
       setLoadingTable(false);
       return;
     }
+
+    const fromDateAPI = formatDateForAPI(selectedFromDate);
+    const toDateAPI = formatDateForAPI(selectedToDate, true);
 
     try {
       const response = await axios.get(`${ENDPOINTS.GET_METRICS_TARGET}/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: {
+          fromDate: fromDateAPI,
+          toDate: toDateAPI,
+          // targetId: selectedTargetId, // Uncomment if your API supports filtering by target ID
+        }
       });
-      console.log("response is:", response.data);
 
       const metricsArray = Array.isArray(response.data) ? response.data : [];
+      console.log("1. Raw data received from API:", metricsArray);
 
-      if (metricsArray.length > 0) {
-        const formattedMetrics = metricsArray.map((metric, index) => {
-          if (!metric || typeof metric !== 'object') {
-            return null;
-          }
+      const formattedMetrics = metricsArray.map((metric, index) => {
+        const target = parseFloat(metric.bsales_value || 0);
+        const achieved = parseFloat(metric.achieved_amount || 0);
+        const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
 
-          const target = parseFloat(metric.bsales_value || 0);
-          const achieved = parseFloat(metric.achieved_amount || 0);
+        const createdAtDate = metric.created_at ? new Date(metric.created_at) : null;
+        const rawFromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
+        const rawToDate = metric.dto_date ? new Date(metric.dto_date) : null;
 
-          const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
+        if (createdAtDate && isNaN(createdAtDate.getTime())) console.warn(`Invalid created_at for metric ID ${metric.id || index}:`, metric.created_at);
+        if (rawFromDate && isNaN(rawFromDate.getTime())) console.warn(`Invalid dfrom_date for metric ID ${metric.id || index}:`, metric.dfrom_date);
+        if (rawToDate && isNaN(rawToDate.getTime())) console.warn(`Invalid dto_date for metric ID ${metric.id || index}:`, metric.dto_date);
 
-          return {
-            id: metric.id || `metric-${index}`,
-            metricName: metric.metric_name || "Sales Target (Assigned)",
-            targetValue: target,
-            achieved: achieved,
-            completed: completedPercentage,
-            status: metric.status || "N/A",
-            fromDate: metric.dfrom_date ? new Date(metric.dfrom_date).toLocaleDateString() : "N/A",
-            toDate: metric.dto_date ? new Date(metric.dto_date).toLocaleDateString() : "N/A",
-            assignedTo: metric.AssignedTo || "N/A",
-            assignedBy: metric.AssignedBy || "N/A",
-            createdBy: metric.CreatedBy || "N/A",
-          };
-        }).filter(Boolean);
+        return {
+          id: metric.id || `metric-${index}`,
+          metricName: metric.metric_name || "Sales Target (Assigned)",
+          targetValue: target,
+          achieved: achieved,
+          completed: completedPercentage,
+          status: metric.status || "N/A",
+          fromDate: rawFromDate ? rawFromDate.toLocaleDateString() : "N/A",
+          toDate: rawToDate ? rawToDate.toLocaleDateString() : "N/A",
+          rawFromDate: rawFromDate,
+          rawToDate: rawToDate,
+          createdAt: createdAtDate,
+          assignedTo: metric.AssignedTo || "N/A",
+          assignedBy: metric.AssignedBy || "N/A",
+          createdBy: metric.CreatedBy || "N/A",
+        };
+      }).filter(Boolean);
 
-        setTableMetrics(formattedMetrics);
+      // console.log("2. Formatted Metrics (check date objects and values):", formattedMetrics);
+
+      setTableMetrics(formattedMetrics);
+
+      // --- Calculate Summary Data for Current Month "Active/Starting" Targets ---
+      let totalCurrentMonthSalesTarget = 0;
+      let totalCurrentMonthAchievedValue = 0;
+      let totalCurrentMonthCompletionRate = 0;
+      let targetsAssignedOverallCount = formattedMetrics.length;
+
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+
+      // console.log(`3. Current Month for summary filtering: ${currentMonth + 1}/${currentYear}`);
+
+      const currentMonthRelevantTargets = formattedMetrics.filter(metric => {
+        if (!metric.rawFromDate || isNaN(metric.rawFromDate.getTime())) {
+          return false;
+        }
+        const isCurrentMonthFromDate = metric.rawFromDate.getMonth() === currentMonth && metric.rawFromDate.getFullYear() === currentYear;
+        return isCurrentMonthFromDate;
+      });
+
+      // console.log("4. Targets starting in current month (for summary cards):", currentMonthRelevantTargets);
+
+      currentMonthRelevantTargets.forEach(metric => {
+        totalCurrentMonthSalesTarget += metric.targetValue;
+        totalCurrentMonthAchievedValue += metric.achieved;
+      });
+
+      if (totalCurrentMonthSalesTarget > 0) {
+        totalCurrentMonthCompletionRate = ((totalCurrentMonthAchievedValue / totalCurrentMonthSalesTarget) * 100).toFixed(2);
       } else {
-        setTableMetrics([]);
+        totalCurrentMonthCompletionRate = "0.00";
       }
+
+      
+
+      setSummaryData({
+        salesTarget: totalCurrentMonthSalesTarget,
+        achievedValue: totalCurrentMonthAchievedValue,
+        completionRate: parseFloat(totalCurrentMonthCompletionRate),
+        targetsAssigned: targetsAssignedOverallCount,
+      });
+
+      // --- Prepare Bar Chart Data (Total Current Month Summary) ---
+      const chartDataForTotalMonth = [{
+        name: "Current Month",
+        targetValue: totalCurrentMonthSalesTarget,
+        achievedValue: totalCurrentMonthAchievedValue,
+        completion: parseFloat(totalCurrentMonthCompletionRate),
+      }];
+
+      // console.log("6. Final Bar Chart Data (targetTrendsData - Total Month):", chartDataForTotalMonth);
+      setTargetTrendsData(chartDataForTotalMonth);
+
     } catch (error) {
       console.error("Error fetching target metrics:", error);
       setTableMetrics([]);
+      setSummaryData({
+        salesTarget: 0,
+        achievedValue: 0,
+        completionRate: 0,
+        targetsAssigned: 0,
+      });
+      setTargetTrendsData([]);
+      setOverallError("Failed to load dashboard data. Please try again.");
     } finally {
+      setLoadingSummary(false);
       setLoadingTable(false);
     }
-  }, [userId]);
+  }, [userId, selectedFromDate, selectedToDate]); // Removed selectedTargetId if not used for filtering API
 
   useEffect(() => {
     if (!userId) {
@@ -186,30 +210,17 @@ const TargetDashboard = ({ userId }) => {
     }
 
     setOverallError(null);
-
-    fetchUserTarget();
     fetchTargetMetrics();
+  }, [userId, fetchTargetMetrics]);
 
-  }, [userId, selectedFromDate, selectedToDate, selectedTargetId, fetchUserTarget, fetchTargetMetrics]);
-
-  const handleFromDateChange = (e) => {
-    setSelectedFromDate(e.target.value ? `${e.target.value}T00:00:00` : '');
-  };
-
-  const handleToDateChange = (e) => {
-    setSelectedToDate(e.target.value ? `${e.target.value}T23:59:59` : '');
-  };
-
-  const handleTargetIdChange = (e) => {
-    setSelectedTargetId(parseInt(e.target.value, 10));
-  };
+  // Removed handleFromDateChange, handleToDateChange, and handleTargetIdChange functions
+  // as they are no longer tied to UI elements.
 
   const closeTargetModal = () => {
     setShowAddTargetModal(false);
   };
 
   const handleTargetAdded = () => {
-    fetchUserTarget();
     fetchTargetMetrics();
   };
 
@@ -224,7 +235,7 @@ const TargetDashboard = ({ userId }) => {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-screen-xl mx-auto bg-gray-50 min-h-screen rounded-lg shadow-xl">
+    <div className="p-4 md:p-6 mx-auto bg-gray-50 min-h-screen rounded-lg shadow-xl">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl md:text-4xl font-extrabold text-blue-800 border-b-4 border-blue-500 pb-2 animate-fade-in-down">
           Sales Target Dashboard
@@ -238,42 +249,7 @@ const TargetDashboard = ({ userId }) => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8 p-5 bg-white rounded-xl shadow-md border border-gray-200">
-        <div>
-          <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">From Date:</label>
-          <input
-            type="date"
-            id="fromDate"
-            value={selectedFromDate.split('T')[0]}
-            onChange={handleFromDateChange}
-            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5 transition duration-200 ease-in-out"
-          />
-        </div>
-        <div>
-          <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">To Date:</label>
-          <input
-            type="date"
-            id="toDate"
-            value={selectedToDate.split('T')[0]}
-            onChange={handleToDateChange}
-            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5 transition duration-200 ease-in-out"
-          />
-        </div>
-        <div className="md:col-span-1 lg:col-span-2">
-          <label htmlFor="targetId" className="block text-sm font-medium text-gray-700 mb-1">Target Type:</label>
-          <select
-            id="targetId"
-            value={selectedTargetId}
-            onChange={handleTargetIdChange}
-            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5 bg-white transition duration-200 ease-in-out"
-          >
-            <option value={1}>Sales Target</option>
-            <option value={2}>Lead Conversion</option>
-            <option value={3}>Pipeline Value</option>
-            <option value={4}>Overall Performance</option>
-          </select>
-        </div>
-      </div>
+      {/* Date Filters and Target ID Selector section removed */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {loadingSummary ? (
@@ -288,44 +264,74 @@ const TargetDashboard = ({ userId }) => {
         ) : (
           <>
             <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <h4 className="font-semibold text-lg">Sales Target</h4>
+              <h4 className="font-semibold text-lg">Current Month Target</h4>
               <p className="text-xl font-bold break-words mt-2">₹{summaryData.salesTarget.toLocaleString('en-IN')}</p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <h4 className="font-semibold text-lg">Achieved Value</h4>
-              <p className="text-xl font-bold mt-2">₹{summaryData.pipelineValueTarget.toLocaleString('en-IN')}</p>
+              <h4 className="font-semibold text-lg">Current Month Achieved</h4>
+              <p className="text-xl font-bold mt-2">₹{summaryData.achievedValue.toLocaleString('en-IN')}</p>
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-700 text-white p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <h4 className="font-semibold text-lg">Completion Rate</h4>
-              <p className="text-xl font-bold mt-2">{summaryData.leadConversionTarget.toFixed(2)}%</p>
+              <h4 className="font-semibold text-lg">Current Month Completion</h4>
+              <p className="text-xl font-bold mt-2">{summaryData.completionRate.toFixed(2)}%</p>
             </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-700 text-white p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <h4 className="font-semibold text-lg">Targets Assigned</h4>
-              <p className="text-xl font-bold mt-2">{summaryData.achievementRate.toLocaleString()}</p>
+              <h4 className="font-semibold text-lg">Total Targets Assigned</h4>
+              <p className="text-xl font-bold mt-2">{summaryData.targetsAssigned.toLocaleString()}</p>
             </div>
           </>
         )}
       </div>
 
       <div className="mb-10 p-6 bg-white rounded-xl shadow-md border border-gray-200">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">Weekly Target Trends</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800">Monthly Performance Summary</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={targetTrendsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorTarget" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.3} />
               </linearGradient>
+              <linearGradient id="colorAchieved" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.3} />
+              </linearGradient>
+              <linearGradient id="colorCompletion" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#a855f7" stopOpacity={0.3} />
+              </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
-            <XAxis dataKey="day" axisLine={false} tickLine={false} />
-            <YAxis axisLine={false} tickLine={false} />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+            <YAxis yAxisId="left" orientation="left" stroke="#4f46e5" axisLine={false} tickLine={false} />
+            <YAxis yAxisId="right" orientation="right" stroke="#a855f7" axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
             <Legend wrapperStyle={{ paddingTop: '10px' }} />
             <Bar
-              dataKey="value"
-              fill="url(#colorValue)"
-              name="Target Value"
+              yAxisId="left"
+              dataKey="targetValue"
+              fill="url(#colorTarget)"
+              name="Total Target Value"
+              barSize={30}
+              radius={[10, 10, 0, 0]}
+              isAnimationActive={true}
+              animationDuration={1500}
+            />
+            <Bar
+              yAxisId="left"
+              dataKey="achievedValue"
+              fill="url(#colorAchieved)"
+              name="Total Achieved Value"
+              barSize={30}
+              radius={[10, 10, 0, 0]}
+              isAnimationActive={true}
+              animationDuration={1500}
+            />
+            <Bar
+              yAxisId="right"
+              dataKey="completion"
+              fill="url(#colorCompletion)"
+              name="Completion Rate (%)"
               barSize={30}
               radius={[10, 10, 0, 0]}
               isAnimationActive={true}
@@ -390,11 +396,9 @@ const TargetDashboard = ({ userId }) => {
         )}
       </div>
 
-      {/* New Target Modal - Using your desired structure */}
       {showAddTargetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
           <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
-            {/* SalesForm is placed directly inside this content div */}
             <SalesForm
               onClose={() => {
                 closeTargetModal();

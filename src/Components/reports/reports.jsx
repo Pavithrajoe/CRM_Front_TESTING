@@ -15,12 +15,12 @@ const cardsData = [
     route: "/lead-lost-analytics",
     image: "/public/illustrations/lost.svg", // Use your actual image path here
   },
-   {
-    title: "Lead Conversion Time",
-    description: "Analyze lost leads and identify drop-off patterns.",
-    route: "/lead-conversion",
-    image: "/public/illustrations/timeline.svg", // Use your actual image path here
-  },
+  //  {
+  //   title: "Lead Conversion Time",
+  //   description: "Analyze lost leads and identify drop-off patterns.",
+  //   route: "/lead-conversion",
+  //   image: "/public/illustrations/timeline.svg", // Use your actual image path here
+  // },
    {
     title: "Prospects Engaged But Not Converted",
     description: "View performance of opportunities across sales stages.",
@@ -50,6 +50,12 @@ const cardsData = [
     description: "View performance of opportunities across sales stages.",
     route: "/Sales-pipeline",
     image: "/public/illustrations/pipeline.svg", // Use your actual image path here
+  },
+   {
+    title: "Territory Based Analytics",
+    description: "View performance of opportunities across sales Regions.",
+    route: "/territory-based-analytics",
+    image: "/public/illustrations/map.png", // Use your actual image path here
   },
 ];
 const CardsPage = () => {

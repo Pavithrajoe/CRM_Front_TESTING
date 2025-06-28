@@ -64,7 +64,7 @@ const [data, setData] = useState({});
 
      <div
   className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
-  onClick={() => navigate('/leads')} 
+  onClick={() => navigate('/leadcardview')} 
 >
   <div className="flex justify-between items-start">
     <p className="text-sm font-bold text-gray-900">Total Leads</p>

@@ -27,7 +27,7 @@ export default function TeamleadHeader() {
             isProfile ? 'bg-black text-white' : 'text-black'
           }`}
         >
-          My Profile
+          Dashboard
         </button>
         <div className="w-px h-5 bg-gray-300"></div>
         <button
@@ -36,7 +36,7 @@ export default function TeamleadHeader() {
             isTeam ? 'bg-black text-white' : 'text-black'
           }`}
         >
-          Team Profile
+          Team Dashboard
         </button>
       </div>
     </div>

@@ -36,7 +36,7 @@ export default function ProspectsEngagedReport() {
         if (!company_id) throw new Error("Company ID missing");
 
         const res = await fetch(
-          `${ENDPOINTS.PROSPECTS_LOST_LEADS}${company_id}`,
+          `${ENDPOINTS.PROSPECTS_LOST_LEADS}/${company_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -45,13 +45,8 @@ export default function ProspectsEngagedReport() {
           }
         );
 
-        if (!res.ok) {
-          console.error("API failed", res);
-        }
-
         const result = await res.json();
         setProspectsEngaged(result);
-        console.log("API response for prospects:", result);
       } catch (err) {
         console.error("API error:", err.message);
       }
@@ -74,7 +69,7 @@ export default function ProspectsEngagedReport() {
     {
       title: "Avg Engagement Score",
       value: prospectsEngaged?.avgEngagementScore ?? "--",
-      changeType: "negative",
+      changeType: "neutral",
     },
     {
       title: "Avg No. of Interactions",
@@ -99,7 +94,7 @@ export default function ProspectsEngagedReport() {
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
 
-  const convertedStatuses = ["Won"];
+  const convertedStatuses = ["Won", "Converted"];
   const convertedData = [];
   const nonConvertedData = [];
   const labels = Object.keys(statusCounts);
@@ -120,14 +115,16 @@ export default function ProspectsEngagedReport() {
       {
         label: "Converted",
         data: convertedData,
-        backgroundColor: "#BBD816",
-        borderRadius: 5,
+        backgroundColor: "#4CAF50",
+        borderRadius: 8,
+        barThickness: 30,
       },
       {
         label: "Non-Converted",
         data: nonConvertedData,
-        backgroundColor: "#C200A2",
-        borderRadius: 5,
+        backgroundColor: "#F44336",
+        borderRadius: 8,
+        barThickness: 30,
       },
     ],
   };
@@ -137,14 +134,21 @@ export default function ProspectsEngagedReport() {
     plugins: {
       legend: {
         position: "top",
-        align: "end",
         labels: {
           usePointStyle: true,
+          pointStyle: "circle",
+          color: "#4B5563",
+          font: {
+            size: 12,
+          },
         },
       },
       tooltip: {
-        mode: "index",
-        intersect: false,
+        backgroundColor: "#111827",
+        titleColor: "#fff",
+        bodyColor: "#E5E7EB",
+        padding: 10,
+        cornerRadius: 6,
       },
     },
     scales: {
@@ -152,12 +156,26 @@ export default function ProspectsEngagedReport() {
         grid: {
           display: false,
         },
+        ticks: {
+          color: "#4B5563",
+        },
       },
       y: {
         beginAtZero: true,
+        grid: {
+          color: "#E5E7EB",
+        },
+        ticks: {
+          color: "#4B5563",
+        },
         title: {
           display: true,
           text: "No. Of Prospects",
+          color: "#374151",
+          font: {
+            size: 14,
+            weight: "bold",
+          },
         },
       },
     },
@@ -176,21 +194,30 @@ export default function ProspectsEngagedReport() {
   }));
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 flex flex-col gap-6">
-      <h2 className="text-2xl font-semibold text-gray-800 border-l-4 pl-4 border-lime-500">
+    <div className="min-h-screen p-6 bg-gray-50 flex flex-col gap-6">
+      <h2 className="text-3xl font-semibold text-gray-800">
         Prospects Engaged But Not Converted
       </h2>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {cardData.map((card, idx) => (
-          <div key={idx} className="bg-white rounded-xl p-4 shadow-sm">
+          <div
+            key={idx}
+            className="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition"
+          >
             <div className="text-gray-500 text-sm">{card.title}</div>
-            <div className="text-2xl font-bold">{card.value}</div>
+            <div className="text-2xl font-bold text-gray-800 mt-2">
+              {card.value}
+            </div>
             {card.change && (
               <div
                 className={`text-xs mt-1 ${
-                  card.changeType === "positive" ? "text-green-500" : "text-red-500"
+                  card.changeType === "positive"
+                    ? "text-green-600"
+                    : card.changeType === "neutral"
+                    ? "text-gray-500"
+                    : "text-red-500"
                 }`}
               >
                 {card.change}
@@ -201,21 +228,25 @@ export default function ProspectsEngagedReport() {
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <h3 className="text-lg font-semibold mb-2">Lead Handling & Productivity Metrics</h3>
+      <div className="bg-white rounded-2xl p-6 shadow-md">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700">
+          Lead Handling & Productivity Metrics
+        </h3>
         <Bar data={leadHandlingChartData} options={leadHandlingChartOptions} />
       </div>
 
       {/* Table with Pagination */}
-      <div className="bg-white rounded-xl p-6 shadow-md">
-        <h3 className="text-lg font-semibold mb-2">Prospects Engaged Metrics</h3>
+      <div className="bg-white rounded-2xl p-6 shadow-md">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700">
+          Prospects Engaged Metrics
+        </h3>
         <PaginatedTable data={tableData} />
       </div>
     </div>
   );
 }
 
-// Pagination Table as a subcomponent
+// ✅ Pagination Table
 function PaginatedTable({ data }) {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,7 +265,7 @@ function PaginatedTable({ data }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left shadow-md">
+      <table className="w-full border-collapse text-left">
         <thead>
           <tr className="bg-gray-100 text-gray-700">
             {[
@@ -245,7 +276,7 @@ function PaginatedTable({ data }) {
               "Status",
               "Disqualification Reason",
             ].map((header) => (
-              <th key={header} className="p-4 border-b border-gray-300">
+              <th key={header} className="p-4 border-b">
                 {header}
               </th>
             ))}
@@ -253,8 +284,10 @@ function PaginatedTable({ data }) {
         </thead>
         <tbody>
           {paginatedData.map((row, index) => (
-            <tr key={row.sNo} className="hover:bg-gray-50 transition-all">
-              <td className="p-4 border-b">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+            <tr key={row.sNo} className="hover:bg-gray-50">
+              <td className="p-4 border-b">
+                {(currentPage - 1) * itemsPerPage + index + 1}
+              </td>
               <td className="p-4 border-b">{row.prospectName}</td>
               <td className="p-4 border-b">{row.engagementScore}</td>
               <td className="p-4 border-b">{row.interactionCount}</td>

@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  FiEdit,
-  FiPhone,
-  FiMail,
-  FiMapPin,
-  FiUpload,
-  FiSave,
-  FiEye,
-  FiX,
-  FiMove,
-  FiCodesandbox,
-  FiCamera,
-} from "react-icons/fi";
+import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiSave,FiEye,FiX,FiMove,FiCodesandbox,FiCamera,} from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -19,7 +7,7 @@ import Loader from "./Loader";
 import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
-
+import DemoSessionDetails from "./demo_session_details"
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
@@ -166,8 +154,10 @@ const ProfileCard = () => {
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [users, setUsers] = useState([]);
   const [editSuccess, setEditSuccess] = useState(false);
+  const [selectedAssignToUser, setSelectedAssignToUser] = useState(null);
+  const [selectedNotifyToUser, setSelectedNotifyToUser] = useState(null);
+  const [users, setUsers] = useState([]);
 
   const [attachments, setAttachments] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -175,9 +165,12 @@ const ProfileCard = () => {
   const [isAttachmentModalOpen, setIsAttachmentModalOpen] = useState(false);
   const [assignedToList, setAssignedToList] = useState([]);
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
+  const [showAssignConfirmation, setShowAssignConfirmation] = useState(false);
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
+    
+    console.log("Token", token);
     if (token) {
       try {
         const base64Payload = token.split(".")[1];
@@ -199,12 +192,15 @@ const ProfileCard = () => {
       const token = localStorage.getItem("token");
 
       try {
+
+        
         const response = await axios.get(`${apiEndPoint}/lead/${leadId}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
+        console.log("API Response for Lead Details:", response.data);
         setProfile(response.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
@@ -234,6 +230,12 @@ const ProfileCard = () => {
     }
   }, [leadId]);
 
+  const handleNotifyLead = (event) => {
+    const userId = event.target.value === "" ? null : event.target.value;
+    setSelectedNotifyToUser(userId);
+    console.log("Selected user for notification:", userId); 
+  };
+
   const fetchAttachments = async () => {
     const token = localStorage.getItem("token");
 
@@ -256,7 +258,7 @@ const ProfileCard = () => {
       const res = await axios.get(`${apiEndPoint}/assigned-to/${leadId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const sortedList = res.data.sort(
         (a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt)
       );
@@ -336,39 +338,93 @@ const ProfileCard = () => {
     }
   };
 
-  const handleAssignLead = async (e) => {
-    const userId = e.target.value;
-    const token = localStorage.getItem("token");
-    const loggedInUserId = getUserIdFromToken(); 
-
-    if (!loggedInUserId) {
-
-      alert("User not logged in or token invalid.");
+  const handleAssignButtonClick = () => {
+    if (!selectedAssignToUser) {
+      alert("Please select a user to assign to.");
       return;
     }
-   console.log("logged user",loggedInUserId)
-    try {
-      await axios.post(
-        `${apiEndPoint}/assigned-to`,
-        {
-          iassigned_by: loggedInUserId, 
-          iassigned_to: Number(userId),
-          ilead_id: Number(leadId),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      alert("Lead assigned successfully.");
-      fetchAssignedToList();
-    } catch (err) {
-      console.error("Failed to assign lead", err);
-      alert("Failed to assign lead.");
-    }
+    setShowAssignConfirmation(true);
   };
+
+  const confirmAssignment = async () => {
+  setShowAssignConfirmation(false); 
+
+  const userIdToAssign = Number(selectedAssignToUser);
+  const token = localStorage.getItem("token");
+  const loggedInUserId = getUserIdFromToken();
+
+  if (!loggedInUserId) {
+    alert("User not logged in or token invalid.");
+    return;
+  }
+
+  
+
+  if (!userIdToAssign || userIdToAssign === 0) {
+    alert("Please select a valid user to assign the lead to.");
+    return;
+  }
+
+  console.log("logged user", loggedInUserId);
+  console.log("User to assign lead to:", userIdToAssign);
+
+  try {
+    await axios.post(
+      `${apiEndPoint}/assigned-to`,
+      {
+        iassigned_by: loggedInUserId,
+        iassigned_to: userIdToAssign,
+        ilead_id: Number(leadId),
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    alert("Lead assigned successfully.");
+    fetchAssignedToList(); 
+    const assignedUser = users.find(user => String(user.iUser_id) === String(userIdToAssign));
+    const notifiedPerson = users.find(user => String(user.iUser_id) === String(selectedNotifyToUser));
+
+    if (assignedUser && profile) { 
+      const mailPayload = {
+        userName: assignedUser.cUser_name, 
+        time: new Date().toISOString(), 
+        leadName: profile.clead_name, 
+        leadURL: window.location.href, 
+        mailId: assignedUser.cEmail, 
+        assignedTo: assignedUser.cUser_name, 
+        notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
+      };
+
+      console.log("Mail Payload:", mailPayload); 
+
+      try {
+        await axios.post(
+          `${apiEndPoint}/assigned-to-mail`, 
+          mailPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Notification email sent successfully.");
+      } catch (mailErr) {
+        console.error("Failed to send notification email:", mailErr);
+      }
+    } else {
+      console.warn("Could not send notification email: Assigned user or lead profile not found.");
+    }
+
+  } catch (err) {
+    console.error("Failed to assign lead", err);
+    alert("Failed to assign lead.");
+  }
+};
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -386,7 +442,8 @@ const ProfileCard = () => {
 
   const handleFileUpload = async () => {
     const token = localStorage.getItem("token");
-    const userId = getUserIdFromToken(); 
+    console.log("Token", token);
+    const userId = getUserIdFromToken();
 
     if (!userId) {
       alert("User not logged in or token invalid.");
@@ -428,6 +485,9 @@ const ProfileCard = () => {
     );
 
   const latestAssignments = assignedToList.slice(0, 2);
+  const usersForNotify = users.filter(
+    (user) => String(user.iUser_id) !== String(selectedAssignToUser)
+  );
 
   return (
     <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6 ">
@@ -527,58 +587,150 @@ const ProfileCard = () => {
             LOST LEAD
           </div>
         )}
-  {/* New "Remarks" Section for Website Lead */}
-        {profile.website_lead === true && (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm mt-5 text-sm text-yellow-800 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-            </svg>
-            <p className="font-semibold">This is a Website Lead.</p>
+        {/* Combined block for Website Lead and Remarks */}
+        {(profile.website_lead === true || profile.remarks) && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm mt-5 text-sm text-green-800 flex flex-col gap-3">
+            {profile.website_lead === true && (
+              <div className="flex items-center gap-2">
+                {/* New Website Lead Icon (World/Globe icon) */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-green-600 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.083 9.922A6.955 6.955 0 0010 16a6.955 6.955 0 005.917-6.078 2.5 2.5 0 010-4.844A6.955 6.955 0 0010 4a6.955 6.955 0 00-5.917 6.078 2.5 2.5 0 010 4.844zM10 18a8 8 0 100-16 8 8 0 000 16zm-7.5-8a7.5 7.5 0 1015 0 7.5 7.5 0 00-15 0zM10 7a3 3 0 100 6 3 3 0 000-6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="font-semibold">This is a Website Lead.</p>
+              </div>
+            )}
+
+            {profile.remarks && (
+              <div className="flex items-start gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-green-600 flex-shrink-0 mt-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-9-4a1 1 0 112 0v4a1 1 0 01-2 0V6zm1 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="font-medium break-words">
+                  <span className="text-gray-700 font-semibold">Remarks:</span> {profile.remarks}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5">
-          <label
-            htmlFor="assignUser"
-            className="text-sm font-semibold text-gray-700 min-w-[90px]"
-          >
-            Assign to:
-          </label>
-          <div className="relative w-full sm:w-64">
-            <select
-              id="assignUser"
-              className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-              onChange={handleAssignLead}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select User
-              </option>
-              {users.map((user) => (
-                <option key={user.iUser_id} value={user.iUser_id}>
-                  {user.cUser_name}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-              <svg
-                className="w-4 h-4"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
+<div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
+
+  {/* Assign To */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+    <label
+      htmlFor="assignUser"
+      className="text-sm font-semibold text-gray-700 min-w-[90px]"
+    >
+      Assign to:
+    </label>
+    <div className="relative w-full sm:w-64">
+      <select
+        id="assignUser"
+        className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
+        onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
+        value={selectedAssignToUser || ""}
+      >
+        <option value="" disabled>
+          Select User
+        </option>
+        {users.map((user) => (
+          <option key={user.iUser_id} value={user.iUser_id}>
+            {user.cUser_name}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+        <svg
+          className="w-4 h-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  {/* Notify To */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+    <label
+      htmlFor="notifyUser"
+      className="text-sm font-semibold text-gray-700 min-w-[90px]"
+    >
+      Notify to:
+    </label>
+    <div className="relative w-full sm:w-64">
+      <select
+        id="notifyUser"
+        className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
+        onChange={handleNotifyLead}
+        value={selectedNotifyToUser || ""}
+      >
+        <option value="">
+          Select User
+        </option>
+        {usersForNotify.map((user) => (
+          <option key={user.iUser_id} value={user.iUser_id}>
+            {user.cUser_name}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+        <svg
+          className="w-4 h-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  {/* Assign Button */}
+ <div className="flex justify-center">
+  <button
+    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+    disabled={!selectedAssignToUser}
+    onClick={handleAssignButtonClick}
+  >
+    Assign Lead
+  </button>
+</div>
+</div>
+
 
         {/* Assigned to me list */}
         <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
@@ -781,8 +933,45 @@ const ProfileCard = () => {
           </div>
         </Dialog>
 
+        {/* Assignment Confirmation Modal */}
+        <Dialog
+          open={showAssignConfirmation}
+          onClose={() => setShowAssignConfirmation(false)}
+          className="relative z-50"
+        >
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="w-full max-w-xs bg-white p-6 rounded-2xl shadow-lg text-center">
+              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
+                Confirm Assignment
+              </Dialog.Title>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to assign this lead?
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setShowAssignConfirmation(false)}
+                  className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAssignment}
+                  className="px-5 py-2 text-sm font-semibold rounded-lg text-white bg-blue-700 hover:bg-blue-600 transition-colors"
+                >
+                  Confirm
+                </button>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+
+
         {editSuccess && (
-          <div className="text-green-600 bg-green-50 border border-green-200 rounded-lg p-3 text-center text-sm mt-5">
+          <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
             Profile updated successfully!
           </div>
         )}
@@ -864,58 +1053,54 @@ const ProfileCard = () => {
                 </div>
               )}
             </div>
-
-              {/* <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mt-8 mb-4 border-t pt-4 border-gray-100">
-                Profile Update History
-              </h3> */}
-              <div className="space-y-4">
-                {history.length === 0 ? (
-                  <div className="text-gray-500 italic">
-                    {/* No history available. */}
-                  </div>
-                ) : (
-                  history.map((entry, index) => (
-                    <div
-                      key={index}
-                      className="p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100"
-                    >
-                      <p className="font-semibold text-sm sm:text-base text-gray-700 mb-2">
-                        Updated on: {entry.date}
-                      </p>
-                      <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-                        {entry.updatedProfile?.clead_name && (
-                          <div>
-                            <span className="font-medium">Name:</span>{" "}
-                            {entry.updatedProfile.clead_name}
-                          </div>
-                        )}
-                        {entry.updatedProfile?.cemail && (
-                          <div>
-                            <span className="font-medium">Email:</span>{" "}
-                            {entry.updatedProfile.cemail}
-                          </div>
-                        )}
-                        {entry.updatedProfile?.iphone_no && (
-                          <div>
-                            <span className="font-medium">Phone:</span>{" "}
-                            {entry.updatedProfile.iphone_no}
-                          </div>
-                        )}
-                        {entry.updatedProfile?.caddress && (
-                          <div>
-                            <span className="font-medium">Address:</span>{" "}
-                            {entry.updatedProfile.icity}
-                          </div>
-                        )}
-                      </div>
+            <div className="space-y-4">
+              {history.length === 0 ? (
+                <div className="text-gray-500 italic">
+                </div>
+              ) : (
+                history.map((entry, index) => (
+                  <div
+                    key={index}
+                    className="p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100"
+                  >
+                    <p className="font-semibold text-sm sm:text-base text-gray-700 mb-2">
+                      Updated on: {entry.date}
+                    </p>
+                    <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                      {entry.updatedProfile?.clead_name && (
+                        <div>
+                          <span className="font-medium">Name:</span>{" "}
+                          {entry.updatedProfile.clead_name}
+                        </div>
+                      )}
+                      {entry.updatedProfile?.cemail && (
+                        <div>
+                          <span className="font-medium">Email:</span>{" "}
+                          {entry.updatedProfile.cemail}
+                        </div>
+                      )}
+                      {entry.updatedProfile?.iphone_no && (
+                        <div>
+                          <span className="font-medium">Phone:</span>{" "}
+                          {entry.updatedProfile.iphone_no}
+                        </div>
+                      )}
+                      {entry.updatedProfile?.caddress && (
+                        <div>
+                          <span className="font-medium">Address:</span>{" "}
+                          {entry.updatedProfile.icity}
+                        </div>
+                      )}
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                ))
+              )}
             </div>
-        
+          </div>
         )}
       </div>
+      <DemoSessionDetails leadId={leadId} />
+
     </div>
   );
 };

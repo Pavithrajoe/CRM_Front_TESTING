@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LineChart, Line, XAxis, Area, YAxis, Tooltip, Legend, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
 
@@ -13,7 +13,7 @@ const FirstResponseTimeReport = () => {
     { title: "First Resp. SLA Rate",      value: "56%",     change: "+5.27% than last Month", changeType: "positive" },
   ]);
 
-  const [responseTimeWinRateData] = useState([
+  const responseTimeWinRateData = [
     { name: 'Jan', 'Response Time': 25, 'Win Rate': 50 },
     { name: 'Feb', 'Response Time': 20, 'Win Rate': 55 },
     { name: 'Mar', 'Response Time': 22, 'Win Rate': 52 },
@@ -21,22 +21,22 @@ const FirstResponseTimeReport = () => {
     { name: 'May', 'Response Time': 20, 'Win Rate': 58 },
     { name: 'Jun', 'Response Time': 25, 'Win Rate': 50 },
     { name: 'Jul', 'Response Time': 23, 'Win Rate': 55 },
-  ]);
+  ];
 
-  const [responseTimeMetricsTableData] = useState([
+  const responseTimeMetricsTableData = [
     { sNo: 1, salesRep: "Jaba Kumar",     opportunitySource: "Website",  opportunityType: "New Customer", priority: "High" },
     { sNo: 2, salesRep: "Siva Kumar",     opportunitySource: "Website",  opportunityType: "Upsell",       priority: "Low"  },
     { sNo: 3, salesRep: "Dinesh Raja",    opportunitySource: "Referral", opportunityType: "Upsell",       priority: "Low"  },
     { sNo: 4, salesRep: "Karthick Raja",  opportunitySource: "Website",  opportunityType: "Cross‑Sell",   priority: "Medium" },
     { sNo: 5, salesRep: "Nikesh Kumar",   opportunitySource: "Referral", opportunityType: "New Customer", priority: "High" },
-  ]);
+  ];
 
-  const [responseTimeDistributionData] = useState([
+  const responseTimeDistributionData = [
     { name: '<1 hr',   value: 20 },
     { name: '1-3 hrs', value: 40 },
     { name: '4-24 hrs', value: 20 },
     { name: '24+ hrs',  value: 20 },
-  ]);
+  ];
 
   const PIE_COLORS = ["#98EE4E", "#FFC107", "#7E2D77", "#36A2EB"];
 
@@ -61,14 +61,13 @@ const FirstResponseTimeReport = () => {
           fontWeight: 700,
           color: "#1c1c1e",
           margin: 0
-        }}>First Response Time for Opportunity</h2>
-        <div style={{ display: "flex", gap: 12 }} />
+        }}>First Response Time Report</h2>
       </div>
 
-      {/* Cards + Chart */}
+      {/* Cards Section */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
         gap: 20,
       }}>
         {cardData.map((card, idx) => {
@@ -77,64 +76,29 @@ const FirstResponseTimeReport = () => {
               <div key={idx} style={{
                 gridColumn: "span 2",
                 background: "#fff",
-                borderRadius: 12,
+                borderRadius: 20,
                 padding: 24,
-                boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-                position: "relative",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                minHeight: 240,
+                minHeight: 260,
               }}>
-                <div style={{
-                  position: "absolute",
-                  top: 16,
-                  right: 16,
-                  background: "#f2f2f7",
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#555",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}>
-                  This Month <span style={{ fontSize: 10 }}>▼</span>
-                </div>
                 <h4 style={{
                   fontSize: 17,
                   fontWeight: 600,
                   color: "#1c1c1e",
-                  margin: "0 0 12px 0"
+                  marginBottom: 12
                 }}>Response Time Vs Win Rate</h4>
-                <div style={{ flexGrow: 1, width: "100%" }}>
-                 <ResponsiveContainer width="100%" height={180}>
-  <LineChart data={responseTimeWinRateData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-    <YAxis axisLine={false} tickLine={false} />
-    <Tooltip />
-    <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-
-    <Line
-      type="monotone"
-      dataKey="Response Time"
-      stroke="#FF5722"
-      strokeWidth={2}
-      dot={false}
-    />
-    <Line
-      type="monotone"
-      dataKey="Win Rate"
-      stroke="#4CAF50"
-      strokeWidth={2}
-      dot={false}
-    />
-  </LineChart>
-</ResponsiveContainer>
-
-                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={responseTimeWinRateData}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" iconType="circle" />
+                    <Line type="monotone" dataKey="Response Time" stroke="#FF5722" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="Win Rate" stroke="#4CAF50" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             );
           }
@@ -142,9 +106,9 @@ const FirstResponseTimeReport = () => {
           return (
             <div key={idx} style={{
               background: "#fff",
-              borderRadius: 12,
+              borderRadius: 20,
               padding: 24,
-              boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
               display: "flex",
               flexDirection: "column",
               gap: 6,
@@ -228,13 +192,13 @@ const FirstResponseTimeReport = () => {
               </thead>
               <tbody>
                 {responseTimeMetricsTableData.map(r => (
-                  <tr key={r.sNo} style={{
-                    borderBottom: "1px solid #eee",
-                    transition: "background 0.2s"
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = "#f9f9f9"}
-                  onMouseLeave={e => e.currentTarget.style.background = "#fff"}
-                  >
+                  <tr key={r.sNo}
+                    style={{
+                      borderBottom: "1px solid #eee",
+                      transition: "background 0.2s"
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9f9f9"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
                     <td style={{ padding: "14px 18px" }}>{r.sNo}</td>
                     <td style={{ padding: "14px 18px" }}>{r.salesRep}</td>
                     <td style={{ padding: "14px 18px" }}>{r.opportunitySource}</td>
@@ -277,7 +241,7 @@ const FirstResponseTimeReport = () => {
             margin: "0 0 20px 0",
             alignSelf: "flex-start"
           }}>Response Time Distribution</h3>
-          <div style={{ width: "100%", maxWidth: 320 }}>
+          <div style={{ width: "100%", maxWidth: 320, padding:"10px"}}>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie

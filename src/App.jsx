@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+  import { Routes, Route } from "react-router-dom";
 
 import ForgetPassword from "./Components/ForgetPassword";
 import { ToastProvider } from "./context/ToastContext";
@@ -50,6 +50,8 @@ import ProspectsEngagedReport from './Components/reports/ProspectsEngagedReport'
 import SalesPipelineAnalysis from "./Components/reports/Sales_pipeline_analysis.jsx";
 import CompanyLeads from "./Components/reports/company_leads";  
 import LeadOwnerEfficency from "./Components/reports/lead_owner_efficiency";
+import CompanyMaster from "./pages/Masters/companyMaster.jsx";
+import LeadConversionPage from "./Components/reports/LeadConversionPage.jsx";
 
 function App() {
   return (
@@ -81,9 +83,10 @@ function App() {
                <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
               <Route path="userpage" element={<UserPage />} />
               <Route path="commandpage" element={<Commandpage />} />
-              <Route path="users" element={<CreateUserForm />} />
+              <Route path="/users" element={<CreateUserForm />} />
               <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
               <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
+              <Route path="/lead-conversion" element={<LeadConversionPage/>}/>
             <Route path="/company-leads" element={<CompanyLeads />} />
              <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
               <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis/>}/>
@@ -94,6 +97,8 @@ function App() {
               <Route path="leadtimeline" element={<LeadTimeline />} />
               <Route path="allleadpage" element={<AllLeadsPage />} />
               <Route path="history" element={<HistoryPage />} />
+              <Route path="companymaster" element={<CompanyMaster />} />
+
               <Route path="companylist" element={<CompanyList />} />
               <Route path="companypage" element={<CompanyPage />} />
               <Route path="analytics" element={<UserAnalyticsPage />} />

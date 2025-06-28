@@ -123,12 +123,12 @@ const UserPage = () => {
           onChange={handleSearch}
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
-        <button
+        {/* <button
           onClick={handleCreateUserClick}
           className="relative inline-flex items-center ms-[320px] gap-2 px-5 py-2 rounded-full text-blue-600 font-semibold bg-white border border-black"
         >
           + User
-        </button>
+        </button> */}
         <div className="flex gap-3 items-center">
           <button
             onClick={handleSort}

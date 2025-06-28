@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 export default function KPIStats(data) {
   const [hotCount, setHotCount] = useState(0);
@@ -14,6 +15,8 @@ export default function KPIStats(data) {
   const [error, setError] = useState(null); 
   const [loading, setLoading] = useState(true); 
 
+  const navigate = useNavigate();
+
   
   useEffect(() => {
     let extractedUserId = null;
@@ -21,11 +24,11 @@ export default function KPIStats(data) {
 
     try {
       tokenFromStorage = localStorage.getItem('token');
-      console.log("Token from localStorage:", tokenFromStorage);
+      //console.log("Token from localStorage:", tokenFromStorage);
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
         extractedUserId = decodedToken.user_id;
-        console.log("Extracted User ID:", extractedUserId);
+        //console.log("Extracted User ID:", extractedUserId);
         if (!extractedUserId) {
           throw new Error("User ID not found in token.");
         }
@@ -74,8 +77,7 @@ export default function KPIStats(data) {
 
         if (status === "Won") won++;
 
-        //  for Total Leads
-        if (lead.bisConverted === false) {
+        if (lead.bisConverted === false) { 
           deals++;
         }
       }
@@ -140,18 +142,33 @@ export default function KPIStats(data) {
     );
   }
 
+
+    const handleTotalLeadsClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'leads' } });
+  };
+
+  const handleTotalLostClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'lost' } });
+  };
+
+
   return (
     <div className="px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* Top two small cards */}
         <div className="grid grid-cols-2 gap-6">
-          <div className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm">
+          <div
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            onClick={handleTotalLeadsClick}
+          >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
                Total Leads
             </h3>
             <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
           </div>
-          <div className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm">
+          <div
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            onClick={handleTotalLostClick}
+          >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
               Total Lost
             </h3>

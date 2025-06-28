@@ -1,4 +1,3 @@
-// Your import section remains unchanged
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
@@ -15,9 +14,7 @@ const Comments = () => {
   const { leadId } = useParams();
   const [comments, setComments] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [editText, setEditText] = useState({ comments: "", iuser_id: "", ilead_id: leadId });
   const [formData, setFormData] = useState({ comments: "", LeadId: leadId });
-  const [editingId, setEditingId] = useState(null);
   const [deletMsg, setDeleteMsg] = useState(false);
   const [userId, setUserId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,7 +47,6 @@ const Comments = () => {
         mic.stop();
         mic.onend = () => {};
       }
-      mic.onstart = () => {};
       mic.onresult = (event) => {
         const transcript = Array.from(event.results)
           .map((result) => result[0].transcript)
@@ -102,92 +98,43 @@ const Comments = () => {
   };
 
   const handleFormSubmission = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    const trimmedComment = formData.comments.trim();
 
-  // Validate comment is not empty or whitespace only
-  if (!formData.comments.trim()) {
-    return showPopup("Warning", "Comment cannot be empty!", "warning");
-  }
-
-  try {
-    const response = await fetch(`${apiEndPoint}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        comments: formData.comments,
-        LeadId: Number(leadId),
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return showPopup("Error", data.message || "Failed to add comment.", "error");
+    if (trimmedComment.length === 0) {
+      return showPopup("Warning", "Comment cannot be empty!", "warning");
     }
 
-    showPopup("Success", "🎉 Comment added successfully!", "success");
+    if (trimmedComment.length < 5) {
+      return showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
+    }
 
-    // Clear only comments field, keep LeadId as is or reset if needed
-    setFormData((prev) => ({ ...prev, comments: "" }));
-
-    setShowForm(false);
-
-    // Refresh comments list after successful submission
-    fetchComments();
-
-  } catch (error) {
-    showPopup("Error", "Failed to add comment due to network error.", "error");
-  }
-};
-
-
-  const handleSaveEdit = async (id) => {
-    if (!editText.comments.trim()) return showPopup("Warning", "Edited comment cannot be empty!", "warning");
     try {
-      const response = await fetch(`${apiEndPoint}/comments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(editText),
+      const response = await fetch(`${apiEndPoint}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comments: formData.comments,
+          LeadId: Number(leadId),
+        }),
       });
+
       const data = await response.json();
-      if (!response.ok) return showPopup("Error", data.message || "Update failed", "error");
-      showPopup("Success", "✅ Comment updated successfully!!", "success");
-      setEditingId(null);
+      if (!response.ok) {
+        return showPopup("Error", data.message || "Failed to add comment.", "error");
+      }
+
+      showPopup("Success", "🎉 Comment added successfully!", "success");
+      setFormData((prev) => ({ ...prev, comments: "" }));
+      setShowForm(false);
       fetchComments();
     } catch (error) {
-      showPopup("Error", "Network error updating comment.", "error");
+      showPopup("Error", "Failed to add comment due to network error.", "error");
     }
   };
-
- const deleteCommand = async (commentId, status) => {
-  const confirmed = confirm("🗑️ Are you sure you want to delete this comment?");
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch(`${apiEndPoint}/comments/${commentId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ bactive: status }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return showPopup("Error", data.message || "Couldn't delete comment", "error");
-    }
-
-    setDeleteMsg(true);
-    showPopup("Success", "✅ Comment deleted successfully.", "success");
-    fetchComments();
-  } catch (error) {
-    showPopup("Error", "Network error deleting comment.", "error");
-  }
-};
 
   const activeComments = comments.filter((comment) => comment.bactive === true);
   const filteredComments = activeComments.filter((comment) =>
@@ -234,75 +181,24 @@ const Comments = () => {
       </div>
 
       <div className="p-6 space-y-5">
-        {deletMsg && (
-          <div className="bg-red-50 border-l-4 border-red-400 text-red-700 p-3 rounded-xl shadow animate-pulse">
-            ✅ Comment deleted successfully.
-          </div>
-        )}
-
         {filteredComments.length === 0 ? (
           <p className="text-center text-gray-400">No comments found.</p>
         ) : (
           currentComments.map((comment) => (
-           <div
-  key={comment.icomment_id}
-  className="border border-gray-200 rounded-3xl p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
->
-  <div className="flex justify-between items-start">
-    <span className="font-medium text-gray-900 text-base">{comment.name}</span>
-    <div className="space-x-2 flex-shrink-0">
-      <button
-        onClick={() => {
-          setEditingId(comment.icomment_id);
-          setEditText({ comments: comment.ccomment_content, iuser_id: userId, ilead_id: leadId });
-        }}
-        className="text-indigo-500 hover:text-indigo-600 transition-colors duration-200 text-sm px-3 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100"
-      >
-        ✏️ Edit
-      </button>
-      <button
-        onClick={() => deleteCommand(comment.icomment_id, false)}
-        className="text-red-500 hover:text-red-600 transition-colors duration-200 text-sm px-3 py-1 rounded-full bg-red-50 hover:bg-red-100"
-      >
-        🗑️ Delete
-      </button>
-    </div>
-  </div>
-
-  {editingId === comment.icomment_id ? (
-    <div className="mt-3 animate-fade-in-down">
-      <textarea
-        value={editText.comments}
-        onChange={(e) => setEditText((prev) => ({ ...prev, comments: e.target.value }))}
-        className="w-full border border-gray-300 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none resize-none transition-all duration-200"
-        rows={3}
-      />
-      <div className="flex justify-end gap-3 mt-3">
-        <button
-          onClick={() => handleSaveEdit(comment.icomment_id)}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-5 py-1.5 rounded-full transition-all"
-        >
-          Save
-        </button>
-        <button
-          onClick={() => setEditingId(null)}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm px-5 py-1.5 rounded-full transition-all"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  ) : (
-    <>
-      <p className="text-gray-700 text-sm mt-3 leading-relaxed">{comment.ccomment_content}</p>
-      <p className="text-xs text-gray-400 mt-2 italic">
-        {comment.imodify_dt
-          ? `Edited • ${formatDateTime(comment.imodify_dt)}`
-          : `Posted • ${formatDateTime(comment.icreate_dt)}`}
-      </p>
-    </>
-  )}
-</div>
+            <div
+              key={comment.icomment_id}
+              className="border border-gray-200 rounded-3xl p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
+            >
+              <div className="flex justify-between items-start">
+                <span className="font-medium text-gray-900 text-base">{comment.name}</span>
+              </div>
+              <p className="text-gray-700 text-sm mt-3 leading-relaxed">{comment.ccomment_content}</p>
+              <p className="text-xs text-gray-400 mt-2 italic">
+                {comment.imodify_dt
+                  ? `Edited by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.imodify_dt)}`
+                  : `Posted by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.icreate_dt)}`}
+              </p>
+            </div>
           ))
         )}
 
@@ -325,11 +221,9 @@ const Comments = () => {
         )}
       </div>
 
-      {/* Slide-in Cupertino modal */}
       {showForm && (
         <>
           <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity"></div>
-
           <div
             ref={formRef}
             className="fixed top-1/2 right-6 transform -translate-y-1/2 w-96 max-w-sm bg-white rounded-2xl shadow-2xl p-6 z-50 transition-all duration-300"

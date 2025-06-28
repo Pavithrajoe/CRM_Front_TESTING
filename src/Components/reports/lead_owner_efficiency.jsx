@@ -33,13 +33,13 @@ export default function LeadOwnerEfficiency() {
         if (!company_id) throw new Error('Company ID missing');
 
         const response = await axios.get(
-          `${ENDPOINTS.LEAD_OWNER_FIRST_RES}${company_id}`,
+          `${ENDPOINTS.LEAD_OWNER_FIRST_RES}/${company_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        console.log("API Response:", response.data);
+        // console.log("API Response:", response.data);
         setLeadOwnerEfficiency(response.data);
 
         const summary = response.data.leadOwnerSummary || {};

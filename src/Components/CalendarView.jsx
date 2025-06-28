@@ -6,33 +6,22 @@ import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
 import Slide from '@mui/material/Slide';
 
-
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
 }
 
-const dummyApi = {
-
-  createMeet: (meetData) => new Promise((resolve) => {
-
-    setTimeout(() => resolve({
-      data: {
-        ...meetData,
-        id: Math.floor(Math.random() * 1000),
-        client: "New Client",
-        completed: false,
-        description: `Meeting scheduled at ${meetData.time}`
-      }
-    }), 800);
-  }),
-
-  toggleReminder: () => new Promise((resolve) => {
-    setTimeout(() => resolve({ success: true }), 300);
-  })
+const getStartOfDayInLocalTime = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const getEndOfDayInLocalTime = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
 };
 
-// MeetFormDrawer Component
-const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar }) => { 
+const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar }) => {
   const initialFormData = {
     ctitle: '',
     devent_startdt: '',
@@ -40,56 +29,78 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     icreated_by: '',
     iupdated_by: '',
     devent_end: '',
-    dupdated_at: new Date().toISOString().split('.')[0] + 'Z',
+    dupdated_at: new Date().toISOString(),
     recurring_task: ''
   };
 
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && selectedDate) {
+      const now = new Date();
+      const initialStartDateTime = new Date(selectedDate);
+      if (initialStartDateTime.toDateString() === now.toDateString()) {
+        initialStartDateTime.setHours(now.getHours() + 1, 0, 0, 0);
+      } else {
+        initialStartDateTime.setHours(9, 0, 0, 0);
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        devent_startdt: initialStartDateTime.toISOString().slice(0, 16),
+        devent_end: new Date(initialStartDateTime.getTime() + 60 * 60 * 1000).toISOString().slice(0, 16)
+      }));
+    }
+  }, [open, selectedDate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const startDate = new Date(formData.devent_startdt);
-    const now = new Date();
+    const startDateLocal = new Date(formData.devent_startdt);
+    const endDateLocal = new Date(formData.devent_end);
 
-    
-    if (startDate < now.setSeconds(0, 0)) {
+    if (endDateLocal < startDateLocal) {
       setSnackbar({
         open: true,
-        message: 'ℹ️ Please select a future date and time!',
+        message: 'ℹ️ End date cannot be before start date!',
         severity: 'info'
       });
-      return; 
+      return;
     }
 
-    const startTime = startDate.toISOString().split('.')[0] + 'Z';
-    const user_data = localStorage.getItem("user");
-    const user_data_parsed = JSON.parse(user_data);
+    const startTimeUTC = startDateLocal.toISOString();
+    const endTimeUTC = endDateLocal.toISOString();
 
-    formData.devent_startdt = startTime;
-    formData.icreated_by = user_data_parsed.iUser_id;
-    formData.iupdated_by = user_data_parsed.iUser_id;
-    formData.devent_end = startTime; 
-    formData.dupdated_at = new Date().toISOString().split('.')[0] + 'Z';
-
-    setLoading(true);
+    const user_data_parsed = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
 
+    const finalData = {
+      ...formData,
+      devent_startdt: startTimeUTC,
+      devent_end: endTimeUTC,
+      icreated_by: user_data_parsed.iUser_id,
+      iupdated_by: user_data_parsed.iUser_id,
+      dupdated_at: new Date().toISOString(),
+      recurring_task: formData.recurring_task || null
+    };
+
+    setLoading(true);
     try {
-      const response = await fetch(`${ENDPOINTS.CREATE_EVENT}`, {
+      const response = await fetch(ENDPOINTS.CREATE_EVENT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalData),
       });
-      setFormData(initialFormData);
 
       if (!response.ok) {
+        const errorData = await response.json();
         setSnackbar({
           open: true,
-          message: '❌ Failed to create reminder. Try again!',
+          message: `❌ Failed to create calendar event: ${errorData.message || 'Try again!'}`,
           severity: 'error',
         });
         return;
@@ -97,12 +108,12 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
       setSnackbar({
         open: true,
-        message: '✅ Reminder created successfully!',
+        message: '✅ Calendar Event created successfully!',
         severity: 'success',
       });
-      onCreated(); 
+      setFormData(initialFormData);
+      onCreated();
       onClose();
-
 
     } catch (error) {
       console.error('Submission error:', error);
@@ -116,13 +127,10 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
   };
 
-
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <div className={`fixed top-0 right-0 h-full w-[50%] sm:w-[400px] md:w-[360px] bg-white rounded-l-2xl shadow-2xl z-50 transition-all duration-500 ease-in-out transform ${open ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="relative p-6 h-full overflow-y-auto">
-
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-black transition duration-200"
@@ -138,28 +146,20 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-
-          {/* Header */}
-          <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">Create Reminder</h2>
-
-          {/* Form */}
+          <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">Calendar Event</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
-
-            {/* Title */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={formData.ctitle}
                 onChange={(e) => setFormData({ ...formData, ctitle: e.target.value })}
-                placeholder="Reminder title"
+                placeholder="Calendar Event title"
                 className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 maxLength={100}
                 required
               />
             </div>
-
-            {/* Description */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">Description</label>
               <textarea
@@ -170,41 +170,47 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
                 maxLength={300}
               />
             </div>
-
-            {/* Date */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Date & Time <span className="text-red-500">*</span></label>
+              <label className="block text-sm text-gray-600 mb-1">Start Date<span className="text-red-500">*</span></label>
               <input
                 type="datetime-local"
                 value={formData.devent_startdt}
                 onChange={(e) => setFormData({ ...formData, devent_startdt: e.target.value })}
                 className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                required
               />
             </div>
-
-            {/* Recurring Task Dropdown */}
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
+              <input
+                type="datetime-local"
+                value={formData.devent_end}
+                onChange={(e) => setFormData({ ...formData, devent_end: e.target.value })}
+                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Recurring Task</label>
               <select
-                name="recurring_task" 
-                value={formData.recurring_task} 
-                onChange={(e) => setFormData({ ...formData, recurring_task: e.target.value })} 
+                name="recurring_task"
+                value={formData.recurring_task ?? ""}
+                onChange={(e) => setFormData({ ...formData, recurring_task: e.target.value === "" ? null : e.target.value })}
                 className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               >
-                <option value="">None</option> 
+                <option value="">None</option>
                 <option value="Quarter">Quarter</option>
                 <option value="Half_year">Half-year</option>
                 <option value="Year">Year</option>
               </select>
             </div>
-
-            {/* Submit */}
             <div className="flex justify-center mt-6">
               <button
                 type="submit"
                 className="w-full py-2 bg-black hover:bg-gray-900 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+                disabled={loading}
               >
-                Submit
+                {loading ? <CircularProgress size={20} color="inherit" /> : 'Submit'}
               </button>
             </div>
           </form>
@@ -216,13 +222,10 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
 const CalendarView = () => {
   const [msg, setMsg] = useState('');
-  const [reminderList, setReminderList] = useState([])
+  const [reminderList, setReminderList] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const [reminders, setReminders] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
-
-
   const [loading, setLoading] = useState(true);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -230,29 +233,37 @@ const CalendarView = () => {
     message: '',
     severity: 'success'
   });
-  // const [draftToEdit, setDraftToEdit] = useState(null); // Not used, can be removed if not planned for future use
+  const [activeTab, setActiveTab] = useState('reminders');
+  const [loggedInUserName, setLoggedInUserName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [showEnded, setShowEnded] = useState(false);
 
+  useEffect(() => {
+    const user_data = localStorage.getItem("user");
+    if (user_data) {
+      try {
+        const user_data_parsed = JSON.parse(user_data);
+        setLoggedInUserName(user_data_parsed.cUser_Name);
+      } catch (error) {
+        console.error("Failed to parse user data from localStorage:", error);
+      }
+    }
+  }, []);
 
-  const fetchReminders = async (date = selectedDate) => {
+  const fetchRemindersAndEventsForSelectedDate = async (date = selectedDate) => {
     const user_data = localStorage.getItem("user");
     const user_data_parsed = JSON.parse(user_data);
-
     let dates = new Date(date);
-
-    // Step 2: Create a new UTC date with desired time: 00:00:00 (12:00 AM)
-    let utcDate = new Date(Date.UTC(
-      dates.getUTCFullYear(),
-      dates.getUTCMonth(),
-      dates.getUTCDate() + 1, 
-      0, 0, 0 // 12:00 AM UTC
+    let utcStartOfDay = new Date(Date.UTC(
+      dates.getFullYear(),
+      dates.getMonth(),
+      dates.getDate(),
+      0, 0, 0, 0
     ));
-
-    // Step 3: Convert to ISO string
-    let formattedDate = utcDate.toISOString(); // e.g. "2025-05-08T00:00:00.000Z"
-
-    // Optional: remove milliseconds
+    let formattedDate = utcStartOfDay.toISOString();
     formattedDate = formattedDate.replace('.000', '');
-
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -272,33 +283,53 @@ const CalendarView = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to load reminders',
+        message: 'Failed to load reminders for selected date',
         severity: 'error'
       });
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const toggleReminder = async (id) => {
     try {
-      await dummyApi.toggleReminder(id);
-      setReminders(reminders.map(reminder =>
-        reminder.id === id ? { ...reminder, completed: !reminder.completed } : reminder
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.TOGGLE_REMINDER}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle reminder status');
+      }
+
+      setReminders(prevReminders => prevReminders.map(reminder =>
+        reminder.iremainder_id === id ? { ...reminder, bactive: !reminder.bactive } : reminder
       ));
+      setReminderList(prevList => prevList.map(reminder =>
+        reminder.iremainder_id === id ? { ...reminder, bactive: !reminder.bactive } : reminder
+      ));
+
+      setSnackbar({
+        open: true,
+        message: 'Reminder status updated!',
+        severity: 'success'
+      });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to update reminder',
+        message: `Failed to update reminder: ${error.message}`,
         severity: 'error'
       });
     }
   };
 
-
-  const UserReminder = async () => {
+  const fetchAllUserReminders = async () => {
     const token = localStorage.getItem("token");
+    setLoading(true);
     try {
       const response = await fetch(`${ENDPOINTS.USER_REMINDER}`, {
         headers: {
@@ -308,105 +339,117 @@ const CalendarView = () => {
       });
 
       if (!response.ok) {
-        setMsg("Error in fetching user reminder")
+        setMsg("Error in fetching user reminders");
+        return;
       }
 
       const data = await response.json();
-      const reminderLists = data.data;
-      setReminderList(reminderLists)
+      setReminderList(data.data || []);
     } catch (e) {
-      setMsg("can't fetch reminders")
+      setMsg("Can't fetch user reminders");
+      setSnackbar({
+        open: true,
+        message: 'Failed to load all reminders.',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
-  }
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [showEnded, setShowEnded] = useState(false); 
-
-  // Parse "yyyy-mm-dd" to JS Date (start of day)
-  const parseDate = (dateStr) => {
-    if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-');
-    const d = new Date(year, month - 1, day);
-    d.setHours(0, 0, 0, 0);
-    return d;
   };
 
+  const filterAndSortItems = (items, dateKey, contentKey, endTimeKey = null, showEndedState, applyDateFilters) => {
+    const now = new Date();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    const filtered = items.filter((item) => {
+      const searchMatch =
+        (item?.[contentKey]?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.created_by?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.assigned_to?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.lead_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.ctitle?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.cdescription?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (item?.recurring_task?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
+      const itemStartDateTime = new Date(item[dateKey]);
+      const itemEndDateTime = endTimeKey && item[endTimeKey] ? new Date(item[endTimeKey]) : itemStartDateTime;
 
-  const filteredReminders = reminderList.filter((reminder) => {
-    const searchMatch =
-      (reminder?.cremainder_content?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (reminder?.created_by?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (reminder?.assigned_to?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (reminder?.lead_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      let dateRangeMatch = true;
+      let timeStatusMatch = true;
 
-    const reminderDate = new Date(reminder.dremainder_dt);
-    const from = parseDate(fromDate);
-    const to = parseDate(toDate);
+      if (applyDateFilters) { // Only apply date/time filters if `applyDateFilters` is true
+        const from = fromDate ? getStartOfDayInLocalTime(fromDate) : null;
+        const to = toDate ? getEndOfDayInLocalTime(toDate) : null;
 
-    if (to) to.setHours(23, 59, 59, 999); 
+        dateRangeMatch = (!from || itemEndDateTime >= from) && (!to || itemStartDateTime <= to);
 
-    const dateMatch =
-      (!from || reminderDate >= from) && (!to || reminderDate <= to);
+        if (showEndedState) {
+          timeStatusMatch = itemEndDateTime <= now;
+        } else {
+          timeStatusMatch = itemEndDateTime > now;
+        }
+      }
 
-    return searchMatch && dateMatch;
-  });
+      return searchMatch && dateRangeMatch && timeStatusMatch;
+    });
 
+    return filtered.sort((a, b) => {
+      const sortDateA = endTimeKey && a[endTimeKey] ? new Date(a[endTimeKey]) : new Date(a[dateKey]);
+      const sortDateB = endTimeKey && b[endTimeKey] ? new Date(b[endTimeKey]) : new Date(b[dateKey]);
 
-  const upcomingReminders = filteredReminders.filter(reminder => {
-    const reminderDate = new Date(reminder.dremainder_dt);
-    reminderDate.setHours(0, 0, 0, 0);
-    return reminderDate >= today;
-  });
+      if (showEndedState && applyDateFilters) { // Only sort by ended if `showEndedState` and `applyDateFilters` are true
+        return sortDateB.getTime() - sortDateA.getTime();
+      } else {
+        return sortDateA.getTime() - sortDateB.getTime();
+      }
+    });
+  };
 
-  const endedReminders = filteredReminders.filter(reminder => {
-    const reminderDate = new Date(reminder.dremainder_dt);
-    reminderDate.setHours(0, 0, 0, 0);
-    return reminderDate < today;
-  });
-
-
-  const remindersToShow = showEnded ? endedReminders : upcomingReminders;
+  // Pass a new boolean argument `true` for reminders to apply date filters, `false` for calendar events
+  const currentTabItems = activeTab === 'reminders'
+    ? filterAndSortItems(reminderList, 'dremainder_dt', 'cremainder_content', null, showEnded, true)
+    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false); // No specific date/time filters for calendar events
 
   const [currentPage, setCurrentPage] = useState(1);
-  const remindersPerPage = 5;
+  const itemsPerPage = 5;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedCurrentItems = currentTabItems.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(currentTabItems.length / itemsPerPage);
 
-  const indexOfLastReminder = currentPage * remindersPerPage;
-  const indexOfFirstReminder = indexOfLastReminder - remindersPerPage;
-  const currentReminders = remindersToShow.slice(indexOfFirstReminder, indexOfLastReminder);
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
 
-  
-  const handleReminderCreated = () => {
-    fetchReminders(); 
-    UserReminder();   
+  const handleItemCreated = () => {
+    fetchRemindersAndEventsForSelectedDate();
+    fetchAllUserReminders();
   };
 
   useEffect(() => {
-    fetchReminders();
-    UserReminder();
+    fetchRemindersAndEventsForSelectedDate();
   }, [selectedDate]);
+
+  useEffect(() => {
+    fetchAllUserReminders();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, showEnded, searchTerm, fromDate, toDate, reminderList, calendarEvents]);
 
   return (
     <div>
-      <div className="flex w-full p-8 rounded-xl ">
-
-        {/* Left Column - Calendar and Actions */}
+<div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
         <div className="w-1/2 flex flex-col mb-1 mr-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 transition-transform duration-300 hover:scale-[1.01]">
-
-            {/* Calendar Header */}
             <Calendar
               onChange={setSelectedDate}
               value={selectedDate}
               className="border-none w-full"
               navigationLabel={({ date, view, label }) => (
                 <div className="flex items-center justify-between px-6 mb-2">
-                  {/* Removed custom onClick for navigation. React-Calendar handles this internally */}
                   <FaChevronLeft
                     className="text-gray-600 hover:text-black cursor-pointer transition"
                     onClick={() => setSelectedDate(prevDate => {
@@ -418,7 +461,6 @@ const CalendarView = () => {
                   <span className="text-xl font-semibold text-gray-800">
                     {date.toLocaleString('default', { month: 'long' })} {date.getFullYear()}
                   </span>
-                
                   <FaChevronRight
                     className="text-gray-600 hover:text-black cursor-pointer transition"
                     onClick={() => setSelectedDate(prevDate => {
@@ -431,21 +473,31 @@ const CalendarView = () => {
               )}
               prevLabel={null}
               nextLabel={null}
-              tileClassName={({ date }) =>
-                date.getDate() === selectedDate.getDate() && date.getMonth() === selectedDate.getMonth() && date.getFullYear() === selectedDate.getFullYear()
-                  ? 'bg-black text-white rounded-full'
-                  : 'hover:bg-gray-200 transition rounded-full'
-              }
+              tileClassName={({ date }) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selected = new Date(selectedDate);
+                selected.setHours(0, 0, 0, 0);
+
+                const tile = new Date(date);
+                tile.setHours(0, 0, 0, 0);
+
+                if (tile.getTime() === selected.getTime()) {
+                  return 'bg-black text-white rounded-full';
+                } else if (tile.getTime() === today.getTime()) {
+                  return 'text-blue-600 font-bold';
+                }
+                return 'hover:bg-gray-200 transition rounded-full';
+              }}
             />
 
-            {/* Action Buttons */}
             <div className="flex gap-4 mt-6 justify-center">
               <button
                 onClick={() => setOpenDrawer(true)}
                 className="w-[180px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
               >
                 <FaPlus className="mr-2" />
-                Create Reminder 
+                Create Calendar Event
               </button>
 
               <button
@@ -459,13 +511,8 @@ const CalendarView = () => {
           </div>
         </div>
 
-        {/* Right Column - Reminders & Events */}
         <div className="max-h-[395px] overflow-y-auto bg-white rounded-2xl shadow-lg p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
-
-          {/* Reminders Header */}
-          <h2 className="text-xl font-bold text-gray-800">Reminders</h2>
-
-          {/* Legend */}
+          <h2 className="text-xl font-bold text-gray-800">Reminders for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
           <div className="flex gap-6 text-sm mb-4 text-gray-600">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Reminder
@@ -475,7 +522,6 @@ const CalendarView = () => {
             </div>
           </div>
 
-          {/* Reminders List */}
           {reminders.length > 0 ? (
             reminders.map(reminder => (
               <div key={reminder.iremainder_id} className="border-b pb-4 last:border-0 transition-all">
@@ -529,8 +575,7 @@ const CalendarView = () => {
             <p className="text-gray-500">No reminders found for this date.</p>
           )}
 
-          {/* Calendar Events */}
-          <h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events</h2>
+          <h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
           {calendarEvents.length > 0 ? (
             calendarEvents.map(event => (
               <div key={event.icalender_event} className="border-b pb-4 last:border-0">
@@ -558,158 +603,230 @@ const CalendarView = () => {
           )}
         </div>
 
-        {/* Meet Form Drawer */}
         <MeetFormDrawer
           open={openDrawer}
           onClose={() => setOpenDrawer(false)}
           selectedDate={selectedDate}
           setSnackbar={setSnackbar}
-          onCreated={handleReminderCreated} 
+          onCreated={handleItemCreated}
         />
-
-        {/* Snackbar for Notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          <Alert severity={snackbar.severity}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-
       </div>
 
-      {/* All reminders of users */}
       <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6 tracking-wide">
-          📅 All Reminders
-        </h2>
-
-        {/* Controls */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mb-5">
-          {/* Left: Search */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <label htmlFor="search" className="text-gray-700 font-medium text-sm">
-              Search:
-            </label>
-            <input
-              type="search"
-              id="search"
-              className="w-full md:w-60 px-3 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400 text-gray-900 transition duration-150 shadow-sm"
-              placeholder="Search reminder..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          {/* Right: Date Filters and Toggle */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <label className="text-gray-700 font-medium text-sm">From:</label>
-            <input
-              type="date"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-            />
-
-            <label className="text-gray-700 font-medium text-sm">To:</label>
-            <input
-              type="date"
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
-              value={toDate || ''}
-              onChange={(e) => {
-                const newToDate = e.target.value;
-                if (fromDate && new Date(newToDate) < new Date(fromDate)) {
-                  setSnackbar({
-                    open: true,
-                    message: 'To date should be after From date',
-                    severity: 'error',
-                  });
-                  setToDate(null);
-                  return;
-                }
-                setToDate(newToDate);
-              }}
-            />
-
-            <button
-              className="text-blue-500 hover:text-blue-700 text-sm font-semibold"
-              onClick={() => {
-                setFromDate('');
-                setToDate('');
-              }}
-              title="Clear Dates"
-            >
-              Clear
-            </button>
-
-            <button
-              className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
-              onClick={() => setShowEnded(!showEnded)}
-            >
-              {showEnded ? 'Show Upcoming' : 'Show Ended'}
-            </button>
-          </div>
+        <div className="flex border-b border-gray-200 mb-6">
+          <button
+            className={`py-3 px-6 text-lg font-semibold ${activeTab === 'reminders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
+              } transition-colors duration-200`}
+            onClick={() => {
+              setActiveTab('reminders');
+            }}
+          >
+            📅 All Reminders
+          </button>
+          <button
+            className={`py-3 px-6 text-lg font-semibold ${activeTab === 'calendarEvents' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
+              } transition-colors duration-200`}
+            onClick={() => {
+              setActiveTab('calendarEvents');
+            }}
+          >
+            🗓️ All Calendar Events
+          </button>
         </div>
 
-        {/* Active Filters Display */}
-        {fromDate && toDate && (
+        {/* Conditional rendering for filters based on activeTab */}
+        {activeTab === 'reminders' && (
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mb-5">
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <label htmlFor="search" className="text-gray-700 font-medium text-sm">
+                Search:
+              </label>
+              <input
+                type="search"
+                id="search"
+                className="w-full md:w-60 px-3 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none placeholder-gray-400 text-gray-900 transition duration-150 shadow-sm"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <label className="text-gray-700 font-medium text-sm">From:</label>
+              <input
+                type="date"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+
+              <label className="text-gray-700 font-medium text-sm">To:</label>
+              <input
+                type="date"
+                className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+                value={toDate || ''}
+                onChange={(e) => {
+                  const newToDate = e.target.value;
+                  if (fromDate && new Date(newToDate) < new Date(fromDate)) {
+                    setSnackbar({
+                      open: true,
+                      message: 'To date should be after From date',
+                      severity: 'error',
+                    });
+                    setToDate('');
+                    return;
+                  }
+                  setToDate(newToDate);
+                }}
+              />
+
+              <button
+                className="text-blue-500 hover:text-blue-700 text-sm font-semibold"
+                onClick={() => {
+                  setFromDate('');
+                  setToDate('');
+                }}
+                title="Clear Dates"
+              >
+                Clear
+              </button>
+
+              <button
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+                onClick={() => setShowEnded(!showEnded)}
+              >
+                {showEnded ? 'Show Upcoming' : 'Show Ended'}
+              </button>
+            </div>
+          </div>
+        )}
+        {/* End conditional rendering for filters */}
+
+        {(fromDate || toDate) && activeTab === 'reminders' && ( // Only show filter text for reminders
           <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
-            Filter: <strong>{new Date(fromDate).toISOString().slice(0, 10)}</strong> to{' '}
-            <strong>{new Date(toDate).toISOString().slice(0, 10)}</strong>
+            Filter:{' '}
+            {fromDate && <strong>{new Date(fromDate).toLocaleDateString('en-GB')}</strong>}
+            {fromDate && toDate && ' to '}
+            {toDate && <strong>{new Date(toDate).toLocaleDateString('en-GB')}</strong>}
           </p>
         )}
 
-        {/* Reminder Table */}
-        {remindersToShow.length > 0 ? (
+        {paginatedCurrentItems.length > 0 ? (
           <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs">
             <table className="min-w-full text-sm text-gray-800 table-auto">
               <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
                 <tr>
                   <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
-                  <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
-                  <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
-                  <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
-                  <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
-                  <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
+                  {activeTab === 'reminders' ? (
+                    <>
+                      <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
+                      <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
+                      <th className="px-4 py-3 border-b text-left w-[30%]">Description</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {currentReminders.map((reminder, index) => (
+                {paginatedCurrentItems.map((item, index) => (
                   <tr
-                    key={index}
+                    key={activeTab === 'reminders' ? item.iremainder_id : item.icalender_event}
                     className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"
                   >
                     <td className="px-4 py-3 border-b text-center font-medium align-top">
-                      {(currentPage - 1) * remindersPerPage + index + 1}
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-4 py-3 border-b align-top break-words">
-                      {reminder.cremainder_content}
-                    </td>
-                    <td className="px-4 py-3 border-b align-top break-words">
-                      {reminder.created_by}
-                    </td>
-                    <td className="px-4 py-3 border-b align-top break-words">
-                      {reminder.assigned_to}
-                    </td>
-                    <td className="px-4 py-3 border-b align-top break-words">
-                      {reminder.lead_name}
-                    </td>
-                    <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                      {new Intl.DateTimeFormat('en-GB', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      }).format(new Date(reminder.dremainder_dt))}
-                    </td>
+                    {activeTab === 'reminders' ? (
+                      <>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.cremainder_content}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.created_by}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.assigned_to}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.lead_name}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+                          {new Date(item.dremainder_dt).toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.ctitle}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.cdescription || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.recurring_task || 'None'}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+                          {new Date(item.devent_startdt).toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </td>
+                        <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+                          {new Date(item.devent_end).toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="flex justify-end p-4">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`px-4 py-2 mx-1 rounded-md ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 mx-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
-            <p>No {showEnded ? 'ended' : 'upcoming'} reminders found.</p>
+            <p>No {showEnded && activeTab === 'reminders' ? 'ended' : 'upcoming'} {activeTab === 'reminders' ? 'reminders' : 'calendar events'} found.</p>
           </div>
         )}
       </div>

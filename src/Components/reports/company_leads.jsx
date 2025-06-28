@@ -28,7 +28,7 @@ const CompanyLeads = () => {
         const { company_id } = JSON.parse(jsonPayload);
         if (!company_id) throw new Error('Company ID missing');
 
-        const response = await axios.get(`${ENDPOINTS.COMPANY_LEADS}${company_id}`, {
+        const response = await axios.get(`${ENDPOINTS.COMPANY_LEADS}/${company_id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

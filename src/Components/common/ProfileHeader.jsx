@@ -111,7 +111,6 @@ export default function ProfileHeader() {
       if (!showNotifications && newNotifications > 0) {
         setBellNotificationCount(Math.max(0, newNotifications));
 
-        // Push Notification (always, even if tab is focused)
         if (Notification.permission === 'granted' && !hasPushedNotification.current) {
           const latest = unreadTodayNotifications[0];
           const notif = new Notification('🔔 New Notification', {
@@ -180,7 +179,7 @@ export default function ProfileHeader() {
     navigate('/');
   };
 
-  const createUser = () => navigate('/create-user');
+  const createUser = () => navigate('/users');
   const viewAllNotifications = () => {
     setShowNotifications(false);
     navigate('/notifications');
@@ -203,7 +202,7 @@ export default function ProfileHeader() {
         </div>
       )}
 
-      {profile.role?.toLowerCase() === 'reseller' && (
+      {profile.role?.toLowerCase() === 'administrator' && (
         <button
           onClick={createUser}
           className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
@@ -282,12 +281,20 @@ export default function ProfileHeader() {
 
         {showDropdown && (
           <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
-            <div className="font-semibold text-gray-900">{profile.name}</div>
-            <div className="text-gray-500">{profile.email}</div>
-            <div className="text-gray-500">Role: {profile.role}</div>
-            {profile.companyName && (
-              <div className="text-gray-500">Company: {profile.companyName}</div>
-            )}
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <div className="font-semibold text-gray-900">{profile.name}</div>
+                <div className="text-gray-500">{profile.email}</div>
+                <div className="text-gray-500">Role: {profile.role}</div>
+                {profile.companyName && (
+                  <div className="text-gray-500">Company: {profile.companyName}</div>
+                )}
+              </div>
+              <X
+                className="w-5 h-5 cursor-pointer text-gray-400 hover:text-gray-600"
+                onClick={() => setShowDropdown(false)}
+              />
+            </div>
             <button
               onClick={handleLogout}
               className="w-full text-center mt-5 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"

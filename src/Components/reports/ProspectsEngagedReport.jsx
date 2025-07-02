@@ -17,6 +17,7 @@ export default function ProspectsEngagedReport() {
     leadEngagementDetails: [],
     leadCovertToDeal: [],
   });
+  const [activeChartFilter, setActiveChartFilter] = useState("all"); // 'all', 'converted', 'nonConverted'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,6 +50,7 @@ export default function ProspectsEngagedReport() {
         setProspectsEngaged(result);
       } catch (err) {
         console.error("API error:", err.message);
+        // Optionally, set an error state to display to the user
       }
     };
 
@@ -86,62 +88,81 @@ export default function ProspectsEngagedReport() {
 
   const statusCounts = {};
   prospectsEngaged.leadEngagementDetails?.forEach((lead) => {
-    const status = lead.previousActionBeforeLost || "Lost";
+    const status = lead.previousActionBeforeLost || "Lost"; // Default to "Lost" if not specified
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
   prospectsEngaged.leadCovertToDeal?.forEach((lead) => {
-    const status = lead.lead_status?.clead_name || "Converted";
+    const status = lead.lead_status?.clead_name || "Converted"; // Default to "Converted"
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
 
   const convertedStatuses = ["Won", "Converted"];
-  const convertedData = [];
-  const nonConvertedData = [];
   const labels = Object.keys(statusCounts);
 
-  labels.forEach((status) => {
-    if (convertedStatuses.includes(status)) {
-      convertedData.push(statusCounts[status]);
-      nonConvertedData.push(0);
-    } else {
-      nonConvertedData.push(statusCounts[status]);
-      convertedData.push(0);
-    }
-  });
+  // Prepare data for Chart based on activeChartFilter
+  const getChartData = () => {
+    const convertedData = [];
+    const nonConvertedData = [];
 
-  const leadHandlingChartData = {
-    labels,
-    datasets: [
-      {
+    labels.forEach((status) => {
+      if (convertedStatuses.includes(status)) {
+        convertedData.push(statusCounts[status]);
+        nonConvertedData.push(0); // Ensure non-converted dataset has correct length
+      } else {
+        nonConvertedData.push(statusCounts[status]);
+        convertedData.push(0); // Ensure converted dataset has correct length
+      }
+    });
+
+    let datasets = [];
+
+    if (activeChartFilter === "all") {
+      datasets.push({
         label: "Converted",
         data: convertedData,
-        backgroundColor: "#4CAF50",
+        backgroundColor: "#4CAF50", // Green
         borderRadius: 8,
         barThickness: 30,
-      },
-      {
+      });
+      datasets.push({
         label: "Non-Converted",
         data: nonConvertedData,
-        backgroundColor: "#F44336",
+        backgroundColor: "#F44336", // Red
         borderRadius: 8,
         barThickness: 30,
-      },
-    ],
+      });
+    } else if (activeChartFilter === "converted") {
+      datasets.push({
+        label: "Converted",
+        data: convertedData,
+        backgroundColor: "#4CAF50", // Green
+        borderRadius: 8,
+        barThickness: 30,
+      });
+    } else if (activeChartFilter === "nonConverted") {
+      datasets.push({
+        label: "Non-Converted",
+        data: nonConvertedData,
+        backgroundColor: "#F44336", // Red
+        borderRadius: 8,
+        barThickness: 30,
+      });
+    }
+
+    return {
+      labels,
+      datasets,
+    };
   };
+
+  const leadHandlingChartData = getChartData();
 
   const leadHandlingChartOptions = {
     responsive: true,
+    maintainAspectRatio: false, // Allows the chart to fill the parent container more effectively
     plugins: {
       legend: {
-        position: "top",
-        labels: {
-          usePointStyle: true,
-          pointStyle: "circle",
-          color: "#4B5563",
-          font: {
-            size: 12,
-          },
-        },
+        display: false, // Hide default legend as we're using external buttons
       },
       tooltip: {
         backgroundColor: "#111827",
@@ -167,6 +188,7 @@ export default function ProspectsEngagedReport() {
         },
         ticks: {
           color: "#4B5563",
+          precision: 0, // Ensure integer ticks for count
         },
         title: {
           display: true,
@@ -188,8 +210,9 @@ export default function ProspectsEngagedReport() {
     interactionCount: lead.interactionCount,
     status: lead.previousActionBeforeLost || "Lost",
     disqualificationReason:
-      typeof lead.previousActionBeforeLost === "object"
-        ? lead.previousActionBeforeLost || "No Reason"
+      typeof lead.previousActionBeforeLost === "object" && // Check if it's an object before accessing properties
+      lead.previousActionBeforeLost?.reason
+        ? lead.previousActionBeforeLost.reason
         : "No Reason",
   }));
 
@@ -232,7 +255,42 @@ export default function ProspectsEngagedReport() {
         <h3 className="text-lg font-semibold mb-4 text-gray-700">
           Lead Handling & Productivity Metrics
         </h3>
-        <Bar data={leadHandlingChartData} options={leadHandlingChartOptions} />
+        {/* Chart Filter Buttons */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <button
+            onClick={() => setActiveChartFilter("all")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "all"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            All Leads
+          </button>
+          <button
+            onClick={() => setActiveChartFilter("converted")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "converted"
+                ? "bg-green-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Converted
+          </button>
+          <button
+            onClick={() => setActiveChartFilter("nonConverted")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "nonConverted"
+                ? "bg-red-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Non-Converted
+          </button>
+        </div>
+        <div className="relative h-96"> {/* Added a fixed height to the chart container for better responsiveness */}
+          <Bar data={leadHandlingChartData} options={leadHandlingChartOptions} />
+        </div>
       </div>
 
       {/* Table with Pagination */}
@@ -265,7 +323,7 @@ function PaginatedTable({ data }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left">
+      <table className="w-full border-collapse text-left min-w-[768px]"> {/* Added min-w for better table responsiveness */}
         <thead>
           <tr className="bg-gray-100 text-gray-700">
             {[

@@ -200,7 +200,7 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        // console.log("API Response for Lead Details:", response.data);
+        console.log("API Response for Lead Details:", response.data);
         setProfile(response.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
@@ -292,6 +292,7 @@ const ProfileCard = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
+      console.log("Profile updated successfully:", updatedFormData);
       setEditSuccess(true);
       setIsEditModalOpen(false);
       setProfile(updatedFormData);
@@ -303,7 +304,7 @@ const ProfileCard = () => {
         },
         ...history,
       ]);
-    } catch (err) {
+    }  catch (err) {
       console.error("Failed to save profile", err);
       alert("Failed to save profile.");
     }

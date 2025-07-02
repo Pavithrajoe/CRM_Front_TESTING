@@ -14,7 +14,9 @@ export default function ProfileHeader() {
     name: '',
     email: '',
     role: '',
-    companyName: '',
+    company_name:'',
+    roleType: '',
+
   });
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -36,12 +38,13 @@ export default function ProfileHeader() {
     if (userString) {
       try {
         const userObject = JSON.parse(userString);
-        setProfile({
-          name: userObject.cFull_name || '',
-          email: userObject.cEmail || '',
-          role: userObject.cRole_name || userObject.irole_id || 'N/A',
-          companyName: userObject.cCompany_name || 'N/A',
-        });
+       setProfile({
+  name: userObject.cFull_name || '',
+  email: userObject.cEmail || '',
+  role: userObject.cRole_name || userObject.irole_id || 'N/A',
+  company_name: userObject.company_name || userObject.company?.cCompany_name || 'N/A',
+  roleType: userObject.roleType || 'N/A',
+});
       } catch (e) {
         setProfile({ name: '', email: '', role: '', companyName: '' });
       }
@@ -286,8 +289,11 @@ export default function ProfileHeader() {
                 <div className="font-semibold text-gray-900">{profile.name}</div>
                 <div className="text-gray-500">{profile.email}</div>
                 <div className="text-gray-500">Role: {profile.role}</div>
-                {profile.companyName && (
-                  <div className="text-gray-500">Company: {profile.companyName}</div>
+                <div className="text-gray-500">System Role:{profile.roleType}</div>
+                {profile.company_name && (
+                  <div className="text-gray-500">Company: {profile.company_name
+
+}</div>
                 )}
               </div>
               <X

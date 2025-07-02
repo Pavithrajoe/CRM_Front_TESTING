@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone } from 'react-icons/fa';
 import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
 import Slide from '@mui/material/Slide';
+import { useNavigate } from "react-router-dom";
+
 
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
@@ -28,13 +30,17 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     cdescription: '',
     icreated_by: '',
     iupdated_by: '',
-    devent_end: '',
+    devent_end: '', // Make it optional
     dupdated_at: new Date().toISOString(),
     recurring_task: ''
   };
 
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null); 
+    const navigate = useNavigate();
+  // Use useRef for the SpeechRecognition object
 
   useEffect(() => {
     if (open && selectedDate) {
@@ -42,6 +48,9 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       const initialStartDateTime = new Date(selectedDate);
       if (initialStartDateTime.toDateString() === now.toDateString()) {
         initialStartDateTime.setHours(now.getHours() + 1, 0, 0, 0);
+        if (initialStartDateTime < now) {
+          initialStartDateTime.setHours(now.getHours(), now.getMinutes() + 5, 0, 0);
+        }
       } else {
         initialStartDateTime.setHours(9, 0, 0, 0);
       }
@@ -49,36 +58,124 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       setFormData(prev => ({
         ...prev,
         devent_startdt: initialStartDateTime.toISOString().slice(0, 16),
-        devent_end: new Date(initialStartDateTime.getTime() + 60 * 60 * 1000).toISOString().slice(0, 16)
+        devent_end: '', // Ensure end date is initially blank as it's optional
       }));
     }
   }, [open, selectedDate]);
+
+  useEffect(() => {
+    // Initialize SpeechRecognition only once
+    if (!recognitionRef.current) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setSnackbar({
+          open: true,
+          message: "Speech Recognition not supported by your browser.",
+          severity: 'error'
+        });
+        return;
+      }
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setFormData(prev => ({ ...prev, cdescription: prev.cdescription + transcript }));
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setSnackbar({
+          open: true,
+          message: `Speech recognition error: ${event.error}`,
+          severity: 'error'
+        });
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    // Clean up function to stop recognition if component unmounts or drawer closes
+    return () => {
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+    };
+  }, [isListening]); // Dependency on isListening to trigger cleanup when state changes
+
+  const handleMicClick = () => {
+    if (!recognitionRef.current) {
+      setSnackbar({
+        open: true,
+        message: "Speech Recognition is not available.",
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        setFormData(prev => ({ ...prev, cdescription: prev.cdescription + ' ' })); // Add a space for new dictation
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error("Error starting speech recognition:", error);
+        setSnackbar({
+          open: true,
+          message: "Error starting voice input. Please ensure microphone access is granted.",
+          severity: 'error'
+        });
+        setIsListening(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const startDateLocal = new Date(formData.devent_startdt);
-    const endDateLocal = new Date(formData.devent_end);
+    const now = new Date();
 
-    if (endDateLocal < startDateLocal) {
+    if (startDateLocal < now) {
       setSnackbar({
         open: true,
-        message: 'ℹ️ End date cannot be before start date!',
+        message: 'ℹ️ Start date and time cannot be in the past!',
         severity: 'info'
       });
       return;
     }
 
-    const startTimeUTC = startDateLocal.toISOString();
-    const endTimeUTC = endDateLocal.toISOString();
+    // Only validate end date if it's provided
+    if (formData.devent_end) {
+      const endDateLocal = new Date(formData.devent_end);
+      if (endDateLocal < startDateLocal) {
+        setSnackbar({
+          open: true,
+          message: 'ℹ️ End date cannot be before start date!',
+          severity: 'info'
+        });
+        return;
+      }
+    }
 
     const user_data_parsed = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
 
     const finalData = {
       ...formData,
-      devent_startdt: startTimeUTC,
-      devent_end: endTimeUTC,
+      devent_startdt: startDateLocal.toISOString(),
+      // Send devent_end as null or undefined if empty, otherwise as ISO string
+      devent_end: formData.devent_end ? new Date(formData.devent_end).toISOString() : null,
       icreated_by: user_data_parsed.iUser_id,
       iupdated_by: user_data_parsed.iUser_id,
       dupdated_at: new Date().toISOString(),
@@ -125,7 +222,9 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     } finally {
       setLoading(false);
     }
+    
   };
+  const goToLeadsPage = (userId) => navigate(`/userprofile/${userId}`);
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
@@ -162,13 +261,23 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Description</label>
-              <textarea
-                value={formData.cdescription}
-                onChange={(e) => setFormData({ ...formData, cdescription: e.target.value })}
-                placeholder="Optional details…"
-                className="w-full px-4 py-2 rounded-xl bg-gray-100 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                maxLength={300}
-              />
+              <div className="relative">
+                <textarea
+                  value={formData.cdescription}
+                  onChange={(e) => setFormData({ ...formData, cdescription: e.target.value })}
+                  placeholder="Optional details…"
+                  className="w-full px-4 py-2 rounded-xl bg-gray-100 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition pr-10"
+                  maxLength={300}
+                />
+                <button
+                  type="button"
+                  onClick={handleMicClick}
+                  className={`absolute top-3 right-3 transition ${isListening ? 'text-red-500' : 'text-gray-500 hover:text-blue-600'}`} // Color change for listening state
+                  title={isListening ? "Stop listening" : "Start voice input"}
+                >
+                  <FaMicrophone className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Start Date<span className="text-red-500">*</span></label>
@@ -181,13 +290,12 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
+              <label className="block text-sm text-gray-600 mb-1">End Date</label> {/* Removed '*' making it optional */}
               <input
                 type="datetime-local"
                 value={formData.devent_end}
                 onChange={(e) => setFormData({ ...formData, devent_end: e.target.value })}
                 className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                required
               />
             </div>
             <div>
@@ -376,7 +484,7 @@ const CalendarView = () => {
       let dateRangeMatch = true;
       let timeStatusMatch = true;
 
-      if (applyDateFilters) { // Only apply date/time filters if `applyDateFilters` is true
+      if (applyDateFilters) {
         const from = fromDate ? getStartOfDayInLocalTime(fromDate) : null;
         const to = toDate ? getEndOfDayInLocalTime(toDate) : null;
 
@@ -396,7 +504,7 @@ const CalendarView = () => {
       const sortDateA = endTimeKey && a[endTimeKey] ? new Date(a[endTimeKey]) : new Date(a[dateKey]);
       const sortDateB = endTimeKey && b[endTimeKey] ? new Date(b[endTimeKey]) : new Date(b[dateKey]);
 
-      if (showEndedState && applyDateFilters) { // Only sort by ended if `showEndedState` and `applyDateFilters` are true
+      if (showEndedState && applyDateFilters) {
         return sortDateB.getTime() - sortDateA.getTime();
       } else {
         return sortDateA.getTime() - sortDateB.getTime();
@@ -404,10 +512,9 @@ const CalendarView = () => {
     });
   };
 
-  // Pass a new boolean argument `true` for reminders to apply date filters, `false` for calendar events
   const currentTabItems = activeTab === 'reminders'
     ? filterAndSortItems(reminderList, 'dremainder_dt', 'cremainder_content', null, showEnded, true)
-    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false); // No specific date/time filters for calendar events
+    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -439,9 +546,22 @@ const CalendarView = () => {
     setCurrentPage(1);
   }, [activeTab, showEnded, searchTerm, fromDate, toDate, reminderList, calendarEvents]);
 
+  const formatDateForTable = (dateString) => {
+    if (!dateString) return 'N/A'; // Handle cases where dateString might be null or undefined
+    const date = new Date(dateString);
+    return date.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).replace(',', '');
+  };
+
   return (
     <div>
-<div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
+      <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
         <div className="w-1/2 flex flex-col mb-1 mr-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 transition-transform duration-300 hover:scale-[1.01]">
             <Calendar
@@ -559,14 +679,7 @@ const CalendarView = () => {
 
                   <div className="text-xs text-black bg-yellow-400 px-3 py-1 rounded-full flex items-center">
                     <FaClock className="mr-1" />
-                    {new Date(reminder.dremainder_dt).toLocaleString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+                    {formatDateForTable(reminder.dremainder_dt)}
                   </div>
                 </div>
               </div>
@@ -586,14 +699,7 @@ const CalendarView = () => {
                   </div>
                   <div className="text-xs text-white bg-blue-600 px-3 py-1 rounded-full flex items-center">
                     <FaClock className="mr-1" />
-                    {new Date(event.devent_startdt).toLocaleString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+                    {formatDateForTable(event.devent_startdt)}
                   </div>
                 </div>
               </div>
@@ -634,7 +740,6 @@ const CalendarView = () => {
           </button>
         </div>
 
-        {/* Conditional rendering for filters based on activeTab */}
         {activeTab === 'reminders' && (
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mb-5">
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -700,9 +805,8 @@ const CalendarView = () => {
             </div>
           </div>
         )}
-        {/* End conditional rendering for filters */}
 
-        {(fromDate || toDate) && activeTab === 'reminders' && ( // Only show filter text for reminders
+        {(fromDate || toDate) && activeTab === 'reminders' && (
           <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
             Filter:{' '}
             {fromDate && <strong>{new Date(fromDate).toLocaleDateString('en-GB')}</strong>}
@@ -712,7 +816,10 @@ const CalendarView = () => {
         )}
 
         {paginatedCurrentItems.length > 0 ? (
+          
           <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs">
+            
+            
             <table className="min-w-full text-sm text-gray-800 table-auto">
               <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
                 <tr>
@@ -760,10 +867,7 @@ const CalendarView = () => {
                           {item.lead_name}
                         </td>
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {new Date(item.dremainder_dt).toLocaleString('en-GB', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
+                          {formatDateForTable(item.dremainder_dt)}
                         </td>
                       </>
                     ) : (
@@ -778,16 +882,10 @@ const CalendarView = () => {
                           {item.recurring_task || 'None'}
                         </td>
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {new Date(item.devent_startdt).toLocaleString('en-GB', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
+                          {formatDateForTable(item.devent_startdt)}
                         </td>
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {new Date(item.devent_end).toLocaleString('en-GB', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
+                          {item.devent_end ? formatDateForTable(item.devent_end) : 'N/A'}
                         </td>
                       </>
                     )}

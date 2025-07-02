@@ -118,7 +118,7 @@ const LeadsDashboard = () => {
       userSelect: 'none',
     }}
   >
-    🎉 OCRM V1.5 is here ! 🎉 
+    🎉 OCRM V 2.5 is here ! 🎉 
   </DialogTitle>
 
 <DialogContent

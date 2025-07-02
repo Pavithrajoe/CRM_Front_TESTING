@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MasterModal from '../../Components/Master/MasterModel';
 import { Sparkles } from 'lucide-react';
 import { ENDPOINTS, BASE_URL } from '../../api/constraints'; // Assuming this path is correct and BASE_URL is needed
@@ -506,13 +506,10 @@ export default function CompanyMaster() {
             {selectedMaster && isModalOpen && (
                 <MasterModal
                     master={selectedMaster}
-                    onClose={handleCloseModal}
-                    companyId={companyId} // Pass state to modal
-                    userId={userId} // Pass state to modal
-                    // Pass the entire MASTER_CONFIG object as masterConfigs for lookup
+                    onClose={handleCloseModal} // <--- onClose prop is passed here
+                    companyId={companyId}
+                    userId={userId}
                     masterConfigs={MASTER_CONFIG.reduce((acc, config) => {
-                        // Create a map of master configs by their title (uppercase, no spaces/hyphens)
-                        // e.g., "Sub-Industries" -> "SUB_INDUSTRIES"
                         acc[config.title.toUpperCase().replace(/[-\s]/g, '_')] = config;
                         return acc;
                     }, {})}

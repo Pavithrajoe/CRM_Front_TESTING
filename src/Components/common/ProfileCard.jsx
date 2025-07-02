@@ -516,7 +516,7 @@ const ProfileCard = () => {
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
           <img
-            src={profile.avatar || "https://i.pravatar.cc/150?img=1"}
+            src={profile.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=Your+Name"}
             alt="Avatar"
             className="w-full h-full rounded-full object-cover border-2 border-gray-100 shadow-sm"
           />
@@ -532,10 +532,10 @@ const ProfileCard = () => {
         </div>
         <div className="text-center sm:text-left">
           <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
-            {profile.clead_name || "N/A"}
+            {profile.clead_name || "-"}
           </h3>
           <p className="text-sm sm:text-base break-words text-gray-500">
-            {profile.corganization || "N/A"}
+            {profile.corganization || "-"}
           </p>
         </div>
       </div>
@@ -543,19 +543,19 @@ const ProfileCard = () => {
       <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
         <div className="flex items-center gap-3">
           <FiPhone className="text-gray-500 reak-words w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="break-words">{profile.iphone_no || "N/A"}</span>
+          <span className="break-words">{profile.iphone_no || "-"}</span>
         </div>
         <div className="flex items-center gap-3">
           <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="break-words">{profile.cemail || "N/A"}</span>
+          <span className="break-words">{profile.cemail || "-"}</span>
         </div>
         <div className="flex items-start gap-3">
           <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.clead_address1 || "N/A"}</span>
+          <span className="break-words">{profile.clead_address1 || "-"}</span>
         </div>
         <div className="flex items-start gap-3">
           <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.clead_address2 || "N/A"}</span>
+          <span className="break-words">{profile.clead_address2 || "-"}</span>
         </div>
         <div className="flex items-start gap-3">
           <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
@@ -573,13 +573,13 @@ const ProfileCard = () => {
               {profile.cwebsite}
             </a>
           ) : (
-            <span>N/A</span>
+            <span>-</span>
           )}
         </div>
 
         <div className="flex items-start gap-3">
           <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.corganization || "N/A"}</span>
+          <span className="break-words">{profile.corganization || "-"}</span>
         </div>
 
         {profile.bactive === false && (
@@ -760,11 +760,11 @@ const ProfileCard = () => {
                 >
                   <p>
                     <span className="font-medium">Assigned To:</span>{" "}
-                    {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "N/A"}
+                    {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     <span className="font-medium">Assigned By:</span>{" "}
-                    {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "N/A"}{" "}
+                    {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"}{" "}
                     on {new Date(assignment.dcreate_dt).toLocaleString()}
                   </p>
                 </div>
@@ -918,11 +918,11 @@ const ProfileCard = () => {
                     >
                       <p>
                         <span className="font-medium">Assigned To:</span>{" "}
-                        {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "N/A"}
+                        {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         <span className="font-medium">Assigned By:</span>{" "}
-                        {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "N/A"}{" "}
+                        {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"}{" "}
                         on {new Date(assignment.dcreate_dt).toLocaleString()}
                       </p>
                     </div>
@@ -1001,43 +1001,43 @@ const ProfileCard = () => {
                   <FiPhone className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
                   <span>
                     <span className="font-medium">Phone:</span>{" "}
-                    {profile.iphone_no || "N/A"}
+                    {profile.iphone_no || "-"}
                   </span>
                 </div>
                 <div className="flex items-center break-words gap-3">
                   <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
                   <span>
                     <span className="font-medium">Email:</span>{" "}
-                    {profile.cemail || "N/A"}
+                    {profile.cemail || "-"}
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
                   <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                   <span>
                     <span className="font-medium">Address:</span>{" "}
-                    {profile.clead_address1 || "N/A"}
+                    {profile.clead_address1 || "-"}
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
                   <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                   <span>
                     <span className="font-medium">Address 2:</span>{" "}
-                    {profile.clead_address2 || "N/A"}
+                    {profile.clead_address2 || "N-"}
                   </span>
                 </div>
                 <div className="flex items-start gap-3">
                   <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                   <span>
                     <span className="font-medium">Website:</span>{" "}
-                    {profile.cwebsite || "N/A"}
+                    {profile.cwebsite || "-"}
                   </span>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                   <span>
-                    <span className="font-medium">Created At:</span>{" "}
-                    {profile.corganization || "N/A"}
+                    <span className="font-medium">Organisation:</span>{" "}
+                    {profile.corganization || "-"}
                   </span>{" "}
                 </div>
               </div>

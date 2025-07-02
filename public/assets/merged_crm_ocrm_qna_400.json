@@ -1,0 +1,3632 @@
+[
+  {
+    "question": "What's OCRM? (Example 1)",
+    "variants": [
+      "ocrm? ex1",
+      "what is ocrm? ex1",
+      "wht's ocrm ex1",
+      "ocrm meaning? ex1"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Hey siri",
+
+    
+    "variants": [
+      "hi siri",
+      "hello siri",
+      "hy siri",
+      "hlo siri"
+    ],
+    "answer": "Hello Yar"
+  },
+  {
+    "question": "Who are you? ",
+    "variants": [
+      "who r u? ex2",
+      "u bot? ex2",
+      "who dis? ex2"
+    ],
+    "answer": "I\u2019m Inklidox Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 3)",
+    "variants": [
+      "ocrm versions? ex3",
+      "how many ocrm updates? ex3",
+      "ocrm roadmap? ex3"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 4)",
+    "variants": [
+      "v1.0 features? ex4",
+      "what i get in v1? ex4",
+      "first update in ocrm? ex4"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 5)",
+    "variants": [
+      "v1 release date? ex5",
+      "first version date? ex5",
+      "v1 out? ex5"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 6)",
+    "variants": [
+      "v1.5 update? ex6",
+      "what features in v1.5? ex6",
+      "new in 1.5? ex6"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 7)",
+    "variants": [
+      "v1.5 date? ex7",
+      "when v1.5 out? ex7",
+      "update 1.5 date? ex7"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 8)",
+    "variants": [
+      "v2.0 features? ex8",
+      "ocrm version 2? ex8",
+      "v2 update details? ex8"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 9)",
+    "variants": [
+      "whatsapp in ocrm? ex9",
+      "can i use whatsapp? ex9",
+      "wa integration? ex9"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 10)",
+    "variants": [
+      "calendar integration? ex10",
+      "google cal in ocrm? ex10",
+      "calendar sync? ex10"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 11)",
+    "variants": [
+      "v2 release date? ex11",
+      "ocrm 2.0 date? ex11",
+      "version 2 time? ex11"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 12)",
+    "variants": [
+      "v2.5 info? ex12",
+      "what\u2019s in final version? ex12",
+      "last update features? ex12"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 13)",
+    "variants": [
+      "v2.5 date? ex13",
+      "final version release? ex13",
+      "ai update date? ex13"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 14)",
+    "variants": [
+      "no-code forms? ex14",
+      "form builder? ex14",
+      "create forms easy? ex14"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 15)",
+    "variants": [
+      "ai in ocrm? ex15",
+      "smart crm features? ex15",
+      "ocrm use ai? ex15"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 16)",
+    "variants": [
+      "voice notes? ex16",
+      "speak to write? ex16",
+      "voice input? ex16"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 17)",
+    "variants": [
+      "ocrm app? ex17",
+      "mobile version? ex17",
+      "can i use on phone? ex17"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 18)",
+    "variants": [
+      "data export? ex18",
+      "can i import csv? ex18",
+      "ocrm import features? ex18"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 19)",
+    "variants": [
+      "lead reminders? ex19",
+      "notification for leads? ex19",
+      "ocrm reminder? ex19"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 20)",
+    "variants": [
+      "file upload? ex20",
+      "docs in leads? ex20",
+      "invoice upload? ex20"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 21)",
+    "variants": [
+      "ocrm built with? ex21",
+      "which tech? ex21",
+      "backend stack? ex21"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 22)",
+    "variants": [
+      "crm overview? ex22",
+      "dashboard view? ex22",
+      "lead stats? ex22"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 23)",
+    "variants": [
+      "profile settings? ex23",
+      "change password? ex23",
+      "edit my info? ex23"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 24)",
+    "variants": [
+      "ocrm bot? ex24",
+      "smart assistant? ex24",
+      "help chatbot? ex24"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 25)",
+    "variants": [
+      "report feature? ex25",
+      "crm reports? ex25",
+      "data analytics? ex25"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 26)",
+    "variants": [
+      "ocrm? ex26",
+      "what is ocrm? ex26",
+      "wht's ocrm ex26",
+      "ocrm meaning? ex26"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 27)",
+    "variants": [
+      "who r u? ex27",
+      "u bot? ex27",
+      "who dis? ex27"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 28)",
+    "variants": [
+      "ocrm versions? ex28",
+      "how many ocrm updates? ex28",
+      "ocrm roadmap? ex28"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 29)",
+    "variants": [
+      "v1.0 features? ex29",
+      "what i get in v1? ex29",
+      "first update in ocrm? ex29"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 30)",
+    "variants": [
+      "v1 release date? ex30",
+      "first version date? ex30",
+      "v1 out? ex30"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 31)",
+    "variants": [
+      "v1.5 update? ex31",
+      "what features in v1.5? ex31",
+      "new in 1.5? ex31"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 32)",
+    "variants": [
+      "v1.5 date? ex32",
+      "when v1.5 out? ex32",
+      "update 1.5 date? ex32"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 33)",
+    "variants": [
+      "v2.0 features? ex33",
+      "ocrm version 2? ex33",
+      "v2 update details? ex33"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 34)",
+    "variants": [
+      "whatsapp in ocrm? ex34",
+      "can i use whatsapp? ex34",
+      "wa integration? ex34"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 35)",
+    "variants": [
+      "calendar integration? ex35",
+      "google cal in ocrm? ex35",
+      "calendar sync? ex35"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 36)",
+    "variants": [
+      "v2 release date? ex36",
+      "ocrm 2.0 date? ex36",
+      "version 2 time? ex36"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 37)",
+    "variants": [
+      "v2.5 info? ex37",
+      "what\u2019s in final version? ex37",
+      "last update features? ex37"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 38)",
+    "variants": [
+      "v2.5 date? ex38",
+      "final version release? ex38",
+      "ai update date? ex38"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 39)",
+    "variants": [
+      "no-code forms? ex39",
+      "form builder? ex39",
+      "create forms easy? ex39"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 40)",
+    "variants": [
+      "ai in ocrm? ex40",
+      "smart crm features? ex40",
+      "ocrm use ai? ex40"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 41)",
+    "variants": [
+      "voice notes? ex41",
+      "speak to write? ex41",
+      "voice input? ex41"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 42)",
+    "variants": [
+      "ocrm app? ex42",
+      "mobile version? ex42",
+      "can i use on phone? ex42"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 43)",
+    "variants": [
+      "data export? ex43",
+      "can i import csv? ex43",
+      "ocrm import features? ex43"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 44)",
+    "variants": [
+      "lead reminders? ex44",
+      "notification for leads? ex44",
+      "ocrm reminder? ex44"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 45)",
+    "variants": [
+      "file upload? ex45",
+      "docs in leads? ex45",
+      "invoice upload? ex45"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 46)",
+    "variants": [
+      "ocrm built with? ex46",
+      "which tech? ex46",
+      "backend stack? ex46"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 47)",
+    "variants": [
+      "crm overview? ex47",
+      "dashboard view? ex47",
+      "lead stats? ex47"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 48)",
+    "variants": [
+      "profile settings? ex48",
+      "change password? ex48",
+      "edit my info? ex48"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 49)",
+    "variants": [
+      "ocrm bot? ex49",
+      "smart assistant? ex49",
+      "help chatbot? ex49"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 50)",
+    "variants": [
+      "report feature? ex50",
+      "crm reports? ex50",
+      "data analytics? ex50"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 51)",
+    "variants": [
+      "ocrm? ex51",
+      "what is ocrm? ex51",
+      "wht's ocrm ex51",
+      "ocrm meaning? ex51"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 52)",
+    "variants": [
+      "who r u? ex52",
+      "u bot? ex52",
+      "who dis? ex52"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 53)",
+    "variants": [
+      "ocrm versions? ex53",
+      "how many ocrm updates? ex53",
+      "ocrm roadmap? ex53"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 54)",
+    "variants": [
+      "v1.0 features? ex54",
+      "what i get in v1? ex54",
+      "first update in ocrm? ex54"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 55)",
+    "variants": [
+      "v1 release date? ex55",
+      "first version date? ex55",
+      "v1 out? ex55"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 56)",
+    "variants": [
+      "v1.5 update? ex56",
+      "what features in v1.5? ex56",
+      "new in 1.5? ex56"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 57)",
+    "variants": [
+      "v1.5 date? ex57",
+      "when v1.5 out? ex57",
+      "update 1.5 date? ex57"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 58)",
+    "variants": [
+      "v2.0 features? ex58",
+      "ocrm version 2? ex58",
+      "v2 update details? ex58"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 59)",
+    "variants": [
+      "whatsapp in ocrm? ex59",
+      "can i use whatsapp? ex59",
+      "wa integration? ex59"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 60)",
+    "variants": [
+      "calendar integration? ex60",
+      "google cal in ocrm? ex60",
+      "calendar sync? ex60"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 61)",
+    "variants": [
+      "v2 release date? ex61",
+      "ocrm 2.0 date? ex61",
+      "version 2 time? ex61"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 62)",
+    "variants": [
+      "v2.5 info? ex62",
+      "what\u2019s in final version? ex62",
+      "last update features? ex62"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 63)",
+    "variants": [
+      "v2.5 date? ex63",
+      "final version release? ex63",
+      "ai update date? ex63"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 64)",
+    "variants": [
+      "no-code forms? ex64",
+      "form builder? ex64",
+      "create forms easy? ex64"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 65)",
+    "variants": [
+      "ai in ocrm? ex65",
+      "smart crm features? ex65",
+      "ocrm use ai? ex65"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 66)",
+    "variants": [
+      "voice notes? ex66",
+      "speak to write? ex66",
+      "voice input? ex66"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 67)",
+    "variants": [
+      "ocrm app? ex67",
+      "mobile version? ex67",
+      "can i use on phone? ex67"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 68)",
+    "variants": [
+      "data export? ex68",
+      "can i import csv? ex68",
+      "ocrm import features? ex68"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 69)",
+    "variants": [
+      "lead reminders? ex69",
+      "notification for leads? ex69",
+      "ocrm reminder? ex69"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 70)",
+    "variants": [
+      "file upload? ex70",
+      "docs in leads? ex70",
+      "invoice upload? ex70"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 71)",
+    "variants": [
+      "ocrm built with? ex71",
+      "which tech? ex71",
+      "backend stack? ex71"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 72)",
+    "variants": [
+      "crm overview? ex72",
+      "dashboard view? ex72",
+      "lead stats? ex72"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 73)",
+    "variants": [
+      "profile settings? ex73",
+      "change password? ex73",
+      "edit my info? ex73"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 74)",
+    "variants": [
+      "ocrm bot? ex74",
+      "smart assistant? ex74",
+      "help chatbot? ex74"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 75)",
+    "variants": [
+      "report feature? ex75",
+      "crm reports? ex75",
+      "data analytics? ex75"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 76)",
+    "variants": [
+      "ocrm? ex76",
+      "what is ocrm? ex76",
+      "wht's ocrm ex76",
+      "ocrm meaning? ex76"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 77)",
+    "variants": [
+      "who r u? ex77",
+      "u bot? ex77",
+      "who dis? ex77"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 78)",
+    "variants": [
+      "ocrm versions? ex78",
+      "how many ocrm updates? ex78",
+      "ocrm roadmap? ex78"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 79)",
+    "variants": [
+      "v1.0 features? ex79",
+      "what i get in v1? ex79",
+      "first update in ocrm? ex79"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 80)",
+    "variants": [
+      "v1 release date? ex80",
+      "first version date? ex80",
+      "v1 out? ex80"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 81)",
+    "variants": [
+      "v1.5 update? ex81",
+      "what features in v1.5? ex81",
+      "new in 1.5? ex81"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 82)",
+    "variants": [
+      "v1.5 date? ex82",
+      "when v1.5 out? ex82",
+      "update 1.5 date? ex82"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 83)",
+    "variants": [
+      "v2.0 features? ex83",
+      "ocrm version 2? ex83",
+      "v2 update details? ex83"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 84)",
+    "variants": [
+      "whatsapp in ocrm? ex84",
+      "can i use whatsapp? ex84",
+      "wa integration? ex84"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 85)",
+    "variants": [
+      "calendar integration? ex85",
+      "google cal in ocrm? ex85",
+      "calendar sync? ex85"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 86)",
+    "variants": [
+      "v2 release date? ex86",
+      "ocrm 2.0 date? ex86",
+      "version 2 time? ex86"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 87)",
+    "variants": [
+      "v2.5 info? ex87",
+      "what\u2019s in final version? ex87",
+      "last update features? ex87"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 88)",
+    "variants": [
+      "v2.5 date? ex88",
+      "final version release? ex88",
+      "ai update date? ex88"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 89)",
+    "variants": [
+      "no-code forms? ex89",
+      "form builder? ex89",
+      "create forms easy? ex89"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 90)",
+    "variants": [
+      "ai in ocrm? ex90",
+      "smart crm features? ex90",
+      "ocrm use ai? ex90"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 91)",
+    "variants": [
+      "voice notes? ex91",
+      "speak to write? ex91",
+      "voice input? ex91"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 92)",
+    "variants": [
+      "ocrm app? ex92",
+      "mobile version? ex92",
+      "can i use on phone? ex92"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 93)",
+    "variants": [
+      "data export? ex93",
+      "can i import csv? ex93",
+      "ocrm import features? ex93"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 94)",
+    "variants": [
+      "lead reminders? ex94",
+      "notification for leads? ex94",
+      "ocrm reminder? ex94"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 95)",
+    "variants": [
+      "file upload? ex95",
+      "docs in leads? ex95",
+      "invoice upload? ex95"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 96)",
+    "variants": [
+      "ocrm built with? ex96",
+      "which tech? ex96",
+      "backend stack? ex96"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 97)",
+    "variants": [
+      "crm overview? ex97",
+      "dashboard view? ex97",
+      "lead stats? ex97"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 98)",
+    "variants": [
+      "profile settings? ex98",
+      "change password? ex98",
+      "edit my info? ex98"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 99)",
+    "variants": [
+      "ocrm bot? ex99",
+      "smart assistant? ex99",
+      "help chatbot? ex99"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 100)",
+    "variants": [
+      "report feature? ex100",
+      "crm reports? ex100",
+      "data analytics? ex100"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 101)",
+    "variants": [
+      "ocrm? ex101",
+      "what is ocrm? ex101",
+      "wht's ocrm ex101",
+      "ocrm meaning? ex101"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 102)",
+    "variants": [
+      "who r u? ex102",
+      "u bot? ex102",
+      "who dis? ex102"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 103)",
+    "variants": [
+      "ocrm versions? ex103",
+      "how many ocrm updates? ex103",
+      "ocrm roadmap? ex103"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 104)",
+    "variants": [
+      "v1.0 features? ex104",
+      "what i get in v1? ex104",
+      "first update in ocrm? ex104"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 105)",
+    "variants": [
+      "v1 release date? ex105",
+      "first version date? ex105",
+      "v1 out? ex105"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 106)",
+    "variants": [
+      "v1.5 update? ex106",
+      "what features in v1.5? ex106",
+      "new in 1.5? ex106"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 107)",
+    "variants": [
+      "v1.5 date? ex107",
+      "when v1.5 out? ex107",
+      "update 1.5 date? ex107"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 108)",
+    "variants": [
+      "v2.0 features? ex108",
+      "ocrm version 2? ex108",
+      "v2 update details? ex108"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 109)",
+    "variants": [
+      "whatsapp in ocrm? ex109",
+      "can i use whatsapp? ex109",
+      "wa integration? ex109"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 110)",
+    "variants": [
+      "calendar integration? ex110",
+      "google cal in ocrm? ex110",
+      "calendar sync? ex110"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 111)",
+    "variants": [
+      "v2 release date? ex111",
+      "ocrm 2.0 date? ex111",
+      "version 2 time? ex111"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 112)",
+    "variants": [
+      "v2.5 info? ex112",
+      "what\u2019s in final version? ex112",
+      "last update features? ex112"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 113)",
+    "variants": [
+      "v2.5 date? ex113",
+      "final version release? ex113",
+      "ai update date? ex113"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 114)",
+    "variants": [
+      "no-code forms? ex114",
+      "form builder? ex114",
+      "create forms easy? ex114"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 115)",
+    "variants": [
+      "ai in ocrm? ex115",
+      "smart crm features? ex115",
+      "ocrm use ai? ex115"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 116)",
+    "variants": [
+      "voice notes? ex116",
+      "speak to write? ex116",
+      "voice input? ex116"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 117)",
+    "variants": [
+      "ocrm app? ex117",
+      "mobile version? ex117",
+      "can i use on phone? ex117"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 118)",
+    "variants": [
+      "data export? ex118",
+      "can i import csv? ex118",
+      "ocrm import features? ex118"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 119)",
+    "variants": [
+      "lead reminders? ex119",
+      "notification for leads? ex119",
+      "ocrm reminder? ex119"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 120)",
+    "variants": [
+      "file upload? ex120",
+      "docs in leads? ex120",
+      "invoice upload? ex120"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 121)",
+    "variants": [
+      "ocrm built with? ex121",
+      "which tech? ex121",
+      "backend stack? ex121"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 122)",
+    "variants": [
+      "crm overview? ex122",
+      "dashboard view? ex122",
+      "lead stats? ex122"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 123)",
+    "variants": [
+      "profile settings? ex123",
+      "change password? ex123",
+      "edit my info? ex123"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 124)",
+    "variants": [
+      "ocrm bot? ex124",
+      "smart assistant? ex124",
+      "help chatbot? ex124"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 125)",
+    "variants": [
+      "report feature? ex125",
+      "crm reports? ex125",
+      "data analytics? ex125"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 126)",
+    "variants": [
+      "ocrm? ex126",
+      "what is ocrm? ex126",
+      "wht's ocrm ex126",
+      "ocrm meaning? ex126"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 127)",
+    "variants": [
+      "who r u? ex127",
+      "u bot? ex127",
+      "who dis? ex127"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 128)",
+    "variants": [
+      "ocrm versions? ex128",
+      "how many ocrm updates? ex128",
+      "ocrm roadmap? ex128"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 129)",
+    "variants": [
+      "v1.0 features? ex129",
+      "what i get in v1? ex129",
+      "first update in ocrm? ex129"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 130)",
+    "variants": [
+      "v1 release date? ex130",
+      "first version date? ex130",
+      "v1 out? ex130"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 131)",
+    "variants": [
+      "v1.5 update? ex131",
+      "what features in v1.5? ex131",
+      "new in 1.5? ex131"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 132)",
+    "variants": [
+      "v1.5 date? ex132",
+      "when v1.5 out? ex132",
+      "update 1.5 date? ex132"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 133)",
+    "variants": [
+      "v2.0 features? ex133",
+      "ocrm version 2? ex133",
+      "v2 update details? ex133"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 134)",
+    "variants": [
+      "whatsapp in ocrm? ex134",
+      "can i use whatsapp? ex134",
+      "wa integration? ex134"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 135)",
+    "variants": [
+      "calendar integration? ex135",
+      "google cal in ocrm? ex135",
+      "calendar sync? ex135"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 136)",
+    "variants": [
+      "v2 release date? ex136",
+      "ocrm 2.0 date? ex136",
+      "version 2 time? ex136"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 137)",
+    "variants": [
+      "v2.5 info? ex137",
+      "what\u2019s in final version? ex137",
+      "last update features? ex137"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 138)",
+    "variants": [
+      "v2.5 date? ex138",
+      "final version release? ex138",
+      "ai update date? ex138"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 139)",
+    "variants": [
+      "no-code forms? ex139",
+      "form builder? ex139",
+      "create forms easy? ex139"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 140)",
+    "variants": [
+      "ai in ocrm? ex140",
+      "smart crm features? ex140",
+      "ocrm use ai? ex140"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 141)",
+    "variants": [
+      "voice notes? ex141",
+      "speak to write? ex141",
+      "voice input? ex141"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 142)",
+    "variants": [
+      "ocrm app? ex142",
+      "mobile version? ex142",
+      "can i use on phone? ex142"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 143)",
+    "variants": [
+      "data export? ex143",
+      "can i import csv? ex143",
+      "ocrm import features? ex143"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 144)",
+    "variants": [
+      "lead reminders? ex144",
+      "notification for leads? ex144",
+      "ocrm reminder? ex144"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 145)",
+    "variants": [
+      "file upload? ex145",
+      "docs in leads? ex145",
+      "invoice upload? ex145"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 146)",
+    "variants": [
+      "ocrm built with? ex146",
+      "which tech? ex146",
+      "backend stack? ex146"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 147)",
+    "variants": [
+      "crm overview? ex147",
+      "dashboard view? ex147",
+      "lead stats? ex147"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 148)",
+    "variants": [
+      "profile settings? ex148",
+      "change password? ex148",
+      "edit my info? ex148"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 149)",
+    "variants": [
+      "ocrm bot? ex149",
+      "smart assistant? ex149",
+      "help chatbot? ex149"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 150)",
+    "variants": [
+      "report feature? ex150",
+      "crm reports? ex150",
+      "data analytics? ex150"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 151)",
+    "variants": [
+      "ocrm? ex151",
+      "what is ocrm? ex151",
+      "wht's ocrm ex151",
+      "ocrm meaning? ex151"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 152)",
+    "variants": [
+      "who r u? ex152",
+      "u bot? ex152",
+      "who dis? ex152"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 153)",
+    "variants": [
+      "ocrm versions? ex153",
+      "how many ocrm updates? ex153",
+      "ocrm roadmap? ex153"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 154)",
+    "variants": [
+      "v1.0 features? ex154",
+      "what i get in v1? ex154",
+      "first update in ocrm? ex154"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 155)",
+    "variants": [
+      "v1 release date? ex155",
+      "first version date? ex155",
+      "v1 out? ex155"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 156)",
+    "variants": [
+      "v1.5 update? ex156",
+      "what features in v1.5? ex156",
+      "new in 1.5? ex156"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 157)",
+    "variants": [
+      "v1.5 date? ex157",
+      "when v1.5 out? ex157",
+      "update 1.5 date? ex157"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 158)",
+    "variants": [
+      "v2.0 features? ex158",
+      "ocrm version 2? ex158",
+      "v2 update details? ex158"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 159)",
+    "variants": [
+      "whatsapp in ocrm? ex159",
+      "can i use whatsapp? ex159",
+      "wa integration? ex159"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 160)",
+    "variants": [
+      "calendar integration? ex160",
+      "google cal in ocrm? ex160",
+      "calendar sync? ex160"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 161)",
+    "variants": [
+      "v2 release date? ex161",
+      "ocrm 2.0 date? ex161",
+      "version 2 time? ex161"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 162)",
+    "variants": [
+      "v2.5 info? ex162",
+      "what\u2019s in final version? ex162",
+      "last update features? ex162"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 163)",
+    "variants": [
+      "v2.5 date? ex163",
+      "final version release? ex163",
+      "ai update date? ex163"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 164)",
+    "variants": [
+      "no-code forms? ex164",
+      "form builder? ex164",
+      "create forms easy? ex164"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 165)",
+    "variants": [
+      "ai in ocrm? ex165",
+      "smart crm features? ex165",
+      "ocrm use ai? ex165"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 166)",
+    "variants": [
+      "voice notes? ex166",
+      "speak to write? ex166",
+      "voice input? ex166"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 167)",
+    "variants": [
+      "ocrm app? ex167",
+      "mobile version? ex167",
+      "can i use on phone? ex167"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 168)",
+    "variants": [
+      "data export? ex168",
+      "can i import csv? ex168",
+      "ocrm import features? ex168"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 169)",
+    "variants": [
+      "lead reminders? ex169",
+      "notification for leads? ex169",
+      "ocrm reminder? ex169"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 170)",
+    "variants": [
+      "file upload? ex170",
+      "docs in leads? ex170",
+      "invoice upload? ex170"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 171)",
+    "variants": [
+      "ocrm built with? ex171",
+      "which tech? ex171",
+      "backend stack? ex171"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 172)",
+    "variants": [
+      "crm overview? ex172",
+      "dashboard view? ex172",
+      "lead stats? ex172"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 173)",
+    "variants": [
+      "profile settings? ex173",
+      "change password? ex173",
+      "edit my info? ex173"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 174)",
+    "variants": [
+      "ocrm bot? ex174",
+      "smart assistant? ex174",
+      "help chatbot? ex174"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 175)",
+    "variants": [
+      "report feature? ex175",
+      "crm reports? ex175",
+      "data analytics? ex175"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What's OCRM? (Example 176)",
+    "variants": [
+      "ocrm? ex176",
+      "what is ocrm? ex176",
+      "wht's ocrm ex176",
+      "ocrm meaning? ex176"
+    ],
+    "answer": "OCRM is a CRM system that helps manage leads, deals, tasks, and communication efficiently."
+  },
+  {
+    "question": "Who are you? (Example 177)",
+    "variants": [
+      "who r u? ex177",
+      "u bot? ex177",
+      "who dis? ex177"
+    ],
+    "answer": "I\u2019m INKLIDOX Child, your smart assistant for OCRM. Ask me anything about your CRM!"
+  },
+  {
+    "question": "How many versions does OCRM have? (Example 178)",
+    "variants": [
+      "ocrm versions? ex178",
+      "how many ocrm updates? ex178",
+      "ocrm roadmap? ex178"
+    ],
+    "answer": "OCRM has 4 versions: V1.0 (Core), V1.5 (Communication), V2.0 (Integrations), V2.5 (AI)."
+  },
+  {
+    "question": "What's in OCRM V1.0? (Example 179)",
+    "variants": [
+      "v1.0 features? ex179",
+      "what i get in v1? ex179",
+      "first update in ocrm? ex179"
+    ],
+    "answer": "OCRM V1.0 includes lead management, reminders (mail/calendar), dashboard, and user onboarding. Released May 10, 2025."
+  },
+  {
+    "question": "When is V1.0 released? (Example 180)",
+    "variants": [
+      "v1 release date? ex180",
+      "first version date? ex180",
+      "v1 out? ex180"
+    ],
+    "answer": "OCRM V1.0 was released on May 10, 2025."
+  },
+  {
+    "question": "What's new in V1.5? (Example 181)",
+    "variants": [
+      "v1.5 update? ex181",
+      "what features in v1.5? ex181",
+      "new in 1.5? ex181"
+    ],
+    "answer": "V1.5 adds dashboards, notifications, file uploads, mail features, and recurring tasks. Released May 31, 2025."
+  },
+  {
+    "question": "What's the release date for V1.5? (Example 182)",
+    "variants": [
+      "v1.5 date? ex182",
+      "when v1.5 out? ex182",
+      "update 1.5 date? ex182"
+    ],
+    "answer": "OCRM V1.5 was released on May 31, 2025."
+  },
+  {
+    "question": "What's in V2.0? (Example 183)",
+    "variants": [
+      "v2.0 features? ex183",
+      "ocrm version 2? ex183",
+      "v2 update details? ex183"
+    ],
+    "answer": "OCRM V2.0 brings WhatsApp, Google Calendar, Google Meet, OCR, mobile app, and SMS integration. Released June 15, 2025."
+  },
+  {
+    "question": "Is WhatsApp supported? (Example 184)",
+    "variants": [
+      "whatsapp in ocrm? ex184",
+      "can i use whatsapp? ex184",
+      "wa integration? ex184"
+    ],
+    "answer": "Yes, WhatsApp integration is available in OCRM V2.0 and above."
+  },
+  {
+    "question": "Can I use Google Calendar? (Example 185)",
+    "variants": [
+      "calendar integration? ex185",
+      "google cal in ocrm? ex185",
+      "calendar sync? ex185"
+    ],
+    "answer": "Yes! Google Calendar integration is available from OCRM V2.0."
+  },
+  {
+    "question": "When was V2.0 released? (Example 186)",
+    "variants": [
+      "v2 release date? ex186",
+      "ocrm 2.0 date? ex186",
+      "version 2 time? ex186"
+    ],
+    "answer": "OCRM V2.0 was released on June 15, 2025."
+  },
+  {
+    "question": "Tell me about OCRM V2.5 (Example 187)",
+    "variants": [
+      "v2.5 info? ex187",
+      "what\u2019s in final version? ex187",
+      "last update features? ex187"
+    ],
+    "answer": "OCRM V2.5 adds AI tools, no-code form builder, sales forecasting, and voice-to-text notes. Released June 25, 2025."
+  },
+  {
+    "question": "When is V2.5 released? (Example 188)",
+    "variants": [
+      "v2.5 date? ex188",
+      "final version release? ex188",
+      "ai update date? ex188"
+    ],
+    "answer": "OCRM V2.5 was released on June 25, 2025."
+  },
+  {
+    "question": "Can I build forms without code? (Example 189)",
+    "variants": [
+      "no-code forms? ex189",
+      "form builder? ex189",
+      "create forms easy? ex189"
+    ],
+    "answer": "Yes! Version 2.5 includes a no-code form and field builder."
+  },
+  {
+    "question": "Are AI features available? (Example 190)",
+    "variants": [
+      "ai in ocrm? ex190",
+      "smart crm features? ex190",
+      "ocrm use ai? ex190"
+    ],
+    "answer": "Yes, V2.5 includes AI features like sales forecasting and intelligent notes."
+  },
+  {
+    "question": "Can I use voice-to-text? (Example 191)",
+    "variants": [
+      "voice notes? ex191",
+      "speak to write? ex191",
+      "voice input? ex191"
+    ],
+    "answer": "Yes, in V2.5, you can use voice-to-text for note-taking."
+  },
+  {
+    "question": "Is mobile app available? (Example 192)",
+    "variants": [
+      "ocrm app? ex192",
+      "mobile version? ex192",
+      "can i use on phone? ex192"
+    ],
+    "answer": "Yes! A mobile app is available starting from OCRM V2.0."
+  },
+  {
+    "question": "Can I import and export data? (Example 193)",
+    "variants": [
+      "data export? ex193",
+      "can i import csv? ex193",
+      "ocrm import features? ex193"
+    ],
+    "answer": "Yes, OCRM V1.5 introduced import & export options for CRM data."
+  },
+  {
+    "question": "Do I get reminders in OCRM? (Example 194)",
+    "variants": [
+      "lead reminders? ex194",
+      "notification for leads? ex194",
+      "ocrm reminder? ex194"
+    ],
+    "answer": "Yes, from V1.0 you get mail and calendar reminders for leads."
+  },
+  {
+    "question": "Can I attach files to leads? (Example 195)",
+    "variants": [
+      "file upload? ex195",
+      "docs in leads? ex195",
+      "invoice upload? ex195"
+    ],
+    "answer": "Yes, V1.5 allows file attachments like invoices, presentations, and spreadsheets."
+  },
+  {
+    "question": "What is the tech stack used? (Example 196)",
+    "variants": [
+      "ocrm built with? ex196",
+      "which tech? ex196",
+      "backend stack? ex196"
+    ],
+    "answer": "OCRM uses React, Node.js, PostgreSQL, and JWT authentication. Later versions integrate AI and microservices."
+  },
+  {
+    "question": "Is there a dashboard in OCRM? (Example 197)",
+    "variants": [
+      "crm overview? ex197",
+      "dashboard view? ex197",
+      "lead stats? ex197"
+    ],
+    "answer": "Yes! Dashboards are available from V1.0 and improved in V1.5 onwards."
+  },
+  {
+    "question": "Can I edit my profile? (Example 198)",
+    "variants": [
+      "profile settings? ex198",
+      "change password? ex198",
+      "edit my info? ex198"
+    ],
+    "answer": "Yes, V1.5 added profile editing, password change, and profile image options."
+  },
+  {
+    "question": "Is there an AI assistant in OCRM? (Example 199)",
+    "variants": [
+      "ocrm bot? ex199",
+      "smart assistant? ex199",
+      "help chatbot? ex199"
+    ],
+    "answer": "Yes! I'm your built-in assistant, available across OCRM to help anytime."
+  },
+  {
+    "question": "Can I generate reports? (Example 200)",
+    "variants": [
+      "report feature? ex200",
+      "crm reports? ex200",
+      "data analytics? ex200"
+    ],
+    "answer": "Yes! Report generation is available from V2.0 and fully enhanced in V2.5."
+  },
+  {
+    "question": "What is CRM? (Q1)",
+    "variants": [
+      "crm? q1",
+      "define crm q1",
+      "crm meaning? q1"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q2)",
+    "variants": [
+      "crm for sales? q2",
+      "how crm helps sales? q2",
+      "sales crm? q2"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q3)",
+    "variants": [
+      "track interactions? q3",
+      "customer activity tracking? q3",
+      "can crm follow customer chats? q3"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q4)",
+    "variants": [
+      "lead tracking? q4",
+      "what crm lead? q4",
+      "crm leads? q4"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q5)",
+    "variants": [
+      "crm for support? q5",
+      "service crm? q5",
+      "does crm boost support? q5"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q6)",
+    "variants": [
+      "crm? q6",
+      "define crm q6",
+      "crm meaning? q6"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q7)",
+    "variants": [
+      "crm for sales? q7",
+      "how crm helps sales? q7",
+      "sales crm? q7"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q8)",
+    "variants": [
+      "track interactions? q8",
+      "customer activity tracking? q8",
+      "can crm follow customer chats? q8"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q9)",
+    "variants": [
+      "lead tracking? q9",
+      "what crm lead? q9",
+      "crm leads? q9"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q10)",
+    "variants": [
+      "crm for support? q10",
+      "service crm? q10",
+      "does crm boost support? q10"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q11)",
+    "variants": [
+      "crm? q11",
+      "define crm q11",
+      "crm meaning? q11"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q12)",
+    "variants": [
+      "crm for sales? q12",
+      "how crm helps sales? q12",
+      "sales crm? q12"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q13)",
+    "variants": [
+      "track interactions? q13",
+      "customer activity tracking? q13",
+      "can crm follow customer chats? q13"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q14)",
+    "variants": [
+      "lead tracking? q14",
+      "what crm lead? q14",
+      "crm leads? q14"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q15)",
+    "variants": [
+      "crm for support? q15",
+      "service crm? q15",
+      "does crm boost support? q15"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q16)",
+    "variants": [
+      "crm? q16",
+      "define crm q16",
+      "crm meaning? q16"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q17)",
+    "variants": [
+      "crm for sales? q17",
+      "how crm helps sales? q17",
+      "sales crm? q17"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q18)",
+    "variants": [
+      "track interactions? q18",
+      "customer activity tracking? q18",
+      "can crm follow customer chats? q18"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q19)",
+    "variants": [
+      "lead tracking? q19",
+      "what crm lead? q19",
+      "crm leads? q19"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q20)",
+    "variants": [
+      "crm for support? q20",
+      "service crm? q20",
+      "does crm boost support? q20"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q21)",
+    "variants": [
+      "crm? q21",
+      "define crm q21",
+      "crm meaning? q21"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q22)",
+    "variants": [
+      "crm for sales? q22",
+      "how crm helps sales? q22",
+      "sales crm? q22"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q23)",
+    "variants": [
+      "track interactions? q23",
+      "customer activity tracking? q23",
+      "can crm follow customer chats? q23"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q24)",
+    "variants": [
+      "lead tracking? q24",
+      "what crm lead? q24",
+      "crm leads? q24"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q25)",
+    "variants": [
+      "crm for support? q25",
+      "service crm? q25",
+      "does crm boost support? q25"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q26)",
+    "variants": [
+      "crm? q26",
+      "define crm q26",
+      "crm meaning? q26"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q27)",
+    "variants": [
+      "crm for sales? q27",
+      "how crm helps sales? q27",
+      "sales crm? q27"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q28)",
+    "variants": [
+      "track interactions? q28",
+      "customer activity tracking? q28",
+      "can crm follow customer chats? q28"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q29)",
+    "variants": [
+      "lead tracking? q29",
+      "what crm lead? q29",
+      "crm leads? q29"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q30)",
+    "variants": [
+      "crm for support? q30",
+      "service crm? q30",
+      "does crm boost support? q30"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q31)",
+    "variants": [
+      "crm? q31",
+      "define crm q31",
+      "crm meaning? q31"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q32)",
+    "variants": [
+      "crm for sales? q32",
+      "how crm helps sales? q32",
+      "sales crm? q32"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q33)",
+    "variants": [
+      "track interactions? q33",
+      "customer activity tracking? q33",
+      "can crm follow customer chats? q33"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q34)",
+    "variants": [
+      "lead tracking? q34",
+      "what crm lead? q34",
+      "crm leads? q34"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q35)",
+    "variants": [
+      "crm for support? q35",
+      "service crm? q35",
+      "does crm boost support? q35"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q36)",
+    "variants": [
+      "crm? q36",
+      "define crm q36",
+      "crm meaning? q36"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q37)",
+    "variants": [
+      "crm for sales? q37",
+      "how crm helps sales? q37",
+      "sales crm? q37"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q38)",
+    "variants": [
+      "track interactions? q38",
+      "customer activity tracking? q38",
+      "can crm follow customer chats? q38"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q39)",
+    "variants": [
+      "lead tracking? q39",
+      "what crm lead? q39",
+      "crm leads? q39"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q40)",
+    "variants": [
+      "crm for support? q40",
+      "service crm? q40",
+      "does crm boost support? q40"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q41)",
+    "variants": [
+      "crm? q41",
+      "define crm q41",
+      "crm meaning? q41"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q42)",
+    "variants": [
+      "crm for sales? q42",
+      "how crm helps sales? q42",
+      "sales crm? q42"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q43)",
+    "variants": [
+      "track interactions? q43",
+      "customer activity tracking? q43",
+      "can crm follow customer chats? q43"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q44)",
+    "variants": [
+      "lead tracking? q44",
+      "what crm lead? q44",
+      "crm leads? q44"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q45)",
+    "variants": [
+      "crm for support? q45",
+      "service crm? q45",
+      "does crm boost support? q45"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q46)",
+    "variants": [
+      "crm? q46",
+      "define crm q46",
+      "crm meaning? q46"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q47)",
+    "variants": [
+      "crm for sales? q47",
+      "how crm helps sales? q47",
+      "sales crm? q47"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q48)",
+    "variants": [
+      "track interactions? q48",
+      "customer activity tracking? q48",
+      "can crm follow customer chats? q48"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q49)",
+    "variants": [
+      "lead tracking? q49",
+      "what crm lead? q49",
+      "crm leads? q49"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q50)",
+    "variants": [
+      "crm for support? q50",
+      "service crm? q50",
+      "does crm boost support? q50"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q51)",
+    "variants": [
+      "crm? q51",
+      "define crm q51",
+      "crm meaning? q51"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q52)",
+    "variants": [
+      "crm for sales? q52",
+      "how crm helps sales? q52",
+      "sales crm? q52"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q53)",
+    "variants": [
+      "track interactions? q53",
+      "customer activity tracking? q53",
+      "can crm follow customer chats? q53"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q54)",
+    "variants": [
+      "lead tracking? q54",
+      "what crm lead? q54",
+      "crm leads? q54"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q55)",
+    "variants": [
+      "crm for support? q55",
+      "service crm? q55",
+      "does crm boost support? q55"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q56)",
+    "variants": [
+      "crm? q56",
+      "define crm q56",
+      "crm meaning? q56"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q57)",
+    "variants": [
+      "crm for sales? q57",
+      "how crm helps sales? q57",
+      "sales crm? q57"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q58)",
+    "variants": [
+      "track interactions? q58",
+      "customer activity tracking? q58",
+      "can crm follow customer chats? q58"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q59)",
+    "variants": [
+      "lead tracking? q59",
+      "what crm lead? q59",
+      "crm leads? q59"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q60)",
+    "variants": [
+      "crm for support? q60",
+      "service crm? q60",
+      "does crm boost support? q60"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q61)",
+    "variants": [
+      "crm? q61",
+      "define crm q61",
+      "crm meaning? q61"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q62)",
+    "variants": [
+      "crm for sales? q62",
+      "how crm helps sales? q62",
+      "sales crm? q62"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q63)",
+    "variants": [
+      "track interactions? q63",
+      "customer activity tracking? q63",
+      "can crm follow customer chats? q63"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q64)",
+    "variants": [
+      "lead tracking? q64",
+      "what crm lead? q64",
+      "crm leads? q64"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q65)",
+    "variants": [
+      "crm for support? q65",
+      "service crm? q65",
+      "does crm boost support? q65"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q66)",
+    "variants": [
+      "crm? q66",
+      "define crm q66",
+      "crm meaning? q66"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q67)",
+    "variants": [
+      "crm for sales? q67",
+      "how crm helps sales? q67",
+      "sales crm? q67"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q68)",
+    "variants": [
+      "track interactions? q68",
+      "customer activity tracking? q68",
+      "can crm follow customer chats? q68"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q69)",
+    "variants": [
+      "lead tracking? q69",
+      "what crm lead? q69",
+      "crm leads? q69"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q70)",
+    "variants": [
+      "crm for support? q70",
+      "service crm? q70",
+      "does crm boost support? q70"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q71)",
+    "variants": [
+      "crm? q71",
+      "define crm q71",
+      "crm meaning? q71"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q72)",
+    "variants": [
+      "crm for sales? q72",
+      "how crm helps sales? q72",
+      "sales crm? q72"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q73)",
+    "variants": [
+      "track interactions? q73",
+      "customer activity tracking? q73",
+      "can crm follow customer chats? q73"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q74)",
+    "variants": [
+      "lead tracking? q74",
+      "what crm lead? q74",
+      "crm leads? q74"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q75)",
+    "variants": [
+      "crm for support? q75",
+      "service crm? q75",
+      "does crm boost support? q75"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q76)",
+    "variants": [
+      "crm? q76",
+      "define crm q76",
+      "crm meaning? q76"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q77)",
+    "variants": [
+      "crm for sales? q77",
+      "how crm helps sales? q77",
+      "sales crm? q77"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q78)",
+    "variants": [
+      "track interactions? q78",
+      "customer activity tracking? q78",
+      "can crm follow customer chats? q78"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q79)",
+    "variants": [
+      "lead tracking? q79",
+      "what crm lead? q79",
+      "crm leads? q79"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q80)",
+    "variants": [
+      "crm for support? q80",
+      "service crm? q80",
+      "does crm boost support? q80"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q81)",
+    "variants": [
+      "crm? q81",
+      "define crm q81",
+      "crm meaning? q81"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q82)",
+    "variants": [
+      "crm for sales? q82",
+      "how crm helps sales? q82",
+      "sales crm? q82"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q83)",
+    "variants": [
+      "track interactions? q83",
+      "customer activity tracking? q83",
+      "can crm follow customer chats? q83"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q84)",
+    "variants": [
+      "lead tracking? q84",
+      "what crm lead? q84",
+      "crm leads? q84"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q85)",
+    "variants": [
+      "crm for support? q85",
+      "service crm? q85",
+      "does crm boost support? q85"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q86)",
+    "variants": [
+      "crm? q86",
+      "define crm q86",
+      "crm meaning? q86"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q87)",
+    "variants": [
+      "crm for sales? q87",
+      "how crm helps sales? q87",
+      "sales crm? q87"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q88)",
+    "variants": [
+      "track interactions? q88",
+      "customer activity tracking? q88",
+      "can crm follow customer chats? q88"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q89)",
+    "variants": [
+      "lead tracking? q89",
+      "what crm lead? q89",
+      "crm leads? q89"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q90)",
+    "variants": [
+      "crm for support? q90",
+      "service crm? q90",
+      "does crm boost support? q90"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q91)",
+    "variants": [
+      "crm? q91",
+      "define crm q91",
+      "crm meaning? q91"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q92)",
+    "variants": [
+      "crm for sales? q92",
+      "how crm helps sales? q92",
+      "sales crm? q92"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q93)",
+    "variants": [
+      "track interactions? q93",
+      "customer activity tracking? q93",
+      "can crm follow customer chats? q93"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q94)",
+    "variants": [
+      "lead tracking? q94",
+      "what crm lead? q94",
+      "crm leads? q94"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q95)",
+    "variants": [
+      "crm for support? q95",
+      "service crm? q95",
+      "does crm boost support? q95"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q96)",
+    "variants": [
+      "crm? q96",
+      "define crm q96",
+      "crm meaning? q96"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q97)",
+    "variants": [
+      "crm for sales? q97",
+      "how crm helps sales? q97",
+      "sales crm? q97"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q98)",
+    "variants": [
+      "track interactions? q98",
+      "customer activity tracking? q98",
+      "can crm follow customer chats? q98"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q99)",
+    "variants": [
+      "lead tracking? q99",
+      "what crm lead? q99",
+      "crm leads? q99"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q100)",
+    "variants": [
+      "crm for support? q100",
+      "service crm? q100",
+      "does crm boost support? q100"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q101)",
+    "variants": [
+      "crm? q101",
+      "define crm q101",
+      "crm meaning? q101"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q102)",
+    "variants": [
+      "crm for sales? q102",
+      "how crm helps sales? q102",
+      "sales crm? q102"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q103)",
+    "variants": [
+      "track interactions? q103",
+      "customer activity tracking? q103",
+      "can crm follow customer chats? q103"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q104)",
+    "variants": [
+      "lead tracking? q104",
+      "what crm lead? q104",
+      "crm leads? q104"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q105)",
+    "variants": [
+      "crm for support? q105",
+      "service crm? q105",
+      "does crm boost support? q105"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q106)",
+    "variants": [
+      "crm? q106",
+      "define crm q106",
+      "crm meaning? q106"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q107)",
+    "variants": [
+      "crm for sales? q107",
+      "how crm helps sales? q107",
+      "sales crm? q107"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q108)",
+    "variants": [
+      "track interactions? q108",
+      "customer activity tracking? q108",
+      "can crm follow customer chats? q108"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q109)",
+    "variants": [
+      "lead tracking? q109",
+      "what crm lead? q109",
+      "crm leads? q109"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q110)",
+    "variants": [
+      "crm for support? q110",
+      "service crm? q110",
+      "does crm boost support? q110"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q111)",
+    "variants": [
+      "crm? q111",
+      "define crm q111",
+      "crm meaning? q111"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q112)",
+    "variants": [
+      "crm for sales? q112",
+      "how crm helps sales? q112",
+      "sales crm? q112"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q113)",
+    "variants": [
+      "track interactions? q113",
+      "customer activity tracking? q113",
+      "can crm follow customer chats? q113"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q114)",
+    "variants": [
+      "lead tracking? q114",
+      "what crm lead? q114",
+      "crm leads? q114"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q115)",
+    "variants": [
+      "crm for support? q115",
+      "service crm? q115",
+      "does crm boost support? q115"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q116)",
+    "variants": [
+      "crm? q116",
+      "define crm q116",
+      "crm meaning? q116"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q117)",
+    "variants": [
+      "crm for sales? q117",
+      "how crm helps sales? q117",
+      "sales crm? q117"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q118)",
+    "variants": [
+      "track interactions? q118",
+      "customer activity tracking? q118",
+      "can crm follow customer chats? q118"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q119)",
+    "variants": [
+      "lead tracking? q119",
+      "what crm lead? q119",
+      "crm leads? q119"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q120)",
+    "variants": [
+      "crm for support? q120",
+      "service crm? q120",
+      "does crm boost support? q120"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q121)",
+    "variants": [
+      "crm? q121",
+      "define crm q121",
+      "crm meaning? q121"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q122)",
+    "variants": [
+      "crm for sales? q122",
+      "how crm helps sales? q122",
+      "sales crm? q122"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q123)",
+    "variants": [
+      "track interactions? q123",
+      "customer activity tracking? q123",
+      "can crm follow customer chats? q123"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q124)",
+    "variants": [
+      "lead tracking? q124",
+      "what crm lead? q124",
+      "crm leads? q124"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q125)",
+    "variants": [
+      "crm for support? q125",
+      "service crm? q125",
+      "does crm boost support? q125"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q126)",
+    "variants": [
+      "crm? q126",
+      "define crm q126",
+      "crm meaning? q126"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q127)",
+    "variants": [
+      "crm for sales? q127",
+      "how crm helps sales? q127",
+      "sales crm? q127"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q128)",
+    "variants": [
+      "track interactions? q128",
+      "customer activity tracking? q128",
+      "can crm follow customer chats? q128"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q129)",
+    "variants": [
+      "lead tracking? q129",
+      "what crm lead? q129",
+      "crm leads? q129"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q130)",
+    "variants": [
+      "crm for support? q130",
+      "service crm? q130",
+      "does crm boost support? q130"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q131)",
+    "variants": [
+      "crm? q131",
+      "define crm q131",
+      "crm meaning? q131"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q132)",
+    "variants": [
+      "crm for sales? q132",
+      "how crm helps sales? q132",
+      "sales crm? q132"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q133)",
+    "variants": [
+      "track interactions? q133",
+      "customer activity tracking? q133",
+      "can crm follow customer chats? q133"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q134)",
+    "variants": [
+      "lead tracking? q134",
+      "what crm lead? q134",
+      "crm leads? q134"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q135)",
+    "variants": [
+      "crm for support? q135",
+      "service crm? q135",
+      "does crm boost support? q135"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q136)",
+    "variants": [
+      "crm? q136",
+      "define crm q136",
+      "crm meaning? q136"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q137)",
+    "variants": [
+      "crm for sales? q137",
+      "how crm helps sales? q137",
+      "sales crm? q137"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q138)",
+    "variants": [
+      "track interactions? q138",
+      "customer activity tracking? q138",
+      "can crm follow customer chats? q138"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q139)",
+    "variants": [
+      "lead tracking? q139",
+      "what crm lead? q139",
+      "crm leads? q139"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q140)",
+    "variants": [
+      "crm for support? q140",
+      "service crm? q140",
+      "does crm boost support? q140"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q141)",
+    "variants": [
+      "crm? q141",
+      "define crm q141",
+      "crm meaning? q141"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q142)",
+    "variants": [
+      "crm for sales? q142",
+      "how crm helps sales? q142",
+      "sales crm? q142"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q143)",
+    "variants": [
+      "track interactions? q143",
+      "customer activity tracking? q143",
+      "can crm follow customer chats? q143"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q144)",
+    "variants": [
+      "lead tracking? q144",
+      "what crm lead? q144",
+      "crm leads? q144"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q145)",
+    "variants": [
+      "crm for support? q145",
+      "service crm? q145",
+      "does crm boost support? q145"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q146)",
+    "variants": [
+      "crm? q146",
+      "define crm q146",
+      "crm meaning? q146"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q147)",
+    "variants": [
+      "crm for sales? q147",
+      "how crm helps sales? q147",
+      "sales crm? q147"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q148)",
+    "variants": [
+      "track interactions? q148",
+      "customer activity tracking? q148",
+      "can crm follow customer chats? q148"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q149)",
+    "variants": [
+      "lead tracking? q149",
+      "what crm lead? q149",
+      "crm leads? q149"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q150)",
+    "variants": [
+      "crm for support? q150",
+      "service crm? q150",
+      "does crm boost support? q150"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q151)",
+    "variants": [
+      "crm? q151",
+      "define crm q151",
+      "crm meaning? q151"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q152)",
+    "variants": [
+      "crm for sales? q152",
+      "how crm helps sales? q152",
+      "sales crm? q152"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q153)",
+    "variants": [
+      "track interactions? q153",
+      "customer activity tracking? q153",
+      "can crm follow customer chats? q153"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q154)",
+    "variants": [
+      "lead tracking? q154",
+      "what crm lead? q154",
+      "crm leads? q154"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q155)",
+    "variants": [
+      "crm for support? q155",
+      "service crm? q155",
+      "does crm boost support? q155"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q156)",
+    "variants": [
+      "crm? q156",
+      "define crm q156",
+      "crm meaning? q156"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q157)",
+    "variants": [
+      "crm for sales? q157",
+      "how crm helps sales? q157",
+      "sales crm? q157"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q158)",
+    "variants": [
+      "track interactions? q158",
+      "customer activity tracking? q158",
+      "can crm follow customer chats? q158"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q159)",
+    "variants": [
+      "lead tracking? q159",
+      "what crm lead? q159",
+      "crm leads? q159"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q160)",
+    "variants": [
+      "crm for support? q160",
+      "service crm? q160",
+      "does crm boost support? q160"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q161)",
+    "variants": [
+      "crm? q161",
+      "define crm q161",
+      "crm meaning? q161"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q162)",
+    "variants": [
+      "crm for sales? q162",
+      "how crm helps sales? q162",
+      "sales crm? q162"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q163)",
+    "variants": [
+      "track interactions? q163",
+      "customer activity tracking? q163",
+      "can crm follow customer chats? q163"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q164)",
+    "variants": [
+      "lead tracking? q164",
+      "what crm lead? q164",
+      "crm leads? q164"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q165)",
+    "variants": [
+      "crm for support? q165",
+      "service crm? q165",
+      "does crm boost support? q165"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q166)",
+    "variants": [
+      "crm? q166",
+      "define crm q166",
+      "crm meaning? q166"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q167)",
+    "variants": [
+      "crm for sales? q167",
+      "how crm helps sales? q167",
+      "sales crm? q167"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q168)",
+    "variants": [
+      "track interactions? q168",
+      "customer activity tracking? q168",
+      "can crm follow customer chats? q168"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q169)",
+    "variants": [
+      "lead tracking? q169",
+      "what crm lead? q169",
+      "crm leads? q169"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q170)",
+    "variants": [
+      "crm for support? q170",
+      "service crm? q170",
+      "does crm boost support? q170"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q171)",
+    "variants": [
+      "crm? q171",
+      "define crm q171",
+      "crm meaning? q171"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q172)",
+    "variants": [
+      "crm for sales? q172",
+      "how crm helps sales? q172",
+      "sales crm? q172"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q173)",
+    "variants": [
+      "track interactions? q173",
+      "customer activity tracking? q173",
+      "can crm follow customer chats? q173"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q174)",
+    "variants": [
+      "lead tracking? q174",
+      "what crm lead? q174",
+      "crm leads? q174"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q175)",
+    "variants": [
+      "crm for support? q175",
+      "service crm? q175",
+      "does crm boost support? q175"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q176)",
+    "variants": [
+      "crm? q176",
+      "define crm q176",
+      "crm meaning? q176"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q177)",
+    "variants": [
+      "crm for sales? q177",
+      "how crm helps sales? q177",
+      "sales crm? q177"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q178)",
+    "variants": [
+      "track interactions? q178",
+      "customer activity tracking? q178",
+      "can crm follow customer chats? q178"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q179)",
+    "variants": [
+      "lead tracking? q179",
+      "what crm lead? q179",
+      "crm leads? q179"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q180)",
+    "variants": [
+      "crm for support? q180",
+      "service crm? q180",
+      "does crm boost support? q180"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q181)",
+    "variants": [
+      "crm? q181",
+      "define crm q181",
+      "crm meaning? q181"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q182)",
+    "variants": [
+      "crm for sales? q182",
+      "how crm helps sales? q182",
+      "sales crm? q182"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q183)",
+    "variants": [
+      "track interactions? q183",
+      "customer activity tracking? q183",
+      "can crm follow customer chats? q183"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q184)",
+    "variants": [
+      "lead tracking? q184",
+      "what crm lead? q184",
+      "crm leads? q184"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q185)",
+    "variants": [
+      "crm for support? q185",
+      "service crm? q185",
+      "does crm boost support? q185"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q186)",
+    "variants": [
+      "crm? q186",
+      "define crm q186",
+      "crm meaning? q186"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q187)",
+    "variants": [
+      "crm for sales? q187",
+      "how crm helps sales? q187",
+      "sales crm? q187"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q188)",
+    "variants": [
+      "track interactions? q188",
+      "customer activity tracking? q188",
+      "can crm follow customer chats? q188"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q189)",
+    "variants": [
+      "lead tracking? q189",
+      "what crm lead? q189",
+      "crm leads? q189"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q190)",
+    "variants": [
+      "crm for support? q190",
+      "service crm? q190",
+      "does crm boost support? q190"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q191)",
+    "variants": [
+      "crm? q191",
+      "define crm q191",
+      "crm meaning? q191"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q192)",
+    "variants": [
+      "crm for sales? q192",
+      "how crm helps sales? q192",
+      "sales crm? q192"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q193)",
+    "variants": [
+      "track interactions? q193",
+      "customer activity tracking? q193",
+      "can crm follow customer chats? q193"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q194)",
+    "variants": [
+      "lead tracking? q194",
+      "what crm lead? q194",
+      "crm leads? q194"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q195)",
+    "variants": [
+      "crm for support? q195",
+      "service crm? q195",
+      "does crm boost support? q195"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+  {
+    "question": "What is CRM? (Q196)",
+    "variants": [
+      "crm? q196",
+      "define crm q196",
+      "crm meaning? q196"
+    ],
+    "answer": "CRM stands for Customer Relationship Management. It helps businesses manage and analyze customer interactions and data."
+  },
+  {
+    "question": "How does CRM help sales teams? (Q197)",
+    "variants": [
+      "crm for sales? q197",
+      "how crm helps sales? q197",
+      "sales crm? q197"
+    ],
+    "answer": "CRM helps sales teams track leads, manage customer info, and improve communication for better sales outcomes."
+  },
+  {
+    "question": "Can CRM track customer interactions? (Q198)",
+    "variants": [
+      "track interactions? q198",
+      "customer activity tracking? q198",
+      "can crm follow customer chats? q198"
+    ],
+    "answer": "Yes, CRM systems can log emails, calls, meetings, and chat history with customers."
+  },
+  {
+    "question": "What is lead management in CRM? (Q199)",
+    "variants": [
+      "lead tracking? q199",
+      "what crm lead? q199",
+      "crm leads? q199"
+    ],
+    "answer": "Lead management helps businesses capture, track, and nurture potential customers."
+  },
+  {
+    "question": "Does CRM improve customer service? (Q200)",
+    "variants": [
+      "crm for support? q200",
+      "service crm? q200",
+      "does crm boost support? q200"
+    ],
+    "answer": "Yes, CRM helps support teams respond faster and personalize interactions with customers."
+  },
+   {
+    "question": "How to create a leads in OCRM?",
+    "variants": [
+      "way to create leads?",
+      "how to create leads?",
+      "leads creating way?",
+      "leadform creating way? q200"
+    ],
+    "answer": "To create a lead in OCRM, you'll find a Create Lead option readily available. It's prominently displayed at the top of the OCRM homepage and is also designed to be visible on every page within the system. This ensures you can quickly and easily create a new lead no matter where you are in the OCRM platform."
+  }
+]

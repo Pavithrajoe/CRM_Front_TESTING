@@ -8,6 +8,7 @@ import { useParams } from "react-router-dom";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
 
+// Speech recognition setup is only needed for content now
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = new SpeechRecognition();
@@ -28,9 +29,6 @@ const ReminderForm = () => {
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [assignToMe, setAssignToMe] = useState(false);
 
-  const [isListeningTitle, setIsListeningTitle] = useState(false);
-  const [noteTitle, setNoteTitle] = useState(null);
-
   const [isListeningContent, setIsListeningContent] = useState(false);
   const [noteContent, setNoteContent] = useState(null);
 
@@ -48,7 +46,6 @@ const ReminderForm = () => {
     ilead_id: Number(leadId),
   });
 
-  const titleInputRef = useRef(null);
   const contentInputRef = useRef(null);
 
   useEffect(() => {
@@ -66,17 +63,29 @@ const ReminderForm = () => {
     }
   }, []);
 
+  // Set current date and time when the form is shown
   useEffect(() => {
-    const targetField = isListeningTitle
-      ? "title"
-      : isListeningContent
-      ? "content"
-      : null;
+    if (showForm) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
 
-    if (targetField) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        reminderDate: `${year}-${month}-${day}`,
+        time: `${hours}:${minutes}`,
+      }));
+    }
+  }, [showForm]);
+
+  useEffect(() => {
+    if (isListeningContent) {
       mic.start();
       mic.onend = () => {
-        if (isListeningTitle || isListeningContent) mic.start();
+        if (isListeningContent) mic.start();
       };
     } else {
       mic.stop();
@@ -89,13 +98,7 @@ const ReminderForm = () => {
         .map((result) => result.transcript)
         .join("");
 
-      if (isListeningTitle) {
-        setNoteTitle(transcript);
-        setForm((prevForm) => ({
-          ...prevForm,
-          title: transcript,
-        }));
-      } else if (isListeningContent) {
+      if (isListeningContent) {
         setNoteContent(transcript);
         setForm((prevForm) => ({
           ...prevForm,
@@ -106,26 +109,16 @@ const ReminderForm = () => {
 
     mic.onerror = (event) => {
       toast.error(`Speech recognition error: ${event.error}`);
-      setIsListeningTitle(false);
       setIsListeningContent(false);
     };
 
     return () => {
       mic.stop();
     };
-  }, [isListeningTitle, isListeningContent]);
+  }, [isListeningContent]);
 
   const toggleListening = (field) => {
-    if (isListeningTitle && field !== "title") {
-      setIsListeningTitle(false);
-    }
-    if (isListeningContent && field !== "content") {
-      setIsListeningContent(false);
-    }
-
-    if (field === "title") {
-      setIsListeningTitle((prevState) => !prevState);
-    } else if (field === "content") {
+    if (field === "content") {
       setIsListeningContent((prevState) => !prevState);
     }
   };
@@ -201,9 +194,11 @@ const ReminderForm = () => {
       });
 
       const result = await response.json();
-      
+
       if (!response.ok || (result.data && result.data.error)) {
-        toast.error(`Error: ${result.data?.error || result.message || "Could not add reminder"}`);
+        toast.error(
+          `Error: ${result.data?.error || result.message || "Could not add reminder"}`
+        );
         return;
       }
 
@@ -216,7 +211,6 @@ const ReminderForm = () => {
         assignt_to: "",
         ilead_id: Number(leadId),
       });
-      setNoteTitle(null);
       setNoteContent(null);
       setAssignToMe(false);
       toast.success(
@@ -282,12 +276,12 @@ const ReminderForm = () => {
   }, []);
 
   const filteredReminders = reminderList.filter((reminder) => {
-  const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  const matchesSearch =
-    reminder.cremainder_title.toLowerCase().includes(lowerCaseSearchTerm) ||
-    reminder.cremainder_content.toLowerCase().includes(lowerCaseSearchTerm) ||
-    reminder.priority.toLowerCase().includes(lowerCaseSearchTerm) ||
-    reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    const matchesSearch =
+      reminder.cremainder_title.toLowerCase().includes(lowerCaseSearchTerm) ||
+      reminder.cremainder_content.toLowerCase().includes(lowerCaseSearchTerm) ||
+      reminder.priority.toLowerCase().includes(lowerCaseSearchTerm) ||
+      reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
 
     const reminderDate = new Date(reminder.dremainder_dt);
     const from = fromDate ? new Date(fromDate) : null;
@@ -299,10 +293,9 @@ const ReminderForm = () => {
     return matchesSearch && matchesDate;
   });
 
-
   return (
     <div className="relative min-h-screen bg-[#f8f8f8] p-6 font-sans text-base leading-relaxed text-gray-900">
-      <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={5000} />
 
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm">
@@ -320,7 +313,7 @@ const ReminderForm = () => {
             onClick={() => setShowFilterModal(true)}
             className="p-2 rounded-full bg-blue-600 hover:bg-blue-700"
           >
-            <Filter size={20}  color="white"/>
+            <Filter size={20} color="white" />
           </button>
           <button
             onClick={() => setShowForm(true)}
@@ -419,18 +412,18 @@ const ReminderForm = () => {
                   </div>
                 </div>
                 <div className="text-right text-sm text-gray-600 whitespace-nowrap">
-                 <p className="font-medium text-blue-700">
-                  {(() => {
-                    const d = new Date(reminder.dremainder_dt);
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const month = String(d.getMonth() + 1).padStart(2, '0'); 
-                    const year = d.getFullYear();
-                    const hours = String(d.getHours()).padStart(2, '0');
-                    const minutes = String(d.getMinutes()).padStart(2, '0');
-                    const seconds = String(d.getSeconds()).padStart(2, '0');
-                    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-                  })()}
-                </p>
+                  <p className="font-medium text-blue-700">
+                    {(() => {
+                      const d = new Date(reminder.dremainder_dt);
+                      const day = String(d.getDate()).padStart(2, "0");
+                      const month = String(d.getMonth() + 1).padStart(2, "0");
+                      const year = d.getFullYear();
+                      const hours = String(d.getHours()).padStart(2, "0");
+                      const minutes = String(d.getMinutes()).padStart(2, "0");
+                      const seconds = String(d.getSeconds()).padStart(2, "0");
+                      return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
@@ -468,27 +461,8 @@ const ReminderForm = () => {
                     onChange={handleChange}
                     required
                     maxLength={100}
-                    ref={titleInputRef}
                     placeholder="Enter reminder title"
                   />
-                  <button
-                    type="button"
-                    onClick={() => toggleListening("title")}
-                    className={`px-3 py-1 rounded-full text-white text-sm select-none ${
-                      isListeningTitle ? "bg-red-500 hover:bg-red-600" : "bg-red-500 hover:bg-blue-900"
-                    } transition`}
-                    aria-label={isListeningTitle ? "Stop listening to title" : "Start listening to title"}
-                  >
-                    {isListeningTitle ? (
-                      <>
-                        <span className="animate-pulse">🎙️</span> Stop
-                      </>
-                    ) : (
-                      <>
-                        <span>🎙️</span>
-                      </>
-                    )}
-                  </button>
                 </div>
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
@@ -509,9 +483,15 @@ const ReminderForm = () => {
                     type="button"
                     onClick={() => toggleListening("content")}
                     className={`absolute top-2 right-2 px-3 py-1 rounded-full text-white text-sm select-none ${
-                      isListeningContent ? "bg-red-500 hover:bg-red-600" : "bg-red-500 hover:bg-blue-900"
+                      isListeningContent
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-red-500 hover:bg-blue-900"
                     } transition`}
-                    aria-label={isListeningContent ? "Stop listening to description" : "Start listening to description"}
+                    aria-label={
+                      isListeningContent
+                        ? "Stop listening to description"
+                        : "Start listening to description"
+                    }
                   >
                     {isListeningContent ? (
                       <>
@@ -530,7 +510,9 @@ const ReminderForm = () => {
                   </p>
                 )}
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">Priority</label>
+                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                  Priority
+                </label>
                 <select
                   name="priority"
                   className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -544,7 +526,9 @@ const ReminderForm = () => {
                 </select>
 
                 <div className="flex items-center justify-between mb-4">
-                  <label className="text-sm font-semibold text-gray-700">Assign To</label>
+                  <label className="text-sm font-semibold text-gray-700">
+                    Assign To
+                  </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -553,7 +537,10 @@ const ReminderForm = () => {
                       onChange={handleAssignToMeChange}
                       className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
                     />
-                    <label htmlFor="assignToMe" className="text-sm text-gray-700 cursor-pointer select-none">
+                    <label
+                      htmlFor="assignToMe"
+                      className="text-sm text-gray-700 cursor-pointer select-none"
+                    >
                       Assign to me
                     </label>
                   </div>
@@ -574,7 +561,9 @@ const ReminderForm = () => {
                   ))}
                 </select>
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">Date *</label>
+                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                  Date *
+                </label>
                 <input
                   type="date"
                   className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -584,7 +573,9 @@ const ReminderForm = () => {
                   required
                 />
 
-                <label className="block text-sm mb-4 font-semibold text-gray-700">Time *</label>
+                <label className="block text-sm mb-4 font-semibold text-gray-700">
+                  Time *
+                </label>
                 <input
                   type="time"
                   className="w-full border border-gray-300 p-3 mb-8 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -602,14 +593,14 @@ const ReminderForm = () => {
                   >
                     {submitting ? "Submitting..." : "Submit Reminder"}
                   </button>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={(e) => handleSubmit(e, "draft")}
                     className="bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition font-semibold"
                     disabled={submitting}
                   >
                     Save as Draft
-                  </button>
+                  </button> */}
                 </div>
               </form>
             </div>

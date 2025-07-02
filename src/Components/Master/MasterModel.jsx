@@ -88,7 +88,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
     // Memoize fetchItems to prevent unnecessary re-creations
     const fetchItems = useCallback(async () => {
         if (!master || !master.get) {
-            // console.warn("Master configuration or GET endpoint is missing. Cannot fetch items.");
+            console.warn("Master configuration or GET endpoint is missing. Cannot fetch items.");
             return;
         }
 
@@ -151,7 +151,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
     // Fetch all lead source items for filtering purposes
     const fetchAllLeadSourceItems = useCallback(async () => {
         if (!leadSourceConfig || !leadSourceConfig.get) {
-            // console.warn("LEAD_SOURCE configuration or GET endpoint is missing. Cannot fetch all lead source items.");
+            console.warn("LEAD_SOURCE configuration or GET endpoint is missing. Cannot fetch all lead source items.");
             return;
         }
         setIsLoadingAllLeadSourceItems(true);
@@ -162,7 +162,11 @@ export default function MasterModal({ master, onClose, companyId, userId, master
         try {
             const response = await axios.get(leadSourceConfig.get, { headers });
             const items = getNestedObject(response.data, leadSourceConfig.responseKey);
-            setAllLeadSourceItems(Array.isArray(items) ? items : []);
+const filteredItems = Array.isArray(items)
+  ? items.filter(item => item.bactive !== false) // Show only active items
+  : [];
+
+setAllLeadSourceItems(filteredItems);
         } catch (error) {
             console.error("Failed to fetch all lead source items for filtering:", error);
             toast.error("Failed to load lead source options for filtering.");
@@ -204,7 +208,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
 
                 if (Array.isArray(parents)) {
                     setParentOptions(parents);
-                    // console.log("Fetched Parent Options for dropdown:", parents); // DEBUG
+                    console.log("Fetched Parent Options for dropdown:", parents); // DEBUG
                 } else {
                     setParentOptions([]);
                     toast.warn(`Could not load parent options for ${master.title}. Check parentMasterConfig.responseKey.`);
@@ -299,7 +303,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
                 }
 
             }
-            // console.log("FormData after selectedItemForEdit:", newFormData); // DEBUG
+            console.log("FormData after selectedItemForEdit:", newFormData); // DEBUG
         } else {
             // For new entries, initialize from basePostPayload
             newFormData = { ...master.basePostPayload };
@@ -337,7 +341,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             } else if (name === 'parentLeadSourceId') { // For the new filtered lead source dropdown
                  newValue = value === '' ? null : Number(value);
             }
-            // console.log(`handleChange: Name=${name}, Value=${value}, NewValueInState=${newValue}`); // DEBUG
+            console.log(`handleChange: Name=${name}, Value=${value}, NewValueInState=${newValue}`); // DEBUG
             return {
                 ...prev,
                 [name]: newValue,
@@ -448,7 +452,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             }
         }
         
-        // console.log("Final Payload for API:", payload); // DEBUG
+        console.log("Final Payload for API:", payload); // DEBUG
         try {
             const token = localStorage.getItem('token');
             const headers = { 'Content-Type': 'application/json' };
@@ -584,8 +588,8 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             // Determine if payload needs to be sent in the body
             const sendPayloadInBody = master.idLocation === 'body'; // Now strictly relies on idLocation being 'body'
 
-            // console.log("DELETE Request - URL:", url); // DEBUG
-            // console.log("DELETE Request - Payload (if body expected):", sendPayloadInBody ? deletePayload : "N/A - Query/Params Expected"); // DEBUG
+            console.log("DELETE Request - URL:", url); // DEBUG
+            console.log("DELETE Request - Payload (if body expected):", sendPayloadInBody ? deletePayload : "N/A - Query/Params Expected"); // DEBUG
 
             if (sendPayloadInBody) {
                 if (Object.keys(deletePayload).length === 0) {
@@ -642,42 +646,27 @@ export default function MasterModal({ master, onClose, companyId, userId, master
             setIsDeleting(false);
         }
     };
-const handleEditSubIndustryClick = (subIndustryItem) => {
-    setSelectedItemForEdit({ ...subIndustryItem, isSubIndustry: true });
 
-    if (subIndustryConfig) {
-        const parentIdKeyInResponse = subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey || 'iindustry_parent';
-        const formParentKey = subIndustryConfig.parentMasterConfig?.formFieldKey || 'parentId';
+    const handleEditSubIndustryClick = (subIndustryItem) => {
+        setSelectedItemForEdit({ ...subIndustryItem, isSubIndustry: true });
+        
+        if (subIndustryConfig) {
+            const parentIdKeyInResponse = subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey || '';
+            const formParentKey = subIndustryConfig.parentMasterConfig?.formFieldKey || 'parentId';
 
-        setFormData(prev => ({
-            ...prev,
-            // Main name field
-            [subIndustryConfig.payloadKey]: subIndustryItem[subIndustryConfig.payloadMapping?.subindustry_name || 'subindustry_name'] || '',
-
-            // Parent ID - corrected
-            [formParentKey]:
-                subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse] !== undefined
+            setFormData(prev => ({
+                ...prev,
+                // Use payloadMapping to ensure correct mapping from GET response (snake_case) to form (camelCase)
+                [subIndustryConfig.payloadKey]: subIndustryItem[subIndustryConfig.payloadMapping?.subindustry_name || 'subindustry_name'] || '', 
+                [formParentKey]: subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse] !== undefined && subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse] !== null
                     ? Number(subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse])
                     : null,
-
-            // ID key (for update operation)
-            [subIndustryConfig.idKey]: subIndustryItem[subIndustryConfig.idKey],
-
-            // Active status (if used)
-            ...(subIndustryConfig.activeStatusPayloadKey && {
-                [subIndustryConfig.activeStatusPayloadKey]: subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false,
-            }),
-
-            // Any additional fields dynamically
-            ...(subIndustryConfig.additionalFields &&
-                subIndustryConfig.additionalFields.reduce(
-                    (acc, field) => ({ ...acc, [field]: subIndustryItem[field] || '' }),
-                    {}
-                )),
-        }));
-    }
-};
-
+                [subIndustryConfig.idKey]: subIndustryItem[subIndustryConfig.idKey], 
+                ...(subIndustryConfig.activeStatusPayloadKey && { [subIndustryConfig.activeStatusPayloadKey]: subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false }),
+                ...(subIndustryConfig.additionalFields && subIndustryConfig.additionalFields.reduce((acc, field) => ({ ...acc, [field]: subIndustryItem[field] || '' }), {}))
+            }));
+        }
+    };
 
     const handleDeleteSubIndustryClick = async (subIndustryItem) => {
         if (!subIndustryConfig) {
@@ -741,21 +730,21 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
         }
     };
 
-    // Filter lead source options based on the entered orderId
-    const filteredLeadSourceOptions = React.useMemo(() => {
-        if (master.title !== leadSourceConfig?.title || formData.orderId === undefined || formData.orderId === null || formData.orderId === '') {
-            return []; // Only filter if it's Lead Source master and orderId is present
-        }
-        const orderIdValue = Number(formData.orderId);
-        // Assuming lead source items have 'iorder_id' as the order ID from backend
-        const mappedOrderIdKey = leadSourceConfig?.payloadMapping?.orderId || 'orderId'; // Get backend key for orderId
+    // // Filter lead source options based on the entered orderId
+    // const filteredLeadSourceOptions = React.useMemo(() => {
+    //     if (master.title !== leadSourceConfig?.title || formData.orderId === undefined || formData.orderId === null || formData.orderId === '') {
+    //         return []; // Only filter if it's Lead Source master and orderId is present
+    //     }
+    //     const orderIdValue = Number(formData.orderId);
+    //     // Assuming lead source items have 'iorder_id' as the order ID from backend
+    //     const mappedOrderIdKey = leadSourceConfig?.payloadMapping?.orderId || 'orderId'; // Get backend key for orderId
 
-        // Filter out the currently selected item for edit from the parent source options
-        return allLeadSourceItems.filter(item => 
-            item[mappedOrderIdKey] === orderIdValue && 
-            item[leadSourceConfig.idKey] !== (selectedItemForEdit ? selectedItemForEdit[leadSourceConfig.idKey] : null)
-        );
-    }, [formData.orderId, allLeadSourceItems, master.title, leadSourceConfig, selectedItemForEdit]);
+    //     // Filter out the currently selected item for edit from the parent source options
+    //     return allLeadSourceItems.filter(item => 
+    //         item[mappedOrderIdKey] === orderIdValue && 
+    //         item[leadSourceConfig.idKey] !== (selectedItemForEdit ? selectedItemForEdit[leadSourceConfig.idKey] : null)
+    //     );
+    // }, [formData.orderId, allLeadSourceItems, master.title, leadSourceConfig, selectedItemForEdit]);
 
 
     if (!master) {
@@ -786,14 +775,15 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[80vh] flex flex-col">
-                <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">{master.title} Master</h2>
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-3xl font-bold"
-                >
-                    &times;
-                </button>
+<div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[80vh] flex flex-col relative">
+               <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-3xl font-bold z-10"
+    >
+        &times;
+    </button>
+                    <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">{master.title} Master</h2>
+
 
                 {apiError && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{apiError}</div>}
 
@@ -860,7 +850,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                     ) : (
                                         <ul className="space-y-2">
                                             {existingItems.map(item => {
-                                                // console.log(`Rendering flat item (Master: ${master.title}):`, item); // DEBUG: Log each item
+                                                console.log(`Rendering flat item (Master: ${master.title}):`, item); // DEBUG: Log each item
                                                 return (
                                                 <li
                                                     key={item[master.idKey]}
@@ -954,31 +944,14 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                             ))}
                                         </select>
                                     )}
-                                     {/* {console.log("Current Parent Dropdown Value:", formData[formParentKey])} DEBUG: Check selected parent ID */}
+                                     {console.log("Current Parent Dropdown Value:", formData[formParentKey])} {/* DEBUG: Check selected parent ID */}
                                 </div>
                             )}
 
                            {/* Main Input Field (clead_name, subindustry_name, etc.) */}
                             <div className="mb-4">
-                          {selectedItemForEdit && (
-  <div className="mb-3">
-    <h3 className="text-lg font-semibold text-blue-700">
-      Industry:{" "}
-      {(() => {
-        const matchedIndustry = parentOptions.find(
-          (industry) =>
-            String(industry.iindustry_id) ===
-            String(selectedItemForEdit.iindustry_parent)
-        );
-        return matchedIndustry?.cindustry_name || "Not Found";
-      })()}
-    </h3>
-  </div>
-)}
-
-
                                 <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
-                                    {master.modalKey || master.payloadKey}:
+                                    {master.modalKey || master.payloadKey} Name:
                                 </label>
                                 <input
                                     id={master.payloadKey}
@@ -1011,7 +984,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />
-                                     {/* {console.log("Current Order ID Value:", formData.orderId)} DEBUG: Check current orderId in form */}
+                                     {console.log("Current Order ID Value:", formData.orderId)} {/* DEBUG: Check current orderId in form */}
                                 </div>
                             )}
                             {/* ############################################################# */}

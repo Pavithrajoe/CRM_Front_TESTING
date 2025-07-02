@@ -31,6 +31,10 @@ const LeadDetailView = () => {
   const [mailSubject, setMailSubject] = useState("");
   const [mailContent, setMailContent] = useState("");
 
+  // States to hold logged-in user and company info
+  const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
+  const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
+
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
@@ -67,7 +71,7 @@ const LeadDetailView = () => {
         const base64Payload = token.split(".")[1];
         const decodedPayload = atob(base64Payload);
         const payloadObject = JSON.parse(decodedPayload);
-        userId = payloadObject.user_id;
+        userId = payloadObject.iUser_id; // Using iUser_id from your provided JWT payload structure
       } else {
         return;
       }
@@ -164,12 +168,28 @@ const LeadDetailView = () => {
           },
         });
 
-        if (!response.ok) throw new Error("Failed to fetch lead data");
+        if (!response.ok) {
+          console.error("Failed to fetch lead data. Status:", response.status);
+          throw new Error("Failed to fetch lead data");
+        }
 
         const data = await response.json();
-        setLeadData(data);
+        setLeadData(data); // Set leadData first
         setIsDeal(data.bisConverted);
         setIsLost(data.bactive);
+
+        // Use 'cEmail' for lead's email as it's the most common casing in your original snippet
+        if (data.cEmail) { // Changed from 'cemail' to 'cEmail' based on initial snippet
+          setSentTo(data.cEmail);
+          console.log("DEBUG: cEmail found and set to:", data.cEmail);
+        } else {
+          console.warn("DEBUG: cEmail not found or is empty in lead data:", data.cEmail);
+        }
+
+        console.log("DEBUG: Lead Data cFirstName:", data.cFirstName);
+        console.log("DEBUG: Lead Data cLastName:", data.cLastName);
+        console.log("DEBUG: Lead Data cProjectName:", data.cProjectName);
+
       } catch (error) {
         console.error("Error fetching lead data:", error);
       } finally {
@@ -194,9 +214,109 @@ const LeadDetailView = () => {
       }
     };
 
+    const getUserInfoFromLocalStorage = () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const base64Payload = token.split(".")[1];
+          const decodedPayload = atob(base64Payload);
+          const payloadObject = JSON.parse(decodedPayload);
+
+          console.log("DEBUG: Decoded JWT Payload:", payloadObject);
+
+          // Attempt to get user name from common properties
+          setLoggedInUserName(
+            payloadObject.cFull_name || // Your specified property
+            payloadObject.fullName ||
+            payloadObject.name ||
+            payloadObject.cUser_name || // Your other specified property
+            "User"
+          );
+
+          // Attempt to get company name from common properties
+          // Note: If 'company_name' or similar is truly not in the JWT,
+          // you'll need to fetch it from a separate user profile API.
+          setLoggedInCompanyName(
+            payloadObject.company_name ||
+            payloadObject.company ||
+            payloadObject.organization ||
+            payloadObject.orgName ||
+            "Your Company"
+          );
+
+          console.log("DEBUG: User Name extracted (attempted):", loggedInUserName);
+          console.log("DEBUG: Company Name extracted (attempted):", loggedInCompanyName);
+
+        } else {
+          console.warn("DEBUG: No JWT token found in localStorage.");
+          // Fallback if token is not present, check for userInfo in localStorage (if stored separately)
+          const userInfoString = localStorage.getItem("userInfo");
+          if (userInfoString) {
+            const userInfo = JSON.parse(userInfoString);
+            console.log("DEBUG: UserInfo from localStorage (separate storage):", userInfo);
+            setLoggedInUserName(userInfo.cFull_name || userInfo.fullName || userInfo.name || userInfo.cUser_name || "User");
+            setLoggedInCompanyName(userInfo.company_name || userInfo.company || userInfo.organization || userInfo.orgName || "Your Company");
+            console.log("DEBUG: User Info from localStorage (separate) extracted:", loggedInUserName);
+            console.log("DEBUG: Company Info from localStorage (separate) extracted:", loggedInCompanyName);
+          } else {
+            console.warn("DEBUG: No 'userInfo' found in localStorage either.");
+          }
+        }
+      } catch (error) {
+        console.error("Error extracting user info from token/localStorage:", error);
+        setLoggedInUserName("Your Name"); // Default if extraction fails
+        setLoggedInCompanyName("Your Company"); // Default if extraction fails
+      }
+    };
+
     fetchLeadData();
     fetchLostReasons();
-  }, [leadId]);
+    getUserInfoFromLocalStorage();
+  }, [leadId]); // Depend on leadId only for these initial fetches
+
+  useEffect(() => {
+    // This useEffect populates the email template when the modal opens or leadData/user info changes
+    if (isMailOpen && leadData) {
+      console.log("DEBUG: Inside mail-specific useEffect (template generation).");
+      console.log("DEBUG: leadData available for template:", leadData);
+      console.log("DEBUG: loggedInUserName for template:", loggedInUserName);
+      console.log("DEBUG: loggedInCompanyName for template:", loggedInCompanyName);
+      console.log("DEBUG: current sentTo state (pre-modal update):", sentTo);
+
+
+      // Re-setting sentTo here is generally redundant if fetchLeadData sets it correctly,
+      // but keeping it as a fallback in case of race conditions.
+      if (leadData.cEmail && sentTo !== leadData.cEmail) {
+          setSentTo(leadData.cEmail);
+          console.log("DEBUG: Re-set sentTo in mail useEffect (redundant, but safe) to:", leadData.cEmail);
+      } else if (!leadData.cEmail) {
+          console.warn("DEBUG: leadData.cEmail is missing or empty when opening mail modal for template.");
+      }
+
+      const leadFirstName = leadData.cFirstName || '';
+      const leadLastName = leadData.cLastName || '';
+      const leadProjectName = leadData.cProjectName || 'our services/products';
+
+      const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
+
+      const defaultContent = `
+        <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
+        <p>Hope this email finds you well.</p>
+        <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
+        <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
+        <p>Best regards,</p>
+      
+      `;
+      setMailSubject(defaultSubject);
+      setMailContent(defaultContent);
+
+      console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
+      console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
+      console.log("DEBUG: Final sentTo state when modal opens (after potential re-set):", sentTo);
+    } else if (isMailOpen && !leadData) {
+        console.warn("DEBUG: Mail modal opened but leadData is not yet available for template generation!");
+    }
+  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName, sentTo]); // Added sentTo to dependencies as it's modified here
 
   const modules = {
     toolbar: [

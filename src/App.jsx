@@ -8,6 +8,7 @@ import VerifyCodePage from "./pages/credential/verify_code";
 import Login from "./pages/credential/login";
 import { PopupProvider } from "./context/PopupContext";
 import SignupRes from "./pages/credential/signup_res";
+import Chatbot from "./Components/Chatbot"; // Already imported, perfect!
 
 import LeadTimeline from "./Components/LeadTimeline";
 import HistoryPage from "./pages/history";
@@ -115,6 +116,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+          <Chatbot />
        </UserProvider>
         </TabProvider>
       </ToastProvider>

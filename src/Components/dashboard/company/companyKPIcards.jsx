@@ -38,12 +38,12 @@ const [data, setData] = useState({});
             Authorization: `Bearer ${authData.token}`,
           },
         });
-        //console.log('Fetching Company KPI Data:', response);
+        // console.log('Fetching Company KPI Data:', response);
 
         if (!response.ok) throw new Error('Failed to fetch data');
 
         const result = await response.json();
-       // console.log('Company KPI API Response:', result);
+      //  console.log('Company KPI API Response:', result);
 
         // If the result is an object and you don't need filtering
         setData(result.data);
@@ -59,13 +59,22 @@ const [data, setData] = useState({});
   if (error) return <div>Error: {error}</div>;
 
 
+  const handleTotalLeadClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'total_leads' } });
+  };
+  const handleTotalLostClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'lost' } });
+  };
+
+   
+
   return (
     <>
 
      <div
-  className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
-  onClick={() => navigate('/leadcardview')} 
->
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            onClick={handleTotalLeadClick}
+          >
   <div className="flex justify-between items-start">
     <p className="text-sm font-bold text-gray-900">Total Leads</p>
     <div className="bg-blue-100 text-blue-600 rounded-full p-2">
@@ -77,7 +86,7 @@ const [data, setData] = useState({});
 
      <div
   className="bg-white p-4 rounded-lg shadow border cursor-pointer hover:shadow-md transition"
-  onClick={() => navigate('/leads')} 
+  onClick={handleTotalLostClick}
 >
         <div className="flex justify-between items-start">
           <p className="text-sm font-bold text-gray-900">Total Deals</p>

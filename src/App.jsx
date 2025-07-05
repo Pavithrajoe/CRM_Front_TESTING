@@ -53,6 +53,8 @@ import CompanyLeads from "./Components/reports/company_leads";
 import LeadOwnerEfficency from "./Components/reports/lead_owner_efficiency";
 import CompanyMaster from "./pages/Masters/companyMaster.jsx";
 import LeadConversionPage from "./Components/reports/LeadConversionPage.jsx";
+import UserDeals from "./pages/userPage/userDeal.jsx";
+import UserReportPage from "./pages/userPage/UserReportPage.jsx";
 
 function App() {
   return (
@@ -99,12 +101,15 @@ function App() {
               <Route path="allleadpage" element={<AllLeadsPage />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="companymaster" element={<CompanyMaster />} />
+           
 
               <Route path="companylist" element={<CompanyList />} />
               <Route path="companypage" element={<CompanyPage />} />
               <Route path="analytics" element={<UserAnalyticsPage />} />
               <Route path="teamview" element={<TeamviewDashboard />} />
               <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
+               <Route path="userdeals/:userId" element = {<UserDeals/>}/>
+               <Route path="/reports/:userId" element={<UserReportPage />} />
               <Route path="/first-response" element={<FirstResponseTimeReport/>}/>
               <Route path="settingspage" element={<SettingsPage />}>
                 <Route path="account" element={<AccountSettings />} />

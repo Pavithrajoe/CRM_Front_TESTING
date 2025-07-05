@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiSave,FiEye,FiX,FiMove,FiCodesandbox,FiCamera,} from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
@@ -7,140 +7,636 @@ import Loader from "./Loader";
 import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
-import DemoSessionDetails from "./demo_session_details"
+import DemoSessionDetails from "./demo_session_details";
+
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm = ({ profile, onClose, onSave }) => {
-  const [formData, setFormData] = useState({});
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+  const company_id = localStorage.getItem("company_id");
+  
+  const [form, setForm] = useState({
+    ileadpotential_id: profile?.ileadpotential_id || "",
+    ileadstatus_id: profile?.ileadstatus_id || "",
+    cindustry_id: profile?.cindustry_id || "",
+    csubindustry_id: profile?.csubindustry_id || "", 
+    lead_source_id: profile?.lead_source_id || "",
+    ino_employee: profile?.ino_employee || 0, 
+    iproject_value: profile?.iproject_value || 0, 
+    clead_name: profile?.clead_name || "",
+    cemail: profile?.cemail || "",
+    corganization: profile?.corganization || "",
+    cwebsite: profile?.cwebsite || "",
+    icity: profile?.icity || "",
+    iphone_no: profile?.iphone_no || "",
+    phone_country_code: profile?.phone_country_code || "+91",
+    cgender: profile?.cgender || 1,
+    clogo: profile?.clogo || "logo.png",
+    clead_address1: profile?.clead_address1 || "",
+    cwhatsapp: profile?.cwhatsapp || "",
+    whatsapp_country_code: profile?.whatsapp_country_code || "+91",
+    clead_address2: profile?.clead_address2 || "",
+    clead_address3: profile?.clead_address3 || "",
+    cstate: profile?.cstate || "",
+    cdistrict: profile?.cdistrict || "",
+    cpincode: profile?.cpincode || "",
+    ccountry: profile?.ccountry || "",
+    cservices: profile?.cservices || "No services entered",
+    clead_source: profile?.clead_source || "",
+    cresponded_by: userId,
+    modified_by: userId,
+  });
 
-  useEffect(() => {
-    if (profile) {
-      setFormData({ ...profile });
+  const [Potential, setPotential] = useState([]);
+  const [status, setStatus] = useState([]);
+  const [leadIndustry, setIndustry] = useState([]);
+  const [leadSubIndustry, setSubIndustry] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [searchCity, setSearchCity] = useState("");
+  const [filteredCities, setFilteredCities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [source, setSource] = useState([]);
+  
+  // Refs for dropdowns
+  const cityDropdownRef = useRef(null);
+  const potentialDropdownRef = useRef(null);
+  const statusDropdownRef = useRef(null);
+  const industryDropdownRef = useRef(null);
+  const subIndustryDropdownRef = useRef(null);
+  const sourceDropdownRef = useRef(null);
+  
+  // Dropdown states
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isIndustryDropdownOpen, setIsIndustryDropdownOpen] = useState(false);
+  const [isSubIndustryDropdownOpen, setIsSubIndustryDropdownOpen] = useState(false);
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  
+  // Search states
+  const [searchPotential, setSearchPotential] = useState("");
+  const [searchStatus, setSearchStatus] = useState("");
+  const [searchIndustry, setSearchIndustry] = useState("");
+  const [searchSubIndustry, setSearchSubIndustry] = useState("");
+  const [searchSource, setSearchSource] = useState("");
+
+  // Fetch dropdown data
+  const fetchDropdownData = async (endpoint, setData, dataName, transformFn) => {
+    try {
+      const response = await fetch(`${apiEndPoint}/${endpoint}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error(`Can't fetch ${dataName}. Status: ${response.status}`);
+        return;
+      }
+
+      const rawData = await response.json();
+      setData(transformFn(rawData));
+    } catch (e) {
+      console.error(`Error in fetching ${dataName}:`, e);
     }
-  }, [profile]);
-
-  // console.log("Form Data in EditProfileForm:", formData);
-
-  const handleFieldChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    onSave(formData);
+  // Fetch cities data
+  const fetchCitiesData = async () => {
+    try {
+      const response = await fetch(`${apiEndPoint}/city`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Can't fetch cities, there was an error.");
+        return;
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data.cities)) {
+        setCities(data.cities);
+        setFilteredCities(data.cities);
+      }
+    } catch (e) {
+      console.error("Error in fetching cities:", e);
+    }
+  };
+
+  // Handle city search
+  const handleSearchCity = (e) => {
+    const searchTerm = e.target.value;
+    setSearchCity(searchTerm);
+    const filtered = cities.filter((city) =>
+      city.cCity_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredCities(filtered);
+    setIsCityDropdownOpen(true);
+  };
+
+  // Handle city selection
+  const handleCitySelect = (cityId, cityName) => {
+    setForm(prev => ({ ...prev, icity: cityId }));
+    setSearchCity(cityName);
+    setIsCityDropdownOpen(false);
+  };
+
+  // Handle potential selection
+  const handlePotentialSelect = (potentialId, potentialName) => {
+    setForm(prev => ({ ...prev, iLeadpoten_id: potentialId }));
+    setSearchPotential(potentialName);
+    setIsPotentialDropdownOpen(false);
+  };
+
+  // Handle status selection
+  const handleStatusSelect = (statusId, statusName) => {
+    setForm(prev => ({ ...prev, ileadstatus_id: statusId }));
+    setSearchStatus(statusName);
+    setIsStatusDropdownOpen(false);
+  };
+
+  // Handle industry selection
+  const handleIndustrySelect = (industryId, industryName) => {
+    setForm(prev => ({ ...prev, cindustry_id: industryId, csubindustry_id: "" }));
+    setSearchIndustry(industryName);
+    setIsIndustryDropdownOpen(false);
+    setSearchSubIndustry("");
+  };
+
+  // Handle sub-industry selection
+  const handleSubIndustrySelect = (subIndustryId, subIndustryName) => {
+    setForm(prev => ({ ...prev, csubindustry_id: subIndustryId }));
+    setSearchSubIndustry(subIndustryName);
+    setIsSubIndustryDropdownOpen(false);
+  };
+
+  // Handle source selection
+  const handleSourceSelect = (sourceId, sourceName) => {
+    setForm(prev => ({ ...prev, lead_source_id: sourceId }));
+    setSearchSource(sourceName);
+    setIsSourceDropdownOpen(false);
+  };
+
+  // Filter sub-industries based on selected industry
+  const filteredSubIndustries = leadSubIndustry.filter(
+    sub => sub.iindustry_parent === form.cindustry_id
+  );
+
+  // Fetch all dropdown data on component mount
+  useEffect(() => {
+    fetchDropdownData("lead-potential/company-potential", setPotential, "lead potential", (res) => res.data || []);
+    fetchDropdownData("lead-status/company-lead", setStatus, "lead status", (res) => res.response || []);
+    fetchDropdownData("lead-source/company-src", setSource, "lead sources", (data) => data.data || []);
+    fetchCitiesData();
+
+    // Fetch industry and sub-industry
+    const fetchIndustryAndSubIndustry = async () => {
+      try {
+        const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error("Can't fetch lead industry and sub-industry");
+          return;
+        }
+
+        const rawData = await response.json();
+        setIndustry(rawData.response?.industry || []);
+        setSubIndustry(rawData.response?.subindustries || []); 
+      } catch (e) {
+        console.error("Error in fetching lead industry and sub-industry:", e);
+      }
+    };
+
+    fetchIndustryAndSubIndustry();
+  }, []);
+
+  // Set initial search values based on profile data
+  useEffect(() => {
+    if (profile) {
+      // Set potential search value
+      const selectedPotential = Potential.find(p => p.ileadpoten_id === profile.iLeadpoten_id);
+      if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+      
+      // Set status search value
+      const selectedStatus = status.find(s => s.ileadstatus_id === profile.ileadstatus_id);
+      if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+      
+      // Set industry search value
+      const selectedIndustry = leadIndustry.find(i => i.iindustry_id === profile.cindustry_id);
+      if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+      
+      // Set sub-industry search value
+      const selectedSubIndustry = leadSubIndustry.find(s => s.isubindustry === profile.csubindustry_id);
+      if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+      
+      // Set source search value
+      const selectedSource = source.find(s => s.source_id === profile.lead_source_id);
+      if (selectedSource) setSearchSource(selectedSource.source_name);
+      
+      // Set city search value
+      const selectedCity = cities.find(c => c.icity_id === profile.icity);
+      if (selectedCity) setSearchCity(selectedCity.cCity_name);
+    }
+  }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities]);
+
+  // Handle form field changes
+  const handleFieldChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(form);
   };
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-sm sm:max-w-md w-full shadow-lg relative">
+      <div className="block bg-white p-6 sm:p-8 rounded-2xl max-w-[80%] sm:max-w-[80%] w-full shadow-lg overflow-y-scroll h-[100vh] relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
         >
           <FiX size={24} />
         </button>
+        
         <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
           Edit Lead Profile
         </h3>
-        <div className="space-y-5">
+        
+        <form onSubmit={handleSubmit} className="space-y-5 overflow-y-scroll">
+          {/* Name Field */}
           <div>
-            <label
-              htmlFor="clead_name"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="clead_name" className="block text-sm font-medium text-gray-700 mb-1">
               Name:
             </label>
             <input
               type="text"
               id="clead_name"
               name="clead_name"
-              value={formData.clead_name || ""}
+              value={form.clead_name}
               onChange={handleFieldChange}
               className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              required
             />
           </div>
+          
+          {/* Organization Field */}
           <div>
-            <label
-              htmlFor="corganization"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="corganization" className="block text-sm font-medium text-gray-700 mb-1">
               Organization:
             </label>
             <input
               type="text"
               id="corganization"
               name="corganization"
-              value={formData.corganization || ""}
+              value={form.corganization}
               onChange={handleFieldChange}
               className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
             />
           </div>
+          
+          {/* Phone Field */}
           <div>
-            <label
-              htmlFor="iphone_no"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="iphone_no" className="block text-sm font-medium text-gray-700 mb-1">
               Phone:
             </label>
-            <input
-              type="text"
-              id="iphone_no"
-              name="iphone_no"
-              value={formData.iphone_no || ""}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
+            <div className="flex">
+              <div className="relative w-20 mr-2">
+                <input
+                  type="text"
+                  value={form.phone_country_code}
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg py-2 px-3 text-gray-800 text-sm"
+                />
+              </div>
+              <input
+                type="text"
+                id="iphone_no"
+                name="iphone_no"
+                value={form.iphone_no}
+                onChange={handleFieldChange}
+                className="flex-1 border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              />
+            </div>
           </div>
+          
+          {/* Email Field */}
           <div>
-            <label
-              htmlFor="cemail"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="cemail" className="block text-sm font-medium text-gray-700 mb-1">
               Email:
             </label>
             <input
               type="email"
               id="cemail"
               name="cemail"
-              value={formData.cemail || ""}
+              value={form.cemail}
               onChange={handleFieldChange}
               className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
             />
           </div>
+          
+          {/* Website Field */}
           <div>
-            <label
-              htmlFor="website"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="cwebsite" className="block text-sm font-medium text-gray-700 mb-1">
               Website:
             </label>
             <input
               type="text"
               id="cwebsite"
               name="cwebsite"
-              value={formData.cwebsite || ""}
+              value={form.cwebsite}
               onChange={handleFieldChange}
               className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
             />
           </div>
-
+          
+          {/* Lead Potential Dropdown */}
+          <div className="relative" ref={potentialDropdownRef}>
+            <label htmlFor="iLeadpoten_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Potential:
+            </label>
+            <input
+              type="text"
+              value={searchPotential}
+              onChange={(e) => {
+                setSearchPotential(e.target.value);
+                setIsPotentialDropdownOpen(true);
+              }}
+              onClick={() => setIsPotentialDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Select potential"
+            />
+            {isPotentialDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {Potential.filter(potential => 
+                  potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
+                ).map((potential) => (
+                  <div
+                    key={potential.ileadpoten_id}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handlePotentialSelect(potential.ileadpoten_id, potential.clead_name)}
+                  >
+                    {potential.clead_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Lead Status Dropdown */}
+          <div className="relative" ref={statusDropdownRef}>
+            <label htmlFor="ileadstatus_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Status:
+            </label>
+            <input
+              type="text"
+              value={searchStatus}
+              onChange={(e) => {
+                setSearchStatus(e.target.value);
+                setIsStatusDropdownOpen(true);
+              }}
+              onClick={() => setIsStatusDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Select status"
+            />
+            {isStatusDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {status.filter(statusItem => 
+                  statusItem.clead_name.toLowerCase().includes(searchStatus.toLowerCase())
+                ).map((statusItem) => (
+                  <div
+                    key={statusItem.ileadstatus_id}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handleStatusSelect(statusItem.ileadstatus_id, statusItem.clead_name)}
+                  >
+                    {statusItem.clead_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Lead Source Dropdown */}
+          <div className="relative" ref={sourceDropdownRef}>
+            <label htmlFor="lead_source_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Lead Source:
+            </label>
+            <input
+              type="text"
+              value={searchSource}
+              onChange={(e) => {
+                setSearchSource(e.target.value);
+                setIsSourceDropdownOpen(true);
+              }}
+              onClick={() => setIsSourceDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Select source"
+            />
+            {isSourceDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {source.filter(sourceItem => 
+                  sourceItem.source_name.toLowerCase().includes(searchSource.toLowerCase())
+                ).map((sourceItem) => (
+                  <div
+                    key={sourceItem.source_id}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handleSourceSelect(sourceItem.source_id, sourceItem.source_name)}
+                  >
+                    {sourceItem.source_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Industry Dropdown */}
+          <div className="relative" ref={industryDropdownRef}>
+            <label htmlFor="cindustry_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Industry:
+            </label>
+            <input
+              type="text"
+              value={searchIndustry}
+              onChange={(e) => {
+                setSearchIndustry(e.target.value);
+                setIsIndustryDropdownOpen(true);
+              }}
+              onClick={() => setIsIndustryDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Select industry"
+            />
+            {isIndustryDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {leadIndustry.filter(industry => 
+                  industry.cindustry_name.toLowerCase().includes(searchIndustry.toLowerCase())
+                ).map((industry) => (
+                  <div
+                    key={industry.iindustry_id}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handleIndustrySelect(industry.iindustry_id, industry.cindustry_name)}
+                  >
+                    {industry.cindustry_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Sub-Industry Dropdown */}
+          <div className="relative" ref={subIndustryDropdownRef}>
+            <label htmlFor="csubindustry_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Sub-Industry:
+            </label>
+            <input
+              type="text"
+              value={searchSubIndustry}
+              onChange={(e) => {
+                setSearchSubIndustry(e.target.value);
+                setIsSubIndustryDropdownOpen(true);
+              }}
+              onClick={() => setIsSubIndustryDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Select sub-industry"
+              disabled={!form.cindustry_id}
+            />
+            {isSubIndustryDropdownOpen && form.cindustry_id && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {filteredSubIndustries.filter(subIndustry => 
+                  subIndustry.subindustry_name.toLowerCase().includes(searchSubIndustry.toLowerCase())
+                ).map((subIndustry) => (
+                  <div
+                    key={subIndustry.isubindustry}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handleSubIndustrySelect(subIndustry.isubindustry, subIndustry.subindustry_name)}
+                  >
+                    {subIndustry.subindustry_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* City Dropdown */}
+          <div className="relative" ref={cityDropdownRef}>
+            <label htmlFor="icity" className="block text-sm font-medium text-gray-700 mb-1">
+              City:
+            </label>
+            <input
+              type="text"
+              value={searchCity}
+              onChange={handleSearchCity}
+              onClick={() => setIsCityDropdownOpen(true)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              placeholder="Search city"
+            />
+            {isCityDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                {filteredCities.map((city) => (
+                  <div
+                    key={city.icity_id}
+                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
+                    onClick={() => handleCitySelect(city.icity_id, city.cCity_name)}
+                  >
+                    {city.cCity_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Address Fields */}
+          <div>
+            <label htmlFor="clead_address1" className="block text-sm font-medium text-gray-700 mb-1">
+              Address 1:
+            </label>
+            <input
+              type="text"
+              id="clead_address1"
+              name="clead_address1"
+              value={form.clead_address1}
+              onChange={handleFieldChange}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="clead_address2" className="block text-sm font-medium text-gray-700 mb-1">
+              Address 2:
+            </label>
+            <input
+              type="text"
+              id="clead_address2"
+              name="clead_address2"
+              value={form.clead_address2}
+              onChange={handleFieldChange}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+            />
+          </div>
+          
+          {/* Project Value Field */}
+          <div>
+            <label htmlFor="iproject_value" className="block text-sm font-medium text-gray-700 mb-1">
+              Project Value:
+            </label>
+            <input
+              type="number"
+              id="iproject_value"
+              name="iproject_value"
+              value={form.iproject_value}
+              onChange={handleFieldChange}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+            />
+          </div>
+          
+          {/* Number of Employees Field */}
+          <div>
+            <label htmlFor="ino_employee" className="block text-sm font-medium text-gray-700 mb-1">
+              Number of Employees:
+            </label>
+            <input
+              type="number"
+              id="ino_employee"
+              name="ino_employee"
+              value={form.ino_employee}
+              onChange={handleFieldChange}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+            />
+          </div>
+          
+          {/* Form Actions */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
-              onClick={handleSave}
+              type="submit"
               className="bg-blue-500 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200"
             >
               <FiSave size={16} />
               Save
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transition-colors duration-200"
             >
               Cancel
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
@@ -158,7 +654,6 @@ const ProfileCard = () => {
   const [selectedAssignToUser, setSelectedAssignToUser] = useState(null);
   const [selectedNotifyToUser, setSelectedNotifyToUser] = useState(null);
   const [users, setUsers] = useState([]);
-
   const [attachments, setAttachments] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -169,8 +664,6 @@ const ProfileCard = () => {
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
-    
-    // console.log("Token", token);
     if (token) {
       try {
         const base64Payload = token.split(".")[1];
@@ -192,15 +685,12 @@ const ProfileCard = () => {
       const token = localStorage.getItem("token");
 
       try {
-
-        
         const response = await axios.get(`${apiEndPoint}/lead/${leadId}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        console.log("API Response for Lead Details:", response.data);
         setProfile(response.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
@@ -233,7 +723,6 @@ const ProfileCard = () => {
   const handleNotifyLead = (event) => {
     const userId = event.target.value === "" ? null : event.target.value;
     setSelectedNotifyToUser(userId);
-    // console.log("Selected user for notification:", userId); 
   };
 
   const fetchAttachments = async () => {
@@ -292,7 +781,6 @@ const ProfileCard = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      console.log("Profile updated successfully:", updatedFormData);
       setEditSuccess(true);
       setIsEditModalOpen(false);
       setProfile(updatedFormData);
@@ -304,38 +792,9 @@ const ProfileCard = () => {
         },
         ...history,
       ]);
-    }  catch (err) {
+    } catch (err) {
       console.error("Failed to save profile", err);
       alert("Failed to save profile.");
-    }
-  };
-
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfile((prev) => ({ ...prev, avatar: imageUrl }));
-
-      const formData = new FormData();
-      formData.append("avatar", file);
-      const token = localStorage.getItem("token");
-
-      try {
-        await axios.post(
-          `${apiEndPoint}/lead/${leadId}/upload-avatar`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          }
-        );
-        alert("Profile picture updated.");
-      } catch (err) {
-        console.error("Failed to upload avatar", err);
-        alert("Failed to upload avatar.");
-      }
     }
   };
 
@@ -348,84 +807,72 @@ const ProfileCard = () => {
   };
 
   const confirmAssignment = async () => {
-  setShowAssignConfirmation(false); 
+    setShowAssignConfirmation(false);
+    const userIdToAssign = Number(selectedAssignToUser);
+    const token = localStorage.getItem("token");
+    const loggedInUserId = getUserIdFromToken();
 
-  const userIdToAssign = Number(selectedAssignToUser);
-  const token = localStorage.getItem("token");
-  const loggedInUserId = getUserIdFromToken();
-
-  if (!loggedInUserId) {
-    alert("User not logged in or token invalid.");
-    return;
-  }
-
-  
-
-  if (!userIdToAssign || userIdToAssign === 0) {
-    alert("Please select a valid user to assign the lead to.");
-    return;
-  }
-
-  // console.log("logged user", loggedInUserId);
-  // console.log("User to assign lead to:", userIdToAssign);
-
-  try {
-    await axios.post(
-      `${apiEndPoint}/assigned-to`,
-      {
-        iassigned_by: loggedInUserId,
-        iassigned_to: userIdToAssign,
-        ilead_id: Number(leadId),
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    alert("Lead assigned successfully.");
-    fetchAssignedToList(); 
-    const assignedUser = users.find(user => String(user.iUser_id) === String(userIdToAssign));
-    const notifiedPerson = users.find(user => String(user.iUser_id) === String(selectedNotifyToUser));
-
-    if (assignedUser && profile) { 
-      const mailPayload = {
-        userName: assignedUser.cUser_name, 
-        time: new Date().toISOString(), 
-        leadName: profile.clead_name, 
-        leadURL: window.location.href, 
-        mailId: assignedUser.cEmail, 
-        assignedTo: assignedUser.cUser_name, 
-        notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
-      };
-
-      // console.log("Mail Payload:", mailPayload); 
-
-      try {
-        await axios.post(
-          `${apiEndPoint}/assigned-to-mail`, 
-          mailPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        // console.log("Notification email sent successfully.");
-      } catch (mailErr) {
-        console.error("Failed to send notification email:", mailErr);
-      }
-    } else {
-      console.warn("Could not send notification email: Assigned user or lead profile not found.");
+    if (!loggedInUserId) {
+      alert("User not logged in or token invalid.");
+      return;
     }
 
-  } catch (err) {
-    console.error("Failed to assign lead", err);
-    alert("Failed to assign lead.");
-  }
-};
+    if (!userIdToAssign || userIdToAssign === 0) {
+      alert("Please select a valid user to assign the lead to.");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${apiEndPoint}/assigned-to`,
+        {
+          iassigned_by: loggedInUserId,
+          iassigned_to: userIdToAssign,
+          ilead_id: Number(leadId),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("Lead assigned successfully.");
+      fetchAssignedToList();
+      const assignedUser = users.find(user => String(user.iUser_id) === String(userIdToAssign));
+      const notifiedPerson = users.find(user => String(user.iUser_id) === String(selectedNotifyToUser));
+
+      if (assignedUser && profile) {
+        const mailPayload = {
+          userName: assignedUser.cUser_name,
+          time: new Date().toISOString(),
+          leadName: profile.clead_name,
+          leadURL: window.location.href,
+          mailId: assignedUser.cEmail,
+          assignedTo: assignedUser.cUser_name,
+          notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
+        };
+
+        try {
+          await axios.post(
+            `${apiEndPoint}/assigned-to-mail`,
+            mailPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        } catch (mailErr) {
+          console.error("Failed to send notification email:", mailErr);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to assign lead", err);
+      alert("Failed to assign lead.");
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -443,7 +890,6 @@ const ProfileCard = () => {
 
   const handleFileUpload = async () => {
     const token = localStorage.getItem("token");
-    // console.log("Token", token);
     const userId = getUserIdFromToken();
 
     if (!userId) {
@@ -482,7 +928,7 @@ const ProfileCard = () => {
   if (error) return <div className="text-red-500 p-4">{error}</div>;
   if (!profile)
     return (
-      <div className="p-4 text-gray-700">No profile data found.</div>
+      <div className="p-4 text-gray-700">No profile found.</div>
     );
 
   const latestAssignments = assignedToList.slice(0, 2);
@@ -517,21 +963,14 @@ const ProfileCard = () => {
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
           <img
-            src={profile.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=Your+Name"}
-            alt="Avatar"
-            className="w-full h-full rounded-full object-cover border-2 border-gray-100 shadow-sm"
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+              profile.clead_name
+            )}&background=random&color=fff&rounded=true`}
+            alt="Profile"
+            className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
           />
-          <label className="absolute -bottom-1 -right-1 bg-white p-2 rounded-full shadow-md cursor-pointer border border-gray-200 hover:bg-gray-50 transition-colors">
-            <FiCamera className="w-5 h-5 text-gray-600" />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
-          </label>
         </div>
-        <div className="text-center sm:text-left">
+        <div className="text-center sm:text-left mt-5">
           <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
             {profile.clead_name || "-"}
           </h3>
@@ -543,7 +982,7 @@ const ProfileCard = () => {
 
       <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
         <div className="flex items-center gap-3">
-          <FiPhone className="text-gray-500 reak-words w-4 h-4 sm:w-5 sm:h-5" />
+          <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
           <span className="break-words">{profile.iphone_no || "-"}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -588,12 +1027,11 @@ const ProfileCard = () => {
             LOST LEAD
           </div>
         )}
-        {/* Combined block for Website Lead and Remarks */}
+        
         {(profile.website_lead === true || profile.remarks) && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm mt-5 text-sm text-green-800 flex flex-col gap-3">
             {profile.website_lead === true && (
               <div className="flex items-center gap-2">
-                {/* New Website Lead Icon (World/Globe icon) */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-green-600 flex-shrink-0"
@@ -632,108 +1070,102 @@ const ProfileCard = () => {
           </div>
         )}
 
-<div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            <label
+              htmlFor="assignUser"
+              className="text-sm font-semibold text-gray-700 min-w-[90px]"
+            >
+              Assign to:
+            </label>
+            <div className="relative w-full sm:w-64">
+              <select
+                id="assignUser"
+                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
+                onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
+                value={selectedAssignToUser || ""}
+              >
+                <option value="" disabled>
+                  Select User
+                </option>
+                {users.map((user) => (
+                  <option key={user.iUser_id} value={user.iUser_id}>
+                    {user.cUser_name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                <svg
+                  className="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-  {/* Assign To */}
-  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-    <label
-      htmlFor="assignUser"
-      className="text-sm font-semibold text-gray-700 min-w-[90px]"
-    >
-      Assign to:
-    </label>
-    <div className="relative w-full sm:w-64">
-      <select
-        id="assignUser"
-        className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-        onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
-        value={selectedAssignToUser || ""}
-      >
-        <option value="" disabled>
-          Select User
-        </option>
-        {users.map((user) => (
-          <option key={user.iUser_id} value={user.iUser_id}>
-            {user.cUser_name}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-        <svg
-          className="w-4 h-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </div>
-    </div>
-  </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            <label
+              htmlFor="notifyUser"
+              className="text-sm font-semibold text-gray-700 min-w-[90px]"
+            >
+              Notify to:
+            </label>
+            <div className="relative w-full sm:w-64">
+              <select
+                id="notifyUser"
+                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
+                onChange={handleNotifyLead}
+                value={selectedNotifyToUser || ""}
+              >
+                <option value="">
+                  Select User
+                </option>
+                {usersForNotify.map((user) => (
+                  <option key={user.iUser_id} value={user.iUser_id}>
+                    {user.cUser_name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                <svg
+                  className="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-  {/* Notify To */}
-  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-    <label
-      htmlFor="notifyUser"
-      className="text-sm font-semibold text-gray-700 min-w-[90px]"
-    >
-      Notify to:
-    </label>
-    <div className="relative w-full sm:w-64">
-      <select
-        id="notifyUser"
-        className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-        onChange={handleNotifyLead}
-        value={selectedNotifyToUser || ""}
-      >
-        <option value="">
-          Select User
-        </option>
-        {usersForNotify.map((user) => (
-          <option key={user.iUser_id} value={user.iUser_id}>
-            {user.cUser_name}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-        <svg
-          className="w-4 h-4"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </div>
-    </div>
-  </div>
+          <div className="flex justify-center">
+            <button
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!selectedAssignToUser}
+              onClick={handleAssignButtonClick}
+            >
+              Assign Lead
+            </button>
+          </div>
+        </div>
 
-  {/* Assign Button */}
- <div className="flex justify-center">
-  <button
-    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-    disabled={!selectedAssignToUser}
-    onClick={handleAssignButtonClick}
-  >
-    Assign Lead
-  </button>
-</div>
-</div>
-
-
-        {/* Assigned to me list */}
         <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-gray-700">
@@ -774,7 +1206,6 @@ const ProfileCard = () => {
           )}
         </div>
 
-        {/* Attachment Upload Section */}
         <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-4">
             Manage Attachments
@@ -787,7 +1218,6 @@ const ProfileCard = () => {
             <FiUpload className="mr-2" /> Upload New File
           </button>
 
-          {/* Display attachments list below */}
           <div className="mt-5 space-y-3">
             {attachments.length === 0 && (
               <p className="text-sm text-gray-500 italic">
@@ -884,7 +1314,6 @@ const ProfileCard = () => {
           </div>
         </Dialog>
 
-        {/* Assigned To All List Modal */}
         <Dialog
           open={isAssignedToModalOpen}
           onClose={() => setIsAssignedToModalOpen(false)}
@@ -934,7 +1363,6 @@ const ProfileCard = () => {
           </div>
         </Dialog>
 
-        {/* Assignment Confirmation Modal */}
         <Dialog
           open={showAssignConfirmation}
           onClose={() => setShowAssignConfirmation(false)}
@@ -969,7 +1397,6 @@ const ProfileCard = () => {
             </Dialog.Panel>
           </div>
         </Dialog>
-
 
         {editSuccess && (
           <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
@@ -1041,9 +1468,37 @@ const ProfileCard = () => {
                     {profile.corganization || "-"}
                   </span>{" "}
                 </div>
+               
+                 <div className="flex items-start gap-3">
+                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                  <span>
+                    <span className="font-medium">Project Value:</span>{" "}
+                    {profile.iproject_value || "-"}
+                  </span>
+                </div>
+                 <div className="flex items-start gap-3">
+                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                  <span>
+                    <span className="font-medium">Potential:</span>{" "}
+                    {profile.lead_potential?.clead_name || "-"}
+                  </span>
+                </div>
+                 <div className="flex items-start gap-3">
+                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                  <span>
+                    <span className="font-medium">Status:</span>{" "}
+                    {profile.lead_status?.clead_name || "-"}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                  <span>
+                    <span className="font-medium">Employee:</span>{" "}
+                    {profile.ino_employee || "-"}
+                  </span>
+                </div>
               </div>
 
-              {/* Display Website Lead status in full details as well */}
               {profile.website_lead === true && (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm text-sm mt-10 text-yellow-800 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
@@ -1101,7 +1556,6 @@ const ProfileCard = () => {
         )}
       </div>
       <DemoSessionDetails leadId={leadId} />
-
     </div>
   );
 };

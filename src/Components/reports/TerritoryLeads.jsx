@@ -243,11 +243,13 @@ const TerritoryLeadsAnalytics = () => {
                     </span>
                   </td>
                   <td className="px-6 py-3">₹{lead.project_value?.toLocaleString() || 0}</td>
-                  <td className="px-6 py-3">{lead.city?.cCity_name || "N/A"}</td>
+                  <td className="px-6 py-3">{lead.city?.cCity_name || "-"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          
         </div>
 
         <div className="flex justify-center items-center space-x-3 mt-8">

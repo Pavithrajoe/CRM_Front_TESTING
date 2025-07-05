@@ -1,34 +1,36 @@
+// src/userPage/acheivementPage.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ENDPOINTS } from '../../api/constraints';
-import { UserContext } from '../../context/UserContext';
+import { ENDPOINTS } from '../../api/constraints'; // Ensure this path is correct
+import { UserContext } from '../../context/UserContext'; // Ensure this path is correct
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
-// Reusable ToggleSwitch component (No changes needed here)
+// Reusable ToggleSwitch component (No changes needed here, though not used in the dashboard itself)
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
-  <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
-    <span className="text-gray-700 font-medium">{label}</span>
-    <div
-      onClick={onToggle}
-      className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${
-        isChecked ? 'bg-blue-600' : 'bg-gray-300'
-      }`}
-    >
-      <div
-        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
-          isChecked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      ></div>
+    <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
+        <span className="text-gray-700 font-medium">{label}</span>
+        <div
+            onClick={onToggle}
+            className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${
+                isChecked ? 'bg-blue-600' : 'bg-gray-300'
+            }`}
+        >
+            <div
+                className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                    isChecked ? 'translate-x-5' : 'translate-x-0'
+                }`}
+            ></div>
+        </div>
     </div>
-  </div>
 );
 
-function AcheivementDashboard({ userId }) {
-    // console.log("AcheivementDashboard: Received userId prop:", userId);
-
+function AcheivementDashboard({ userId }) { // Accept userId as a prop
     const { users } = useContext(UserContext);
+    // Find the current user from the context based on the prop userId
     const currentUser = users ? users.find(user => user.iUser_id === userId) : null;
-    const currentUserName = currentUser ? currentUser.cFull_name : ''; 
+    const currentUserName = currentUser ? currentUser.cFull_name : 'Loading...';
+    const navigate = useNavigate(); // Initialize navigate hook
 
     const [achievements, setAchievements] = useState({
         totalLeadClosed: 0,
@@ -42,9 +44,12 @@ function AcheivementDashboard({ userId }) {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedTimeFilter, setSelectedTimeFilter] = useState('this-week'); // Initial filter
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [filterIconTrigger, setFilterIconTrigger] = useState(0); // For apply filter icon click
 
-    // --- Helper Functions for Formatting (unchanged) ---
+
+    // --- Helper Functions for Formatting ---
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -58,9 +63,9 @@ function AcheivementDashboard({ userId }) {
         if (!isoString) return 'Nil';
         const date = new Date(isoString);
         return date.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric',
-            month: 'short',
-            day: 'numeric',
         });
     };
 
@@ -74,33 +79,49 @@ function AcheivementDashboard({ userId }) {
         });
     };
 
-    // --- Data Fetching Logic (Modified to include timeFilter) ---
+    // --- Data Fetching Logic ---
     useEffect(() => {
         const fetchAchievements = async () => {
             setLoading(true);
             setError(null);
             const authToken = localStorage.getItem("token");
 
-            if (!authToken || !userId) {
-                setError("Authentication token or User ID missing. Please log in.");
+            // Ensure authToken and userId are available
+            if (!authToken) {
+                setError("Authentication token missing. Please log in.");
                 setLoading(false);
                 toast.error("Please login to view achievements.");
                 return;
             }
+            if (!userId) {
+                // This case should ideally be handled by the parent component or route guard
+                // but kept here for robustness.
+                setError("User ID missing. Cannot fetch achievements.");
+                setLoading(false);
+                toast.error("User ID is required to fetch achievements.");
+                return;
+            }
+
+            // Basic validation for date range before fetching
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                toast.error("Start date cannot be after end date.");
+                setLoading(false);
+                setAchievements(prev => ({ ...prev, historicalRevenueData: [] })); // Clear table if dates are invalid
+                return;
+            }
 
             try {
-                // Construct the URL with the timeFilter query parameter
                 const url = new URL(`${ENDPOINTS.USER_ACHIEVEMENTS}/${userId}`);
-                // Add the timeFilter parameter only if it's not 'all-time' or you want to send 'all-time' explicitly
-                if (selectedTimeFilter && selectedTimeFilter !== 'all-time') {
-                    url.searchParams.append('timeFilter', selectedTimeFilter);
-                } else if (selectedTimeFilter === 'all-time') {
-                     url.searchParams.append('timeFilter', 'all-time'); // Explicitly send 'all-time'
-                }
                 
-                // console.log(`Fetching achievements from: ${url.toString()} for User ID: ${userId} with filter: ${selectedTimeFilter}`);
-                         //this function is to send the user id to fetch the deals closed by the user 
-                // const dealsColsedByUser=await fetch()
+                if (startDate) {
+                    url.searchParams.append('startDate', startDate);
+                }
+                if (endDate) {
+                    url.searchParams.append('endDate', endDate);
+                }
+
+                console.log(`Fetching achievements from: ${url.toString()} for User ID: ${userId} with filter: from ${startDate || 'beginning'} to ${endDate || 'now'}`);
+
                 const response = await fetch(url.toString(), {
                     method: 'GET',
                     headers: {
@@ -115,7 +136,7 @@ function AcheivementDashboard({ userId }) {
                 }
 
                 const data = await response.json();
-                // console.log("Fetched achievement data:", data);
+                console.log("Fetched achievement data:", data);
 
                 setAchievements({
                     totalLeadClosed: data.totalLeadClosed || 0,
@@ -124,7 +145,7 @@ function AcheivementDashboard({ userId }) {
                     totalRevenueAmount: data.totalRevenueAmount || 0,
                     highestValueLead: data.highestValueLead || { iproject_value: 0, dcreated_dt: null, convertToDealTime: null },
                     highestAchievedMonth: data.highestAchievedMonth || { month: '', count: 0 },
-                    historicalRevenueData: data.totalRevenue || [],
+                    historicalRevenueData: Array.isArray(data.totalRevenue) ? data.totalRevenue : [],
                 });
 
             } catch (err) {
@@ -136,25 +157,51 @@ function AcheivementDashboard({ userId }) {
             }
         };
 
+        // Only fetch if userId is genuinely provided and not null/undefined
         if (userId) {
             fetchAchievements();
         } else {
-            // console.warn("AcheivementDashboard: userId prop is not available yet, skipping fetch.");
-            setLoading(false);
+            setLoading(false); // If no userId, stop loading and show appropriate message
         }
-    }, [userId, selectedTimeFilter]); // *** Dependency now includes selectedTimeFilter ***
+    }, [userId, startDate, endDate, filterIconTrigger]); // Depend on userId to re-fetch when it changes
 
-    const handleTimeFilterChange = (e) => {
-        const newFilter = e.target.value;
-        setSelectedTimeFilter(newFilter);
-        // The useEffect hook will now re-run automatically because selectedTimeFilter changed.
-        toast.info(`Time filter changed to: ${newFilter}. Re-fetching data...`);
+    // Handler for triggering the filter when the apply icon is clicked
+    const handleFilterIconClick = () => {
+        if (!startDate && !endDate) {
+            toast.warn("Please select at least a start or end date to filter.");
+            return;
+        }
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            toast.error("Start date cannot be after end date.");
+            return;
+        }
+        setFilterIconTrigger(prev => prev + 1);
+        toast.info(`Applying filter from ${startDate || 'beginning'} to ${endDate || 'now'}. Re-fetching data...`);
+    };
+
+    // Handler for clearing the date filter when the clear icon is clicked
+    const handleClearFilterIconClick = () => {
+        if (startDate === '' && endDate === '') {
+            toast.info("Filter is already clear.");
+            return;
+        }
+        setStartDate('');
+        setEndDate('');
+        setFilterIconTrigger(prev => prev + 1);
+        toast.info("Date filter cleared. Showing all-time data.");
+    };
+
+    // MODIFICATION HERE: If you click "Total Deals Closed", you likely want to see ALL deals, not just the current month.
+    // So, navigate to the base UserDeals route for that user without date params.
+    const handleTotalDealsClosedClick = () => {
+        navigate(`/userdeals/${userId}`); 
     };
 
     if (loading) {
         return (
             <div className="min-h-screen p-5 font-sans text-gray-800 flex justify-center items-center">
-                <p className="text-xl font-semibold">Loading Achievements...</p>
+                <p className="text-xl font-semibold">Loading Achievements for {currentUserName}...</p>
+                <ToastContainer />
             </div>
         );
     }
@@ -172,17 +219,20 @@ function AcheivementDashboard({ userId }) {
         <div className="min-h-screen p-5 text-gray-800 bg-gray-50">
             <div className="dashboard-container mx-auto p-8 rounded-lg bg-white shadow-xl border border-gray-200">
                 
-                <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">Your Achievements</h2>
+                <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">
+                    Achievements of {currentUserName}
+                </h2>
 
                 <div className="achievement-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    {/* Achievement Cards */}
                     {/* Card 1: Total Deals Closed */}
-                    <div className="achievement-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
-                        <div className="achievement-card-title text-base text-blue-800 font-medium mb-2">
-                            Total Deals Closed</div>
-                        <div className="achievement-card-metric text-2xl font-bold text-blue-900 mb-2">
-                            {achievements.totalLeadClosed}
 
-                        </div>
+                    <div 
+                        className="achievement-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102 cursor-pointer" // Added cursor-pointer
+                        onClick={handleTotalDealsClosedClick} // Added onClick handler
+                    >
+                        <div className="achievement-card-title text-base text-blue-800 font-medium mb-2">Total Deals Closed</div>
+                        <div className="achievement-card-metric text-2xl font-bold text-blue-900 mb-2">{achievements.totalLeadClosed}</div>
                         <div className="achievement-card-trend flex items-center text-sm text-green-600 font-semibold">
                             <span className="arrow mr-1 text-lg">&#x25B2;</span>
                             +Overview
@@ -218,8 +268,7 @@ function AcheivementDashboard({ userId }) {
                             {formatCurrency(achievements.highestValueLead?.iproject_value || 0)}
                         </div>
                         <div className="achievement-card-trend flex items-center text-sm text-red-600 font-semibold">
-                            <span className="arrow mr-1 text-lg">&#x25B2;</span>
-                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : '+0.18% than last Month'}
+                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : '-'}
                         </div>
                     </div>
 
@@ -230,7 +279,6 @@ function AcheivementDashboard({ userId }) {
                             {achievements.highestAchievedMonth?.month ? new Date(achievements.highestAchievedMonth.month).toLocaleString('en-IN', { month: 'long', year: 'numeric' }) : 'Nil'}
                         </div>
                         <div className="achievement-card-trend flex items-center text-sm text-yellow-600 font-semibold">
-                            <span className="arrow mr-1 text-lg">&#x25B2;</span>
                             {achievements.highestAchievedMonth?.count ? ` with ${achievements.highestAchievedMonth.count} achievements` : '+Overview'}
                         </div>
                     </div>
@@ -248,30 +296,44 @@ function AcheivementDashboard({ userId }) {
 
                 <div className="historical-section-header flex flex-col sm:flex-row justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Historical Revenue Details</h2>
-                    <div className="time-selector relative w-full sm:w-auto">
-                        <select
-                            className="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm transition duration-200"
-                            value={selectedTimeFilter}
-                            onChange={handleTimeFilterChange}
-                        >
-                            <option value="this-week">This Week</option>
-                            <option value="last-week">Last Week</option>
-                            <option value="this-month">This Month</option>
-                            <option value="last-month">Last Month</option>
-                            <option value="all-time">All Time</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
+                    <div className="date-filter-inputs flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="block w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm transition duration-200"
+                            aria-label="Start Date"
+                        />
+                        <span className="text-gray-600 font-medium hidden sm:block">to</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="block w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm transition duration-200"
+                            aria-label="End Date"
+                        />
+                        
+                        {/* Apply Filter Icon */}
+                        <i 
+                            className="fas fa-filter text-blue-600 hover:text-blue-800 text-2xl cursor-pointer transition-colors duration-200"
+                            onClick={handleFilterIconClick}
+                            title="Apply Date Filter"
+                        ></i>
+                        
+                        {/* Clear Filter Icon */}
+                        <i 
+                            className="fas fa-xmark text-red-600 hover:text-red-800 text-2xl cursor-pointer transition-colors duration-200"
+                            onClick={handleClearFilterIconClick}
+                            title="Clear Filter"
+                        ></i>
                     </div>
                 </div>
 
-                <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+                <div className="overflow-x-auto overflow-y-scroll h-[550px] shadow-lg rounded-lg border border-gray-200">
                     <table className="historical-table w-full border-collapse">
                         <thead>
                             <tr className="bg-gray-50">
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">S.No</th>
-                                {/* <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">User ID</th> */}
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Project Values</th>
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Created Date</th>
                                 <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Conversion Time</th> 
@@ -280,13 +342,10 @@ function AcheivementDashboard({ userId }) {
                         <tbody>
                             {achievements.historicalRevenueData.length > 0 ? (
                                 achievements.historicalRevenueData.map((row, index) => (
-                                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                                    <tr key={row.iProject_id || index} className="hover:bg-gray-50 transition-colors duration-150">
                                         <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {index + 1}
                                         </td>
-                                        {/* <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
-                                            {userId}
-                                        </td> */}
                                         <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatCurrency(row.iproject_value)}
                                         </td>
@@ -300,7 +359,7 @@ function AcheivementDashboard({ userId }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="p-6 text-center text-gray-500 bg-white">No historical revenue data available.</td>
+                                    <td colSpan="4" className="p-6 text-center text-gray-500 bg-white">No historical revenue data available for the selected dates.</td>
                                 </tr>
                             )}
                         </tbody>

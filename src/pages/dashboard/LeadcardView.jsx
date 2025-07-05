@@ -80,7 +80,7 @@ const LeadCardViewPage = () => {
         dateStr
             ? new Date(dateStr).toLocaleDateString('en-GB', {
                   day: '2-digit',
-                  month: 'short',
+                  month: 'numeric',
                   year: 'numeric',
               })
             : '-';
@@ -240,6 +240,7 @@ const LeadCardViewPage = () => {
                 throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
             }
             const result = await response.json();
+            console.log("Fetched deals:", result); // Debugging log
             const fetchedDeals = Array.isArray(result) ? result : result.data || [];
             setDeals(fetchedDeals);
 
@@ -316,7 +317,7 @@ const LeadCardViewPage = () => {
             const mergedLeads = assignedEntries.map(assigned => {
                 const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
 
-                let statusDisplay = 'N/A';
+                let statusDisplay = '-';
                 let statusColor = 'bg-gray-300 text-gray-700';
 
                 const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
@@ -344,17 +345,17 @@ const LeadCardViewPage = () => {
                     dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
                     dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
                     dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt, // Ensure update date is present
-                    clead_name: correspondingLead?.clead_name || assigned.clead_name || 'N/A',
-                    corganization: correspondingLead?.corganization || assigned.corganization || 'N/A',
-                    cemail: correspondingLead?.cemail || assigned.cemail || 'N/A',
-                    iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || 'N/A',
+                    clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
+                    corganization: correspondingLead?.corganization || assigned.corganization || '-',
+                    cemail: correspondingLead?.cemail || assigned.cemail || '-',
+                    iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
                     statusDisplay: statusDisplay,
                     statusColor: statusColor,
                     lead_status: correspondingLead?.lead_status || assigned.lead_status, // Keep original lead_status if available
                     bactive: isActiveAssigned,
                     bisConverted: isConvertedAssigned,
                     website_lead: isWebsiteAssigned,
-                    iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || 'N/A'
+                    iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
                 };
             }).filter(lead => lead.bactive === true || lead.bactive === 'true'); // Filter for active assigned leads
             const sortedAssigned = mergedLeads.sort(
@@ -810,8 +811,8 @@ const LeadCardViewPage = () => {
                                         onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
                                         className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}
                                     >
-                                        <div>{item.clead_name || item.cdeal_name || 'N/A'}</div>
-                                        <div>{item.corganization || item.c_organization || 'N/A'}</div>
+                                        <div>{item.clead_name || item.cdeal_name || '-'}</div>
+                                        <div>{item.corganization || item.c_organization || '-'}</div>
 
                                         <div className="relative group overflow-visible">
                                             <span className="block truncate">
@@ -826,7 +827,7 @@ const LeadCardViewPage = () => {
                                         <div>{item.iphone_no || item.c_phone || '-'}</div>
                                         {selectedFilter === 'assignedToMe' && (
                                             <>
-                                                <div>{item.iassigned_by_name || 'N/A'}</div>
+                                                <div>{item.iassigned_by_name || '-'}</div>
                                                 <div>{formatDate(item.dcreate_dt)}</div>
                                                 <div>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div> {/* Use dupdate_dt here for display */}
                                             </>
@@ -889,10 +890,10 @@ const LeadCardViewPage = () => {
                                     >
                                         <div>
                                             <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
-                                                {item.clead_name || item.cdeal_name || 'N/A'}
+                                                {item.clead_name || item.cdeal_name || '-'}
                                             </h3>
                                             <p className="text-gray-600 text-sm mb-2 truncate">
-                                                {item.corganization || item.c_organization || 'N/A'}
+                                                {item.corganization || item.c_organization || '-'}
                                             </p>
                                             <div className="text-gray-500 text-xs space-y-1 mb-3">
                                                 {(item.cemail || item.c_email) && (

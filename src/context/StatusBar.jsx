@@ -1,3 +1,4 @@
+// StatusBar.js
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 import {
@@ -19,6 +20,8 @@ const mandatoryInputStages = ['Proposal', 'Won'];
 const StatusBar = ({ leadId, leadData }) => {
   const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const [statusRemarks, setStatusRemarks] = useState([]);
+
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogValue, setDialogValue] = useState('');
@@ -26,6 +29,12 @@ const StatusBar = ({ leadId, leadData }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [users, setUsers] = useState([]);
   const { showToast } = useToast();
+
+  const [showRemarkDialog, setShowRemarkDialog] = useState(false);
+  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
+  const [remarkStageId, setRemarkStageId] = useState(null);
+  const [selectedRemarkId, setSelectedRemarkId] = useState(null);
+const [selectedRemark, setSelectedRemark] = useState(null);
 
   const fetchStages = async () => {
     try {
@@ -36,10 +45,7 @@ const StatusBar = ({ leadId, leadData }) => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch stages');
-      }
+      if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
       const formattedStages = Array.isArray(data.response)
         ? data.response
@@ -50,10 +56,8 @@ const StatusBar = ({ leadId, leadData }) => {
             }))
             .sort((a, b) => a.order - b.order)
         : [];
-
       setStages(formattedStages);
     } catch (err) {
-      console.error(err);
       setError(err.message || 'Unable to fetch stage data');
     }
   };
@@ -75,31 +79,19 @@ const StatusBar = ({ leadId, leadData }) => {
     }
   };
 
-  const fetchCurrentStage = () => {
-    if (leadData && stages.length > 0) {
-      const currentStatusId = leadData.ileadstatus_id;
-      const index = stages.findIndex(stage => stage.id === currentStatusId);
-      if (index !== -1) {
-        setCurrentStageIndex(index);
-      }
-    }
-  };
-
   useEffect(() => {
-    const init = async () => {
-      await fetchStages();
-      await fetchUsers();
-    };
-    init();
+    fetchStages();
+    fetchUsers();
   }, []);
 
   useEffect(() => {
-    if (stages.length > 0 && leadData) {
-      fetchCurrentStage();
+    if (stages.length && leadData) {
+      const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
+      if (index !== -1) setCurrentStageIndex(index);
     }
   }, [stages, leadData]);
 
-  const handleStageClick = async (clickedIndex, statusId) => {
+  const handleStageClick = (clickedIndex, statusId) => {
     if (clickedIndex <= currentStageIndex) {
       showToast('info', 'Cannot go back or re-select current stage.');
       return;
@@ -127,186 +119,243 @@ const StatusBar = ({ leadId, leadData }) => {
       return;
     }
 
-    await updateStage(clickedIndex, statusId);
-    showToast('success', 'Status changed!');
+    setRemarkStageId(statusId);
+    setRemarkData({ remark: '', projectValue: '' });
+    setShowRemarkDialog(true);
   };
 
   const updateStage = async (newIndex, statusId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update status');
-      }
+      await fetch(`${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
       setCurrentStageIndex(newIndex);
-      showToast('success', 'Lead status updated successfully!');
       if (stages[newIndex].name?.toLowerCase() === 'won') {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       }
     } catch (e) {
-      console.error('Error updating status:', e);
       showToast('error', e.message || 'Error updating status');
     }
   };
 
-  const handleDialogSave = async () => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('user');
-    let userData = null;
-    try {
-      userData = JSON.parse(userId);
-    } catch (e) {
-      console.error("Failed to parse user data from localStorage", e);
-      showToast('error', 'User data not found. Please log in again.');
-      setOpenDialog(false);
-      return;
-    }
+ const handleDialogSave = async () => {
+  const token = localStorage.getItem('token');
+  const userId = JSON.parse(localStorage.getItem('user'));
+  const stageName = stages[dialogStageIndex]?.name;
+  const statusId = stages[dialogStageIndex]?.id;
 
-    const stageName = stages[dialogStageIndex]?.name;
-    const statusId = stages[dialogStageIndex].id;
+  try {
+    if (stageName?.toLowerCase().includes('demo')) {
+      const {
+        demoSessionType,
+        demoSessionStartTime,
+        demoSessionEndTime,
+        notes,
+        place,
+        demoSessionAttendees,
+      } = dialogValue;
 
-    try {
-      if (stageName?.toLowerCase().includes('demo')) {
-        if (
-          !dialogValue.demoSessionType ||
-          !dialogValue.demoSessionStartTime ||
-          !dialogValue.demoSessionEndTime ||
-          !dialogValue.place ||
-          !dialogValue.notes ||
-          (dialogValue.demoSessionAttendees?.length === 0)
-        ) {
-          showToast('error', 'Please fill all mandatory demo details.');
-          return;
-        }
-
-        const requestBody = {
-          demoSessionType: dialogValue.demoSessionType,
-          demoSessionStartTime: new Date(dialogValue.demoSessionStartTime).toISOString(),
-          demoSessionEndTime: new Date(dialogValue.demoSessionEndTime).toISOString(),
-          notes: dialogValue.notes,
-          place: dialogValue.place,
-          leadId: parseInt(leadId),
-          demoSessionAttendees: dialogValue.demoSessionAttendees.map(u => ({
-            attendeeId: u.iUser_id,
-          })),
-        };
-
-        await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, requestBody, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-        showToast('success', 'Demo session details saved!');
-      } else if (['proposal', 'won'].includes(stageName?.toLowerCase())) {
-        const amount = parseFloat(dialogValue);
-        if (isNaN(amount) || amount <= 0) {
-          showToast('error', 'Please enter a valid positive amount.');
-          return;
-        }
-
-        const requestBody = {
-          caction: stageName,
-          iaction_doneby: userData.iUser_id,
-          iamount: amount,
-          ilead_id: parseInt(leadId),
-        };
-
-        await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, requestBody, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-        showToast('success', `${stageName} details saved!`);
+      // Validate required fields
+      if (
+        !demoSessionType ||
+        !demoSessionStartTime ||
+        !demoSessionEndTime ||
+        !notes ||
+        !place ||
+        !demoSessionAttendees.length
+      ) {
+        showToast('error', 'Please fill all demo session fields');
+        return;
       }
 
-      await updateStage(dialogStageIndex, statusId);
-    } catch (error) {
-      console.error('POST Error:', error?.response?.data?.message || error.message);
-      showToast('error', error?.response?.data?.message || 'Failed to save details.');
-    } finally {
-      setOpenDialog(false);
-      setDialogValue('');
-      setDialogStageIndex(null);
+      const start = new Date(demoSessionStartTime);
+      const end = new Date(demoSessionEndTime);
+
+      if (start >= end) {
+        showToast('error', 'Start time must be earlier than end time');
+        return;
+      }
+
+      const body = {
+        demoSessionType,
+        demoSessionStartTime: start.toISOString(),
+        demoSessionEndTime: end.toISOString(),
+        notes,
+        place,
+        leadId: parseInt(leadId),
+        demoSessionAttendees: demoSessionAttendees.map(u => ({ attendeeId: u.iUser_id })),
+      };
+
+      await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, body, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast('success', 'Demo session details saved!');
+    } else {
+      // Handle Proposal or Won stage input
+      const amount = parseFloat(dialogValue);
+      if (isNaN(amount) || amount <= 0) {
+        showToast('error', 'Please enter a valid amount');
+        return;
+      }
+
+      const body = {
+        caction: stageName,
+        iaction_doneby: userId.iUser_id,
+        iamount: amount,
+        ilead_id: parseInt(leadId),
+      };
+
+      await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, body, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast('success', `${stageName} details saved!`);
     }
+
+    setRemarkStageId(statusId);
+    setRemarkData({ remark: '', projectValue: '' });
+    setShowRemarkDialog(true);
+    setOpenDialog(false);
+  } catch (e) {
+    showToast('error', e?.response?.data?.message || e.message || 'Something went wrong');
+  }
+};
+
+
+  const handleRemarkSubmit = async () => {
+  if (!remarkData.remark.trim()) {
+    showToast('error', 'Remark is required');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  const userId = JSON.parse(localStorage.getItem('user'));
+  const payload = {
+    remark: remarkData.remark.trim(),
+    leadId: parseInt(leadId),
+    leadStatusId: remarkStageId,
+    createBy: userId.iUser_id,
+    ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
   };
+
+  try {
+  await axios.post(ENDPOINTS.STATUS_REMARKS, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    showToast('success', 'Remark submitted!');
+    const newIndex = stages.findIndex(s => s.id === remarkStageId);
+    await updateStage(newIndex, remarkStageId);
+    setShowRemarkDialog(false); // ✅ Only close on success
+  } catch (err) {
+    const serverMsg = err.response?.data?.Message;
+    const issues = Array.isArray(serverMsg?.issues)
+      ? serverMsg.issues.join(', ')
+      : serverMsg?.message || 'Failed to submit remark';
+
+    showToast('error', issues);
+  }
+};
+
+const getStatusRemarks = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (Array.isArray(response.data?.Response)) {
+      setStatusRemarks(response.data.Response);
+    }
+    console.log("the status remarks",response.data)
+  } catch (e) {
+    console.error("Error fetching remarks:", e.message);
+  }
+};
+
+
+
+useEffect(() => {
+  getStatusRemarks();
+
+}, []);
+    console.log(statusRemarks)
+
 
   return (
     <div className="w-full px-4 py-6">
       {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
       <div className="flex items-center justify-between relative">
-        {stages.map((stage, index) => {
-          const isCompleted = index < currentStageIndex;
-          const isActive = index === currentStageIndex;
-          const isClickable = index > currentStageIndex;
+       {stages.map((stage, index) => {
+  const isCompleted = index < currentStageIndex;
+  const isActive = index === currentStageIndex;
+  const isClickable = index > currentStageIndex;
 
-          return (
-            <div key={stage.id} className="flex flex-col items-center flex-1">
-              <div
-                onClick={() => handleStageClick(index, stage.id)}
-                className={`relative flex items-center justify-center w-10 h-10 rounded-full 
-                  ${
-                    isCompleted
-                      ? 'bg-green-600 text-white'
-                      : isActive
-                      ? 'bg-blue-600 text-white'
-                      : isClickable
-                      ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  }
-                  transition-colors duration-200`}
-              >
-                {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
-              </div>
-              <span className="mt-2 text-sm text-center">{stage.name}</span>
-            </div>
-          );
-        })}
+  // Find matching remark
+  const matchedRemark = statusRemarks.find(
+    (r) => r.lead_status_id === stage.id
+  );
+
+  return (
+    <div key={stage.id} className="flex flex-col items-center flex-1">
+      <div
+        onClick={() => handleStageClick(index, stage.id)}
+        className={`relative flex items-center justify-center w-10 h-10 rounded-full 
+          ${
+            isCompleted
+              ? 'bg-green-600 text-white'
+              : isActive
+              ? 'bg-blue-600 text-white'
+              : isClickable
+              ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+          }
+          transition-colors duration-200`}
+        title={matchedRemark ? matchedRemark.lead_status_remarks : ''}
+      >
+        {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
+      </div>
+      <span className="mt-2 text-sm text-center">{stage.name}</span>
+    </div>
+  );
+})}
+
       </div>
 
-      {/* Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        PaperProps={{ sx: { borderRadius: 3, padding: 2, minWidth: 360 } }}
-      >
-        <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.4rem' }}>
-          {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo')
-            ? 'Demo - Enter Details'
-            : `${stages[dialogStageIndex]?.name} - Enter Value`}
-        </DialogTitle>
-
-        <DialogContent sx={{ width: '100%', maxWidth: 500 }}>
+      {/* Demo/Proposal/Won Dialog */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Enter Details</DialogTitle>
+        <DialogContent>
           {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo') ? (
             <>
               <Autocomplete
                 fullWidth
-                options={['Online', 'Offline']}
-                value={dialogValue.demoSessionType || null}
-                onChange={(event, newValue) =>
+                options={['online', 'offline']}
+                value={dialogValue.demoSessionType || ''}
+                onChange={(e, newValue) =>
                   setDialogValue(prev => ({ ...prev, demoSessionType: newValue }))
                 }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Session Type"
-                    variant="outlined"
-                    sx={{ mt: 2 }}
-                    required
-                  />
+                  <TextField {...params} label="Session Type" sx={{ mt: 2 }} />
                 )}
               />
 
@@ -320,7 +369,6 @@ const StatusBar = ({ leadId, leadData }) => {
                 }
                 sx={{ mt: 2 }}
                 InputLabelProps={{ shrink: true }}
-                required
               />
 
               <TextField
@@ -333,7 +381,6 @@ const StatusBar = ({ leadId, leadData }) => {
                 }
                 sx={{ mt: 2 }}
                 InputLabelProps={{ shrink: true }}
-                required
               />
 
               <TextField
@@ -342,73 +389,130 @@ const StatusBar = ({ leadId, leadData }) => {
                 multiline
                 rows={2}
                 value={dialogValue.notes || ''}
-                onChange={(e) => setDialogValue(prev => ({ ...prev, notes: e.target.value }))}
+                onChange={(e) =>
+                  setDialogValue(prev => ({ ...prev, notes: e.target.value }))
+                }
                 sx={{ mt: 2 }}
-                required
               />
 
               <TextField
-                label={dialogValue.demoSessionType === 'Online' ? 'Meeting Link' : 'Place'}
+                label="Place / Link"
                 fullWidth
                 value={dialogValue.place || ''}
-                onChange={(e) => setDialogValue(prev => ({ ...prev, place: e.target.value }))}
+                onChange={(e) =>
+                  setDialogValue(prev => ({ ...prev, place: e.target.value }))
+                }
                 sx={{ mt: 2 }}
-                required
               />
 
               <Autocomplete
                 multiple
                 options={users}
-                getOptionLabel={(option) => option.cFull_name || ''}
+                getOptionLabel={(option) =>option.bactive===true? option.cFull_name : ''}
                 isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
-                value={
-                  (dialogValue.demoSessionAttendees || []).map(selected =>
-                    users.find(user => user.iUser_id === selected.iUser_id) || selected
-                  )
-                }
-                onChange={(event, newValue) =>
+                value={dialogValue.demoSessionAttendees || []}
+                onChange={(e, newValue) =>
                   setDialogValue(prev => ({ ...prev, demoSessionAttendees: newValue }))
                 }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Attendees"
-                    variant="outlined"
-                    required
-                    error={dialogValue.demoSessionAttendees?.length === 0}
-                    helperText={
-                      dialogValue.demoSessionAttendees?.length === 0
-                        ? 'Please select at least one attendee'
-                        : ''
-                    }
-                    sx={{ mt: 2 }}
-                  />
+                  <TextField {...params} label="Attendees" sx={{ mt: 2 }} />
                 )}
               />
             </>
           ) : (
             <TextField
+              label="Enter Value"
               fullWidth
-              variant="outlined"
+              type="number"
               value={dialogValue}
               onChange={(e) => setDialogValue(e.target.value)}
-              label="Enter Value"
-              type="number"
-              sx={{ mt: 1 }}
-              required
+              sx={{ mt: 2 }}
             />
           )}
         </DialogContent>
-
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} color="inherit">
-            Cancel
-          </Button>
-          <Button onClick={handleDialogSave} variant="contained">
-            Save
-          </Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleDialogSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Remark Dialog */}
+      <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
+        <DialogTitle>Enter Remark</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Remark"
+            fullWidth
+            multiline
+            rows={3}
+            required
+            value={remarkData.remark}
+            onChange={(e) => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
+            sx={{ mt: 2 }}
+          />
+          <TextField
+            label="Project Value (optional)"
+            type="number"
+            fullWidth
+            value={remarkData.projectValue}
+            onChange={(e) => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+          <Button onClick={handleRemarkSubmit} variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
+    {statusRemarks.length > 0 && (
+  <div className="mt-6">
+    <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
+    <div className="flex overflow-x-auto space-x-6 px-2 py-4 relative">
+
+      {statusRemarks
+  .sort((a, b) => a.ilead_status_remarks_id - b.ilead_status_remarks_id)
+  .map((remark, index) => (
+    <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
+      {index !== statusRemarks.length - 1 && (
+        <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
+      )}
+
+      <div
+ className="font-sans bg-white shadow-md border border-gray-300 rounded-lg p-4 w-64 min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer hover:shadow-xl transition"
+        onClick={() => setSelectedRemark(remark)}
+      >
+        <p className="text-sm"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
+        <p className="text-sm"><strong>Created By:</strong> {remark.createdBy || 'N/A'}</p>
+        <p className="text-sm"><strong>Date:</strong> {new Date(remark.dcreated_dt).toLocaleString()}</p>
+        <p className="text-sm"><strong>Status:</strong> {remark.status_name}</p>
+      </div>
+    </div>
+))}
+{selectedRemark && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 transition-all duration-300">
+    <div className="bg-white w-[60%] max-w-3xl rounded-2xl shadow-2xl p-6 relative animate-fadeInUp">
+      <button
+        onClick={() => setSelectedRemark(null)}
+        className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-xl"
+      >
+        &times;
+      </button>
+      <h2 className="text-xl font-semibold mb-4 text-blue-600">Remark Details</h2>
+      <div className="space-y-3 text-sm">
+        <p><strong>Remark:</strong> {selectedRemark.lead_status_remarks}</p>
+        <p><strong>Created By:</strong> {selectedRemark.createdBy || 'N/A'}</p>
+        <p><strong>Date:</strong> {new Date(selectedRemark.dcreated_dt).toLocaleString()}</p>
+        <p><strong>Status:</strong> {selectedRemark.status_name}</p>
+      </div>
+    </div>
+  </div>
+)}
+
+    </div>
+  </div>
+)}
+
+
 
       {showConfetti && <Confetti />}
     </div>

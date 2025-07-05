@@ -4,7 +4,7 @@ import { ENDPOINTS } from '../../src/api/constraints';
 import ProfileHeader from '../Components/common/ProfileHeader';
 import SettingsPage from './userPage/settingsPage';
 import HistoryDashboard from './userPage/historyPage';
-import TargetDashboard from './userPage/targetPage';
+import TargetDashboard from './userPage/TargetPage';
 import AcheivementDashboard from './userPage/acheivementPage';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaCalendarAlt,

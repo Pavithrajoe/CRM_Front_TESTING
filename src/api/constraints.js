@@ -102,7 +102,7 @@ export const ENDPOINTS = {
   LEAD_OWNER_FIRST_RES: `${BASE_URL}/reports/lead-owner-efficiency`,
   SALES_PIPLINE_ANALYSIS: `${BASE_URL}/reports/sales-pipline-report`,
   PROSPECTS_LOST_LEADS: `${BASE_URL}/reports/prospects-lost-leads`,
-  
+  STATUS_REMARKS:`${BASE_URL}/lead-status-remark`
 
  
 };

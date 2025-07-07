@@ -229,8 +229,7 @@ const DemoSessionDetails = ({ leadId }) => {
               !(selectedSession?.attendees || []).some(att => att.attendeeId === user.iUser_id) &&
               !(formData.demoSessionAttendees || []).some(att => att.iUser_id === user.iUser_id)
             )}
-            getOptionLabel={(option) => option.cFull_name || ''}
-            isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+getOptionLabel={(option) =>option.bactive===true? option.cFull_name : ''}            isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
             onChange={(e, newVal) => {
               setFormData(prev => ({
                 ...prev,

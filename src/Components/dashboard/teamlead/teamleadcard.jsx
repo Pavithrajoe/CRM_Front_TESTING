@@ -113,7 +113,7 @@ export default function LeadsTable() {
         id: item.ilead_id,
         name: item.clead_name || "No Name",
         status: item.lead_status?.clead_name || "Unknown",
-        assignedTo: item.user?.cFull_name || "Unassigned", // User who is the owner
+        assignedTo: item.user?.cFull_name || "Unassigned", 
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
         time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
           hour: "2-digit",
@@ -204,10 +204,16 @@ export default function LeadsTable() {
           <tbody className="bg-white divide-y divide-gray-100">
             {currentLeads.length > 0 ? (
               currentLeads.map((lead) => (
+                // <tr
+                //   key={lead.id}
+                //   className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+                // >
                 <tr
-                  key={lead.id}
-                  className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-                >
+                    key={lead.id}
+                    className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+                    onClick={() => navigate(`/leaddetailview/${lead.id}`)}
+                  >
+
                   <td className="px-6 py-2 whitespace-nowrap text-gray-900 font-medium">
                     {lead.name}
                   </td>
@@ -247,7 +253,7 @@ export default function LeadsTable() {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-400">
+                <td colSpan={4} className="py-8 text-center text-gray-500"> 
                   No active leads found for active users.
                 </td>
               </tr>

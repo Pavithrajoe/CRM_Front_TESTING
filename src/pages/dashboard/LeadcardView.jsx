@@ -10,7 +10,6 @@ import { jwtDecode } from 'jwt-decode';
 const LeadCardViewPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-
     const [allLeads, setAllLeads] = useState([]);
     const [deals, setDeals] = useState([]);
     const [assignedLeads, setAssignedLeads] = useState([]);
@@ -26,10 +25,8 @@ const LeadCardViewPage = () => {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentToken, setCurrentToken] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' }); // New state for sorting
-
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' }); 
     const leadsPerPage = 12;
-
     const [showLostLeads, setShowLostLeads] = useState(true);
     const [showLostDeals, setShowLostDeals] = useState(true);
 
@@ -45,10 +42,13 @@ const LeadCardViewPage = () => {
 
         try {
             tokenFromStorage = localStorage.getItem('token');
+            console.log("Token from local storage:", tokenFromStorage); 
 
             if (tokenFromStorage) {
                 const decodedToken = jwtDecode(tokenFromStorage);
                 extractedUserId = decodedToken.user_id;
+                //console.log("Decoded Token:", decodedToken);
+                //console.log("Extracted User ID:", extractedUserId);
 
                 if (!extractedUserId) {
                     throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -130,7 +130,6 @@ const LeadCardViewPage = () => {
     const applyFilters = useCallback((data, isAssigned = false) => {
         return data.filter((item) => {
             const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
-
             const matchesSearch =
                 match(item.clead_name || item.cdeal_name) ||
                 match(item.corganization || item.c_organization) ||
@@ -141,12 +140,21 @@ const LeadCardViewPage = () => {
 
             let dateToFilter = item.dmodified_dt || item.d_modified_date;
             if (isAssigned) {
-                // For assigned leads, check relevant date fields in order of preference
                 dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
             }
             const matchesDate = isWithinDateRange(dateToFilter);
 
-            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+            const isConverted = item.bisConverted === true || item.bisConverted === 'true' ;
+            // if (item.clead_owner === currentUserId && isConverted) {
+                // console.log(
+                //     "isConverted for testing:", isConverted,
+                //     "for item:", item.clead_name || item.cdeal_name,
+                //     " | currentUserId:", currentUserId,
+                //     " | clead_owner:", item.clead_owner
+                // );
+            // }
+                        //const isConverted = (item.bisConverted === true || item.bisConverted === 'true') && item.clead_owner === extractedUserId;
+            //console.log("isConverted for testing:", isConverted, "for item:", item.clead_name || item.cdeal_name);
             const isActive = item.bactive === true || item.bactive === 'true';
             const isWebsite = item.website_lead === true || item.website_lead === 'true';
 
@@ -159,7 +167,6 @@ const LeadCardViewPage = () => {
             } else if (selectedFilter === 'deals') {
                 return matchesSearch && matchesDate && isConverted && isActive;
             } else if (selectedFilter === 'lost') {
-                // For 'lost' filter, check if lead/deal is inactive
                 if (isActive === false) {
                     const isLeadLost = !isConverted && showLostLeads;
                     const isDealLost = isConverted && showLostDeals;
@@ -167,7 +174,6 @@ const LeadCardViewPage = () => {
                 }
                 return false;
             } else if (selectedFilter === 'assignedToMe') {
-                // For assignedToMe, filter for active leads only by default
                 return matchesSearch && matchesDate && isActive;
             }
 
@@ -204,7 +210,6 @@ const LeadCardViewPage = () => {
             }
 
             const data = await res.json();
-            // Initial sort by dmodified_dt (newest first)
             const sorted = (Array.isArray(data.details) ? data.details : []).sort(
                 (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
             );
@@ -220,38 +225,49 @@ const LeadCardViewPage = () => {
     }, [currentUserId, currentToken]);
 
     const fetchDeals = useCallback(async () => {
-        if (!currentUserId || !currentToken) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(ENDPOINTS.GET_DEALS, {
-                method: "GET",
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-                throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
+    if (!currentUserId || !currentToken) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+        const response = await fetch(`${ENDPOINTS.GET_DEALS}`, {
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+                'Content-Type': 'application/json'
             }
-            const result = await response.json();
-            console.log("Fetched deals:", result); // Debugging log
-            const fetchedDeals = Array.isArray(result) ? result : result.data || [];
-            setDeals(fetchedDeals);
+        });
 
-        } catch (err) {
-            console.error("Error fetching deals:", err);
-            setError(`Failed to fetch deals: ${err.message}`);
-            setDeals([]);
-        } finally {
-            setLoading(false);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+            throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
         }
-    }, [currentUserId, currentToken]);
+        const result = await response.json();
+        const rawFetchedDeals = Array.isArray(result) ? result : result.data || [];
+
+        // console.log("Raw Result from API:", result);
+        // console.log("Raw fetchedDeals before filtering:", rawFetchedDeals);
+
+        const filteredDeals = rawFetchedDeals.filter(item => {
+            const isOwnedByCurrentUser = item.clead_owner === currentUserId;
+            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+            return isOwnedByCurrentUser && isConverted;
+        });
+
+        console.log("Filtered Deals (for 'deals' tab logic):", filteredDeals);
+
+        setDeals(filteredDeals);
+
+    } catch (err) {
+        console.error("Error fetching deals:", err);
+        setError(`Failed to fetch deals: ${err.message}`);
+        setDeals([]);
+    } finally {
+        setLoading(false);
+    }
+}, [currentUserId, currentToken]);
 
     const fetchLostLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) {
@@ -319,7 +335,6 @@ const LeadCardViewPage = () => {
 
                 let statusDisplay = '-';
                 let statusColor = 'bg-gray-300 text-gray-700';
-
                 const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
                 const isActiveAssigned = (correspondingLead?.bactive === true || correspondingLead?.bactive === 'true') || (assigned.bactive === true || assigned.bactive === 'true');
                 const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
@@ -341,7 +356,6 @@ const LeadCardViewPage = () => {
                 return {
                     ...assigned,
                     ...(correspondingLead || {}),
-                    // Use dmodified_dt from lead if available, otherwise assigned dates
                     dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
                     dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
                     dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt, // Ensure update date is present
@@ -351,7 +365,7 @@ const LeadCardViewPage = () => {
                     iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
                     statusDisplay: statusDisplay,
                     statusColor: statusColor,
-                    lead_status: correspondingLead?.lead_status || assigned.lead_status, // Keep original lead_status if available
+                    lead_status: correspondingLead?.lead_status || assigned.lead_status, 
                     bactive: isActiveAssigned,
                     bisConverted: isConvertedAssigned,
                     website_lead: isWebsiteAssigned,
@@ -371,11 +385,12 @@ const LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken]);
 
+
     useEffect(() => {
         if (!currentUserId || !currentToken) return;
 
         setCurrentPage(1);
-        setSortConfig({ key: null, direction: 'ascending' }); // Reset sort on filter change
+        setSortConfig({ key: null, direction: 'ascending' }); 
 
         if (selectedFilter !== 'lost') {
             setShowLostLeads(true);
@@ -400,18 +415,19 @@ const LeadCardViewPage = () => {
             if (prevSortConfig.key === key && prevSortConfig.direction === 'ascending') {
                 direction = 'descending';
             }
-            // console.log(`handleSort called. Key: "${key}", New Direction: "${direction}"`); // Removed debugging log
-            // console.log("Previous sortConfig:", prevSortConfig); // Removed debugging log
+            // console.log(`handleSort called. Key: "${key}", New Direction: "${direction}"`); 
+            // console.log("Previous sortConfig:", prevSortConfig); 
             const newSortConfig = { key, direction };
-            // console.log("New sortConfig set to:", newSortConfig); // Removed debugging log
+            // console.log("New sortConfig set to:", newSortConfig);
             return newSortConfig;
         });
     }, []);
 
-    // Define dataToDisplay FIRST
     const dataToDisplay = useMemo(() => {
         let data = [];
         if (selectedFilter === 'deals') {
+            // const userDeals = deals?.filter((d) => d.i_created_by === currentUserId);
+            // data = applyFilters(userDeals, false);
             data = applyFilters(deals, false);
         } else if (selectedFilter === 'assignedToMe') {
             data = applyFilters(assignedLeads, true);
@@ -420,39 +436,33 @@ const LeadCardViewPage = () => {
         } else {
             data = applyFilters(allLeads, false);
         }
-        // console.log("dataToDisplay (filtered data):", data.length, "items"); // Removed debugging log
+        // console.log("dataToDisplay (filtered data):", data.length, "items"); 
         return data;
     }, [selectedFilter, deals, assignedLeads, lostLeads, allLeads, applyFilters]);
 
-    // Then define sortedData, which depends on dataToDisplay
     const sortedData = useMemo(() => {
-        // console.log("sortedData useMemo re-running. sortConfig:", sortConfig); // Removed debugging log
-        let sortableItems = [...dataToDisplay]; // Now dataToDisplay is defined
+                let sortableItems = [...dataToDisplay]; 
 
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
                 let aValue, bValue;
 
-                // Helper to get string value safely
                 const getStringValue = (item, keys) => {
                     for (const key of keys) {
                         if (item && item[key] !== undefined && item[key] !== null) {
                             return String(item[key]).toLowerCase();
                         }
                     }
-                    return ''; // Default to empty string for consistent comparison
+                    return ''; 
                 };
-
-                // Helper to get date value safely
                 const getDateValue = (item, keys) => {
                     for (const key of keys) {
                         if (item && item[key]) {
                             const date = new Date(item[key]);
-                            // Check if the date is valid. Invalid dates (e.g., from 'null' or bad strings) return NaN timestamp.
                             return isNaN(date.getTime()) ? new Date(0) : date;
                         }
                     }
-                    return new Date(0); // Default to epoch for consistent comparison
+                    return new Date(0); 
                 };
 
                 switch (sortConfig.key) {
@@ -488,22 +498,19 @@ const LeadCardViewPage = () => {
                         aValue = getDateValue(a, ['dmodified_dt', 'd_modified_date']);
                         bValue = getDateValue(b, ['dmodified_dt', 'd_modified_date']);
                         break;
-                    case 'statusDisplay': // For assignedToMe status
+                    case 'statusDisplay': 
                         aValue = getStringValue(a, ['statusDisplay']);
                         bValue = getStringValue(b, ['statusDisplay']);
                         break;
-                    case 'lead_status': // For other statuses (nested property)
+                    case 'lead_status': 
                         aValue = getStringValue(a.lead_status, ['clead_name']);
                         bValue = getStringValue(b.lead_status, ['clead_name']);
                         break;
                     default:
-                        // Fallback for direct properties, ensure it's converted to string for comparison
                         aValue = String(a[sortConfig.key] || '').toLowerCase();
                         bValue = String(b[sortConfig.key] || '').toLowerCase();
                 }
-
-                // console.log(`Comparing ${sortConfig.key}: A=${aValue}, B=${bValue}`); // Removed debugging log
-
+                // console.log(`Comparing ${sortConfig.key}: A=${aValue}, B=${bValue}`); 
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
                 }
@@ -513,16 +520,16 @@ const LeadCardViewPage = () => {
                 return 0;
             });
         }
-        // console.log("Sorted Data (first 5):", sortableItems.slice(0, 5).map(item => ({ // Removed debugging log
+        // console.log("Sorted Data (first 5):", sortableItems.slice(0, 5).map(item => ({ 
         //     name: item.clead_name || item.cdeal_name,
         //     modified: item.dmodified_dt || item.d_modified_date,
-        //     sortKey: sortConfig.key ? (item[sortConfig.key] || (item.lead_status ? item.lead_status.clead_name : '')) : 'N/A'
+        //     sortKey: sortConfig.key ? (item[sortConfig.key] || (item.lead_status ? item.lead_status.clead_name : '')) : '-'
         // })));
         return sortableItems;
     }, [dataToDisplay, sortConfig]);
 
 
-    const totalPages = Math.ceil(sortedData.length / leadsPerPage); // Use sortedData here
+    const totalPages = Math.ceil(sortedData.length / leadsPerPage); 
     const displayedData = sortedData.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage);
 
     const handleSearchChange = (e) => {
@@ -548,8 +555,8 @@ const LeadCardViewPage = () => {
         setShowFilterModal(false);
         setShowLostLeads(true);
         setShowLostDeals(true);
-        setSortConfig({ key: null, direction: 'ascending' }); // Reset sort on reset
-        fetchLeads(); // Re-fetch leads to ensure initial state
+        setSortConfig({ key: null, direction: 'ascending' }); 
+        fetchLeads(); 
     }
 
     const goToDetail = (id) => {
@@ -557,13 +564,10 @@ const LeadCardViewPage = () => {
     };
 
     const getSortIndicator = (key) => {
-        // console.log(`getSortIndicator: Checking key "${key}" against sortConfig.key "${sortConfig.key}"`); // Removed debugging log
         if (sortConfig.key === key) {
-            // console.log(`Match found! Key: "${key}", Direction: "${sortConfig.direction}"`); // Removed debugging log
             return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
         }
-        // This is the change: always show a neutral indicator
-        return ' ↕'; // Or ' ◇' depending on your preference
+        return ' ↕'; 
     };
 
     if (loading) {
@@ -589,12 +593,10 @@ const LeadCardViewPage = () => {
                 <div className="flex gap-2 flex-wrap">
                     <button
                         onClick={() => {
-                            // Ensure data is re-fetched based on the currently selected filter
                             if (selectedFilter === 'deals') fetchDeals();
                             else if (selectedFilter === 'assignedToMe') fetchAssignedLeads();
                             else if (selectedFilter === 'lost') fetchLostLeads();
                             else fetchLeads();
-                             // Reset sort config on refresh
                             setSortConfig({ key: null, direction: 'ascending' });
                         }}
                         title="Refresh"
@@ -781,30 +783,77 @@ const LeadCardViewPage = () => {
                                 if (selectedFilter === 'assignedToMe') {
                                     statusText = item.statusDisplay;
                                     statusBgColor = item.statusColor;
-                                } else if (selectedFilter === 'lost') {
-                                    statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
+                                } 
+                                else if (selectedFilter === 'lost') {
+                                    statusText = item.lead_status?.clead_name
+                                        ? `${item.lead_status.clead_name} (Lost)`
+                                        : isConverted
+                                        ? 'Deal Lost'
+                                        : 'Lead Lost';
                                     statusBgColor = getStatusColor('lost');
-                                } else {
-                                    if (isItemCurrentlyLost) {
-                                        if (isConverted) {
-                                            statusText = 'Deal Lost';
-                                        } else {
-                                            statusText = `${item.lead_status?.clead_name || 'Lead'} (Lost)`;
-                                        }
-                                        statusBgColor = getStatusColor('lost');
-                                    } else {
-                                        if (isConverted) {
-                                            statusText = 'Deal';
-                                            statusBgColor = getStatusColor('deal');
-                                        } else if (item.website_lead === true || item.website_lead === 'true') {
-                                            statusText = 'Website Lead';
-                                            statusBgColor = getStatusColor('website lead');
-                                        } else {
-                                            statusText = item.lead_status?.clead_name || 'Lead';
-                                            statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
-                                        }
-                                    }
                                 }
+// else if (selectedFilter === 'lost') {
+//     statusText = item.lead_status?.clead_name
+//         ? `${item.lead_status.clead_name} (Lost)`
+//         : isConverted
+//         ? 'Deal Lost'
+//         : 'Lead Lost';
+//     statusBgColor = getStatusColor('lost');
+// } 
+else {
+    if (isItemCurrentlyLost) {
+        statusText = item.lead_status?.clead_name
+            ? `${item.lead_status.clead_name} (Lost)`
+            : isConverted
+            ? 'Deal Lost'
+            : 'Lead Lost';
+        statusBgColor = getStatusColor('lost');
+    } else if (isConverted) {
+        statusText = 'Deal';
+        statusBgColor = getStatusColor('deal');
+    } else {
+        statusText = item.lead_status?.clead_name || 'Lead';
+        statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
+    }
+}
+
+
+                                // let statusText;
+                                // let statusBgColor;
+
+                                // if (selectedFilter === 'assignedToMe') {
+                                //     statusText = item.statusDisplay;
+                                //     statusBgColor = item.statusColor;
+                                // } else if (selectedFilter === 'lost') {
+                                //     statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
+                                //     statusBgColor = getStatusColor('lost');
+                                // } else {
+                                //     if (isItemCurrentlyLost) {
+                                //         if (isConverted) {
+                                //             statusText = 'Deal Lost';
+                                //         } else {
+                                //             statusText = `${item.lead_status?.clead_name || 'Lead'} (Lost)`;
+                                //         }
+                                //         statusBgColor = getStatusColor('lost');
+                                //     } else {
+                                //         if (isConverted) {
+                                //             statusText = 'Deal';
+                                //             statusBgColor = getStatusColor('deal');
+                                //         } 
+                                //         // else if (item.website_lead === true || item.website_lead === 'true') {
+                                //         //     statusText = 'Website Lead';
+                                //         //     statusBgColor = getStatusColor('website lead');
+                                //         // } 
+                                //         else if (item.website_lead === true || item.website_lead === 'true') {
+                                //                 statusText = (<> Website Lead <FaGlobe className="inline ml-1 text-blue-600" /> </>);
+                                //                 statusBgColor = getStatusColor('website lead');
+                                //             }
+                                //              else {
+                                //             statusText = item.lead_status?.clead_name || 'Lead';
+                                //             statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
+                                //         }
+                                //     }
+                                // }
                                 return (
                                     <div
                                         key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`} // More robust key
@@ -857,10 +906,21 @@ const LeadCardViewPage = () => {
                                 if (selectedFilter === 'assignedToMe') {
                                     statusText = item.statusDisplay;
                                     statusBgColor = item.statusColor;
-                                } else if (selectedFilter === 'lost') {
-                                    statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
+                                } 
+                                else if (selectedFilter === 'lost') {
+                                    statusText = item.lead_status?.clead_name
+                                        ? `${item.lead_status.clead_name} (Lost)`
+                                        : isConverted
+                                        ? 'Deal Lost'
+                                        : 'Lead Lost';
                                     statusBgColor = getStatusColor('lost');
-                                } else {
+                                }
+
+                                // else if (selectedFilter === 'lost') {
+                                //     statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
+                                //     statusBgColor = getStatusColor('lost');
+                                // }
+                                 else {
                                     if (isItemCurrentlyLost) {
                                         if (isConverted) {
                                             statusText = 'Deal Lost';
@@ -884,11 +944,23 @@ const LeadCardViewPage = () => {
 
                                 return (
                                     <div
-                                        key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`} // More robust key
+                                        key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                         onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
-                                        className="bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
-                                    >
+                                        className="relative bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
+                                        >
+                                        {(item.website_lead === true || item.website_lead === 'true') && (
+                                            <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
+                                            <FaGlobe size={18} />
+                                            </div>
+                                        )}
+
                                         <div>
+                                            {viewMode === 'grid' && (item.website_lead === true || item.website_lead === 'true') && (
+                                                <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
+                                                    <FaGlobe size={18} />
+                                                </div>
+                                                )}
+                                           
                                             <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                                 {item.clead_name || item.cdeal_name || '-'}
                                             </h3>

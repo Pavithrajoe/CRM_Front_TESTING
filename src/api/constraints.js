@@ -1,6 +1,6 @@
 export const BASE_URL = import.meta.env.VITE_API_URL;
 
-export const ENDPOINTS = {
+export const ENDPOINTS = {  
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
@@ -33,6 +33,7 @@ export const ENDPOINTS = {
   UPDATE_PASSWORD: `${BASE_URL}/update-password`,
   GET_DEALS: `${BASE_URL}/lead/deals`,
   DEMO_MAIL: `${BASE_URL}/sentmail`,
+  DEMO_REQUEST: `${BASE_URL}/request-demo`,
   ASSIGN_TO_ME: `${BASE_URL}/assigned-to/get-asssigned-leads`,
   TEAM_KPI: `${BASE_URL}/lead/manager`,
   TEAM_LEAD: `${BASE_URL}/lead/manager`,

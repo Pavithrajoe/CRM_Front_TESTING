@@ -12,7 +12,7 @@ export default function DealsTable() {
   const [dealsData, setDealsData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null); // This is the numerical user ID
   const [currentToken, setCurrentToken] = useState(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function DealsTable() {
 
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
-        extractedUserId = decodedToken.user_id;
+        extractedUserId = decodedToken.user_id; // This is the numerical user ID
 
         if (!extractedUserId) {
           throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -90,34 +90,46 @@ export default function DealsTable() {
 
   const deals = useMemo(() => {
     if (!Array.isArray(dealsData)) {
-      // console.warn("dealsData is not an array:", dealsData);
+      console.warn("dealsData is not an array:", dealsData);
       return [];
     }
-
     return (
       dealsData
-        .filter(item => item.bactive === true && item.bisConverted === true) 
+        .filter(item => 
+          item.bactive === true && 
+          item.bisConverted === true &&
+          (item.modified_by === currentUserId || item.clead_owner_id === currentUserId) // Add this line
+        ) 
         .map((item) => ({
           id: item.ilead_id,
           name: item.clead_name || "No Name",
           status: item.lead_status?.clead_name || "Unknown",
-          assignedTo: item.clead_owner_name || "Unassigned",
+          assignedTo: item.clead_owner_name || "Unassigned", 
           modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || String(item.modified_by) || "Unknown",
-          time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-            day: "2-digit",
-            month: "short",
-          }),
+          time: (() => {
+            const dateObj = new Date(item.dmodified_dt);
+            const datePart = dateObj
+              .toLocaleDateString("en-GB") // DD/MM/YYYY
+              .replace(/\//g, "-");
+            const timePart = dateObj
+              .toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
+              .replace(/am|pm/, (match) => match.toUpperCase()); // AM/PM in caps
+            return `${datePart}\n${timePart}`;
+          })(),
+
           modifiedDate: new Date(item.dmodified_dt),
           avatar: "./images/dashboard/grl.png",
         }))
         .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || [] 
-    );
-  }, [dealsData]); 
 
-  
+    );
+  }, [dealsData, currentUserId]); // Add currentUserId to dependency array
+
+  // The rest of your component (filteredDeals, totalPages, paginatedDeals, return JSX) remains the same
   const filteredDeals = useMemo(() => {
     const term = search.toLowerCase();
     return deals.filter(
@@ -233,9 +245,11 @@ export default function DealsTable() {
               <tr>
                 <td
                   colSpan={3}
-                  className="py-8 text-center text-gray-400 italic select-none"
+                  className="py-8 text-center text-gray-500"  
                 >
-                  No active and converted deals found.
+                  {dealsData.length === 0
+                    ? " Welcome! You don’t have any deals yet. Once you start adding leads, they’ll appear here."
+                    :  " No active and converted deals found for you."}
                 </td>
               </tr>
             )}

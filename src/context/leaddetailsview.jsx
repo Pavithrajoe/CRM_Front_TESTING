@@ -10,6 +10,7 @@ import ActionCard from "../Components/common/ActrionCard";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -24,8 +25,9 @@ const LeadDetailView = () => {
   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
   const [lostReasons, setLostReasons] = useState([]);
   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
+  const [lostDescription, setLostDescription] = useState(""); 
   const { showPopup } = usePopup();
-
+  const navigate = useNavigate();
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
@@ -91,6 +93,7 @@ const LeadDetailView = () => {
           action: "Lost",
           userId,
           LeadLostReasonId: parseInt(selectedLostReasonId),
+          description: lostDescription,
         }),
       });
 
@@ -111,6 +114,8 @@ const LeadDetailView = () => {
       showPopup("Info", `Lead updated as lost. ${randomQuote}`, "info");
       setLeadLostDescriptionTrue(false);
       setSelectedLostReasonId("");
+      setLostDescription("");
+      navigate("/leads");
     } catch (error) {
       console.error("Error marking lead as lost:", error);
     }
@@ -302,7 +307,6 @@ const LeadDetailView = () => {
         <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
         <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
         <p>Best regards,</p>
-
         <p>${loggedInUserName}</p>
         <p>${loggedInCompanyName}</p>
       `;
@@ -401,7 +405,27 @@ const LeadDetailView = () => {
               <FaWhatsapp size={20} /> WhatsApp
             </button> */}
 
-            {!loading && !isDeal && isLost && (
+            {!loading && isLost && (
+              <div className="flex gap-3">
+                {!isDeal && (
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
+                    onClick={convertToDeal}
+                  >
+                    Convert
+                  </button>
+                )}
+                <button
+                  className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
+                  onClick={handleLostClick}
+                >
+                  Lost
+                </button>
+              </div>
+            )}
+
+
+            {/* {!loading && !isDeal && isLost && (
               <>
                 <button
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
@@ -416,7 +440,7 @@ const LeadDetailView = () => {
                   Lost
                 </button>
               </>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -434,7 +458,7 @@ const LeadDetailView = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="lostReason" className="block font-medium mb-1">
-                  Pick the reason for marking this lead as Lost:
+                  Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
                 </label>
                 <select
                   id="lostReason"
@@ -454,6 +478,22 @@ const LeadDetailView = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* This is where you add the textarea for lostDescription */}
+              <div>
+                <label htmlFor="lostDescription" className="block font-medium mb-1">
+                  Remarks
+                </label>
+                <textarea
+                  id="lostDescription"
+                  name="lostDescription"
+                  rows="4"
+                  value={lostDescription} 
+                  onChange={(e) => setLostDescription(e.target.value)} 
+                  className="w-full border px-3 py-2 rounded-md"
+                  placeholder="Enter a brief description for marking as lost..."
+                ></textarea>
               </div>
               <div className="flex justify-end space-x-2">
                 <button

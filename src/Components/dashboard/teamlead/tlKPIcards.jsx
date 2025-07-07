@@ -134,15 +134,6 @@ export default function KPIStats(data) {
     );
   }
 
-  if (leads.length === 0) {
-    return (
-      <div className="text-center text-gray-400 py-8 text-lg font-medium">
-        No data available
-      </div>
-    );
-  }
-
-
     const handleTotalLeadsClick = () => {
     navigate('/leadcardview', { state: { activeTab: 'leads' } });
   };
@@ -150,7 +141,6 @@ export default function KPIStats(data) {
   const handleTotalLostClick = () => {
     navigate('/leadcardview', { state: { activeTab: 'lost' } });
   };
-
 
   return (
     <div className="px-4 py-6">

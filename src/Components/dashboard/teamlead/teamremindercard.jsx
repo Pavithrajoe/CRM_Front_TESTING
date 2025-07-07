@@ -150,11 +150,11 @@ export default function RemindersCard() {
                   alt={`${name} avatar`}
                   className="w-10 h-10 rounded-full object-cover"
                 />
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-800 truncate max-w-xs">
+                <div className="flex flex-col flex-grow min-w-0">
+                  <span className="font-medium text-gray-800 break-words">
                     {name}
                   </span>
-                  <div className="text-sm text-gray-500 flex items-center gap-1 truncate max-w-xs">
+                  <div className="text-sm text-gray-500 flex items-center gap-1 break-words">
                     <span role="img" aria-label="clock">
                       🕒
                     </span>
@@ -162,7 +162,7 @@ export default function RemindersCard() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 bg-gray-200 px-3 py-1 rounded-full font-medium text-sm text-gray-700 flex-shrink-0">
+              <div className="flex items-center gap-1 bg-gray-200 px-3 py-1 rounded-full font-medium text-sm text-gray-700 flex-shrink-0 mt-2 sm:mt-0 sm:ml-4">
                 <span role="img" aria-label="hourglass">
                   ⏳
                 </span>

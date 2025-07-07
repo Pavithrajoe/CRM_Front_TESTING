@@ -1,3 +1,4 @@
+
 // StatusBar.js
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
@@ -33,7 +34,7 @@ const StatusBar = ({ leadId, leadData }) => {
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
   const [remarkStageId, setRemarkStageId] = useState(null);
-  const [selectedRemarkId, setSelectedRemarkId] = useState(null);
+  // const [selectedRemarkId, setSelectedRemarkId] = useState(null);
 const [selectedRemark, setSelectedRemark] = useState(null);
 
   const fetchStages = async () => {

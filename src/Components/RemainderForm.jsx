@@ -28,6 +28,7 @@ const ReminderForm = () => {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [assignToMe, setAssignToMe] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   const [isListeningContent, setIsListeningContent] = useState(false);
   const [noteContent, setNoteContent] = useState(null);
@@ -157,20 +158,30 @@ const ReminderForm = () => {
   };
 
   const validateForm = () => {
-    if (!form.title || !form.content || !form.reminderDate || !form.time) {
-      toast.error(
-        "Please fill in all required fields (Title, Description, Date, Time)."
-      );
-      return false;
-    }
-    const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
-    const now = new Date();
-    if (selectedDateTime < now) {
-      toast.error("Reminder date and time must be in the future.");
-      return false;
-    }
-    return true;
-  };
+  const errors = {};
+
+  if (!form.title) errors.title = "Title is required";
+  if (!form.content) errors.content = "Description is required";
+  if (!form.reminderDate) errors.reminderDate = "Date is required";
+  if (!form.time) errors.time = "Time is required";
+  if (!form.assignt_to) errors.assignt_to = "Assign To is required";
+
+  setFormErrors(errors); // set errors to state
+
+  if (Object.keys(errors).length > 0) {
+    toast.error("Please fill in all required fields.");
+    return false;
+  }
+
+  const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
+  const now = new Date();
+  if (selectedDateTime < now) {
+    toast.error("Reminder date and time must be in the future.");
+    return false;
+  }
+
+  return true;
+};
 
   const handleSubmit = async (e, status) => {
     e.preventDefault();
@@ -451,7 +462,7 @@ const ReminderForm = () => {
 
               <form onSubmit={(e) => handleSubmit(e, "submitted")}>
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Title *
+                  Title<span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2 mb-6">
                   <input
@@ -466,7 +477,7 @@ const ReminderForm = () => {
                 </div>
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Description *
+                  Description<span className="text-red-500">*</span>
                 </label>
                 <div className="relative mb-6">
                   <textarea

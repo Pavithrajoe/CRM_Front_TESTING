@@ -9,13 +9,14 @@ import {
 } from 'recharts';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
+import { useNavigate } from "react-router-dom"; 
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function LeadOwnerEfficiency() {
   const [leadOwnerEfficiency, setLeadOwnerEfficiency] = useState({});
   const [chartData, setChartData] = useState([]);
-  const [showAllRows, setShowAllRows] = useState(false); // New state for View All
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [filterType, setFilterType] = useState(null); // This state isn't used in the provided code, can be removed if not needed
+  const [showAllRows, setShowAllRows] = useState(false);
+  const navigate = useNavigate();  
 
   // --- Date Filtering States ---
   const [dateFilterFrom, setDateFilterFrom] = useState('');
@@ -152,8 +153,31 @@ export default function LeadOwnerEfficiency() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
+        <button
+          onClick={() => navigate("/reportpage")} 
+          style={{
+            color: "#6B7280", 
+            padding: "8px",
+            borderRadius: "9999px", 
+            marginRight: "16px", 
+            fontSize: "24px",
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease", 
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} 
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft />
+        </button>
       <h1 className='text-2xl font-bold p-2'>Lead Owner Efficiency</h1>
-
+</div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mb-10">
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-1">

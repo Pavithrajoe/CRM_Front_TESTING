@@ -3,7 +3,7 @@ import React from "react";
 export default function RemindersCard({ reminder_data }) {
   const now = new Date();
 
-  //console.log("Reminder Data:", reminder_data); // Log the reminder_data prop to check its value
+  //console.log("Reminder Data:", reminder_data);
 
   // Transform the data to format each reminder
   const reminders = reminder_data?.map((reminder) => {
@@ -29,7 +29,7 @@ export default function RemindersCard({ reminder_data }) {
         minute: "2-digit",
       }),
       remaining: remainingText,
-      avatar: "/images/dashboard/grl.png", // Adjust path as needed
+      avatar: "/images/dashboard/grl.png", 
     };
   }) || [];
 

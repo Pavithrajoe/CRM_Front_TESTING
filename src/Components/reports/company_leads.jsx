@@ -1,6 +1,9 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { ENDPOINTS } from '../../api/constraints'; // Ensure this path is correct
+import { ENDPOINTS } from '../../api/constraints';
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+
 
 const CompanyLeads = () => {
   const [leads, setLeads] = useState([]);
@@ -8,6 +11,7 @@ const CompanyLeads = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
   const leadsPerPage = 10;
 
   // New states for date filtering
@@ -81,11 +85,10 @@ const CompanyLeads = () => {
     fetchData();
   }, [dateFilterFrom, dateFilterTo]); // Re-fetch data when date filters change
 
-  // Effect for local filtering (search and status filters)
   useEffect(() => {
-    let updated = [...leads]; // Start with the leads fetched based on date filters
+    let updated = [...leads];
 
-    // Apply status filter
+    // Apply filter
     if (filterType === 'open') {
       updated = updated.filter((lead) => lead.bactive === true && lead.bisConverted === false);
     } else if (filterType === 'lost') {
@@ -115,7 +118,7 @@ const CompanyLeads = () => {
 
     setFilteredLeads(updated);
     setCurrentPage(1); // Reset to first page on filter/search change
-  }, [searchTerm, filterType, leads]); // Depend on 'leads' (which updates after date filter fetch)
+  }, [searchTerm, filterType, leads]);
 
   // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
@@ -179,10 +182,47 @@ const CompanyLeads = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Table Controls */}
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-4"> {/* Added flex-wrap and gap */}
-          <div className="relative flex items-center space-x-2 flex-wrap gap-2"> {/* Added flex-wrap and gap */}
+      {/* Changed Header structure to include both button and title */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "32px 32px 0 32px", // Added top padding to match previous design if needed
+        marginBottom: "24px" // Keep margin bottom for spacing to content below
+      }}>
+        <button
+          onClick={() => navigate("/reportpage")}
+          style={{
+            color: "#6B7280",
+            padding: "8px",
+            borderRadius: "9999px",
+            fontSize: "24px",
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease",
+            marginRight: "16px", // Space between button and title
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft />
+        </button>
+        <h2 style={{
+          fontSize: 26,
+          fontWeight: 700,
+          color: "#1c1c1e",
+          margin: 0 // Ensure no default margin from h2
+        }}>Company Leads Reports</h2> {/* Changed heading text */}
+      </div>
+
+      {/* Table Controls - moved padding to this div */}
+      <div className="px-6 pb-6"> {/* Adjusted padding here to align search/filters */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="relative flex items-center space-x-2">
             <div className="relative">
               <input
                 type="text"

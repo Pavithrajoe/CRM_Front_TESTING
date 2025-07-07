@@ -904,19 +904,20 @@ const CalendarView = () => {
                   <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
                   {activeTab === 'reminders' ? (
                     <>
-                      <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
-                      <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
+
+                      <th className="px-4 py-3 border-b text-left w-[12%]">Lead</th>
+                      <th className="px-4 py-3 border-b text-center w-[35%]">Reminder</th>
+                      <th className="px-4 py-3 border-b text-left w-[12%]">Created by</th> 
+                      <th className="px-4 py-3 border-b text-left w-[12%]">Assigned to</th> 
+                      <th className="px- py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
-                      <th className="px-4 py-3 border-b text-left w-[30%]">Description</th>
+                      <th className="px-4 py-3 border-b text-left w-[16%]">Event Title</th>
+                      <th className="px-4 py-3 border-b text-center w-[30%]">Description</th>
                       <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
+                      <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
+                      <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
                     </>
                   )}
                 </tr>
@@ -945,6 +946,11 @@ const CalendarView = () => {
                     </td>
                     {activeTab === 'reminders' ? (
                       <>
+
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.lead_name}
+                        </td>
+                        
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.cremainder_content}
                         </td>
@@ -954,12 +960,19 @@ const CalendarView = () => {
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.assigned_to}
                         </td>
-                        <td className="px-4 py-3 border-b align-top break-words">
-                          {item.lead_name}
-                        </td>
+
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {formatDateForTable(item.dremainder_dt)}
+                          {new Date(item.dremainder_dt).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true // To show AM/PM
+                          }).replace(/\//g, '-').toUpperCase()}
                         </td>
+                        
+
                       </>
                     ) : (
                       <>
@@ -972,12 +985,30 @@ const CalendarView = () => {
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.recurring_task || 'None'}
                         </td>
+                       
+
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {formatDateForTable(item.devent_startdt)}
+                          {new Date(item.devent_startdt).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }).replace(/\//g, '-').toUpperCase()}
                         </td>
+
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {item.devent_end ? formatDateForTable(item.devent_end) : '-'}
+                          {new Date(item.devent_end).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }).replace(/\//g, '-').toUpperCase()}
                         </td>
+                        
                       </>
                     )}
                   </tr>

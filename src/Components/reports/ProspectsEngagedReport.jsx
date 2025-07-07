@@ -9,9 +9,10 @@ import {
   Legend,
 } from "chart.js";
 import { ENDPOINTS } from "../../api/constraints";
+import { useNavigate } from "react-router-dom"; // For navigation
+import { FaArrowLeft } from "react-icons/fa"; 
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
-
 export default function ProspectsEngagedReport() {
   const [prospectsEngaged, setProspectsEngaged] = useState({
     leadEngagementDetails: [],
@@ -50,6 +51,7 @@ export default function ProspectsEngagedReport() {
   }, []); // Run only once on mount
 
   // Effect to fetch data based on date filters
+const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -278,9 +280,33 @@ export default function ProspectsEngagedReport() {
 
   return (
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col gap-6">
-      <h2 className="text-3xl font-semibold text-gray-800">
-        Prospects Engaged But Not Converted
-      </h2>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
+        <button
+          onClick={() => navigate("/reportpage")} 
+          style={{
+            color: "#6B7280", // Equivalent to text-gray-600
+            padding: "8px", // Equivalent to p-2
+            borderRadius: "9999px", 
+            marginRight: "16px", 
+            fontSize: "24px", 
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease", // Equivalent to transition-colors
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} // Equivalent to hover:bg-gray-200
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft /> {/* Back arrow icon */}
+        </button>
+        <h2 className="text-3xl font-semibold text-gray-800">
+          Prospects Engaged But Not Converted
+        </h2>
+      </div>
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -525,7 +551,6 @@ function PaginatedTable({ data }) {
         </tbody>
       </table>
 
-      {/* Pagination controls */}
       <div className="flex justify-end items-center gap-2 mt-4">
         <button
           onClick={() => changePage(currentPage - 1)}

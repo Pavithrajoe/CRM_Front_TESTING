@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { ENDPOINTS } from "../../api/constraints";
-
+import { useNavigate } from "react-router-dom"; 
+import { FaArrowLeft } from "react-icons/fa";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -38,6 +39,7 @@ export default function SalesByStageReport() {
     datasets: []
   });
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,9 +139,35 @@ return (
 
     {/* Main Content */}
     <div className="flex-1 p-8">
-      <h2 className="text-3xl font-semibold text-gray-900 mb-6">
-        Opportunity Summary by Sales Stage
-      </h2>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
+        <button
+          onClick={() => navigate("/reportpage")} 
+          style={{
+            color: "#6B7280", 
+            padding: "8px",
+            borderRadius: "9999px", 
+            marginRight: "16px", 
+            fontSize: "24px",
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease", 
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} 
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft />
+        </button>
+
+        
+        <h2 className="text-3xl font-semibold text-gray-900">
+          Opportunity Summary by Sales Stage
+        </h2>
+      </div>
    
       {/* Top Section: Cards and Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -270,6 +298,7 @@ return (
     />
   </div>
 </div>
+
 
       </div>
 

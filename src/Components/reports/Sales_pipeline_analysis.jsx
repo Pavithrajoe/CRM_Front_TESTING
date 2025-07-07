@@ -12,10 +12,13 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { useNavigate } from "react-router-dom"; 
+import { FaArrowLeft } from "react-icons/fa";
 
 export default function SalesPipelineAnalysis() {
   const [pipelineData, setPipelineData] = useState(null);
   const [filter, setFilter] = useState("month");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -182,10 +185,34 @@ export default function SalesPipelineAnalysis() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Sales Pipeline Analysis
-      </h1>
-
+   <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
+  <button
+    onClick={() => navigate("/reportpage")}
+    style={{
+      color: "#6B7280",
+      padding: "8px",
+      borderRadius: "9999px",
+      marginRight: "16px",
+      fontSize: "24px",
+      cursor: "pointer",
+      background: "transparent",
+      border: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "background-color 0.2s ease",
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")}
+    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+    aria-label="Back to reports"
+  >
+    <FaArrowLeft />
+  </button>
+  <h1 className="text-3xl font-bold mb-6 text-gray-800"
+      style={{ margin: 0 }}> 
+    Sales Pipeline Analysis
+  </h1>
+</div>
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {cardData.map((card, idx) => (

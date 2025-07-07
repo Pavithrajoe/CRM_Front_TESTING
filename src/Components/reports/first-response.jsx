@@ -595,10 +595,54 @@ const FirstResponseTimeReport = () => {
 
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className='text-2xl font-bold p-2'>First Response Time for Opportunity</h1>
+    <div style={{
+      minHeight: "100vh",
+      padding: 32,
+      background: "linear-gradient(to bottom right, #f4f5f7, #e9ecf3)",
+      display: "flex",
+      flexDirection: "column",
+      gap: 32,
+      fontFamily: "SF Pro Display, Helvetica Neue, Helvetica, Arial, sans-serif",
+    }}>
+      {/* Header */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
 
-      {/* Date Filters and Intimation Area for the CHARTS/CARDS */}
+        <button
+          onClick={() => navigate("/reportpage")} 
+          style={{
+            color: "#6B7280", 
+            padding: "8px",
+            borderRadius: "9999px", 
+            fontSize: "24px", 
+            cursor: "pointer",
+            background: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background-color 0.2s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} 
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          aria-label="Back to reports"
+        >
+          <FaArrowLeft /> 
+        </button>
+
+        <h2 style={{
+          fontSize: 26,
+          fontWeight: 700,
+          color: "#1c1c1e",
+          margin: 0
+        }}>First Response Time Report</h2>
+      </div>
+</div>
+      {/* Cards Section */}
       <div style={{
           display: "flex",
           justifyContent: "space-between",

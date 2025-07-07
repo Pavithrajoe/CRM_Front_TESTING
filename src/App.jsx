@@ -121,7 +121,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
-          <Chatbot />
+          {/* <Chatbot /> */}
        </UserProvider>
         </TabProvider>
       </ToastProvider>

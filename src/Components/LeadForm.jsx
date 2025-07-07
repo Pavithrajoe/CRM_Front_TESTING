@@ -494,9 +494,35 @@ useEffect(() => {
     if (name === "lead_source_id" && !value) {
       error = "Lead Source is required";
     }
-    if ((name === "ino_employee" || name === "iproject_value") && value !== "" && isNaN(Number(value))) {
-        error = "Must be a valid number";
-    }
+   if (name === "ino_employee") {
+  const num = Number(value);
+  if (value === "") {
+    error = "Number of Employees is required";
+  } else if (isNaN(num) || !Number.isInteger(num)) {
+    error = "Must be a valid whole number";
+  } else if (num <= 0) {
+    error = "Number must be greater than 0";
+  } else if (num > 999999) {
+    error = "Number must be less than 1 million"; //10 lakhs
+  }
+}
+
+
+    if (name === "iproject_value") {
+  const amount = parseFloat(value);
+  if (value === "") {
+    error = "Project Value is required";
+  } else if (isNaN(amount)) {
+    error = "Must be a valid number";
+  } else if (amount < 0) {
+    error = "Value cannot be negative";
+  } else if (!/^\d+(\.\d{1,2})?$/.test(value))  {
+    error = "Only up to 2 decimal places allowed";
+  } else if (amount > 1000000000) {
+    error = "Value must be less than 1 billion"; //	100 crores
+  }
+}
+
     return error;
   };
 
@@ -803,7 +829,7 @@ useEffect(() => {
         newErrors.ino_employee = "No. of employees must be a valid number";
     }
     if (form.iproject_value !== "" && isNaN(Number(form.iproject_value))) {
-        newErrors.iproject_value = "Total Revenue must be a valid number";
+        newErrors.iproject_value = "Project value must be a valid number";
     }
 
     return { ...errors, ...newErrors };
@@ -1195,16 +1221,16 @@ useEffect(() => {
               <p className="text-red-600 text-sm">{errors.ino_employee}</p>
             )}
           </div>
-          {/* Field: Total Revenue */}
+          {/* Field: Project Value */}
           <div>
-            <label className="text-sm font-medium">Total Revenue</label>
+            <label className="text-sm font-medium">Project Value</label>
             <input
               type="number"
               name="iproject_value"
               value={form.iproject_value === 0 ? "" : form.iproject_value}
               onChange={handleChange}
               onBlur={handleBlur}
-              placeholder="Enter total revenue"
+              placeholder="Enter project value"
               className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
               min="0"
             />

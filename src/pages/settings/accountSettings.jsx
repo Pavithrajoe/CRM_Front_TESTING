@@ -266,7 +266,7 @@ const AccountSettings = () => {
       ))}
 
       <div className="flex flex-col">
-        <label className="text-xs text-gray-600 mb-1">City ID</label>
+        <label className="text-xs text-gray-600 mb-1">City</label>
         <input
           type="number"
           name="cityId"

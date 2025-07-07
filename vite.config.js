@@ -6,12 +6,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": "/src", // this will resolve '@' to your src directory
+      "@": "/src", 
     },
   },
+
+  
    server: {
     host: '0.0.0.0',
-    port: 5173, // or any port
+    port: 5173, 
   },
 });
 

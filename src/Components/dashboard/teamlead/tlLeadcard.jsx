@@ -11,19 +11,35 @@ export default function LeadsTable({ data }) {
   const activeUnconvertedLeads = useMemo(() => {
     return (data || [])
       .filter(item => item.bactive === true && item.bisConverted === false)
+      .sort((a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt)) 
       .map((item) => ({
         id: item.ilead_id,
         name: item.clead_name || "No Name",
         status: item.lead_status?.clead_name || "Unknown",
         assignedTo: item.user?.cFull_name || "Unassigned",
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
-        time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-          day: "2-digit",
-          month: "short",
-        }),
+        time: (() => {
+          const dateObj = new Date(item.dmodified_dt);
+          const datePart = dateObj
+            .toLocaleDateString("en-GB") // DD/MM/YYYY
+            .replace(/\//g, "-");
+          const timePart = dateObj
+            .toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+            .replace(/am|pm/, (match) => match.toUpperCase()); // AM/PM in caps
+          return `${datePart}\n${timePart}`;
+        })(),
+
+        // time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
+        //   hour: "2-digit",
+        //   minute: "2-digit",
+        //   hour12: true,
+        //   day: "2-digit",
+        //   month: "short",
+        // }),
         avatar: "/images/dashboard/grl.png",
       }));
   }, [data]);
@@ -150,7 +166,7 @@ export default function LeadsTable({ data }) {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-400">
+                <td colSpan={4} className="py-8 text-center text-gray-500">
                   No active, unconverted leads found
                 </td>
               </tr>

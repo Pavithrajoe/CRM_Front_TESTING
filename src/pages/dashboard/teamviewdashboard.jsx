@@ -12,11 +12,8 @@ const TeamviewDashboard = ({
   loading,           
   error          
 }) => {
-
- 
   const leads = dashboardData?.details?.leads || [];
   const teamMembers = dashboardData?.details?.subordinateNames || [];
-
   const leadCount = leads.filter(item => item.bisConverted === false).length;
   const leadData = leads.filter(item => item.bisConverted === false);
   const dealCount = leads.filter(item => item.bisConverted === true).length;
@@ -39,8 +36,6 @@ const TeamviewDashboard = ({
       </main>
     );
   }
-
-  
   return (
     <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen">
       {/* Header Section */}

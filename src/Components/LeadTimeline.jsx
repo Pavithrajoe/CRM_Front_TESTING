@@ -81,7 +81,7 @@ export default function LeadTimeline({ leadId }) {
   }, [leadId]);
 
   return (
-    <div className="relative w-full h-[600px] overflow-y-auto px-6 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="relative w-full h-full overflow-y-auto px-6 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="flex flex-col items-center space-y-8 max-w-5xl mx-auto">
 
         {error && (
@@ -167,18 +167,18 @@ export default function LeadTimeline({ leadId }) {
                     ...(isLeft ? { right: "calc(100% + 12px)" } : { left: "calc(100% + 12px)" }),
                   }}
                 />
-                {!isLast && (
-                  <div className="flex flex-col items-center mt-2 space-y-1">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className="w-1 h-5 rounded-full opacity-60"
-                        style={{ backgroundColor: color }}
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                )}
+               {!isLast && (
+                <div
+                  className="w-1 rounded-full mt-2"
+                  style={{
+                    height: "80px", // Limit the line's height
+                    backgroundColor: color,
+                    opacity: 0.6,
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+
               </div>
 
               {/* Right content */}

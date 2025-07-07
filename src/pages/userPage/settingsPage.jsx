@@ -263,12 +263,7 @@ const SettingsPage = () => {
     }
   };
 
-  // Placeholder for email change functionality (not implemented in this UI)
-  // const handleChangeEmail = async () => {
-  //   toast.info('Email change functionality triggered. (Backend implementation needed for verification)');
-  // };
-
-  // Handler for changing password
+  
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
     if (!authToken) return toast.error("Authentication required.");
@@ -376,7 +371,7 @@ const SettingsPage = () => {
                   <input id="picture-upload" type="file" accept="image/*" onChange={handleUploadPicture} className="hidden" />
                 </label>
                 <p className="text-xs text-gray-500 mt-2">Max size 500kb</p>
-              </div>
+              </div> 
             </div>
           )}
         </section>

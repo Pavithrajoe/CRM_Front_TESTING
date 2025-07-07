@@ -40,8 +40,8 @@ const MembersSettings = () => {
   };
 
   return (
-    <div className=" mx-auto mt-10 bg-white/90 backdrop-blur-md border border-gray-200 shadow-lg rounded-2xl p-8">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Member Settings</h2>
+    <div className=" mx-auto mt-2 bg-white/90 backdrop-blur-md border border-gray-200 shadow-lg rounded-2xl p-8">
+      <h2 className="text-2xl font-semibold mb-1 text-gray-800">Member Settings</h2>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Role Selection */}

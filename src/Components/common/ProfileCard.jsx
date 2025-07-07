@@ -1,5 +1,17 @@
-import React, { useEffect, useState, useRef } from "react";
-import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiSave,FiEye,FiX,FiMove,FiCodesandbox,FiCamera,} from "react-icons/fi";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  FiEdit,
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiUpload,
+  FiSave,
+  FiEye,
+  FiX,
+  FiMove,
+  FiCodesandbox,
+  FiCamera,
+} from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -11,6 +23,10 @@ import DemoSessionDetails from "./demo_session_details";
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
+
+
+
+
 
 
 const EditProfileForm = ({ profile, onClose, onSave }) => {
@@ -279,54 +295,130 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const validateForm = () => {
-    console.log("the validated form :",form)
+const validateForm = () => {
+    console.log("the validated form :", form);
     let newErrors = {};
+
+    // Helper function to check if a string contains only digits
+    const isNumeric = (value) => /^\d+$/.test(value);
+
+    // Name validation
     if (!form.clead_name.trim()) {
-      newErrors.clead_name = "Name is required.";
+        newErrors.clead_name = "Name is required.";
+    } else if (form.clead_name.trim().length > 20) {
+        newErrors.clead_name = "Name cannot exceed 20 characters.";
     }
+
+    // Organization validation
     if (!form.corganization.trim()) {
-      newErrors.corganization = "Organization is required.";
+        newErrors.corganization = "Organization is required.";
+    } else if (form.corganization.trim().length > 20) {
+        newErrors.corganization = "Organization cannot exceed 20 characters.";
     }
-    if (!form.iphone_no.trim()) {
-      newErrors.iphone_no = "Phone number is required.";
-    } else if (!/^\d{10}$/.test(form.iphone_no)) {
-      newErrors.iphone_no = "Phone number must be 10 digits.";
-    }
-    if (form.cemail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
-      newErrors.cemail = "Invalid email format.";
-    }
-    if (!form.iLeadpoten_id) {
-      newErrors.iLeadpoten_id = "Potential is required.";
-    }
-    if (form.ileadstatus_id === '' || form.ileadstatus_id === null || form.ileadstatus_id === undefined) {
-    newErrors.ilead_status_id = "Status is required.";
+
+//Services
+
+if(!form.cservices.trim()){
+  newErrors.cservices = " Service Required.";
 }
+else if (typeof form.cservices !== "string" &&  form.cservices.trim().length > 20) {
+  newErrors.cservices = "Services cannot exceed 20 characters and must be a valid string.";
+}
+
+// Website validation
+if (!form.cwebsite.trim()) {
+  newErrors.cwebsite = "Website is required.";
+} else if (form.cwebsite.trim().length > 20) {
+  newErrors.cwebsite = "Website cannot exceed 20 characters.";
+} else if (!form.cwebsite.trim().endsWith(".com") && !form.cwebsite.trim().endsWith(".in")) {
+  newErrors.cwebsite = "Website must end with '.com' or 'in'.";
+}
+
+    // Phone number validation (iphone_no)
+    if (!form.iphone_no.trim()) {
+        newErrors.iphone_no = "Phone number is required.";
+    } else if (!isNumeric(form.iphone_no)) {
+        newErrors.iphone_no = "Phone number must contain only digits.";
+    } else if (!/^\d{10}$/.test(form.iphone_no)) {
+        newErrors.iphone_no = "Phone number must be 10 digits.";
+    }
+
+    // WhatsApp number validation (cwhatsapp)
+if (!form.cwhatsapp.trim()) {
+    newErrors.cwhatsapp = "Phone number is required.";
+} else if (!isNumeric(form.cwhatsapp)) { // This line specifically checks for non-digit characters
+    newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
+} else if (!/^\d{10}$/.test(form.cwhatsapp)) {
+    newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
+}
+
+    // Email validation
+    if (form.cemail.trim()) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
+            newErrors.cemail = "Invalid email format.";
+        } else if (form.cemail.trim().length > 30) {
+            newErrors.cemail = "Email cannot exceed 30 characters.";
+        }
+    }
+
+    // Lead potential validation
+    if (!form.iLeadpoten_id) {
+        newErrors.iLeadpoten_id = "Potential is required.";
+    }
+
+    // Lead status validation
+    if (form.ileadstatus_id === '' || form.ileadstatus_id === null || form.ileadstatus_id === undefined) {
+        newErrors.ilead_status_id = "Status is required.";
+    }
+
+    // Lead source validation
     if (!form.lead_source_id) {
-      newErrors.lead_source_id = "Lead source is required.";
+        newErrors.lead_source_id = "Lead source is required.";
     }
+
+    // Industry validation
     if (!form.cindustry_id) {
-      newErrors.cindustry_id = "Industry is required.";
+        newErrors.cindustry_id = "Industry is required.";
     }
+
+    // Sub-Industry validation
     if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
-      newErrors.csubindustry_id = "Sub-Industry is required.";
+        newErrors.csubindustry_id = "Sub-Industry is required.";
     }
+
+    // City validation
     if (!form.icity) {
-      newErrors.icity = "City is required.";
+        newErrors.icity = "City is required.";
     }
+
+    // Address 1 validation
     if (!form.clead_address1.trim()) {
-      newErrors.clead_address1 = "Address 1 is required.";
+        newErrors.clead_address1 = "Address 1 is required.";
+    } else if (form.clead_address1.trim().length > 20) {
+        newErrors.clead_address1 = "Address 1 cannot exceed 20 characters.";
     }
-    if (form.iproject_value < 0) {
-      newErrors.iproject_value = "Project value cannot be negative.";
+
+    // Project value validation
+    if (form.iproject_value !== null && form.iproject_value !== undefined && form.iproject_value !== '') {
+        if (!isNumeric(String(form.iproject_value))) {
+            newErrors.iproject_value = "Project value must contain only digits.";
+        } else if (parseInt(form.iproject_value) < 0) {
+            newErrors.iproject_value = "Project value cannot be negative.";
+        }
     }
-    if (form.ino_employee < 0) {
-      newErrors.ino_employee = "Number of employees cannot be negative.";
+
+    // Number of employees validation
+    if (form.ino_employee !== null && form.ino_employee !== undefined && form.ino_employee !== '') {
+        if (!isNumeric(String(form.ino_employee))) {
+            newErrors.ino_employee = "Number of employees must contain only digits.";
+        } else if (parseInt(form.ino_employee) < 0) {
+            newErrors.ino_employee = "Number of employees cannot be negative.";
+        }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -398,13 +490,13 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 Phone: <span className="text-red-500">*</span>
               </label>
               <div className="flex">
-                <div className="relative w-20 mr-2">
+                {/* <div className="relative w-20 mr-2">
                   <input
                     type="text"
                     value={form.phone_country_code}
                     readOnly
                     className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50" />
-                </div>
+                </div> */}
                 <input
                   type="text"
                   id="iphone_no"
@@ -415,6 +507,33 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 />
               </div>
               {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
+            </div>
+
+             {/* WhatsApp Field */}
+            <div>
+              <label htmlFor="cwhatsapp" className={labelClasses}>
+                WhatsApp:
+              </label>
+              <div className="flex">
+                {/* <div className="relative w-20 mr-2">
+                  {/* <input
+                    type="text"
+                    value={form.whatsapp_country_code}
+                    readOnly
+                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50"
+                  /> */}
+                {/* </div>  */}
+                 <input
+                  type="text"
+                  id="cwhatsapp"
+                  name="cwhatsapp"
+                  value={form.cwhatsapp}
+                  onChange={handleFieldChange}
+                  className={`flex-1 ${commonInputClasses} ${errors.cwhatsapp ? errorInputClasses : "border-blue-300"}`}
+                />
+              </div>
+                            {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
+
             </div>
 
             {/* Email Field */}
@@ -444,8 +563,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="cwebsite"
                 value={form.cwebsite}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} border-blue-300`}
+                className={`${commonInputClasses} ${errors.cwebsite ? errorInputClasses : "border-blue-300"}`}
               />
+              {errors.cwebsite && <p className={errorTextClasses}>{errors.cwebsite}</p>}
             </div>
 
             {/* Lead Potential Dropdown */}
@@ -737,31 +857,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
               />
               {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
             </div>
-
-            {/* WhatsApp Field */}
-            <div>
-              <label htmlFor="cwhatsapp" className={labelClasses}>
-                WhatsApp:
-              </label>
-              <div className="flex">
-                <div className="relative w-20 mr-2">
-                  <input
-                    type="text"
-                    value={form.whatsapp_country_code}
-                    readOnly
-                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50"
-                  />
-                </div>
-                <input
-                  type="text"
-                  id="cwhatsapp"
-                  name="cwhatsapp"
-                  value={form.cwhatsapp}
-                  onChange={handleFieldChange}
-                  className={`flex-1 ${commonInputClasses} border-blue-300`}
-                />
-              </div>
-            </div>
+           
 
             {/* Services Field */}
             <div>
@@ -774,9 +870,12 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="cservices"
                 value={form.cservices}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} border-blue-300`}
+                className={`${commonInputClasses} ${errors.cservices ? errorInputClasses : "border-blue-300"}`}
               />
+                          {errors.cservices && <p className={errorTextClasses}>{errors.cservices}</p>}
+
             </div>
+
           </div>
 
           {/* Form Actions */}
@@ -825,6 +924,10 @@ const ProfileCard = () => {
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
+
+    console.log("Token from localStorage:", token);
+    
+    // console.log("Token", token);
     if (token) {
       try {
         const base64Payload = token.split(".")[1];
@@ -969,71 +1072,86 @@ const ProfileCard = () => {
 
   const confirmAssignment = async () => {
     setShowAssignConfirmation(false);
+
+
     const userIdToAssign = Number(selectedAssignToUser);
+    const notifyUserId = selectedNotifyToUser;
     const token = localStorage.getItem("token");
     const loggedInUserId = getUserIdFromToken();
 
     if (!loggedInUserId) {
-      alert("User not logged in or token invalid.");
-      return;
+        alert("User not logged in or token invalid.");
+        return;
     }
 
     if (!userIdToAssign || userIdToAssign === 0) {
-      alert("Please select a valid user to assign the lead to.");
-      return;
+        alert("Please select a valid user to assign the lead to.");
+        return;
     }
+
+    // ✅ Visually reset selection before long operations
+    setSelectedAssignToUser(null);
+    setSelectedNotifyToUser(null);
 
     try {
-      await axios.post(
-        `${apiEndPoint}/assigned-to`,
-        {
-          iassigned_by: loggedInUserId,
-          iassigned_to: userIdToAssign,
-          ilead_id: Number(leadId),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      alert("Lead assigned successfully.");
-      fetchAssignedToList();
-      const assignedUser = users.find(user => String(user.iUser_id) === String(userIdToAssign));
-      const notifiedPerson = users.find(user => String(user.iUser_id) === String(selectedNotifyToUser));
-
-      if (assignedUser && profile) {
-        const mailPayload = {
-          userName: assignedUser.cUser_name,
-          time: new Date().toISOString(),
-          leadName: profile.clead_name,
-          leadURL: window.location.href,
-          mailId: assignedUser.cEmail,
-          assignedTo: assignedUser.cUser_name,
-          notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
-        };
-
-        try {
-          await axios.post(
-            `${apiEndPoint}/assigned-to-mail`,
-            mailPayload,
+         axios.post(
+            `${apiEndPoint}/assigned-to`,
             {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
+                iassigned_by: loggedInUserId,
+                iassigned_to: userIdToAssign,
+                ilead_id: Number(leadId),
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
             }
-          );
-        } catch (mailErr) {
-          console.error("Failed to send notification email:", mailErr);
+        );
+        const isConverted = profile?.bisConverted === true || profile?.bisConverted === 'true';
+        const successMessage = isConverted ? "Deal assigned successfully." : "Lead assigned successfully.";
+        alert(successMessage);
+
+        fetchAssignedToList();
+
+        const assignedUser = users.find(
+            (user) => String(user.iUser_id) === String(userIdToAssign)
+        );
+        const notifiedPerson = users.find(
+            (user) => String(user.iUser_id) === String(notifyUserId)
+        );
+
+        if (assignedUser && profile) {
+            const mailPayload = {
+                userName: assignedUser.cUser_name,
+                time: new Date().toISOString(),
+                leadName: profile.clead_name,
+                leadURL: window.location.href,
+                mailId: assignedUser.cEmail,
+                assignedTo: assignedUser.cUser_name,
+                notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
+            };
+
+            try {
+                 axios.post(`${apiEndPoint}/assigned-to-mail`, mailPayload, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            } catch (mailErr) {
+                console.error("Failed to send notification email:", mailErr);
+            }
+        } else {
+            console.warn(
+                "Could not send notification email: Assigned user or lead profile not found."
+            );
         }
-      }
     } catch (err) {
-      console.error("Failed to assign lead", err);
-      alert("Failed to assign lead.");
+        console.error("Failed to assign lead", err);
+        alert("Failed to assign lead.");
     }
-  };
+ };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -1092,12 +1210,19 @@ const ProfileCard = () => {
       <div className="p-4 text-gray-700">No profile found.</div>
     );
 
-  const latestAssignments = assignedToList.slice(0, 2);
-  const usersForNotify = users.filter(
-    (user) => String(user.iUser_id) !== String(selectedAssignToUser)
-  );
+  // const latestAssignments = assignedToList.slice(0, 2);
+  // const usersForNotify = users.filter(
+  //   (user) => String(user.iUser_id) !== String(selectedAssignToUser)
+  // );
+
+   const latestAssignments = assignedToList.slice(0, 2);
+   const activeUsers = users.filter(user => user.bactive === true);
+   const usersForNotify = activeUsers.filter(
+        (user) => String(user.iUser_id) !== String(selectedAssignToUser)
+    );
 
   return (
+    <>
     <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6 ">
       <div className="flex items-center justify-between pb-4 border-b border-gray-100">
         <h2 className="text-sm sm:text-sm md:text-xl font-semibold text-gray-800">
@@ -1129,8 +1254,7 @@ const ProfileCard = () => {
               profile.clead_name
             )}&background=random&color=fff&rounded=true`}
             alt="Profile"
-            className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
-          />
+            className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover" />
         </div>
         <div className="text-center sm:text-left mt-5">
           <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
@@ -1163,11 +1287,9 @@ const ProfileCard = () => {
           <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
           {profile.cwebsite ? (
             <a
-              href={
-                profile.cwebsite.startsWith("http")
-                  ? profile.cwebsite
-                  : `https://${profile.cwebsite}`
-              }
+              href={profile.cwebsite.startsWith("http")
+                ? profile.cwebsite
+                : `https://${profile.cwebsite}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
@@ -1189,7 +1311,7 @@ const ProfileCard = () => {
             LOST LEAD
           </div>
         )}
-        
+
         {(profile.website_lead === true || profile.remarks) && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm mt-5 text-sm text-green-800 flex flex-col gap-3">
             {profile.website_lead === true && (
@@ -1203,8 +1325,7 @@ const ProfileCard = () => {
                   <path
                     fillRule="evenodd"
                     d="M4.083 9.922A6.955 6.955 0 0010 16a6.955 6.955 0 005.917-6.078 2.5 2.5 0 010-4.844A6.955 6.955 0 0010 4a6.955 6.955 0 00-5.917 6.078 2.5 2.5 0 010 4.844zM10 18a8 8 0 100-16 8 8 0 000 16zm-7.5-8a7.5 7.5 0 1015 0 7.5 7.5 0 00-15 0zM10 7a3 3 0 100 6 3 3 0 000-6z"
-                    clipRule="evenodd"
-                  />
+                    clipRule="evenodd" />
                 </svg>
                 <p className="font-semibold">This is a Website Lead.</p>
               </div>
@@ -1221,8 +1342,7 @@ const ProfileCard = () => {
                   <path
                     fillRule="evenodd"
                     d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-9-4a1 1 0 112 0v4a1 1 0 01-2 0V6zm1 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
-                    clipRule="evenodd"
-                  />
+                    clipRule="evenodd" />
                 </svg>
                 <p className="font-medium break-words">
                   <span className="text-gray-700 font-semibold">Remarks:</span> {profile.remarks}
@@ -1233,47 +1353,7 @@ const ProfileCard = () => {
         )}
 
         <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-            <label
-              htmlFor="assignUser"
-              className="text-sm font-semibold text-gray-700 min-w-[90px]"
-            >
-              Assign to:
-            </label>
-            <div className="relative w-full sm:w-64">
-              <select
-                id="assignUser"
-                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-                onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
-                value={selectedAssignToUser || ""}
-              >
-                <option value="" disabled>
-                  Select User
-                </option>
-                {users.map((user) => (
-                  <option key={user.iUser_id} value={user.iUser_id}>
-                    {user.cUser_name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                <svg
-                  className="w-4 h-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+          
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
             <label
@@ -1310,416 +1390,450 @@ const ProfileCard = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
+                    d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          {/* Assign To */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            <label
+              htmlFor="assignUser"
+              className="text-sm font-semibold text-gray-700 min-w-[90px]"
+            >
+              Assign to:
+            </label>
+            <div className="relative w-full sm:w-64">
+              <select
+                id="assignUser"
+                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
+                onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
+                value={selectedAssignToUser || ""}
+              >
+                <option value="" disabled>
+                  Select User
+                </option>
+                {activeUsers.map((user) => (
+                  <option key={user.iUser_id} value={user.iUser_id}>
+                    {user.cUser_name}
+                  </option>
+                ))}
+
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                <svg
+                  className="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <button
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-              disabled={!selectedAssignToUser}
-              onClick={handleAssignButtonClick}
-            >
-              Assign Lead
-            </button>
-          </div>
+          
         </div>
 
-        <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-gray-700">
-              Lead Assigned to
-            </h3>
-            {assignedToList.length > 2 && (
-              <button
-                onClick={() => setIsAssignedToModalOpen(true)}
-                className="text-blue-600 hover:underline text-sm font-medium"
-              >
-                View All
-              </button>
-            )}
-          </div>
-          {latestAssignments.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">
-              No assignment history available.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {latestAssignments.map((assignment) => (
-                <div
-                  key={assignment.iassigned_id}
-                  className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
-                >
-                  <p>
-                    <span className="font-medium">Assigned To:</span>{" "}
-                    {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    <span className="font-medium">Assigned By:</span>{" "}
-                    {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"}{" "}
-                    on {new Date(assignment.dcreate_dt).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* Assign Button */}
+        <div className="flex justify-center">
+          <button
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!selectedAssignToUser}
+            onClick={handleAssignButtonClick}
+          >
+            Assign Lead
+          </button>
+        </div>
+      </div>
+      {/* Assigned to me list */}
+      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-medium text-gray-700">
+            Lead Assigned to
+          </h3>
+          {assignedToList.length > 2 && (
+            <button
+              onClick={() => setIsAssignedToModalOpen(true)}
+              className="text-blue-600 hover:underline text-sm font-medium"
+            >
+              View All
+            </button>
           )}
         </div>
-
-        <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-4">
-            Manage Attachments
-          </label>
-
-          <button
-            onClick={() => setIsAttachmentModalOpen(true)}
-            className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md"
-          >
-            <FiUpload className="mr-2" /> Upload New File
-          </button>
-
-          <div className="mt-5 space-y-3">
-            {attachments.length === 0 && (
-              <p className="text-sm text-gray-500 italic">
-                No attachments uploaded yet.
-              </p>
-            )}
-
-            {attachments.map((file) => {
-              const filePath = file?.cattechment_path;
-              const filename = filePath?.split("/").pop();
-
-              return (
-                <div
-                  key={file.ilead_id || filename}
-                  className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex justify-between items-center"
-                >
-                  <span className="font-medium truncate max-w-[70%] sm:max-w-[80%]">
-                    {filename}
-                  </span>
-                  <FilePreviewer filePath={filePath} apiBaseUrl={apiNoEndPoint} />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <Dialog
-          open={isAttachmentModalOpen}
-          onClose={() => setIsAttachmentModalOpen(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg">
-              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
-                Upload File
-              </Dialog.Title>
-
+        {latestAssignments.length === 0 ? (
+          <p className="text-sm text-gray-500 italic">
+            No assignment history available.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {latestAssignments.map((assignment) => (
               <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${
-                  isDragActive
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 hover:border-gray-400 bg-gray-50"
-                }`}
+                key={assignment.iassigned_id}
+                className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
               >
-                <input {...getInputProps()} />
-                {selectedFile ? (
-                  <p className="text-sm text-gray-700 font-medium">
-                    {selectedFile.name}
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-500">
-                      Drag & drop a file here, or{" "}
-                      <span className="text-blue-500 font-medium">
-                        click to select
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Only PDF,PNG and JPEG files can be uploaded
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setIsAttachmentModalOpen(false);
-                    setSelectedFile(null);
-                  }}
-                  className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                  disabled={uploading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleFileUpload}
-                  disabled={!selectedFile || uploading}
-                  className={`px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md ${
-                    uploading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-500 hover:bg-blue-600"
-                  } transition-colors`}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
-              </div>
-            </Dialog.Panel>
-          </div>
-        </Dialog>
-
-        <Dialog
-          open={isAssignedToModalOpen}
-          onClose={() => setIsAssignedToModalOpen(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
-              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
-                All Assigned To History
-                <button
-                  onClick={() => setIsAssignedToModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <FiX size={20} />
-                </button>
-              </Dialog.Title>
-
-              {assignedToList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No assignment history available.
+                <p>
+                  <span className="font-medium">Assigned To:</span>{" "}
+                  {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
                 </p>
-              ) : (
-                <div className="space-y-3">
-                  {assignedToList.map((assignment) => (
-                    <div
-                      key={assignment.iassigned_id}
-                      className="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm"
-                    >
-                      <p>
-                        <span className="font-medium">Assigned To:</span>{" "}
-                        {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-medium">Assigned By:</span>{" "}
-                        {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"}{" "}
-                        on {new Date(assignment.dcreate_dt).toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Dialog.Panel>
-          </div>
-        </Dialog>
-
-        <Dialog
-          open={showAssignConfirmation}
-          onClose={() => setShowAssignConfirmation(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-xs bg-white p-6 rounded-2xl shadow-lg text-center">
-              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
-                Confirm Assignment
-              </Dialog.Title>
-              <p className="text-sm text-gray-600 mb-6">
-                Are you sure you want to assign this lead?
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setShowAssignConfirmation(false)}
-                  className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmAssignment}
-                  className="px-5 py-2 text-sm font-semibold rounded-lg text-white bg-blue-700 hover:bg-blue-600 transition-colors"
-                >
-                  Confirm
-                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  <span className="font-medium">Assigned By:</span>{" "}
+                  {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"} on{" "}
+                  {new Date(assignment.dcreate_dt).toLocaleString()}
+                </p>
               </div>
-            </Dialog.Panel>
-          </div>
-        </Dialog>
-
-        {editSuccess && (
-          <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
-            Profile updated successfully!
-          </div>
-        )}
-
-        {isEditModalOpen && profile && (
-          <EditProfileForm
-            profile={profile}
-            onClose={handleCloseEditModal}
-            onSave={handleSaveProfile}
-          />
-        )}
-
-        {showDetails && (
-          <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-            <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-lg sm:max-w-xl md:max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg relative">
-              <button
-                onClick={() => setShowDetails(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <FiX size={24} />
-              </button>
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
-                Full Profile Details
-              </h3>
-              <div className="space-y-4 text-sm sm:text-base text-gray-700">
-                <div className="flex items-center gap-3">
-                  <FiPhone className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>
-                    <span className="font-medium">Phone:</span>{" "}
-                    {profile.iphone_no || "-"}
-                  </span>
-                </div>
-                <div className="flex items-center break-words gap-3">
-                  <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>
-                    <span className="font-medium">Email:</span>{" "}
-                    {profile.cemail || "-"}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Address:</span>{" "}
-                    {profile.clead_address1 || "-"}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Address 2:</span>{" "}
-                    {profile.clead_address2 || "N-"}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Website:</span>{" "}
-                    {profile.cwebsite || "-"}
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Organisation:</span>{" "}
-                    {profile.corganization || "-"}
-                  </span>{" "}
-                </div>
-               
-                 <div className="flex items-start gap-3">
-                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Project Value:</span>{" "}
-                    {profile.iproject_value || "-"}
-                  </span>
-                </div>
-                 <div className="flex items-start gap-3">
-                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Potential:</span>{" "}
-                    {profile.lead_potential?.clead_name || "-"}
-                  </span>
-                </div>
-                 <div className="flex items-start gap-3">
-                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Status:</span>{" "}
-                    {profile.lead_status?.clead_name || "-"}
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                  <span>
-                    <span className="font-medium">Employee:</span>{" "}
-                    {profile.ino_employee || "-"}
-                  </span>
-                </div>
-              </div>
-
-              {profile.website_lead === true && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm text-sm mt-10 text-yellow-800 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-                  </svg>
-                  <p className="font-semibold">This lead originated from the website.</p>
-                </div>
-              )}
-            </div>
-            <div className="space-y-4">
-              {history.length === 0 ? (
-                <div className="text-gray-500 italic">
-                </div>
-              ) : (
-                history.map((entry, index) => (
-                  <div
-                    key={index}
-                    className="p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100"
-                  >
-                    <p className="font-semibold text-sm sm:text-base text-gray-700 mb-2">
-                      Updated on: {entry.date}
-                    </p>
-                    <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-                      {entry.updatedProfile?.clead_name && (
-                        <div>
-                          <span className="font-medium">Name:</span>{" "}
-                          {entry.updatedProfile.clead_name}
-                        </div>
-                      )}
-                      {entry.updatedProfile?.cemail && (
-                        <div>
-                          <span className="font-medium">Email:</span>{" "}
-                          {entry.updatedProfile.cemail}
-                        </div>
-                      )}
-                      {entry.updatedProfile?.iphone_no && (
-                        <div>
-                          <span className="font-medium">Phone:</span>{" "}
-                          {entry.updatedProfile.iphone_no}
-                        </div>
-                      )}
-                      {entry.updatedProfile?.caddress && (
-                        <div>
-                          <span className="font-medium">Address:</span>{" "}
-                          {entry.updatedProfile.icity}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            ))}
           </div>
         )}
       </div>
+     </div><div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
+        <label className="block text-sm font-medium text-gray-700 mb-4">
+          Manage Attachments
+        </label>
+
+        <button
+          onClick={() => setIsAttachmentModalOpen(true)}
+          className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md"
+        >
+          <FiUpload className="mr-2" /> Upload New File
+        </button>
+
+        <div className="mt-5 space-y-3">
+          {attachments.length === 0 && (
+            <p className="text-sm text-gray-500 italic">
+              No attachments uploaded yet.
+            </p>
+          )}
+
+          {attachments.map((file) => {
+            const filePath = file?.cattechment_path;
+            const filename = filePath?.split("/").pop();
+
+            return (
+              <div
+                key={file.ilead_id || filename}
+                className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex justify-between items-center"
+              >
+                <span className="font-medium truncate max-w-[70%] sm:max-w-[80%]">
+                  {filename}
+                </span>
+                <FilePreviewer filePath={filePath} apiBaseUrl={apiNoEndPoint} />
+              </div>
+            );
+          })}
+        </div>
+      </div><Dialog
+        open={isAttachmentModalOpen}
+        onClose={() => setIsAttachmentModalOpen(false)}
+        className="relative z-50"
+      >
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
+          aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg">
+            <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
+              Upload File
+            </Dialog.Title>
+
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${isDragActive
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-gray-400 bg-gray-50"}`}
+            >
+              <input {...getInputProps()} />
+              {selectedFile ? (
+                <p className="text-sm text-gray-700 font-medium">
+                  {selectedFile.name}
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-500">
+                    Drag & drop a file here, or{" "}
+                    <span className="text-blue-500 font-medium">
+                      click to select
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Only PDF,PNG and JPEG files can be uploaded
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setIsAttachmentModalOpen(false);
+                  setSelectedFile(null);
+                } }
+                className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFileUpload}
+                disabled={!selectedFile || uploading}
+                className={`px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md ${uploading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"} transition-colors`}
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog><Dialog
+        open={isAssignedToModalOpen}
+        onClose={() => setIsAssignedToModalOpen(false)}
+        className="relative z-50"
+      >
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
+          aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
+              All Assigned To History
+              <button
+                onClick={() => setIsAssignedToModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <FiX size={20} />
+              </button>
+            </Dialog.Title>
+
+            {assignedToList.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">
+                No assignment history available.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {assignedToList.map((assignment) => (
+                  <div
+                    key={assignment.iassigned_id}
+                    className="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm"
+                  >
+                    <p>
+                      <span className="font-medium">Assigned To:</span>{" "}
+                      {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      <span className="font-medium">Assigned By:</span>{" "}
+                      {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"}{" "}
+                      on {new Date(assignment.dcreate_dt).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Dialog.Panel>
+        </div>
+      </Dialog><Dialog
+        open={showAssignConfirmation}
+        onClose={() => setShowAssignConfirmation(false)}
+        className="relative z-50"
+      >
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
+          aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-xs bg-white p-6 rounded-2xl shadow-lg text-center">
+            <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Assignment
+            </Dialog.Title>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to assign this lead?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setShowAssignConfirmation(false)}
+                className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAssignment}
+                className="px-5 py-2 text-sm font-semibold rounded-lg text-white bg-blue-700 hover:bg-blue-600 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      {/* Move the following JSX inside the main return statement */}
+      {editSuccess && (
+        <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
+          Profile updated successfully!
+        </div>
+      )}
+
+      {isEditModalOpen && profile && (
+        <EditProfileForm
+          profile={profile}
+          onClose={handleCloseEditModal}
+          onSave={handleSaveProfile}
+        />
+      )}
+
+      {showDetails && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
+          <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-lg sm:max-w-xl md:max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg relative">
+            <button
+              onClick={() => setShowDetails(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <FiX size={24} />
+            </button>
+            <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
+              Full Profile Details
+            </h3>
+            <div className="space-y-4 text-sm sm:text-base text-gray-700">
+              <div className="flex items-center gap-3">
+                <FiPhone className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                <span>
+                  <span className="font-medium">Phone:</span>{" "}
+                  {profile.iphone_no || "-"}
+                </span>
+              </div>
+              <div className="flex items-center break-words gap-3">
+                <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                <span>
+                  <span className="font-medium">Email:</span>{" "}
+                  {profile.cemail || "-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Address:</span>{" "}
+                  {profile.clead_address1 || "-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Address 2:</span>{" "}
+                  {profile.clead_address2 || "N-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Website:</span>{" "}
+                  {profile.cwebsite || "-"}
+                </span>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Organisation:</span>{" "}
+                  {profile.corganization || "-"}
+                </span>{" "}
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Project Value:</span>{" "}
+                  {profile.iproject_value || "-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Potential:</span>{" "}
+                  {profile.lead_potential?.clead_name || "-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Status:</span>{" "}
+                  {profile.lead_status?.clead_name || "-"}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <span>
+                  <span className="font-medium">Employee:</span>{" "}
+                  {profile.ino_employee || "-"}
+                </span>
+              </div>
+            </div>
+
+            {profile.website_lead === true && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm text-sm mt-10 text-yellow-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                </svg>
+                <p className="font-semibold">This lead originated from the website.</p>
+              </div>
+            )}
+          </div>
+          <div className="space-y-4">
+            {history.length === 0 ? (
+              <div className="text-gray-500 italic">
+              </div>
+            ) : (
+              history.map((entry, index) => (
+                <div
+                  key={index}
+                  className="p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100"
+                >
+                  <p className="font-semibold text-sm sm:text-base text-gray-700 mb-2">
+                    Updated on: {entry.date}
+                  </p>
+                  <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                    {entry.updatedProfile?.clead_name && (
+                      <div>
+                        <span className="font-medium">Name:</span>{" "}
+                        {entry.updatedProfile.clead_name}
+                      </div>
+                    )}
+                    {entry.updatedProfile?.cemail && (
+                      <div>
+                        <span className="font-medium">Email:</span>{" "}
+                        {entry.updatedProfile.cemail}
+                      </div>
+                    )}
+                    {entry.updatedProfile?.iphone_no && (
+                      <div>
+                        <span className="font-medium">Phone:</span>{" "}
+                        {entry.updatedProfile.iphone_no}
+                      </div>
+                    )}
+                    {entry.updatedProfile?.caddress && (
+                      <div>
+                        <span className="font-medium">Address:</span>{" "}
+                        {entry.updatedProfile.icity}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       <DemoSessionDetails leadId={leadId} />
-    </div>
-  );
+      </>
+    
+    
+  )
 };
+
 
 export default ProfileCard;

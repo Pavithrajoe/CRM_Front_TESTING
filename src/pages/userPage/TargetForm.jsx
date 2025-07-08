@@ -1,26 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { X } from "lucide-react";
+
 export default function SalesForm({ onClose }) {
     // Define ENDPOINTS directly within the component
     const ENDPOINTS = {
         USER_POST: "http://192.168.1.75:3000/api/user-target", // Endpoint for submitting sales data
-        USER_GET: "http://192.168.1.75:3000/api/users", // Endpoint to fetch users (assuming it exists and returns all or relevant users)
+        USER_GET: "http://192.168.1.75:3000/api/users", // Endpoint to fetch users
+    };
+
+    // Helper to get current datetime in 'YYYY-MM-DDTHH:mm' format for datetime-local input
+    const getCurrentDateTimeLocal = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
     const [formData, setFormData] = useState({
         salesValue: '',
-        formDate: '',
+        formDate: getCurrentDateTimeLocal(), // Initialize with current date and time
         toDate: '',
         assignedTo: '',
         assignedBy: '',
         createdBy: '',
     });
+
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionMessage, setSubmissionMessage] = useState('');
-    const [companyUsers, setCompanyUsers] = useState([]); // New state for company users
-    const [fetchingUsers, setFetchingUsers] = useState(true); // Loading state for users
-    const [usersError, setUsersError] = useState(null); // Error state for users fetch
+    const [companyUsers, setCompanyUsers] = useState([]);
+    const [fetchingUsers, setFetchingUsers] = useState(true);
+    const [usersError, setUsersError] = useState(null);
 
     const token = localStorage.getItem("token");
 
@@ -65,11 +78,10 @@ export default function SalesForm({ onClose }) {
                 }
 
                 const data = await response.json();
-                // Filter users by the company ID
                 const filteredCompanyUsers = data.filter(user => user.iCompany_id === companyId);
                 setCompanyUsers(filteredCompanyUsers);
 
-                // If only one user is available, pre-select them for 'assignedBy' and 'createdBy'
+                // Pre-select 'assignedBy' and 'createdBy' based on token or single user
                 if (filteredCompanyUsers.length === 1) {
                     setFormData(prev => ({
                         ...prev,
@@ -77,8 +89,6 @@ export default function SalesForm({ onClose }) {
                         createdBy: filteredCompanyUsers[0].iUser_id.toString()
                     }));
                 } else if (token) {
-                    // Attempt to pre-fill 'createdBy' and 'assignedBy' with the current user's ID
-                    // if they are in the companyUsers list.
                     const currentUserPayload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
                     const currentUserId = currentUserPayload.user_id || currentUserPayload.iUser_id;
                     if (currentUserId && filteredCompanyUsers.some(user => user.iUser_id === currentUserId)) {
@@ -99,7 +109,7 @@ export default function SalesForm({ onClose }) {
         };
 
         fetchCompanyUsers();
-    }, [token, ENDPOINTS.USER_GET]); // Re-run if token or endpoint changes
+    }, [token, ENDPOINTS.USER_GET]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -111,37 +121,66 @@ export default function SalesForm({ onClose }) {
 
     const validate = () => {
         const newErrors = {};
+        const now = new Date(); // Current date and time for validation
+
+        // Sales Value Validation (up to Crore)
         if (!formData.salesValue) {
             newErrors.salesValue = 'Sales Value is required';
-        } else if (isNaN(formData.salesValue) || parseFloat(formData.salesValue) <= 0) {
-            newErrors.salesValue = 'Sales Value must be a positive number';
+        } else {
+            const salesValueNum = parseFloat(formData.salesValue);
+            if (isNaN(salesValueNum) || salesValueNum <= 0) {
+                newErrors.salesValue = 'Sales Value must be a positive number';
+            } else if (salesValueNum > 999999999) { // Up to 99 Crore 99 Lakh 99 Thousand 999
+                newErrors.salesValue = 'Sales Value cannot exceed 99 Crore 99 Lakh 99 Thousand 999';
+            }
         }
 
+        // From Date Validation
         if (!formData.formDate) {
             newErrors.formDate = 'From Date is required';
-        }
-        if (!formData.toDate) {
-            newErrors.toDate = 'To Date is required';
-        } else if (formData.formDate && new Date(formData.toDate) < new Date(formData.formDate)) {
-            newErrors.toDate = 'To Date cannot be before From Date';
+        } else {
+            const fromDate = new Date(formData.formDate);
+            // Allow comparison at the minute level for 'now'
+            const currentMinuteNow = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+            if (fromDate < currentMinuteNow) {
+                newErrors.formDate = 'From Date cannot be in the past';
+            }
         }
 
+        // To Date Validation
+        if (!formData.toDate) {
+            newErrors.toDate = 'To Date is required';
+        } else {
+            const toDate = new Date(formData.toDate);
+            const currentMinuteNow = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+            if (toDate < currentMinuteNow) {
+                newErrors.toDate = 'To Date cannot be in the past';
+            }
+            if (formData.formDate) { // Only compare if fromDate is valid
+                const fromDate = new Date(formData.formDate);
+                if (toDate < fromDate) {
+                    newErrors.toDate = 'To Date cannot be before From Date';
+                }
+            }
+        }
+
+        // User ID Validations (assignedTo, assignedBy, createdBy)
         if (!formData.assignedTo) {
             newErrors.assignedTo = 'Assigned To is required';
         } else if (isNaN(formData.assignedTo) || parseInt(formData.assignedTo) <= 0) {
-            newErrors.assignedTo = 'Assigned To must be a positive number (User ID)';
+            newErrors.assignedTo = 'Assigned To must be a valid User';
         }
 
         if (!formData.assignedBy) {
             newErrors.assignedBy = 'Assigned By is required';
         } else if (isNaN(formData.assignedBy) || parseInt(formData.assignedBy) <= 0) {
-            newErrors.assignedBy = 'Assigned By must be a positive number (User ID)';
+            newErrors.assignedBy = 'Assigned By must be a valid User';
         }
 
         if (!formData.createdBy) {
             newErrors.createdBy = 'Created By is required';
         } else if (isNaN(formData.createdBy) || parseInt(formData.createdBy) <= 0) {
-            newErrors.createdBy = 'Created By must be a positive number (User ID)';
+            newErrors.createdBy = 'Created By must be a valid User';
         }
 
         setErrors(newErrors);
@@ -156,53 +195,49 @@ export default function SalesForm({ onClose }) {
         setSubmissionMessage('');
         setErrors({});
 
+        // Format dates for API (YYYY-MM-DD HH:mm:00)
+        const formatApiDate = (dateTimeLocalString) => {
+            if (!dateTimeLocalString) return '';
+            return `${dateTimeLocalString.replace('T', ' ')}:00`;
+        };
+
         const requestBody = {
             salesValue: parseFloat(formData.salesValue),
-            fromDate: formData.formDate ? `${formData.formDate.replace('T', ' ')}:00` : '',
-            toDate: formData.toDate ? `${formData.toDate.replace('T', ' ')}:00` : '',
+            fromDate: formatApiDate(formData.formDate),
+            toDate: formatApiDate(formData.toDate),
             assignedTo: parseInt(formData.assignedTo),
             assignedBy: parseInt(formData.assignedBy),
             createdBy: parseInt(formData.createdBy),
         };
-
-        // console.log('Sending sales data to API:', ENDPOINTS.USER_POST, requestBody);
-        // console.log('Using token:', token);
 
         try {
             const response = await fetch(ENDPOINTS.USER_POST, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`, // Include the authorization token
+                    'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(requestBody), // Use the directly constructed object
+                body: JSON.stringify(requestBody),
             });
-
-            // console.log('API Response Status:', response.status);
 
             if (!response.ok) {
                 let errorText = 'Failed to submit sales data.';
-                let errorData = {};
                 try {
-                    errorData = await response.json();
-                    console.error('Parsed error response JSON:', errorData);
+                    const errorData = await response.json();
                     errorText = errorData.message || errorData.detail || JSON.stringify(errorData) || errorText;
                 } catch (jsonError) {
-                    console.error('Failed to parse error response as JSON (falling back to text):', jsonError);
                     errorText = await response.text() || errorText;
-                    console.error('Raw error response text:', errorText);
                 }
                 throw new Error(`${errorText} (Status: ${response.status})`);
             }
 
             const responseData = await response.json();
-            // console.log('Sales data submitted successfully:', responseData);
+            setSubmissionMessage(responseData.result?.Message || 'Sales target submitted successfully!');
 
-            setSubmissionMessage(responseData.result?.Message || 'Sales data submitted successfully!');
-            
+            // Clear form data after successful submission
             setFormData({
                 salesValue: '',
-                formDate: '',
+                formDate: getCurrentDateTimeLocal(), // Reset to current date/time
                 toDate: '',
                 assignedTo: '',
                 assignedBy: '',
@@ -222,136 +257,68 @@ export default function SalesForm({ onClose }) {
     };
 
     return (
-        <div className="relative inset-0 flex justify-center items-center pt-10 overflow-y-auto z-5">
-            <form onSubmit={handleSubmit} className="form-container w-full max-w-xl mx-auto bg-white shadow-lg rounded-2xl p-4 md:p-6">
+        <div className="fixed inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50 overflow-y-auto z-50">
+            <form onSubmit={handleSubmit} className="relative bg-white shadow-2xl rounded-xl p-6 md:p-8 w-full max-w-2xl mx-4 my-8 border-t-8 border-blue-600">
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-black"
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors"
                     aria-label="Close form"
                 >
-                    <X size={20} />
+                    <X size={24} />
                 </button>
-                <h2 className="text-lg md:text-xl font-semibold text-center mb-6">
-                    Set a Target: Conquer Goals
-
+                <h2 className="text-2xl font-bold text-center text-blue-800 mb-8">
+                    Set a Sales Target
                 </h2>
 
                 {submissionMessage && (
-                    <div className="bg-green-100 border border-green-800 text-green-900 px-4 py-3 rounded relative mb-4" role="alert">
-                        <strong className="font-bold">Success: </strong>
+                    <div className="bg-green-100 border border-green-500 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+                        <strong className="font-semibold">Success! </strong>
                         <span className="block sm:inline">{submissionMessage}</span>
                     </div>
                 )}
 
                 {errors.submit && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <strong className="font-bold">Error: </strong>
+                    <div className="bg-red-100 border border-red-500 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                        <strong className="font-semibold">Error! </strong>
                         <span className="block sm:inline">{errors.submit}</span>
                     </div>
                 )}
 
                 {fetchingUsers ? (
-                    <div className="text-center py-4">Loading user options...</div>
+                    <div className="text-center py-6 text-blue-600">Loading user options...</div>
                 ) : usersError ? (
-                    <div className="text-center text-red-500 py-4">Error: {usersError}</div>
+                    <div className="text-center text-red-600 py-6">Error: {usersError}</div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Key change here */}
+                        {/* Sales Value */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">Sales Value *</label>
+                            <label htmlFor="salesValue" className="block text-sm font-medium text-gray-700 mb-1">Sales Value <span className="text-red-500">*</span></label>
                             <input
                                 type="number"
+                                id="salesValue"
                                 name="salesValue"
                                 value={formData.salesValue}
                                 onChange={handleChange}
-                                placeholder="e.g., 1000000"
-                                className="w-full border border-gray-300 rounded-xl p-2"
+                                placeholder="e.g., 999999999 (up to 99 Crore)"
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                max="999999999" // HTML5 max attribute
+                                min="1" // HTML5 min attribute
                             />
                             {errors.salesValue && (
-                                <p className="text-red-500 text-sm mt-1">{errors.salesValue}</p>
+                                <p className="text-red-500 text-xs mt-1">{errors.salesValue}</p>
                             )}
                         </div>
 
+                        {/* Created By */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">From Date *</label>
-                            <input
-                                type="datetime-local"
-                                name="formDate"
-                                value={formData.formDate}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl p-2"
-                            />
-                            {errors.formDate && (
-                                <p className="text-red-500 text-sm mt-1">{errors.formDate}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1">To Date *</label>
-                            <input
-                                type="datetime-local"
-                                name="toDate"
-                                value={formData.toDate}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl p-2"
-                            />
-                            {errors.toDate && (
-                                <p className="text-red-500 text-sm mt-1">{errors.toDate}</p>
-                            )}
-                        </div>
-
-                        {/* Assigned To (User ID) - Dropdown */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Assigned To*</label>
+                            <label htmlFor="createdBy" className="block text-sm font-medium text-gray-700 mb-1">Created By <span className="text-red-500">*</span></label>
                             <select
-                                name="assignedTo"
-                                value={formData.assignedTo}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl p-2 bg-white"
-                                disabled={fetchingUsers || companyUsers.length === 0}
-                            >
-                                <option value="">Select User</option>
-                                {companyUsers.map((user) => (
-                                    <option key={user.iUser_id} value={user.iUser_id}>
-                                        {user.cFull_name} 
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.assignedTo && (
-                                <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>
-                            )}
-                        </div>
-
-                        {/* Assigned By (User ID) - Dropdown */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Assigned By *</label>
-                            <select
-                                name="assignedBy"
-                                value={formData.assignedBy}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl p-2 bg-white"
-                                disabled={fetchingUsers || companyUsers.length === 0}
-                            >
-                                <option value="">Select User</option>
-                                {companyUsers.map((user) => (
-                                    <option key={user.iUser_id} value={user.iUser_id}>
-                                        {user.cFull_name} 
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.assignedBy && (
-                                <p className="text-red-500 text-sm mt-1">{errors.assignedBy}</p>
-                            )}
-                        </div>
-
-                        {/* Created By (User ID) - Dropdown */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Created By *</label>
-                            <select
+                                id="createdBy"
                                 name="createdBy"
                                 value={formData.createdBy}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl p-2 bg-white"
+                                className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none"
                                 disabled={fetchingUsers || companyUsers.length === 0}
                             >
                                 <option value="">Select User</option>
@@ -362,7 +329,87 @@ export default function SalesForm({ onClose }) {
                                 ))}
                             </select>
                             {errors.createdBy && (
-                                <p className="text-red-500 text-sm mt-1">{errors.createdBy}</p>
+                                <p className="text-red-500 text-xs mt-1">{errors.createdBy}</p>
+                            )}
+                        </div>
+
+                        {/* From Date */}
+                        <div>
+                            <label htmlFor="formDate" className="block text-sm font-medium text-gray-700 mb-1">From Date <span className="text-red-500">*</span></label>
+                            <input
+                                type="datetime-local"
+                                id="formDate"
+                                name="formDate"
+                                value={formData.formDate}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                // min is set by JS validation for datetime-local
+                            />
+                            {errors.formDate && (
+                                <p className="text-red-500 text-xs mt-1">{errors.formDate}</p>
+                            )}
+                        </div>
+
+                        {/* To Date */}
+                        <div>
+                            <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">To Date <span className="text-red-500">*</span></label>
+                            <input
+                                type="datetime-local"
+                                id="toDate"
+                                name="toDate"
+                                value={formData.toDate}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                                // min is set by JS validation for datetime-local
+                            />
+                            {errors.toDate && (
+                                <p className="text-red-500 text-xs mt-1">{errors.toDate}</p>
+                            )}
+                        </div>
+
+                        {/* Assigned To */}
+                        <div>
+                            <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">Assigned To <span className="text-red-500">*</span></label>
+                            <select
+                                id="assignedTo"
+                                name="assignedTo"
+                                value={formData.assignedTo}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none"
+                                disabled={fetchingUsers || companyUsers.length === 0}
+                            >
+                                <option value="">Select User</option>
+                                {companyUsers.map((user) => (
+                                    <option key={user.iUser_id} value={user.iUser_id}>
+                                        {user.cFull_name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.assignedTo && (
+                                <p className="text-red-500 text-xs mt-1">{errors.assignedTo}</p>
+                            )}
+                        </div>
+
+                        {/* Assigned By */}
+                        <div>
+                            <label htmlFor="assignedBy" className="block text-sm font-medium text-gray-700 mb-1">Assigned By <span className="text-red-500">*</span></label>
+                            <select
+                                id="assignedBy"
+                                name="assignedBy"
+                                value={formData.assignedBy}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-blue-500 focus:border-blue-500 shadow-sm appearance-none"
+                                disabled={fetchingUsers || companyUsers.length === 0}
+                            >
+                                <option value="">Select User</option>
+                                {companyUsers.map((user) => (
+                                    <option key={user.iUser_id} value={user.iUser_id}>
+                                        {user.cFull_name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.assignedBy && (
+                                <p className="text-red-500 text-xs mt-1">{errors.assignedBy}</p>
                             )}
                         </div>
                     </div>
@@ -371,14 +418,13 @@ export default function SalesForm({ onClose }) {
                 <div className="flex justify-center mt-8">
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition"
+                        className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isSubmitting || fetchingUsers || companyUsers.length === 0}
                     >
-                        {isSubmitting ? 'Submitting...' : 'Submit Sales Data'}
+                        {isSubmitting ? 'Setting Target...' : 'Set Target'}
                     </button>
                 </div>
             </form>
-             
         </div>
     );
 }

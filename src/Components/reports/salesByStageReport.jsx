@@ -288,7 +288,7 @@ return (
                 <th className="px-4 py-3 font-medium">Total Value</th>
                 <th className="px-4 py-3 font-medium">Avg. Deal Size</th>
                 <th className="px-4 py-3 font-medium">Avg Days</th>
-                <th className="px-4 py-3 font-medium">Conversion Rate</th>
+         
                 <th className="px-4 py-3 font-medium">Win (%)</th>
               </tr>
             </thead>
@@ -301,7 +301,7 @@ return (
                   <td className="px-4 py-2">₹{row.val.toLocaleString()}</td>
                   <td className="px-4 py-2">₹{row.deal.toLocaleString()}</td>
                   <td className="px-4 py-2">{row.days}</td>
-                  <td className="px-4 py-2">{row.conv}%</td>
+      
                   <td className="px-4 py-2">{row.win}%</td>
                 </tr>
               ))}

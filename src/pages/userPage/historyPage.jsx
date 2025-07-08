@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints'; 
 
+
 function HistoryDashboard({ userId }) {
     //console.log("HistoryDashboard: Received userId prop:", userId);
 
@@ -42,7 +43,7 @@ function HistoryDashboard({ userId }) {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
+                console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
 
                 setSummaryMetrics({
                     totalLogsByUser: response.data.totalLogsByUser || 0,
@@ -55,8 +56,8 @@ function HistoryDashboard({ userId }) {
                     const mappedActivityData = response.data.fetchAllRemainderByUser.map(remainder => ({
                         id: remainder.iremainder_id,
                         activitytype: remainder.cremainder_title || 'Remainder',
-                        crm_lead_name: remainder.crm_lead_name || 'N/A',
-                        user: { cFull_name: remainder.cFull_name || 'N/A' }, // Use cFull_name if available
+                        crm_lead_name: remainder.crm_lead_name || '-',
+                        user: { cFull_name: remainder.cFull_name || '-' }, // Use cFull_name if available
                         activitytimestamp: remainder.dremainder_dt,
                     }));
                     setActivityData(mappedActivityData);
@@ -92,11 +93,11 @@ function HistoryDashboard({ userId }) {
 
     // Helper for formatting date and time
     const formatDateTime = (isoString) => {
-        if (!isoString) return 'N/A';
+        if (!isoString) return '-';
         try {
             return new Date(isoString).toLocaleString('en-IN', {
                 year: 'numeric',
-                month: 'short',
+                month: 'numeric',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -145,7 +146,8 @@ function HistoryDashboard({ userId }) {
                             <span className="mr-1 text-lg">&#x25B2;</span>+Overview
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
+                    <div className="bg-gradient-to
+                    -br from-green-50 to-green-100 p-6 rounded-xl shadow-md border border-green-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="text-base text-green-800 font-semibold mb-2">Total Activities</div>
                         <div className="text-2xl font-bold text-green-900 mb-2">{summaryMetrics.totalActivityByUser.toLocaleString()}</div>
                         <div className="flex items-center text-sm text-green-600 font-medium">
@@ -174,25 +176,28 @@ function HistoryDashboard({ userId }) {
                     {/* Removed "View All" link as per your original code's comment */}
                 </div>
 
-                <div className="overflow-x-auto shadow-lg rounded-xl border border-gray-200">
-                    <table className="min-w-full divide-y divide-gray-200 bg-white">
-                        <thead className="bg-gray-50">
+                <div className="overflow-x-auto shadow-lg overflow-y-scroll h-[40vh]  rounded-xl border border-gray-200">
+                    <table className="min-w-full divide-y divide-gray-200 bg-white overflow-y-scroll">
+                        <thead className="bg-gray-50 font-semibold text-lg">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">S.No</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Activity Type</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Lead Name</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Performed By</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Timestamp</th>
+                                
+                                <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">S.No</th>
+                                  <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">Lead Name</th>
+                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Activity Type</th>
+                              
+                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Performed By</th>
+                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Timestamp</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {activityData.length > 0 ? activityData.map((item, index) => (
                                 <tr key={item.id || `activity-${index}`} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">{item.activitytype?.replace(/_/g, ' ')}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.crm_lead_name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{item.user?.cFull_name || 'N/A'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDateTime(item.activitytimestamp)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm font-medium text-gray-900">{index + 1}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.crm_lead_name}</td>
+
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700 capitalize">{item.activitytype?.replace(/_/g, ' ')}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.user?.cFull_name || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700">{formatDateTime(item.activitytimestamp)}</td>
                                 </tr>
                             )) : (
                                 <tr>
@@ -200,11 +205,13 @@ function HistoryDashboard({ userId }) {
                                 </tr>
                             )}
                         </tbody>
+
                     </table>
                 </div>
-            </div>
+            </div>                                
         </div>
     );
 }
+
 
 export default HistoryDashboard;

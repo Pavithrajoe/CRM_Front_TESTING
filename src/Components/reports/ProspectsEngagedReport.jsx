@@ -17,9 +17,42 @@ export default function ProspectsEngagedReport() {
     leadEngagementDetails: [],
     leadCovertToDeal: [],
   });
+  const [activeChartFilter, setActiveChartFilter] = useState("all"); // 'all', 'converted', 'nonConverted'
+  const [loading, setLoading] = useState(true);
 
+  // States for date filtering
+  const [dateFilterFrom, setDateFilterFrom] = useState('');
+  const [dateFilterTo, setDateFilterTo] = useState('');
+  const [isDefaultMonth, setIsDefaultMonth] = useState(true); // Tracks if current month is active
+
+  // Helper function to format date to YYYY-MM-DD for input type="date"
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Effect to set default current month dates on initial load
+  useEffect(() => {
+    const today = new Date(); // Current date is Friday, July 4, 2025
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
+    const formattedLastDay = formatDateForInput(lastDayOfMonth);
+
+    setDateFilterFrom(formattedFirstDay);
+    setDateFilterTo(formattedLastDay);
+    setIsDefaultMonth(true); // Set to true as it's the default load
+  }, []); // Run only once on mount
+
+  // Effect to fetch data based on date filters
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Token not found");
@@ -35,25 +68,40 @@ export default function ProspectsEngagedReport() {
         const { company_id } = JSON.parse(jsonPayload);
         if (!company_id) throw new Error("Company ID missing");
 
-        const res = await fetch(
-          `${ENDPOINTS.PROSPECTS_LOST_LEADS}/${company_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const queryParams = new URLSearchParams();
+        if (dateFilterFrom) {
+          queryParams.append("fromDate", new Date(dateFilterFrom).toISOString());
+        }
+        if (dateFilterTo) {
+          const endOfDay = new Date(dateFilterTo);
+          endOfDay.setHours(23, 59, 59, 999);
+          queryParams.append("toDate", endOfDay.toISOString());
+        }
+
+        let apiUrl = `${ENDPOINTS.PROSPECTS_LOST_LEADS}/${company_id}`;
+        if (queryParams.toString()) {
+          apiUrl += `?${queryParams.toString()}`;
+        }
+
+        const res = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         const result = await res.json();
         setProspectsEngaged(result);
       } catch (err) {
         console.error("API error:", err.message);
+        // Optionally, set an error state to display to the user
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [dateFilterFrom, dateFilterTo]); // Re-fetch data when date filters change
 
   const convertedCount = prospectsEngaged.leadCovertToDeal?.length ?? 0;
   const lostCount = prospectsEngaged?.totalLostLead ?? 0;
@@ -85,63 +133,83 @@ export default function ProspectsEngagedReport() {
   ];
 
   const statusCounts = {};
+  // Aggregate data for chart based on the fetched data
   prospectsEngaged.leadEngagementDetails?.forEach((lead) => {
-    const status = lead.previousActionBeforeLost || "Lost";
+    const status = lead.previousActionBeforeLost || "Lost"; // Default to "Lost" if not specified
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
   prospectsEngaged.leadCovertToDeal?.forEach((lead) => {
-    const status = lead.lead_status?.clead_name || "Converted";
+    const status = lead.lead_status?.clead_name || "Converted"; // Default to "Converted"
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
 
   const convertedStatuses = ["Won", "Converted"];
-  const convertedData = [];
-  const nonConvertedData = [];
   const labels = Object.keys(statusCounts);
 
-  labels.forEach((status) => {
-    if (convertedStatuses.includes(status)) {
-      convertedData.push(statusCounts[status]);
-      nonConvertedData.push(0);
-    } else {
-      nonConvertedData.push(statusCounts[status]);
-      convertedData.push(0);
-    }
-  });
+  // Prepare data for Chart based on activeChartFilter
+  const getChartData = () => {
+    const convertedData = [];
+    const nonConvertedData = [];
 
-  const leadHandlingChartData = {
-    labels,
-    datasets: [
-      {
+    labels.forEach((status) => {
+      if (convertedStatuses.includes(status)) {
+        convertedData.push(statusCounts[status]);
+        nonConvertedData.push(0);
+      } else {
+        nonConvertedData.push(statusCounts[status]);
+        convertedData.push(0);
+      }
+    });
+
+    let datasets = [];
+
+    if (activeChartFilter === "all") {
+      datasets.push({
         label: "Converted",
         data: convertedData,
-        backgroundColor: "#4CAF50",
+        backgroundColor: "#4CAF50", // Green
         borderRadius: 8,
         barThickness: 30,
-      },
-      {
+      });
+      datasets.push({
         label: "Non-Converted",
         data: nonConvertedData,
-        backgroundColor: "#F44336",
+        backgroundColor: "#F44336", // Red
         borderRadius: 8,
         barThickness: 30,
-      },
-    ],
+      });
+    } else if (activeChartFilter === "converted") {
+      datasets.push({
+        label: "Converted",
+        data: convertedData,
+        backgroundColor: "#4CAF50", // Green
+        borderRadius: 8,
+        barThickness: 30,
+      });
+    } else if (activeChartFilter === "nonConverted") {
+      datasets.push({
+        label: "Non-Converted",
+        data: nonConvertedData,
+        backgroundColor: "#F44336", // Red
+        borderRadius: 8,
+        barThickness: 30,
+      });
+    }
+
+    return {
+      labels,
+      datasets,
+    };
   };
+
+  const leadHandlingChartData = getChartData();
 
   const leadHandlingChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
-        labels: {
-          usePointStyle: true,
-          pointStyle: "circle",
-          color: "#4B5563",
-          font: {
-            size: 12,
-          },
-        },
+        display: false,
       },
       tooltip: {
         backgroundColor: "#111827",
@@ -167,6 +235,7 @@ export default function ProspectsEngagedReport() {
         },
         ticks: {
           color: "#4B5563",
+          precision: 0,
         },
         title: {
           display: true,
@@ -188,10 +257,24 @@ export default function ProspectsEngagedReport() {
     interactionCount: lead.interactionCount,
     status: lead.previousActionBeforeLost || "Lost",
     disqualificationReason:
-      typeof lead.previousActionBeforeLost === "object"
-        ? lead.previousActionBeforeLost || "No Reason"
+      typeof lead.previousActionBeforeLost === "object" &&
+      lead.previousActionBeforeLost?.reason
+        ? lead.previousActionBeforeLost.reason
         : "No Reason",
   }));
+
+  const getIntimationMessage = () => {
+    const fromDateObj = dateFilterFrom ? new Date(dateFilterFrom) : null;
+    const toDateObj = dateFilterTo ? new Date(dateFilterTo) : null;
+
+    if (isDefaultMonth && fromDateObj && toDateObj) {
+      return `💡 Showing leads for the **current month**: **${fromDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **${toDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.`;
+    } else if (fromDateObj && toDateObj) {
+      return `🗓️ Filtering leads from **${fromDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **${toDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.`;
+    } else {
+      return `📊 Showing **all available leads** (no date filter applied).`;
+    }
+  };
 
   return (
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col gap-6">
@@ -232,7 +315,46 @@ export default function ProspectsEngagedReport() {
         <h3 className="text-lg font-semibold mb-4 text-gray-700">
           Lead Handling & Productivity Metrics
         </h3>
-        <Bar data={leadHandlingChartData} options={leadHandlingChartOptions} />
+        {/* Chart Filter Buttons */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <button
+            onClick={() => setActiveChartFilter("all")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "all"
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            All Leads
+          </button>
+          <button
+            onClick={() => setActiveChartFilter("converted")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "converted"
+                ? "bg-green-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Converted
+          </button>
+          <button
+            onClick={() => setActiveChartFilter("nonConverted")}
+            className={`px-5 py-2 rounded-lg font-medium text-sm transition-colors duration-200 ${
+              activeChartFilter === "nonConverted"
+                ? "bg-red-600 text-white shadow-md"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Non-Converted
+          </button>
+        </div>
+        <div className="relative h-96">
+          {loading ? (
+            <p className="text-center text-gray-500">Loading chart data...</p>
+          ) : (
+            <Bar data={leadHandlingChartData} options={leadHandlingChartOptions} />
+          )}
+        </div>
       </div>
 
       {/* Table with Pagination */}
@@ -240,13 +362,110 @@ export default function ProspectsEngagedReport() {
         <h3 className="text-lg font-semibold mb-4 text-gray-700">
           Prospects Engaged Metrics
         </h3>
-        <PaginatedTable data={tableData} />
+
+        {/* Date Filters and Intimation Area for Table */}
+        <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+            flexWrap: "wrap", // Allow wrapping on smaller screens
+            gap: "15px", // Spacing between items
+          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <label style={{ fontSize: 16, color: "#555", fontWeight: "bold" }}>From:</label>
+            <input
+              type="date"
+              value={dateFilterFrom}
+              onChange={(e) => {
+                setDateFilterFrom(e.target.value);
+                setIsDefaultMonth(false); // No longer default month if user changes it
+              }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                fontSize: 16,
+                outline: "none",
+                transition: "border-color 0.2s ease",
+              }}
+            />
+            <label style={{ fontSize: 16, color: "#555", fontWeight: "bold" }}>To:</label>
+            <input
+              type="date"
+              value={dateFilterTo}
+              onChange={(e) => {
+                setDateFilterTo(e.target.value);
+                setIsDefaultMonth(false); // No longer default month if user changes it
+              }}
+              style={{
+                padding: "8px 12px",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                fontSize: 16,
+                outline: "none",
+                transition: "border-color 0.2s ease",
+              }}
+            />
+            <button
+              onClick={() => {
+                // Clear date filters to fetch all data
+                setDateFilterFrom('');
+                setDateFilterTo('');
+                setIsDefaultMonth(false); // Not default month when showing all
+              }}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+                backgroundColor: "#f0f0f0",
+                color: "#333",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease, border-color 0.2s ease",
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              Reset
+            </button>
+          </div>
+          {/* Enhanced Intimation Area for Table */}
+          <div style={{
+            flex: 1,
+            minWidth: "250px",
+            padding: "10px 18px",
+            borderRadius: 12,
+            fontSize: 15,
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            background: isDefaultMonth && dateFilterFrom ? "linear-gradient(to right, #e6ffe6, #d0ffe0)" :
+                        (dateFilterFrom && dateFilterTo ? "linear-gradient(to right, #e0f7fa, #c2eff5)" :
+                        "linear-gradient(to right, #f8f8f8, #f0f0f0)"),
+            color: isDefaultMonth && dateFilterFrom ? "#1b5e20" :
+                   (dateFilterFrom && dateFilterTo ? "#006064" : "#424242"),
+            border: isDefaultMonth && dateFilterFrom ? "1px solid #a5d6a7" :
+                    (dateFilterFrom && dateFilterTo ? "1px solid #80deea" : "1px solid #e0e0e0"),
+          }}>
+            {getIntimationMessage()}
+          </div>
+        </div>
+
+        {loading ? (
+          <p className="text-center text-gray-500">Loading table data...</p>
+        ) : (
+          <PaginatedTable data={tableData} />
+        )}
       </div>
     </div>
   );
 }
 
-// ✅ Pagination Table
+// ✅ Pagination Table (remains the same)
 function PaginatedTable({ data }) {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -265,16 +484,16 @@ function PaginatedTable({ data }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left">
+      <table className="w-full border-collapse text-left min-w-[768px]">
         <thead>
           <tr className="bg-gray-100 text-gray-700">
             {[
               "S.No",
-              "Prospect Name",
+              "Lead Name",
               "Engagement Score",
               "Num of Interactions",
               "Status",
-              "Disqualification Reason",
+              // "Disqualification Reason",
             ].map((header) => (
               <th key={header} className="p-4 border-b">
                 {header}
@@ -283,18 +502,26 @@ function PaginatedTable({ data }) {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((row, index) => (
-            <tr key={row.sNo} className="hover:bg-gray-50">
-              <td className="p-4 border-b">
-                {(currentPage - 1) * itemsPerPage + index + 1}
+          {paginatedData.length > 0 ? (
+            paginatedData.map((row, index) => (
+              <tr key={row.sNo} className="hover:bg-gray-50">
+                <td className="p-4 border-b">
+                  {(currentPage - 1) * itemsPerPage + index + 1}
+                </td>
+                <td className="p-4 border-b">{row.prospectName}</td>
+                <td className="p-4 border-b">{row.engagementScore}</td>
+                <td className="p-4 border-b">{row.interactionCount}</td>
+                <td className="p-4 border-b">{row.status}</td>
+                {/* <td className="p-4 border-b">{row.disqualificationReason}</td> */}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={6} className="text-center py-6 text-gray-500">
+                No prospects found for the selected period.
               </td>
-              <td className="p-4 border-b">{row.prospectName}</td>
-              <td className="p-4 border-b">{row.engagementScore}</td>
-              <td className="p-4 border-b">{row.interactionCount}</td>
-              <td className="p-4 border-b">{row.status}</td>
-              <td className="p-4 border-b">{row.disqualificationReason}</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 

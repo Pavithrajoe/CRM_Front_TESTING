@@ -4,12 +4,31 @@ import { ENDPOINTS } from '../../src/api/constraints';
 import ProfileHeader from '../Components/common/ProfileHeader';
 import SettingsPage from './userPage/settingsPage';
 import HistoryDashboard from './userPage/historyPage';
-import TargetDashboard from './userPage/targetPage';
+import TargetDashboard from './userPage/TargetPage';
 import AcheivementDashboard from './userPage/acheivementPage';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaCalendarAlt,
   FaFingerprint, FaBriefcase, FaUserTie, FaUserCircle
 } from 'react-icons/fa';
+
+// Reusable ToggleSwitch component
+const ToggleSwitch = ({ label, isChecked, onToggle }) => (
+  <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
+    <span className="text-gray-700 font-semibold">{label}</span>
+    <div
+      onClick={onToggle}
+      className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
+        isChecked ? 'bg-green-600' : 'bg-red-400'
+      }`}
+    >
+      <div
+        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
+          isChecked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      ></div>
+    </div>
+  </div>
+);
 
 const tabs = ['Target', 'History', 'Settings', 'Achievement'];
 
@@ -63,6 +82,7 @@ const UserProfile = () => {
           },
         });
         const data = await response.json();
+        console.log("Fetched users for reports_to:", data);
         if (!response.ok) throw new Error(data.message);
         const filtered = data.filter(u => u.iUser_id !== parseInt(userId));
         setReportToUsers(filtered);
@@ -74,10 +94,25 @@ const UserProfile = () => {
   }, [userId]);
 
   const handleToggleUserActive = useCallback(async () => {
-    if (!user) return;
-    const token = localStorage.getItem('token');
+    if (!user || typeof user.bactive === 'undefined') {
+      console.warn("User data or bactive status not available for toggle.");
+      return;
+    }
+
     const newStatus = !user.bactive;
-    if (!window.confirm(`Are you sure you want to ${newStatus ? 'activate' : 'deactivate'} this user?`)) return;
+    const token = localStorage.getItem('token');
+
+    if (!newStatus) {
+      const confirmDeactivation = window.confirm("Are you sure you want to deactivate this user's account? They will no longer be able to log in.");
+      if (!confirmDeactivation) {
+        return;
+      }
+    } else {
+      const confirmActivation = window.confirm("Are you sure you want to activate this user's account?");
+      if (!confirmActivation) {
+        return;
+      }
+    }
 
     try {
       const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
@@ -90,9 +125,10 @@ const UserProfile = () => {
       });
       if (!res.ok) throw new Error('Failed to update user status');
       setUser({ ...user, bactive: newStatus });
+      alert(`User account successfully set to ${newStatus ? 'active' : 'inactive'}!`);
     } catch (err) {
       console.error(err);
-      alert('Failed to update user status');
+      alert(`Failed to change user status: ${err.message}. Please try again.`);
     }
   }, [user, userId]);
 
@@ -120,6 +156,7 @@ const UserProfile = () => {
       if (!res.ok) throw new Error(updated.message);
       setUser(updated);
       setShowForm(false);
+      alert('Profile updated successfully!');
     } catch (err) {
       console.error(err);
       alert('Failed to update profile');
@@ -279,6 +316,18 @@ const UserProfile = () => {
                   ))}
                 </select>
               </div>
+
+              {/* User Active/Inactive Toggle inside the edit modal */}
+              {user.bactive !== undefined && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <ToggleSwitch
+                    label="Account Status"
+                    isChecked={user.bactive}
+                    onToggle={handleToggleUserActive}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Toggle to activate or deactivate this user's account.</p>
+                </div>
+              )}
 
               <button
                 type="submit"

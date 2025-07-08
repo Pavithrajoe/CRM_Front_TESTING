@@ -7,10 +7,9 @@ import 'react-toastify/dist/ReactToastify.css'; // Correct path and casing
 import { UserContext } from '../../context/UserContext'; // Adjust path as needed
 import { ENDPOINTS } from '../../api/constraints'; // Adjust path as needed
 
-// --- Reusable InputGroup component (Modified for internal icon) ---
-// Note: Removed mb-5 from here, parent container will manage margin/gap
+// --- Reusable InputGroup component ---
 const InputGroup = ({ label, placeholder, type = 'text', value, onChange, className = '', hasRightIcon = false, children }) => (
-  <div className={`${className}`}> {/* Removed mb-5 here */}
+  <div className={`${className}`}>
     <label className="block mb-2 font-semibold text-sm text-gray-800">{label}</label>
     <div className="relative"> {/* This div is now relative to contain the absolutely positioned icon */}
       <input
@@ -19,7 +18,7 @@ const InputGroup = ({ label, placeholder, type = 'text', value, onChange, classN
         value={value}
         onChange={onChange}
         // Conditional padding-right to make space for the icon
-        className={`w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 shadow-sm transition duration-200 ${
+        className={`w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 shadow-sm transition duration-200 ${
           hasRightIcon ? 'pr-10' : '' // Add right padding if an icon is expected
         }`}
       />
@@ -28,7 +27,7 @@ const InputGroup = ({ label, placeholder, type = 'text', value, onChange, classN
   </div>
 );
 
-// --- Reusable Button component (Sharpened) ---
+// --- Reusable Button component ---
 const Button = ({ text, onClick, className = '', type = 'button', disabled = false }) => (
   <button
     type={type}
@@ -42,7 +41,7 @@ const Button = ({ text, onClick, className = '', type = 'button', disabled = fal
   </button>
 );
 
-// --- Reusable ToggleSwitch component (Sharpened) ---
+// --- Reusable ToggleSwitch component ---
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
     <span className="text-gray-700 font-medium">{label}</span>
@@ -151,13 +150,13 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
-      // console.log("General settings data received from API on page load/after save:", data);
+      console.log("General settings data received from API on page load/after save:", data);
 
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       
       const settings = data.result && Array.isArray(data.result) && data.result.length > 0
-                       ? data.result[0]
-                       : {};
+                         ? data.result[0]
+                         : {};
 
       setWhatsappActive(settings.whatsapp_active || false);
       setMailActive(settings.mail_active || false);
@@ -264,10 +263,10 @@ const SettingsPage = () => {
     }
   };
 
-  // Placeholder for email change functionality
-  const handleChangeEmail = async () => {
-    toast.info('Email change functionality triggered. (Backend implementation needed for verification)');
-  };
+  // Placeholder for email change functionality (not implemented in this UI)
+  // const handleChangeEmail = async () => {
+  //   toast.info('Email change functionality triggered. (Backend implementation needed for verification)');
+  // };
 
   // Handler for changing password
   const handleChangePassword = async () => {
@@ -279,8 +278,8 @@ const SettingsPage = () => {
       return;
     }
 
-    if (newPassword.length < 8) {
-      toast.warn("New password must be at least 8 characters.");
+    if (newPassword.length < 6) {
+      toast.warn("New password must be at least 6 characters.");
       return;
     }
 
@@ -327,87 +326,46 @@ const SettingsPage = () => {
   const isLoading = loadingProfile || loadingSettings;
 
   return (
-    <div className="p-4 md:p-6 bg-gray-100 min-h-screen">
-      <div className="bg-white p-6 md:p-8 space-y-5 rounded-xl shadow-xl w-full mx-auto border border-gray-200">
+    <div className="p-4 md:p-6 bg-gray-100 min-h-screen font-sans">
+      <style>
+        {`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .animate-fade-in-down {
+          animation: fadeInDown 0.6s ease-out forwards;
+        }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .section-divider {
+          height: 1px;
+          background: linear-gradient(to right, transparent, #cbd5e1, transparent);
+          margin: 3rem 0; /* Increased margin for better separation */
+        }
+        `}
+      </style>
+      <div className="bg-white p-6 md:p-8 space-y-8 rounded-xl shadow-2xl max-w-6xl w-full mx-auto border border-gray-200">
         
         {/* User Profile Settings Section */}
-        <section className="mb-8 pb-6 border-b space-y-5 border-gray-200">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">User Profile Settings</h2>
+        <section className="animate-fade-in-down">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Personal Information</h2>
           {isLoading ? (
-            <div className="animate-pulse">
-              <div className="h-10 bg-gray-200 rounded-md mb-5"></div>
-              <div className="h-10 bg-gray-200 rounded-md mb-5"></div>
-              <div className="h-10 bg-gray-200 rounded-md mb-5"></div>
-              <div className="h-10 bg-gray-200 rounded-md mb-5"></div>
-              <div className="h-10 bg-gray-200 rounded-md mb-5"></div>
+            <div className="animate-pulse space-y-5">
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
             </div>
           ) : (
-            <div className="flex flex-col space-y-5 md:flex-row gap-8">
+            <div className="flex flex-col space-y-5 md:flex-row md:space-y-0 md:gap-8">
               <div className="flex-grow space-y-5">
                 <InputGroup label="Full Name" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} />
                 <InputGroup label="Username" placeholder="Enter your username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                
-                <div className="flex flex-col sm:flex-row items-end gap-4 mb-5">
-                  <InputGroup
-                    label="Email ID"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-grow"
-                  />
-                  {/* <Button text="Change Email" onClick={handleChangeEmail} className="bg-gray-700 text-white w-full sm:w-auto" /> */}
-                </div>
-
-                {/* Current Password Field with Eye Icon INSIDE */}
-                <div className="mb-5"> {/* This div adds the margin-bottom for spacing below this password field */}
-                  <InputGroup
-                    label="Current Password"
-                    placeholder="Enter your current password"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    hasRightIcon={true} 
-                  >
-                    {/* The Eye icon rendered as a child of InputGroup */}
-                    <div
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </div>
-                  </InputGroup>
-                </div>
-
-                {/* --- CORRECTED ALIGNMENT FOR NEW PASSWORD FIELD AND BUTTON --- */}
-                {/* Both the InputGroup and Button are now siblings within this flex container, which also provides the mb-5 */}
-                <div className="flex flex-col sm:flex-row items-end gap-4 mb-5"> {/* This div now handles the bottom margin */}
-                  <InputGroup
-                    label="New Password"
-                    placeholder="Enter new password"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="flex-grow" /* Allows input to take up available space */
-                    hasRightIcon={true} /* Tell InputGroup to make space for the icon */
-                  >
-                    {/* The Eye icon rendered as a child of InputGroup */}
-                    <div
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </div>
-                  </InputGroup>
-                  {/* The Button is now a direct flex item alongside the InputGroup */}
-                  <Button
-                    text="Update Password"
-                    onClick={handleChangePassword}
-                    className="bg-blue-900 text-white hover:bg-blue-700 focus:ring-blue-500 min-w-[150px]" /* Added min-w to prevent button from shrinking too much on smaller screens if text is long */
-                  />
-                </div>
+                <InputGroup label="Email ID" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
 
-              <div className="md:w-64 text-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center">
+              <div className="md:w-64 text-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center shadow-inner">
                 <h3 className="text-lg font-medium mb-4 text-gray-700">Profile Picture</h3>
                 <label
                   htmlFor="picture-upload"
@@ -423,15 +381,79 @@ const SettingsPage = () => {
           )}
         </section>
 
-        {/* Preferences Section */}
-        <section className="mb-8 pt-6">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">Preferences</h2>
+        {/* Section Divider */}
+        <div className="section-divider"></div>
+
+        {/* Password Settings Section */}
+        <section className="animate-fade-in-down">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Password Settings</h2>
           {isLoading ? (
-            <div className="animate-pulse">
-              <div className="h-10 bg-gray-200 rounded-md my-3"></div>
-              <div className="h-10 bg-gray-200 rounded-md my-3"></div>
-              <div className="h-10 bg-gray-200 rounded-md my-3"></div>
-              <div className="h-10 bg-gray-200 rounded-md my-3"></div>
+            <div className="animate-pulse space-y-5">
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Current Password Field with Eye Icon INSIDE */}
+              <InputGroup
+                label="Current Password"
+                placeholder="Enter your current password"
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                hasRightIcon={true} 
+              >
+                {/* The Eye icon rendered as a child of InputGroup */}
+                <div
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <Eye size={20} /> : <EyeOff size={20} /> }
+                </div>
+              </InputGroup>
+
+              {/* New Password Field with Eye Icon INSIDE and Update Button */}
+              <div className="flex flex-col sm:flex-row items-end gap-4">
+                <InputGroup
+                  label="New Password"
+                  placeholder="Enter new password"
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="flex-grow"
+                  hasRightIcon={true}
+                >
+                  {/* The Eye icon rendered as a child of InputGroup */}
+                  <div
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <Eye size={20} />  : <EyeOff size={20}/>}
+                  </div>
+                </InputGroup>
+                <Button
+                  text="Update Password"
+                  onClick={handleChangePassword}
+                  className="bg-blue-900 text-white hover:bg-blue-700 focus:ring-blue-500 min-w-[150px] shadow-md"
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Section Divider */}
+        <div className="section-divider"></div>
+
+        {/* Preferences Section */}
+        <section className="animate-fade-in-down">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Preferences</h2>
+          {isLoading ? (
+            <div className="animate-pulse space-y-3">
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
             </div>
           ) : (
             <>
@@ -444,12 +466,12 @@ const SettingsPage = () => {
         </section>
 
         {/* Save Changes Button */}
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
           <Button
             text={isSaving ? 'Saving...' : 'Save All Changes'}
             onClick={handleSaveChanges}
             disabled={isSaving}
-            className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-xs shadow-lg"
+            className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
           />
         </div>
       </div>

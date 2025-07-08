@@ -1,7 +1,6 @@
-
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { ENDPOINTS } from '../../api/constraints';
+import { ENDPOINTS } from '../../api/constraints'; // Ensure this path is correct
 
 const CompanyLeads = () => {
   const [leads, setLeads] = useState([]);
@@ -11,72 +10,112 @@ const CompanyLeads = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10;
 
+  // New states for date filtering
+  const [dateFilterFrom, setDateFilterFrom] = useState('');
+  const [dateFilterTo, setDateFilterTo] = useState('');
+  const [showDefaultMonthNotification, setShowDefaultMonthNotification] = useState(false);
+
+  // Helper function to format date to YYYY-MM-DD for input type="date"
+  const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Effect to set default current month dates on initial load
+  useEffect(() => {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
+    const formattedLastDay = formatDateForInput(lastDayOfMonth);
+
+    setDateFilterFrom(formattedFirstDay);
+    setDateFilterTo(formattedLastDay);
+    setShowDefaultMonthNotification(true); // Show notification on default load
+  }, []); // Run only once on mount
+
+  // Effect to fetch data based on filters
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('Token not found');
 
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const base66Url = token.split('.')[1];
+        const base64 = base66Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(
           atob(base64)
             .split('')
             .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
             .join('')
         );
+
         const { company_id } = JSON.parse(jsonPayload);
         if (!company_id) throw new Error('Company ID missing');
 
+        // Prepare params for the API call
+        const params = {
+          fromDate: dateFilterFrom,
+          toDate: dateFilterTo,
+        };
+
         const response = await axios.get(`${ENDPOINTS.COMPANY_LEADS}/${company_id}`, {
           headers: { Authorization: `Bearer ${token}` },
+          params: params, // Pass fromDate and toDate as query parameters
         });
 
         const data = response.data?.data || [];
         setLeads(data);
-        setFilteredLeads(data);
+        setFilteredLeads(data); // Initial filter based on fetched data
       } catch (err) {
         console.error('Error fetching leads:', err);
+        // Optionally, show an error message to the user
       }
     };
 
     fetchData();
-  }, []);
+  }, [dateFilterFrom, dateFilterTo]); // Re-fetch data when date filters change
 
- useEffect(() => {
-  let updated = [...leads];
+  // Effect for local filtering (search and status filters)
+  useEffect(() => {
+    let updated = [...leads]; // Start with the leads fetched based on date filters
 
-  // Apply filter
-  if (filterType === 'open') {
-    updated = updated.filter((lead) => lead.bactive === true && lead.bisConverted === false);
-  } else if (filterType === 'lost') {
-    updated = updated.filter((lead) => lead.bactive === false);
-  } else if (filterType === 'deal') {
-    updated = updated.filter((lead) => lead.bisConverted === true);
-  }
+    // Apply status filter
+    if (filterType === 'open') {
+      updated = updated.filter((lead) => lead.bactive === true && lead.bisConverted === false);
+    } else if (filterType === 'lost') {
+      updated = updated.filter((lead) => lead.bactive === false);
+    } else if (filterType === 'deal') {
+      updated = updated.filter((lead) => lead.bisConverted === true);
+    }
 
-  // Apply search
-  if (searchTerm.trim() !== '') {
-    updated = updated.filter((lead) =>
-      [
-        lead.clead_name,
-        lead.user?.cFull_name,
-        lead.cemail,
-        lead.corganization,
-        lead.lead_status?.clead_name,
-        lead.lead_sources?.source_name,
-        lead.iphone_no,
-        lead.whatsapp_number,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  }
+    // Apply search
+    if (searchTerm.trim() !== '') {
+      updated = updated.filter((lead) =>
+        [
+          lead.clead_name,
+          lead.user?.cFull_name,
+          lead.cemail,
+          lead.corganization,
+          lead.lead_status?.clead_name,
+          lead.lead_sources?.source_name,
+          lead.iphone_no,
+          lead.whatsapp_number,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+    }
 
-  setFilteredLeads(updated);
-  setCurrentPage(1); // Reset to first page on filter/search change
-}, [searchTerm, filterType, leads]);
+    setFilteredLeads(updated);
+    setCurrentPage(1); // Reset to first page on filter/search change
+  }, [searchTerm, filterType, leads]); // Depend on 'leads' (which updates after date filter fetch)
 
   // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
@@ -129,7 +168,7 @@ const CompanyLeads = () => {
           disabled={currentPage === totalPages}
           className="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-50"
         >
-        Next
+          Next
         </button>
         <span className="text-sm text-gray-600">
           {indexOfLastLead > filteredLeads.length ? filteredLeads.length : indexOfLastLead}/{filteredLeads.length}
@@ -142,8 +181,8 @@ const CompanyLeads = () => {
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Table Controls */}
       <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="relative flex items-center space-x-2">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4"> {/* Added flex-wrap and gap */}
+          <div className="relative flex items-center space-x-2 flex-wrap gap-2"> {/* Added flex-wrap and gap */}
             <div className="relative">
               <input
                 type="text"
@@ -178,18 +217,60 @@ const CompanyLeads = () => {
             >
               Deal
             </button>
+            {/* New Date Filter Inputs */}
+            <label className="text-gray-700 font-medium text-sm">From:</label>
+            <input
+              type="date"
+              value={dateFilterFrom}
+              onChange={(e) => {
+                setDateFilterFrom(e.target.value);
+                setShowDefaultMonthNotification(false); // Hide notification if user changes date
+              }}
+              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+            />
+            <label className="text-gray-700 font-medium text-sm">To:</label>
+            <input
+              type="date"
+              value={dateFilterTo}
+              onChange={(e) => {
+                setDateFilterTo(e.target.value);
+                setShowDefaultMonthNotification(false); // Hide notification if user changes date
+              }}
+              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+            />
             <button
               className="px-4 py-2 bg-gray-300 text-black rounded-full"
               onClick={() => {
                 setFilterType(null);
                 setSearchTerm('');
+                // Reset date filters to empty and trigger re-fetch for all data
+                setDateFilterFrom('');
+                setDateFilterTo('');
+                setShowDefaultMonthNotification(false); // Ensure notification is off
               }}
             >
               Reset
             </button>
           </div>
-         
         </div>
+
+        {/* Current Month Data Notification */}
+        {showDefaultMonthNotification && dateFilterFrom && dateFilterTo && (
+          <div className="mb-4 p-6 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
+            💡 Showing leads for the **current month**: **{new Date(dateFilterFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **{new Date(dateFilterTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.
+          </div>
+        )}
+        {!showDefaultMonthNotification && dateFilterFrom && dateFilterTo && (
+          <div className="mb-4 p-6 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
+            Filtering leads from **{new Date(dateFilterFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **{new Date(dateFilterTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.
+          </div>
+        )}
+        {!dateFilterFrom && !dateFilterTo && (
+            <div className="mb-4 p-6 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
+                Showing all leads.
+            </div>
+        )}
+
 
         {/* Table */}
         <div className="bg-white shadow-md rounded-lg overflow-x-auto h-full">
@@ -203,39 +284,38 @@ const CompanyLeads = () => {
                 <th className="px-4 py-3 text-sm font-bold text-black ">E-Mail ID</th>
                 <th className="px-4 py-3 text-sm font-bold text-black ">Phone No</th>
                 <th className="px-4 py-3 text-sm font-bold text-black ">Created Date</th>
-                <th className="px-4 py-3 text-sm font-bold  text-black ">Lead owner</th>
-                <th className="px-4 py-3 text-sm font-bold text-center  text-black ">Status</th>
+                <th className="px-4 py-3 text-sm font-bold text-black ">Lead owner</th>
+                <th className="px-4 py-3 text-sm font-bold text-center text-black ">Status</th>
               </tr>
             </thead>
             <tbody>
               {currentLeads.map((lead, index) => (
                 <tr key={lead.ilead_id || index} className="border-t">
                   <td className="px-4 py-3 text-sm text-gray-700">{indexOfFirstLead + index + 1}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.clead_name || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.corganization || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.lead_sources?.source_name || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.cemail || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.iphone_no || 'N/A'}</td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-  {lead.dcreated_dt
-    ? new Date(lead.dcreated_dt).toLocaleDateString('en-GB') // This gives DD/MM/YYYY
-        .replace(/\//g, '-') // Convert to DD-MM-YYYY
-    : 'N/A'}
-</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.clead_name || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.corganization || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.lead_sources?.source_name || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.cemail || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.iphone_no || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {lead.dcreated_dt
+                      ? new Date(lead.dcreated_dt).toLocaleDateString('en-GB') // This gives DD/MM/YYYY
+                        .replace(/\//g, '-') // Convert to DD-MM-YYYY
+                      : '-'}
+                  </td>
 
-                  <td className="px-4 py-3 text-sm text-gray-700">{lead.user?.cFull_name || 'N/A'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{lead.user?.cFull_name || '-'}</td>
                   <td className="px-4 py-3 text-sm w-10">
-  <span
-    className={`inline-block text-center px-2 py-1 rounded-full w-24 ${
-      lead.lead_status?.clead_name === 'Won'
-        ? 'bg-green-100 text-green-600'
-        : 'bg-yellow-100 text-yellow-600'
-    }`}
-  >
-    {lead.lead_status?.clead_name || 'Unknown'}
-  </span>
-</td>
-
+                    <span
+                      className={`inline-block text-center px-2 py-1 rounded-full w-24 ${
+                        lead.lead_status?.clead_name === 'Won'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-yellow-100 text-yellow-600'
+                      }`}
+                    >
+                      {lead.lead_status?.clead_name || 'Unknown'}
+                    </span>
+                  </td>
                 </tr>
               ))}
               {currentLeads.length === 0 && (

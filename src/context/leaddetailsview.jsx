@@ -131,7 +131,7 @@ const LeadDetailView = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          sent_to: sentTo,
+          sent_to: sentTo, // Corrected: Use 'sentTo' state variable
           mailSubject,
           mailContent,
         }),
@@ -147,7 +147,7 @@ const LeadDetailView = () => {
 
       showPopup("Success", "Email sent successfully!", "success");
       setIsMailOpen(false);
-      setSentTo("");
+      setSentTo(""); // Clear the sentTo field after sending
       setMailSubject("");
       setMailContent("");
     } catch (error) {
@@ -178,13 +178,10 @@ const LeadDetailView = () => {
         setIsDeal(data.bisConverted);
         setIsLost(data.bactive);
 
-        // Use 'cEmail' for lead's email as it's the most common casing in your original snippet
-        if (data.cEmail) { // Changed from 'cemail' to 'cEmail' based on initial snippet
-          setSentTo(data.cEmail);
-          console.log("DEBUG: cEmail found and set to:", data.cEmail);
-        } else {
-          console.warn("DEBUG: cEmail not found or is empty in lead data:", data.cEmail);
-        }
+        // Set sentTo to lead's email or empty string
+        setSentTo(data.cemail || ""); // This line auto-populates the email field
+
+        console.log("DEBUG: cEmail found and set to:", data.cemail);
 
         console.log("DEBUG: Lead Data cFirstName:", data.cFirstName);
         console.log("DEBUG: Lead Data cLastName:", data.cLastName);
@@ -305,10 +302,13 @@ const LeadDetailView = () => {
         <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
         <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
         <p>Best regards,</p>
-      
+
+        <p>${loggedInUserName}</p>
+        <p>${loggedInCompanyName}</p>
       `;
       setMailSubject(defaultSubject);
       setMailContent(defaultContent);
+
 
       console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
       console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
@@ -316,7 +316,8 @@ const LeadDetailView = () => {
     } else if (isMailOpen && !leadData) {
         console.warn("DEBUG: Mail modal opened but leadData is not yet available for template generation!");
     }
-  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName, sentTo]); // Added sentTo to dependencies as it's modified here
+
+  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]); // Removed sentTo from dependencies here as it's set inside the effect
 
   const modules = {
     toolbar: [
@@ -484,7 +485,7 @@ const LeadDetailView = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                sendEmail();
+                sendEmail(); // Call sendEmail function directly here
               }}
               className="flex flex-col flex-grow space-y-4"
             >
@@ -493,8 +494,8 @@ const LeadDetailView = () => {
                 <input
                   type="email"
                   className="w-full border px-3 py-2 rounded-xl"
-                  value={sentTo}
-                  onChange={(e) => setSentTo(e.target.value)}
+                  value={sentTo} // Corrected: Use 'sentTo' state variable
+                  onChange={(e) => setSentTo(e.target.value)} // Corrected: Update 'sentTo' state
                   required
                 />
               </div>

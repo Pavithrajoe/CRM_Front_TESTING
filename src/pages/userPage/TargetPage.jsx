@@ -115,15 +115,15 @@ const TargetDashboard = ({ userId }) => {
           targetValue: target,
           achieved: achieved,
           completed: completedPercentage,
-          status: metric.status || "N/A",
-          fromDate: rawFromDate ? rawFromDate.toLocaleDateString() : "N/A",
-          toDate: rawToDate ? rawToDate.toLocaleDateString() : "N/A",
+          status: metric.status || "-",
+          fromDate: rawFromDate ? rawFromDate.toLocaleDateString() : "-",
+          toDate: rawToDate ? rawToDate.toLocaleDateString() : "-",
           rawFromDate: rawFromDate,
           rawToDate: rawToDate,
           createdAt: createdAtDate,
-          assignedTo: metric.AssignedTo || "N/A",
-          assignedBy: metric.AssignedBy || "N/A",
-          createdBy: metric.CreatedBy || "N/A",
+          assignedTo: metric.AssignedTo || "-",
+          assignedBy: metric.AssignedBy || "-",
+          createdBy: metric.CreatedBy || "-",
         };
       }).filter(Boolean);
 
@@ -351,7 +351,7 @@ const TargetDashboard = ({ userId }) => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table className="min-w-full bg-white border border-gray-200 h-[350px] rounded-lg overflow-y-scroll">
               <thead>
                 <tr className="bg-gray-100 text-left text-gray-600 uppercase text-xs sm:text-sm leading-normal">
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned To</th>

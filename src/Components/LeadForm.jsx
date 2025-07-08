@@ -53,6 +53,7 @@ const LeadForm = ({ onClose }) => {
     clead_source: "",
     cresponded_by: userId,
     modified_by: userId,
+    
   });
 
   // for lables ==============
@@ -80,6 +81,7 @@ const LeadForm = ({ onClose }) => {
   const [popupMessage, setPopupMessage] = useState("");
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  
 
   const [searchPotential, setSearchPotential] = useState("");
   const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
@@ -1015,7 +1017,7 @@ useEffect(() => {
         {/* <h3 className="text-lg font-semibold mt-6">Lead Details</h3> */}
         <h3 className="text-lg font-semibold mt-6">{formLabels.section1Label}</h3>  {/* for dynamic sec 1 title */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {basicLeadFields.map(({ label, name, required, type, value, readOnly }) => (
+          {basicLeadFields.map(({ label, name, required , value, readOnly }) => (
             <div key={name}>
               <label className="text-sm font-medium">
                 {label} {required && <span className="text-red-500">*</span>}

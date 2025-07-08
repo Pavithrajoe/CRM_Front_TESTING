@@ -12,19 +12,35 @@ import DemoSessionDetails from "./demo_session_details";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
+
 const EditProfileForm = ({ profile, onClose, onSave }) => {
   const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-  const company_id = localStorage.getItem("company_id");
-  
+
+  let userId = "";
+  let company_id = "";
+
+  if (token) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(base64));
+      userId = payload.user_id;
+      company_id = payload.company_id;
+    } catch (error) {
+      console.error("Token decode error:", error);
+    }
+  } else {
+    console.error("Invalid or missing JWT token");
+  }
+
   const [form, setForm] = useState({
-    ileadpotential_id: profile?.ileadpotential_id || "",
-    ileadstatus_id: profile?.ileadstatus_id || "",
+    iLeadpoten_id: profile?.iLeadpoten_id || "",
+    ileadstatus_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
-    csubindustry_id: profile?.csubindustry_id || "", 
+    csubindustry_id: profile?.csubindustry_id || "",
     lead_source_id: profile?.lead_source_id || "",
-    ino_employee: profile?.ino_employee || 0, 
-    iproject_value: profile?.iproject_value || 0, 
+    ino_employee: profile?.ino_employee || 0,
+    iproject_value: profile?.iproject_value || 0,
     clead_name: profile?.clead_name || "",
     cemail: profile?.cemail || "",
     corganization: profile?.corganization || "",
@@ -32,57 +48,51 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     icity: profile?.icity || "",
     iphone_no: profile?.iphone_no || "",
     phone_country_code: profile?.phone_country_code || "+91",
-    cgender: profile?.cgender || 1,
+    cgender: profile?.cgender || 1, // Assuming default gender is 1
     clogo: profile?.clogo || "logo.png",
     clead_address1: profile?.clead_address1 || "",
     cwhatsapp: profile?.cwhatsapp || "",
     whatsapp_country_code: profile?.whatsapp_country_code || "+91",
     clead_address2: profile?.clead_address2 || "",
     clead_address3: profile?.clead_address3 || "",
-    cstate: profile?.cstate || "",
-    cdistrict: profile?.cdistrict || "",
-    cpincode: profile?.cpincode || "",
-    ccountry: profile?.ccountry || "",
     cservices: profile?.cservices || "No services entered",
-    clead_source: profile?.clead_source || "",
     cresponded_by: userId,
+    icompany_id: company_id,
     modified_by: userId,
   });
+
+  const [errors, setErrors] = useState({});
 
   const [Potential, setPotential] = useState([]);
   const [status, setStatus] = useState([]);
   const [leadIndustry, setIndustry] = useState([]);
   const [leadSubIndustry, setSubIndustry] = useState([]);
   const [cities, setCities] = useState([]);
+  const [source, setSource] = useState([]);
+
   const [searchCity, setSearchCity] = useState("");
   const [filteredCities, setFilteredCities] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState([]);
-  
-  // Refs for dropdowns
+
   const cityDropdownRef = useRef(null);
   const potentialDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
   const industryDropdownRef = useRef(null);
   const subIndustryDropdownRef = useRef(null);
   const sourceDropdownRef = useRef(null);
-  
-  // Dropdown states
+
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isIndustryDropdownOpen, setIsIndustryDropdownOpen] = useState(false);
   const [isSubIndustryDropdownOpen, setIsSubIndustryDropdownOpen] = useState(false);
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
-  
-  // Search states
+
   const [searchPotential, setSearchPotential] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
   const [searchIndustry, setSearchIndustry] = useState("");
   const [searchSubIndustry, setSearchSubIndustry] = useState("");
   const [searchSource, setSearchSource] = useState("");
 
-  // Fetch dropdown data
   const fetchDropdownData = async (endpoint, setData, dataName, transformFn) => {
     try {
       const response = await fetch(`${apiEndPoint}/${endpoint}`, {
@@ -105,7 +115,6 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   };
 
-  // Fetch cities data
   const fetchCitiesData = async () => {
     try {
       const response = await fetch(`${apiEndPoint}/city`, {
@@ -131,7 +140,6 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   };
 
-  // Handle city search
   const handleSearchCity = (e) => {
     const searchTerm = e.target.value;
     setSearchCity(searchTerm);
@@ -142,62 +150,60 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     setIsCityDropdownOpen(true);
   };
 
-  // Handle city selection
   const handleCitySelect = (cityId, cityName) => {
-    setForm(prev => ({ ...prev, icity: cityId }));
+    setForm((prev) => ({ ...prev, icity: cityId }));
     setSearchCity(cityName);
     setIsCityDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, icity: "" }));
   };
 
-  // Handle potential selection
   const handlePotentialSelect = (potentialId, potentialName) => {
-    setForm(prev => ({ ...prev, iLeadpoten_id: potentialId }));
+    setForm((prev) => ({ ...prev, iLeadpoten_id: potentialId }));
     setSearchPotential(potentialName);
     setIsPotentialDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
   };
 
-  // Handle status selection
   const handleStatusSelect = (statusId, statusName) => {
-    setForm(prev => ({ ...prev, ileadstatus_id: statusId }));
+    setForm((prev) => ({ ...prev, ilead_status_id: statusId }));
     setSearchStatus(statusName);
     setIsStatusDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, ilead_status_id: "" }));
   };
 
-  // Handle industry selection
   const handleIndustrySelect = (industryId, industryName) => {
-    setForm(prev => ({ ...prev, cindustry_id: industryId, csubindustry_id: "" }));
+    setForm((prev) => ({ ...prev, cindustry_id: industryId, csubindustry_id: "" }));
     setSearchIndustry(industryName);
     setIsIndustryDropdownOpen(false);
     setSearchSubIndustry("");
+    setErrors((prev) => ({ ...prev, cindustry_id: "" }));
+    setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
   };
 
-  // Handle sub-industry selection
   const handleSubIndustrySelect = (subIndustryId, subIndustryName) => {
-    setForm(prev => ({ ...prev, csubindustry_id: subIndustryId }));
+    setForm((prev) => ({ ...prev, csubindustry_id: subIndustryId }));
     setSearchSubIndustry(subIndustryName);
     setIsSubIndustryDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
   };
 
-  // Handle source selection
   const handleSourceSelect = (sourceId, sourceName) => {
-    setForm(prev => ({ ...prev, lead_source_id: sourceId }));
+    setForm((prev) => ({ ...prev, lead_source_id: sourceId }));
     setSearchSource(sourceName);
     setIsSourceDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, lead_source_id: "" }));
   };
 
-  // Filter sub-industries based on selected industry
   const filteredSubIndustries = leadSubIndustry.filter(
-    sub => sub.iindustry_parent === form.cindustry_id
+    (sub) => sub.iindustry_parent === form.cindustry_id
   );
 
-  // Fetch all dropdown data on component mount
   useEffect(() => {
     fetchDropdownData("lead-potential/company-potential", setPotential, "lead potential", (res) => res.data || []);
     fetchDropdownData("lead-status/company-lead", setStatus, "lead status", (res) => res.response || []);
     fetchDropdownData("lead-source/company-src", setSource, "lead sources", (data) => data.data || []);
     fetchCitiesData();
 
-    // Fetch industry and sub-industry
     const fetchIndustryAndSubIndustry = async () => {
       try {
         const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
@@ -215,415 +221,569 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
 
         const rawData = await response.json();
         setIndustry(rawData.response?.industry || []);
-        setSubIndustry(rawData.response?.subindustries || []); 
+        setSubIndustry(rawData.response?.subindustries || []);
       } catch (e) {
         console.error("Error in fetching lead industry and sub-industry:", e);
       }
     };
-
     fetchIndustryAndSubIndustry();
-  }, []);
+  }, [token]);
 
-  // Set initial search values based on profile data
   useEffect(() => {
     if (profile) {
-      // Set potential search value
-      const selectedPotential = Potential.find(p => p.ileadpoten_id === profile.iLeadpoten_id);
-      if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
-      
-      // Set status search value
-      const selectedStatus = status.find(s => s.ileadstatus_id === profile.ileadstatus_id);
-      if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
-      
-      // Set industry search value
-      const selectedIndustry = leadIndustry.find(i => i.iindustry_id === profile.cindustry_id);
-      if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
-      
-      // Set sub-industry search value
-      const selectedSubIndustry = leadSubIndustry.find(s => s.isubindustry === profile.csubindustry_id);
-      if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
-      
-      // Set source search value
-      const selectedSource = source.find(s => s.source_id === profile.lead_source_id);
-      if (selectedSource) setSearchSource(selectedSource.source_name);
-      
-      // Set city search value
-      const selectedCity = cities.find(c => c.icity_id === profile.icity);
-      if (selectedCity) setSearchCity(selectedCity.cCity_name);
+      const setInitialDropdownValue = (items, idKey, nameKey, formId, setSearch) => {
+        const selectedItem = items.find(item => item[idKey] === profile[formId]);
+        if (selectedItem) setSearch(selectedItem[nameKey]);
+      };
+
+      setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
+      setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ilead_status_id', setSearchStatus);
+      setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
+      setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'csubindustry_id', setSearchSubIndustry);
+      setInitialDropdownValue(source, 'source_id', 'source_name', 'lead_source_id', setSearchSource);
+      setInitialDropdownValue(cities, 'icity_id', 'cCity_name', 'icity', setSearchCity);
     }
   }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities]);
 
-  // Handle form field changes
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+        setIsCityDropdownOpen(false);
+      }
+      if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
+        setIsPotentialDropdownOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setIsStatusDropdownOpen(false);
+      }
+      if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
+        setIsIndustryDropdownOpen(false);
+      }
+      if (subIndustryDropdownRef.current && !subIndustryDropdownRef.current.contains(event.target)) {
+        setIsSubIndustryDropdownOpen(false);
+      }
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
+        setIsSourceDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Handle form submission
+  const validateForm = () => {
+    console.log("the validated form :",form)
+    let newErrors = {};
+    if (!form.clead_name.trim()) {
+      newErrors.clead_name = "Name is required.";
+    }
+    if (!form.corganization.trim()) {
+      newErrors.corganization = "Organization is required.";
+    }
+    if (!form.iphone_no.trim()) {
+      newErrors.iphone_no = "Phone number is required.";
+    } else if (!/^\d{10}$/.test(form.iphone_no)) {
+      newErrors.iphone_no = "Phone number must be 10 digits.";
+    }
+    if (form.cemail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
+      newErrors.cemail = "Invalid email format.";
+    }
+    if (!form.iLeadpoten_id) {
+      newErrors.iLeadpoten_id = "Potential is required.";
+    }
+    if (form.ileadstatus_id === '' || form.ileadstatus_id === null || form.ileadstatus_id === undefined) {
+    newErrors.ilead_status_id = "Status is required.";
+}
+    if (!form.lead_source_id) {
+      newErrors.lead_source_id = "Lead source is required.";
+    }
+    if (!form.cindustry_id) {
+      newErrors.cindustry_id = "Industry is required.";
+    }
+    if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
+      newErrors.csubindustry_id = "Sub-Industry is required.";
+    }
+    if (!form.icity) {
+      newErrors.icity = "City is required.";
+    }
+    if (!form.clead_address1.trim()) {
+      newErrors.clead_address1 = "Address 1 is required.";
+    }
+    if (form.iproject_value < 0) {
+      newErrors.iproject_value = "Project value cannot be negative.";
+    }
+    if (form.ino_employee < 0) {
+      newErrors.ino_employee = "Number of employees cannot be negative.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form);
+    if (validateForm()) {
+      onSave(form);
+    } else {
+      console.log("Form has validation errors:", errors);
+    }
   };
+
+  // --- Blue Theme Classes ---
+  const commonInputClasses = "mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-600 focus:border-blue-600 transition-all duration-200 text-sm";
+  const errorInputClasses = "border-red-500 focus:ring-red-500 focus:border-red-500";
+  const labelClasses = "block text-sm font-medium text-blue-800 mb-1"; // Darker blue for labels
+  const errorTextClasses = "text-red-500 text-xs mt-1";
+  const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 text-blue-900"; // Lighter blue for hover
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="block bg-white p-6 sm:p-8 rounded-2xl max-w-[80%] sm:max-w-[80%] w-full shadow-lg overflow-y-scroll h-[100vh] relative">
+      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative border-2 border-blue-500"> {/* Blue border on modal */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors" // Blue hover for close icon
         >
           <FiX size={24} />
         </button>
-        
-        <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
+
+        <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 mb-6 border-b pb-3 border-blue-200"> {/* Blue text and border for heading */}
           Edit Lead Profile
         </h3>
-        
-        <form onSubmit={handleSubmit} className="space-y-5 overflow-y-scroll">
-          {/* Name Field */}
-          <div>
-            <label htmlFor="clead_name" className="block text-sm font-medium text-gray-700 mb-1">
-              Name:
-            </label>
-            <input
-              type="text"
-              id="clead_name"
-              name="clead_name"
-              value={form.clead_name}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              required
-            />
-          </div>
-          
-          {/* Organization Field */}
-          <div>
-            <label htmlFor="corganization" className="block text-sm font-medium text-gray-700 mb-1">
-              Organization:
-            </label>
-            <input
-              type="text"
-              id="corganization"
-              name="corganization"
-              value={form.corganization}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          {/* Phone Field */}
-          <div>
-            <label htmlFor="iphone_no" className="block text-sm font-medium text-gray-700 mb-1">
-              Phone:
-            </label>
-            <div className="flex">
-              <div className="relative w-20 mr-2">
-                <input
-                  type="text"
-                  value={form.phone_country_code}
-                  readOnly
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 text-gray-800 text-sm"
-                />
-              </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Name Field */}
+            <div>
+              <label htmlFor="clead_name" className={labelClasses}>
+                Name: <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
-                id="iphone_no"
-                name="iphone_no"
-                value={form.iphone_no}
+                id="clead_name"
+                name="clead_name"
+                value={form.clead_name}
                 onChange={handleFieldChange}
-                className="flex-1 border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                className={`${commonInputClasses} ${errors.clead_name ? errorInputClasses : "border-blue-300"}`} 
+              />
+              {errors.clead_name && <p className={errorTextClasses}>{errors.clead_name}</p>}
+            </div>
+
+            {/* Organization Field */}
+            <div>
+              <label htmlFor="corganization" className={labelClasses}>
+                Organization: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="corganization"
+                name="corganization"
+                value={form.corganization}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} ${errors.corganization ? errorInputClasses : "border-blue-300"}`}
+              />
+              {errors.corganization && <p className={errorTextClasses}>{errors.corganization}</p>}
+            </div>
+
+            {/* Phone Field */}
+            <div>
+              <label htmlFor="iphone_no" className={labelClasses}>
+                Phone: <span className="text-red-500">*</span>
+              </label>
+              <div className="flex">
+                <div className="relative w-20 mr-2">
+                  <input
+                    type="text"
+                    value={form.phone_country_code}
+                    readOnly
+                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50" />
+                </div>
+                <input
+                  type="text"
+                  id="iphone_no"
+                  name="iphone_no"
+                  value={form.iphone_no}
+                  onChange={handleFieldChange}
+                  className={`flex-1 ${commonInputClasses} ${errors.iphone_no ? errorInputClasses : "border-blue-300"}`}
+                />
+              </div>
+              {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label htmlFor="cemail" className={labelClasses}>
+                Email:
+              </label>
+              <input
+                type="email"
+                id="cemail"
+                name="cemail"
+                value={form.cemail}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} ${errors.cemail ? errorInputClasses : "border-blue-300"}`}
+              />
+              {errors.cemail && <p className={errorTextClasses}>{errors.cemail}</p>}
+            </div>
+
+            {/* Website Field */}
+            <div>
+              <label htmlFor="cwebsite" className={labelClasses}>
+                Website:
+              </label>
+              <input
+                type="text"
+                id="cwebsite"
+                name="cwebsite"
+                value={form.cwebsite}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} border-blue-300`}
+              />
+            </div>
+
+            {/* Lead Potential Dropdown */}
+            <div className="relative" ref={potentialDropdownRef}>
+              <label htmlFor="iLeadpoten_id" className={labelClasses}>
+                Potential: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchPotential}
+                onChange={(e) => {
+                  setSearchPotential(e.target.value);
+                  setIsPotentialDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
+                }}
+                onClick={() => setIsPotentialDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.iLeadpoten_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select potential"
+                readOnly={Potential.length === 0}
+              />
+              {isPotentialDropdownOpen && Potential.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> {/* Blue ring */}
+                  {Potential.filter(potential =>
+                    potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
+                  ).map((potential) => (
+                    <div
+                      key={potential.ileadpoten_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handlePotentialSelect(potential.ileadpoten_id, potential.clead_name)}
+                    >
+                      {potential.clead_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.iLeadpoten_id && <p className={errorTextClasses}>{errors.iLeadpoten_id}</p>}
+            </div>
+
+            {/* Lead Status Dropdown */}
+            <div className="relative" ref={statusDropdownRef}>
+              <label htmlFor="ilead_status_id" className={labelClasses}>
+                Status: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchStatus}
+                onChange={(e) => {
+                  setSearchStatus(e.target.value);
+                  setIsStatusDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, ilead_status_id: "" }));
+                }}
+                onClick={() => setIsStatusDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.ilead_status_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select status"
+                readOnly={status.length === 0}
+              />
+              {isStatusDropdownOpen && status.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {status.filter(statusItem =>
+                  
+                    statusItem.clead_name.toLowerCase().includes(searchStatus.toLowerCase())
+                  ).map((statusItem) => (
+                    <div
+                      key={statusItem.ilead_status_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleStatusSelect(statusItem.ilead_status_id, statusItem.clead_name)}
+                    >
+                      {statusItem.clead_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.ilead_status_id && <p className={errorTextClasses}>{errors.ilead_status_id}</p>}
+            </div>
+
+            {/* Lead Source Dropdown */}
+            <div className="relative" ref={sourceDropdownRef}>
+              <label htmlFor="lead_source_id" className={labelClasses}>
+                Lead Source: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchSource}
+                onChange={(e) => {
+                  setSearchSource(e.target.value);
+                  setIsSourceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, lead_source_id: "" }));
+                }}
+                onClick={() => setIsSourceDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.lead_source_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select source"
+                readOnly={source.length === 0}
+              />
+              {isSourceDropdownOpen && source.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {source.filter(sourceItem =>
+                    sourceItem.source_name.toLowerCase().includes(searchSource.toLowerCase())
+                  ).map((sourceItem) => (
+                    <div
+                      key={sourceItem.source_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleSourceSelect(sourceItem.source_id, sourceItem.source_name)}
+                    >
+                      {sourceItem.source_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.lead_source_id && <p className={errorTextClasses}>{errors.lead_source_id}</p>}
+            </div>
+
+            {/* Industry Dropdown */}
+            <div className="relative" ref={industryDropdownRef}>
+              <label htmlFor="cindustry_id" className={labelClasses}>
+                Industry: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchIndustry}
+                onChange={(e) => {
+                  setSearchIndustry(e.target.value);
+                  setIsIndustryDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, cindustry_id: "" }));
+                }}
+                onClick={() => setIsIndustryDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.cindustry_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select industry"
+                readOnly={leadIndustry.length === 0}
+              />
+              {isIndustryDropdownOpen && leadIndustry.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {leadIndustry.filter(industry =>
+                    industry.cindustry_name.toLowerCase().includes(searchIndustry.toLowerCase())
+                  ).map((industry) => (
+                    <div
+                      key={industry.iindustry_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleIndustrySelect(industry.iindustry_id, industry.cindustry_name)}
+                    >
+                      {industry.cindustry_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.cindustry_id && <p className={errorTextClasses}>{errors.cindustry_id}</p>}
+            </div>
+
+            {/* Sub-Industry Dropdown */}
+            <div className="relative" ref={subIndustryDropdownRef}>
+              <label htmlFor="csubindustry_id" className={labelClasses}>
+                Sub-Industry: {form.cindustry_id && filteredSubIndustries.length > 0 && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type="text"
+                value={searchSubIndustry}
+                onChange={(e) => {
+                  setSearchSubIndustry(e.target.value);
+                  setIsSubIndustryDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
+                }}
+                onClick={() => setIsSubIndustryDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.csubindustry_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select sub-industry"
+                disabled={!form.cindustry_id || filteredSubIndustries.length === 0}
+                readOnly={filteredSubIndustries.length === 0}
+              />
+              {isSubIndustryDropdownOpen && form.cindustry_id && filteredSubIndustries.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredSubIndustries.filter(subIndustry =>
+                    subIndustry.subindustry_name.toLowerCase().includes(searchSubIndustry.toLowerCase())
+                  ).map((subIndustry) => (
+                    <div
+                      key={subIndustry.isubindustry}
+                      className={dropdownItemClasses}
+                      onClick={() => handleSubIndustrySelect(subIndustry.isubindustry, subIndustry.subindustry_name)}
+                    >
+                      {subIndustry.subindustry_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.csubindustry_id && <p className={errorTextClasses}>{errors.csubindustry_id}</p>}
+            </div>
+
+            {/* City Dropdown */}
+            <div className="relative" ref={cityDropdownRef}>
+              <label htmlFor="icity" className={labelClasses}>
+                City: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchCity}
+                onChange={handleSearchCity}
+                onClick={() => setIsCityDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.icity ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Search city"
+                readOnly={cities.length === 0}
+              />
+              {isCityDropdownOpen && cities.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredCities.map((city) => (
+                    <div
+                      key={city.icity_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleCitySelect(city.icity_id, city.cCity_name)}
+                    >
+                      {city.cCity_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.icity && <p className={errorTextClasses}>{errors.icity}</p>}
+            </div>
+
+            {/* Address 1 Field */}
+            <div>
+              <label htmlFor="clead_address1" className={labelClasses}>
+                Address 1: <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="clead_address1"
+                name="clead_address1"
+                value={form.clead_address1}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} ${errors.clead_address1 ? errorInputClasses : "border-blue-300"}`}
+              />
+              {errors.clead_address1 && <p className={errorTextClasses}>{errors.clead_address1}</p>}
+            </div>
+
+            {/* Address 2 Field */}
+            <div>
+              <label htmlFor="clead_address2" className={labelClasses}>
+                Address 2:
+              </label>
+              <input
+                type="text"
+                id="clead_address2"
+                name="clead_address2"
+                value={form.clead_address2}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} border-blue-300`}
+              />
+            </div>
+
+            {/* Address 3 Field */}
+            <div>
+              <label htmlFor="clead_address3" className={labelClasses}>
+                Address 3:
+              </label>
+              <input
+                type="text"
+                id="clead_address3"
+                name="clead_address3"
+                value={form.clead_address3}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} border-blue-300`}
+              />
+            </div>
+
+            {/* Project Value Field */}
+            <div>
+              <label htmlFor="iproject_value" className={labelClasses}>
+                Project Value:
+              </label>
+              <input
+                type="number"
+                id="iproject_value"
+                name="iproject_value"
+                value={form.iproject_value}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} ${errors.iproject_value ? errorInputClasses : "border-blue-300"}`}
+              />
+              {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
+            </div>
+
+            {/* Number of Employees Field */}
+            <div>
+              <label htmlFor="ino_employee" className={labelClasses}>
+                Number of Employees:
+              </label>
+              <input
+                type="number"
+                id="ino_employee"
+                name="ino_employee"
+                value={form.ino_employee}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} ${errors.ino_employee ? errorInputClasses : "border-blue-300"}`}
+              />
+              {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
+            </div>
+
+            {/* WhatsApp Field */}
+            <div>
+              <label htmlFor="cwhatsapp" className={labelClasses}>
+                WhatsApp:
+              </label>
+              <div className="flex">
+                <div className="relative w-20 mr-2">
+                  <input
+                    type="text"
+                    value={form.whatsapp_country_code}
+                    readOnly
+                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50"
+                  />
+                </div>
+                <input
+                  type="text"
+                  id="cwhatsapp"
+                  name="cwhatsapp"
+                  value={form.cwhatsapp}
+                  onChange={handleFieldChange}
+                  className={`flex-1 ${commonInputClasses} border-blue-300`}
+                />
+              </div>
+            </div>
+
+            {/* Services Field */}
+            <div>
+              <label htmlFor="cservices" className={labelClasses}>
+                Services:
+              </label>
+              <input
+                type="text"
+                id="cservices"
+                name="cservices"
+                value={form.cservices}
+                onChange={handleFieldChange}
+                className={`${commonInputClasses} border-blue-300`}
               />
             </div>
           </div>
-          
-          {/* Email Field */}
-          <div>
-            <label htmlFor="cemail" className="block text-sm font-medium text-gray-700 mb-1">
-              Email:
-            </label>
-            <input
-              type="email"
-              id="cemail"
-              name="cemail"
-              value={form.cemail}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          {/* Website Field */}
-          <div>
-            <label htmlFor="cwebsite" className="block text-sm font-medium text-gray-700 mb-1">
-              Website:
-            </label>
-            <input
-              type="text"
-              id="cwebsite"
-              name="cwebsite"
-              value={form.cwebsite}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          {/* Lead Potential Dropdown */}
-          <div className="relative" ref={potentialDropdownRef}>
-            <label htmlFor="iLeadpoten_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Potential:
-            </label>
-            <input
-              type="text"
-              value={searchPotential}
-              onChange={(e) => {
-                setSearchPotential(e.target.value);
-                setIsPotentialDropdownOpen(true);
-              }}
-              onClick={() => setIsPotentialDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Select potential"
-            />
-            {isPotentialDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {Potential.filter(potential => 
-                  potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
-                ).map((potential) => (
-                  <div
-                    key={potential.ileadpoten_id}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handlePotentialSelect(potential.ileadpoten_id, potential.clead_name)}
-                  >
-                    {potential.clead_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Lead Status Dropdown */}
-          <div className="relative" ref={statusDropdownRef}>
-            <label htmlFor="ileadstatus_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Status:
-            </label>
-            <input
-              type="text"
-              value={searchStatus}
-              onChange={(e) => {
-                setSearchStatus(e.target.value);
-                setIsStatusDropdownOpen(true);
-              }}
-              onClick={() => setIsStatusDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Select status"
-            />
-            {isStatusDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {status.filter(statusItem => 
-                  statusItem.clead_name.toLowerCase().includes(searchStatus.toLowerCase())
-                ).map((statusItem) => (
-                  <div
-                    key={statusItem.ileadstatus_id}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handleStatusSelect(statusItem.ileadstatus_id, statusItem.clead_name)}
-                  >
-                    {statusItem.clead_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Lead Source Dropdown */}
-          <div className="relative" ref={sourceDropdownRef}>
-            <label htmlFor="lead_source_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Lead Source:
-            </label>
-            <input
-              type="text"
-              value={searchSource}
-              onChange={(e) => {
-                setSearchSource(e.target.value);
-                setIsSourceDropdownOpen(true);
-              }}
-              onClick={() => setIsSourceDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Select source"
-            />
-            {isSourceDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {source.filter(sourceItem => 
-                  sourceItem.source_name.toLowerCase().includes(searchSource.toLowerCase())
-                ).map((sourceItem) => (
-                  <div
-                    key={sourceItem.source_id}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handleSourceSelect(sourceItem.source_id, sourceItem.source_name)}
-                  >
-                    {sourceItem.source_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Industry Dropdown */}
-          <div className="relative" ref={industryDropdownRef}>
-            <label htmlFor="cindustry_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Industry:
-            </label>
-            <input
-              type="text"
-              value={searchIndustry}
-              onChange={(e) => {
-                setSearchIndustry(e.target.value);
-                setIsIndustryDropdownOpen(true);
-              }}
-              onClick={() => setIsIndustryDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Select industry"
-            />
-            {isIndustryDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {leadIndustry.filter(industry => 
-                  industry.cindustry_name.toLowerCase().includes(searchIndustry.toLowerCase())
-                ).map((industry) => (
-                  <div
-                    key={industry.iindustry_id}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handleIndustrySelect(industry.iindustry_id, industry.cindustry_name)}
-                  >
-                    {industry.cindustry_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Sub-Industry Dropdown */}
-          <div className="relative" ref={subIndustryDropdownRef}>
-            <label htmlFor="csubindustry_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Sub-Industry:
-            </label>
-            <input
-              type="text"
-              value={searchSubIndustry}
-              onChange={(e) => {
-                setSearchSubIndustry(e.target.value);
-                setIsSubIndustryDropdownOpen(true);
-              }}
-              onClick={() => setIsSubIndustryDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Select sub-industry"
-              disabled={!form.cindustry_id}
-            />
-            {isSubIndustryDropdownOpen && form.cindustry_id && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {filteredSubIndustries.filter(subIndustry => 
-                  subIndustry.subindustry_name.toLowerCase().includes(searchSubIndustry.toLowerCase())
-                ).map((subIndustry) => (
-                  <div
-                    key={subIndustry.isubindustry}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handleSubIndustrySelect(subIndustry.isubindustry, subIndustry.subindustry_name)}
-                  >
-                    {subIndustry.subindustry_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* City Dropdown */}
-          <div className="relative" ref={cityDropdownRef}>
-            <label htmlFor="icity" className="block text-sm font-medium text-gray-700 mb-1">
-              City:
-            </label>
-            <input
-              type="text"
-              value={searchCity}
-              onChange={handleSearchCity}
-              onClick={() => setIsCityDropdownOpen(true)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              placeholder="Search city"
-            />
-            {isCityDropdownOpen && (
-              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                {filteredCities.map((city) => (
-                  <div
-                    key={city.icity_id}
-                    className="cursor-pointer hover:bg-blue-50 px-4 py-2"
-                    onClick={() => handleCitySelect(city.icity_id, city.cCity_name)}
-                  >
-                    {city.cCity_name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Address Fields */}
-          <div>
-            <label htmlFor="clead_address1" className="block text-sm font-medium text-gray-700 mb-1">
-              Address 1:
-            </label>
-            <input
-              type="text"
-              id="clead_address1"
-              name="clead_address1"
-              value={form.clead_address1}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="clead_address2" className="block text-sm font-medium text-gray-700 mb-1">
-              Address 2:
-            </label>
-            <input
-              type="text"
-              id="clead_address2"
-              name="clead_address2"
-              value={form.clead_address2}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          {/* Project Value Field */}
-          <div>
-            <label htmlFor="iproject_value" className="block text-sm font-medium text-gray-700 mb-1">
-              Project Value:
-            </label>
-            <input
-              type="number"
-              id="iproject_value"
-              name="iproject_value"
-              value={form.iproject_value}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
-          {/* Number of Employees Field */}
-          <div>
-            <label htmlFor="ino_employee" className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Employees:
-            </label>
-            <input
-              type="number"
-              id="ino_employee"
-              name="ino_employee"
-              value={form.ino_employee}
-              onChange={handleFieldChange}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-            />
-          </div>
-          
+
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-4 border-t pt-3 border-blue-200"> {/* Blue border above buttons */}
             <button
               type="submit"
-              className="bg-blue-500 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200"
+              className="bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 transition-colors duration-200"
             >
               <FiSave size={16} />
               Save
@@ -631,7 +791,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transition-colors duration-200"
+              className="bg-blue-200 text-blue-800 px-5 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-colors duration-200"
             >
               Cancel
             </button>
@@ -641,6 +801,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     </div>
   );
 };
+
 
 const ProfileCard = () => {
   const { leadId } = useParams();

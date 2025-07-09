@@ -295,7 +295,7 @@ const ReminderForm = () => {
       reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
 
     const reminderDate = new Date(reminder.dremainder_dt);
-    const from = fromDate ? new Date(fromDate) : null;
+    const from = from`Date` ? new Date(fromDate) : null;
     const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
 
     const matchesDate =

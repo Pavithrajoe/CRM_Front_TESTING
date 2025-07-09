@@ -572,9 +572,7 @@ const ReminderForm = () => {
                   ))}
                 </select>
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Date *
-                </label>
+                <label className="block text-sm mb-2 font-semibold text-gray-700">Date<span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -584,9 +582,7 @@ const ReminderForm = () => {
                   required
                 />
 
-                <label className="block text-sm mb-4 font-semibold text-gray-700">
-                  Time *
-                </label>
+                <label className="block text-sm mb-4 font-semibold text-gray-700">Time<span className="text-red-500">*</span></label>
                 <input
                   type="time"
                   className="w-full border border-gray-300 p-3 mb-8 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"

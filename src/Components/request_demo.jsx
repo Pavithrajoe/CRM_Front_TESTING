@@ -248,10 +248,10 @@ const RequestDemo = () => {
 
       const formattedPhoneNumber = phoneNumberObj.format('E.164'); // Format to international E.164 standard
 
-      const response = await fetch(ENDPOINTS.DEMO_MAIL, {
+      const response = await fetch(ENDPOINTS.DEMO_REQUEST, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json",   
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({

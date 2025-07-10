@@ -1,33 +1,58 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaCloudUploadAlt } from 'react-icons/fa';
-import { Eye, EyeOff } from 'lucide-react'; // Ensure lucide-react is installed: npm install lucide-react
+import { Eye, EyeOff } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Correct path and casing
-import { UserContext } from '../../context/UserContext'; // Adjust path as needed
-import { ENDPOINTS } from '../../api/constraints'; // Adjust path as needed
+import 'react-toastify/dist/ReactToastify.css';
+import { UserContext } from '../../context/UserContext';
+import { ENDPOINTS } from '../../api/constraints';
 
-// --- Reusable InputGroup component ---
-const InputGroup = ({ label, placeholder, type = 'text', value, onChange, className = '', hasRightIcon = false, children }) => (
+const InputGroup = ({ 
+  label, 
+  placeholder, 
+  type = 'text', 
+  value, 
+  onChange, 
+  className = '', 
+  hasRightIcon = false, 
+  children,
+  maxLength = 60,
+  validationError = '',
+  onBlur
+}) => (
   <div className={`${className}`}>
-    <label className="block mb-2 font-semibold text-sm text-gray-800">{label}</label>
-    <div className="relative"> {/* This div is now relative to contain the absolutely positioned icon */}
+    <label className="block mb-2 font-semibold text-sm text-gray-800">
+      {label}
+      {maxLength && (
+        <span className="text-xs text-gray-500 ml-1">
+          ({value.length}/{maxLength})
+        </span>
+      )}
+    </label>
+    <div className="relative">
       <input
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        // Conditional padding-right to make space for the icon
-        className={`w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 shadow-sm transition duration-200 ${
-          hasRightIcon ? 'pr-10' : '' // Add right padding if an icon is expected
+        maxLength={maxLength}
+        onBlur={onBlur}
+        className={`w-full px-4 py-2.5 border ${
+          validationError ? 'border-red-500' : 'border-gray-300'
+        } rounded-xl focus:outline-none focus:ring-2 ${
+          validationError ? 'focus:ring-red-500' : 'focus:ring-blue-500'
+        } focus:border-transparent text-gray-900 placeholder-gray-500 shadow-sm transition duration-200 ${
+          hasRightIcon ? 'pr-10' : ''
         }`}
       />
-      {children} {/* Renders any children passed into InputGroup (like the Eye icon) */}
+      {children}
+      {validationError && (
+        <p className="mt-1 text-xs text-red-500">{validationError}</p>
+      )}
     </div>
   </div>
 );
 
-// --- Reusable Button component ---
 const Button = ({ text, onClick, className = '', type = 'button', disabled = false }) => (
   <button
     type={type}
@@ -41,14 +66,13 @@ const Button = ({ text, onClick, className = '', type = 'button', disabled = fal
   </button>
 );
 
-// --- Reusable ToggleSwitch component ---
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
     <span className="text-gray-700 font-medium">{label}</span>
     <div
       onClick={onToggle}
       className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${
-        isChecked ? 'bg-blue-600' : 'bg-gray-300' // Distinct active color
+        isChecked ? 'bg-blue-600' : 'bg-gray-300'
       }`}
     >
       <div
@@ -64,7 +88,6 @@ const SettingsPage = () => {
   const { userId: urlUserId } = useParams();
   const { users } = useContext(UserContext);
 
-  // State for user profile inputs
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -72,19 +95,17 @@ const SettingsPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-
-  // State for general settings toggles
   const [whatsappActive, setWhatsappActive] = useState(false);
   const [mailActive, setMailActive] = useState(false);
   const [websiteActive, setWebsiteActive] = useState(false);
   const [phoneActive, setPhoneActive] = useState(false);
-
-  // Loading states for data fetching
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); // To disable save button during API call
+  const [isSaving, setIsSaving] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
 
-  // Effect to fetch user profile details based on URL userId
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!urlUserId) {
@@ -130,7 +151,6 @@ const SettingsPage = () => {
     fetchUserProfile();
   }, [urlUserId, users]);
 
-  // Function to fetch general settings
   const fetchGeneralSettings = async () => {
     setLoadingSettings(true);
     const authToken = localStorage.getItem("token");
@@ -150,8 +170,6 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
-      console.log("General settings data received from API on page load/after save:", data);
-
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       
       const settings = data.result && Array.isArray(data.result) && data.result.length > 0
@@ -171,11 +189,80 @@ const SettingsPage = () => {
   };
 
   useEffect(() => {
-    fetchGeneralSettings(); // Call on mount
+    fetchGeneralSettings();
   }, []);
 
-  // Handler for saving all changes
+  const validateName = () => {
+    if (!name.trim()) {
+      setNameError('Name is required');
+      return false;
+    }
+    if (name.length > 60) {
+      setNameError('Name must be 60 characters or less');
+      return false;
+    }
+    setNameError('');
+    return true;
+  };
+
+  const validateEmail = () => {
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      return false;
+    }
+    if (email.length > 60) {
+      setEmailError('Email must be 60 characters or less');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validateUsername = () => {
+    if (username.length > 60) {
+      setUsernameError('Username must be 60 characters or less');
+      return false;
+    }
+    setUsernameError('');
+    return true;
+  };
+
+  const handleNameBlur = () => validateName();
+  const handleEmailBlur = () => validateEmail();
+  const handleUsernameBlur = () => validateUsername();
+
+  const handleNameChange = (e) => {
+    if (e.target.value.length <= 60) {
+      setName(e.target.value);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    if (e.target.value.length <= 60) {
+      setEmail(e.target.value);
+    }
+  };
+
+  const handleUsernameChange = (e) => {
+    if (e.target.value.length <= 60) {
+      setUsername(e.target.value);
+    }
+  };
+
   const handleSaveChanges = async () => {
+    const isNameValid = validateName();
+    const isEmailValid = validateEmail();
+    const isUsernameValid = validateUsername();
+
+    if (!isNameValid || !isEmailValid || !isUsernameValid) {
+      toast.error('Please fix validation errors before saving');
+      return;
+    }
+
     setIsSaving(true);
     const authToken = localStorage.getItem("token");
     if (!authToken) {
@@ -185,7 +272,6 @@ const SettingsPage = () => {
     }
 
     try {
-      // --- User Profile Update ---
       const profileUpdateResponse = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
         method: 'PUT',
         headers: {
@@ -204,7 +290,6 @@ const SettingsPage = () => {
         throw new Error(profileUpdateResult.message || 'Failed to update profile');
       }
 
-      // --- General Settings Update/Create ---
       try {
         let generalSettingsResponse = await fetch(ENDPOINTS.GENERAL_SETTINGS_UPDATE, {
           method: 'PUT',
@@ -223,7 +308,6 @@ const SettingsPage = () => {
         if (!generalSettingsResponse.ok) {
           const errorData = await generalSettingsResponse.json();
           if (generalSettingsResponse.status === 404 && errorData.error === "General setting not found for this user and company") {
-            console.warn("General setting not found, attempting to create it via POST...");
             generalSettingsResponse = await fetch(ENDPOINTS.GENERAL_SETTINGS_UPDATE, {
               method: 'POST',
               headers: {
@@ -251,10 +335,7 @@ const SettingsPage = () => {
       }
 
       toast.success('Changes saved successfully!');
-      
-      // Re-fetch settings after successful save to ensure UI reflects backend state
-      await fetchGeneralSettings(); 
-
+      await fetchGeneralSettings();
     } catch (error) {
       console.error('Error saving changes:', error);
       toast.error(`Failed to save changes: ${error.message}`);
@@ -263,7 +344,6 @@ const SettingsPage = () => {
     }
   };
 
-  
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
     if (!authToken) return toast.error("Authentication required.");
@@ -288,7 +368,6 @@ const SettingsPage = () => {
         body: JSON.stringify({
           email: email,
           password: newPassword,
-          // currentPassword: currentPassword, // Uncomment if your backend requires current password for verification
         }),
       });
 
@@ -304,7 +383,6 @@ const SettingsPage = () => {
     }
   };
 
-  // Handler for uploading picture
   const handleUploadPicture = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -315,7 +393,6 @@ const SettingsPage = () => {
     }
 
     toast.info(`Selected file "${file.name}" for upload.`);
-    // Here you would typically send the file to an API endpoint for image upload
   };
 
   const isLoading = loadingProfile || loadingSettings;
@@ -336,13 +413,11 @@ const SettingsPage = () => {
         .section-divider {
           height: 1px;
           background: linear-gradient(to right, transparent, #cbd5e1, transparent);
-          margin: 3rem 0; /* Increased margin for better separation */
+          margin: 3rem 0;
         }
         `}
       </style>
       <div className="bg-white p-6 md:p-8 space-y-8 rounded-xl shadow-2xl max-w-6xl w-full mx-auto border border-gray-200">
-        
-        {/* User Profile Settings Section */}
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Personal Information</h2>
           {isLoading ? (
@@ -355,9 +430,33 @@ const SettingsPage = () => {
           ) : (
             <div className="flex flex-col space-y-5 md:flex-row md:space-y-0 md:gap-8">
               <div className="flex-grow space-y-5">
-                <InputGroup label="Full Name" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} />
-                <InputGroup label="Username" placeholder="Enter your username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                <InputGroup label="Email ID" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <InputGroup 
+                  label="Full Name" 
+                  placeholder="Enter your full name" 
+                  value={name} 
+                  onChange={handleNameChange}
+                  onBlur={handleNameBlur}
+                  validationError={nameError}
+                  maxLength={60}
+                />
+                <InputGroup 
+                  label="Username" 
+                  placeholder="Enter your username" 
+                  value={username} 
+                  onChange={handleUsernameChange}
+                  onBlur={handleUsernameBlur}
+                  validationError={usernameError}
+                  maxLength={60}
+                />
+                <InputGroup 
+                  label="Email ID" 
+                  placeholder="Enter your email" 
+                  value={email} 
+                  onChange={handleEmailChange}
+                  onBlur={handleEmailBlur}
+                  validationError={emailError}
+                  maxLength={60}
+                />
               </div>
 
               <div className="md:w-64 text-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center shadow-inner">
@@ -376,10 +475,8 @@ const SettingsPage = () => {
           )}
         </section>
 
-        {/* Section Divider */}
         <div className="section-divider"></div>
 
-        {/* Password Settings Section */}
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Password Settings</h2>
           {isLoading ? (
@@ -390,16 +487,14 @@ const SettingsPage = () => {
             </div>
           ) : (
             <div className="space-y-5">
-              {/* Current Password Field with Eye Icon INSIDE */}
               <InputGroup
                 label="Current Password"
                 placeholder="Enter your current password"
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                hasRightIcon={true} 
+                hasRightIcon={true}
               >
-                {/* The Eye icon rendered as a child of InputGroup */}
                 <div
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -408,7 +503,6 @@ const SettingsPage = () => {
                 </div>
               </InputGroup>
 
-              {/* New Password Field with Eye Icon INSIDE and Update Button */}
               <div className="flex flex-col sm:flex-row items-end gap-4">
                 <InputGroup
                   label="New Password"
@@ -419,12 +513,11 @@ const SettingsPage = () => {
                   className="flex-grow"
                   hasRightIcon={true}
                 >
-                  {/* The Eye icon rendered as a child of InputGroup */}
                   <div
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
-                    {showNewPassword ? <Eye size={20} />  : <EyeOff size={20}/>}
+                    {showNewPassword ? <Eye size={20} /> : <EyeOff size={20}/>}
                   </div>
                 </InputGroup>
                 <Button
@@ -437,10 +530,8 @@ const SettingsPage = () => {
           )}
         </section>
 
-        {/* Section Divider */}
         <div className="section-divider"></div>
 
-        {/* Preferences Section */}
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Preferences</h2>
           {isLoading ? (
@@ -460,7 +551,6 @@ const SettingsPage = () => {
           )}
         </section>
 
-        {/* Save Changes Button */}
         <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
           <Button
             text={isSaving ? 'Saving...' : 'Save All Changes'}

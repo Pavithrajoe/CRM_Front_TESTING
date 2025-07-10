@@ -96,7 +96,7 @@ const ForgetPassword = () => {
             disabled={loading}
             className="w-auto bg-black text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-800 transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Sending..." : "Send OTP"}
+            {loading ? "Sending..." : " OTP"}
           </button>
         </div>
       </div>

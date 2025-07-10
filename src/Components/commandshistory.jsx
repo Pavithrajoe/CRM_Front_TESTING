@@ -19,11 +19,11 @@ const Comments = () => {
   const [userId, setUserId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isListening, setIsListening] = useState(false);
+  const formRef = useRef(null);
   const commentsPerPage = 10;
   const token = localStorage.getItem("token");
   const { showPopup } = usePopup();
-  const [isListening, setIsListening] = useState(false);
-  const formRef = useRef(null);
 
   useEffect(() => {
     if (token) {
@@ -54,7 +54,6 @@ const Comments = () => {
         setFormData((prev) => ({ ...prev, comments: transcript }));
       };
       mic.onerror = (event) => {
-        // console.error("Speech Recognition Error:", event.error);
         setIsListening(false);
       };
     };
@@ -102,11 +101,13 @@ const Comments = () => {
     const trimmedComment = formData.comments.trim();
 
     if (trimmedComment.length === 0) {
-      return showPopup("Warning", "Comment cannot be empty!", "warning");
+      showPopup("Warning", "Comment cannot be empty!", "warning");
+      return false;
     }
 
     if (trimmedComment.length < 5) {
-      return showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
+      showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
+      return false;
     }
 
     try {
@@ -124,15 +125,19 @@ const Comments = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        return showPopup("Error", data.message || "Failed to add comment.", "error");
+        showPopup("Error", data.message || "Failed to add comment.", "error");
+        return false;
       }
 
       showPopup("Success", "🎉 Comment added successfully!", "success");
       setFormData((prev) => ({ ...prev, comments: "" }));
+      setIsListening(false);
       setShowForm(false);
       fetchComments();
+      return true;
     } catch (error) {
       showPopup("Error", "Failed to add comment due to network error.", "error");
+      return false;
     }
   };
 
@@ -147,17 +152,6 @@ const Comments = () => {
 
   const formatDateTime = (dateStr) =>
     new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showForm && formRef.current && !formRef.current.contains(event.target)) {
-        setShowForm(false);
-        setIsListening(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showForm]);
 
   return (
     <div className="relative bg-white border rounded-2xl shadow-md overflow-hidden transition-all duration-300">
@@ -240,7 +234,12 @@ const Comments = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleFormSubmission} className="flex flex-col h-full">
+            <form onSubmit={async (e) => {
+              const success = await handleFormSubmission(e);
+              if (success) {
+                setIsListening(false);
+              }
+            }} className="flex flex-col h-full">
               <textarea
                 name="comments"
                 onChange={handleChange}

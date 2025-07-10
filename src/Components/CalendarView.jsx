@@ -44,26 +44,43 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
-  useEffect(() => {
-    if (open && selectedDate) {
-      const now = new Date();
-      const initialStartDateTime = new Date(selectedDate);
-      if (initialStartDateTime.toDateString() === now.toDateString()) {
-        initialStartDateTime.setHours(now.getHours() + 1, 0, 0, 0);
-        if (initialStartDateTime < now) {
-          initialStartDateTime.setHours(now.getHours(), now.getMinutes() + 5, 0, 0);
-        }
-      } else {
-        initialStartDateTime.setHours(9, 0, 0, 0);
-      }
 
-      setFormData(prev => ({
-        ...prev,
-        devent_startdt: initialStartDateTime.toISOString().slice(0, 16),
-        devent_end: '', // Ensure end date is cleared or set appropriately
-      }));
+
+
+  useEffect(() => {
+  if (open && selectedDate) {
+    const now = new Date(); // Already in IST if your system/browser is
+    const initialStartDateTime = new Date(selectedDate);
+
+    if (initialStartDateTime.toDateString() === now.toDateString()) {
+      initialStartDateTime.setHours(now.getHours() , 0, 0, 0);
+
+      if (initialStartDateTime < now) {
+        initialStartDateTime.setHours(now.getHours(), now.getMinutes()  , 0, 0);
+      }
+    } else {
+      initialStartDateTime.setHours(9, 0, 0, 0);
     }
-  }, [open, selectedDate]);
+
+    // ✅ Format to 'datetime-local' (local time, no shift needed)
+    const toDatetimeLocal = (date) => {
+      const pad = (n) => (n < 10 ? "0" + n : n);
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
+    const formattedLocal = toDatetimeLocal(initialStartDateTime);
+
+    setFormData(prev => ({
+      ...prev,
+      devent_startdt: formattedLocal,
+      devent_end: '',
+    }));
+  }
+}, [open, selectedDate]);
+
+
+
+
 
   useEffect(() => {
     if (!recognitionRef.current) {

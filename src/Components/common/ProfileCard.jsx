@@ -11,6 +11,7 @@ import {
   FiMove,
   FiCodesandbox,
   FiCamera,
+  FiDollarSign , FiUser 
 } from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
@@ -104,6 +105,8 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
 
   const [searchPotential, setSearchPotential] = useState("");
+  const [isUpdated, setIsUpdated] = useState(false);
+
   const [searchStatus, setSearchStatus] = useState("");
   const [searchIndustry, setSearchIndustry] = useState("");
   const [searchSubIndustry, setSearchSubIndustry] = useState("");
@@ -605,7 +608,7 @@ if (!form.cwhatsapp.trim()) {
             </div>
 
             {/* Lead Status Dropdown */}
-            <div className="relative" ref={statusDropdownRef}>
+            {/* <div className="relative" ref={statusDropdownRef}>
               <label htmlFor="ilead_status_id" className={labelClasses}>
                 Status: <span className="text-red-500">*</span>
               </label>
@@ -639,7 +642,7 @@ if (!form.cwhatsapp.trim()) {
                 </div>
               )}
               {errors.ilead_status_id && <p className={errorTextClasses}>{errors.ilead_status_id}</p>}
-            </div>
+            </div> */}
 
             {/* Lead Source Dropdown */}
             <div className="relative" ref={sourceDropdownRef}>
@@ -824,6 +827,7 @@ if (!form.cwhatsapp.trim()) {
                 onChange={handleFieldChange}
                 className={`${commonInputClasses} border-blue-300`}
               />
+              {errors.clead_address3 && <p className={errorTextClasses}>{errors.clead_address3}</p>}
             </div>
 
             {/* Project Value Field */}
@@ -872,7 +876,7 @@ if (!form.cwhatsapp.trim()) {
                 onChange={handleFieldChange}
                 className={`${commonInputClasses} ${errors.cservices ? errorInputClasses : "border-blue-300"}`}
               />
-                          {errors.cservices && <p className={errorTextClasses}>{errors.cservices}</p>}
+              {errors.cservices && <p className={errorTextClasses}>{errors.cservices}</p>}
 
             </div>
 
@@ -955,7 +959,9 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
+       console.log("lead details",response.data);
         setProfile(response.data);
+       
       } catch (err) {
         console.error("Failed to load lead details", err);
         setError("Failed to load lead details.");
@@ -1229,6 +1235,7 @@ const ProfileCard = () => {
           Lead Details
         </h2>
         <div className="flex items-center space-x-2 sm:space-x-3">
+         
           <button
             onClick={() => setShowDetails(true)}
             className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
@@ -1245,8 +1252,14 @@ const ProfileCard = () => {
           </button>
         </div>
       </div>
+              {profile.isUpdated === true && (
+  <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
+Edited Profile  </h3>
+)}
+
 
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
+
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
           <img
 
@@ -1272,7 +1285,7 @@ const ProfileCard = () => {
           <span className="break-words">{profile.iphone_no || "-"}</span>
         </div>
         <div className="flex items-center gap-3">
-          <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+          <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
           <span className="break-words">{profile.cemail || "-"}</span>
         </div>
         <div className="flex items-start gap-3">
@@ -1706,7 +1719,7 @@ const ProfileCard = () => {
                 </span>
               </div>
               <div className="flex items-center break-words gap-3">
-                <FiMail className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                <FiMail className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
                 <span>
                   <span className="font-medium">Email:</span>{" "}
                   {profile.cemail || "-"}
@@ -1743,13 +1756,13 @@ const ProfileCard = () => {
               </div>
               
               <div className="flex items-start gap-3">
-                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <FiDollarSign className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                 <span>
                   <span className="font-medium">Project Value:</span>{" "}
                   {profile.iproject_value || "-"}
                 </span>
               </div>
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                 <span>
                   <span className="font-medium">Potential:</span>{" "}
@@ -1762,9 +1775,9 @@ const ProfileCard = () => {
                   <span className="font-medium">Status:</span>{" "}
                   {profile.lead_status?.clead_name || "-"}
                 </span>
-              </div>
+              </div> */}
               <div className="flex items-start gap-3">
-                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+                <FiUser className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                 <span>
                   <span className="font-medium">Employee:</span>{" "}
                   {profile.ino_employee || "-"}

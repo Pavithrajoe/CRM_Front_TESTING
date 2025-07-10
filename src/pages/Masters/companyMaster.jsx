@@ -44,7 +44,7 @@ export default function CompanyMaster() {
        {
             title: 'Status',
             value: 'Status Masters',
-            modalKey: 'Status Name', 
+            modalKey: 'Status', 
             idKey: 'ilead_status_id',
             payloadKey: 'clead_name',
             responseKey: 'response',
@@ -78,7 +78,7 @@ export default function CompanyMaster() {
         {
             title: 'Potential',
             value: 'Potential Masters',
-            modalKey: 'Potential Name',
+            modalKey: 'Potential',
             idKey: 'ileadpoten_id', 
             payloadKey: 'clead_name', 
             responseKey: 'data', 
@@ -123,7 +123,7 @@ export default function CompanyMaster() {
         {
             title: 'Industries',
             value: 'Industry Masters',
-            modalKey: 'Industry Name', // Changed for clarity in UI
+            modalKey: 'Industry', // Changed for clarity in UI
             idKey: 'iindustry_id', // ID key from GET response
             payloadKey: 'cindustry_name', // Main content key from GET response/form field name
             responseKey: 'response.industry', // Path to the array of items in GET response (VERIFY THIS!)
@@ -147,7 +147,7 @@ export default function CompanyMaster() {
    {
     title: 'Sub-Industries',
     value: 'Sub-Industry Masters',
-    modalKey: 'Sub Industry Name',
+    modalKey: 'Sub Industry',
 
     idKey: 'isubindustry',
     payloadKey: 'subindustry_name',
@@ -230,7 +230,7 @@ export default function CompanyMaster() {
         { 
             title: 'Lead Source',
             value: 'Lead Source Masters',
-            modalKey: 'Source Name',
+            modalKey: 'Source',
             
             // --- CRITICAL: idKey must match API response's ID field name ---
             idKey: 'source_id', // Make sure this is correct based on your GET API response

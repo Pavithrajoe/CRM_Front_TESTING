@@ -7,8 +7,7 @@ import HistoryDashboard from './userPage/historyPage';
 import TargetDashboard from './userPage/TargetPage';
 import AcheivementDashboard from './userPage/acheivementPage';
 import {
-  FaEdit, FaUser, FaEnvelope, FaIdBadge, FaCalendarAlt,
-  FaFingerprint, FaBriefcase, FaUserTie, FaUserCircle
+  FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie, FaUserCircle
 } from 'react-icons/fa';
 
 // Reusable ToggleSwitch component
@@ -253,6 +252,7 @@ const UserProfile = () => {
             <button onClick={() => setShowForm(false)} className="absolute top-3 right-3 text-xl">✖</button>
             <h3 className="text-2xl font-semibold mb-6">Edit Profile</h3>
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Removed the duplicated div here */}
               <div className="relative">
                 <FaUser className="absolute top-3 left-3 text-gray-500" />
                 <input
@@ -263,6 +263,7 @@ const UserProfile = () => {
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
+                  maxLength={40}
                 />
               </div>
               <div className="relative">
@@ -275,6 +276,7 @@ const UserProfile = () => {
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
+                  maxLength={40}
                 />
               </div>
               <div className="relative">
@@ -287,8 +289,10 @@ const UserProfile = () => {
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
+                  maxLength={40}
                 />
               </div>
+              
               <div className="relative">
                 <FaBriefcase className="absolute top-3 left-3 text-gray-500" />
                 <input

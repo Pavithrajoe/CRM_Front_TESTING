@@ -238,13 +238,13 @@ const LeadDetailView = () => {
           // Attempt to get company name from common properties
           // Note: If 'company_name' or similar is truly not in the JWT,
           // you'll need to fetch it from a separate user profile API.
-          setLoggedInCompanyName(
-            payloadObject.company_name ||
-            payloadObject.company ||
-            payloadObject.organization ||
-            payloadObject.orgName ||
-            "Your Company"
-          );
+          // setLoggedInCompanyName(
+          //   payloadObject.company_name ||
+          //   payloadObject.company ||
+          //   payloadObject.organization ||
+          //   payloadObject.orgName ||
+          //   "Your Company"
+          // );
 
           console.log("DEBUG: User Name extracted (attempted):", loggedInUserName);
           console.log("DEBUG: Company Name extracted (attempted):", loggedInCompanyName);
@@ -295,27 +295,27 @@ const LeadDetailView = () => {
           console.warn("DEBUG: leadData.cEmail is missing or empty when opening mail modal for template.");
       }
 
-      const leadFirstName = leadData.cFirstName || '';
-      const leadLastName = leadData.cLastName || '';
-      const leadProjectName = leadData.cProjectName || 'our services/products';
+      // const leadFirstName = leadData.cFirstName || '';
+      // const leadLastName = leadData.cLastName || '';
+      // const leadProjectName = leadData.cProjectName || 'our services/products';
 
-      const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
+      // const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
 
-      const defaultContent = `
-        <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
-        <p>Hope this email finds you well.</p>
-        <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
-        <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
-        <p>Best regards,</p>
-        <p>${loggedInUserName}</p>
-        <p>${loggedInCompanyName}</p>
-      `;
-      setMailSubject(defaultSubject);
-      setMailContent(defaultContent);
+      // const defaultContent = `
+      //   <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
+      //   <p>Hope this email finds you well.</p>
+      //   <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
+      //   <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
+      //   <p>Best regards,</p>
+      //   <p>${loggedInUserName}</p>
+      //   <p>${loggedInCompanyName}</p>
+      // `;
+      // setMailSubject(defaultSubject);
+      // setMailContent(defaultContent);
 
 
-      console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
-      console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
+      // console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
+      // console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
       console.log("DEBUG: Final sentTo state when modal opens (after potential re-set):", sentTo);
     } else if (isMailOpen && !leadData) {
         console.warn("DEBUG: Mail modal opened but leadData is not yet available for template generation!");

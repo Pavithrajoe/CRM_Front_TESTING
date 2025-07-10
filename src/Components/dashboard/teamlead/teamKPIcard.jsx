@@ -152,7 +152,7 @@ export default function TeamKPIStats() {
       iconBg: "bg-green-500",
     },
     {
-      title: "Converted Deals",
+      title: "Deals",
       value: dealCount,
       colorStart: "#8E24AA",
       colorEnd: "#9C27B0",

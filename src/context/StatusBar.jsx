@@ -468,7 +468,7 @@ useEffect(() => {
     {statusRemarks.length > 0 && (
   <div className="mt-6">
     <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
-    <div className="flex overflow-x-auto space-x-6 px-2 py-4 relative">
+    <div className="flex w-[90%] overflow-x-scroll space-x-6 px-2 py-4 relative">
 
       {statusRemarks
   .sort((a, b) => a.ilead_status_remarks_id - b.ilead_status_remarks_id)
@@ -479,7 +479,7 @@ useEffect(() => {
       )}
 
       <div
- className="font-sans bg-white shadow-md border border-gray-300 rounded-lg p-4 w-64 min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer hover:shadow-xl transition"
+ className="font-sans bg-white shadow-xxl border border-green-500 rounded-3xl p-4 space-y-2 w-64 min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer hover:shadow-xl transition"
         onClick={() => setSelectedRemark(remark)}
       >
         <p className="text-sm"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
@@ -490,8 +490,8 @@ useEffect(() => {
     </div>
 ))}
 {selectedRemark && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 transition-all duration-300">
-    <div className="bg-white w-[60%] max-w-3xl rounded-2xl shadow-2xl p-6 relative animate-fadeInUp">
+  <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/30 transition-all duration-300">
+    <div className="bg-white w-[60%] max-w-3xl rounded-xl shadow-2xl p-6 relative animate-fadeInUp">
       <button
         onClick={() => setSelectedRemark(null)}
         className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-xl"

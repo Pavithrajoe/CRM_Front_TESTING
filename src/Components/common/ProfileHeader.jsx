@@ -9,14 +9,13 @@ import { ENDPOINTS } from '../../api/constraints';
 const LAST_UNREAD_COUNT_KEY = 'lastUnreadCountForBell';
 const POLLING_INTERVAL_MS = 30000;
 
-export default function ProfileHeader() {
+const ProfileHeader = () => {
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     role: '',
-    company_name:'',
+    company_name: '',
     roleType: '',
-
   });
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -38,15 +37,15 @@ export default function ProfileHeader() {
     if (userString) {
       try {
         const userObject = JSON.parse(userString);
-       setProfile({
-  name: userObject.cFull_name || '',
-  email: userObject.cEmail || '',
-  role: userObject.cRole_name || userObject.irole_id || 'N/A',
-  company_name: userObject.company_name || userObject.company?.cCompany_name || 'N/A',
-  roleType: userObject.roleType || 'N/A',
-});
+        setProfile({
+          name: userObject.cFull_name || '',
+          email: userObject.cEmail || '',
+          role: userObject.cRole_name || userObject.irole_id || '-',
+          company_name: userObject.company_name || userObject.company?.cCompany_name || '-',
+          roleType: userObject.roleType || '-',
+        });
       } catch (e) {
-        setProfile({ name: '', email: '', role: '', companyName: '' });
+        setProfile({ name: '', email: '', role: '', company_name: '' });
       }
     }
 
@@ -188,6 +187,8 @@ export default function ProfileHeader() {
     navigate('/notifications');
   };
 
+  const isAdminUser = ['administrator', 'super_admin'].includes(profile.role?.toLowerCase());
+
   return (
     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
       <button
@@ -205,7 +206,7 @@ export default function ProfileHeader() {
         </div>
       )}
 
-      {profile.role?.toLowerCase() === 'administrator' && (
+      {isAdminUser && (
         <button
           onClick={createUser}
           className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
@@ -237,25 +238,23 @@ export default function ProfileHeader() {
             {displayedNotifications.length === 0 ? (
               <div className="text-gray-400">No new notifications for today.</div>
             ) : (
-              <>
-                <ul className="space-y-3 mb-2">
-                  {displayedNotifications.map((note) => (
-                    <li
-                      key={note.id}
-                      className="flex justify-between items-start bg-blue-50 p-3 rounded-2xl shadow-sm text-gray-700"
-                    >
-                      <span>{note.message || note.title || 'New Notification'}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={viewAllNotifications}
-                  className="w-full mt-2 py-2 text-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-                >
-                  View All
-                </button>
-              </>
+              <ul className="space-y-3 mb-2">
+                {displayedNotifications.map((note) => (
+                  <li
+                    key={note.id}
+                    className="flex justify-between items-start bg-blue-50 p-3 rounded-2xl shadow-sm text-gray-700"
+                  >
+                    <span>{note.message || note.title || 'New Notification'}</span>
+                  </li>
+                ))}
+              </ul>
             )}
+            <button
+              onClick={viewAllNotifications}
+              className="w-full mt-2 py-2 text-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+            >
+              View All
+            </button>
           </div>
         )}
       </div>
@@ -289,11 +288,9 @@ export default function ProfileHeader() {
                 <div className="font-semibold text-gray-900">{profile.name}</div>
                 <div className="text-gray-500">{profile.email}</div>
                 <div className="text-gray-500">Role: {profile.role}</div>
-                <div className="text-gray-500">System Role:{profile.roleType}</div>
+                <div className="text-gray-500">System Role: {profile.roleType}</div>
                 {profile.company_name && (
-                  <div className="text-gray-500">Company: {profile.company_name
-
-}</div>
+                  <div className="text-gray-500">Company: {profile.company_name}</div>
                 )}
               </div>
               <X
@@ -312,4 +309,6 @@ export default function ProfileHeader() {
       </div>
     </div>
   );
-}
+};
+
+export default ProfileHeader;

@@ -88,7 +88,7 @@ const ForgetPassword = () => {
           </button>
 
           <p className="text-xs text-gray-400 text-center mt-6">
-            &copy; 2025 Inklidox Technologies · V1.5
+            &copy; 2025 Inklidox Technologies V 2.5
           </p>
         </div>
       </div>

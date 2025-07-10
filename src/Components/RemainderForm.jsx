@@ -28,7 +28,6 @@ const ReminderForm = () => {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [assignToMe, setAssignToMe] = useState(false);
-  const [formErrors, setFormErrors] = useState({});
 
   const [isListeningContent, setIsListeningContent] = useState(false);
   const [noteContent, setNoteContent] = useState(null);
@@ -158,30 +157,20 @@ const ReminderForm = () => {
   };
 
   const validateForm = () => {
-  const errors = {};
-
-  if (!form.title) errors.title = "Title is required";
-  if (!form.content) errors.content = "Description is required";
-  if (!form.reminderDate) errors.reminderDate = "Date is required";
-  if (!form.time) errors.time = "Time is required";
-  if (!form.assignt_to) errors.assignt_to = "Assign To is required";
-
-  setFormErrors(errors); // set errors to state
-
-  if (Object.keys(errors).length > 0) {
-    toast.error("Please fill in all required fields.");
-    return false;
-  }
-
-  const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
-  const now = new Date();
-  if (selectedDateTime < now) {
-    toast.error("Reminder date and time must be in the future.");
-    return false;
-  }
-
-  return true;
-};
+    if (!form.title || !form.content || !form.reminderDate || !form.time) {
+      toast.error(
+        "Please fill in all required fields (Title, Description, Date, Time)."
+      );
+      return false;
+    }
+    const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
+    const now = new Date();
+    if (selectedDateTime < now) {
+      toast.error("Reminder date and time must be in the future.");
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e, status) => {
     e.preventDefault();
@@ -295,7 +284,7 @@ const ReminderForm = () => {
       reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
 
     const reminderDate = new Date(reminder.dremainder_dt);
-    const from = from`Date` ? new Date(fromDate) : null;
+    const from = fromDate ? new Date(fromDate) : null;
     const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
 
     const matchesDate =
@@ -462,7 +451,7 @@ const ReminderForm = () => {
 
               <form onSubmit={(e) => handleSubmit(e, "submitted")}>
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Title<span className="text-red-500">*</span>
+                  Title *
                 </label>
                 <div className="flex items-center gap-2 mb-6">
                   <input
@@ -477,7 +466,7 @@ const ReminderForm = () => {
                 </div>
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Description<span className="text-red-500">*</span>
+                  Description *
                 </label>
                 <div className="relative mb-6">
                   <textarea
@@ -572,7 +561,9 @@ const ReminderForm = () => {
                   ))}
                 </select>
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">Date<span className="text-red-500">*</span></label>
+                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                  Date *
+                </label>
                 <input
                   type="date"
                   className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
@@ -582,7 +573,9 @@ const ReminderForm = () => {
                   required
                 />
 
-                <label className="block text-sm mb-4 font-semibold text-gray-700">Time<span className="text-red-500">*</span></label>
+                <label className="block text-sm mb-4 font-semibold text-gray-700">
+                  Time *
+                </label>
                 <input
                   type="time"
                   className="w-full border border-gray-300 p-3 mb-8 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"

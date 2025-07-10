@@ -37,6 +37,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
       } catch (error) {
         console.error('Invalid token', error);
         // Optionally, handle token invalidation (e.g., redirect to login)
+        // End of CreateUserForm component
       }
     }
   }, [token]);
@@ -105,6 +106,8 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
       newErrors.email = 'Email is required';
     } else if (!emailRegex.test(formData.email.trim())) {
       newErrors.email = 'Invalid email format';
+    } else if (formData.email.trim().length > 50) {
+      newErrors.email = 'Email cannot exceed 50 characters';
     }
 
     if (!formData.password.trim()) {

@@ -92,6 +92,7 @@ const TargetDashboard = ({ userId }) => {
           // targetId: selectedTargetId, // Uncomment if your API supports filtering by target ID
         }
       });
+     
 
       const metricsArray = Array.isArray(response.data) ? response.data : [];
       // console.log("1. Raw data received from API:", metricsArray);
@@ -127,7 +128,7 @@ const TargetDashboard = ({ userId }) => {
         };
       }).filter(Boolean);
 
-      // console.log("2. Formatted Metrics (check date objects and values):", formattedMetrics);
+      console.log("2. Formatted Metrics (check date objects and values):", formattedMetrics);
 
       setTableMetrics(formattedMetrics);
 
@@ -357,11 +358,11 @@ const TargetDashboard = ({ userId }) => {
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned To</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned By</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Target</th>
-                  <th className="p-3 sm:p-4 border-b border-gray-200">Achieved</th>
+                  {/* <th className="p-3 sm:p-4 border-b border-gray-200">Achieved</th> */}
                   <th className="p-3 sm:p-4 border-b border-gray-200">Completed (%)</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">From</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">To</th>
-                  <th className="p-3 sm:p-4 border-b border-gray-200">Status</th>
+                  {/* <th className="p-3 sm:p-4 border-b border-gray-200">Status</th> */}
                 </tr>
               </thead>
               <tbody className="text-gray-700 text-sm font-light">
@@ -370,11 +371,11 @@ const TargetDashboard = ({ userId }) => {
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedTo}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedBy}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.targetValue.toLocaleString('en-IN')}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.achieved.toLocaleString('en-IN')}</td>
+                    {/* <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.achieved.toLocaleString('en-IN')}</td> */}
                     <td className="p-3 sm:p-4 whitespace-nowrap font-medium">{row.completed}%</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.fromDate}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.toDate}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">
+                    {/* <td className="p-3 sm:p-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         row.status === "Assigned" ? "bg-blue-100 text-blue-700" :
                         row.status === "Completed" ? "bg-green-100 text-green-700" :
@@ -382,7 +383,7 @@ const TargetDashboard = ({ userId }) => {
                       }`}>
                         {row.status}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
                 {tableMetrics.length === 0 && (

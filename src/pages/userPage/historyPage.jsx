@@ -43,7 +43,7 @@ function HistoryDashboard({ userId }) {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
+                // console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
 
                 setSummaryMetrics({
                     totalLogsByUser: response.data.totalLogsByUser || 0,
@@ -96,8 +96,9 @@ function HistoryDashboard({ userId }) {
         if (!isoString) return '-';
         try {
             return new Date(isoString).toLocaleString('en-IN', {
-                year: 'numeric',
                 month: 'numeric',
+
+                year: 'numeric',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',

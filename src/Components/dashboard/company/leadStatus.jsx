@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceDot, ReferenceLine } from 'recharts';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Legend
+} from 'recharts';
 import { ENDPOINTS } from '../../../api/constraints'; 
+
 const LeadStatusChart = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +19,7 @@ const LeadStatusChart = () => {
     'this_year': 'This Year',
   };
 
+  // Function to decode the token and get companyId
   const getCompanyIdAndToken = () => {
     const token = localStorage.getItem('token');
     if (!token) return null;
@@ -29,13 +34,15 @@ const LeadStatusChart = () => {
     }
   };
 
+  // Function to fetch data specific to the company
   const fetchLeadStatusData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     const authData = getCompanyIdAndToken();
     if (!authData) {
-      setError('Authentication data missing');
+      setError('Authentication data missing. Please log in.');
+      setLoading(false);
       return;
     }
 
@@ -46,14 +53,16 @@ const LeadStatusChart = () => {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch data');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
 
       const result = await response.json();
       const stageCounts = result?.data?.stageCounts || {};
-
-      // Transform to chart-friendly format
+      
+      // Transform the fetched stage counts and remove leading/trailing whitespace from stage names
       const transformedData = Object.entries(stageCounts).map(([stage, count]) => ({
-        name: stage,
+        name: stage.trim(), // Use .trim() to remove leading/trailing whitespace
         "Lead Status": count
       }));
 
@@ -69,11 +78,13 @@ const LeadStatusChart = () => {
     fetchLeadStatusData();
   }, [fetchLeadStatusData]);
 
+  // Handlers for time range selection (currently not modifying data fetching but included for UI)
   const handleTimeRangeChange = (range) => {
     setSelectedTimeRange(range);
     setDropdownOpen(false);
   };
 
+  // Custom tooltip component for the chart
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -85,18 +96,11 @@ const LeadStatusChart = () => {
     return null;
   };
 
-  const leadStatusCategories = [
-    'New', 'Interested', 'Contacted', 'Qualification', 'Demo', 'Proposal', 'Negotiation', 'Won'
-  ];
-
-  const qualificationIndex = leadStatusCategories.indexOf('Qualification');
-  const qualificationData = chartData.find(item => item.name === 'Qualification');
-  const showAnnotation = qualificationData?.["Lead Status"] === 18 && selectedTimeRange === 'this_week';
-
+  // Loading and Error handling UI
   if (loading) {
     return (
       <div className="bg-white p-4 rounded-lg shadow h-64 flex items-center justify-center">
-        <p>Loading lead status data...</p>
+        <p>Loading sales pipeline data...</p>
       </div>
     );
   }
@@ -109,19 +113,13 @@ const LeadStatusChart = () => {
     );
   }
 
+  // Main component rendering
   return (
-    <div className="bg-white p-4 h-[60vh] rounded-lg shadow">
+    <div className="bg-white p-4 h-[80vh] rounded-lg shadow">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Sales Pipeline Stages</h2>
+        {/* Time Range Dropdown */}
         <div className="relative">
-          {/* <button
-            className="text-sm border px-3 py-1 rounded flex items-center space-x-2 cursor-pointer"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <span>📅</span>
-            <span>{timeRangeOptions[selectedTimeRange]}</span>
-            <span>▼</span>
-          </button> */}
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10">
               {Object.entries(timeRangeOptions).map(([key, value]) => (
@@ -137,59 +135,41 @@ const LeadStatusChart = () => {
           )}
         </div>
       </div>
-      <div style={{ width: '100%', height: 300 }}>
-        <ResponsiveContainer>
-          <LineChart
-            data={chartData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="name"
-              type="category"
-              interval={0}
-            />
-            <YAxis label={{ value: 'Number of Leads', angle: -90, position: 'insideLeft' }} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-           <Line
-          type="linear"            
-            dataKey="Lead Status"
-             stroke="#164CA1"
-               strokeWidth={1}          
-            dot={{ r: 6 }}           
-            activeDot={{ r:8, stroke: '#164CA3', strokeWidth: 1 }}    
-          />
-
-            {showAnnotation && (
-              <>
-                <ReferenceLine
-                  x="Qualification"
-                  stroke="#cccccc"
-                  strokeDasharray="3 3"
-                />
-                <ReferenceDot
-                  x="Qualification"
-                  y={18}
-                  r={8}
-                  fill="black"
-                />
-                <text
-                  x={chartData[qualificationIndex]?.x || 0}
-                  y={18}
-                  dx={0}
-                  dy={-20}
-                  fill="#000"
-                  fontSize={14}
-                  fontWeight="bold"
-                  textAnchor="middle"
-                >
-                  18
-                </text>
-              </>
-            )}
-          </LineChart>
-        </ResponsiveContainer>
+      <div style={{ width: '100%', height: 500 }}>
+        {chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No lead status data available for this time range.
+          </div>
+        ) : (
+          <ResponsiveContainer>
+            <LineChart
+              data={chartData}
+              margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              {/* X-axis for stage names, rotated for readability */}
+              <XAxis
+                dataKey="name"
+                type="category"
+                angle={-45} 
+                textAnchor="end"
+                height={90} 
+                interval={0}
+              />
+              <YAxis label={{ value: 'Number of Leads', angle: -90, position: 'insideLeft' }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Line
+                type="linear"
+                dataKey="Lead Status"
+                stroke="#164CA1"
+                strokeWidth={1}
+                dot={{ r: 6 }}
+                activeDot={{ r:8, stroke: '#164CA3', strokeWidth: 1 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

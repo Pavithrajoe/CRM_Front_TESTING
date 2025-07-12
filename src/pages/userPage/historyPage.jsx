@@ -56,8 +56,8 @@ function HistoryDashboard({ userId }) {
                     const mappedActivityData = response.data.fetchAllRemainderByUser.map(remainder => ({
                         id: remainder.iremainder_id,
                         activitytype: remainder.cremainder_title || 'Remainder',
-                        crm_lead_name: remainder.crm_lead_name || '-',
-                        user: { cFull_name: remainder.cFull_name || '-' }, // Use cFull_name if available
+                        lead_name: remainder.lead ?.clead_name || '-',
+                        priority: remainder.priority || '-' , // Use cFull_name if available
                         activitytimestamp: remainder.dremainder_dt,
                     }));
                     setActivityData(mappedActivityData);
@@ -184,9 +184,9 @@ function HistoryDashboard({ userId }) {
                                 
                                 <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">S.No</th>
                                   <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">Lead Name</th>
-                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Activity Type</th>
+                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Reminder Title</th>
                               
-                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Performed By</th>
+                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Priority</th>
                                 <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Timestamp</th>
                             </tr>
                         </thead>
@@ -194,10 +194,10 @@ function HistoryDashboard({ userId }) {
                             {activityData.length > 0 ? activityData.map((item, index) => (
                                 <tr key={item.id || `activity-${index}`} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out">
                                     <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm font-medium text-gray-900">{index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.crm_lead_name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.lead_name}</td>
 
                                     <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700 capitalize">{item.activitytype?.replace(/_/g, ' ')}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.user?.cFull_name || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.priority || '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700">{formatDateTime(item.activitytimestamp)}</td>
                                 </tr>
                             )) : (

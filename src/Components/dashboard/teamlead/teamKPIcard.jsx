@@ -12,6 +12,7 @@ export default function TeamKPIStats() {
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
+  const [noData, setNoData] = useState(false); // New state variable for "No data available"
 
   useEffect(() => {
     let extractedUserId = null;
@@ -56,6 +57,7 @@ export default function TeamKPIStats() {
     try {
       setLoading(true);
       setError(null); 
+      setNoData(false); // Reset noData state
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -71,58 +73,62 @@ export default function TeamKPIStats() {
       }
 
       const data = await response.json();
-      //console.log("API response data for TEAM_KPI:", data);
-
+      
       const leadsArray = data.details?.lead;
       const subordinatesArray = data.details?.subordinates;
 
+      // Check if data is present and correctly structured
       if (Array.isArray(leadsArray) && Array.isArray(subordinatesArray)) {
-        const activeSubordinateIds = new Set(
-          subordinatesArray
-            .filter(sub => sub.bactive === true)
-            .map(sub => sub.iUser_id)
-        );
+        if (leadsArray.length === 0 && subordinatesArray.length === 0) {
+          // If arrays are empty, set noData to true
+          setNoData(true);
+          setLeadCount(0);
+          setDealCount(0);
+          setHotLeadCount(0);
+          setColdLeadCount(0);
+        } else {
+          // Process data if arrays are not empty
+          const activeSubordinateIds = new Set(
+            subordinatesArray
+              .filter(sub => sub.bactive === true)
+              .map(sub => sub.iUser_id)
+          );
 
-        //console.log("Active Subordinate IDs:", Array.from(activeSubordinateIds));
+          const filteredLeads = leadsArray.filter(lead =>
+            lead.bactive === true &&
+            activeSubordinateIds.has(lead.clead_owner)
+          );
 
+          const totalLeadsCount = filteredLeads.length;
+          const convertedDealsCount = filteredLeads.filter(
+            (lead) => lead.bisConverted === true
+          ).length;
+          const hotLeadsCount = filteredLeads.filter(
+            (lead) =>
+              lead.lead_potential &&
+              lead.lead_potential.clead_name === "HOT" &&
+              lead.bisConverted === false
+          ).length;
+          const coldLeadsCount = filteredLeads.filter(
+            (lead) =>
+              lead.lead_potential &&
+              lead.lead_potential.clead_name === "COLD" &&
+              lead.bisConverted === false
+          ).length;
 
-        const filteredLeads = leadsArray.filter(lead =>
-          lead.bactive === true &&
-          activeSubordinateIds.has(lead.clead_owner)
-        );
-
-        //console.log("Filtered Leads (Lead active & Owner active):", filteredLeads);
-
-
-        const totalLeadsCount = filteredLeads.length;
-        const convertedDealsCount = filteredLeads.filter(
-          (lead) => lead.bisConverted === true
-        ).length;
-        const hotLeadsCount = filteredLeads.filter(
-          (lead) =>
-            lead.lead_potential &&
-            lead.lead_potential.clead_name === "HOT" &&
-            lead.bisConverted === false
-        ).length;
-        const coldLeadsCount = filteredLeads.filter(
-          (lead) =>
-            lead.lead_potential &&
-            lead.lead_potential.clead_name === "COLD" &&
-            lead.bisConverted === false
-        ).length;
-
-        setLeadCount(totalLeadsCount);
-        setDealCount(convertedDealsCount);
-        setHotLeadCount(hotLeadsCount);
-        setColdLeadCount(coldLeadsCount);
-        setError(null);
+          setLeadCount(totalLeadsCount);
+          setDealCount(convertedDealsCount);
+          setHotLeadCount(hotLeadsCount);
+          setColdLeadCount(coldLeadsCount);
+          setError(null);
+        }
       } else {
-        // console.warn("API response for TEAM_KPI did not contain expected 'details.lead' or 'details.subordinates' arrays.");
+        // If the structure is missing required arrays (lead or subordinates)
+        setNoData(true);
         setLeadCount(0);
         setDealCount(0);
         setHotLeadCount(0);
         setColdLeadCount(0);
-        setError("API response for KPIs did not contain expected lead or subordinate data.");
       }
     } catch (err) {
       console.error("Error fetching team KPIs:", err);
@@ -180,6 +186,11 @@ export default function TeamKPIStats() {
 
   if (error) {
     return <div className="text-center p-4 text-red-500">Error: {error}</div>;
+  }
+
+  // Display "No data available" if noData is true
+  if (noData) {
+    return <div className="text-center p-4 text-gray-500">No data available.</div>;
   }
 
   return (

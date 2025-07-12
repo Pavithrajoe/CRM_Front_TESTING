@@ -319,6 +319,8 @@ function PaginatedTableForLeads({ initialData }) {
 // FirstResponseTimeReport component (unchanged, just showing context for passing data)
 import axios from 'axios';
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 import {
   LineChart,
   Line,
@@ -337,7 +339,7 @@ const COLORS = ['#A3E635', '#6366F1', '#3B82F6', '#E879F9']; // lime, indigo, bl
 
 // Helper function to format milliseconds into a human-readable time string
 const formatMsToTime = (ms) => {
-  if (ms === Infinity || ms === 0) return 'N/A';
+  if (ms === Infinity || ms === 0) return '0';
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
@@ -352,6 +354,10 @@ const formatMsToTime = (ms) => {
 
   return parts.join(' ');
 };
+ const navigate = () => {
+    navigate(`/reportpage`);
+  };
+
 
 // Helper function to format date to YYYY-MM-DD for input type="date"
 const formatDateForInputMain = (date) => { // Renamed to avoid conflict
@@ -564,15 +570,15 @@ const FirstResponseTimeReport = () => {
   const cardData = [
     {
       title: 'Avg. First Response Time',
-      value: metrics.averageFirstResponseTime || 'N/A',
+      value: metrics.averageFirstResponseTime || 'No data found',
     },
     {
       title: 'Fastest First Response',
-      value: metrics.fastestResponseTime || 'N/A',
+      value: metrics.fastestResponseTime || 'No data found',
     },
     {
       title: 'Slowest First Response',
-      value: metrics.slowestResponseTime || 'N/A',
+      value: metrics.slowestResponseTime || 'No data found',
     },
     {
       title: 'First Resp. SLA Rate',
@@ -613,7 +619,7 @@ const FirstResponseTimeReport = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
 
         <button
-          onClick={() => navigate("/reportpage")} 
+          onClick={navigate} 
           style={{
             color: "#6B7280", 
             padding: "8px",

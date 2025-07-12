@@ -230,7 +230,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-4">
             <div>
-              <label htmlFor="employeeName" className="block mb-1 text-sm font-medium text-gray-700">Employee Name *</label>
+              <label htmlFor="employeeName" className="block mb-1 text-sm font-medium text-gray-700">Employee Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="employeeName"
@@ -250,7 +250,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
             </div>
 
             <div>
-              <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">Email *</label>
+              <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 id="email"
@@ -270,7 +270,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">Password *</label>
+              <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -302,7 +302,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="jobTitle" className="block mb-1 text-sm font-medium text-gray-700">Job Title *</label>
+              <label htmlFor="jobTitle" className="block mb-1 text-sm font-medium text-gray-700">Job Title <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 id="jobTitle"
@@ -314,7 +314,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
             </div>
 
             <div>
-              <label htmlFor="reportsTo" className="block mb-1 text-sm font-medium text-gray-700">Reports To *</label>
+              <label htmlFor="reportsTo" className="block mb-1 text-sm font-medium text-gray-700">Reports To <span className="text-red-500">*</span></label>
               <select
                 id="reportsTo"
                 name="reportsTo"
@@ -341,7 +341,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
             </div>
 
             <div>
-              <label htmlFor="role" className="block mb-1 text-sm font-medium text-gray-700">Role *</label>
+              <label htmlFor="role" className="block mb-1 text-sm font-medium text-gray-700">Role <span className="text-red-500">*</span></label>
               <select
                 id="role"
                 name="role"

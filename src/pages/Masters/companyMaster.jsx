@@ -345,7 +345,7 @@ export default function CompanyMaster() {
             skipCompanyIdInjection: false, // Set to false if company_id is explicitly needed in payload
         },
         { // Corrected Label Master configuration
-            title: 'Label Master',
+            title: 'Label ',
             value: 'Lead Form Labels',
             modalKey: 'Lead Form Title', // Display label for the main input in the modal
 

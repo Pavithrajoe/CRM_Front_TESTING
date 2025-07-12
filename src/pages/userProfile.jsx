@@ -36,10 +36,17 @@ const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Target');
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [editFormData, setEditFormData] = useState({
+    cFull_name: '',
+    cUser_name: '',
+    cEmail: '',
+    cjob_title: '',
+    reports_to: ''
+  });
   const [errorMessage, setErrorMessage] = useState('');
   const [reportToUsers, setReportToUsers] = useState([]);
   const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch user data
   useEffect(() => {
@@ -55,7 +62,8 @@ const UserProfile = () => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         setUser(data);
-        setFormData({
+        // Initialize edit form data
+        setEditFormData({
           cFull_name: data.cFull_name || '',
           cUser_name: data.cUser_name || '',
           cEmail: data.cEmail || '',
@@ -81,7 +89,6 @@ const UserProfile = () => {
           },
         });
         const data = await response.json();
-        console.log("Fetched users for reports_to:", data);
         if (!response.ok) throw new Error(data.message);
         const filtered = data.filter(u => u.iUser_id !== parseInt(userId));
         setReportToUsers(filtered);
@@ -103,14 +110,10 @@ const UserProfile = () => {
 
     if (!newStatus) {
       const confirmDeactivation = window.confirm("Are you sure you want to deactivate this user's account? They will no longer be able to log in.");
-      if (!confirmDeactivation) {
-        return;
-      }
+      if (!confirmDeactivation) return;
     } else {
       const confirmActivation = window.confirm("Are you sure you want to activate this user's account?");
-      if (!confirmActivation) {
-        return;
-      }
+      if (!confirmActivation) return;
     }
 
     try {
@@ -123,7 +126,7 @@ const UserProfile = () => {
         body: JSON.stringify({ bactive: newStatus }),
       });
       if (!res.ok) throw new Error('Failed to update user status');
-      setUser({ ...user, bactive: newStatus });
+      setUser(prev => ({ ...prev, bactive: newStatus }));
       alert(`User account successfully set to ${newStatus ? 'active' : 'inactive'}!`);
     } catch (err) {
       console.error(err);
@@ -133,7 +136,7 @@ const UserProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setEditFormData(prev => ({
       ...prev,
       [name]: name === 'reports_to' ? (value === '' ? '' : parseInt(value)) : value,
     }));
@@ -141,7 +144,9 @@ const UserProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const token = localStorage.getItem('token');
+    
     try {
       const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
         method: 'PUT',
@@ -149,17 +154,32 @@ const UserProfile = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(editFormData),
       });
       const updated = await res.json();
       if (!res.ok) throw new Error(updated.message);
+      
       setUser(updated);
       setShowForm(false);
       alert('Profile updated successfully!');
     } catch (err) {
       console.error(err);
       alert('Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleFormClose = () => {
+    // Reset form data to current user data when closing
+    setEditFormData({
+      cFull_name: user.cFull_name || '',
+      cUser_name: user.cUser_name || '',
+      cEmail: user.cEmail || '',
+      cjob_title: user.cjob_title || '',
+      reports_to: user.reports_to || '',
+    });
+    setShowForm(false);
   };
 
   if (errorMessage) {
@@ -190,10 +210,16 @@ const UserProfile = () => {
               )}
             </div>
             <div className="ml-auto flex gap-2">
-              <button onClick={() => setIsProfileCardVisible(false)} className="text-blue-600 hover:text-gray-800">
+              <button 
+                onClick={() => setIsProfileCardVisible(false)} 
+                className="text-blue-600 hover:text-gray-800"
+              >
                 Collapse
               </button>
-              <button onClick={() => setShowForm(true)} className="text-gray-600 hover:text-gray-800">
+              <button 
+                onClick={() => setShowForm(true)} 
+                className="text-gray-600 hover:text-gray-800"
+              >
                 <FaEdit />
               </button>
             </div>
@@ -249,17 +275,21 @@ const UserProfile = () => {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl relative">
-            <button onClick={() => setShowForm(false)} className="absolute top-3 right-3 text-xl">✖</button>
+            <button 
+              onClick={handleFormClose} 
+              className="absolute top-3 right-3 text-xl hover:text-gray-600"
+            >
+              ✖
+            </button>
             <h3 className="text-2xl font-semibold mb-6">Edit Profile</h3>
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Removed the duplicated div here */}
               <div className="relative">
                 <FaUser className="absolute top-3 left-3 text-gray-500" />
                 <input
                   type="text"
                   name="cFull_name"
                   placeholder="Full Name"
-                  value={formData.cFull_name}
+                  value={editFormData.cFull_name}
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
@@ -272,7 +302,7 @@ const UserProfile = () => {
                   type="text"
                   name="cUser_name"
                   placeholder="Username"
-                  value={formData.cUser_name}
+                  value={editFormData.cUser_name}
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
@@ -285,7 +315,7 @@ const UserProfile = () => {
                   type="email"
                   name="cEmail"
                   placeholder="Email"
-                  value={formData.cEmail}
+                  value={editFormData.cEmail}
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                   required
@@ -299,16 +329,17 @@ const UserProfile = () => {
                   type="text"
                   name="cjob_title"
                   placeholder="Job Title"
-                  value={formData.cjob_title}
+                  value={editFormData.cjob_title}
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
+                  maxLength={40}
                 />
               </div>
               <div className="relative">
                 <FaUserTie className="absolute top-3 left-3 text-gray-500" />
                 <select
                   name="reports_to"
-                  value={formData.reports_to}
+                  value={editFormData.reports_to}
                   onChange={handleChange}
                   className="w-full border p-3 pl-10 rounded-lg"
                 >
@@ -335,9 +366,12 @@ const UserProfile = () => {
 
               <button
                 type="submit"
-                className="w-full p-3 bg-gray-800 text-white rounded-full hover:bg-gray-900"
+                className={`w-full p-3 text-white rounded-full ${
+                  isSubmitting ? 'bg-gray-500' : 'bg-gray-800 hover:bg-gray-900'
+                }`}
+                disabled={isSubmitting}
               >
-                Save Changes
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </form>
           </div>

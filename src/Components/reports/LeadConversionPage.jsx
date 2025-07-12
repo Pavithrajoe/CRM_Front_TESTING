@@ -85,7 +85,7 @@ const LeadConversionPage = () => {
 
       // Log the parameters and the base URL for debugging
       console.log("Fetching conversion data with params:", params);
-      console.log("Base Request URL:", `${ENDPOINTS.LEAD_CONVERSION}/${companyId}`);
+      // console.log("Base Request URL:", `${ENDPOINTS.LEAD_CONVERSION}/${companyId}`);
 
       const response = await axios.get(`${ENDPOINTS.LEAD_CONVERSION}/${companyId}`, {
         headers: {

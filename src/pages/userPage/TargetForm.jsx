@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from "lucide-react";
 
 export default function SalesForm({ onClose }) {
@@ -19,133 +20,98 @@ export default function SalesForm({ onClose }) {
 
   const token = localStorage.getItem("token");
 
-  const currentUserId = (() => {
-    if (!token) return null;
+  // Helper function to decode JWT token payload
+  const decodeToken = (t) => {
+    if (!t) return null;
     try {
-      const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-      return payload.user_id || payload.iUser_id || null;
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      return null;
-    }
-  })();
-
-  const [formData, setFormData] = useState({
-    salesValue: '',
-    formDate: getCurrentDateTimeLocal(),
-    toDate: '',
-    assignedTo: '',
-    assignedBy: currentUserId?.toString() || '',
-    createdBy: currentUserId?.toString() || '',
-  });
-
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionMessage, setSubmissionMessage] = useState('');
-  const [companyUsers, setCompanyUsers] = useState([]);
-  const [fetchingUsers, setFetchingUsers] = useState(true);
-  const [usersError, setUsersError] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  const getCompanyId = () => {
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-      return payload.company_id || payload.iCompany_id;
+      // Decode base64 URL safe token payload
+      const payload = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+      return payload;
     } catch (error) {
       console.error("Error decoding token:", error);
       return null;
     }
   };
 
+  const tokenPayload = decodeToken(token);
+
+  // Determine the current user ID and company ID from the token payload
+  const currentUserId = tokenPayload?.user_id || tokenPayload?.iUser_id || null;
+  const getCompanyId = () => tokenPayload?.company_id || tokenPayload?.iCompany_id || null;
+
+  // Initialize form state
+  const [formData, setFormData] = useState({
+    salesValue: '',
+    formDate: getCurrentDateTimeLocal(),
+    toDate: '',
+    assignedTo: '',
+    assignedBy: currentUserId?.toString() || '', // Assigned By defaults to the current logged-in user
+    createdBy: currentUserId?.toString() || '', // Created By defaults to the current logged-in user
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionMessage, setSubmissionMessage] = useState('');
+  const [companyUsers, setCompanyUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [usersError, setUsersError] = useState(null);
+
+  // User fetching logic using useCallback
+  const fetchCompanyUsers = useCallback(async () => {
+    const companyId = getCompanyId();
+    if (!companyId) {
+      setUsersError("Company ID not found in token.");
+      return;
+    }
+    
+    try {
+      const response = await fetch(ENDPOINTS.USER_GET, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch users.");
+      }
+
+      const data = await response.json();
+      
+      // Console log the API response as requested for debugging
+      console.log("USER_GET API Response:", data); 
+
+      // Filter users belonging to the company
+      const filtered = data.filter(user => user.iCompany_id === companyId);
+      setCompanyUsers(filtered);
+
+      // Find and set current user details for display and form data
+      const currentUser = filtered.find(user => user.iUser_id === currentUserId);
+      if (currentUser) {
+        setCurrentUser(currentUser);
+        // Ensure assignedBy and createdBy are correctly set in the form data
+        setFormData(prev => ({ 
+          ...prev, 
+          assignedBy: currentUser.iUser_id.toString(),
+          createdBy: currentUser.iUser_id.toString()
+        }));
+      }
+
+      // Optional: Auto-assign "Assigned To" if only one user exists and it hasn't been set yet
+      if (filtered.length === 1 && !formData.assignedTo) {
+        const id = filtered[0].iUser_id.toString();
+        setFormData(prev => ({ ...prev, assignedTo: id }));
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setUsersError("Failed to load users. Please try again.");
+    }
+  }, [token, ENDPOINTS.USER_GET, currentUserId, formData.assignedTo]);
+
+  // Execute user fetching on component mount
   useEffect(() => {
-    const fetchCompanyUsers = async () => {
-      setFetchingUsers(true);
-      const companyId = getCompanyId();
-      if (!companyId) {
-        setUsersError("Company ID not found in token.");
-        setFetchingUsers(false);
-        return;
-      }
-      try {
-        const response = await fetch(ENDPOINTS.USER_GET, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await response.json();
-        const filtered = data.filter(user => user.iCompany_id === companyId);
-        setCompanyUsers(filtered);
-
-        // Find and set current user
-        const currentUser = filtered.find(user => user.iUser_id === currentUserId);
-        if (currentUser) {
-          setCurrentUser(currentUser);
-          setFormData(prev => ({ 
-            ...prev, 
-            assignedBy: currentUser.iUser_id.toString(),
-            createdBy: currentUser.iUser_id.toString()
-          }));
-        }
-
-        // If only one user, auto-assign to them
-        if (filtered.length === 1) {
-          const id = filtered[0].iUser_id.toString();
-          setFormData(prev => ({ ...prev, assignedTo: id }));
-        }
-      } catch (err) {
-        setUsersError("Failed to load users.");
-      } finally {
-        setFetchingUsers(false);
-      }
-    };
     fetchCompanyUsers();
-  }, []);
-  const fetchUsers = useCallback(async () => {
-      setLoading(true);
-      setError(null);
-      const companyId = getCompanyId();
-      if (!companyId) {
-        console.warn("No company ID found in token. Cannot fetch users.");
-        setError("Authentication error: No company ID found.");
-        setLoading(false);
-        return;
-      }
-  
-      try {
-        const response = await fetch(ENDPOINTS.USER_GET, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        });
-  
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`
-          );
-        }
-  
-        const data = await response.json();
-        console.log("Fetched users:", data);
-        const companyUsers = data.filter((user) => user.iCompany_id === companyId);
-        setUsers(companyUsers); // Set all company users
-      } catch (err) {
-        console.error("Error fetching users:", err);
-        setError("Failed to load users. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    }, []);
-  
-    useEffect(() => {
-      fetchUsers();
-    }, [fetchUsers]);
-  
-    // Effect to filter users based on search term and active/inactive tab
-    // Removed broken/incomplete useEffect and related code
+  }, [fetchCompanyUsers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -154,13 +120,12 @@ export default function SalesForm({ onClose }) {
 
   const validate = () => {
     const newErrors = {};
-    const now = new Date();
 
     if (!formData.salesValue) {
       newErrors.salesValue = 'Sales Value is required';
     } else {
       const val = parseFloat(formData.salesValue);
-      if (isNaN(val)) { // <-- Corrected line: added missing ')'
+      if (isNaN(val)) { 
         newErrors.salesValue = 'Must be a valid number';
       } else if (val <= 0) {
         newErrors.salesValue = 'Must be a positive number';
@@ -173,6 +138,11 @@ export default function SalesForm({ onClose }) {
     if (!formData.toDate) newErrors.toDate = 'To Date is required';
     if (!formData.assignedTo) newErrors.assignedTo = 'Assigned To is required';
 
+    // Ensure To Date is after From Date
+    if (formData.formDate && formData.toDate && new Date(formData.formDate) >= new Date(formData.toDate)) {
+      newErrors.toDate = 'To Date must be after From Date';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -182,6 +152,7 @@ export default function SalesForm({ onClose }) {
     if (!validate()) return;
 
     setIsSubmitting(true);
+    // Format datetime-local input (YYYY-MM-DDTHH:MM) to the required format (YYYY-MM-DD HH:MM:SS)
     const formatDate = (dt) => `${dt.replace('T', ' ')}:00`;
 
     const body = {
@@ -202,18 +173,24 @@ export default function SalesForm({ onClose }) {
         },
         body: JSON.stringify(body),
       });
+
       if (!res.ok) throw new Error('Submission failed');
+
       setSubmissionMessage('Sales target submitted successfully!');
-      setFormData({
+      
+      // Reset form data after successful submission, keeping assignedBy/createdBy
+      setFormData(prev => ({
+        ...prev,
         salesValue: '',
         formDate: getCurrentDateTimeLocal(),
         toDate: '',
         assignedTo: '',
-        assignedBy: currentUserId?.toString() || '',
-        createdBy: currentUserId?.toString() || '',
-      });
+      }));
+
+      // Close modal after a short delay
       setTimeout(() => onClose(), 1500);
     } catch (err) {
+      console.error("Submission error:", err);
       setErrors({ submit: err.message });
     } finally {
       setIsSubmitting(false);
@@ -228,6 +205,7 @@ export default function SalesForm({ onClose }) {
 
         {submissionMessage && <div className="bg-green-100 p-3 rounded text-green-700 mb-4">{submissionMessage}</div>}
         {errors.submit && <div className="bg-red-100 p-3 rounded text-red-700 mb-4">{errors.submit}</div>}
+        {usersError && <div className="bg-red-100 p-3 rounded text-red-700 mb-4">Error: {usersError}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -269,16 +247,7 @@ export default function SalesForm({ onClose }) {
             {errors.toDate && <p className="text-red-500 text-sm mt-1">{errors.toDate}</p>}
           </div>
 
-          <div>
-            <label className="block mb-1">Assigned To *</label>
-            <select
-              name="assignedTo"
-              value={user.cFull_name}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-            >
-              <option value="">Select User</option>
-              {companyUsers.map(user => (
+          {/* Assigned To (Dropdown displaying cFull_name, value is iUser_id) */}
           <div>
             <label className="block mb-1">Assigned To *</label>
             <select
@@ -288,14 +257,23 @@ export default function SalesForm({ onClose }) {
               className="w-full border p-2 rounded"
             >
               <option value="">Select User</option>
-              {companyUsers.map(user => (
-                <option key={user.iUser_id} value={user.iUser_id}>{user.cFull_name}</option>
-              ))}
+              {companyUsers.length > 0 ? (
+                companyUsers.map(user => (
+                  // Display cFull_name and use iUser_id for the value
+                  <option key={user.iUser_id} value={user.iUser_id}>{user.cFull_name}</option>
+                ))
+              ) : (
+                <option disabled>Loading users...</option>
+              )}
             </select>
             {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
           </div>
-            <div className="bg-gray-100 p-2 rounded">
-              {currentUser?.cFull_name || 'Current User'}
+          
+          {/* Assigned By (Static field showing current user) */}
+          <div>
+            <label className="block mb-1">Assigned By</label>
+            <div className="bg-gray-100 p-2 rounded text-gray-700 font-medium">
+              {currentUser?.cFull_name || 'Loading...'}
             </div>
           </div>
         </div>
@@ -313,3 +291,4 @@ export default function SalesForm({ onClose }) {
     </div>
   );
 }
+

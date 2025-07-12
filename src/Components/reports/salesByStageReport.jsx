@@ -58,7 +58,7 @@ export default function SalesByStageReport() {
         }
 
         const { data } = await response.json();
-        // console.log("This is stage response data:", data);
+        console.log("This is stage response data:", data);
 
         // Transform API data into table format
         const stages = [

@@ -311,14 +311,14 @@ export default function LeadOwnerEfficiency() {
                   <td className="px-4 py-2 h-16">{metric.ownerName || "Unknown"}</td>
                   {/* Safely format dates, adding a check if the date string exists */}
                   <td className="px-4 py-2 h-16">
-                    {metric.createdAtIST ? new Date(metric.createdAtIST).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "No created date"}
+                    {metric.createdAtIST ? new Date(metric.createdAtIST).toLocaleDateString('en-US', { day: 'numeric', month: 'numeric',  year: 'numeric' }) : "No created date"}
                   </td>
                   <td className="px-4 py-2 h-16">
-                    {metric.firstInteractionTimeIST ? new Date(metric.firstInteractionTimeIST).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "No Interaction Yet"}
+                    {metric.firstInteractionTimeIST ? new Date(metric.firstInteractionTimeIST).toLocaleDateString('en-US', {  day: 'numeric', month: 'numeric', year: 'numeric' }) : "No Interaction Yet"}
                   </td>
                   <td className="px-4 py-2 h-16">{metric.hoursToFirstInteraction || "No First Response"}</td>
                   <td className="px-4 py-2 h-16">
-                    {metric.conversionTimeHours ? new Date(metric.conversionTimeHours).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Didn't convert"}
+                    {metric.conversionTimeHours ? new Date(metric.conversionTimeHours).toLocaleDateString('en-US', { day: 'numeric', month: 'numeric', year: 'numeric' }) : "Didn't convert"}
                   </td>
                   <td className="px-4 py-2 h-16">{metric.note || "No notes found"}</td>
                 </tr>

@@ -1,26 +1,41 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-// import 'react-toastify/dist/react-toastify.css';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, X } from 'lucide-react';
 
-// Helper function to safely get nested object properties
 const getNestedObject = (obj, path) => {
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
 export default function MasterModal({ master, onClose, companyId, userId, masterConfigs }) {
-    const [formData, setFormData] = useState({});
-    const [isSaving, setIsSaving] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [apiError, setApiError] = useState(null);
-    const [existingItems, setExistingItems] = useState([]); // Used for flat masters
-    const [groupedHierarchicalItems, setGroupedHierarchicalItems] = useState([]); // New state for hierarchical masters
-    const [isLoadingItems, setIsLoadingItems] = useState(true);
-    const [selectedItemForEdit, setSelectedItemForEdit] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [existingItems, setExistingItems] = useState([]);
+  const [groupedHierarchicalItems, setGroupedHierarchicalItems] = useState([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [selectedItemForEdit, setSelectedItemForEdit] = useState(null);
+  const [parentOptions, setParentOptions] = useState([]);
+  const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
 
-    const [parentOptions, setParentOptions] = useState([]);
-    const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
+  const isLabelMaster = useMemo(() => master?.title === "Label Master", [master]);
+
+  // Helper to check if all label fields are empty (for Label Master)
+  const areLabelFieldsEmpty = useMemo(() => {
+    if (!isLabelMaster) return false;
+    
+    const requiredLabelFields = [
+      'leadFormTitle',
+      'section1Label',
+      'section2Label',
+      'section3Label'
+    ];
+    
+    return requiredLabelFields.every(field => 
+      !formData[field] || formData[field].length === 0
+    );
+  }, [formData, isLabelMaster]);
 
     // New state for all lead sources, used for filtering the dropdown
     const [allLeadSourceItems, setAllLeadSourceItems] = useState([]);
@@ -786,18 +801,18 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[80vh] flex flex-col">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[90vh] flex flex-col">
                 <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">{master.title} Master</h2>
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-3xl font-bold"
+                    className="related top-10 right-10 ms-[600px] mt-[-65px] text-gray-500 hover:text-gray-700 text-3xl font-bold"
                 >
                     &times;
                 </button>
 
                 {apiError && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">{apiError}</div>}
 
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-1 mt-10 overflow-hidden">
                     {/* Existing Items List (Left Side) */}
                     <div className="w-1/2 pr-4 overflow-y-auto border-r border-gray-200">
                         <h3 className="text-xl font-semibold mb-3 text-blue-700">Existing {master.title}</h3>
@@ -860,7 +875,6 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                     ) : (
                                         <ul className="space-y-2">
                                             {existingItems.map(item => {
-                                                // console.log(`Rendering flat item (Master: ${master.title}):`, item); // DEBUG: Log each item
                                                 return (
                                                 <li
                                                     key={item[master.idKey]}
@@ -899,15 +913,17 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                                         >
                                                             <Edit size={18} />
                                                         </button>
-                                                        <button
-                                                            // Ensure handleDelete is called with the correct item ID
-                                                            onClick={() => handleDelete(item[master.idKey])}
-                                                            disabled={isDeleting || !master.delete} // Disable if no delete endpoint
-                                                            className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
+                                                        {/* Hide delete button for Label Master */}
+                                                        {!isLabelMaster && (
+                                                            <button
+                                                                onClick={() => handleDelete(item[master.idKey])}
+                                                                disabled={isDeleting || !master.delete}
+                                                                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </li>
                                             );})}
@@ -936,7 +952,6 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                         <select
                                             id={formParentKey}
                                             name={formParentKey}
-                                            // Ensure value is a string for the select element's value prop
                                             value={String(formData[formParentKey] === null ? '' : formData[formParentKey])}
                                             onChange={handleChange}
                                             required={master.parentMasterConfig.required}
@@ -947,36 +962,18 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                             {parentOptions.map((parent) => (
                                                 <option
                                                     key={parent[master.parentMasterConfig.idKey]}
-                                                    value={String(parent[master.parentMasterConfig.idKey])} // Ensure option value is string
+                                                    value={String(parent[master.parentMasterConfig.idKey])}
                                                 >
                                                     {parent[master.parentMasterConfig.nameKey]}
                                                 </option>
                                             ))}
                                         </select>
                                     )}
-                                     {/* {console.log("Current Parent Dropdown Value:", formData[formParentKey])} DEBUG: Check selected parent ID */}
                                 </div>
                             )}
 
                            {/* Main Input Field (clead_name, subindustry_name, etc.) */}
                             <div className="mb-4">
-                          {selectedItemForEdit && (
-  <div className="mb-3">
-    <h3 className="text-lg font-semibold text-blue-700">
-      Industry:{" "}
-      {(() => {
-        const matchedIndustry = parentOptions.find(
-          (industry) =>
-            String(industry.iindustry_id) ===
-            String(selectedItemForEdit.iindustry_parent)
-        );
-        return matchedIndustry?.cindustry_name || "Not Found";
-      })()}
-    </h3>
-  </div>
-)}
-
-
                                 <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
                                     {master.modalKey || master.payloadKey}:
                                 </label>
@@ -992,10 +989,6 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                 />
                             </div>
 
-                            {/* ############################################################# */}
-                            {/* ### START: MODIFIED SECTION FOR ORDER ID FIELD ############ */}
-                            {/* ### This will now render ONLY for 'Status' Master           ### */}
-                            {/* ############################################################# */}
                             {/* Order ID Input Field (Conditionally Rendered) */}
                             {master.title === "Status" && shouldFieldBeRendered('orderId', formData) && (
                                 <div className="mb-4">
@@ -1011,12 +1004,8 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />
-                                     {/* {console.log("Current Order ID Value:", formData.orderId)} DEBUG: Check current orderId in form */}
                                 </div>
                             )}
-                            {/* ############################################################# */}
-                            {/* ### END: MODIFIED SECTION FOR ORDER ID FIELD ############## */}
-                            {/* ############################################################# */}
 
                             {/* Additional Fields if configured (Conditionally Rendered) */}
                             {master.additionalFields && master.additionalFields.map(field => {
@@ -1028,7 +1017,6 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                 return shouldFieldBeRendered(field, formData) && (
                                     <div className="mb-4" key={field}>
                                         <label htmlFor={field} className="block text-sm font-medium text-gray-700 mb-1">
-                                            {/* Basic humanize for field names */}
                                             {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                                         </label>
                                         <input
@@ -1043,27 +1031,9 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                     </div>
                                 );
                             })}
-                            
-                            {/* Active Status Checkbox */}
-                            {/* {master.activeStatusPayloadKey && (
-                                <div className="flex items-center mb-4">
-                                    <input
-                                        type="checkbox"
-                                        id={master.activeStatusPayloadKey}
-                                        name={master.activeStatusPayloadKey}
-                                        checked={formData[master.activeStatusPayloadKey] || false}
-                                        onChange={handleChange}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                        disabled={isSaving}
-                                    />
-                                    <label htmlFor={master.activeStatusPayloadKey} className="ml-2 block text-sm text-gray-900">
-                                        Active
-                                    </label>
-                                </div>
-                            )} */}
 
                             {/* Form Actions */}
-                            <div className="flex justify-end space-x-2 mt-auto pt-4"> {/* mt-auto and pt-4 for sticking to bottom */}
+                            <div className="flex justify-end space-x-2 mt-auto pt-4">
                                 {selectedItemForEdit && (
                                     <button
                                         type="button"
@@ -1074,13 +1044,16 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                         Cancel Edit
                                     </button>
                                 )}
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                                    disabled={isSaving}
-                                >
-                                    {isSaving ? 'Saving...' : (selectedItemForEdit ? 'Update' : 'Add')}
-                                </button>
+                                {/* Show Add button only when all label fields are empty for Label Master */}
+                                {(!isLabelMaster || (isLabelMaster && areLabelFieldsEmpty)) && (
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? 'Saving...' : (selectedItemForEdit ? 'Update' : 'Add')}
+                                    </button>
+                                )}
                             </div>
                         </form>
                     </div>

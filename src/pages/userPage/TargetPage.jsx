@@ -3,6 +3,8 @@ import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
 import goalIcon from '../../../public/images/nav/target.png';
 import SalesForm from '../userPage/TargetForm';
+import Select from "react-select";
+
 
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid
@@ -92,7 +94,7 @@ const TargetDashboard = ({ userId }) => {
           // targetId: selectedTargetId, // Uncomment if your API supports filtering by target ID
         }
       });
-     
+      
 
       const metricsArray = Array.isArray(response.data) ? response.data : [];
       // console.log("1. Raw data received from API:", metricsArray);
@@ -110,6 +112,9 @@ const TargetDashboard = ({ userId }) => {
         if (rawFromDate && isNaN(rawFromDate.getTime())) console.warn(`Invalid dfrom_date for metric ID ${metric.id || index}:`, metric.dfrom_date);
         if (rawToDate && isNaN(rawToDate.getTime())) console.warn(`Invalid dto_date for metric ID ${metric.id || index}:`, metric.dto_date);
 
+        // Define options for DD/MM/YYYY format
+        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+
         return {
           id: metric.id || `metric-${index}`,
           metricName: metric.metric_name || "Sales Target (Assigned)",
@@ -117,8 +122,9 @@ const TargetDashboard = ({ userId }) => {
           achieved: achieved,
           completed: completedPercentage,
           status: metric.status || "-",
-          fromDate: rawFromDate ? rawFromDate.toLocaleDateString() : "-",
-          toDate: rawToDate ? rawToDate.toLocaleDateString() : "-",
+          // Use 'en-GB' locale for DD/MM/YYYY format
+          fromDate: rawFromDate ? rawFromDate.toLocaleDateString('en-GB', dateOptions) : "-",
+          toDate: rawToDate ? rawToDate.toLocaleDateString('en-GB', dateOptions) : "-",
           rawFromDate: rawFromDate,
           rawToDate: rawToDate,
           createdAt: createdAtDate,
@@ -355,6 +361,7 @@ const TargetDashboard = ({ userId }) => {
             <table className="min-w-full bg-white border border-gray-200 h-[350px] rounded-lg overflow-y-scroll">
               <thead>
                 <tr className="bg-gray-100 text-left text-gray-600 uppercase text-xs sm:text-sm leading-normal">
+                  <th className="p-3 sm:p-4 border-b border-gray-200">S.No</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned To</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned By</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Target</th>
@@ -366,8 +373,9 @@ const TargetDashboard = ({ userId }) => {
                 </tr>
               </thead>
               <tbody className="text-gray-700 text-sm font-light">
-                {tableMetrics.map((row) => (
+                {tableMetrics.map((row, index) => (
                   <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                    <td className="p-3 sm:p-4 whitespace-nowrap">{index + 1}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedTo}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedBy}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.targetValue.toLocaleString('en-IN')}</td>

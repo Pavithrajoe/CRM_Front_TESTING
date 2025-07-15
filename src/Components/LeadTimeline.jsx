@@ -1,3 +1,5 @@
+// LeadTimeline.js
+
 import React, { useEffect, useState } from "react";
 import { ENDPOINTS } from "../api/constraints";
 
@@ -8,7 +10,7 @@ const activityColors = {
   proposal_sent: "#007bff", // blue
   comment_added: "#ffc107", // yellow
   assigned_to_user: "#6f42c1", // purple
-  default: "#6c757d", // gray
+  default: "#28a745", // green
 };
 
 const getActivityMessage = (activity) => {
@@ -81,7 +83,7 @@ export default function LeadTimeline({ leadId }) {
   }, [leadId]);
 
   return (
-    <div className="relative w-full h-full overflow-y-auto px-6 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="relative w-full h-[200vh] overflow-y-scroll px-6 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="flex flex-col items-center space-y-8 max-w-5xl mx-auto">
 
         {error && (
@@ -101,28 +103,30 @@ export default function LeadTimeline({ leadId }) {
 
           const performedBy = entry.user?.cFull_name || `User ${entry.performedbyid || "System"}`;
           const date = new Date(entry.activitytimestamp);
-          const humanReadable = date.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
+
+          // Format the date using 'en-GB' for DD/MM/YYYY and ensure AM/PM is uppercase
+          const humanReadable = date.toLocaleString("en-GB", {
             day: "numeric",
+            month: "numeric",
+            year: "numeric",
             hour: "numeric",
             minute: "2-digit",
             hour12: true,
-          });
+          }).toUpperCase();
 
           const color = getActivityColor(entry.activitytype);
 
           return (
             <div
               key={entry.id || index}
-              className="flex w-full relative min-h-[140px]"
+              className="flex w-full ms-[-100px] relative min-h-[140px]"
               aria-label={`Timeline event: ${message}`}
             >
               {/* Left content */}
               <div className="w-1/2 flex justify-end pr-8">
                 {isLeft && (
                   <article
-                    className="bg-white border border-gray-200 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                    className="bg-white border border-blue-500 border-t-8 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                     role="region"
                     aria-live="polite"
                   >
@@ -146,7 +150,7 @@ export default function LeadTimeline({ leadId }) {
                 )}
               </div>
 
-              {/* Center timeline */}
+              {/* Center timeline (Tracking Line) */}
               <div className="flex flex-col items-center w-0 relative">
                 <span
                   className="block rounded-full border-4 border-white shadow-md"
@@ -158,34 +162,38 @@ export default function LeadTimeline({ leadId }) {
                   }}
                   aria-hidden="true"
                 />
+                
+                {/* Horizontal connection line */}
                 <span
                   className="absolute top-[10px]"
                   style={{
-                    width: 48,
+                    width: 25,
                     height: 4,
                     backgroundColor: color,
                     ...(isLeft ? { right: "calc(100% + 12px)" } : { left: "calc(100% + 12px)" }),
                   }}
-                />
-               {!isLast && (
-                <div
-                  className="w-1 rounded-full mt-2"
-                  style={{
-                    height: "80px", // Limit the line's height
-                    backgroundColor: color,
-                    opacity: 0.6,
-                  }}
                   aria-hidden="true"
                 />
-              )}
-
+                
+                {/* Vertical tracking line */}
+                {!isLast && (
+                  <div
+                    className="w-1 rounded-full mt-2"
+                    style={{
+                      height: "100px", // Limit the line's height
+                      backgroundColor: color,
+                      opacity: 0.6,
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
               </div>
 
               {/* Right content */}
               <div className="w-1/2 flex justify-start pl-8">
                 {!isLeft && (
                   <article
-                    className="bg-white border border-gray-200 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                    className="bg-white border border-blue-600 border-b-8 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                     role="region"
                     aria-live="polite"
                   >

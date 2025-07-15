@@ -195,8 +195,8 @@ const TerritoryLeadsAnalytics = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card icon={<Users size={18} />} title="Total Leads" value={totalLeads} />
         <Card icon={<FaRupeeSign size={18} />} title="Revenue" value={`₹${revenue.toLocaleString()}`} />
-        <Card icon={<TrendingUp size={18} />} title="Converted" value={conversionData.converted} />
-        <Card icon={<PieChart size={18} />} title="Conversion Rate" value={conversionData.conversionRate} />
+        <Card icon={<TrendingUp size={18} />} title="Won" value={conversionData.converted} />
+        <Card icon={<PieChart size={18} />} title="Won Rate" value={conversionData.conversionRate} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -303,7 +303,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">End Date</label>
+              <label className="block text-sm text-gray-600 mb-1">End Date <span className="text-red-500">*</span></label>
               <input
                 type="datetime-local"
                 value={formData.devent_end}

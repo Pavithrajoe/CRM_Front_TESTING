@@ -451,7 +451,7 @@ const ReminderForm = () => {
 
               <form onSubmit={(e) => handleSubmit(e, "submitted")}>
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Title *
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2 mb-6">
                   <input
@@ -466,7 +466,7 @@ const ReminderForm = () => {
                 </div>
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Description *
+                  Description <span className="text-red-500">*</span>
                 </label>
                 <div className="relative mb-6">
                   <textarea
@@ -511,7 +511,7 @@ const ReminderForm = () => {
                 )}
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Priority
+                  Priority <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="priority"
@@ -527,7 +527,7 @@ const ReminderForm = () => {
 
                 <div className="flex items-center justify-between mb-4">
                   <label className="text-sm font-semibold text-gray-700">
-                    Assign To
+                    Assign To <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -562,7 +562,7 @@ const ReminderForm = () => {
                 </select>
 
                 <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Date *
+                  Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -574,7 +574,7 @@ const ReminderForm = () => {
                 />
 
                 <label className="block text-sm mb-4 font-semibold text-gray-700">
-                  Time *
+                  Time <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="time"
@@ -599,6 +599,7 @@ const ReminderForm = () => {
                     className="bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition font-semibold"
                     disabled={submitting}
                   >
+                  
                     Save as Draft
                   </button> */}
                 </div>

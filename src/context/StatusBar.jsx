@@ -1,5 +1,3 @@
-
-// StatusBar.js
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 import {
@@ -18,24 +16,21 @@ import { ENDPOINTS } from '../api/constraints';
 
 const mandatoryInputStages = ['Proposal', 'Won'];
 
-const StatusBar = ({ leadId, leadData }) => {
+const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [statusRemarks, setStatusRemarks] = useState([]);
-
   const [error, setError] = useState(null);
+  
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogValue, setDialogValue] = useState('');
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [users, setUsers] = useState([]);
   const { showToast } = useToast();
-
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
   const [remarkStageId, setRemarkStageId] = useState(null);
-  // const [selectedRemarkId, setSelectedRemarkId] = useState(null);
-const [selectedRemark, setSelectedRemark] = useState(null);
 
   const fetchStages = async () => {
     try {
@@ -93,6 +88,12 @@ const [selectedRemark, setSelectedRemark] = useState(null);
   }, [stages, leadData]);
 
   const handleStageClick = (clickedIndex, statusId) => {
+    // Prevent any status changes if lead is lost or won
+    if (isLost || isWon) {
+      showToast('info', 'Cannot change status for a lost or won lead.');
+      return;
+    }
+
     if (clickedIndex <= currentStageIndex) {
       showToast('info', 'Cannot go back or re-select current stage.');
       return;
@@ -128,14 +129,20 @@ const [selectedRemark, setSelectedRemark] = useState(null);
   const updateStage = async (newIndex, statusId) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`, {
+      const response = await fetch(`${ENDPOINTS.LEAD_STATUS_UPDATE}/${leadId}/status/${statusId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
       setCurrentStageIndex(newIndex);
+      
       if (stages[newIndex].name?.toLowerCase() === 'won') {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
@@ -145,204 +152,208 @@ const [selectedRemark, setSelectedRemark] = useState(null);
     }
   };
 
- const handleDialogSave = async () => {
-  const token = localStorage.getItem('token');
-  const userId = JSON.parse(localStorage.getItem('user'));
-  const stageName = stages[dialogStageIndex]?.name;
-  const statusId = stages[dialogStageIndex]?.id;
+  const handleDialogSave = async () => {
+    const token = localStorage.getItem('token');
+    const userId = JSON.parse(localStorage.getItem('user'));
+    const stageName = stages[dialogStageIndex]?.name;
+    const statusId = stages[dialogStageIndex]?.id;
 
-  try {
-    if (stageName?.toLowerCase().includes('demo')) {
-      const {
-        demoSessionType,
-        demoSessionStartTime,
-        demoSessionEndTime,
-        notes,
-        place,
-        demoSessionAttendees,
-      } = dialogValue;
+    try {
+      if (stageName?.toLowerCase().includes('demo')) {
+        const {
+          demoSessionType,
+          demoSessionStartTime,
+          demoSessionEndTime,
+          notes,
+          place,
+          demoSessionAttendees,
+        } = dialogValue;
 
-      // Validate required fields
-      if (
-        !demoSessionType ||
-        !demoSessionStartTime ||
-        !demoSessionEndTime ||
-        !notes ||
-        !place ||
-        !demoSessionAttendees.length
-      ) {
-        showToast('error', 'Please fill all demo session fields');
-        return;
+        if (
+          !demoSessionType ||
+          !demoSessionStartTime ||
+          !demoSessionEndTime ||
+          !notes ||
+          !place ||
+          !demoSessionAttendees.length
+        ) {
+          showToast('error', 'Please fill all demo session fields');
+          return;
+        }
+
+        const start = new Date(demoSessionStartTime);
+        const end = new Date(demoSessionEndTime);
+
+        if (start >= end) {
+          showToast('error', 'Start time must be earlier than end time');
+          return;
+        }
+
+        const body = {
+          demoSessionType,
+          demoSessionStartTime: start.toISOString(),
+          demoSessionEndTime: end.toISOString(),
+          notes,
+          place,
+          leadId: parseInt(leadId),
+          demoSessionAttendees: demoSessionAttendees.map(u => ({ attendeeId: u.iUser_id })),
+        };
+
+        await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, body, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        showToast('success', 'Demo session details saved!');
+      } else {
+        const amount = parseFloat(dialogValue);
+        if (isNaN(amount) || amount <= 0) {
+          showToast('error', 'Please enter a valid amount');
+          return;
+        }
+
+        const body = {
+          caction: stageName,
+          iaction_doneby: userId.iUser_id,
+          iamount: amount,
+          ilead_id: parseInt(leadId),
+        };
+
+        await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, body, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        showToast('success', `${stageName} details saved!`);
       }
 
-      const start = new Date(demoSessionStartTime);
-      const end = new Date(demoSessionEndTime);
-
-      if (start >= end) {
-        showToast('error', 'Start time must be earlier than end time');
-        return;
-      }
-
-      const body = {
-        demoSessionType,
-        demoSessionStartTime: start.toISOString(),
-        demoSessionEndTime: end.toISOString(),
-        notes,
-        place,
-        leadId: parseInt(leadId),
-        demoSessionAttendees: demoSessionAttendees.map(u => ({ attendeeId: u.iUser_id })),
-      };
-
-      await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, body, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      showToast('success', 'Demo session details saved!');
-    } else {
-      // Handle Proposal or Won stage input
-      const amount = parseFloat(dialogValue);
-      if (isNaN(amount) || amount <= 0) {
-        showToast('error', 'Please enter a valid amount');
-        return;
-      }
-
-      const body = {
-        caction: stageName,
-        iaction_doneby: userId.iUser_id,
-        iamount: amount,
-        ilead_id: parseInt(leadId),
-      };
-
-      await axios.post(`${ENDPOINTS.LEAD_STATUS_ACTION}`, body, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      showToast('success', `${stageName} details saved!`);
+      setRemarkStageId(statusId);
+      setRemarkData({ remark: '', projectValue: '' });
+      setShowRemarkDialog(true);
+      setOpenDialog(false);
+    } catch (e) {
+      showToast('error', e?.response?.data?.message || e.message || 'Something went wrong');
     }
-
-    setRemarkStageId(statusId);
-    setRemarkData({ remark: '', projectValue: '' });
-    setShowRemarkDialog(true);
-    setOpenDialog(false);
-  } catch (e) {
-    showToast('error', e?.response?.data?.message || e.message || 'Something went wrong');
-  }
-};
-
-
-  const handleRemarkSubmit = async () => {
-  if (!remarkData.remark.trim()) {
-    showToast('error', 'Remark is required');
-    return;
-  }
-
-  const token = localStorage.getItem('token');
-  const userId = JSON.parse(localStorage.getItem('user'));
-  const payload = {
-    remark: remarkData.remark.trim(),
-    leadId: parseInt(leadId),
-    leadStatusId: remarkStageId,
-    createBy: userId.iUser_id,
-    ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
   };
 
-  try {
-  await axios.post(ENDPOINTS.STATUS_REMARKS, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    showToast('success', 'Remark submitted!');
-    const newIndex = stages.findIndex(s => s.id === remarkStageId);
-    await updateStage(newIndex, remarkStageId);
-    setShowRemarkDialog(false); // ✅ Only close on success
-  } catch (err) {
-    const serverMsg = err.response?.data?.Message;
-    const issues = Array.isArray(serverMsg?.issues)
-      ? serverMsg.issues.join(', ')
-      : serverMsg?.message || 'Failed to submit remark';
-
-    showToast('error', issues);
-  }
-};
-
-const getStatusRemarks = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (Array.isArray(response.data?.Response)) {
-      setStatusRemarks(response.data.Response);
+  const handleRemarkSubmit = async () => {
+    if (!remarkData.remark.trim()) {
+      showToast('error', 'Remark is required');
+      return;
     }
-    console.log("the status remarks",response.data)
-  } catch (e) {
-    console.error("Error fetching remarks:", e.message);
-  }
-};
 
+    const token = localStorage.getItem('token');
+    const userId = JSON.parse(localStorage.getItem('user'));
+    const payload = {
+      remark: remarkData.remark.trim(),
+      leadId: parseInt(leadId),
+      leadStatusId: remarkStageId,
+      createBy: userId.iUser_id,
+      ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+    };
 
+    try {
+      await axios.post(ENDPOINTS.STATUS_REMARKS, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-useEffect(() => {
-  getStatusRemarks();
+      showToast('success', 'Remark submitted!');
+      const newIndex = stages.findIndex(s => s.id === remarkStageId);
+      await updateStage(newIndex, remarkStageId);
+      setShowRemarkDialog(false);
+    } catch (err) {
+      const serverMsg = err.response?.data?.Message;
+      const issues = Array.isArray(serverMsg?.issues)
+        ? serverMsg.issues.join(', ')
+        : serverMsg?.message || 'Failed to submit remark';
 
-}, []);
-    console.log(statusRemarks)
+      showToast('error', issues);
+    }
+  };
 
+  const getStatusRemarks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (Array.isArray(response.data?.Response)) {
+        setStatusRemarks(response.data.Response);
+      }
+    } catch (e) {
+      console.error("Error fetching remarks:", e.message);
+    }
+  };
+
+  useEffect(() => {
+    getStatusRemarks();
+  }, []);
 
   return (
-    <div className="w-full px-4 py-6">
+    <div className="w-full px-2 py-6">
       {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
       <div className="flex items-center justify-between relative">
-       {stages.map((stage, index) => {
-  const isCompleted = index < currentStageIndex;
-  const isActive = index === currentStageIndex;
-  const isClickable = index > currentStageIndex;
+        {stages.map((stage, index) => {
+          const isCompleted = index < currentStageIndex;
+          const isActive = index === currentStageIndex;
+          const isClickable = index > currentStageIndex && !isLost && !isWon;
 
-  // Find matching remark
-  const matchedRemark = statusRemarks.find(
-    (r) => r.lead_status_id === stage.id
-  );
+          const matchedRemark = statusRemarks.find(
+            (r) => r.lead_status_id === stage.id
+          );
 
-  return (
-    <div key={stage.id} className="flex flex-col items-center flex-1">
-      <div
-        onClick={() => handleStageClick(index, stage.id)}
-        className={`relative flex items-center justify-center w-10 h-10 rounded-full 
-          ${
-            isCompleted
-              ? 'bg-green-600 text-white'
-              : isActive
-              ? 'bg-blue-600 text-white'
-              : isClickable
-              ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-          }
-          transition-colors duration-200`}
-        title={matchedRemark ? matchedRemark.lead_status_remarks : ''}
-      >
-        {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
-      </div>
-      <span className="mt-2 text-sm text-center">{stage.name}</span>
-    </div>
-  );
-})}
-
+          return (
+            <div key={stage.id} className="flex flex-col items-center flex-1">
+              <div
+                onClick={() => isClickable ? handleStageClick(index, stage.id) : null}
+                className={`relative flex items-center justify-center w-10 h-10 rounded-full 
+                  ${
+                    isCompleted
+                      ? 'bg-green-600 text-white'
+                      : isActive
+                      ? 'bg-blue-600 text-white'
+                      : isClickable
+                      ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }
+                  transition-colors duration-200`}
+                title={matchedRemark ? matchedRemark.lead_status_remarks : ''}
+              >
+                {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
+              </div>
+              <span className="mt-2 text-sm text-center">{stage.name}</span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Demo/Proposal/Won Dialog */}
+      {isWon && (
+        <div className="flex justify-center mt-4">
+          <div className="flex items-center gap-2 text-green-600 text-lg font-semibold bg-green-50 px-4 py-2 rounded-full shadow">
+            <span role="img" aria-label="deal">🎉</span> WON
+          </div>
+        </div>
+      )}
+
+      {!isLost && (
+        <div className="flex justify-center mt-4">
+          <div className="flex items-center gap-2 text-red-600 text-lg font-semibold bg-red-50 px-4 py-2 rounded-full shadow">
+            <span role="img" aria-label="lost"></span> LOST
+          </div>
+        </div>
+      )}
+
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Enter Details</DialogTitle>
         <DialogContent>
@@ -409,7 +420,7 @@ useEffect(() => {
               <Autocomplete
                 multiple
                 options={users}
-                getOptionLabel={(option) =>option.bactive===true? option.cFull_name : ''}
+                getOptionLabel={(option) => option.bactive === true ? option.cFull_name : ''}
                 isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
                 value={dialogValue.demoSessionAttendees || []}
                 onChange={(e, newValue) =>
@@ -437,7 +448,6 @@ useEffect(() => {
         </DialogActions>
       </Dialog>
 
-      {/* Remark Dialog */}
       <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
         <DialogTitle>Enter Remark</DialogTitle>
         <DialogContent>
@@ -465,55 +475,30 @@ useEffect(() => {
           <Button onClick={handleRemarkSubmit} variant="contained">Submit</Button>
         </DialogActions>
       </Dialog>
-    {statusRemarks.length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
-    <div className="flex w-[90%] overflow-x-scroll space-x-6 px-2 py-4 relative">
 
-      {statusRemarks
-  .sort((a, b) => a.ilead_status_remarks_id - b.ilead_status_remarks_id)
-  .map((remark, index) => (
-    <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
-      {index !== statusRemarks.length - 1 && (
-        <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
+      {statusRemarks.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
+          <div className="flex w-[100%] overflow-x-scroll space-x-4 px-2 py-4 relative">
+            {statusRemarks
+              .sort((a, b) => a.ilead_status_remarks_id - b.ilead_status_remarks_id)
+              .map((remark, index) => (
+                <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
+                  {index !== statusRemarks.length - 1 && (
+                    <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
+                  )}
+
+                  <div className="font-sans bg-white w-xxl shadow-xxl border border-blue-700 border-l-4 border-r-blue-800 rounded-3xl p-4 space-y-2 min-h-40 max-h-40 overflow-hidden z-10 cursor-default transition">
+                    <p className="text-sm"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
+                    <p className="text-sm"><strong>Created By:</strong> {remark.createdBy || '-'}</p>
+                    <p className="text-sm"><strong>Date:</strong> {new Date(remark.dcreated_dt).toLocaleDateString('en-GB').split('/').join('/')}</p>
+                    <p className="text-sm"><strong>Status:</strong> {remark.status_name}</p>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
       )}
-
-      <div
- className="font-sans bg-white shadow-xxl border border-green-500 rounded-3xl p-4 space-y-2 w-64 min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer hover:shadow-xl transition"
-        onClick={() => setSelectedRemark(remark)}
-      >
-        <p className="text-sm"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
-        <p className="text-sm"><strong>Created By:</strong> {remark.createdBy || 'N/A'}</p>
-        <p className="text-sm"><strong>Date:</strong> {new Date(remark.dcreated_dt).toLocaleString()}</p>
-        <p className="text-sm"><strong>Status:</strong> {remark.status_name}</p>
-      </div>
-    </div>
-))}
-{selectedRemark && (
-  <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-black/30 transition-all duration-300">
-    <div className="bg-white w-[60%] max-w-3xl rounded-xl shadow-2xl p-6 relative animate-fadeInUp">
-      <button
-        onClick={() => setSelectedRemark(null)}
-        className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-xl"
-      >
-        &times;
-      </button>
-      <h2 className="text-xl font-semibold mb-4 text-blue-600">Remark Details</h2>
-      <div className="space-y-3 text-sm">
-        <p><strong>Remark:</strong> {selectedRemark.lead_status_remarks}</p>
-        <p><strong>Created By:</strong> {selectedRemark.createdBy || 'N/A'}</p>
-        <p><strong>Date:</strong> {new Date(selectedRemark.dcreated_dt).toLocaleString()}</p>
-        <p><strong>Status:</strong> {selectedRemark.status_name}</p>
-      </div>
-    </div>
-  </div>
-)}
-
-    </div>
-  </div>
-)}
-
-
 
       {showConfetti && <Confetti />}
     </div>

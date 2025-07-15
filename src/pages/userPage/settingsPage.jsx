@@ -533,23 +533,45 @@ const SettingsPage = () => {
         <div className="section-divider"></div>
 
         <section className="animate-fade-in-down">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Preferences</h2>
-          {isLoading ? (
-            <div className="animate-pulse space-y-3">
-              <div className="h-10 bg-gray-200 rounded-md"></div>
-              <div className="h-10 bg-gray-200 rounded-md"></div>
-              <div className="h-10 bg-gray-200 rounded-md"></div>
-              <div className="h-10 bg-gray-200 rounded-md"></div>
-            </div>
-          ) : (
-            <>
-              <ToggleSwitch label="WhatsApp Active" isChecked={whatsappActive} onToggle={() => setWhatsappActive(!whatsappActive)} />
-              <ToggleSwitch label="Mail Active" isChecked={mailActive} onToggle={() => setMailActive(!mailActive)} />
-              <ToggleSwitch label="Website Active" isChecked={websiteActive} onToggle={() => setWebsiteActive(!websiteActive)} />
-              <ToggleSwitch label="Phone Active" isChecked={phoneActive} onToggle={() => setPhoneActive(!phoneActive)} />
-            </>
-          )}
-        </section>
+  <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
+    Communication Channel Activation
+  </h2>
+  {isLoading ? (
+    <div className="animate-pulse space-y-3">
+      <div className="h-10 bg-gray-200 rounded-md"></div>
+      <div className="h-10 bg-gray-200 rounded-md"></div>
+      <div className="h-10 bg-gray-200 rounded-md"></div>
+      <div className="h-10 bg-gray-200 rounded-md"></div>
+    </div>
+  ) : (
+    <>
+      <ToggleSwitch 
+        label="WhatsApp " 
+        isChecked={whatsappActive} 
+        onToggle={() => setWhatsappActive(!whatsappActive)} 
+        note="Click to activate/deactivate WhatsApp communication."
+      />
+      <ToggleSwitch 
+        label="Mail " 
+        isChecked={mailActive} 
+        onToggle={() => setMailActive(!mailActive)} 
+        note="Click to activate/deactivate email communication."
+      />
+      <ToggleSwitch 
+        label="Website " 
+        isChecked={websiteActive} 
+        onToggle={() => setWebsiteActive(!websiteActive)} 
+        note="Click to activate/deactivate website notifications."
+      />
+      <ToggleSwitch 
+        label="Phone " 
+        isChecked={phoneActive} 
+        onToggle={() => setPhoneActive(!phoneActive)} 
+        note="Click to activate/deactivate phone communication."
+      />
+    </>
+  )}
+</section>
 
         <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
           <Button

@@ -248,7 +248,7 @@ export default function DealsTable() {
                   className="py-8 text-center text-gray-500"  
                 >
                   {dealsData.length === 0
-                    ? " Welcome! You don’t have any deals yet. Once you start adding leads, they’ll appear here."
+                    ? "  No active and converted deals found for you."
                     :  " No active and converted deals found for you."}
                 </td>
               </tr>

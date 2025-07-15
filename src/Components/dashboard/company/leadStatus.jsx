@@ -96,6 +96,11 @@ const LeadStatusChart = () => {
     return null;
   };
 
+  // Custom tick formatter for Y-axis to ensure integer values
+  const formatYAxisTick = (tick) => {
+    return Math.floor(tick); // Ensure the tick is an integer
+  };
+
   // Loading and Error handling UI
   if (loading) {
     return (
@@ -156,7 +161,13 @@ const LeadStatusChart = () => {
                 height={90} 
                 interval={0}
               />
-              <YAxis label={{ value: 'Number of Leads', angle: -90, position: 'insideLeft' }} />
+              <YAxis 
+                label={{ value: 'Number of Leads', angle: -90, position: 'insideLeft' }} 
+                tickFormatter={formatYAxisTick} // Apply the custom formatter
+                allowDecimals={false} // Prevent decimal ticks
+                // Optional: set a dynamic domain to ensure ticks start from 0 and go up in whole numbers
+                domain={[0, 'dataMax + 1']} 
+              />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Line

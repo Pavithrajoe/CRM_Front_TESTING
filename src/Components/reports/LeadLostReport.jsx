@@ -15,11 +15,17 @@ import { FaArrowLeft } from "react-icons/fa";
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function LostLeadReports() {
-  const [listData, setListData] = useState({});
-  const [loading, setLoading] = useState(true);
+  // State for data for the CARDS and CHARTS (all time)
+  const [allTimeReportData, setAllTimeReportData] = useState({});
+  // State for data for the TABLE (filterable by date)
+  const [filteredTableData, setFilteredTableData] = useState([]);
+
+  const [loadingCardsAndChart, setLoadingCardsAndChart] = useState(true);
+  const [loadingTable, setLoadingTable] = useState(true);
+
   const [barData, setBarData] = useState(null);
 
-  // States for date filtering
+  // States for date filtering for the TABLE
   const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
   const [isDefaultMonth, setIsDefaultMonth] = useState(true); // Tracks if current month is active
@@ -36,45 +42,14 @@ export default function LostLeadReports() {
     return `${year}-${month}-${day}`;
   };
 
-  // Effect to set default current month dates on initial load
+  // --- NEW EFFECT FOR ALL-TIME DATA (CARDS & CHART) ---
   useEffect(() => {
-    const today = new Date(); // Current date
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
-    const formattedLastDay = formatDateForInput(lastDayOfMonth);
-
-    setDateFilterFrom(formattedFirstDay);
-    setDateFilterTo(formattedLastDay);
-    setIsDefaultMonth(true); // Set to true as it's the default load
-  }, []); // Run only once on mount
-
-  // Effect to fetch data based on date filters
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchAllTimeData = async () => {
+      setLoadingCardsAndChart(true);
       const token = localStorage.getItem("token");
 
-      const queryParams = new URLSearchParams();
-      // Only append if dates are actually set (not empty strings from reset)
-      if (dateFilterFrom) {
-        queryParams.append("fromDate", new Date(dateFilterFrom).toISOString());
-      }
-      if (dateFilterTo) {
-        // To ensure the whole day is included, set time to end of day
-        const endOfDay = new Date(dateFilterTo);
-        endOfDay.setHours(23, 59, 59, 999);
-        queryParams.append("toDate", endOfDay.toISOString());
-      }
-
-      let apiUrl = `${ENDPOINTS.REPORT_LOST}`;
-      if (queryParams.toString()) {
-        apiUrl += `?${queryParams.toString()}`;
-      }
-
       try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(ENDPOINTS.REPORT_LOST, { // No query params for all-time data
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -83,18 +58,19 @@ export default function LostLeadReports() {
         });
 
         if (!response.ok) {
-          console.error("Can't fetch lost leads data", response);
-          setLoading(false);
+          console.error("Can't fetch all-time lost leads data", response);
+          setLoadingCardsAndChart(false);
           return;
         }
 
         const data = await response.json();
-        const allLeads = data.data;
+        const allLeadsData = data.data; // This is now your all-time data
 
-        setListData(allLeads);
+        setAllTimeReportData(allLeadsData); // Set for cards
 
-        const wonDetailsForChart = allLeads.won_details || [];
-        const lostDetailsForChart = allLeads.lead_details || [];
+        // Prepare chart data from all-time leads
+        const wonDetailsForChart = allLeadsData.won_details || [];
+        const lostDetailsForChart = allLeadsData.lead_details || [];
 
         const getMonthName = (dateStr) => {
           const date = new Date(dateStr);
@@ -138,38 +114,143 @@ export default function LostLeadReports() {
             },
           ],
         };
-
         setBarData(chartData);
+
       } catch (error) {
-        console.error("Error fetching report data:", error);
+        console.error("Error fetching all-time report data:", error);
       } finally {
-        setLoading(false);
+        setLoadingCardsAndChart(false);
       }
     };
 
-    fetchData();
-  }, [dateFilterFrom, dateFilterTo]); // Re-fetch data when date filters change
+    fetchAllTimeData();
+  }, []); // Run only once on mount to get all-time data
+
+  // --- EFFECT FOR TABLE DATA (DATE FILTERED) ---
+
+  // Set default current month dates for the table filter on initial load
+  useEffect(() => {
+    const today = new Date(); // Current date
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
+    const formattedLastDay = formatDateForInput(lastDayOfMonth);
+
+    setDateFilterFrom(formattedFirstDay);
+    setDateFilterTo(formattedLastDay);
+    setIsDefaultMonth(true); // Set to true as it's the default load
+  }, []); // Run only once on mount
+
+  // Effect to fetch TABLE data based on date filters
+  useEffect(() => {
+    const fetchFilteredTableData = async () => {
+      setLoadingTable(true);
+      const token = localStorage.getItem("token");
+
+      const queryParams = new URLSearchParams();
+      if (dateFilterFrom) {
+        queryParams.append("fromDate", new Date(dateFilterFrom).toISOString());
+      }
+      if (dateFilterTo) {
+        const endOfDay = new Date(dateFilterTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        queryParams.append("toDate", endOfDay.toISOString());
+      }
+
+      let apiUrl = `${ENDPOINTS.REPORT_LOST}`;
+      if (queryParams.toString()) {
+        apiUrl += `?${queryParams.toString()}`;
+      }
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error("Can't fetch filtered table data", response);
+          setLoadingTable(false);
+          return;
+        }
+
+        const data = await response.json();
+        setFilteredTableData(data.data.lead_details || []); // Only set lead_details for the table
+
+      } catch (error) {
+        console.error("Error fetching filtered table data:", error);
+      } finally {
+        setLoadingTable(false);
+      }
+    };
+
+    fetchFilteredTableData();
+  }, [dateFilterFrom, dateFilterTo]); // Re-fetch table data when date filters change
+
+  // Calculate highest lost value from all-time leads for the card
+  const highestValueAmongLostLeads = allTimeReportData.lead_details && allTimeReportData.lead_details.length > 0
+    ? Math.max(...allTimeReportData.lead_details.map(lead => lead.value))
+    : 0;
 
   const cardData = [
-    { title: "Total Counts", value: `${listData.totalCount || 0}` },
-    { title: "Lost Percentage", value: `${listData.lostPercentage || 0} %` },
-    { title: "Lost from Leads", value: `${listData.lostFromLeads || 0}` },
-    { title: "Lost from Deals", value: `${listData.lostFromDeals || 0}` },
+    { title: "Total Leads ", value: `${allTimeReportData.totalCount || 0}` },
+    { title: "Lost Percentage ", value: `${allTimeReportData.lostPercentage || 0} %` },
+    { title: "Total Lost", value: `${(allTimeReportData.lostFromLeads || 0) + (allTimeReportData.lostFromDeals || 0)}` },
+    { title: "Highest Lost Lead Value", value: `₹${highestValueAmongLostLeads}` },
   ];
 
+  // Updated barOptions with axis titles
   const barOptions = {
     responsive: true,
     plugins: {
       legend: { position: "top" },
       tooltip: { mode: "index", intersect: false },
+      title: {
+        display: true,
+        text: 'Monthly Lead Performance', // Chart Title
+        font: {
+          size: 18,
+          weight: 'bold'
+        },
+        color: '#333'
+      }
     },
     scales: {
-      x: { stacked: false },
-      y: { beginAtZero: true },
+      x: {
+        stacked: false,
+        title: { // X-axis title
+          display: true,
+          text: 'Month', // Label for the X-axis
+          color: '#333',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        title: { // Y-axis title
+          display: true,
+          text: 'Amount (₹)', // Label for the Y-axis
+          color: '#333',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        ticks: {
+          callback: function(value) {
+            return `₹${value}`; // Format Y-axis ticks with Rupee symbol
+          }
+        }
+      },
     },
   };
-
-  const lead_details = listData.lead_details || [];
 
   const getIntimationMessage = () => {
     const fromDateObj = dateFilterFrom ? new Date(dateFilterFrom) : null;
@@ -183,7 +264,6 @@ export default function LostLeadReports() {
       return `📊 Showing **all available leads** (no date filter applied).`;
     }
   };
-
 
   return (
     <div
@@ -221,7 +301,7 @@ export default function LostLeadReports() {
           <FaArrowLeft />
         </button>
         <h2 style={{ fontSize: 28, fontWeight: 700, color: "#1c1c1e" }}>
-          Lost Lead Reports
+          Lost Lead Reports Overview 📊
         </h2>
       </div>
 
@@ -240,53 +320,57 @@ export default function LostLeadReports() {
             gap: 16,
           }}
         >
-          {cardData.map((card, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: "rgba(255, 255, 255, 0.75)",
-                backdropFilter: "blur(12px)",
-                borderRadius: 16,
-                padding: "20px 16px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: 100,
-                transition: "transform 0.2s ease",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = "scale(1.02)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }
-            >
+          {loadingCardsAndChart ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '20px' }}>Loading Cards...</div>
+          ) : (
+            cardData.map((card, idx) => (
               <div
+                key={idx}
                 style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "#333",
-                  opacity: 0.75,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
+                  background: "rgba(255, 255, 255, 0.75)",
+                  backdropFilter: "blur(12px)",
+                  borderRadius: 16,
+                  padding: "20px 16px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: 100,
+                  transition: "transform 0.2s ease",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.transform = "scale(1.02)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
               >
-                {card.title}
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: "#333",
+                    opacity: 0.75,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {card.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: "#111",
+                    marginTop: 6,
+                  }}
+                >
+                  {card.value}
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: 28,
-                  fontWeight: 700,
-                  color: "#111",
-                  marginTop: 6,
-                }}
-              >
-                {card.value}
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Right Side - Bar Chart */}
@@ -303,10 +387,12 @@ export default function LostLeadReports() {
             justifyContent: "center",
           }}
         >
-          {barData ? (
+          {loadingCardsAndChart ? (
+            <p>Loading Chart...</p>
+          ) : barData ? (
             <Bar data={barData} options={barOptions} />
           ) : (
-            <p>Loading Chart...</p>
+            <p>No chart data available.</p>
           )}
         </div>
       </div>
@@ -323,7 +409,7 @@ export default function LostLeadReports() {
         <h3
           style={{ marginBottom: 16, fontSize: 24, fontWeight: 600, color: "#1c1c1e", fontFamily: "serif" }}
         >
-          Lost Leads
+          Lost Leads Table (Filtered by Date)
         </h3>
 
         {/* Date Filters and Message Display */}
@@ -332,8 +418,8 @@ export default function LostLeadReports() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 16,
-          flexWrap: "wrap", 
-          gap: "15px", 
+          flexWrap: "wrap",
+          gap: "15px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <label style={{ fontSize: 16, color: "#555", fontWeight: "bold" }}>From:</label>
@@ -342,7 +428,7 @@ export default function LostLeadReports() {
               value={dateFilterFrom}
               onChange={(e) => {
                 setDateFilterFrom(e.target.value);
-                setIsDefaultMonth(false); 
+                setIsDefaultMonth(false);
               }}
               style={{
                 padding: "8px 12px",
@@ -359,7 +445,7 @@ export default function LostLeadReports() {
               value={dateFilterTo}
               onChange={(e) => {
                 setDateFilterTo(e.target.value);
-                setIsDefaultMonth(false); 
+                setIsDefaultMonth(false);
               }}
               style={{
                 padding: "8px 12px",
@@ -372,10 +458,9 @@ export default function LostLeadReports() {
             />
             <button
               onClick={() => {
-            
                 setDateFilterFrom('');
                 setDateFilterTo('');
-                setIsDefaultMonth(false); 
+                setIsDefaultMonth(false); // Reset to false to show "all available leads" message if no dates
               }}
               style={{
                 padding: "8px 16px",
@@ -399,42 +484,48 @@ export default function LostLeadReports() {
             flex: 1,
             minWidth: "250px",
             padding: "10px 18px",
-            borderRadius: 12, 
+            borderRadius: 12,
             fontSize: 15,
             fontWeight: 500,
             display: "flex",
             alignItems: "center",
             gap: 10,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)", 
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
             background: isDefaultMonth && dateFilterFrom ? "linear-gradient(to right, #e6ffe6, #d0ffe0)" :
-                        (dateFilterFrom && dateFilterTo ? "linear-gradient(to right, #e0f7fa, #c2eff5)" :
-                        "linear-gradient(to right, #f8f8f8, #f0f0f0)"),
+              (dateFilterFrom && dateFilterTo ? "linear-gradient(to right, #e0f7fa, #c2eff5)" :
+                "linear-gradient(to right, #f8f8f8, #f0f0f0)"),
             color: isDefaultMonth && dateFilterFrom ? "#1b5e20" :
-                   (dateFilterFrom && dateFilterTo ? "#006064" : "#424242"),
+              (dateFilterFrom && dateFilterTo ? "#006064" : "#424242"),
             border: isDefaultMonth && dateFilterFrom ? "1px solid #a5d6a7" :
-                    (dateFilterFrom && dateFilterTo ? "1px solid #80deea" : "1px solid #e0e0e0"),
+              (dateFilterFrom && dateFilterTo ? "1px solid #80deea" : "1px solid #e0e0e0"),
           }}>
             {getIntimationMessage()}
           </div>
         </div>
 
-        {loading ? (
-          <p>Loading...</p>
+        {loadingTable ? (
+          <p>Loading table data...</p>
         ) : (
           <div style={{ overflowX: "auto", overflowY: "scroll", height: "60vh" }}>
-            <table className="w-full border-collapse text-xl text-gray-800  font-serif">
+            <table className="w-full justify-center border-collapse text-lg text-gray-800  font-serif">
               <thead>
                 <tr style={{ backgroundColor: "#f2f2f7", fontSize: 20, fontWeight: 600 }}>
+                  <th
+                    className="px-4 py-3 font-semibold text-lg text-center"
+                    style={{ wordBreak: "break-word" }}
+                  >
+                    S.No.
+                  </th>
                   {[
                     "Lead Name",
                     "Lead Owner",
-                    "Service",
+                    "Created Date",
                     "Value",
                     "Reason",
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-4 py-3 font-semibold text-center"
+                      className="px-4 py-3 text-lg font-semibold text-center"
                       style={{ wordBreak: "break-word" }}
                     >
                       {header}
@@ -443,8 +534,8 @@ export default function LostLeadReports() {
                 </tr>
               </thead>
               <tbody>
-                {lead_details.length > 0 ? (
-                  lead_details.map((lead, index) => (
+                {filteredTableData.length > 0 ? (
+                  filteredTableData.map((lead, index) => (
                     <tr
                       key={index}
                       style={{
@@ -453,20 +544,30 @@ export default function LostLeadReports() {
                       }}
                       className="hover:bg-gray-50"
                     >
-                      <td className="px-4 py-3 text-lg text-center">{lead.lead_name}</td>
-                      <td className="px-4 py-3 text-lg text-center">{lead.lead_owner}</td>
-                      <td className="px-4 py-3 text-lg  text-center">{lead.service}</td>
-                      <td className="px-4 py-3 text-lg  text-center font-semibold text-blue-600">
+                      <td className="px-4 py-3 text-lg justify-center text-center">{index + 1}</td>
+                      <td className="px-4 py-3 text-lg justify-center text-center">{lead.lead_name}</td>
+                      <td className="px-4 py-3 text-lg justify-center text-center">{lead.lead_owner}</td>
+                      <td className="px-4 py-3 text-lg justify-center text-center">
+                        {new Date(lead.created_at).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        }).replace(',', '').toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3 text-lg justify-center text-center font-semibold text-blue-600">
                         ₹{lead.value}
                       </td>
-                      <td className="px-4 py-3 text-lg  text-center text-red-500 font-medium">
+                      <td className="px-4 py-3 text-lg justify-center text-center text-red-500 font-medium">
                         {lead.reason}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center  text-gray-500">
+                    <td colSpan={6} className="py-6 text-center  text-gray-500">
                       No lost leads found for the selected period.
                     </td>
                   </tr>

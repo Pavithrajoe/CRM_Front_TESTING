@@ -173,7 +173,7 @@ function HistoryDashboard({ userId }) {
 
                 {/* Dynamic Activity History Table */}
                 <div className="historical-section-header flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Recent Activities & Reminders</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Recent Activity Reminders</h2>
                     {/* Removed "View All" link as per your original code's comment */}
                 </div>
 

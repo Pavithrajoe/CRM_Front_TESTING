@@ -7,7 +7,7 @@ export default function KPIStats(data) {
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);
   const [wonCount, setWonCount] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
+  const [ActiveCount, setActiveCount] = useState(0);
   const [lostCount, setLostCount] = useState(0);
 
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -87,7 +87,7 @@ export default function KPIStats(data) {
     setWarmCount(warm);
     setColdCount(cold);
     setWonCount(won);
-    setTotalCount(deals); 
+    setActiveCount(deals); 
     setLostCount(lost);
   }, [leads]);
 
@@ -151,9 +151,9 @@ export default function KPIStats(data) {
             onClick={handleTotalLeadsClick}
           >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
-               Total Leads
+               Active Leads
             </h3>
-            <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
+            <p className="text-2xl font-bold text-gray-900">{ActiveCount}</p>
           </div>
           <div
             className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 

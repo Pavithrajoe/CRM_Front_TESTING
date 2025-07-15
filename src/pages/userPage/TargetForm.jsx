@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from "lucide-react";
 
@@ -20,11 +19,9 @@ export default function SalesForm({ onClose }) {
 
   const token = localStorage.getItem("token");
 
-  // Helper function to decode JWT token payload
   const decodeToken = (t) => {
     if (!t) return null;
     try {
-      // Decode base64 URL safe token payload
       const payload = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
       return payload;
     } catch (error) {
@@ -34,19 +31,16 @@ export default function SalesForm({ onClose }) {
   };
 
   const tokenPayload = decodeToken(token);
-
-  // Determine the current user ID and company ID from the token payload
   const currentUserId = tokenPayload?.user_id || tokenPayload?.iUser_id || null;
   const getCompanyId = () => tokenPayload?.company_id || tokenPayload?.iCompany_id || null;
 
-  // Initialize form state
   const [formData, setFormData] = useState({
     salesValue: '',
     formDate: getCurrentDateTimeLocal(),
     toDate: '',
-    assignedTo: '',
-    assignedBy: currentUserId?.toString() || '', // Assigned By defaults to the current logged-in user
-    createdBy: currentUserId?.toString() || '', // Created By defaults to the current logged-in user
+    assignedTo: '', // Will store cFull_name
+    assignedBy: currentUserId?.toString() || '',
+    createdBy: currentUserId?.toString() || '',
   });
 
   const [errors, setErrors] = useState({});
@@ -56,14 +50,13 @@ export default function SalesForm({ onClose }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [usersError, setUsersError] = useState(null);
 
-  // User fetching logic using useCallback
   const fetchCompanyUsers = useCallback(async () => {
     const companyId = getCompanyId();
     if (!companyId) {
       setUsersError("Company ID not found in token.");
       return;
     }
-    
+
     try {
       const response = await fetch(ENDPOINTS.USER_GET, {
         headers: {
@@ -71,51 +64,50 @@ export default function SalesForm({ onClose }) {
           "Content-Type": "application/json",
         },
       });
-      
+            console.log("users", response.data)
+
+
       if (!response.ok) {
         throw new Error("Failed to fetch users.");
       }
 
       const data = await response.json();
-      
-      // Console log the API response as requested for debugging
-      console.log("USER_GET API Response:", data); 
+      const filtered = data.filter(user =>
+  user.iCompany_id === companyId && (user.bactive === true || user.bactive === 1 || user.bactive === "true")
+);
 
-      // Filter users belonging to the company
-      const filtered = data.filter(user => user.iCompany_id === companyId);
-      setCompanyUsers(filtered);
 
-      // Find and set current user details for display and form data
+      setCompanyUsers(filtered); // ✅ FIXED
+
       const currentUser = filtered.find(user => user.iUser_id === currentUserId);
       if (currentUser) {
         setCurrentUser(currentUser);
-        // Ensure assignedBy and createdBy are correctly set in the form data
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData(prev => ({
+          ...prev,
           assignedBy: currentUser.iUser_id.toString(),
-          createdBy: currentUser.iUser_id.toString()
+          createdBy: currentUser.iUser_id.toString(),
         }));
       }
 
-      // Optional: Auto-assign "Assigned To" if only one user exists and it hasn't been set yet
       if (filtered.length === 1 && !formData.assignedTo) {
-        const id = filtered[0].iUser_id.toString();
-        setFormData(prev => ({ ...prev, assignedTo: id }));
+        setFormData(prev => ({
+          ...prev,
+          assignedTo: filtered[0].cFull_name,
+        }));
       }
     } catch (err) {
       console.error("Error fetching users:", err);
       setUsersError("Failed to load users. Please try again.");
     }
-  }, [token, ENDPOINTS.USER_GET, currentUserId, formData.assignedTo]);
+  }, [token, currentUserId, formData.assignedTo]);
 
-  // Execute user fetching on component mount
   useEffect(() => {
     fetchCompanyUsers();
   }, [fetchCompanyUsers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const validate = () => {
@@ -125,7 +117,7 @@ export default function SalesForm({ onClose }) {
       newErrors.salesValue = 'Sales Value is required';
     } else {
       const val = parseFloat(formData.salesValue);
-      if (isNaN(val)) { 
+      if (isNaN(val)) {
         newErrors.salesValue = 'Must be a valid number';
       } else if (val <= 0) {
         newErrors.salesValue = 'Must be a positive number';
@@ -138,7 +130,6 @@ export default function SalesForm({ onClose }) {
     if (!formData.toDate) newErrors.toDate = 'To Date is required';
     if (!formData.assignedTo) newErrors.assignedTo = 'Assigned To is required';
 
-    // Ensure To Date is after From Date
     if (formData.formDate && formData.toDate && new Date(formData.formDate) >= new Date(formData.toDate)) {
       newErrors.toDate = 'To Date must be after From Date';
     }
@@ -152,14 +143,13 @@ export default function SalesForm({ onClose }) {
     if (!validate()) return;
 
     setIsSubmitting(true);
-    // Format datetime-local input (YYYY-MM-DDTHH:MM) to the required format (YYYY-MM-DD HH:MM:SS)
     const formatDate = (dt) => `${dt.replace('T', ' ')}:00`;
 
     const body = {
       salesValue: parseFloat(formData.salesValue),
       fromDate: formatDate(formData.formDate),
       toDate: formatDate(formData.toDate),
-      assignedTo: parseInt(formData.assignedTo),
+      assignedTo: formData.assignedTo, // cFull_name
       assignedBy: parseInt(formData.assignedBy),
       createdBy: parseInt(formData.createdBy),
     };
@@ -177,8 +167,7 @@ export default function SalesForm({ onClose }) {
       if (!res.ok) throw new Error('Submission failed');
 
       setSubmissionMessage('Sales target submitted successfully!');
-      
-      // Reset form data after successful submission, keeping assignedBy/createdBy
+
       setFormData(prev => ({
         ...prev,
         salesValue: '',
@@ -187,7 +176,6 @@ export default function SalesForm({ onClose }) {
         assignedTo: '',
       }));
 
-      // Close modal after a short delay
       setTimeout(() => onClose(), 1500);
     } catch (err) {
       console.error("Submission error:", err);
@@ -208,8 +196,33 @@ export default function SalesForm({ onClose }) {
         {usersError && <div className="bg-red-100 p-3 rounded text-red-700 mb-4">Error: {usersError}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+       
+
           <div>
-            <label className="block mb-1">Sales Value *</label>
+            <label className="block mb-1">From Date <span className='text-red-600'>*</span></label>
+            <input
+              type="datetime-local"
+              name="formDate"
+              value={formData.formDate}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            />
+            {errors.formDate && <p className="text-red-500 text-sm mt-1">{errors.formDate}</p>}
+          </div>
+
+          <div>
+            <label className="block mb-1">To Date <span className='text-red-600'>*</span></label>
+            <input
+              type="datetime-local"
+              name="toDate"
+              value={formData.toDate}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            />
+            {errors.toDate && <p className="text-red-500 text-sm mt-1">{errors.toDate}</p>}
+          </div>
+             <div>
+            <label className="block mb-1">Sales Value <span className='text-red-600'>*</span></label>
             <input
               type="number"
               name="salesValue"
@@ -224,52 +237,32 @@ export default function SalesForm({ onClose }) {
           </div>
 
           <div>
-            <label className="block mb-1">From Date *</label>
-            <input
-              type="datetime-local"
-              name="formDate"
-              value={formData.formDate}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-            />
-            {errors.formDate && <p className="text-red-500 text-sm mt-1">{errors.formDate}</p>}
-          </div>
-
-          <div>
-            <label className="block mb-1">To Date *</label>
-            <input
-              type="datetime-local"
-              name="toDate"
-              value={formData.toDate}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-            />
-            {errors.toDate && <p className="text-red-500 text-sm mt-1">{errors.toDate}</p>}
-          </div>
-
-          {/* Assigned To (Dropdown displaying cFull_name, value is iUser_id) */}
-          <div>
-            <label className="block mb-1">Assigned To *</label>
+            <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
             <select
               name="assignedTo"
-              value={formData.assignedTo}
-              onChange={handleChange}
+              value={companyUsers.find(user => user.
+cUser_name
+ === formData.assignedTo)?.cUser_name|| ''}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedUser = companyUsers.find(u => u.cUser_name.toString() === selectedId);
+                setFormData(prev => ({
+                  ...prev,
+                  assignedTo: selectedUser?.cUser_name || ''
+                }));
+              }}
               className="w-full border p-2 rounded"
             >
               <option value="">Select User</option>
-              {companyUsers.length > 0 ? (
-                companyUsers.map(user => (
-                  // Display cFull_name and use iUser_id for the value
-                  <option key={user.iUser_id} value={user.iUser_id}>{user.cFull_name}</option>
-                ))
-              ) : (
-                <option disabled>Loading users...</option>
-              )}
+              {companyUsers.map(user => (
+                <option key={user.iUser_id} value={user.iUser_id}>
+                  {user.cFull_name}
+                </option>
+              ))}
             </select>
             {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
           </div>
-          
-          {/* Assigned By (Static field showing current user) */}
+
           <div>
             <label className="block mb-1">Assigned By</label>
             <div className="bg-gray-100 p-2 rounded text-gray-700 font-medium">
@@ -291,4 +284,3 @@ export default function SalesForm({ onClose }) {
     </div>
   );
 }
-

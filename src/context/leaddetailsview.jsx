@@ -20,18 +20,19 @@ const LeadDetailView = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
-  const [isLost, setIsLost] = useState(false);
+  const [isLost, setIsLost] = useState(false); // true if lead is active, false if it's lost
   const [leadData, setLeadData] = useState(null);
   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
   const [lostReasons, setLostReasons] = useState([]);
   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
-  const [lostDescription, setLostDescription] = useState(""); 
+  const [lostDescription, setLostDescription] = useState("");
   const { showPopup } = usePopup();
   const navigate = useNavigate();
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
   const [mailContent, setMailContent] = useState("");
+  const [isWon, setIsWon] = useState(false); // New state for tracking if lead is "Won"
 
   // States to hold logged-in user and company info
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
@@ -58,6 +59,10 @@ const LeadDetailView = () => {
 
       showPopup("Success", "Lead converted to deal!", "success");
       setIsDeal(true);
+      // If converted to deal, it effectively means it's 'Won' for UI purposes
+      setIsWon(true); // Set isWon to true
+      // Also refetch lead data to update the status bar and other components
+      fetchLeadData();
     } catch (error) {
       console.error("Error occurred while converting the lead to deal", error);
     }
@@ -115,7 +120,8 @@ const LeadDetailView = () => {
       setLeadLostDescriptionTrue(false);
       setSelectedLostReasonId("");
       setLostDescription("");
-      navigate("/leads");
+      setIsLost(false); // Set isLost to false as the lead is now lost
+      // navigate("/leads"); // You might want to remove or comment this if you want to stay on the page and show disabled state
     } catch (error) {
       console.error("Error marking lead as lost:", error);
     }
@@ -136,7 +142,7 @@ const LeadDetailView = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          sent_to: sentTo, // Corrected: Use 'sentTo' state variable
+          sent_to: sentTo,
           mailSubject,
           mailContent,
         }),
@@ -152,7 +158,7 @@ const LeadDetailView = () => {
 
       showPopup("Success", "Email sent successfully!", "success");
       setIsMailOpen(false);
-      setSentTo(""); // Clear the sentTo field after sending
+      setSentTo("");
       setMailSubject("");
       setMailContent("");
     } catch (error) {
@@ -161,120 +167,110 @@ const LeadDetailView = () => {
     }
   };
 
+  const fetchLeadData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Failed to fetch lead data. Status:", response.status);
+        throw new Error("Failed to fetch lead data");
+      }
+
+      const data = await response.json();
+      setLeadData(data);
+      setIsDeal(data.bisConverted); // This indicates if it's converted to a deal (e.g., Won)
+      setIsLost(data.bactive); // This indicates if the lead is active (true) or lost (false)
+
+      // Determine if the lead is in the "Won" stage
+      if (data.clead_status_name?.toLowerCase() === 'won') {
+        setIsWon(true);
+        setIsDeal(true); // If won, it's also a deal
+        setIsLost(true); // If won, it's also considered 'active' not 'lost' in terms of deletion.
+      } else {
+        setIsWon(false);
+      }
+
+
+      setSentTo(data.cemail || "");
+
+      console.log("DEBUG: cEmail found and set to:", data.cemail);
+      console.log("DEBUG: Lead Data cFirstName:", data.cFirstName);
+      console.log("DEBUG: Lead Data cLastName:", data.cLastName);
+      console.log("DEBUG: Lead Data cProjectName:", data.cProjectName);
+      console.log("DEBUG: Lead Data clead_status_name:", data.clead_status_name);
+      console.log("DEBUG: Lead Data bisConverted:", data.bisConverted);
+      console.log("DEBUG: Lead Data bactive:", data.bactive);
+      console.log("DEBUG: isWon:", isWon);
+      console.log("DEBUG: isDeal:", isDeal);
+      console.log("DEBUG: isLost (bactive):", isLost);
+
+    } catch (error) {
+      console.error("Error fetching lead data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLostReasons = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch lost reasons");
+      const data = await response.json();
+      setLostReasons(data.data);
+    } catch (error) {
+      console.error("Error fetching lost reasons:", error);
+    }
+  };
+
+  const getUserInfoFromLocalStorage = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = atob(base64Payload);
+        const payloadObject = JSON.parse(decodedPayload);
+
+        setLoggedInUserName(
+          payloadObject.cFull_name ||
+          payloadObject.fullName ||
+          payloadObject.name ||
+          payloadObject.cUser_name ||
+          "User"
+        );
+
+      } else {
+        const userInfoString = localStorage.getItem("userInfo");
+        if (userInfoString) {
+          const userInfo = JSON.parse(userInfoString);
+          setLoggedInUserName(userInfo.cFull_name || userInfo.fullName || userInfo.name || userInfo.cUser_name || "User");
+          setLoggedInCompanyName(userInfo.company_name || userInfo.company || userInfo.organization || userInfo.orgName || "Your Company");
+        }
+      }
+    } catch (error) {
+      console.error("Error extracting user info from token/localStorage:", error);
+      setLoggedInUserName("Your Name");
+      setLoggedInCompanyName("Your Company");
+    }
+  };
+
   useEffect(() => {
-    const fetchLeadData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-
-        if (!response.ok) {
-          console.error("Failed to fetch lead data. Status:", response.status);
-          throw new Error("Failed to fetch lead data");
-        }
-
-        const data = await response.json();
-        setLeadData(data); // Set leadData first
-        setIsDeal(data.bisConverted);
-        setIsLost(data.bactive);
-
-        // Set sentTo to lead's email or empty string
-        setSentTo(data.cemail || ""); // This line auto-populates the email field
-
-        console.log("DEBUG: cEmail found and set to:", data.cemail);
-
-        console.log("DEBUG: Lead Data cFirstName:", data.cFirstName);
-        console.log("DEBUG: Lead Data cLastName:", data.cLastName);
-        console.log("DEBUG: Lead Data cProjectName:", data.cProjectName);
-
-      } catch (error) {
-        console.error("Error fetching lead data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchLostReasons = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch lost reasons");
-        const data = await response.json();
-        setLostReasons(data.data);
-      } catch (error) {
-        console.error("Error fetching lost reasons:", error);
-      }
-    };
-
-    const getUserInfoFromLocalStorage = () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (token) {
-          const base64Payload = token.split(".")[1];
-          const decodedPayload = atob(base64Payload);
-          const payloadObject = JSON.parse(decodedPayload);
-
-          console.log("DEBUG: Decoded JWT Payload:", payloadObject);
-
-          // Attempt to get user name from common properties
-          setLoggedInUserName(
-            payloadObject.cFull_name || // Your specified property
-            payloadObject.fullName ||
-            payloadObject.name ||
-            payloadObject.cUser_name || // Your other specified property
-            "User"
-          );
-
-          // Attempt to get company name from common properties
-          // Note: If 'company_name' or similar is truly not in the JWT,
-          // you'll need to fetch it from a separate user profile API.
-          // setLoggedInCompanyName(
-          //   payloadObject.company_name ||
-          //   payloadObject.company ||
-          //   payloadObject.organization ||
-          //   payloadObject.orgName ||
-          //   "Your Company"
-          // );
-
-          console.log("DEBUG: User Name extracted (attempted):", loggedInUserName);
-          console.log("DEBUG: Company Name extracted (attempted):", loggedInCompanyName);
-
-        } else {
-          console.warn("DEBUG: No JWT token found in localStorage.");
-          // Fallback if token is not present, check for userInfo in localStorage (if stored separately)
-          const userInfoString = localStorage.getItem("userInfo");
-          if (userInfoString) {
-            const userInfo = JSON.parse(userInfoString);
-            console.log("DEBUG: UserInfo from localStorage (separate storage):", userInfo);
-            setLoggedInUserName(userInfo.cFull_name || userInfo.fullName || userInfo.name || userInfo.cUser_name || "User");
-            setLoggedInCompanyName(userInfo.company_name || userInfo.company || userInfo.organization || userInfo.orgName || "Your Company");
-            console.log("DEBUG: User Info from localStorage (separate) extracted:", loggedInUserName);
-            console.log("DEBUG: Company Info from localStorage (separate) extracted:", loggedInCompanyName);
-          } else {
-            console.warn("DEBUG: No 'userInfo' found in localStorage either.");
-          }
-        }
-      } catch (error) {
-        console.error("Error extracting user info from token/localStorage:", error);
-        setLoggedInUserName("Your Name"); // Default if extraction fails
-        setLoggedInCompanyName("Your Company"); // Default if extraction fails
-      }
-    };
-
     fetchLeadData();
     fetchLostReasons();
     getUserInfoFromLocalStorage();
-  }, [leadId]); // Depend on leadId only for these initial fetches
+  }, [leadId]);
 
   useEffect(() => {
     // This useEffect populates the email template when the modal opens or leadData/user info changes
@@ -286,42 +282,42 @@ const LeadDetailView = () => {
       console.log("DEBUG: current sentTo state (pre-modal update):", sentTo);
 
 
-      // Re-setting sentTo here is generally redundant if fetchLeadData sets it correctly,
-      // but keeping it as a fallback in case of race conditions.
       if (leadData.cEmail && sentTo !== leadData.cEmail) {
-          setSentTo(leadData.cEmail);
-          console.log("DEBUG: Re-set sentTo in mail useEffect (redundant, but safe) to:", leadData.cEmail);
+        setSentTo(leadData.cEmail);
+        console.log("DEBUG: Re-set sentTo in mail useEffect (redundant, but safe) to:", leadData.cEmail);
       } else if (!leadData.cEmail) {
-          console.warn("DEBUG: leadData.cEmail is missing or empty when opening mail modal for template.");
+        console.warn("DEBUG: leadData.cEmail is missing or empty when opening mail modal for template.");
       }
 
-      // const leadFirstName = leadData.cFirstName || '';
-      // const leadLastName = leadData.cLastName || '';
-      // const leadProjectName = leadData.cProjectName || 'our services/products';
+      // **IMPORTANT**: Uncomment this section to enable auto-filling of mail subject and content
+      // based on lead details and logged-in user info.
+      const leadFirstName = leadData.cFirstName || '';
+      const leadLastName = leadData.cLastName || '';
+      const leadProjectName = leadData.cProjectName || 'our services/products';
 
-      // const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
+      const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
 
-      // const defaultContent = `
-      //   <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
-      //   <p>Hope this email finds you well.</p>
-      //   <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
-      //   <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
-      //   <p>Best regards,</p>
-      //   <p>${loggedInUserName}</p>
-      //   <p>${loggedInCompanyName}</p>
-      // `;
-      // setMailSubject(defaultSubject);
-      // setMailContent(defaultContent);
+      const defaultContent = `
+        <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
+        <p>Hope this email finds you well.</p>
+        <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
+        <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
+        <p>Best regards,</p>
+        <p>${loggedInUserName}</p>
+        <p>${loggedInCompanyName}</p>
+      `;
+      setMailSubject(defaultSubject);
+      setMailContent(defaultContent);
 
 
-      // console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
-      // console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
+      console.log("DEBUG: Email Modal Prepared - Subject:", defaultSubject);
+      console.log("DEBUG: Email Modal Prepared - Content (truncated):", defaultContent.substring(0, 150) + "...");
       console.log("DEBUG: Final sentTo state when modal opens (after potential re-set):", sentTo);
     } else if (isMailOpen && !leadData) {
-        console.warn("DEBUG: Mail modal opened but leadData is not yet available for template generation!");
+      console.warn("DEBUG: Mail modal opened but leadData is not yet available for template generation!");
     }
 
-  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]); // Removed sentTo from dependencies here as it's set inside the effect
+  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]);
 
   const modules = {
     toolbar: [
@@ -352,6 +348,10 @@ const LeadDetailView = () => {
     "background",
   ];
 
+  // Determine if action buttons should be visible/enabled
+  const showActionButtons = !loading && isLost && !isWon; // Only show if not loading, lead is active (not lost), and not won
+  const showLostButton = !loading && isLost && !isWon; // Only show if not loading, lead is active, and not won
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
       <div className="w-full md:w-1/3 lg:w-1/4 p-4">
@@ -364,11 +364,18 @@ const LeadDetailView = () => {
       <div className="w-full md:w-full lg:w-full p-4">
         <div className="mb-4 flex items-center justify-between">
           <StatusBar leadId={leadId} leadData={leadData} />
-          {!loading && isDeal && isLost && (
+          {/* Display "WON" badge if lead is won */}
+          {!loading && isWon && (
             <div className="flex items-center gap-2 text-green-600 text-lg font-semibold bg-green-50 px-4 py-2 rounded-full shadow">
-              <span role="img" aria-label="deal">🎉</span> Deal
+              <span role="img" aria-label="deal">🎉</span> WON
             </div>
           )}
+          {/* Display "LOST" badge if lead is lost (bactive is false) */}
+          {/* {!loading && !isLost && (
+            <div className="flex items-center gap-2 text-red-600 text-lg font-semibold bg-red-50 px-4 py-2 rounded-full shadow">
+              <span role="img" aria-label="lost">💔</span> LOST
+            </div>
+          )} */}
         </div>
 
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-4 mb-4 w-full overflow-x-hidden">
@@ -377,11 +384,13 @@ const LeadDetailView = () => {
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
+                // Disable tab changes if lead is lost or won
+                disabled={!isLost || isWon}
                 className={`px-5 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
                   tabIndex === idx
                     ? "bg-white shadow text-blue-600"
                     : "text-gray-500 hover:bg-white hover:text-blue-600"
-                }`}
+                } ${(!isLost || isWon) ? 'cursor-not-allowed opacity-50' : ''}`}
               >
                 {label}
               </button>
@@ -389,58 +398,46 @@ const LeadDetailView = () => {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={() => setIsMailOpen(true)}
-              className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1"
-              title="Email"
-            >
-              <MdEmail size={20} /> Email
-            </button>
-
-            {/* <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
-              <FaPhone size={18} /> Call
-            </button>
-
-            <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
-              <FaWhatsapp size={20} /> WhatsApp
-            </button> */}
-
-            {!loading && isLost && (
-              <div className="flex gap-3">
-                {!isDeal && (
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
-                    onClick={convertToDeal}
-                  >
-                    Convert
-                  </button>
-                )}
-                <button
-                  className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
-                  onClick={handleLostClick}
-                >
-                  Lost
-                </button>
-              </div>
-            )}
-
-
-            {/* {!loading && !isDeal && isLost && (
+            {/* Action Buttons: Email, Call, WhatsApp, Convert, Lost */}
+            {showActionButtons && ( // Conditionally render the group of buttons
               <>
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full shadow transition"
-                  onClick={convertToDeal}
+                  onClick={() => setIsMailOpen(true)}
+                  className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1"
+                  title="Email"
                 >
-                  Convert
+                  <MdEmail size={20} /> Email
                 </button>
-                <button
-                  className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
-                  onClick={handleLostClick}
-                >
-                  Lost
+
+                {/* Keeping Call and WhatsApp commented out as in original, but they would also be inside showActionButtons */}
+                {/* <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
+                  <FaPhone size={18} /> Call
                 </button>
+
+                <button className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-2 px-4 rounded-full shadow transition flex items-center justify-center gap-1">
+                  <FaWhatsapp size={20} /> WhatsApp
+                </button> */}
+
+                {!isDeal && ( // Show Convert button only if not already a deal
+                  <button
+                    className="bg-green-600 hover:bg-green-900 text-white font-semibold py-2 px-6 rounded-full shadow transition"
+                    onClick={convertToDeal}
+                  >
+                    Won
+                  </button>
+                )}
               </>
-            )} */}
+            )}
+
+            {/* Lost Button (shown separately if conditions meet) */}
+            {showLostButton && (
+              <button
+                className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-2 px-6 rounded-full shadow-inner transition"
+                onClick={handleLostClick}
+              >
+                Lost
+              </button>
+            )}
           </div>
         </div>
 
@@ -480,17 +477,24 @@ const LeadDetailView = () => {
                 </select>
               </div>
 
-              {/* This is where you add the textarea for lostDescription */}
               <div>
+                         {/* Display "LOST" badge if lead is lost (bactive is false) */}
+          {/* {!loading && !isLost && (
+            <div className="flex flex-1 ms-[150px] items-center gap-2 text-red-600 text-lg font-semibold bg-red-50 px-4 py-2 rounded-full shadow">
+              <span role="img" aria-label="lost">💔</span> LOST
+            </div>
+          )} */}
                 <label htmlFor="lostDescription" className="block font-medium mb-1">
                   Remarks
+        
+  
                 </label>
                 <textarea
                   id="lostDescription"
                   name="lostDescription"
                   rows="4"
-                  value={lostDescription} 
-                  onChange={(e) => setLostDescription(e.target.value)} 
+                  value={lostDescription}
+                  onChange={(e) => setLostDescription(e.target.value)}
                   className="w-full border px-3 py-2 rounded-md"
                   placeholder="Enter a brief description for marking as lost..."
                 ></textarea>
@@ -525,7 +529,7 @@ const LeadDetailView = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                sendEmail(); // Call sendEmail function directly here
+                sendEmail();
               }}
               className="flex flex-col flex-grow space-y-4"
             >
@@ -534,8 +538,8 @@ const LeadDetailView = () => {
                 <input
                   type="email"
                   className="w-full border px-3 py-2 rounded-xl"
-                  value={sentTo} // Corrected: Use 'sentTo' state variable
-                  onChange={(e) => setSentTo(e.target.value)} // Corrected: Update 'sentTo' state
+                  value={sentTo}
+                  onChange={(e) => setSentTo(e.target.value)}
                   required
                 />
               </div>

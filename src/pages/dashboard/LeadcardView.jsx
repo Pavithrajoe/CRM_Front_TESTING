@@ -652,7 +652,7 @@ const LeadCardViewPage = () => {
                                 : filterKey === 'websiteLeads'
                                     ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
                                     : filterKey === 'deals'
-                                        ? 'Deals'
+                                        ? 'Won'
                                         : filterKey === 'lost'
                                             ? 'Lost'
                                             : 'Assigned to Me'}

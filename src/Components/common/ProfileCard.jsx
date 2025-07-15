@@ -1736,7 +1736,7 @@ Edited Profile  </h3>
                 <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                 <span>
                   <span className="font-medium">Address 2:</span>{" "}
-                  {profile.clead_address2 || "N-"}
+                  {profile.clead_address2 || "-"}
                 </span>
               </div>
               <div className="flex items-start gap-3">

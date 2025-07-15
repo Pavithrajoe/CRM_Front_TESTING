@@ -90,7 +90,7 @@ const UserProfile = () => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
-        const filtered = data.filter(u => u.iUser_id !== parseInt(userId));
+        const filtered = data.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
         setReportToUsers(filtered);
       } catch (err) {
         console.error(err);

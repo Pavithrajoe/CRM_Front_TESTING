@@ -36,6 +36,28 @@ const formatMsToTime = (ms) => {
   return parts.join(' ');
 };
 
+// Helper function to format date to DD.MM.YYYY with optional time
+const formatDate = (dateString, includeTime = false) => {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '-';
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  
+  if (!includeTime) return `${day}.${month}.${year}`;
+  
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  
+  return `${day}.${month}.${year} ${hours}:${minutes} ${ampm}`;
+};
+
 const PaginatedTableForLeads = ({ initialData }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(10);
@@ -74,16 +96,16 @@ const PaginatedTableForLeads = ({ initialData }) => {
               return (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {lead.cFirstName} {lead.cLastName}
+                    {lead.clead_name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatMsToTime(responseTime)}
+                    {formatDate(lead.first_response_time, true)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {lead.lead_status?.clead_name || 'N/A'}
+                    {lead.lead_status?.clead_name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(lead.dcreated_dt).toLocaleDateString()}
+                    {formatDate(lead.dcreated_dt, true)}
                   </td>
                 </tr>
               );
@@ -274,36 +296,71 @@ const FirstResponseTimeReport = () => {
             </div>
           ))}
         </div>
-
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Response Time Vs Win Rate</h2>
-            <span className="bg-gray-200 px-3 py-1 rounded-md text-sm">All Time Data</span>
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={responseTimeWinRateData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="Response Time" 
-                  stroke="#FF5722" 
-                  strokeWidth={2} 
-                  activeDot={{ r: 6 }} 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="Win Rate" 
-                  stroke="#4CAF50" 
-                  strokeWidth={2} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+<div className="bg-white rounded-xl shadow p-4">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-lg font-semibold">Response Time Vs Win Rate</h2>
+    <span className="bg-gray-200 px-3 py-1 rounded-md text-sm">All Time Data</span>
+  </div>
+  <div className="h-80">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={responseTimeWinRateData}>
+        <XAxis 
+          dataKey="name" 
+          label={{ 
+            value: 'Day of Week', 
+            position: 'insideBottom', 
+            offset: -5,
+            style: { fill: '#666', fontSize: 12 }
+          }} 
+        />
+        <YAxis 
+          yAxisId="left"
+          label={{ 
+            value: 'Response Count', 
+            angle: -90, 
+            position: 'insideLeft',
+            style: { fill: '#FF5722', fontSize: 12 }
+          }}
+        />
+        <YAxis 
+          yAxisId="right"
+          orientation="right"
+          label={{ 
+            value: 'Win Count', 
+            angle: 90, 
+            position: 'insideRight',
+            style: { fill: '#4CAF50', fontSize: 12 }
+          }}
+        />
+        <Tooltip 
+          formatter={(value, name) => {
+            if (name === 'Win Rate') return [value, 'Win Count'];
+            if (name === 'Response Time') return [value, 'Response Count'];
+            return [value, name];
+          }}
+        />
+        <Legend />
+        <Line 
+          yAxisId="left"
+          type="monotone" 
+          dataKey="Response Time" 
+          name="Response Count"
+          stroke="#FF5722" 
+          strokeWidth={2} 
+          activeDot={{ r: 6 }} 
+        />
+        <Line 
+          yAxisId="right"
+          type="monotone" 
+          dataKey="Win Rate" 
+          name="Win Count"
+          stroke="#4CAF50" 
+          strokeWidth={2} 
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

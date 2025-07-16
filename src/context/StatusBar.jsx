@@ -346,13 +346,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </div>
       )}
 
-      {!isLost && (
+      {/* {!isLost && (
         <div className="flex justify-center mt-4">
           <div className="flex items-center gap-2 text-red-600 text-lg font-semibold bg-red-50 px-4 py-2 rounded-full shadow">
             <span role="img" aria-label="lost"></span> LOST
           </div>
         </div>
-      )}
+      )} */}
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Enter Details</DialogTitle>
@@ -488,8 +488,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
                   )}
 
-                  <div className="font-sans bg-white w-xxl shadow-xxl border border-blue-700 border-l-4 border-r-blue-800 rounded-3xl p-4 space-y-2 min-h-40 max-h-40 overflow-hidden z-10 cursor-default transition">
-                    <p className="text-sm"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
+                  <div className="font-sans bg-white w-[300px] shadow-xxl border border-blue-700 border-l-4 border-r-blue-800 rounded-3xl p-4 space-y-2 min-h-40 max-h-40 overflow-hidden z-10 cursor-default transition">
+                    <p className="text-sm break-words"><strong>Remark:</strong> {remark.lead_status_remarks}</p>
                     <p className="text-sm"><strong>Created By:</strong> {remark.createdBy || '-'}</p>
                     <p className="text-sm"><strong>Date:</strong> {new Date(remark.dcreated_dt).toLocaleDateString('en-GB').split('/').join('/')}</p>
                     <p className="text-sm"><strong>Status:</strong> {remark.status_name}</p>

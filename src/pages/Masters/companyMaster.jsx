@@ -148,12 +148,12 @@ export default function CompanyMaster() {
     title: 'Sub-Industries',
     value: 'Sub-Industry Masters',
     modalKey: 'Sub Industry',
-
     idKey: 'isubindustry',
     payloadKey: 'subindustry_name',
+    responseKey: 'response.subindustries',
 
     get: ENDPOINTS.MASTER_INDUSTRY_GET,
-    responseKey: 'response.subindustries',
+    // responseKey: 'response.subindustries',
 
     post: ENDPOINTS.MASTER_SUB_INDUSTRY,
     put: ENDPOINTS.MASTER_SUB_INDUSTRY,
@@ -201,16 +201,16 @@ export default function CompanyMaster() {
 
     isHierarchical: true,
 
-    parentMasterConfig: {
+      parentMasterConfig: {
         masterName: "INDUSTRY",
         getEndpoint: ENDPOINTS.MASTER_INDUSTRY_GET,
         responseKey: 'response.industry',
         idKey: 'iindustry_id',
         nameKey: 'cindustry_name',
-        parentIdInChildResponseKey: 'industryParent',  // ✅ Fixed to match backend
-        formFieldKey: 'industryParent',
+        parentIdInChildResponseKey: 'industryParent', // Must match the API response field
+        formFieldKey: 'industryParent', // Must match the form field name
         modalLabel: 'Parent Industry',
-        required: true,
+        required: true
     },
 
     postPayloadFields: [
@@ -344,6 +344,43 @@ export default function CompanyMaster() {
             
             skipCompanyIdInjection: false, // Set to false if company_id is explicitly needed in payload
         },
+        {
+    title: 'Service',
+    value: 'Service Masters',
+    modalKey: 'Service',
+    idKey: 'iservice_id',
+    payloadKey: 'cservice_name',
+    responseKey: 'data',
+    idLocation: 'body',
+    modifierIdPayloadKey: {
+        post: 'icreated_by',
+        put: 'iupdated_by'
+    },
+    updatedDtPayloadKey: {
+        post: 'dcreated_at',
+        put: 'dupdated_at'
+    },
+    activeStatusPayloadKey: 'bactive',
+    get: ENDPOINTS.MASTER_SERVICE_GET,
+    post: ENDPOINTS.MASTER_SERVICE_POST,
+    put: ENDPOINTS.MASTER_SERVICE_PUT,
+    delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+    basePostPayload: { cservice_name: '' },
+    basePutPayload: {},
+    putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
+    postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
+    payloadMapping: {
+        iservice_id: 'serviceId',
+        cservice_name: 'serviceName', // Fixed typo to match API
+        bactive: 'bactive',
+        icompany_id: 'icompany_id',
+        icreated_by: 'icreated_by',
+        iupdated_by: 'iupdated_by',
+        dcreated_at: 'dcreated_at',
+        dupdated_at: 'dupdated_at'
+    },
+    skipCompanyIdInjection: false
+},
         { // Corrected Label Master configuration
             title: 'Label ',
             value: 'Lead Form Labels',

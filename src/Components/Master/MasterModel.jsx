@@ -245,98 +245,43 @@ export default function MasterModal({ master, onClose, companyId, userId, master
 
     // Initialize formData when selectedItemForEdit or master changes
     useEffect(() => {
-        if (!master) return;
+    if (!master) return;
 
-        let newFormData = {};
+    let newFormData = {};
 
-        if (selectedItemForEdit) {
-            const currentEditMasterConfig = (selectedItemForEdit.isSubIndustry && subIndustryConfig) ? subIndustryConfig : master;
-
-            if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
-                // For Sub-Industries, map snake_case GET response to camelCase formData
-                newFormData = {
-                    [currentEditMasterConfig.payloadKey]: selectedItemForEdit['subindustry_name'] || '', 
-                };
-
-                if (currentEditMasterConfig.activeStatusPayloadKey) {
-                    newFormData[currentEditMasterConfig.activeStatusPayloadKey] = selectedItemForEdit[currentEditMasterConfig.activeStatusPayloadKey] || false;
-                }
-
-                if (currentEditMasterConfig.additionalFields) {
-                    currentEditMasterConfig.additionalFields.forEach(field => {
-                        newFormData[field] = selectedItemForEdit[field] || '';
-                    });
-                }
-                
-                if (currentEditMasterConfig.isHierarchical && currentEditMasterConfig.parentMasterConfig) {
-                    const parentIdKeyInResponse = currentEditMasterConfig.parentMasterConfig.parentIdInChildResponseKey;
-                    const formParentKey = currentEditMasterConfig.parentMasterConfig.formFieldKey;
-                    
-                    newFormData[formParentKey] = selectedItemForEdit[parentIdKeyInResponse] !== undefined && selectedItemForEdit[parentIdKeyInResponse] !== null
-                        ? Number(selectedItemForEdit[parentIdKeyInResponse])
-                        : null;
-                }
-                newFormData[currentEditMasterConfig.idKey] = selectedItemForEdit[currentEditMasterConfig.idKey]; 
-                
-
-            } else { // Handle non-sub-industry masters, INCLUDING LABEL_MASTER and LEAD_STATUS, POTENTIAL
-                // For non-sub-industry masters, directly copy all properties from selectedItemForEdit
-                // to formData. `payloadMapping` will handle the PUT payload conversion.
-                newFormData = { ...selectedItemForEdit };
-
-                // Ensure idKey is copied to formData if not already (for PUT)
-                if (currentEditMasterConfig.idKey && selectedItemForEdit[currentEditMasterConfig.idKey] !== undefined) {
-                    newFormData[currentEditMasterConfig.idKey] = selectedItemForEdit[currentEditMasterConfig.idKey];
-                }
-
-                // Handle active status for non-sub-industry masters
-                if (currentEditMasterConfig.activeStatusPayloadKey && newFormData[currentEditMasterConfig.activeStatusPayloadKey] === undefined) {
-                    newFormData[currentEditMasterConfig.activeStatusPayloadKey] = selectedItemForEdit[currentEditMasterConfig.activeStatusPayloadKey] || false;
-                }
-
-                // Handle hierarchical parent for non-sub-industry masters
-                if (currentEditMasterConfig.isHierarchical && currentEditMasterConfig.parentMasterConfig) {
-                    const parentIdKeyInResponse = currentEditMasterConfig.parentMasterConfig.parentIdInChildResponseKey || currentEditMasterConfig.parentMasterConfig.idKey;
-                    const formParentKey = currentEditMasterConfig.parentMasterConfig.formFieldKey || 'parentId';
-                    newFormData[formParentKey] = selectedItemForEdit[parentIdKeyInResponse] !== undefined && selectedItemForEdit[parentIdKeyInResponse] !== null
-                        ? Number(selectedItemForEdit[parentIdKeyInResponse])
-                        : null;
-                }
-
-                // Specific handling for 'orderId' for Lead Status and Potential
-                if ((master.title === "Lead Status" || master.title === "Potential") && selectedItemForEdit[currentEditMasterConfig.payloadMapping?.orderId || 'orderId'] !== undefined) {
-                    newFormData.orderId = selectedItemForEdit[currentEditMasterConfig.payloadMapping?.orderId || 'orderId'];
-                }
-                
-                // Specific handling for 'parentLeadSourceId' for Lead Source if it's an edit
-                if (master.title === leadSourceConfig?.title && selectedItemForEdit[leadSourceConfig?.parentLeadSourceIdKeyInResponse] !== undefined) {
-                     newFormData.parentLeadSourceId = selectedItemForEdit[leadSourceConfig.parentLeadSourceIdKeyInResponse];
-                }
-
-            }
-            // console.log("FormData after selectedItemForEdit:", newFormData); // DEBUG
+    if (selectedItemForEdit) {
+        if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
+            // Handle sub-industry edit
+            const parentIdKey = subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey || 'industryParent';
+            const formParentKey = subIndustryConfig.parentMasterConfig?.formFieldKey || 'industryParent';
+            
+            newFormData = {
+                [subIndustryConfig.payloadKey]: selectedItemForEdit[subIndustryConfig.payloadKey] || '',
+                [formParentKey]: selectedItemForEdit[parentIdKey] !== undefined 
+                    ? Number(selectedItemForEdit[parentIdKey])
+                    : null,
+                [subIndustryConfig.idKey]: selectedItemForEdit[subIndustryConfig.idKey],
+                ...(subIndustryConfig.activeStatusPayloadKey && {
+                    [subIndustryConfig.activeStatusPayloadKey]: selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false
+                })
+            };
         } else {
-            // For new entries, initialize from basePostPayload
-            newFormData = { ...master.basePostPayload };
-            if (master.activeStatusPayloadKey && newFormData[master.activeStatusPayloadKey] === undefined) {
-                newFormData[master.activeStatusPayloadKey] = true;
-            }
-            if (master.isHierarchical && master.parentMasterConfig) {
-                const formParentKey = master.parentMasterConfig.formFieldKey || 'parentId';
-                newFormData[formParentKey] = null;
-            }
-            // For new Lead Status/Potential entries, initialize orderId if it's in basePostPayload
-            if ((master.title === "Lead Status" || master.title === "Potential") && master.basePostPayload.orderId !== undefined) {
-                newFormData.orderId = master.basePostPayload.orderId;
-            }
-            // Initialize parentLeadSourceId for new Lead Source entries
-            if (master.title === leadSourceConfig?.title && leadSourceConfig?.basePostPayload?.parentLeadSourceId !== undefined) {
-                newFormData.parentLeadSourceId = leadSourceConfig.basePostPayload.parentLeadSourceId;
-            }
-
+            // Handle non-sub-industry edits
+            newFormData = { ...selectedItemForEdit };
         }
-        setFormData(newFormData);
-    }, [selectedItemForEdit, master, subIndustryConfig, industryConfig, leadSourceConfig]); 
+    } else {
+        // For new entries
+        newFormData = { ...master.basePostPayload };
+        
+        // Initialize parent industry for new sub-industry
+        if (master.isHierarchical && master.parentMasterConfig) {
+            const formParentKey = master.parentMasterConfig.formFieldKey || 'parentId';
+            newFormData[formParentKey] = null;
+        }
+    }
+
+    setFormData(newFormData);
+},  [selectedItemForEdit, master, subIndustryConfig, industryConfig, leadSourceConfig]); 
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -360,14 +305,20 @@ export default function MasterModal({ master, onClose, companyId, userId, master
         });
     };
 
-    const handleSave = async () => {
-        if (!master) {
-            toast.error("Master configuration is missing. Cannot save.");
-            return;
-        }
+const handleSave = async () => {
+  if (!master) {
+    toast.error("Master configuration is missing. Cannot save.");
+    return;
+  }
 
-        setIsSaving(true);
-        setApiError(null);
+  // 👇 Add length validation for service name (applies to all masters using payloadKey)
+  if (formData[master.payloadKey]?.length < 5 || formData[master.payloadKey]?.length > 50) {
+    setApiError(`${master.modalKey || master.title} must be between 5-50 characters`);
+    return; // Stop execution if validation fails
+  }
+
+  setIsSaving(true);
+  setApiError(null);
 
         // Client-side validation for orderId if master is Lead Source and orderId must be 1
         if (master.title === leadSourceConfig?.title && formData.orderId !== undefined && master.orderIdMustBeOne && formData.orderId !== 1) {
@@ -661,35 +612,30 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
     setSelectedItemForEdit({ ...subIndustryItem, isSubIndustry: true });
 
     if (subIndustryConfig) {
-        const parentIdKeyInResponse = subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey || 'iindustry_parent';
-        const formParentKey = subIndustryConfig.parentMasterConfig?.formFieldKey || 'parentId';
+        // Get the parent ID key from the sub-industry config
+        const parentIdKeyInResponse = subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey || 'industryParent';
+        const formParentKey = subIndustryConfig.parentMasterConfig?.formFieldKey || 'industryParent';
 
-        setFormData(prev => ({
-            ...prev,
+        // Create the form data with proper parent industry mapping
+        const newFormData = {
             // Main name field
-            [subIndustryConfig.payloadKey]: subIndustryItem[subIndustryConfig.payloadMapping?.subindustry_name || 'subindustry_name'] || '',
+            [subIndustryConfig.payloadKey]: subIndustryItem[subIndustryConfig.payloadKey] || '',
 
-            // Parent ID - corrected
-            [formParentKey]:
-                subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse] !== undefined
-                    ? Number(subIndustryItem[subIndustryConfig.payloadMapping?.iindustry_parent || parentIdKeyInResponse])
-                    : null,
+            // Parent ID - use the mapped key from payloadMapping if available
+            [formParentKey]: subIndustryItem[parentIdKeyInResponse] !== undefined 
+                ? Number(subIndustryItem[parentIdKeyInResponse])
+                : null,
 
             // ID key (for update operation)
             [subIndustryConfig.idKey]: subIndustryItem[subIndustryConfig.idKey],
 
             // Active status (if used)
             ...(subIndustryConfig.activeStatusPayloadKey && {
-                [subIndustryConfig.activeStatusPayloadKey]: subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false,
-            }),
+                [subIndustryConfig.activeStatusPayloadKey]: subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false
+            })
+        };
 
-            // Any additional fields dynamically
-            ...(subIndustryConfig.additionalFields &&
-                subIndustryConfig.additionalFields.reduce(
-                    (acc, field) => ({ ...acc, [field]: subIndustryItem[field] || '' }),
-                    {}
-                )),
-        }));
+        setFormData(newFormData);
     }
 };
 
@@ -941,53 +887,62 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                         </h3>
                         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
                             {/* Parent Dropdown for Hierarchical Masters (e.g., Sub-Industries) */}
-                            {master.isHierarchical && master.parentMasterConfig && formParentKey && (
-                                <div className="mb-4">
-                                    <label htmlFor={formParentKey} className="block text-sm font-medium text-gray-700 mb-1">
-                                        {parentLabel}:
-                                    </label>
-                                    {isLoadingParentOptions ? (
-                                        <p className="text-gray-500">Loading {parentLabel.toLowerCase()}...</p>
-                                    ) : (
-                                        <select
-                                            id={formParentKey}
-                                            name={formParentKey}
-                                            value={String(formData[formParentKey] === null ? '' : formData[formParentKey])}
-                                            onChange={handleChange}
-                                            required={master.parentMasterConfig.required}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                            disabled={isSaving}
-                                        >
-                                            <option value="">Select a {parentLabel}</option>
-                                            {parentOptions.map((parent) => (
-                                                <option
-                                                    key={parent[master.parentMasterConfig.idKey]}
-                                                    value={String(parent[master.parentMasterConfig.idKey])}
-                                                >
-                                                    {parent[master.parentMasterConfig.nameKey]}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
-                            )}
+                           {master.isHierarchical && master.parentMasterConfig && formParentKey && (
+    <div className="mb-4">
+        <label htmlFor={formParentKey} className="block text-sm font-medium text-gray-700 mb-1">
+            {parentLabel}:
+        </label>
+        <select
+            id={formParentKey}
+            name={formParentKey}
+            value={formData[formParentKey] === null ? '' : String(formData[formParentKey])}
+            onChange={handleChange}
+            required={master.parentMasterConfig.required}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={isSaving}
+        >
+            <option value="">Select a {parentLabel}</option>
+            {parentOptions.map((parent) => (
+                <option
+                    key={parent[master.parentMasterConfig.idKey]}
+                    value={String(parent[master.parentMasterConfig.idKey])}
+                >
+                    {parent[master.parentMasterConfig.nameKey]}
+                </option>
+            ))}
+        </select>
+    </div>
+)}
 
                            {/* Main Input Field (clead_name, subindustry_name, etc.) */}
-                            <div className="mb-4">
-                                <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
-                                    {master.modalKey || master.payloadKey}:
-                                </label>
-                                <input
-                                    id={master.payloadKey}
-                                    name={master.payloadKey}
-                                    type="text"
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                    value={formData[master.payloadKey] || ''}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={isSaving}
-                                />
-                            </div>
+                            {/* In your form rendering section */}
+<div className="mb-4">
+  <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
+    {master.modalKey || master.title}:
+    <span className="text-xs text-gray-500 ml-1">(3-50 characters)</span>
+  </label>
+  <input
+    id={master.payloadKey}
+    name={master.payloadKey}
+    type="text"
+    minLength={3}
+    maxLength={50}
+    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+    value={formData[master.payloadKey] || ''}
+    onChange={handleChange}
+    required
+    disabled={isSaving}
+  />
+  {formData[master.payloadKey]?.length > 0 && (
+    <p className={`text-xs mt-1 ${
+      formData[master.payloadKey].length < 5 || formData[master.payloadKey].length > 50 
+        ? 'text-red-500' 
+        : 'text-green-500'
+    }`}>
+      {formData[master.payloadKey].length}/50 characters
+    </p>
+  )}
+</div>
 
                             {/* Order ID Input Field (Conditionally Rendered) */}
                             {master.title === "Status" && shouldFieldBeRendered('orderId', formData) && (

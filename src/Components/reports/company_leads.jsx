@@ -240,23 +240,24 @@ const CompanyLeads = () => {
               </svg>
             </div>
             <button
-              className={`px-4 py-2 rounded-full ${filterType === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-xl ${filterType === 'open' ? 'bg-blue-600 text-white' : 'bg-blue-200'}`}
               onClick={() => setFilterType('open')}
             >
               Open
             </button>
+             <button
+              className={`px-4 py-2 rounded-xl ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-blue-200'}`}
+              onClick={() => setFilterType('deal')}
+            >
+              Won
+            </button>
             <button
-              className={`px-4 py-2 rounded-full ${filterType === 'lost' ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
+              className={`px-4 py-2 rounded-xl ${filterType === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-200'}`}
               onClick={() => setFilterType('lost')}
             >
               Lost
             </button>
-            <button
-              className={`px-4 py-2 rounded-full ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
-              onClick={() => setFilterType('deal')}
-            >
-              Deal
-            </button>
+           
             {/* New Date Filter Inputs */}
             <label className="text-gray-700 font-medium text-sm">From:</label>
             <input
@@ -279,7 +280,7 @@ const CompanyLeads = () => {
               className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
             />
             <button
-              className="px-4 py-2 bg-gray-300 text-black rounded-full"
+              className="px-4 py-2 bg-blue-200 text-black rounded-lg"
               onClick={() => {
                 setFilterType(null);
                 setSearchTerm('');
@@ -347,7 +348,7 @@ const CompanyLeads = () => {
                   <td className="px-4 py-3 text-sm text-gray-700">{lead.user?.cFull_name || '-'}</td>
                   <td className="px-4 py-3 text-sm w-10">
                     <span
-                      className={`inline-block text-center px-2 py-1 rounded-full w-24 ${
+                      className={`inline-block text-center px-2 py-1 rounded-xl w-24 ${
                         lead.lead_status?.clead_name === 'Won'
                           ? 'bg-green-100 text-green-600'
                           : 'bg-yellow-100 text-yellow-600'

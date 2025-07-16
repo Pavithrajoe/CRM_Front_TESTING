@@ -1,6 +1,6 @@
 export const BASE_URL = import.meta.env.VITE_API_URL;
 
-export const ENDPOINTS = {  
+export const ENDPOINTS = {
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
@@ -87,6 +87,11 @@ export const ENDPOINTS = {
   MASTER_LOST_REASON_PUT: `${BASE_URL}/lead-lostreason`,
   MASTER_LOST_REASON_DELETE: `${BASE_URL}/lead-lostreason`,
 
+  MASTER_SERVICE_GET: `${BASE_URL}/lead-service`,
+  MASTER_SERVICE_POST: `${BASE_URL}/lead-service`,
+  MASTER_SERVICE_PUT: `${BASE_URL}/lead-service`,
+  MASTER_SERVICE_DELETE: `${BASE_URL}/lead-service`,
+
   MASTER_LABEL_GET: `${BASE_URL}/lead-form-label`,
   MASTER_LABEL_POST: `${BASE_URL}/lead-form-label`,
   MASTER_LABEL_PUT: `${BASE_URL}/lead-form-label`,
@@ -95,6 +100,6 @@ export const ENDPOINTS = {
   LEAD_OWNER_FIRST_RES: `${BASE_URL}/reports/lead-owner-efficiency`,
   SALES_PIPLINE_ANALYSIS: `${BASE_URL}/reports/sales-pipline-report`,
   PROSPECTS_LOST_LEADS: `${BASE_URL}/reports/prospects-lost-leads`,
-  STATUS_REMARKS:`${BASE_URL}/lead-status-remark`,
+  STATUS_REMARKS: `${BASE_URL}/lead-status-remark`,
   FIRST_RESPONSE_FOR_LEAD: `${BASE_URL}/reports/first-response-time`,
 };

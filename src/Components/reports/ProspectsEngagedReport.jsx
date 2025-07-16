@@ -10,9 +10,9 @@ import {
 } from "chart.js";
 import { ENDPOINTS } from "../../api/constraints";
 import { useNavigate } from "react-router-dom"; // For navigation
-import { FaArrowLeft } from "react-icons/fa"; 
+import { FaArrowLeft } from "react-icons/fa";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(BarElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 export default function ProspectsEngagedReport() {
   const [prospectsEngaged, setProspectsEngaged] = useState({
     leadEngagementDetails: [],
@@ -51,7 +51,7 @@ export default function ProspectsEngagedReport() {
   }, []); // Run only once on mount
 
   // Effect to fetch data based on date filters
-const navigate = useNavigate();
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -110,26 +110,35 @@ const navigate = useNavigate();
   const totalCount = convertedCount + lostCount;
   const lostPercentage = totalCount > 0 ? (lostCount / totalCount) * 100 : 0;
 
+  // Helper function to format numbers (remove .00 if whole)
+  const formatNumberForDisplay = (num) => {
+    if (num === null || num === undefined) return "--";
+    const parsedNum = parseFloat(num);
+    if (isNaN(parsedNum)) return "--";
+    return parsedNum % 1 === 0 ? parsedNum.toString() : parsedNum.toFixed(2);
+  };
+
+
   const cardData = [
     {
       title: "Engaged Not Converted",
-      value: lostCount,
+      value: formatNumberForDisplay(lostCount),
       changeType: "positive",
     },
     {
       title: "Avg Engagement Score",
-      value: prospectsEngaged?.avgEngagementScore ?? "--",
+      value: formatNumberForDisplay(prospectsEngaged?.avgEngagementScore),
       changeType: "neutral",
     },
     {
       title: "Avg No. of Interactions",
-      value: prospectsEngaged?.avgInteractions ?? "--",
+      value: formatNumberForDisplay(prospectsEngaged?.avgInteractions),
       changeType: "positive",
     },
     {
       title: "Lost Percentage",
-      value: lostPercentage.toFixed(2) + "%",
-      change: "Deal Converted: " + convertedCount,
+      value: formatNumberForDisplay(lostPercentage) + "%",
+      // change: "Deal Converted: " + convertedCount,
       changeType: "positive",
     },
   ];
@@ -282,13 +291,13 @@ const navigate = useNavigate();
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col gap-6">
       <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
         <button
-          onClick={() => navigate("/reportpage")} 
+          onClick={() => navigate("/reportpage")}
           style={{
             color: "#6B7280", // Equivalent to text-gray-600
             padding: "8px", // Equivalent to p-2
-            borderRadius: "9999px", 
-            marginRight: "16px", 
-            fontSize: "24px", 
+            borderRadius: "9999px",
+            marginRight: "16px",
+            fontSize: "24px",
             cursor: "pointer",
             background: "transparent",
             border: "none",
@@ -470,12 +479,12 @@ const navigate = useNavigate();
             gap: 10,
             boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
             background: isDefaultMonth && dateFilterFrom ? "linear-gradient(to right, #e6ffe6, #d0ffe0)" :
-                        (dateFilterFrom && dateFilterTo ? "linear-gradient(to right, #e0f7fa, #c2eff5)" :
-                        "linear-gradient(to right, #f8f8f8, #f0f0f0)"),
+                          (dateFilterFrom && dateFilterTo ? "linear-gradient(to right, #e0f7fa, #c2eff5)" :
+                          "linear-gradient(to right, #f8f8f8, #f0f0f0)"),
             color: isDefaultMonth && dateFilterFrom ? "#1b5e20" :
-                   (dateFilterFrom && dateFilterTo ? "#006064" : "#424242"),
+                          (dateFilterFrom && dateFilterTo ? "#006064" : "#424242"),
             border: isDefaultMonth && dateFilterFrom ? "1px solid #a5d6a7" :
-                    (dateFilterFrom && dateFilterTo ? "1px solid #80deea" : "1px solid #e0e0e0"),
+                            (dateFilterFrom && dateFilterTo ? "1px solid #80deea" : "1px solid #e0e0e0"),
           }}>
             {getIntimationMessage()}
           </div>

@@ -327,25 +327,25 @@ const LeadConversionPage = () => {
         <Card
           title="Avg Lead Conversion Time"
           value={`${metrics.averageDaysToConvert || 0} Days`}
-          change="0.08%"
+          change=""
           isPositive={true}
         />
         <Card
           title="Fastest Conversion Time"
           value={`${metrics.fastestConversion || 0} Days`}
-          change="0.03%"
+          // change="0.03%"
           isPositive={false}
         />
         <Card
           title="Slowest Conversion Time"
           value={`${metrics.slowestConversion || 0} Days`}
-          change="1.25%"
+          // change="1.25%"
           isPositive={true}
         />
         <Card
           title="Conversion SLA %"
           value={`${metrics.slaPercentage || 0}%`}
-          change="4.66%"
+          // change="4.66%"
           isPositive={false}
         />
       </div>
@@ -503,8 +503,8 @@ const Card = ({ title, value, change, isPositive }) => (
     <h4 className="text-xs text-gray-500">{title}</h4>
     <div className="text-2xl font-semibold text-gray-900">{value}</div>
     <div className={`text-xs flex items-center ${isPositive ? "text-green-500" : "text-red-500"}`}>
-      <span className="mr-1">{isPositive ? "▲" : "▼"}</span>
-      {change} from last Month {/* This 'change' value is static; ideally comes from API */}
+      {/* <span className="mr-1">{isPositive ? "▲" : "▼"}</span> */}
+      {change}{/* This 'change' value is static; ideally comes from API */}
     </div>
   </div>
 );

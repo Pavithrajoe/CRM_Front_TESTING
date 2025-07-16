@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   FiEdit,
   FiPhone,
+  FiChevronDown,
   FiMail,
   FiMapPin,
   FiUpload,
@@ -11,7 +12,8 @@ import {
   FiMove,
   FiCodesandbox,
   FiCamera,
-  FiDollarSign , FiUser 
+  FiDollarSign,
+  FiUser
 } from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
@@ -24,11 +26,6 @@ import DemoSessionDetails from "./demo_session_details";
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
-
-
-
-
-
 
 const EditProfileForm = ({ profile, onClose, onSave }) => {
   const token = localStorage.getItem("token");
@@ -52,6 +49,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
 
   const [form, setForm] = useState({
     iLeadpoten_id: profile?.iLeadpoten_id || "",
+    iservice_id: profile?.iservice_id || "",
     ileadstatus_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
     csubindustry_id: profile?.csubindustry_id || "",
@@ -63,54 +61,58 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     corganization: profile?.corganization || "",
     cwebsite: profile?.cwebsite || "",
     icity: profile?.icity || "",
-    iphone_no: profile?.iphone_no || "",
+    iphone_no: profile?.iphone_no ? profile.iphone_no.replace(profile?.phone_country_code || "+91", "") : "",
     phone_country_code: profile?.phone_country_code || "+91",
-    cgender: profile?.cgender || 1, // Assuming default gender is 1
+    cwhatsapp: profile?.cwhatsapp ? profile.cwhatsapp.replace(profile?.whatsapp_country_code || "+91", "") : "",
+    whatsapp_country_code: profile?.whatsapp_country_code || "+91",
+    cgender: profile?.cgender || 1,
     clogo: profile?.clogo || "logo.png",
     clead_address1: profile?.clead_address1 || "",
-    cwhatsapp: profile?.cwhatsapp || "",
-    whatsapp_country_code: profile?.whatsapp_country_code || "+91",
     clead_address2: profile?.clead_address2 || "",
     clead_address3: profile?.clead_address3 || "",
-    cservices: profile?.cservices || "No services entered",
     cresponded_by: userId,
     icompany_id: company_id,
     modified_by: userId,
   });
 
   const [errors, setErrors] = useState({});
-
   const [Potential, setPotential] = useState([]);
   const [status, setStatus] = useState([]);
   const [leadIndustry, setIndustry] = useState([]);
   const [leadSubIndustry, setSubIndustry] = useState([]);
   const [cities, setCities] = useState([]);
   const [source, setSource] = useState([]);
-
+  const [countryCodes, setCountryCodes] = useState([]);
+  const [service, setService] = useState([]);
   const [searchCity, setSearchCity] = useState("");
   const [filteredCities, setFilteredCities] = useState([]);
-
-  const cityDropdownRef = useRef(null);
-  const potentialDropdownRef = useRef(null);
-  const statusDropdownRef = useRef(null);
-  const industryDropdownRef = useRef(null);
-  const subIndustryDropdownRef = useRef(null);
-  const sourceDropdownRef = useRef(null);
-
-  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-  const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [isIndustryDropdownOpen, setIsIndustryDropdownOpen] = useState(false);
-  const [isSubIndustryDropdownOpen, setIsSubIndustryDropdownOpen] = useState(false);
-  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
-
   const [searchPotential, setSearchPotential] = useState("");
-  const [isUpdated, setIsUpdated] = useState(false);
-
+  const [searchService, setSearchService] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
   const [searchIndustry, setSearchIndustry] = useState("");
   const [searchSubIndustry, setSearchSubIndustry] = useState("");
   const [searchSource, setSearchSource] = useState("");
+  const [isUpdated, setIsUpdated] = useState(false);
+
+  const cityDropdownRef = useRef(null);
+  const potentialDropdownRef = useRef(null);
+  const serviceDropdownRef = useRef(null);
+  const statusDropdownRef = useRef(null);
+  const industryDropdownRef = useRef(null);
+  const subIndustryDropdownRef = useRef(null);
+  const sourceDropdownRef = useRef(null);
+  const phoneCountryCodeRef = useRef(null);
+  const whatsappCountryCodeRef = useRef(null);
+
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [isIndustryDropdownOpen, setIsIndustryDropdownOpen] = useState(false);
+  const [isSubIndustryDropdownOpen, setIsSubIndustryDropdownOpen] = useState(false);
+  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const [isPhoneCountryCodeOpen, setIsPhoneCountryCodeOpen] = useState(false);
+  const [isWhatsappCountryCodeOpen, setIsWhatsappCountryCodeOpen] = useState(false);
 
   const fetchDropdownData = async (endpoint, setData, dataName, transformFn) => {
     try {
@@ -159,6 +161,102 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   };
 
+  const fetchCountryCodes = async () => {
+    try {
+      const response = await fetch(`${apiEndPoint}/country-codes`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Can't fetch country codes");
+        return;
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data.countryCodes)) {
+        setCountryCodes(data.countryCodes);
+      }
+    } catch (e) {
+      console.error("Error in fetching country codes:", e);
+    }
+  };
+
+  const fetchService = async () => {
+    try {
+      const response = await fetch(`${apiEndPoint}/lead-service`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Can't fetch lead service");
+        return;
+      }
+
+      const rawData = await response.json();
+      setService(rawData.data || []);
+    } catch (e) {
+      console.error("Error in fetching lead services:", e);
+    }
+  };
+
+  const fetchIndustryAndSubIndustry = async () => {
+    try {
+      const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Can't fetch lead industry and sub-industry");
+        return;
+      }
+
+      const rawData = await response.json();
+      setIndustry(rawData.response?.industry || []);
+      setSubIndustry(rawData.response?.subindustries || []);
+    } catch (e) {
+      console.error("Error in fetching lead industry and sub-industry:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDropdownData("lead-potential/company-potential", setPotential, "lead potential", (res) => res.data || []);
+    fetchDropdownData("lead-status/company-lead", setStatus, "lead status", (res) => res.response || []);
+    fetchDropdownData("lead-source/company-src", setSource, "lead sources", (data) => data.data || []);
+    fetchCitiesData();
+    fetchCountryCodes();
+    fetchService();
+    fetchIndustryAndSubIndustry();
+  }, [token]);
+
+  useEffect(() => {
+    if (profile) {
+      const setInitialDropdownValue = (items, idKey, nameKey, formId, setSearch) => {
+        const selectedItem = items.find(item => item[idKey] === profile[formId]);
+        if (selectedItem) setSearch(selectedItem[nameKey]);
+      };
+
+      setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
+      setInitialDropdownValue(service, 'iservice_id', 'cservice_name', 'iservice_id', setSearchService);
+      setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ilead_status_id', setSearchStatus);
+      setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
+      setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'csubindustry_id', setSearchSubIndustry);
+      setInitialDropdownValue(source, 'source_id', 'source_name', 'lead_source_id', setSearchSource);
+      setInitialDropdownValue(cities, 'icity_id', 'cCity_name', 'icity', setSearchCity);
+    }
+  }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities, service]);
+
   const handleSearchCity = (e) => {
     const searchTerm = e.target.value;
     setSearchCity(searchTerm);
@@ -181,6 +279,13 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     setSearchPotential(potentialName);
     setIsPotentialDropdownOpen(false);
     setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
+  };
+
+  const handleServiceSelect = (iservice_id, cservice_name) => {
+    setForm((prev) => ({ ...prev, iservice_id: iservice_id }));
+    setSearchService(cservice_name);
+    setIsServiceDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, iservice_id: "" }));
   };
 
   const handleStatusSelect = (statusId, statusName) => {
@@ -213,56 +318,19 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     setErrors((prev) => ({ ...prev, lead_source_id: "" }));
   };
 
+  const handlePhoneCountryCodeSelect = (code) => {
+    setForm((prev) => ({ ...prev, phone_country_code: code }));
+    setIsPhoneCountryCodeOpen(false);
+  };
+
+  const handleWhatsappCountryCodeSelect = (code) => {
+    setForm((prev) => ({ ...prev, whatsapp_country_code: code }));
+    setIsWhatsappCountryCodeOpen(false);
+  };
+
   const filteredSubIndustries = leadSubIndustry.filter(
     (sub) => sub.iindustry_parent === form.cindustry_id
   );
-
-  useEffect(() => {
-    fetchDropdownData("lead-potential/company-potential", setPotential, "lead potential", (res) => res.data || []);
-    fetchDropdownData("lead-status/company-lead", setStatus, "lead status", (res) => res.response || []);
-    fetchDropdownData("lead-source/company-src", setSource, "lead sources", (data) => data.data || []);
-    fetchCitiesData();
-
-    const fetchIndustryAndSubIndustry = async () => {
-      try {
-        const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          console.error("Can't fetch lead industry and sub-industry");
-          return;
-        }
-
-        const rawData = await response.json();
-        setIndustry(rawData.response?.industry || []);
-        setSubIndustry(rawData.response?.subindustries || []);
-      } catch (e) {
-        console.error("Error in fetching lead industry and sub-industry:", e);
-      }
-    };
-    fetchIndustryAndSubIndustry();
-  }, [token]);
-
-  useEffect(() => {
-    if (profile) {
-      const setInitialDropdownValue = (items, idKey, nameKey, formId, setSearch) => {
-        const selectedItem = items.find(item => item[idKey] === profile[formId]);
-        if (selectedItem) setSearch(selectedItem[nameKey]);
-      };
-
-      setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
-      setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ilead_status_id', setSearchStatus);
-      setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
-      setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'csubindustry_id', setSearchSubIndustry);
-      setInitialDropdownValue(source, 'source_id', 'source_name', 'lead_source_id', setSearchSource);
-      setInitialDropdownValue(cities, 'icity_id', 'cCity_name', 'icity', setSearchCity);
-    }
-  }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -284,6 +352,12 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
       if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
         setIsSourceDropdownOpen(false);
       }
+      if (phoneCountryCodeRef.current && !phoneCountryCodeRef.current.contains(event.target)) {
+        setIsPhoneCountryCodeOpen(false);
+      }
+      if (whatsappCountryCodeRef.current && !whatsappCountryCodeRef.current.contains(event.target)) {
+        setIsWhatsappCountryCodeOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -298,135 +372,75 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-const validateForm = () => {
-    console.log("the validated form :", form);
+  const validateForm = () => {
     let newErrors = {};
-
-    // Helper function to check if a string contains only digits
     const isNumeric = (value) => /^\d+$/.test(value);
 
-    // Name validation
     if (!form.clead_name.trim()) {
-        newErrors.clead_name = "Name is required.";
+      newErrors.clead_name = "Name is required.";
     } else if (form.clead_name.trim().length > 20) {
-        newErrors.clead_name = "Name cannot exceed 20 characters.";
+      newErrors.clead_name = "Name cannot exceed 20 characters.";
     }
 
-    // Organization validation
-    if (!form.corganization.trim()) {
-        newErrors.corganization = "Organization is required.";
-    } else if (form.corganization.trim().length > 20) {
-        newErrors.corganization = "Organization cannot exceed 20 characters.";
-    }
-
-//Services
-
-if(!form.cservices.trim()){
-  newErrors.cservices = " Service Required.";
-}
-else if (typeof form.cservices !== "string" &&  form.cservices.trim().length > 20) {
-  newErrors.cservices = "Services cannot exceed 20 characters and must be a valid string.";
-}
-
-// Website validation
-if (!form.cwebsite.trim()) {
-  newErrors.cwebsite = "Website is required.";
-} else if (form.cwebsite.trim().length > 20) {
-  newErrors.cwebsite = "Website cannot exceed 20 characters.";
-} else if (!form.cwebsite.trim().endsWith(".com") && !form.cwebsite.trim().endsWith(".in")) {
-  newErrors.cwebsite = "Website must end with '.com' or 'in'.";
-}
-
-    // Phone number validation (iphone_no)
     if (!form.iphone_no.trim()) {
-        newErrors.iphone_no = "Phone number is required.";
+      newErrors.iphone_no = "Phone number is required.";
     } else if (!isNumeric(form.iphone_no)) {
-        newErrors.iphone_no = "Phone number must contain only digits.";
+      newErrors.iphone_no = "Phone number must contain only digits.";
     } else if (!/^\d{10}$/.test(form.iphone_no)) {
-        newErrors.iphone_no = "Phone number must be 10 digits.";
+      newErrors.iphone_no = "Phone number must be 10 digits.";
     }
 
-    // WhatsApp number validation (cwhatsapp)
-if (!form.cwhatsapp.trim()) {
-    newErrors.cwhatsapp = "Phone number is required.";
-} else if (!isNumeric(form.cwhatsapp)) { // This line specifically checks for non-digit characters
-    newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
-} else if (!/^\d{10}$/.test(form.cwhatsapp)) {
-    newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
-}
+    if (form.cwhatsapp.trim()) {
+      if (!isNumeric(form.cwhatsapp)) {
+        newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
+      } else if (!/^\d{10}$/.test(form.cwhatsapp)) {
+        newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
+      }
+    }
 
-    // Email validation
     if (form.cemail.trim()) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
-            newErrors.cemail = "Invalid email format.";
-        } else if (form.cemail.trim().length > 30) {
-            newErrors.cemail = "Email cannot exceed 30 characters.";
-        }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
+        newErrors.cemail = "Invalid email format.";
+      } else if (form.cemail.trim().length > 30) {
+        newErrors.cemail = "Email cannot exceed 30 characters.";
+      }
     }
 
-    // Lead potential validation
+    if (form.cwebsite.trim()) {
+      if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
+        newErrors.cwebsite = "Invalid website format.";
+      }
+    }
+
     if (!form.iLeadpoten_id) {
-        newErrors.iLeadpoten_id = "Potential is required.";
+      newErrors.iLeadpoten_id = "Potential is required.";
     }
-
-    // Lead status validation
-    if (form.ileadstatus_id === '' || form.ileadstatus_id === null || form.ileadstatus_id === undefined) {
-        newErrors.ilead_status_id = "Status is required.";
-    }
-
-    // Lead source validation
-    if (!form.lead_source_id) {
-        newErrors.lead_source_id = "Lead source is required.";
-    }
-
-    // Industry validation
     if (!form.cindustry_id) {
-        newErrors.cindustry_id = "Industry is required.";
+      newErrors.cindustry_id = "Industry is required.";
     }
-
-    // Sub-Industry validation
+    if (!form.corganization.trim()) {
+      newErrors.corganization = "Organization is required.";
+    }
+    if (!form.lead_source_id) {
+      newErrors.lead_source_id = "Lead source is required.";
+    }
     if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
-        newErrors.csubindustry_id = "Sub-Industry is required.";
-    }
-
-    // City validation
-    if (!form.icity) {
-        newErrors.icity = "City is required.";
-    }
-
-    // Address 1 validation
-    if (!form.clead_address1.trim()) {
-        newErrors.clead_address1 = "Address 1 is required.";
-    } else if (form.clead_address1.trim().length > 20) {
-        newErrors.clead_address1 = "Address 1 cannot exceed 20 characters.";
-    }
-
-    // Project value validation
-    if (form.iproject_value !== null && form.iproject_value !== undefined && form.iproject_value !== '') {
-        if (!isNumeric(String(form.iproject_value))) {
-            newErrors.iproject_value = "Project value must contain only digits.";
-        } else if (parseInt(form.iproject_value) < 0) {
-            newErrors.iproject_value = "Project value cannot be negative.";
-        }
-    }
-
-    // Number of employees validation
-    if (form.ino_employee !== null && form.ino_employee !== undefined && form.ino_employee !== '') {
-        if (!isNumeric(String(form.ino_employee))) {
-            newErrors.ino_employee = "Number of employees must contain only digits.";
-        } else if (parseInt(form.ino_employee) < 0) {
-            newErrors.ino_employee = "Number of employees cannot be negative.";
-        }
+      newErrors.csubindustry_id = "Sub-Industry is required.";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-};
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      onSave(form);
+      const formDataToSave = {
+        ...form,
+        iphone_no: form.phone_country_code + form.iphone_no,
+        cwhatsapp: form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "",
+      };
+      onSave(formDataToSave);
     } else {
       console.log("Form has validation errors:", errors);
     }
@@ -435,21 +449,22 @@ if (!form.cwhatsapp.trim()) {
   // --- Blue Theme Classes ---
   const commonInputClasses = "mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-600 focus:border-blue-600 transition-all duration-200 text-sm";
   const errorInputClasses = "border-red-500 focus:ring-red-500 focus:border-red-500";
-  const labelClasses = "block text-sm font-medium text-blue-800 mb-1"; // Darker blue for labels
+  const labelClasses = "block text-sm font-medium text-blue-800 mb-1";
   const errorTextClasses = "text-red-500 text-xs mt-1";
-  const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 text-blue-900"; // Lighter blue for hover
+  const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 text-blue-900";
+  const countryCodeButtonClasses = "w-20 border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50 flex items-center justify-between";
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative border-2 border-blue-500"> {/* Blue border on modal */}
+      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative border-2 border-blue-500">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors" // Blue hover for close icon
+          className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors"
         >
           <FiX size={24} />
         </button>
 
-        <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 mb-6 border-b pb-3 border-blue-200"> {/* Blue text and border for heading */}
+        <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 mb-6 border-b pb-3 border-blue-200">
           Edit Lead Profile
         </h3>
 
@@ -466,7 +481,7 @@ if (!form.cwhatsapp.trim()) {
                 name="clead_name"
                 value={form.clead_name}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.clead_name ? errorInputClasses : "border-blue-300"}`} 
+                className={`${commonInputClasses} ${errors.clead_name ? errorInputClasses : "border-blue-300"}`}
               />
               {errors.clead_name && <p className={errorTextClasses}>{errors.clead_name}</p>}
             </div>
@@ -492,51 +507,95 @@ if (!form.cwhatsapp.trim()) {
               <label htmlFor="iphone_no" className={labelClasses}>
                 Phone: <span className="text-red-500">*</span>
               </label>
-              <div className="flex">
-                {/* <div className="relative w-20 mr-2">
-                  <input
-                    type="text"
-                    value={form.phone_country_code}
-                    readOnly
-                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50" />
-                </div> */}
+              <div className="flex gap-2">
+                <div className="relative" ref={phoneCountryCodeRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPhoneCountryCodeOpen(!isPhoneCountryCodeOpen)}
+                    className={countryCodeButtonClasses}
+                  >
+                    {form.phone_country_code}
+                    <FiChevronDown size={16} className="ml-1" />
+                  </button>
+                  {isPhoneCountryCodeOpen && countryCodes.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                      {countryCodes.map((code) => (
+                        <div
+                          key={code}
+                          className={dropdownItemClasses}
+                          onClick={() => {
+                            handlePhoneCountryCodeSelect(code);
+                            setErrors(prev => ({ ...prev, iphone_no: "" }));
+                          }}
+                        >
+                          {code}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <input
                   type="text"
                   id="iphone_no"
                   name="iphone_no"
                   value={form.iphone_no}
-                  onChange={handleFieldChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setForm(prev => ({ ...prev, iphone_no: value }));
+                    setErrors(prev => ({ ...prev, iphone_no: "" }));
+                  }}
                   className={`flex-1 ${commonInputClasses} ${errors.iphone_no ? errorInputClasses : "border-blue-300"}`}
                 />
               </div>
               {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
             </div>
 
-             {/* WhatsApp Field */}
+            {/* WhatsApp Field */}
             <div>
               <label htmlFor="cwhatsapp" className={labelClasses}>
                 WhatsApp:
               </label>
-              <div className="flex">
-                {/* <div className="relative w-20 mr-2">
-                  {/* <input
-                    type="text"
-                    value={form.whatsapp_country_code}
-                    readOnly
-                    className="w-full border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50"
-                  /> */}
-                {/* </div>  */}
-                 <input
+              <div className="flex gap-2">
+                <div className="relative" ref={whatsappCountryCodeRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
+                    className={countryCodeButtonClasses}
+                  >
+                    {form.whatsapp_country_code}
+                    <FiChevronDown size={16} className="ml-1" />
+                  </button>
+                  {isWhatsappCountryCodeOpen && countryCodes.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                      {countryCodes.map((code) => (
+                        <div
+                          key={code}
+                          className={dropdownItemClasses}
+                          onClick={() => {
+                            handleWhatsappCountryCodeSelect(code);
+                            setErrors(prev => ({ ...prev, cwhatsapp: "" }));
+                          }}
+                        >
+                          {code}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <input
                   type="text"
                   id="cwhatsapp"
                   name="cwhatsapp"
                   value={form.cwhatsapp}
-                  onChange={handleFieldChange}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setForm(prev => ({ ...prev, cwhatsapp: value }));
+                    setErrors(prev => ({ ...prev, cwhatsapp: "" }));
+                  }}
                   className={`flex-1 ${commonInputClasses} ${errors.cwhatsapp ? errorInputClasses : "border-blue-300"}`}
                 />
               </div>
-                            {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
-
+              {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
             </div>
 
             {/* Email Field */}
@@ -590,7 +649,7 @@ if (!form.cwhatsapp.trim()) {
                 readOnly={Potential.length === 0}
               />
               {isPotentialDropdownOpen && Potential.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> {/* Blue ring */}
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
                   {Potential.filter(potential =>
                     potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
                   ).map((potential) => (
@@ -606,43 +665,6 @@ if (!form.cwhatsapp.trim()) {
               )}
               {errors.iLeadpoten_id && <p className={errorTextClasses}>{errors.iLeadpoten_id}</p>}
             </div>
-
-            {/* Lead Status Dropdown */}
-            {/* <div className="relative" ref={statusDropdownRef}>
-              <label htmlFor="ilead_status_id" className={labelClasses}>
-                Status: <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={searchStatus}
-                onChange={(e) => {
-                  setSearchStatus(e.target.value);
-                  setIsStatusDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, ilead_status_id: "" }));
-                }}
-                onClick={() => setIsStatusDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.ilead_status_id ? errorInputClasses : "border-blue-300"}`}
-                placeholder="Select status"
-                readOnly={status.length === 0}
-              />
-              {isStatusDropdownOpen && status.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {status.filter(statusItem =>
-                  
-                    statusItem.clead_name.toLowerCase().includes(searchStatus.toLowerCase())
-                  ).map((statusItem) => (
-                    <div
-                      key={statusItem.ilead_status_id}
-                      className={dropdownItemClasses}
-                      onClick={() => handleStatusSelect(statusItem.ilead_status_id, statusItem.clead_name)}
-                    >
-                      {statusItem.clead_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.ilead_status_id && <p className={errorTextClasses}>{errors.ilead_status_id}</p>}
-            </div> */}
 
             {/* Lead Source Dropdown */}
             <div className="relative" ref={sourceDropdownRef}>
@@ -753,6 +775,42 @@ if (!form.cwhatsapp.trim()) {
               {errors.csubindustry_id && <p className={errorTextClasses}>{errors.csubindustry_id}</p>}
             </div>
 
+            {/* Services Dropdown */}
+            <div className="relative" ref={serviceDropdownRef}>
+              <label htmlFor="iservice_id" className={labelClasses}>
+                Services:
+              </label>
+              <input
+                type="text"
+                value={searchService}
+                onChange={(e) => {
+                  setSearchService(e.target.value);
+                  setIsServiceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, iservice_id: "" }));
+                }}
+                onClick={() => setIsServiceDropdownOpen(true)}
+                className={`${commonInputClasses} ${errors.iservice_id ? errorInputClasses : "border-blue-300"}`}
+                placeholder="Select Services"
+                readOnly={service.length === 0}
+              />
+              {isServiceDropdownOpen && service.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {service.filter(serviceItem =>
+                    serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
+                  ).map((serviceItem) => (
+                    <div
+                      key={serviceItem.iservice_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
+                    >
+                      {serviceItem.cservice_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
+            </div>
+
             {/* City Dropdown */}
             <div className="relative" ref={cityDropdownRef}>
               <label htmlFor="icity" className={labelClasses}>
@@ -861,35 +919,16 @@ if (!form.cwhatsapp.trim()) {
               />
               {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
             </div>
-           
-
-            {/* Services Field */}
-            <div>
-              <label htmlFor="cservices" className={labelClasses}>
-                Services:
-              </label>
-              <input
-                type="text"
-                id="cservices"
-                name="cservices"
-                value={form.cservices}
-                onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.cservices ? errorInputClasses : "border-blue-300"}`}
-              />
-              {errors.cservices && <p className={errorTextClasses}>{errors.cservices}</p>}
-
-            </div>
-
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t pt-3 border-blue-200"> {/* Blue border above buttons */}
+          <div className="flex justify-end space-x-3 pt-4 border-t border-blue-200 mt-6">
             <button
               type="submit"
               className="bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 transition-colors duration-200"
             >
               <FiSave size={16} />
-              Save
+              Save Changes
             </button>
             <button
               type="button"
@@ -904,6 +943,8 @@ if (!form.cwhatsapp.trim()) {
     </div>
   );
 };
+
+
 
 
 const ProfileCard = () => {

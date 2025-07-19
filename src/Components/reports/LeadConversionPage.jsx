@@ -14,9 +14,90 @@ import {
   Legend,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import * as XLSX from 'xlsx'; // Import xlsx library
+import { HiDownload } from "react-icons/hi";
+import { saveAs } from 'file-saver'; // Import saveAs from file-saver
+import { Listbox } from "@headlessui/react"; // Import Listbox for dropdown
+import { ChevronDown } from "lucide-react"; // Icon for dropdown
 
 // Chart registration - Essential for Chart.js to work
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
+
+// Helper function to format decimal days into human-readable days and hours
+const formatDecimalDaysToDaysHours = (decimalDays) => {
+  const numDays = parseFloat(decimalDays);
+  if (isNaN(numDays) || numDays < 0) return '0 Days';
+
+  const days = Math.floor(numDays);
+  const fractionalPart = numDays - days;
+  const hours = Math.round(fractionalPart * 24); // Round to nearest hour
+
+  let result = '';
+  if (days > 0) {
+    result += `${days} Day${days > 1 ? 's' : ''}`;
+  }
+  if (hours > 0) {
+    if (result) result += ' '; // Add space if days exist
+    result += `${hours} Hr${hours > 1 ? 's' : ''}`;
+  }
+
+  if (days === 0 && hours === 0) {
+    return '0 Days'; // For values like 0.00 or very small fractions
+  }
+  return result.trim(); // Trim any leading/trailing spaces
+};
+
+// Helper function to format hours (e.g., 416.5 hours) into "X hrs Y mins"
+const formatHoursToHrsMins = (decimalHours) => {
+  if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours)) {
+    return '-';
+  }
+
+  const totalMinutes = Math.round(decimalHours * 60); // Convert hours to total minutes
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0 && minutes === 0 && decimalHours !== 0) { // If it's a tiny fraction that rounds to 0 mins
+    return '< 1 min';
+  }
+  if (hours === 0 && minutes === 0 && decimalHours === 0) {
+    return '0 hrs 0 mins';
+  }
+
+  let result = '';
+  if (hours > 0) {
+    result += `${hours} hr${hours > 1 ? 's' : ''}`;
+  }
+  if (minutes > 0) {
+    if (result) result += ' '; // Add space if hours exist
+    result += `${minutes} min${minutes > 1 ? 's' : ''}`;
+  }
+
+  return result.trim();
+};
+
+// Helper function to format date and time to DD/MM/YYYY HH.MM AM/PM
+const formatDateTimeForTable = (isoString) => {
+  if (!isoString) return '-';
+  const date = new Date(isoString);
+
+  // Check for valid date
+  if (isNaN(date.getTime())) return '-';
+
+  const pad = (num) => String(num).padStart(2, '0');
+
+  const day = pad(date.getDate());
+  const month = pad(date.getMonth() + 1); // Month is 0-indexed
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = pad(date.getMinutes());
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // The hour '0' (midnight) should be '12 AM'
+
+  return `${day}/${month}/${year} ${pad(hours)}.${minutes} ${ampm}`;
+};
 
 const LeadConversionPage = () => {
   // State for fetching and displaying data
@@ -37,6 +118,9 @@ const LeadConversionPage = () => {
   // Pagination states for "Lost Opportunity Breakdown" table
   const [lostLeadsCurrentPage, setLostLeadsCurrentPage] = useState(1);
   const lostLeadsPerPage = 10; // Number of lost leads to show per page
+
+  // State for chart granularity (Week or Month)
+  const [chartGranularity, setChartGranularity] = useState("week"); // Default to 'week'
 
   // Helper function to format a Date object to "YYYY-MM-DD" string for input type="date"
   const formatDateForInput = (date) => {
@@ -83,10 +167,6 @@ const LeadConversionPage = () => {
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
 
-      // Log the parameters and the base URL for debugging
-      console.log("Fetching conversion data with params:", params);
-      // console.log("Base Request URL:", `${ENDPOINTS.LEAD_CONVERSION}/${companyId}`);
-
       const response = await axios.get(`${ENDPOINTS.LEAD_CONVERSION}/${companyId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,6 +207,8 @@ const LeadConversionPage = () => {
     if (dateFilterFrom || dateFilterTo || (!dateFilterFrom && !dateFilterTo)) {
         fetchConversionData(dateFilterFrom, dateFilterTo);
     }
+    // Reset lost leads page to 1 whenever filters change
+    setLostLeadsCurrentPage(1);
   }, [dateFilterFrom, dateFilterTo, fetchConversionData]); // Dependencies for useEffect
 
   // --- Render Logic with Robust Checks ---
@@ -144,8 +226,7 @@ const LeadConversionPage = () => {
   const { metrics, data: apiData = {} } = data;
   const { dealConversion = [], lostLeads = [] } = apiData; // Default to empty arrays if missing
 
-  // `displayLostLeads` is now guaranteed to be an array due to default assignment
-  const displayLostLeads = lostLeads;
+  const displayLostLeads = lostLeads; // This is the full array to paginate
 
   // --- Pagination Logic for Lost Leads Table ---
   const indexOfLastLostLead = lostLeadsCurrentPage * lostLeadsPerPage;
@@ -162,6 +243,8 @@ const LeadConversionPage = () => {
   };
 
   const renderLostLeadsPagination = () => {
+    if (totalLostLeadsPages <= 1 && displayLostLeads.length <= lostLeadsPerPage) return null; // Don't show pagination if only one page
+
     const pageNumbers = [];
     const maxVisiblePages = 5; // Max number of page buttons to show
 
@@ -172,6 +255,9 @@ const LeadConversionPage = () => {
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
+
+    // Ensure endPage doesn't go below startPage (e.g., if total pages is less than maxVisiblePages)
+    endPage = Math.max(startPage, endPage);
 
     for (let i = startPage; i <= endPage; i++) {
       pageNumbers.push(i);
@@ -186,6 +272,19 @@ const LeadConversionPage = () => {
         >
           Prev
         </button>
+        {startPage > 1 && (
+          <>
+            <button
+              onClick={() => paginateLostLeads(1)}
+              className={`px-3 py-1 border rounded-lg ${
+                lostLeadsCurrentPage === 1 ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              1
+            </button>
+            {startPage > 2 && <span className="text-gray-600">...</span>}
+          </>
+        )}
         {pageNumbers.map((number) => (
           <button
             key={number}
@@ -197,6 +296,19 @@ const LeadConversionPage = () => {
             {number}
           </button>
         ))}
+        {totalLostLeadsPages > endPage && (
+          <>
+            {totalLostLeadsPages > endPage + 1 && <span className="text-gray-600">...</span>}
+            <button
+              onClick={() => paginateLostLeads(totalLostLeadsPages)}
+              className={`px-3 py-1 border rounded-lg ${
+                lostLeadsCurrentPage === totalLostLeadsPages ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {totalLostLeadsPages}
+            </button>
+          </>
+        )}
         <button
           onClick={() => paginateLostLeads(lostLeadsCurrentPage + 1)}
           disabled={lostLeadsCurrentPage === totalLostLeadsPages}
@@ -206,7 +318,7 @@ const LeadConversionPage = () => {
         </button>
         {/* Display current range of leads and total filtered leads */}
         {displayLostLeads.length > 0 && (
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 ms-4">
                 {`${indexOfFirstLostLead + 1}-${indexOfLastLostLead > displayLostLeads.length ? displayLostLeads.length : indexOfLastLostLead} of ${displayLostLeads.length}`}
             </span>
         )}
@@ -214,29 +326,64 @@ const LeadConversionPage = () => {
     );
   };
 
-  // --- Chart Data (Using sample data for now, bind with actual API response later) ---
-  const barChartData = {
-    labels: ["Mon", "Tues", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: "Conversion Rate",
-        backgroundColor: "#9FE11D",
-        data: [90, 50, 75, 75, 25, 45, 80],
-      },
-      {
-        label: "Win Rate",
-        backgroundColor: "#CD37CC",
-        data: [60, 65, 88, 70, 50, 0, 80],
-      },
-    ],
+  // --- Chart Data (Bound with actual API response) ---
+  const allDaysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // Short names for chart labels
+
+  // Prepare data for the bar chart based on selected granularity
+  const getBarChartData = () => {
+    let labels = [];
+    let convertedData = [];
+    let wonData = [];
+
+    if (chartGranularity === "week") {
+      labels = allDaysOfWeekShort;
+      convertedData = allDaysOfWeekShort.map(day => metrics.weekWise?.[day] || 0);
+      wonData = allDaysOfWeekShort.map(day => metrics.wonLeadsWeekWise?.[day] || 0);
+    } else { // month
+      // Get and sort unique dates from monthWise and wonLeadsMonthWise
+      const allDates = new Set([
+        ...Object.keys(metrics.monthWise || {}),
+        ...Object.keys(metrics.wonLeadsMonthWise || {})
+      ].sort()); // Ensure dates are sorted chronologically
+
+      labels = Array.from(allDates).map(date => {
+        // Format date to DD MMM (e.g., 18 Jul) for better readability
+        const d = new Date(date);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      });
+
+      convertedData = Array.from(allDates).map(date => metrics.monthWise?.[date] || 0);
+      wonData = Array.from(allDates).map(date => metrics.wonLeadsMonthWise?.[date] || 0);
+    }
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "Converted Leads",
+          backgroundColor: "#9FE11D",
+          data: convertedData,
+        },
+        {
+          label: "Won Leads",
+          backgroundColor: "#CD37CC",
+          data: wonData,
+        },
+      ],
+    };
   };
 
+  const barChartData = getBarChartData();
+
+  // Line chart data remains sample data as the API response doesn't directly provide
+  // "Avg. Conv Time vs. Lead Volume" in the required format.
+  // If you get this data in the future, you'll update this section.
   const lineChartData = {
-    labels: [0, 20, 40, 60, 80, 100],
+    labels: [0, 20, 40, 60, 80, 100], // Lead Volume ranges (Sample)
     datasets: [
       {
         label: "Avg. Conv Time",
-        data: [11, 11, 16, 22, 12, 21],
+        data: [11, 11, 16, 22, 12, 21], // Sample data (in hours)
         borderColor: "#3B82F6",
         backgroundColor: "rgba(59, 130, 246, 0.2)",
         tension: 0.4,
@@ -249,7 +396,7 @@ const LeadConversionPage = () => {
     ],
   };
 
-  const lineChartOptions = {
+ const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -257,18 +404,18 @@ const LeadConversionPage = () => {
         beginAtZero: true,
         title: {
           display: true,
-          text: '(Hrs)',
+          text: 'Time (Hrs)', // Corrected unit
           align: 'end',
         },
         ticks: {
           stepSize: 5,
-          max: 24,
+          // Removed max: 24, as conversion time can exceed 24 hours
         },
       },
       x: {
         title: {
           display: true,
-          text: '(Lead Vol)',
+          text: 'Lead Volume',
           align: 'end',
         },
       },
@@ -285,7 +432,7 @@ const LeadConversionPage = () => {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += context.parsed.y + ' Hrs';
+              label += formatHoursToHrsMins(context.parsed.y); // Use new formatter
             }
             return label;
           }
@@ -300,12 +447,19 @@ const LeadConversionPage = () => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
+        title: {
+          display: true,
+          text: 'Number of Leads',
+        },
         ticks: {
-          callback: function(value) {
-            return value + '%';
-          }
+          precision: 0, // Ensure whole numbers for counts
         }
+      },
+      x: {
+        title: {
+          display: true,
+          text: chartGranularity === "week" ? "Day of Week" : "Date",
+        },
       }
     },
     plugins: {
@@ -314,8 +468,70 @@ const LeadConversionPage = () => {
         labels: {
           usePointStyle: true,
         }
+      },
+      tooltip: {
+        callbacks: {
+          title: function(context) {
+            // For month-wise, show full date in tooltip title
+            if (chartGranularity === "month" && context.length > 0) {
+              const dateLabel = context[0].label;
+              // Assuming labels are "DD MMM", convert back to full date if possible for display
+              // This is a simple parsing, might need more robust date handling for different formats
+              const year = new Date().getFullYear(); // Assume current year for display purposes
+              return `${dateLabel} ${year}`;
+            }
+            return context[0].label; // Default for week-wise
+          }
+        }
       }
     }
+  };
+
+  // Function to handle Excel export
+  const handleExport = () => {
+    if (displayLostLeads.length === 0) {
+      alert("No data to export for the current filter.");
+      return;
+    }
+
+    const dataToExport = displayLostLeads.map(lead => {
+      // Re-use your existing formatting helper functions for consistency
+      const createdAtFormatted = formatDateTimeForTable(lead.dcreated_dt);
+      const lostAtFormatted = formatDateTimeForTable(lead.ConvertToLostTime);
+      
+      let timeToLoseFormatted = "-";
+      const createdAtDate = lead.dcreated_dt ? new Date(lead.dcreated_dt) : null;
+      const lostAtDate = lead.ConvertToLostTime ? new Date(lead.ConvertToLostTime) : null;
+
+      if (createdAtDate && lostAtDate) {
+        const diffTimeMs = Math.abs(lostAtDate.getTime() - createdAtDate.getTime());
+        const diffDaysDecimal = diffTimeMs / (1000 * 60 * 60 * 24); // Convert ms to decimal days
+        timeToLoseFormatted = formatDecimalDaysToDaysHours(diffDaysDecimal); // Format using existing helper
+      }
+
+      return {
+        'S.No': '', // Placeholder for serial number, will be filled below
+        'Lead Name': lead.clead_name || "-",
+        'Owner': lead.user?.cFull_name || "-",
+        'Source': lead.lead_source_id === 1 ? "Website" : "Referral",
+        'Created Date': createdAtFormatted,
+        'Lost At': lostAtFormatted,
+        'Time to Lose': timeToLoseFormatted,
+      };
+    });
+
+    // Add sequential S.No after mapping
+    dataToExport.forEach((row, index) => {
+        row['S.No'] = index + 1;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport); // Convert JSON array to worksheet
+    const wb = XLSX.utils.book_new(); // Create a new workbook
+    XLSX.utils.book_append_sheet(wb, ws, "LostLeadsReport"); // Add the worksheet to the workbook
+
+    // Generate Excel file as ArrayBuffer and trigger download
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'LostLeadsReport.xlsx');
   };
 
   return (
@@ -326,32 +542,28 @@ const LeadConversionPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5">
         <Card
           title="Avg Lead Conversion Time"
-          value={`${metrics.averageDaysToConvert || 0} Days`}
+          value={formatDecimalDaysToDaysHours(metrics.averageDaysToConvert)}
           change=""
           isPositive={true}
         />
         <Card
           title="Fastest Conversion Time"
-          value={`${metrics.fastestConversion || 0} Days`}
-          // change="0.03%"
+          value={formatDecimalDaysToDaysHours(metrics.fastestConversion)}
           isPositive={false}
         />
         <Card
           title="Slowest Conversion Time"
-          value={`${metrics.slowestConversion || 0} Days`}
-          // change="1.25%"
+          value={formatDecimalDaysToDaysHours(metrics.slowestConversion)}
           isPositive={true}
         />
         <Card
           title="Conversion SLA %"
           value={`${metrics.slaPercentage || 0}%`}
-          // change="4.66%"
           isPositive={false}
         />
       </div>
 
-      {/* Lost Opportunity Table Section */}
-      {/* Removed fixed height and overflow-y-scroll from this div */}
+      {/* Date Filter and Notification Area for Lost Opportunities */}
       <div className="bg-white rounded-xl shadow p-4">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-800">Lost Opportunity Breakdown</h2>
@@ -384,18 +596,13 @@ const LeadConversionPage = () => {
                 className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-700"
               />
             </div>
-            {/* "View All" Button */}
-            {/* <button
-              onClick={() => {
-                setDateFilterFrom('');
-                setDateFilterTo('');
-                setShowDefaultMonthNotification(false);
-                setLostLeadsCurrentPage(1); // Reset to the first page when viewing all
-              }}
-              className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition text-sm"
+            {/* Export to Excel Button */}
+            <button
+              onClick={handleExport}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
             >
-              View All
-            </button> */}
+            <HiDownload size={16} className="mr-2" /> Export to Excel
+            </button>
           </div>
         </div>
 
@@ -421,7 +628,7 @@ const LeadConversionPage = () => {
           <table className="w-full text-sm text-left table-auto">
             <thead>
               <tr className="bg-gray-100 text-gray-700">
-                {["S.No", "Lead Name", "Owner", "Source", "Created", "Priority", "Lost At", "Time to Lose"].map((head, i) => (
+                {["S.No", "Lead Name", "Owner", "Source", "Created Date", "Lost At", "Time to Lose"].map((head, i) => (
                   <th key={i} className="px-4 py-2">{head}</th>
                 ))}
               </tr>
@@ -435,9 +642,9 @@ const LeadConversionPage = () => {
                   let timeToLose = "-";
 
                   if (createdAt && lostAt) {
-                    const diffTime = Math.abs(lostAt.getTime() - createdAt.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    timeToLose = `${diffDays} D`;
+                    const diffTimeMs = Math.abs(lostAt.getTime() - createdAt.getTime());
+                    const diffDaysDecimal = diffTimeMs / (1000 * 60 * 60 * 24); // Convert ms to decimal days
+                    timeToLose = formatDecimalDaysToDaysHours(diffDaysDecimal); // Format using existing helper
                   }
 
                   return (
@@ -447,11 +654,9 @@ const LeadConversionPage = () => {
                       <td className="px-4 py-2">{lostLead.clead_name || "-"}</td>
                       <td className="px-4 py-2">{lostLead.user?.cFull_name || "-"}</td>
                       <td className="px-4 py-2">{lostLead.lead_source_id === 1 ? "Website" : "Referral"}</td>
-                      <td className="px-4 py-2">{createdAt ? createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "-"}</td>
-                      <td className="px-4 py-2">
-                        <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full">High</span>
-                      </td>
-                      <td className="px-4 py-2">{lostAt ? lostAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : "-"}</td>
+                      <td className="px-4 py-2">{formatDateTimeForTable(lostLead.dcreated_dt)}</td> {/* Applied new format */}
+                      
+                      <td className="px-4 py-2">{formatDateTimeForTable(lostLead.ConvertToLostTime)}</td> {/* Applied new format */}
                       <td className="px-4 py-2">{timeToLose}</td>
                     </tr>
                   );
@@ -473,7 +678,48 @@ const LeadConversionPage = () => {
           {/* Bar Chart */}
           <div className="bg-white p-4 rounded-xl shadow h-[350px]">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="font-semibold mt-5 text-gray-800">Conversion Rate vs Win Rate</h2>
+              <h2 className="font-semibold text-gray-800">Converted Leads vs Won Leads</h2>
+              {/* Chart Granularity Dropdown */}
+              <Listbox value={chartGranularity} onChange={setChartGranularity}>
+                <div className="relative w-36">
+                  <Listbox.Button className="w-full bg-gray-100 border border-gray-300 rounded-lg py-1.5 pl-3 pr-8 text-left text-sm cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-75">
+                    {chartGranularity === "week" ? "Week-wise" : "Month-wise"}
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                    </span>
+                  </Listbox.Button>
+                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    <Listbox.Option
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                          active ? "bg-blue-100 text-blue-900" : "text-gray-900"
+                        }`
+                      }
+                      value="week"
+                    >
+                      {({ selected }) => (
+                        <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
+                          Week-wise
+                        </span>
+                      )}
+                    </Listbox.Option>
+                    <Listbox.Option
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                          active ? "bg-blue-100 text-blue-900" : "text-gray-900"
+                        }`
+                      }
+                      value="month"
+                    >
+                      {({ selected }) => (
+                        <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
+                          Month-wise
+                        </span>
+                      )}
+                    </Listbox.Option>
+                  </Listbox.Options>
+                </div>
+              </Listbox>
             </div>
             <Bar
               data={barChartData}
@@ -503,8 +749,7 @@ const Card = ({ title, value, change, isPositive }) => (
     <h4 className="text-xs text-gray-500">{title}</h4>
     <div className="text-2xl font-semibold text-gray-900">{value}</div>
     <div className={`text-xs flex items-center ${isPositive ? "text-green-500" : "text-red-500"}`}>
-      {/* <span className="mr-1">{isPositive ? "▲" : "▼"}</span> */}
-      {change}{/* This 'change' value is static; ideally comes from API */}
+      {change}
     </div>
   </div>
 );

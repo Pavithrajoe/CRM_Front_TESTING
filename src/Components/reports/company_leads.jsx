@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { ENDPOINTS } from '../../api/constraints';
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import * as XLSX from 'xlsx'; // Import xlsx library for Excel export
+import { saveAs } from 'file-saver'; // Import saveAs from file-saver for downloading files
 
 
 const CompanyLeads = () => {
@@ -180,6 +182,37 @@ const CompanyLeads = () => {
     );
   };
 
+  // Function to handle Excel export for the leads table
+  const handleExport = () => {
+    if (filteredLeads.length === 0) {
+      alert("No data to export for the current filter.");
+      return;
+    }
+
+    const dataToExport = filteredLeads.map((lead, index) => {
+      return {
+        'S.No': index + 1,
+        'Lead Name': lead.clead_name || '-',
+        'Company Name': lead.corganization || '-',
+        'Source': lead.lead_sources?.source_name || '-',
+        'E-Mail ID': lead.cemail || '-',
+        'Phone No': lead.iphone_no || '-',
+        'Created Date': lead.dcreated_dt
+          ? new Date(lead.dcreated_dt).toLocaleDateString('en-GB').replace(/\//g, '-')
+          : '-',
+        'Lead Owner': lead.user?.cFull_name || '-',
+        'Status': lead.lead_status?.clead_name || 'Unknown',
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "CompanyLeadsReport");
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'CompanyLeadsReport.xlsx');
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Changed Header structure to include both button and title */}
@@ -221,8 +254,8 @@ const CompanyLeads = () => {
 
       {/* Table Controls - moved padding to this div */}
       <div className="px-6 pb-6"> {/* Adjusted padding here to align search/filters */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="relative flex items-center space-x-2">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-2"> {/* Added flex-wrap and gap */}
+          <div className="relative flex items-center space-x-2 flex-wrap gap-2"> {/* Added flex-wrap and gap */}
             <div className="relative">
               <input
                 type="text"
@@ -245,7 +278,7 @@ const CompanyLeads = () => {
             >
               Open
             </button>
-             <button
+            <button
               className={`px-4 py-2 rounded-xl ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-blue-200'}`}
               onClick={() => setFilterType('deal')}
             >
@@ -257,58 +290,88 @@ const CompanyLeads = () => {
             >
               Lost
             </button>
-           
-            {/* New Date Filter Inputs */}
-            <label className="text-gray-700 font-medium text-sm">From:</label>
-            <input
-              type="date"
-              value={dateFilterFrom}
-              onChange={(e) => {
-                setDateFilterFrom(e.target.value);
-                setShowDefaultMonthNotification(false); // Hide notification if user changes date
-              }}
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
-            />
-            <label className="text-gray-700 font-medium text-sm">To:</label>
-            <input
-              type="date"
-              value={dateFilterTo}
-              onChange={(e) => {
-                setDateFilterTo(e.target.value);
-                setShowDefaultMonthNotification(false); // Hide notification if user changes date
-              }}
-              className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
-            />
-            <button
-              className="px-4 py-2 bg-blue-200 text-black rounded-lg"
-              onClick={() => {
-                setFilterType(null);
-                setSearchTerm('');
-                // Reset date filters to empty and trigger re-fetch for all data
-                setDateFilterFrom('');
-                setDateFilterTo('');
-                setShowDefaultMonthNotification(false); // Ensure notification is off
-              }}
-            >
-              Reset
-            </button>
           </div>
+          {/* Export to Excel Button */}
+          <button
+            onClick={handleExport}
+            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
+          >
+            Export to Excel
+          </button>
+        </div>
+
+        {/* New Date Filter Inputs and Reset Button */}
+        <div className="flex gap-4 items-center flex-wrap mb-4">
+          <label className="text-gray-700 font-medium text-sm">From:</label>
+          <input
+            type="date"
+            value={dateFilterFrom}
+            onChange={(e) => {
+              setDateFilterFrom(e.target.value);
+              setShowDefaultMonthNotification(false); // Hide notification if user changes date
+            }}
+            className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+          />
+          <label className="text-gray-700 font-medium text-sm">To:</label>
+          <input
+            type="date"
+            value={dateFilterTo}
+            onChange={(e) => {
+              setDateFilterTo(e.target.value);
+              setShowDefaultMonthNotification(false); // Hide notification if user changes date
+            }}
+            className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
+          />
+          <button
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+            onClick={() => {
+              setFilterType(null);
+              setSearchTerm('');
+              // Reset date filters to empty and trigger re-fetch for all data
+              setDateFilterFrom('');
+              setDateFilterTo('');
+              setShowDefaultMonthNotification(false); // Ensure notification is off
+            }}
+          >
+            Reset All Filters
+          </button>
         </div>
 
         {/* Current Month Data Notification */}
         {showDefaultMonthNotification && dateFilterFrom && dateFilterTo && (
-          <div className="mb-4 p-6 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
+          <div className="mb-4 p-3 rounded-lg text-sm"
+            style={{
+              background: "linear-gradient(to right, #e6ffe6, #d0ffe0)",
+              color: "#1b5e20",
+              border: "1px solid #a5d6a7",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            }}
+          >
             💡 Showing leads for the **current month**: **{new Date(dateFilterFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **{new Date(dateFilterTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.
           </div>
         )}
         {!showDefaultMonthNotification && dateFilterFrom && dateFilterTo && (
-          <div className="mb-4 p-6 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
-            Filtering leads from **{new Date(dateFilterFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **{new Date(dateFilterTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.
+          <div className="mb-4 p-3 rounded-lg text-sm"
+            style={{
+              background: "linear-gradient(to right, #e0f7fa, #c2eff5)",
+              color: "#006064",
+              border: "1px solid #80deea",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            }}
+          >
+            🗓️ Filtering leads from **{new Date(dateFilterFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}** to **{new Date(dateFilterTo).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}**.
           </div>
         )}
         {!dateFilterFrom && !dateFilterTo && (
-            <div className="mb-4 p-6 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
-                Showing all leads.
+            <div className="mb-4 p-3 rounded-lg text-sm"
+              style={{
+                background: "linear-gradient(to right, #f8f8f8, #f0f0f0)",
+                color: "#424242",
+                border: "1px solid #e0e0e0",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              }}
+            >
+                📊 Showing **all available leads** (no date filter applied).
             </div>
         )}
 

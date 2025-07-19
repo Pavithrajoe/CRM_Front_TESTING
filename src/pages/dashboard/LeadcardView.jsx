@@ -340,7 +340,7 @@ const LeadCardViewPage = () => {
                 const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
 
                 if (isConvertedAssigned) {
-                    statusDisplay = 'Deal';
+                    statusDisplay = 'Won';
                     statusColor = 'bg-green-100 text-green-700';
                 } else if (!isActiveAssigned && !isConvertedAssigned) {
                     statusDisplay = 'Lost';
@@ -930,7 +930,7 @@ else {
                                         statusBgColor = getStatusColor('lost');
                                     } else {
                                         if (isConverted) {
-                                            statusText = 'Deal';
+                                            statusText = 'Won';
                                             statusBgColor = getStatusColor('deal');
                                         } else if (item.website_lead === true || item.website_lead === 'true') {
                                             statusText = 'Website Lead';

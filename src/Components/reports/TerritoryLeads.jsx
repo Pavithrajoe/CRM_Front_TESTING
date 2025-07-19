@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ENDPOINTS } from "../../api/constraints";
+import { ENDPOINTS } from "../../api/constraints"; // Assuming this path is correct for your API endpoints
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,20 +10,28 @@ import {
   ArcElement,
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
-import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react";
-import { Listbox } from "@headlessui/react";
-import { FaRupeeSign, FaArrowLeft } from "react-icons/fa"; // Import FaArrowLeft
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react"; // Icons from Lucide React
+import { Listbox } from "@headlessui/react"; // Headless UI for accessible dropdown
+import { FaRupeeSign, FaArrowLeft } from "react-icons/fa"; // Font Awesome icons
+import { useNavigate } from "react-router-dom"; // React Router for navigation
+import { HiDownload } from "react-icons/hi"; // Heroicons for download icon
 
+// Import xlsx and file-saver for Excel export
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+
+// Register Chart.js components
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement);
 
 const TerritoryLeadsAnalytics = () => {
+  // State variables for data, selected territory, and pagination
   const [data, setData] = useState(null);
   const [territory, setTerritory] = useState("All Territories");
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 10;
-  const navigate = useNavigate(); // Initialize useNavigate
+  const leadsPerPage = 10; // Number of leads to display per page
+  const navigate = useNavigate(); // Hook for programmatic navigation
 
+  // useEffect hook to fetch data from the API on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -31,28 +39,37 @@ const TerritoryLeadsAnalytics = () => {
           method: "GET",
           headers: {
             "content-type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Get token from local storage
           },
         });
-        if (!response.ok) throw new Error("Failed to fetch territory leads data");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch territory leads data: ${response.statusText}`);
+        }
 
         const responseData = await response.json();
-        setData(responseData.data);
+        setData(responseData.data); // Set the fetched data to state
       } catch (err) {
         console.error("Error fetching territory leads data:", err);
+        // TODO: Implement user-friendly error display (e.g., toast notification)
       }
     };
 
-    fetchData();
-  }, []);
+    fetchData(); // Call the fetch function
+  }, []); // Empty dependency array means this runs once on mount
 
-  if (!data) return <div className="text-center mt-10 text-gray-500">Loading...</div>;
+  // Display loading message if data hasn't been fetched yet
+  if (!data) {
+    return <div className="text-center mt-10 text-gray-500">Loading analytics data...</div>;
+  }
 
+  // Generate a list of all available territories including "All Territories" option
   const allTerritories = ["All Territories", ...Object.keys(data.leadsPerTerritory)];
 
+  // Helper function to merge data for "All Territories" view
   const getMergedData = () => {
-    if (territory !== "All Territories") return null;
+    if (territory !== "All Territories") return null; // Only merge if "All Territories" is selected
 
+    // Helper to sum counts from nested objects
     const mergeCounts = (objects) => {
       const merged = {};
       for (const obj of Object.values(objects)) {
@@ -63,6 +80,7 @@ const TerritoryLeadsAnalytics = () => {
       return merged;
     };
 
+    // Calculate totals across all territories
     const totalLeads = Object.values(data.leadsPerTerritory).reduce((a, b) => a + b, 0);
     const totalRevenue = Object.values(data.revenuePerTerritory).reduce((a, b) => a + b, 0);
     const totalConverted = Object.values(data.conversionPerTerritory).reduce(
@@ -75,25 +93,28 @@ const TerritoryLeadsAnalytics = () => {
       totalLeads,
       totalRevenue,
       converted: totalConverted,
-      conversionRate: ((totalConverted / total) * 100).toFixed(2) + "%",
+      conversionRate: total > 0 ? ((totalConverted / total) * 100).toFixed(2) + "%" : "0.00%",
       status: mergeCounts(data.statusPerTerritory),
       sources: mergeCounts(data.sourceBreakdownPerTerritory),
     };
   };
 
-  const merged = getMergedData();
-  const leadList = data.lead_list || [];
+  const merged = getMergedData(); // Get merged data for "All Territories"
 
+  // Filter the main lead list based on the selected territory
+  const leadList = data.lead_list || [];
   const filteredLeads =
     territory === "All Territories"
       ? leadList
       : leadList.filter((lead) => lead.city?.cCity_name === territory);
 
+  // Pagination calculations for the lead list table
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
 
+  // Determine which data to use for charts and cards based on territory selection
   const statusData = territory === "All Territories" ? merged.status : data.statusPerTerritory[territory];
   const sourceData =
     territory === "All Territories" ? merged.sources : data.sourceBreakdownPerTerritory[territory];
@@ -102,76 +123,170 @@ const TerritoryLeadsAnalytics = () => {
   const revenue = territory === "All Territories" ? merged.totalRevenue : data.revenuePerTerritory[territory];
   const totalLeads = territory === "All Territories" ? merged.totalLeads : data.leadsPerTerritory[territory];
 
+  // Data configuration for the Bar chart (Leads by Status)
   const barChartData = {
-    labels: Object.keys(statusData),
+    labels: Object.keys(statusData || {}), // Ensure labels are based on available keys
     datasets: [
       {
         label: "Leads",
-        data: Object.values(statusData),
-        backgroundColor: "#007AFF",
+        data: Object.values(statusData || {}), // Ensure data is based on available values
+        backgroundColor: "#007AFF", // A pleasant blue color
+        borderRadius: 5, // Rounded bars
       },
     ],
   };
 
+  // Data configuration for the Pie chart (Lead Source Breakdown)
   const pieChartData = {
-    labels: Object.keys(sourceData),
+    labels: Object.keys(sourceData || {}),
     datasets: [
       {
         label: "Sources",
-        data: Object.values(sourceData),
-        backgroundColor: ["#34C759", "#FF9500", "#FF2D55", "#AF52DE", "#5AC8FA"],
+        data: Object.values(sourceData || {}),
+        backgroundColor: [
+          "#34C759", // Green
+          "#FF9500", // Orange
+          "#FF2D55", // Red
+          "#AF52DE", // Purple
+          "#5AC8FA", // Light Blue
+          "#C69C6D", // Brownish
+          "#8E8E93", // Gray
+        ],
+        hoverOffset: 4, // Slightly move segments on hover
       },
     ],
   };
 
+  // Common chart options for responsive design and basic appearance
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: false, // Allows flexible height/width
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: false, // Hide default legend as it's not needed for these charts
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        cornerRadius: 4,
+        padding: 10,
+      }
     },
     scales: {
-      y: { ticks: { precision: 0, font: { size: 11 } } },
-      x: { ticks: { font: { size: 11 } } },
+      y: {
+        ticks: {
+          precision: 0, // Ensure whole numbers for Y-axis ticks
+          font: { size: 11 },
+          color: '#6B7280', // Text color for ticks
+        },
+        grid: {
+            color: '#E5E7EB', // Light grid lines
+        }
+      },
+      x: {
+        ticks: {
+          font: { size: 11 },
+          color: '#6B7280', // Text color for ticks
+        },
+        grid: {
+            display: false, // Hide x-axis grid lines
+        }
+      },
     },
   };
 
+  // Function to determine CSS classes for lead status badges
   function getStatusColor(status) {
-    switch (status.toLowerCase()) {
-      case "new": return "bg-blue-100 text-blue-700";
-      case "contacted": return "bg-yellow-100 text-yellow-700";
-      case "qualified": return "bg-green-100 text-green-700";
-      case "lost": return "bg-red-100 text-red-700";
-      case "converted": return "bg-purple-100 text-purple-700";
-      case "won": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-600";
+    switch (status?.toLowerCase()) {
+      case "new":
+        return "bg-blue-100 text-blue-700";
+      case "contacted":
+        return "bg-yellow-100 text-yellow-700";
+      case "qualified":
+        return "bg-green-100 text-green-700";
+      case "lost":
+        return "bg-red-100 text-red-700";
+      case "converted":
+        return "bg-purple-100 text-purple-700";
+      case "won":
+        return "bg-teal-100 text-teal-700"; // Changed to teal for "Won" to differentiate from "Qualified"
+      default:
+        return "bg-gray-100 text-gray-600";
     }
   }
 
+  // Function to handle Excel export for the filtered lead list
+  const exportToExcel = () => {
+    if (filteredLeads.length === 0) {
+      alert("No data to export for the current selection.");
+      return;
+    }
+
+    const headers = [
+      "S.No",
+      "Lead Name",
+      "Email",
+      "Phone",
+      "Status",
+      "Project Value",
+      "City",
+    ];
+
+    const dataForExport = filteredLeads.map((lead, index) => ({
+      "S.No": index + 1,
+      "Lead Name": lead.lead_name || "-",
+      "Email": lead.mail || "-",
+      "Phone": lead.phone || "-",
+      "Status": lead.lead_status || "-",
+      "Project Value": lead.project_value || 0, // Default to 0 if null/undefined
+      "City": lead.city?.cCity_name || "-",
+    }));
+
+    // Create a worksheet from JSON data
+    const ws = XLSX.utils.json_to_sheet(dataForExport, { header: headers });
+
+    // Create a new workbook and append the worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Territory Leads"); // Sheet name
+
+    // Write the workbook to an ArrayBuffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    // Create a Blob and save the file using file-saver
+    const dataBlob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(dataBlob, `territory_leads_${territory.replace(/\s/g, '_').toLowerCase()}.xlsx`);
+  };
+
   return (
-    <div className="p-4  mx-auto font-[system-ui]">
+    <div className="p-4 mx-auto font-[system-ui] bg-gray-50 min-h-screen">
+      {/* Header and Back Button */}
       <div className="flex items-center mb-6">
         <button
-          onClick={() => navigate("/reportpage")} // Navigate to /reportpage
+          onClick={() => navigate("/reportpage")}
           className="text-gray-600 hover:text-gray-900 mr-4 text-2xl p-2 rounded-full hover:bg-gray-200 transition-colors"
           aria-label="Back to reports"
         >
-          <FaArrowLeft /> {/* Back arrow icon */}
+          <FaArrowLeft />
         </button>
         <h1 className="text-2xl font-bold text-gray-900 text-center">Territory-Based Analytics</h1>
       </div>
 
+      {/* Territory Selection Dropdown */}
       <div className="mb-8 flex justify-center">
-        <Listbox value={territory} onChange={(value) => {
-          setTerritory(value);
-          setCurrentPage(1);
-        }}>
+        <Listbox
+          value={territory}
+          onChange={(value) => {
+            setTerritory(value);
+            setCurrentPage(1); // Reset to first page when territory changes
+          }}
+        >
           <div className="relative w-64">
-            <Listbox.Button className="w-full bg-white border border-gray-300 rounded-full py-2 pl-4 pr-10 text-left shadow-md text-sm focus:outline-none">
+            <Listbox.Button className="w-full bg-white border border-gray-300 rounded-full py-2 pl-4 pr-10 text-left shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
               <span>{territory}</span>
               <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
             </Listbox.Button>
-            <Listbox.Options className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto text-sm">
+            <Listbox.Options className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto text-sm focus:outline-none">
               {allTerritories.map((t) => (
                 <Listbox.Option
                   key={t}
@@ -192,6 +307,7 @@ const TerritoryLeadsAnalytics = () => {
         </Listbox>
       </div>
 
+      {/* Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card icon={<Users size={18} />} title="Total Leads" value={totalLeads} />
         <Card icon={<FaRupeeSign size={18} />} title="Revenue" value={`₹${revenue.toLocaleString()}`} />
@@ -199,97 +315,122 @@ const TerritoryLeadsAnalytics = () => {
         <Card icon={<PieChart size={18} />} title="Won Rate" value={conversionData.conversionRate} />
       </div>
 
+      {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl shadow-md p-4 h-[260px]">
+        {/* Leads by Status Bar Chart */}
+        <div className="bg-white rounded-2xl shadow-md p-4 h-[280px] flex flex-col">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Leads by Status</h3>
-          <div className="w-full h-[200px]">
+          <div className="flex-grow w-full h-[200px]"> {/* Chart container */}
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md p-4 h-[260px]">
+        {/* Lead Source Breakdown Pie Chart */}
+        <div className="bg-white rounded-2xl shadow-md p-4 h-[280px] flex flex-col">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Lead Source Breakdown</h3>
-          <div className="w-full h-[200px]">
-            <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} />
+          <div className="flex-grow w-full h-[200px] flex justify-center items-center"> {/* Centered chart container */}
+            <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} /> {/* No scales for pie chart */}
           </div>
         </div>
       </div>
 
+      {/* Lead List Table with Pagination and Export */}
       <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 shadow-xl">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Lead List: {territory}</h3>
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <h3 className="text-xl font-bold text-gray-900">Lead List: {territory}</h3>
+          {/* Export Button for Excel */}
+          <button
+            onClick={exportToExcel}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
+          >
+            <HiDownload size={16} className="mr-2" /> Export to Excel
+          </button>
+        </div>
+
         <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm max-h-[500px]">
           <table className="min-w-full text-sm text-left text-gray-800 font-medium">
             <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-300 text-gray-600">
               <tr>
-                <th className="px-6 py-4">S.No</th>
-                <th className="px-6 py-4">Lead Name</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Phone</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Project Value</th>
-                <th className="px-6 py-4">City</th>
+                <th className="px-6 py-4 whitespace-nowrap">S.No</th>
+                <th className="px-6 py-4 whitespace-nowrap">Lead Name</th>
+                <th className="px-6 py-4 whitespace-nowrap">Email</th>
+                <th className="px-6 py-4 whitespace-nowrap">Phone</th>
+                <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 whitespace-nowrap">Project Value</th>
+                <th className="px-6 py-4 whitespace-nowrap">City</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {currentLeads.map((lead, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-3">{indexOfFirstLead + index + 1}</td>
-                  <td className="px-6 py-3">{lead.lead_name}</td>
-                  <td className="px-6 py-3">{lead.mail}</td>
-                  <td className="px-6 py-3">{lead.phone}</td>
-                  <td className="px-6 py-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold select-none ${getStatusColor(lead.lead_status)}`}>
-                      {lead.lead_status}
-                    </span>
+              {currentLeads.length > 0 ? (
+                currentLeads.map((lead, index) => (
+                  <tr key={lead._id || index} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-3">{indexOfFirstLead + index + 1}</td>
+                    <td className="px-6 py-3">{lead.lead_name || "-"}</td>
+                    <td className="px-6 py-3">{lead.mail || "-"}</td>
+                    <td className="px-6 py-3">{lead.phone || "-"}</td>
+                    <td className="px-6 py-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold select-none ${getStatusColor(lead.lead_status)}`}>
+                        {lead.lead_status || "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3">₹{lead.project_value?.toLocaleString() || 0}</td>
+                    <td className="px-6 py-3">{lead.city?.cCity_name || "-"}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center py-6 text-gray-500">
+                    No leads found for the selected territory.
                   </td>
-                  <td className="px-6 py-3">₹{lead.project_value?.toLocaleString() || 0}</td>
-                  <td className="px-6 py-3">{lead.city?.cCity_name || "-"}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
-
-          
         </div>
 
-        <div className="flex justify-center items-center space-x-3 mt-8">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 disabled:opacity-40"
-          >
-            Prev
-          </button>
-
-          {[...Array(totalPages)].map((_, i) => (
+        {/* Pagination Controls */}
+        {totalPages > 1 && ( // Only show pagination if there's more than 1 page
+          <div className="flex justify-center items-center space-x-3 mt-8">
             <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-4 py-2 rounded-full font-semibold transition ${
-                currentPage === i + 1
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              }`}
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 disabled:opacity-40 transition-colors"
             >
-              {i + 1}
+              Prev
             </button>
-          ))}
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
+            {/* Render page number buttons */}
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-4 py-2 rounded-full font-semibold transition-all ${
+                  currentPage === i + 1
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 disabled:opacity-40 transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
+// Reusable Card component for displaying key metrics
 const Card = ({ icon, title, value }) => (
-  <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center text-center transition-all hover:shadow-lg">
+  <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center text-center transition-all hover:shadow-lg transform hover:-translate-y-1">
     <div className="text-blue-600 mb-1">{icon}</div>
     <h4 className="text-xs text-gray-500">{title}</h4>
     <p className="text-xl font-bold text-gray-800 mt-1">{value}</p>

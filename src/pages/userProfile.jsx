@@ -6,6 +6,7 @@ import SettingsPage from './userPage/settingsPage';
 import HistoryDashboard from './userPage/historyPage';
 import TargetDashboard from './userPage/TargetPage';
 import AcheivementDashboard from './userPage/acheivementPage';
+import UserCallLogs from './userPage/userCallLogs';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie, FaUserCircle
 } from 'react-icons/fa';
@@ -29,12 +30,16 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   </div>
 );
 
-const tabs = ['Target', 'History', 'Settings', 'Achievement'];
+const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs'];
 
 const UserProfile = () => {
   const { userId } = useParams();
+
+  // const { email } = useParams();
+  const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Target');
+
   const [showForm, setShowForm] = useState(false);
   const [editFormData, setEditFormData] = useState({
     cFull_name: '',
@@ -60,6 +65,9 @@ const UserProfile = () => {
           },
         });
         const data = await response.json();
+        setEmail(data.cEmail);
+
+        console.log("The emial id is: ", data.cEmail);
         if (!response.ok) throw new Error(data.message);
         setUser(data);
         // Initialize edit form data
@@ -89,6 +97,9 @@ const UserProfile = () => {
           },
         });
         const data = await response.json();
+
+      
+
         if (!response.ok) throw new Error(data.message);
         const filtered = data.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
         setReportToUsers(filtered);
@@ -267,6 +278,11 @@ const UserProfile = () => {
         {activeTab === 'Achievement' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
             <AcheivementDashboard userId={userId} />
+          </div>
+        )}
+        {activeTab === 'Call Logs' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <UserCallLogs userId={email} />
           </div>
         )}
       </div>

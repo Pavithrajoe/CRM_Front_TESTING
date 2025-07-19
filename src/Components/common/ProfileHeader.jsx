@@ -191,6 +191,7 @@ const ProfileHeader = () => {
 
   return (
     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
+   
       <button
         onClick={handleLeadFormOpen}
         className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
@@ -304,9 +305,22 @@ const ProfileHeader = () => {
             >
               Logout
             </button>
+
+            
           </div>
+          
+          
+
         )}
+        
       </div>
+       <a href="https://expense.inklidox.com/" class="inline-block">
+    <img
+        src="../../../public/images/nav/menu.svg"
+        alt="Expense Link"
+        class="h-6 w-6"
+    />
+</a>  
     </div>
   );
 };

@@ -55,6 +55,7 @@ import CompanyMaster from "./pages/Masters/companyMaster.jsx";
 import LeadConversionPage from "./Components/reports/LeadConversionPage.jsx";
 import UserDeals from "./pages/userPage/userDeal.jsx";
 import UserReportPage from "./pages/userPage/UserReportPage.jsx";
+import UserCallLogs from "./pages/userPage/userCallLogs";
 
 function App() {
   return (
@@ -100,6 +101,7 @@ function App() {
               <Route path="leadtimeline" element={<LeadTimeline />} />
               <Route path="allleadpage" element={<AllLeadsPage />} />
               <Route path="history" element={<HistoryPage />} />
+              <Route path="usercalllogs" element={<UserCallLogs />}/>
               <Route path="companymaster" element={<CompanyMaster />} />
            
 

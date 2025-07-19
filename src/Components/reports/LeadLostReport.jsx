@@ -11,6 +11,9 @@ import {
 } from "chart.js";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
+import { HiDownload } from "react-icons/hi";
+import * as XLSX from 'xlsx'; // Import xlsx library
+import { saveAs } from 'file-saver'; // Import saveAs from file-saver
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -29,6 +32,10 @@ export default function LostLeadReports() {
   const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
   const [isDefaultMonth, setIsDefaultMonth] = useState(true); // Tracks if current month is active
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // You can adjust this value
 
   const navigate = useNavigate();
 
@@ -180,7 +187,7 @@ export default function LostLeadReports() {
 
         const data = await response.json();
         setFilteredTableData(data.data.lead_details || []); // Only set lead_details for the table
-
+        setCurrentPage(1); // Reset to first page when filters change
       } catch (error) {
         console.error("Error fetching filtered table data:", error);
       } finally {
@@ -213,7 +220,7 @@ export default function LostLeadReports() {
         display: true,
         text: 'Monthly Lead Performance', // Chart Title
         font: {
-          size: 18,
+          size: 20,
           weight: 'bold'
         },
         color: '#333'
@@ -265,6 +272,38 @@ export default function LostLeadReports() {
     }
   };
 
+  // Function to handle Excel export
+  const handleExport = () => {
+    if (filteredTableData.length === 0) {
+      alert("No data to export for the current filter.");
+      return;
+    }
+
+    const dataToExport = filteredTableData.map(lead => ({
+      'Lead Name': lead.lead_name,
+      'Lead Owner': lead.lead_owner,
+      'Created Date': new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }),
+      'Value (₹)': lead.value,
+      'Reason': lead.reason,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "LostLeadsReport");
+
+    // Generate buffer and download
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'LostLeadsReport.xlsx');
+  };
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredTableData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTableData.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div
       style={{
@@ -301,7 +340,7 @@ export default function LostLeadReports() {
           <FaArrowLeft />
         </button>
         <h2 style={{ fontSize: 28, fontWeight: 700, color: "#1c1c1e" }}>
-          Lost Lead Reports Overview 📊
+          Lost Lead Reports Overview 
         </h2>
       </div>
 
@@ -314,7 +353,7 @@ export default function LostLeadReports() {
             background: "white",
             borderRadius: 20,
             padding: 24,
-            boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+            boxShadow: "0 10px 25px rgba(0.06,0.06,0.06,0.06)",
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: 16,
@@ -328,10 +367,10 @@ export default function LostLeadReports() {
                 key={idx}
                 style={{
                   background: "rgba(255, 255, 255, 0.75)",
-                  backdropFilter: "blur(12px)",
-                  borderRadius: 16,
+                  // backdropFilter: "blur(12px)",
+                  borderRadius: 30,
                   padding: "20px 16px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
+                  boxShadow: "0 6px 12px rgba(0.04, 00.4, 0.04, 0.04)",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
@@ -406,11 +445,24 @@ export default function LostLeadReports() {
           padding: 24,
         }}
       >
-        <h3
-          style={{ marginBottom: 16, fontSize: 24, fontWeight: 600, color: "#1c1c1e", fontFamily: "serif" }}
-        >
-          Lost Leads Table (Filtered by Date)
-        </h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: "15px" }}>
+          <h3
+            style={{ fontSize: 20, fontWeight: 600, color: "#1c1c1e" }}
+          >
+            Lost Leads Table (Filtered by Date)
+          </h3>
+          {/* Export to Excel Button */}
+          <button
+            onClick={handleExport}
+                       className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
+
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#218838"} // Darker green on hover
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"} // Original green on leave
+          >
+            <HiDownload size={16} className="mr-2" /> Export to Excel
+          </button>
+        </div>
+
 
         {/* Date Filters and Message Display */}
         <div style={{
@@ -506,75 +558,142 @@ export default function LostLeadReports() {
         {loadingTable ? (
           <p>Loading table data...</p>
         ) : (
-          <div style={{ overflowX: "auto", overflowY: "scroll", height: "60vh" }}>
-            <table className="w-full justify-center border-collapse text-lg text-gray-800  font-serif">
-              <thead>
-                <tr style={{ backgroundColor: "#f2f2f7", fontSize: 20, fontWeight: 600 }}>
-                  <th
-                    className="px-4 py-3 font-semibold text-lg text-center"
-                    style={{ wordBreak: "break-word" }}
-                  >
-                    S.No.
-                  </th>
-                  {[
-                    "Lead Name",
-                    "Lead Owner",
-                    "Created Date",
-                    "Value",
-                    "Reason",
-                  ].map((header) => (
+          <>
+            <div style={{ overflowX: "auto", overflowY: "scroll", height: "60vh" }}>
+              <table className="w-full justify-center border-collapse text-lg text-gray-800">
+                <thead>
+                  <tr style={{ backgroundColor: "#f2f2f7", fontSize: 20, fontWeight: 600 }}>
                     <th
-                      key={header}
-                      className="px-4 py-3 text-lg font-semibold text-center"
+                      className="px-4 py-3 font-semibold text-sm text-center"
                       style={{ wordBreak: "break-word" }}
                     >
-                      {header}
+                      S.No.
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTableData.length > 0 ? (
-                  filteredTableData.map((lead, index) => (
-                    <tr
-                      key={index}
-                      style={{
-                        borderBottom: "1px solid #ececec",
-                        transition: "background 0.3s",
-                      }}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-4 py-3 text-lg justify-center text-center">{index + 1}</td>
-                      <td className="px-4 py-3 text-lg justify-center text-center">{lead.lead_name}</td>
-                      <td className="px-4 py-3 text-lg justify-center text-center">{lead.lead_owner}</td>
-                      <td className="px-4 py-3 text-lg justify-center text-center">
-                        {new Date(lead.created_at).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'numeric',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true,
-                        }).replace(',', '').toUpperCase()}
-                      </td>
-                      <td className="px-4 py-3 text-lg justify-center text-center font-semibold text-blue-600">
-                        ₹{lead.value}
-                      </td>
-                      <td className="px-4 py-3 text-lg justify-center text-center text-red-500 font-medium">
-                        {lead.reason}
+                    {[
+                      "Lead Name",
+                      "Lead Owner",
+                      "Created Date",
+                      "Value",
+                      "Reason",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="px-4 py-3 text-sm font-semibold text-center"
+                        style={{ wordBreak: "break-word" }}
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((lead, index) => (
+                      <tr
+                        key={index}
+                        style={{
+                          borderBottom: "1px solid #ececec",
+                          transition: "background 0.3s",
+                        }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-3 text-sm justify-center text-center">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                        <td className="px-4 py-3 text-sm justify-center text-center">{lead.lead_name}</td>
+                        <td className="px-4 py-3 text-sm justify-center text-center">{lead.lead_owner}</td>
+                        <td className="px-4 py-3 text-sm justify-center text-center">
+                          {new Date(lead.created_at).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          }).replace(',', '').toUpperCase()}
+                        </td>
+                        <td className="px-4 py-3 text-sm justify-center text-center font-semibold text-blue-600">
+                          ₹{lead.value}
+                        </td>
+                        <td className="px-4 py-3 text-sm justify-center text-center text-red-500 font-medium">
+                          {lead.reason}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-6 text-center  text-gray-500">
+                        No lost leads found for the selected period.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-center  text-gray-500">
-                      No lost leads found for the selected period.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {filteredTableData.length > 0 && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+                <nav>
+                  <ul style={{ display: "flex", listStyle: "none", padding: 0 }}>
+                    <li>
+                      <button
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        style={{
+                          padding: "8px 12px",
+                          margin: "0 4px",
+                          border: "1px solid #ddd",
+                          borderRadius: 5,
+                          backgroundColor: currentPage === 1 ? "#f0f0f0" : "#fff",
+                          cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                          color: "#333",
+                          transition: "background-color 0.2s",
+                        }}
+                      >
+                        Previous
+                      </button>
+                    </li>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li key={i}>
+                        <button
+                          onClick={() => paginate(i + 1)}
+                          style={{
+                            padding: "8px 12px",
+                            margin: "0 4px",
+                            border: "1px solid #ddd",
+                            borderRadius: 5,
+                            backgroundColor: currentPage === i + 1 ? "#007bff" : "#fff",
+                            color: currentPage === i + 1 ? "#fff" : "#333",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s, color 0.2s",
+                          }}
+                        >
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+                    <li>
+                      <button
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          padding: "8px 12px",
+                          margin: "0 4px",
+                          border: "1px solid #ddd",
+                          borderRadius: 5,
+                          backgroundColor: currentPage === totalPages ? "#f0f0f0" : "#fff",
+                          cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                          color: "#333",
+                          transition: "background-color 0.2s",
+                        }}
+                      >
+                        Next
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

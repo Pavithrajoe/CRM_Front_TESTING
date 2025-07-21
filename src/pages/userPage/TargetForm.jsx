@@ -10,12 +10,14 @@ export default function SalesForm({ onClose }) {
 
   const getCurrentDateTimeLocal = () => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+
+    const year = now.getFullYear();
+
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    return `${day}-${month}-${year}T${hours}:${minutes}`;
   };
 
   const token = localStorage.getItem("token");
@@ -128,7 +130,7 @@ export default function SalesForm({ onClose }) {
     }
 
     if (!formData.formDate) newErrors.formDate = 'From Date is required';
-    if (!formData.toDate) newErrors.toDate = 'To Date is required';
+    if (!formData.toDate)  newErrors.toDate = 'To Date is required';
     if (!formData.assignedTo) newErrors.assignedTo = 'Assigned To is required';
 
     if (formData.formDate && formData.toDate && new Date(formData.formDate) >= new Date(formData.toDate)) {

@@ -3,9 +3,10 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
 import { Filter, RotateCcw } from 'lucide-react';
+import  { ENDPOINTS } from '../../api/constraints';
 
 function UserCallLogs({userId}) {
-    console.log(userId);
+    console.log(userId);    
     const { users } = useContext(UserContext);
 
     const [callLogs, setCallLogs] = useState([]);
@@ -93,7 +94,8 @@ function UserCallLogs({userId}) {
                 const token = localStorage.getItem('token');
 
                 // Constructing URL with user_email as a query parameter
-                const baseUrl = `http://192.168.1.75:3005/api/getCallLogs`;
+                           const baseUrl = ENDPOINTS.CALL_LOGS;
+           
                 const queryParams = new URLSearchParams();
                 queryParams.append('user_email', userId); // Appen9d the hardcoded email
 

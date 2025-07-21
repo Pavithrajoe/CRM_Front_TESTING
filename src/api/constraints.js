@@ -59,8 +59,9 @@ export const ENDPOINTS = {
   REPORT_LOST: `${BASE_URL}/reports/lost-leads`,
   USER_POST: `${BASE_URL}/user-target`,
   USER_REPORT_DEALS: `${BASE_URL}/user-target/deals-closed-by-user`,
-  CALL_LOGS: `${BASE_URL}/getCallLogs`,
+  CALL_LOGS: `${BASE_URL_DCRM}/getCallLogs`,
   EXCEL_IMPORT: `${BASE_URL}/import-excel-file`,
+  CALLLOG_ACCESS: `${BASE_URL}/users/userAccess`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

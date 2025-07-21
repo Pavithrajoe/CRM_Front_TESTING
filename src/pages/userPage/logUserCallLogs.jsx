@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
 import { Filter, RotateCcw } from 'lucide-react';
+import { ENDPOINTS } from '../../api/constraints';
+import TeamleadHeader from '../../Components/dashboard/teamlead/tlHeader';
+import ProfileHeader from '../../Components/common/ProfileHeader';
 
 function LogUserCallLogs() {
     
-    // const { users } = useContext(UserContext);
+    const { users } = useContext(UserContext);
 
     const [callLogs, setCallLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -23,12 +26,28 @@ function LogUserCallLogs() {
         rejectedCalls:0
     });
 
-   
-     
+    // State to hold the logged-in user's email
+    const [loggedInUserEmail, setLoggedInUserEmail] = useState(null);
 
- 
-    // Hardcoding the user_email as per the request
-    const userEmailToFetch = 'gayathirinagaraj.inklidox@gmail.com'; 
+    // Effect to retrieve the logged-in user's email from localStorage
+    useEffect(() => {
+        try {
+            const userString = localStorage.getItem('user');
+            if (userString) {
+                const userData = JSON.parse(userString); // Parse the JSON string
+                if (userData && userData.cEmail) {
+                    setLoggedInUserEmail(userData.cEmail);
+                } else {
+                    console.warn("User data in localStorage does not contain 'cEmail'.");
+                }
+            } else {
+                console.warn("No user data found in localStorage.");
+            }
+        } catch (err) {
+            console.error("Failed to parse user data from localStorage:", err);
+            toast.error("Error retrieving user information from local storage.");
+        }
+    }, []); // Run only once on component mount
 
     const formatDate = (isoString) => {
         if (!isoString) return 'Nil';
@@ -86,31 +105,38 @@ function LogUserCallLogs() {
 
     useEffect(() => {
         const fetchCallLogs = async () => {
+            // Do not proceed if loggedInUserEmail is not yet available
+            if (!loggedInUserEmail) {
+                setLoading(false);
+                return;
+            }
+
             setLoading(true);
             setError(null);
 
             try {
                 const token = localStorage.getItem('token');
-             const userId = token.find(user => user.cEmail === userEmailToFetch)?.iUser_id;
+                
+                // Assuming your API expects 'user_email' as the parameter
+                // If your API expects 'user_id', you'd need to find the user_id from the 'users' context
+                // based on the loggedInUserEmail first.
+                // For now, let's assume the API directly uses user_email.
+                const userEmailToFetch = loggedInUserEmail; 
 
-                // Constructing URL with user_email as a query parameter
-                const baseUrl = `http://192.168.1.75:3005/api/getCallLogs`;
+                const baseUrl = ENDPOINTS.CALL_LOGS;
                 const queryParams = new URLSearchParams();
-                queryParams.append('user_email', userId); // Appen9d the hardcoded email
+                queryParams.append('user_email', userEmailToFetch); // Use the retrieved email
 
-                // if (startDate) {
-                //     queryParams.append('startDate', startDate);
-                // }
-                // if (endDate) {
-                //     queryParams.append('endDate', endDate);
-                // }
+                if (startDate) {
+                    queryParams.append('startDate', startDate);
+                }
+                if (endDate) {
+                    queryParams.append('endDate', endDate);
+                }
 
                 const url = `${baseUrl}?${queryParams}`;
-                // const url = `${baseUrl}?user_email`;
 
-                console.log("The URL is,", url);
-
-                console.log("Fetching call logs for user email (hardcoded):", userEmailToFetch, "from URL:", url);
+                console.log("Fetching call logs for user email:", userEmailToFetch, "from URL:", url);
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -144,27 +170,44 @@ function LogUserCallLogs() {
             }
         };
 
+        // Re-fetch when loggedInUserEmail or filterTrigger changes
         fetchCallLogs();
-    }, [ userEmailToFetch]); // Add userEmailToFetch to dependencies
-    
- useEffect(() => {
-  if (!callLogs || callLogs.length === 0) return;
+    }, [loggedInUserEmail, filterTrigger, startDate, endDate]); // Added startDate, endDate as dependencies
 
-  const stats = {
-    totalCalls: callLogs.length,
-    incomingCalls: callLogs.filter(log => log.call_type_id === 1).length,
-    outgoingCalls: callLogs.filter(log => log.call_type_id === 2).length,
-    missedCalls: callLogs.filter(log => log.call_type_id === 3).length,
-    rejectedCalls: callLogs.filter(log => log.call_type_id === 4).length,
-  };
+    useEffect(() => {
+        if (!callLogs || callLogs.length === 0) {
+            setCallStats({
+                totalCalls: 0,
+                incomingCalls: 0,
+                outgoingCalls: 0,
+                missedCalls: 0,
+                rejectedCalls: 0
+            });
+            return;
+        }
 
-  setCallStats(stats);
-}, [callLogs]);
+        const stats = {
+            totalCalls: callLogs.length,
+            incomingCalls: callLogs.filter(log => log.call_type_id === 1).length,
+            outgoingCalls: callLogs.filter(log => log.call_type_id === 2).length,
+            missedCalls: callLogs.filter(log => log.call_type_id === 3).length,
+            rejectedCalls: callLogs.filter(log => log.call_type_id === 4).length,
+        };
 
-      
+        setCallStats(stats);
+    }, [callLogs]);
 
        return (
-        <div className="min-h-screen p-6 bg-blue-50 text-gray-800 font-sans">
+           <div className="flex mt-[-80px]">
+              {/* Main Content */}
+              <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
+                {/* Header Section */}
+                <div className="flex justify-between items-center mb-6">
+                  <TeamleadHeader />
+                  <ProfileHeader />
+                </div>
+        <div className="min-h-[100vh] text-gray-800 ">
+            <ToastContainer position="bottom-right" autoClose={3000} />
             <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-2xl border border-blue-200">
                 <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">User Call Logs</h2>
 
@@ -205,19 +248,7 @@ function LogUserCallLogs() {
                         <div className="text-3xl font-bold text-orange-900">{callStats.rejectedCalls}</div>
                         <div className="text-sm text-orange-600 mt-2">Rejections</div>
                     </div>               
-
-                    {/* Card 4: Highest Value Deal Closed */}
-                    {/* <div className="achievement-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
-                        <div className="achievement-card-title text-base text-red-800 font-medium mb-2">Highest Value Deal Closed</div>
-                        <div className="achievement-card-metric text-2xl font-bold text-red-900 mb-2">
-                            {formatCurrency(achievements.highestValueLead?.iproject_value || 0)}
-                        </div>
-                        <div className="achievement-card-trend flex items-center text-sm text-red-600 font-semibold">
-                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : '-'}
-                        </div> */}
-                    </div>
-
-                
+                </div>
 
                 {/* Filter and Reset Buttons */}
                 <div className="flex flex-col md:flex-row items-center justify-end mb-8 space-y-4 md:space-y-0 md:space-x-4 p-4 bg-blue-50 rounded-lg shadow-inner"> {/* Blue-themed filter section */}
@@ -265,7 +296,6 @@ function LogUserCallLogs() {
                         <thead className="bg-blue-700 text-white sticky top-0 shadow-md"> {/* Darker blue header */}
                             <tr>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">S.No</th>
-                                {/* <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Call ID</th> */}
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">User Name</th>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Mobile Number</th>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Call Type</th>
@@ -289,12 +319,12 @@ function LogUserCallLogs() {
                                 </tr>
                             ) : (
                                 callLogs.map((log, index) => {
-                                    const userName = log.caller_name || (users.find(u => u.iUser_id === log.user_id)?.cFull_name || '-');
+                                    // Ensure 'users' is an array before trying to find
+                                    const userName = log.caller_name || (Array.isArray(users) ? users.find(u => u.iUser_id === log.user_id)?.cFull_name : '-') || '-';
 
                                     return (
                                         <tr key={log.call_id || index} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out"> {/* Blue hover for rows */}
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{index + 1}</td>
-                                            {/* <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{log.call_id}</td> */}
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{userName}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{log.call_log_number}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>
@@ -312,9 +342,10 @@ function LogUserCallLogs() {
                         </tbody>
                     </table>
                 </div>
-            </div> {/* Closing div for max-w-7xl container */}
-            <ToastContainer position="bottom-right" autoClose={3000} />
+            </div>
         </div>
+        </main>
+           </div>
     );
 }
 

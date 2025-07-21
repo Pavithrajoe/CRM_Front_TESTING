@@ -105,6 +105,14 @@ const SettingsPage = () => {
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [usernameError, setUsernameError] = useState('');
+  const [toggelestats, setToggelestats] = useState({
+    
+    userId : urlUserId ,
+    whatsapp: false,
+    mail: false,
+    website: false,
+    phone: false,
+});
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -383,6 +391,34 @@ const SettingsPage = () => {
     }
   };
 
+  useEffect(() => {
+    const setToggleStates = async () => {
+      try {
+        const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
+
+          headers: {
+            Authorization:`Bearer ${localStorage.getItem("token")}`,
+            'Content-Type': 'application/json',
+          }
+
+        
+      });  
+      
+      const data = await response.json();
+console.log("Call log access data:", data);
+      if (!response.ok) throw new Error(data.message || 'Failed to fetch call log access');
+    }
+      
+      catch (error) {
+        console.error('Error fetching call log access:', error);
+        
+      }
+   
+  }
+
+
+  }, [urlUserId]);
+  
   const handleUploadPicture = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;

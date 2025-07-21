@@ -1,12 +1,12 @@
-import React, { useEffect, useContext, useState ,useMemo} from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
 import { Filter, RotateCcw } from 'lucide-react';
 
-function UserCallLogs({userId}) {
-    console.log(userId);
-    const { users } = useContext(UserContext);
+function LogUserCallLogs() {
+    
+    // const { users } = useContext(UserContext);
 
     const [callLogs, setCallLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -91,6 +91,7 @@ function UserCallLogs({userId}) {
 
             try {
                 const token = localStorage.getItem('token');
+             const userId = token.find(user => user.cEmail === userEmailToFetch)?.iUser_id;
 
                 // Constructing URL with user_email as a query parameter
                 const baseUrl = `http://192.168.1.75:3005/api/getCallLogs`;
@@ -317,4 +318,4 @@ function UserCallLogs({userId}) {
     );
 }
 
-export default UserCallLogs;
+export default LogUserCallLogs;

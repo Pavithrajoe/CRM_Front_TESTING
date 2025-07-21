@@ -306,7 +306,7 @@ export default function MasterModal({ master, onClose, companyId, userId, master
     };
     const validateMasterName = (name, masterType) => {
   if (!name) return `${masterType} name is required`;
-  if (name.length < 3) return `${masterType} name must be at least 3 characters`;
+  if (name.length < 2) return `${masterType} name must be at least 2 characters`;
   if (name.length > 50) return `${masterType} name cannot exceed 50 characters`;
   return null;
 };
@@ -328,8 +328,8 @@ const handleSave = async () => {
   }
 
   // 👇 Add length validation for service name (applies to all masters using payloadKey)
-  if (formData[master.payloadKey]?.length < 5 || formData[master.payloadKey]?.length > 50) {
-    setApiError(`${master.modalKey || master.title} must be between 5-50 characters`);
+  if (formData[master.payloadKey]?.length < 2 || formData[master.payloadKey]?.length > 50) {
+    setApiError(`${master.modalKey || master.title} must be between 2-50 characters`);
     return; // Stop execution if validation fails
   }
 

@@ -56,6 +56,7 @@ import LeadConversionPage from "./Components/reports/LeadConversionPage.jsx";
 import UserDeals from "./pages/userPage/userDeal.jsx";
 import UserReportPage from "./pages/userPage/UserReportPage.jsx";
 import UserCallLogs from "./pages/userPage/userCallLogs";
+import  LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 
 function App() {
   return (
@@ -102,6 +103,7 @@ function App() {
               <Route path="allleadpage" element={<AllLeadsPage />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="usercalllogs" element={<UserCallLogs />}/>
+              <Route path="logusercalllogs" element={<LogUserCallLogs />} />
               <Route path="companymaster" element={<CompanyMaster />} />
            
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from "lucide-react";
+import { ENDPOINTS} from '../../api/constraints'; // Adjust the import path as necessary
 
 export default function SalesForm({ onClose }) {
-  const ENDPOINTS = {
-    USER_POST: "http://192.168.1.75:3000/api/user-target",
-    USER_GET: "http://192.168.1.75:3000/api/users",
-  };
+  // const ENDPOINTS = {
+  //   USER_POST: "http://192.168.1.75:3000/api/user-target",
+  //   USER_GET: "http://192.168.1.75:3000/api/users",
+  // };
 
   const getCurrentDateTimeLocal = () => {
     const now = new Date();

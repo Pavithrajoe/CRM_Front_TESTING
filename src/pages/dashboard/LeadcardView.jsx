@@ -29,6 +29,12 @@ const LeadCardViewPage = () => {
     const leadsPerPage = 12;
     const [showLostLeads, setShowLostLeads] = useState(true);
     const [showLostDeals, setShowLostDeals] = useState(true);
+    const [showImportModal, setShowImportModal] = useState(false);
+const [selectedFile, setSelectedFile] = useState(null);
+const [importLoading, setImportLoading] = useState(false);
+const [importError, setImportError] = useState(null);
+const [importSuccess, setImportSuccess] = useState(false);
+const [roleID, setRoleID] = useState();
 
     useEffect(() => {
         if (location.state?.activeTab) {
@@ -38,6 +44,7 @@ const LeadCardViewPage = () => {
 
     useEffect(() => {
         let extractedUserId = null;
+        let extractedRoleID = null;
         let tokenFromStorage = null;
 
         try {
@@ -47,8 +54,10 @@ const LeadCardViewPage = () => {
             if (tokenFromStorage) {
                 const decodedToken = jwtDecode(tokenFromStorage);
                 extractedUserId = decodedToken.user_id;
+                extractedRoleID = decodedToken.role_id;
+                
                 //console.log("Decoded Token:", decodedToken);
-                //console.log("Extracted User ID:", extractedUserId);
+                console.log("Extracted Role_id:", extractedRoleID);
 
                 if (!extractedUserId) {
                     throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -69,6 +78,7 @@ const LeadCardViewPage = () => {
 
         if (extractedUserId && tokenFromStorage) {
             setCurrentUserId(extractedUserId);
+            setRoleID(extractedRoleID);
             setCurrentToken(tokenFromStorage);
         } else {
             setError("Failed to obtain valid user ID or authentication token.");
@@ -577,6 +587,78 @@ const LeadCardViewPage = () => {
     if (error) {
         return <div className="text-center py-8 text-red-600 font-medium">{error}</div>;
     }
+const handleImportSubmit = async () => {
+    if (!selectedFile) {
+        setImportError("Please select a file to import");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    setImportLoading(true);
+    setImportError(null);
+    setImportSuccess(false);
+
+    try {
+        const response = await fetch(ENDPOINTS.EXCEL_IMPORT, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+            },
+            body: formData,
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            // Handle 400 Bad Request with specific error details
+            if (response.status === 400) {
+                let errorDetails = "";
+                
+                // Check for different error response formats
+                if (responseData.detail) {
+                    // Handle case where error details are in 'detail' field
+                    errorDetails = responseData.detail;
+                } else if (responseData.errors) {
+                    // Handle validation errors (might be an array or object)
+                    if (Array.isArray(responseData.errors)) {
+                        errorDetails = responseData.errors.join('\n');
+                    } else if (typeof responseData.errors === 'object') {
+                        errorDetails = Object.entries(responseData.errors)
+                            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                            .join('\n');
+                    } else {
+                        errorDetails = responseData.errors;
+                    }
+                } else if (responseData.message) {
+                    errorDetails = responseData.message;
+                } else {
+                    errorDetails = "Invalid file format or missing required fields";
+                }
+
+                throw new Error(errorDetails);
+            } else {
+                throw new Error(responseData.message || `Server error: ${response.status}`);
+            }
+        }
+
+        setImportSuccess(true);
+        // Refresh the leads after successful import
+        setTimeout(() => {
+            fetchLeads();
+            setShowImportModal(false);
+            setSelectedFile(null);
+        }, 1500);
+    } catch (err) {
+        console.error("Import error:", err);
+        // Display the exact error message from backend
+        setImportError(err.message || "An error occurred during import. Please check your file and try again.");
+    } finally {
+        setImportLoading(false);
+    }
+};
+// const isAdminUser = ['administrator', 'superadmin'].includes(extractedRoleID?.toLowerCase());
 
     return (
         <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
@@ -627,38 +709,49 @@ const LeadCardViewPage = () => {
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
-                {['all', 'leads', 'deals', 'websiteLeads', 'assignedToMe', 'lost'].map((filterKey) => (
-                    <button
-                        key={filterKey}
-                        onClick={() => {
-                            setSelectedFilter(filterKey);
-                            setSearchTerm('');
-                            setFromDate('');
-                            setToDate('');
-                            setCurrentPage(1);
-                            setSortConfig({ key: null, direction: 'ascending' }); // Reset sort on tab change
-                        }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                            selectedFilter === filterKey
-                                ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                    >
-                        {filterKey === 'all'
-                            ? 'All Leads'
-                            : filterKey === 'leads'
-                                ? 'Leads'
-                                : filterKey === 'websiteLeads'
-                                    ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
-                                    : filterKey === 'deals'
-                                        ? 'Won'
-                                        : filterKey === 'lost'
-                                            ? 'Lost'
-                                            : 'Assigned to Me'}
-                    </button>
-                ))}
-            </div>
+          <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
+  <div className="flex flex-wrap gap-2">
+    {['all', 'leads', 'deals', 'websiteLeads', 'assignedToMe', 'lost'].map((filterKey) => (
+      <button
+        key={filterKey}
+        onClick={() => {
+          setSelectedFilter(filterKey);
+          setSearchTerm('');
+          setFromDate('');
+          setToDate('');
+          setCurrentPage(1);
+          setSortConfig({ key: null, direction: 'ascending' });
+        }}
+        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+          selectedFilter === filterKey
+            ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`}
+      >
+        {filterKey === 'all'
+          ? 'All Leads'
+          : filterKey === 'leads'
+            ? 'Leads'
+            : filterKey === 'websiteLeads'
+              ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
+              : filterKey === 'deals'
+                ? 'Won'
+                : filterKey === 'lost'
+                  ? 'Lost'
+                  : 'Assigned to Me'}
+      </button>
+    ))}
+  </div>
+  
+{setRoleID && (
+    <button 
+        onClick={() => setShowImportModal(true)}
+        className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition'
+    >
+        Import
+    </button>   
+)}
+</div>
 
             {selectedFilter === 'lost' && (
                 <div className="flex flex-wrap gap-4 mt-4 items-center">
@@ -681,6 +774,7 @@ const LeadCardViewPage = () => {
                         <span>Show Lost Deals</span>
                     </label>
                 </div>
+                
             )}
 
             {showFilterModal && (
@@ -725,6 +819,75 @@ const LeadCardViewPage = () => {
                     </div>
                 </div>
             )}
+            {showImportModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-medium text-gray-800">Import Leads</h2>
+            
+            {importError && (
+                <div className="text-red-600 text-sm p-2 bg-red-50 rounded-md">
+                    {importError}
+                </div>
+            )}
+            
+            {importSuccess && (
+                <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
+                    Leads imported successfully!
+                </div>
+            )}
+
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                <input 
+                    type="file" 
+                    id="file-upload"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                    className="hidden"
+                />
+                <label 
+                    htmlFor="file-upload" 
+                    className="cursor-pointer flex flex-col items-center justify-center"
+                >
+                    <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <span className="text-sm text-gray-600">
+                        {selectedFile ? selectedFile.name : "Click to select Excel file"}
+                    </span>
+                </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+                <button
+                    onClick={() => {
+                        setShowImportModal(false);
+                        setSelectedFile(null);
+                        setImportError(null);
+                        setImportSuccess(false);
+                    }}
+                    className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                    Cancel
+                </button>
+                <button 
+                    onClick={handleImportSubmit}
+                    disabled={!selectedFile || importLoading}
+                    className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {importLoading ? (
+                        <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Importing...
+                        </span>
+                    ) : "Import"}
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
             {displayedData.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm sm:text-base py-8">
@@ -940,7 +1103,10 @@ else {
                                             statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
                                         }
                                     }
+                                    
                                 }
+
+                              
 
                                 return (
                                     <div

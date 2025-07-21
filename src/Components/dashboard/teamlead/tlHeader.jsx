@@ -8,6 +8,7 @@ export default function TeamleadHeader() {
   const currentPath = location.pathname;
   const isProfile = currentPath.includes('profile') || currentPath === '/leads';
   const isTeam = currentPath.includes('team');
+  const isCallLogs = currentPath.includes('/logusercalllogs');
 
   const [userName, setUserName] = useState('User');
 
@@ -15,6 +16,7 @@ export default function TeamleadHeader() {
   const handleTabClick = (tab) => {
     if (tab === 'profile') navigate('/leads');
     if (tab === 'team') navigate('/teamview');
+    if (tab === 'calllogs') navigate('/logusercalllogs');
   };
 
   return (
@@ -38,7 +40,17 @@ export default function TeamleadHeader() {
         >
           Team Dashboard
         </button>
+                <div className="w-px h-5 bg-gray-300"></div>
+                <button
+          onClick={() => handleTabClick('calllogs')}
+          className={`px-4 py-2 rounded-md text-sm font-medium ${
+            isCallLogs ? 'bg-black text-white' : 'text-black'
+          }`}
+        >
+Call Logs        </button>
+
       </div>
+      
     </div>
   );
 }

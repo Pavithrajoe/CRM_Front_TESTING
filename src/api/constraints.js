@@ -1,5 +1,7 @@
 export const BASE_URL = import.meta.env.VITE_API_URL;
 
+export const BASE_URL_DCRM = import.meta.env.VITE_DCRM_API_URL;
+
 export const ENDPOINTS = {
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
@@ -57,7 +59,8 @@ export const ENDPOINTS = {
   REPORT_LOST: `${BASE_URL}/reports/lost-leads`,
   USER_POST: `${BASE_URL}/user-target`,
   USER_REPORT_DEALS: `${BASE_URL}/user-target/deals-closed-by-user`,
-  CALL_LOGS: `${BASE_URL}getCallLogs/14`,
+  CALL_LOGS: `${BASE_URL}/getCallLogs`,
+  EXCEL_IMPORT: `${BASE_URL}/import-excel-file`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -103,4 +106,9 @@ export const ENDPOINTS = {
   PROSPECTS_LOST_LEADS: `${BASE_URL}/reports/prospects-lost-leads`,
   STATUS_REMARKS: `${BASE_URL}/lead-status-remark`,
   FIRST_RESPONSE_FOR_LEAD: `${BASE_URL}/reports/first-response-time`,
+
+  //DCRM Integration API
+
+  DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
+  CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
 };

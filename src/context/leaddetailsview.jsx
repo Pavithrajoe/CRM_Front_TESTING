@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Box } from "@mui/material";
+import { 
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField
+} from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
 import RemainderPage from "../pages/RemainderPage";
@@ -35,14 +43,30 @@ const LeadDetailView = () => {
   const [isWon, setIsWon] = useState(false);
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
+  const [showRemarkDialog, setShowRemarkDialog] = useState(false);
+  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
-  const convertToDeal = async () => {
+  const handleWonClick = () => {
+    setShowRemarkDialog(true);
+    setRemarkData({ remark: '', projectValue: '' });
+  };
+
+  const handleRemarkSubmit = async () => {
+    if (!remarkData.remark.trim()) {
+      showPopup("Error", "Remark is required", "error");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
+      const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
+      if (!userId) throw new Error("User not authenticated");
+
+      // First convert to deal
+      const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -50,17 +74,41 @@ const LeadDetailView = () => {
         },
       });
 
-      if (!response.ok) {
-        showPopup("Error", "Failed to update status!", "error");
-        return;
+      if (!convertResponse.ok) {
+        throw new Error("Failed to convert lead to deal");
       }
 
-      showPopup("Success", "Lead converted to deal!", "success");
+      // Then save the remark
+      const remarkPayload = {
+        remark: remarkData.remark.trim(),
+        leadId: parseInt(leadId),
+        leadStatusId: leadData?.ileadstatus_id, // Use current status ID
+        createBy: userId,
+        ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+      };
+
+      const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(remarkPayload),
+      });
+
+      if (!remarkResponse.ok) {
+        throw new Error("Failed to submit remark");
+      }
+
+      showPopup("Success", "Lead marked as won and remark saved!", "success");
       setIsDeal(true);
       setIsWon(true);
+      setIsLost(false);
+      setShowRemarkDialog(false);
       fetchLeadData();
     } catch (error) {
-      console.error("Error occurred while converting the lead to deal", error);
+      console.error("Error marking lead as won:", error);
+      showPopup("Error", error.message || "Failed to mark lead as won", "error");
     }
   };
 
@@ -103,20 +151,14 @@ const LeadDetailView = () => {
         return;
       }
 
-      const quotes = [
-        "Not every door opens, but every knock builds experience 💪 Keep going 💥.",
-        "Sometimes a 'no' is just redirection to a better opportunity 🔁✨",
-        "Losses are lessons in disguise 📘 Next one's yours!",
-        "Strong minds build from setbacks 🧠💥 You got this!",
-        "This one's gone. But hey, champions always bounce back 🏆🔥",
-      ];
-      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-
-      showPopup("Info", `Lead updated as lost. ${randomQuote}`, "info");
+      showPopup("Info", "Lead updated as lost", "info");
       setLeadLostDescriptionTrue(false);
       setSelectedLostReasonId("");
       setLostDescription("");
-      setIsLost(false);
+      setIsLost(true);
+      setIsDeal(false);
+      setIsWon(false);
+      fetchLeadData();
     } catch (error) {
       console.error("Error marking lead as lost:", error);
     }
@@ -181,14 +223,18 @@ const LeadDetailView = () => {
       const data = await response.json();
       setLeadData(data);
       setIsDeal(data.bisConverted);
-      setIsLost(data.bactive);
+      setIsLost(!data.bactive);
 
       if (data.clead_status_name?.toLowerCase() === 'won') {
         setIsWon(true);
         setIsDeal(true);
+        setIsLost(false);
+      } else if (!data.bactive) {
+        setIsWon(false);
         setIsLost(true);
       } else {
         setIsWon(false);
+        setIsLost(false);
       }
 
       setSentTo(data.cemail || "");
@@ -254,8 +300,8 @@ const LeadDetailView = () => {
 
   useEffect(() => {
     if (isMailOpen && leadData) {
-      if (leadData.cEmail && sentTo !== leadData.cEmail) {
-        setSentTo(leadData.cEmail);
+      if (leadData.cemail && sentTo !== leadData.cemail) {
+        setSentTo(leadData.cemail);
       }
 
       const leadFirstName = leadData.cFirstName || '';
@@ -307,99 +353,131 @@ const LeadDetailView = () => {
     "background",
   ];
 
-  const showActionButtons = !loading && isLost && !isWon;
-  const showLostButton = !loading && isLost && !isWon;
+  const isLeadActive = !isLost && !isWon;
+  const showActionButtons = !loading && isLeadActive;
+  const showLostButton = !loading && isLeadActive;
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
       {/* Left Sidebar - Profile and Action Cards */}
       <div className="w-full lg:w-1/4 p-2 sm:p-3 md:p-4">
         <div className="sticky top-4 z-10 space-y-4">
-          <ProfileCard leadId={leadId} />
-          <ActionCard leadId={leadId} />
+          <ProfileCard 
+            leadId={leadId} 
+            isReadOnly={isLost || isWon} 
+            
+          />
+          {isLeadActive && <ActionCard leadId={leadId} />}
         </div>
       </div>
 
-
-<div className="w-full md:w-full lg:w-full p-4">
+      <div className="w-full md:w-full lg:w-full p-4">
         <div className="mb-4 flex items-center justify-between">
-          <StatusBar leadId={leadId} leadData={leadData} />
-          {!loading && isDeal && isLost && (
-            <div className="flex items-center gap-2 text-green-600 text-lg font-semibold bg-green-50 px-4 py-2 rounded-full shadow">
-              <span role="img" aria-label="won">🎉</span> Won
+          <StatusBar 
+            leadId={leadId} 
+            leadData={leadData} 
+            isLost={isLost} 
+            isWon={isWon} 
+          />
+          {!loading && isWon && (
+            <div className="flex items-center gap-2 text-green-600 text-sm sm:text-lg font-semibold bg-green-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow">
+              <span role="img" aria-label="won">🎉</span> WON
             </div>
           )}
- 
-    
-    {!loading && isWon && (
-      <div className="flex items-center gap-2 text-green-600 text-sm sm:text-lg font-semibold bg-green-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow">
-        <span role="img" aria-label="won">🎉</span> WON
-      </div>
-    )}
-  </div>
-
-  {/* Tabs and Action Buttons */}
-  <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-    {/* Tabs */}
-    <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
-      {["Activity", "Comments", "Reminders"].map((label, idx) => (
-        <button
-          key={label}
-          onClick={() => handleTabChange(null, idx)}
-          disabled={!isLost || isWon}
-          className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors duration-200 ${
-            tabIndex === idx
-              ? "bg-white shadow text-blue-600"
-              : "text-gray-500 hover:bg-white hover:text-blue-600"
-          } ${(!isLost || isWon) ? 'cursor-not-allowed opacity-50' : ''}`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-
-    {/* Action Buttons */}
-    <div className="flex gap-2 sm:gap-3 flex-wrap justify-end sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-      {showActionButtons && (
-        <>
-          <button
-            onClick={() => setIsMailOpen(true)}
-            className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-full shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm"
-            title="Email"
-          >
-            <MdEmail size={16} className="hidden sm:block" /> 
-            <span>Email</span>
-          </button>
-
-          {!isDeal && (
-            <button
-              className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow transition text-xs sm:text-sm"
-              onClick={convertToDeal}
-            >
-              Won
-            </button>
+          {!loading && isLost && (
+            <div className="flex items-center gap-2 text-red-600 text-sm sm:text-lg font-semibold bg-red-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow">
+              <span role="img" aria-label="lost">😞</span> LOST
+            </div>
           )}
-        </>
-      )}
+        </div>
 
-      {showLostButton && (
-        <button
-          className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow-inner transition text-xs sm:text-sm"
-          onClick={handleLostClick}
-        >
-          Lost
-        </button>
-      )}
-    </div>
-  </div>
+        {/* Tabs and Action Buttons */}
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+          {/* Tabs - Always visible but some functionality may be limited */}
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
+            {["Activity", "Comments", "Reminders"].map((label, idx) => (
+              <button
+                key={label}
+                onClick={() => handleTabChange(null, idx)}
+                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors duration-200 ${
+                  tabIndex === idx
+                    ? "bg-white shadow text-blue-600"
+                    : "text-gray-500 hover:bg-white hover:text-blue-600"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-  {/* Tab Content */}
-  <Box className="mt-4 relative z-0 w-full">
-    {tabIndex === 0 && <LeadTimeline leadId={leadId} />}
-    {tabIndex === 1 && <Comments leadId={leadId} />}
-    {tabIndex === 2 && <RemainderPage leadId={leadId} />}
-  </Box>
-</div>
+          {/* Action Buttons - Only shown for active leads */}
+          {showActionButtons && (
+            <div className="flex gap-2 sm:gap-3 flex-wrap justify-end sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+              <button
+                onClick={() => setIsMailOpen(true)}
+                className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-full shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm"
+                title="Email"
+              >
+                <MdEmail size={16} className="hidden sm:block" /> 
+                <span>Email</span>
+              </button>
+              {!loading && !isWon && (
+              <button
+                className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow transition text-xs sm:text-sm"
+                onClick={handleWonClick}
+              >
+                Won
+              </button>
+              )}
+
+              <button
+                className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow-inner transition text-xs sm:text-sm"
+                onClick={handleLostClick}
+              >
+                Lost
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Tab Content - Always visible */}
+        <Box className="mt-4 relative z-0 w-full">
+          {tabIndex === 0 && <LeadTimeline leadId={leadId} isReadOnly={isLost || isWon} />}
+          {tabIndex === 1 && <Comments leadId={leadId} />}
+          {tabIndex === 2 && <RemainderPage leadId={leadId} />}
+        </Box>
+      </div>
+
+      {/* Won Remark Dialog */}
+      <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
+        <DialogTitle>Enter Won Details</DialogTitle>
+        <DialogContent>
+          <TextField
+            label={<span>Remark <span className="text-red-600">*</span></span>}
+            fullWidth
+            multiline
+            rows={3}
+            value={remarkData.remark}
+            onChange={(e) => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Project Value"
+            type="number"
+            fullWidth
+            value={remarkData.projectValue}
+            onChange={(e) => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+          <Button onClick={handleRemarkSubmit} variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Lost Reason Modal */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">

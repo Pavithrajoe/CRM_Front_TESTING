@@ -399,7 +399,14 @@ const SettingsPage = () => {
           headers: {
             Authorization:`Bearer ${localStorage.getItem("token")}`,
             'Content-Type': 'application/json',
-          }
+          },
+           body: JSON.stringify({
+                userId : urlUserId,
+                isMailActive: mail_active,
+                isPhoneActive: phone_active,
+                isWebsiteActive: websiteActive,
+                isWhatsappActive: phoneActive,
+              }),
 
         
       });  

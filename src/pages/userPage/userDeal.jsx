@@ -2,28 +2,30 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { ENDPOINTS } from '../../api/constraints';
-import { useLocation, useParams } from 'react-router-dom'; // Import useParams
+import { useLocation, useParams } from 'react-router-dom';
 
-const UserDeals = () => { // Remove userId from props, we'll get it from params
-    const { userId } = useParams(); // <--- This is the key change!
+const UserDeals = () => {
+    const { userId } = useParams();
+    // Initialize deals and filteredDeals as empty arrays to prevent .slice() errors
     const [deals, setDeals] = useState([]);
     const [filteredDeals, setFilteredDeals] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState(null);
+    const [filterType, setFilterType] = useState(null); // 'open', 'lost', 'deal' (won)
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false); // Add loading state
+    const [error, setError] = useState(null); // Add error state
+
     const dealsPerPage = 10;
 
-    const location = useLocation(); // Hook to access URL parameters
-
+    const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const initialFrom = queryParams.get('startDate') || '';
     const initialTo = queryParams.get('endDate') || '';
 
     const [dateFilterFrom, setDateFilterFrom] = useState(initialFrom);
     const [dateFilterTo, setDateFilterTo] = useState(initialTo);
-    // showDefaultMonthNotification is no longer used for initial mount default, so can be removed if not used elsewhere
-    // const [showDefaultMonthNotification, setShowDefaultMonthNotification] = useState(false);
 
+    // Helper to format date for input (already correct)
     const formatDateForInput = (date) => {
         if (!date) return '';
         const d = new Date(date);
@@ -33,30 +35,34 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
         return `${year}-${month}-${day}`;
     };
 
-    // ✅ Fetch deals whenever userId or date filters change (API call now includes dates)
+    // Effect to fetch deals from the API
     useEffect(() => {
-        console.log("The user id is:", userId); // Now this should correctly log the ID
         const fetchData = async () => {
+            setLoading(true); // Set loading to true before API call
+            setError(null); // Clear previous errors
+
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
                     console.error('Authentication token not found.');
+                    setError('Authentication required. Please log in.');
                     setDeals([]);
                     setFilteredDeals([]);
+                    setLoading(false);
                     return;
                 }
 
                 if (!userId) {
-                    // This can happen on initial render before params are fully resolved, or if the route isn't configured correctly.
-                    // Keep this check, but it should be less frequent now.
+                    // This can happen on initial render before params are fully resolved,
+                    // or if the route isn't configured correctly.
                     console.warn('User ID not provided from URL parameters. Skipping API call.');
                     setDeals([]);
                     setFilteredDeals([]);
+                    setLoading(false);
                     return;
                 }
 
                 const url = new URL(`${ENDPOINTS.USER_REPORT_DEALS}/${userId}`);
-                console.log("The api url:",url)
                 if (dateFilterFrom) {
                     url.searchParams.append('startDate', dateFilterFrom);
                 }
@@ -66,38 +72,45 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
 
                 console.log(`Fetching deals from: ${url.toString()}`);
 
-                const response = await axios.get(`${ENDPOINTS.USER_REPORT_DEALS}/${userId}`, {
+                const response = await axios.get(url.toString(), { // Use url.toString() for axios
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                console.log("The response is ", response)
 
-                const data = response.data?.Response || [];
-                console.log("response of userdeals:", response.data);
+                // Ensure data is an array, defaulting to empty array if not
+                const data = Array.isArray(response.data?.Response) ? response.data.Response : [];
+                console.log("Response data for user deals:", data);
+
                 setDeals(data);
-                setFilteredDeals(data);
+                setFilteredDeals(data); // Initially, filteredDeals is the same as deals
             } catch (err) {
                 console.error('Error fetching deals:', err);
+                setError('Failed to load deals. Please try again.');
                 setDeals([]);
                 setFilteredDeals([]);
+            } finally {
+                setLoading(false); // Set loading to false after API call (success or error)
             }
         };
 
         fetchData();
-    }, [userId, dateFilterFrom, dateFilterTo]); // Re-fetch when these change
+    }, [userId, dateFilterFrom, dateFilterTo]); // Dependencies for re-fetching
 
-    // 🔄 Client-side filtering based on search and status (dates are now handled by API)
+    // Effect for client-side filtering (search term and status)
     useEffect(() => {
-        let updatedDeals = [...deals]; // Start with the deals fetched by the API (which are already date-filtered)
+        let updatedDeals = [...deals]; // Start with the full list of deals (already date-filtered by API)
 
+        // Apply status filter
         if (filterType === 'open') {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === true && deal.bisConverted === false);
         } else if (filterType === 'lost') {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === false);
-        } else if (filterType === 'deal') { // Assuming 'deal' means 'Won'
+        } else if (filterType === 'deal') { // 'deal' typically means 'Won'
             updatedDeals = updatedDeals.filter((deal) => deal.bisConverted === true);
         }
 
+        // Apply search term filter
         if (searchTerm.trim() !== '') {
+            const lowerCaseSearchTerm = searchTerm.toLowerCase();
             updatedDeals = updatedDeals.filter((deal) =>
                 [
                     deal.clead_name,
@@ -109,35 +122,38 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                     deal.iphone_no,
                     deal.whatsapp_number,
                 ]
-                    .filter(Boolean)
+                    .filter(Boolean) // Remove any null/undefined values before joining
                     .join(' ')
                     .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
+                    .includes(lowerCaseSearchTerm)
             );
         }
 
         setFilteredDeals(updatedDeals);
-        setCurrentPage(1); // Reset to first page on filter change
-    }, [searchTerm, filterType, deals]); // Depend on `deals` (the API fetched data)
+        setCurrentPage(1); // Reset to the first page when filters change
+    }, [searchTerm, filterType, deals]); // Depend on `deals` to re-filter when API data changes
 
-    // Pagination logic remains the same
+    // Pagination calculations
     const indexOfLastDeal = currentPage * dealsPerPage;
     const indexOfFirstDeal = indexOfLastDeal - dealsPerPage;
-    const currentDeals = filteredDeals.slice(indexOfFirstDeal, indexOfLastDeal);
+    const currentDeals = filteredDeals.slice(indexOfFirstDeal, indexOfLastDeal); // .slice() is safe here
     const totalPages = Math.ceil(filteredDeals.length / dealsPerPage);
 
+    // Pagination handler
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
-        window.scrollTo(0, 0);
+        window.scrollTo(0, 0); // Scroll to top on page change
     };
 
+    // Render pagination buttons
     const renderPagination = () => {
         const pageNumbers = [];
-        const maxVisiblePages = 8;
+        const maxVisiblePages = 8; // Number of page buttons to show
 
         let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
+        // Adjust startPage if not enough pages to fill maxVisiblePages from the end
         if (endPage - startPage + 1 < maxVisiblePages) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
@@ -168,13 +184,14 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                 ))}
                 <button
                     onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages || totalPages === 0} // Disable if no pages
                     className="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                 >
                     Next
                 </button>
                 <span className="text-sm text-gray-600">
-                    {indexOfLastDeal > filteredDeals.length ? filteredDeals.length : indexOfLastDeal}/{filteredDeals.length}
+                    {/* Display current range / total count */}
+                    {`${Math.min(indexOfLastDeal, filteredDeals.length)}/${filteredDeals.length}`}
                 </span>
             </div>
         );
@@ -186,6 +203,7 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
         setFilterType(null);
         setDateFilterFrom('');
         setDateFilterTo('');
+        // No need to call fetchData explicitly here as useEffect will react to dateFilterFrom/To changes
     };
 
     return (
@@ -193,6 +211,7 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
             <div className="p-6">
                 <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
                     <div className="relative flex items-center space-x-2 flex-wrap gap-2">
+                        {/* Search Input */}
                         <div className="relative">
                             <input
                                 type="text"
@@ -205,6 +224,7 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                                 <path d="M12.9 14.32a8 8 0 111.41-1.41l4.24 4.24-1.42 1.42-4.23-4.25zM8 14a6 6 0 100-12 6 6 0 000 12z" />
                             </svg>
                         </div>
+                        {/* Filter Buttons */}
                         <button
                             className={`px-4 py-2 rounded-full ${filterType === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
                             onClick={() => setFilterType('open')}
@@ -223,14 +243,13 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                         >
                             Won
                         </button>
+                        {/* Date Filters */}
                         <label htmlFor="dateFrom" className="text-gray-700 font-medium text-sm">From:</label>
                         <input
                             id="dateFrom"
                             type="date"
                             value={dateFilterFrom}
-                            onChange={(e) => {
-                                setDateFilterFrom(e.target.value);
-                            }}
+                            onChange={(e) => setDateFilterFrom(e.target.value)}
                             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
                         />
                         <label htmlFor="dateTo" className="text-gray-700 font-medium text-sm">To:</label>
@@ -238,11 +257,10 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                             id="dateTo"
                             type="date"
                             value={dateFilterTo}
-                            onChange={(e) => {
-                                setDateFilterTo(e.target.value);
-                            }}
+                            onChange={(e) => setDateFilterTo(e.target.value)}
                             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
                         />
+                        {/* Reset Filters Button */}
                         <button
                             className="px-4 py-2 bg-gray-300 text-black rounded-full hover:bg-gray-400"
                             onClick={handleResetFilters}
@@ -253,73 +271,86 @@ const UserDeals = () => { // Remove userId from props, we'll get it from params
                 </div>
 
                 {/* Conditional notifications */}
-                {dateFilterFrom && dateFilterTo && (
-                    <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
-                        Filtering deals from <strong>{new Date(dateFilterFrom).toLocaleDateString('en-GB')}</strong> to <strong>{new Date(dateFilterTo).toLocaleDateString('en-GB')}</strong>.
+                {error && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-800 rounded-lg text-sm">
+                        Error: {error}
                     </div>
                 )}
-                {!dateFilterFrom && !dateFilterTo && (
-                    <div className="mb-4 p-3 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
-                        Showing all deals.
-                    </div>
-                )}
+                {loading ? (
+                    <div className="mb-4 p-3 text-center text-blue-600 text-lg">Loading deals...</div>
+                ) : (
+                    <>
+                        {dateFilterFrom && dateFilterTo && (
+                            <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
+                                Filtering deals from <strong>{new Date(dateFilterFrom).toLocaleDateString('en-GB')}</strong> to <strong>{new Date(dateFilterTo).toLocaleDateString('en-GB')}</strong>.
+                            </div>
+                        )}
+                        {!dateFilterFrom && !dateFilterTo && (
+                            <div className="mb-4 p-3 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
+                                Showing all deals.
+                            </div>
+                        )}
 
-                <div className="bg-white shadow-md rounded-lg overflow-x-auto">
-                    <table className="w-full text-left whitespace-nowrap">
-                        <thead className="bg-gray-50 sticky top-0"><tr>
-                            <th className="px-4 py-3 text-sm text-center font-bold text-black">S.No</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Deal Name</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Company Name</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Source</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">E-Mail ID</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Phone No</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Created Date</th>
-                            <th className="px-4 py-3 text-sm font-bold text-black">Deal Owner</th>
-                            <th className="px-4 py-3 text-sm font-bold text-center text-black">Status</th>
-                        </tr></thead>
-                        <tbody>
-                            {currentDeals.length > 0 ? (
-                                currentDeals.map((deal, index) => (
-                                    <tr key={deal.ilead_id || index} className="border-t hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-sm text-gray-700">{indexOfFirstDeal + index + 1}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.clead_name || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.corganization || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.lead_sources || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.cemail || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.iphone_no || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {deal.dcreated_dt
-                                                ? new Date(deal.dcreated_dt).toLocaleDateString('en-GB').replace(/\//g, '-')
-                                                : '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">{deal.updated_by || '-'}</td>
-                                        <td className="px-4 py-3 text-sm w-10">
-                                            <span
-                                                className={`inline-block text-center px-2 py-1 rounded-full w-24 ${
-                                                    deal.lead_status === 'Won'
-                                                        ? 'bg-green-100 text-green-600'
-                                                        : deal.lead_status === 'Lost'
-                                                        ? 'bg-red-100 text-red-600'
-                                                        : 'bg-yellow-100 text-yellow-600'
-                                                }`}
-                                            >
-                                                {deal.lead_status || 'Unknown'}
-                                            </span>
-                                        </td>
+                        <div className="bg-white shadow-md rounded-lg overflow-x-auto">
+                            <table className="w-full text-left whitespace-nowrap">
+                                <thead className="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th className="px-4 py-3 text-sm text-center font-bold text-black">S.No</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Deal Name</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Company Name</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Source</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">E-Mail ID</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Phone No</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Created Date</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Deal Owner</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-center text-black">Status</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={9} className="text-center py-6 text-gray-500">
-                                        No deals found for the selected filters.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {currentDeals.length > 0 ? (
+                                        currentDeals.map((deal, index) => (
+                                            <tr key={deal.ilead_id || index} className="border-t hover:bg-gray-50">
+                                                <td className="px-4 py-3 text-sm text-gray-700">{indexOfFirstDeal + index + 1}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.clead_name || '-'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.corganization || '-'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.lead_sources || '-'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.cemail || '-'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.iphone_no || '-'}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">
+                                                    {deal.dcreated_dt
+                                                        ? new Date(deal.dcreated_dt).toLocaleDateString('en-GB').replace(/\//g, '-')
+                                                        : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-700">{deal.updated_by || '-'}</td>
+                                                <td className="px-4 py-3 text-sm w-10">
+                                                    <span
+                                                        className={`inline-block text-center px-2 py-1 rounded-full w-24 ${
+                                                            deal.lead_status === 'Won'
+                                                                ? 'bg-green-100 text-green-600'
+                                                                : deal.lead_status === 'Lost'
+                                                                ? 'bg-red-100 text-red-600'
+                                                                : 'bg-yellow-100 text-yellow-600'
+                                                        }`}
+                                                    >
+                                                        {deal.lead_status || 'Unknown'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={9} className="text-center py-6 text-gray-500">
+                                                No deals found for the selected filters.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
 
-                {renderPagination()}
+                        {renderPagination()}
+                    </>
+                )}
             </div>
         </div>
     );

@@ -55,7 +55,7 @@ const RequestDemo = () => {
               dialingCode: dialingCode,
             };
           })
-          .filter(country => country.dialingCode !== 'N/A') // Filter out countries without dialing codes
+          .filter(country => country.dialingCode !== '-') // Filter out countries without dialing codes
           .sort((a, b) => a.name.localeCompare(b.name));
 
         setCountriesData(processedCountries);

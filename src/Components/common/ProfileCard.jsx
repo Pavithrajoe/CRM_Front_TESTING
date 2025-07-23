@@ -27,7 +27,7 @@ import DemoSessionDetails from "./demo_session_details";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
-const EditProfileForm = ({ profile, onClose, onSave }) => {
+const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const token = localStorage.getItem("token");
 
   let userId = "";
@@ -258,6 +258,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities, service]);
 
   const handleSearchCity = (e) => {
+    if (isReadOnly) return;
     const searchTerm = e.target.value;
     setSearchCity(searchTerm);
     const filtered = cities.filter((city) =>
@@ -268,6 +269,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleCitySelect = (cityId, cityName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, icity: cityId }));
     setSearchCity(cityName);
     setIsCityDropdownOpen(false);
@@ -275,6 +277,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handlePotentialSelect = (potentialId, potentialName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, iLeadpoten_id: potentialId }));
     setSearchPotential(potentialName);
     setIsPotentialDropdownOpen(false);
@@ -282,6 +285,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleServiceSelect = (iservice_id, cservice_name) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, iservice_id: iservice_id }));
     setSearchService(cservice_name);
     setIsServiceDropdownOpen(false);
@@ -289,6 +293,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleStatusSelect = (statusId, statusName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, ilead_status_id: statusId }));
     setSearchStatus(statusName);
     setIsStatusDropdownOpen(false);
@@ -296,6 +301,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleIndustrySelect = (industryId, industryName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, cindustry_id: industryId, csubindustry_id: "" }));
     setSearchIndustry(industryName);
     setIsIndustryDropdownOpen(false);
@@ -305,6 +311,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleSubIndustrySelect = (subIndustryId, subIndustryName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, csubindustry_id: subIndustryId }));
     setSearchSubIndustry(subIndustryName);
     setIsSubIndustryDropdownOpen(false);
@@ -312,6 +319,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handleSourceSelect = (sourceId, sourceName) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, lead_source_id: sourceId }));
     setSearchSource(sourceName);
     setIsSourceDropdownOpen(false);
@@ -319,11 +327,13 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   };
 
   const handlePhoneCountryCodeSelect = (code) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, phone_country_code: code }));
     setIsPhoneCountryCodeOpen(false);
   };
 
   const handleWhatsappCountryCodeSelect = (code) => {
+    if (isReadOnly) return;
     setForm((prev) => ({ ...prev, whatsapp_country_code: code }));
     setIsWhatsappCountryCodeOpen(false);
   };
@@ -367,12 +377,14 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
   }, []);
 
   const handleFieldChange = (e) => {
+    if (isReadOnly) return;
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
+    if (isReadOnly) return false;
     let newErrors = {};
     const isNumeric = (value) => /^\d+$/.test(value);
 
@@ -434,6 +446,10 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isReadOnly) {
+      onClose();
+      return;
+    }
     if (validateForm()) {
       const formDataToSave = {
         ...form,
@@ -446,13 +462,37 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
     }
   };
 
-  // --- Blue Theme Classes ---
-  const commonInputClasses = "mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none focus:ring-blue-600 focus:border-blue-600 transition-all duration-200 text-sm";
-  const errorInputClasses = "border-red-500 focus:ring-red-500 focus:border-red-500";
+  // Helper function to get input classes with read-only state
+  const getInputClasses = (hasError) => {
+    let classes = `mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none transition-all duration-200 text-sm ${
+      hasError ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "border-blue-300 focus:ring-blue-600 focus:border-blue-600"
+    }`;
+    if (isReadOnly) {
+      classes += " bg-gray-100 cursor-not-allowed";
+    }
+    return classes;
+  };
+
+  const getDropdownButtonClasses = () => {
+    let classes = "w-20 border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50 flex items-center justify-between";
+    if (isReadOnly) {
+      classes += " bg-gray-100 cursor-not-allowed";
+    }
+    return classes;
+  };
+
+  const getSaveButtonClasses = () => {
+    let classes = "bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 transition-colors duration-200";
+    if (isReadOnly) {
+      classes = "bg-gray-400 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md cursor-not-allowed";
+    }
+    return classes;
+  };
+
+  // --- Theme Classes ---
   const labelClasses = "block text-sm font-medium text-blue-800 mb-1";
   const errorTextClasses = "text-red-500 text-xs mt-1";
   const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 text-blue-900";
-  const countryCodeButtonClasses = "w-20 border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50 flex items-center justify-between";
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
@@ -465,7 +505,7 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
         </button>
 
         <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 mb-6 border-b pb-3 border-blue-200">
-          Edit Lead Profile
+          {isReadOnly ? "View Lead Profile" : "Edit Lead Profile"}
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-5 overflow-y-auto">
@@ -481,7 +521,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="clead_name"
                 value={form.clead_name}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.clead_name ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.clead_name)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.clead_name && <p className={errorTextClasses}>{errors.clead_name}</p>}
             </div>
@@ -497,7 +539,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="corganization"
                 value={form.corganization}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.corganization ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.corganization)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.corganization && <p className={errorTextClasses}>{errors.corganization}</p>}
             </div>
@@ -511,11 +555,12 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 <div className="relative" ref={phoneCountryCodeRef}>
                   <button
                     type="button"
-                    onClick={() => setIsPhoneCountryCodeOpen(!isPhoneCountryCodeOpen)}
-                    className={countryCodeButtonClasses}
+                    onClick={() => !isReadOnly && setIsPhoneCountryCodeOpen(!isPhoneCountryCodeOpen)}
+                    className={getDropdownButtonClasses()}
+                    disabled={isReadOnly}
                   >
                     {form.phone_country_code}
-                    <FiChevronDown size={16} className="ml-1" />
+                    {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                   </button>
                   {isPhoneCountryCodeOpen && countryCodes.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -540,11 +585,14 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                   name="iphone_no"
                   value={form.iphone_no}
                   onChange={(e) => {
+                    if (isReadOnly) return;
                     const value = e.target.value.replace(/\D/g, '');
                     setForm(prev => ({ ...prev, iphone_no: value }));
                     setErrors(prev => ({ ...prev, iphone_no: "" }));
                   }}
-                  className={`flex-1 ${commonInputClasses} ${errors.iphone_no ? errorInputClasses : "border-blue-300"}`}
+                  className={`flex-1 ${getInputClasses(errors.iphone_no)}`}
+                  readOnly={isReadOnly}
+                  disabled={isReadOnly}
                 />
               </div>
               {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
@@ -559,11 +607,12 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 <div className="relative" ref={whatsappCountryCodeRef}>
                   <button
                     type="button"
-                    onClick={() => setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
-                    className={countryCodeButtonClasses}
+                    onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
+                    className={getDropdownButtonClasses()}
+                    disabled={isReadOnly}
                   >
                     {form.whatsapp_country_code}
-                    <FiChevronDown size={16} className="ml-1" />
+                    {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                   </button>
                   {isWhatsappCountryCodeOpen && countryCodes.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -588,11 +637,14 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                   name="cwhatsapp"
                   value={form.cwhatsapp}
                   onChange={(e) => {
+                    if (isReadOnly) return;
                     const value = e.target.value.replace(/\D/g, '');
                     setForm(prev => ({ ...prev, cwhatsapp: value }));
                     setErrors(prev => ({ ...prev, cwhatsapp: "" }));
                   }}
-                  className={`flex-1 ${commonInputClasses} ${errors.cwhatsapp ? errorInputClasses : "border-blue-300"}`}
+                  className={`flex-1 ${getInputClasses(errors.cwhatsapp)}`}
+                  readOnly={isReadOnly}
+                  disabled={isReadOnly}
                 />
               </div>
               {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
@@ -609,7 +661,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="cemail"
                 value={form.cemail}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.cemail ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.cemail)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.cemail && <p className={errorTextClasses}>{errors.cemail}</p>}
             </div>
@@ -625,7 +679,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="cwebsite"
                 value={form.cwebsite}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.cwebsite ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.cwebsite)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.cwebsite && <p className={errorTextClasses}>{errors.cwebsite}</p>}
             </div>
@@ -639,14 +695,16 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchPotential}
                 onChange={(e) => {
+                  if (isReadOnly) return;
                   setSearchPotential(e.target.value);
                   setIsPotentialDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
                 }}
-                onClick={() => setIsPotentialDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.iLeadpoten_id ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsPotentialDropdownOpen(true)}
+                className={getInputClasses(errors.iLeadpoten_id)}
                 placeholder="Select potential"
-                readOnly={Potential.length === 0}
+                readOnly={isReadOnly || Potential.length === 0}
+                disabled={isReadOnly || Potential.length === 0}
               />
               {isPotentialDropdownOpen && Potential.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -675,14 +733,16 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchSource}
                 onChange={(e) => {
+                  if (isReadOnly) return;
                   setSearchSource(e.target.value);
                   setIsSourceDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, lead_source_id: "" }));
                 }}
-                onClick={() => setIsSourceDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.lead_source_id ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsSourceDropdownOpen(true)}
+                className={getInputClasses(errors.lead_source_id)}
                 placeholder="Select source"
-                readOnly={source.length === 0}
+                readOnly={isReadOnly || source.length === 0}
+                disabled={isReadOnly || source.length === 0}
               />
               {isSourceDropdownOpen && source.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -711,14 +771,16 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchIndustry}
                 onChange={(e) => {
+                  if (isReadOnly) return;
                   setSearchIndustry(e.target.value);
                   setIsIndustryDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, cindustry_id: "" }));
                 }}
-                onClick={() => setIsIndustryDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.cindustry_id ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsIndustryDropdownOpen(true)}
+                className={getInputClasses(errors.cindustry_id)}
                 placeholder="Select industry"
-                readOnly={leadIndustry.length === 0}
+                readOnly={isReadOnly || leadIndustry.length === 0}
+                disabled={isReadOnly || leadIndustry.length === 0}
               />
               {isIndustryDropdownOpen && leadIndustry.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -747,15 +809,16 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchSubIndustry}
                 onChange={(e) => {
+                  if (isReadOnly) return;
                   setSearchSubIndustry(e.target.value);
                   setIsSubIndustryDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
                 }}
-                onClick={() => setIsSubIndustryDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.csubindustry_id ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsSubIndustryDropdownOpen(true)}
+                className={getInputClasses(errors.csubindustry_id)}
                 placeholder="Select sub-industry"
-                disabled={!form.cindustry_id || filteredSubIndustries.length === 0}
-                readOnly={filteredSubIndustries.length === 0}
+                readOnly={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
+                disabled={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
               />
               {isSubIndustryDropdownOpen && form.cindustry_id && filteredSubIndustries.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -784,14 +847,16 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchService}
                 onChange={(e) => {
+                  if (isReadOnly) return;
                   setSearchService(e.target.value);
                   setIsServiceDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, iservice_id: "" }));
                 }}
-                onClick={() => setIsServiceDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.iservice_id ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
+                className={getInputClasses(errors.iservice_id)}
                 placeholder="Select Services"
-                readOnly={service.length === 0}
+                readOnly={isReadOnly || service.length === 0}
+                disabled={isReadOnly || service.length === 0}
               />
               {isServiceDropdownOpen && service.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -820,10 +885,11 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 type="text"
                 value={searchCity}
                 onChange={handleSearchCity}
-                onClick={() => setIsCityDropdownOpen(true)}
-                className={`${commonInputClasses} ${errors.icity ? errorInputClasses : "border-blue-300"}`}
+                onClick={() => !isReadOnly && setIsCityDropdownOpen(true)}
+                className={getInputClasses(errors.icity)}
                 placeholder="Search city"
-                readOnly={cities.length === 0}
+                readOnly={isReadOnly || cities.length === 0}
+                disabled={isReadOnly || cities.length === 0}
               />
               {isCityDropdownOpen && cities.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
@@ -852,7 +918,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="clead_address1"
                 value={form.clead_address1}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.clead_address1 ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.clead_address1)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.clead_address1 && <p className={errorTextClasses}>{errors.clead_address1}</p>}
             </div>
@@ -868,7 +936,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="clead_address2"
                 value={form.clead_address2}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} border-blue-300`}
+                className={getInputClasses(false)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
             </div>
 
@@ -883,7 +953,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="clead_address3"
                 value={form.clead_address3}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} border-blue-300`}
+                className={getInputClasses(errors.clead_address3)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.clead_address3 && <p className={errorTextClasses}>{errors.clead_address3}</p>}
             </div>
@@ -899,7 +971,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="iproject_value"
                 value={form.iproject_value}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.iproject_value ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.iproject_value)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
             </div>
@@ -915,7 +989,9 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
                 name="ino_employee"
                 value={form.ino_employee}
                 onChange={handleFieldChange}
-                className={`${commonInputClasses} ${errors.ino_employee ? errorInputClasses : "border-blue-300"}`}
+                className={getInputClasses(errors.ino_employee)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
               {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
             </div>
@@ -925,27 +1001,27 @@ const EditProfileForm = ({ profile, onClose, onSave }) => {
           <div className="flex justify-end space-x-3 pt-4 border-t border-blue-200 mt-6">
             <button
               type="submit"
-              className="bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-medium shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50 transition-colors duration-200"
+              className={getSaveButtonClasses()}
+              disabled={isReadOnly}
             >
               <FiSave size={16} />
-              Save Changes
+              {isReadOnly ? "Close" : "Save Changes"}
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-blue-200 text-blue-800 px-5 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-colors duration-200"
-            >
-              Cancel
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="bg-blue-200 text-blue-800 px-5 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+            )}
           </div>
         </form>
       </div>
     </div>
   );
 };
-
-
-
 
 const ProfileCard = () => {
   const { leadId } = useParams();
@@ -969,10 +1045,6 @@ const ProfileCard = () => {
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
-
-    console.log("Token from localStorage:", token);
-    
-    // console.log("Token", token);
     if (token) {
       try {
         const base64Payload = token.split(".")[1];
@@ -1000,9 +1072,7 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-       console.log("lead details",response.data);
         setProfile(response.data);
-       
       } catch (err) {
         console.error("Failed to load lead details", err);
         setError("Failed to load lead details.");
@@ -1120,85 +1190,80 @@ const ProfileCard = () => {
   const confirmAssignment = async () => {
     setShowAssignConfirmation(false);
 
-
     const userIdToAssign = Number(selectedAssignToUser);
     const notifyUserId = selectedNotifyToUser;
     const token = localStorage.getItem("token");
     const loggedInUserId = getUserIdFromToken();
 
     if (!loggedInUserId) {
-        alert("User not logged in or token invalid.");
-        return;
+      alert("User not logged in or token invalid.");
+      return;
     }
 
     if (!userIdToAssign || userIdToAssign === 0) {
-        alert("Please select a valid user to assign the lead to.");
-        return;
+      alert("Please select a valid user to assign the lead to.");
+      return;
     }
 
-    // ✅ Visually reset selection before long operations
     setSelectedAssignToUser(null);
     setSelectedNotifyToUser(null);
 
     try {
-         axios.post(
-            `${apiEndPoint}/assigned-to`,
-            {
-                iassigned_by: loggedInUserId,
-                iassigned_to: userIdToAssign,
-                ilead_id: Number(leadId),
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        const isConverted = profile?.bisConverted === true || profile?.bisConverted === 'true';
-        const successMessage = isConverted ? "Deal assigned successfully." : "Lead assigned successfully.";
-        alert(successMessage);
-
-        fetchAssignedToList();
-
-        const assignedUser = users.find(
-            (user) => String(user.iUser_id) === String(userIdToAssign)
-        );
-        const notifiedPerson = users.find(
-            (user) => String(user.iUser_id) === String(notifyUserId)
-        );
-
-        if (assignedUser && profile) {
-            const mailPayload = {
-                userName: assignedUser.cUser_name,
-                time: new Date().toISOString(),
-                leadName: profile.clead_name,
-                leadURL: window.location.href,
-                mailId: assignedUser.cEmail,
-                assignedTo: assignedUser.cUser_name,
-                notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
-            };
-
-            try {
-                 axios.post(`${apiEndPoint}/assigned-to-mail`, mailPayload, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-            } catch (mailErr) {
-                console.error("Failed to send notification email:", mailErr);
-            }
-        } else {
-            console.warn(
-                "Could not send notification email: Assigned user or lead profile not found."
-            );
+      await axios.post(
+        `${apiEndPoint}/assigned-to`,
+        {
+          iassigned_by: loggedInUserId,
+          iassigned_to: userIdToAssign,
+          ilead_id: Number(leadId),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
+      
+      const isConverted = profile?.bisConverted === true || profile?.bisConverted === 'true';
+      const successMessage = isConverted ? "Deal assigned successfully." : "Lead assigned successfully.";
+      alert(successMessage);
+
+      fetchAssignedToList();
+
+      const assignedUser = users.find(
+        (user) => String(user.iUser_id) === String(userIdToAssign)
+      );
+      const notifiedPerson = users.find(
+        (user) => String(user.iUser_id) === String(notifyUserId)
+      );
+
+      if (assignedUser && profile) {
+        const mailPayload = {
+          userName: assignedUser.cUser_name,
+          time: new Date().toISOString(),
+          leadName: profile.clead_name,
+          leadURL: window.location.href,
+          mailId: assignedUser.cEmail,
+          assignedTo: assignedUser.cUser_name,
+          notifyTo: notifiedPerson ? notifiedPerson.cEmail : null,
+        };
+
+        try {
+          await axios.post(`${apiEndPoint}/assigned-to-mail`, mailPayload, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } catch (mailErr) {
+          console.error("Failed to send notification email:", mailErr);
+        }
+      }
     } catch (err) {
-        console.error("Failed to assign lead", err);
-        alert("Failed to assign lead.");
+      console.error("Failed to assign lead", err);
+      alert("Failed to assign lead.");
     }
- };
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -1257,296 +1322,305 @@ const ProfileCard = () => {
       <div className="p-4 text-gray-700">No profile found.</div>
     );
 
-  // const latestAssignments = assignedToList.slice(0, 2);
-  // const usersForNotify = users.filter(
-  //   (user) => String(user.iUser_id) !== String(selectedAssignToUser)
-  // );
-
-   const latestAssignments = assignedToList.slice(0, 2);
-   const activeUsers = users.filter(user => user.bactive === true);
-   const usersForNotify = activeUsers.filter(
-        (user) => String(user.iUser_id) !== String(selectedAssignToUser)
-    );
+  const latestAssignments = assignedToList.slice(0, 2);
+  const activeUsers = users.filter(user => user.bactive === true);
+  const usersForNotify = activeUsers.filter(
+    (user) => String(user.iUser_id) !== String(selectedAssignToUser)
+  );
 
   return (
     <>
-    <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6 ">
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-        <h2 className="text-sm sm:text-sm md:text-xl font-semibold text-gray-800">
-          Lead Details
-        </h2>
-        <div className="flex items-center space-x-2 sm:space-x-3">
-         
-          <button
-            onClick={() => setShowDetails(true)}
-            className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-            aria-label="View Full Details"
-          >
-            <FiEye size={15} className="sm:w-5 sm:h-5" />
-          </button>
-          <button
-            onClick={handleEditProfile}
-            className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-md"
-            aria-label="Edit Profile"
-          >
-            <FiEdit size={15} className="sm:w-5 sm:h-5" />
-          </button>
-        </div>
-      </div>
-              {profile.isUpdated === true && (
-  <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
-Edited Profile  </h3>
-)}
-
-
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
-
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
-          <img
-
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-              profile.clead_name
-            )}&background=random&color=fff&rounded=true`}
-            alt="Profile"
-            className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover" />
-        </div>
-        <div className="text-center sm:text-left mt-5">
-          <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
-            {profile.clead_name || "-"}
-          </h3>
-          <p className="text-sm sm:text-base break-words text-gray-500">
-            {profile.corganization || "-"}
-          </p>
-        </div>
-      </div>
-
-      <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
-        <div className="flex items-center gap-3">
-          <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="break-words">{profile.iphone_no || "-"}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
-          <span className="break-words">{profile.cemail || "-"}</span>
-        </div>
-        <div className="flex items-start gap-3">
-          <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.clead_address1 || "-"}</span>
-        </div>
-        <div className="flex items-start gap-3">
-          <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.clead_address2 || "-"}</span>
-        </div>
-        <div className="flex items-start gap-3">
-          <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          {profile.cwebsite ? (
-            <a
-              href={profile.cwebsite.startsWith("http")
-                ? profile.cwebsite
-                : `https://${profile.cwebsite}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              {profile.cwebsite}
-            </a>
-          ) : (
-            <span>-</span>
-          )}
-        </div>
-
-        <div className="flex items-start gap-3">
-          <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-          <span className="break-words">{profile.corganization || "-"}</span>
-        </div>
-
-        {profile.bactive === false && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold text-center mt-4">
-            LOST LEAD
-          </div>
-        )}
-
-        {(profile.website_lead === true || profile.remarks) && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm mt-5 text-sm text-green-800 flex flex-col gap-3">
-            {profile.website_lead === true && (
-              <div className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-600 flex-shrink-0"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.083 9.922A6.955 6.955 0 0010 16a6.955 6.955 0 005.917-6.078 2.5 2.5 0 010-4.844A6.955 6.955 0 0010 4a6.955 6.955 0 00-5.917 6.078 2.5 2.5 0 010 4.844zM10 18a8 8 0 100-16 8 8 0 000 16zm-7.5-8a7.5 7.5 0 1015 0 7.5 7.5 0 00-15 0zM10 7a3 3 0 100 6 3 3 0 000-6z"
-                    clipRule="evenodd" />
-                </svg>
-                <p className="font-semibold">This is a Website Lead.</p>
-              </div>
-            )}
-
-            {profile.remarks && (
-              <div className="flex items-start gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-600 flex-shrink-0 mt-1"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-9-4a1 1 0 112 0v4a1 1 0 01-2 0V6zm1 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
-                    clipRule="evenodd" />
-                </svg>
-                <p className="font-medium break-words">
-                  <span className="text-gray-700 font-semibold">Remarks:</span> {profile.remarks}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
-          
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-            <label
-              htmlFor="notifyUser"
-              className="text-sm font-semibold text-gray-700 min-w-[90px]"
-            >
-              Notify to:
-            </label>
-            <div className="relative w-full sm:w-64">
-              <select
-                id="notifyUser"
-                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-                onChange={handleNotifyLead}
-                value={selectedNotifyToUser || ""}
-              >
-                <option value="">
-                  Select User
-                </option>
-                {usersForNotify.map((user) => (
-                  <option key={user.iUser_id} value={user.iUser_id}>
-                    {user.cUser_name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                <svg
-                  className="w-4 h-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          {/* Assign To */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-            <label
-              htmlFor="assignUser"
-              className="text-sm font-semibold text-gray-700 min-w-[90px]"
-            >
-              Assign to:
-            </label>
-            <div className="relative w-full sm:w-64">
-              <select
-                id="assignUser"
-                className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200"
-                onChange={(e) => setSelectedAssignToUser(e.target.value === "" ? null : e.target.value)}
-                value={selectedAssignToUser || ""}
-              >
-                <option value="" disabled>
-                  Select User
-                </option>
-                {activeUsers.map((user) => (
-                  <option key={user.iUser_id} value={user.iUser_id}>
-                    {user.cUser_name}
-                  </option>
-                ))}
-
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                <svg
-                  className="w-4 h-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          
-        </div>
-
-        {/* Assign Button */}
-        <div className="flex justify-center">
-          <button
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={!selectedAssignToUser}
-            onClick={handleAssignButtonClick}
-          >
-            Assign Lead
-          </button>
-        </div>
-      </div>
-      {/* Assigned to me list */}
-      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-medium text-gray-700">
-            Lead Assigned to
-          </h3>
-          {assignedToList.length > 2 && (
+      <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+          <h2 className="text-sm sm:text-sm md:text-xl font-semibold text-gray-800">
+            Lead Details
+          </h2>
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <button
-              onClick={() => setIsAssignedToModalOpen(true)}
-              className="text-blue-600 hover:underline text-sm font-medium"
+              onClick={() => setShowDetails(true)}
+              className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              aria-label="View Full Details"
             >
-              View All
+              <FiEye size={15} className="sm:w-5 sm:h-5" />
             </button>
+            <button
+              onClick={handleEditProfile}
+              className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-md"
+              aria-label="Edit Profile"
+            >
+              <FiEdit size={15} className="sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        </div>
+        
+        {profile.isUpdated === true && (
+          <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
+            Edited Profile
+          </h3>
+        )}
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+            <img
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                profile.clead_name
+              )}&background=random&color=fff&rounded=true`}
+              alt="Profile"
+              className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
+            />
+          </div>
+          <div className="text-center sm:text-left mt-5">
+            <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
+              {profile.clead_name || "-"}
+            </h3>
+            <p className="text-sm sm:text-base break-words text-gray-500">
+              {profile.corganization || "-"}
+            </p>
+          </div>
+        </div>
+
+        <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
+          <div className="flex items-center gap-3">
+            <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="break-words">{profile.iphone_no || "-"}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
+            <span className="break-words">{profile.cemail || "-"}</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="break-words">{profile.clead_address1 || "-"}</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="break-words">{profile.clead_address2 || "-"}</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            {profile.cwebsite ? (
+              <a
+                href={profile.cwebsite.startsWith("http")
+                  ? profile.cwebsite
+                  : `https://${profile.cwebsite}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {profile.cwebsite}
+              </a>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+
+          <div className="flex items-start gap-3">
+            <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="break-words">{profile.corganization || "-"}</span>
+          </div>
+
+          {profile.bactive === false && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold text-center mt-4">
+              LOST LEAD
+            </div>
+          )}
+
+          {(profile.website_lead === true || profile.remarks) && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm mt-5 text-sm text-green-800 flex flex-col gap-3">
+              {profile.website_lead === true && (
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-green-600 flex-shrink-0"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.083 9.922A6.955 6.955 0 0010 16a6.955 6.955 0 005.917-6.078 2.5 2.5 0 010-4.844A6.955 6.955 0 0010 4a6.955 6.955 0 00-5.917 6.078 2.5 2.5 0 010 4.844zM10 18a8 8 0 100-16 8 8 0 000 16zm-7.5-8a7.5 7.5 0 1015 0 7.5 7.5 0 00-15 0zM10 7a3 3 0 100 6 3 3 0 000-6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="font-semibold">This is a Website Lead.</p>
+                </div>
+              )}
+
+              {profile.remarks && (
+                <div className="flex items-start gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-green-600 flex-shrink-0 mt-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-9-4a1 1 0 112 0v4a1 1 0 01-2 0V6zm1 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="font-medium break-words">
+                    <span className="text-gray-700 font-semibold">Remarks:</span> {profile.remarks}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+         <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm mt-5 space-y-4">
+  {/* Assign To */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+    <label htmlFor="assignUser" className="text-sm font-semibold text-gray-700 min-w-[90px]">
+      Assign to:
+    </label>
+    <div className="relative w-full sm:w-64">
+      <select
+        id="assignUser"
+        className={`appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 ${
+          profile.bactive === false ? "bg-gray-100 cursor-not-allowed" : ""
+        }`}
+        onChange={(e) => {
+          if (profile.bactive === false) return;
+          setSelectedAssignToUser(e.target.value === "" ? null : e.target.value);
+        }}
+        value={selectedAssignToUser || ""}
+        disabled={profile.bactive === false}
+      >
+        <option value="" disabled>
+          Select User
+        </option>
+        {activeUsers.map((user) => (
+          <option key={user.iUser_id} value={user.iUser_id}>
+            {user.cUser_name}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+        <svg
+          className="w-4 h-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+  
+  {/* Notify To */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+    <label htmlFor="notifyUser" className="text-sm font-semibold text-gray-700 min-w-[90px]">
+      Notify to:
+    </label>
+    <div className="relative w-full sm:w-64">
+      <select
+        id="notifyUser"
+        className={`appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm text-gray-800 bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 ${
+          profile.bactive === false ? "bg-gray-100 cursor-not-allowed" : ""
+        }`}
+        onChange={(e) => {
+          if (profile.bactive === false) return;
+          const userId = e.target.value === "" ? null : e.target.value;
+          setSelectedNotifyToUser(userId);
+        }}
+        value={selectedNotifyToUser || ""}
+        disabled={profile.bactive === false}
+      >
+        <option value="">
+          Select User
+        </option>
+        {usersForNotify.map((user) => (
+          <option key={user.iUser_id} value={user.iUser_id}>
+            {user.cUser_name}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+        <svg
+          className="w-4 h-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Assign Button - Only show if profile is active */}
+{profile.bactive !== false && (
+  <div className="flex justify-center">
+    <button
+      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+      disabled={!selectedAssignToUser}
+      onClick={handleAssignButtonClick}
+    >
+      Assign Lead
+    </button>
+  </div>
+)}
+          </div>
+        {/* </div> */}
+
+        {/* Assigned to list */}
+        <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-medium text-gray-700">
+              Lead Assigned to
+            </h3>
+            {assignedToList.length > 2 && (
+              <button
+                onClick={() => setIsAssignedToModalOpen(true)}
+                className="text-blue-600 hover:underline text-sm font-medium"
+              >
+                View All
+              </button>
+            )}
+          </div>
+          {latestAssignments.length === 0 ? (
+            <p className="text-sm text-gray-500 italic">
+              No assignment history available.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {latestAssignments.map((assignment) => (
+                <div
+                  key={assignment.iassigned_id}
+                  className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
+                >
+                  <p>
+                    <span className="font-medium">Assigned To:</span>{" "}
+                    {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    <span className="font-medium">Assigned By:</span>{" "}
+                    {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"} on{" "}
+                    {new Date(assignment.dcreate_dt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        {latestAssignments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
-            No assignment history available.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {latestAssignments.map((assignment) => (
-              <div
-                key={assignment.iassigned_id}
-                className="text-sm text-gray-800 bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
-              >
-                <p>
-                  <span className="font-medium">Assigned To:</span>{" "}
-                  {assignment.user_assigned_to_iassigned_toTouser?.cFull_name || "-"}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  <span className="font-medium">Assigned By:</span>{" "}
-                  {assignment.user_assigned_to_iassigned_byTouser?.cFull_name || "-"} on{" "}
-                  {new Date(assignment.dcreate_dt).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-     </div><div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
+
+      {/* Attachments Section */}
+      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
         <label className="block text-sm font-medium text-gray-700 mb-4">
           Manage Attachments
         </label>
@@ -1582,14 +1656,18 @@ Edited Profile  </h3>
             );
           })}
         </div>
-      </div><Dialog
+      </div>
+
+      {/* Attachment Upload Modal */}
+      <Dialog
         open={isAttachmentModalOpen}
         onClose={() => setIsAttachmentModalOpen(false)}
         className="relative z-50"
       >
         <div
           className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-          aria-hidden="true" />
+          aria-hidden="true"
+        />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg">
             <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
@@ -1598,9 +1676,11 @@ Edited Profile  </h3>
 
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${isDragActive
+              className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${
+                isDragActive
                   ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-gray-400 bg-gray-50"}`}
+                  : "border-gray-300 hover:border-gray-400 bg-gray-50"
+              }`}
             >
               <input {...getInputProps()} />
               {selectedFile ? (
@@ -1627,7 +1707,7 @@ Edited Profile  </h3>
                 onClick={() => {
                   setIsAttachmentModalOpen(false);
                   setSelectedFile(null);
-                } }
+                }}
                 className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 disabled={uploading}
               >
@@ -1636,23 +1716,29 @@ Edited Profile  </h3>
               <button
                 onClick={handleFileUpload}
                 disabled={!selectedFile || uploading}
-                className={`px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md ${uploading
+                className={`px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md ${
+                  uploading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600"} transition-colors`}
+                    : "bg-blue-500 hover:bg-blue-600"
+                } transition-colors`}
               >
                 {uploading ? "Uploading..." : "Upload"}
               </button>
             </div>
           </Dialog.Panel>
         </div>
-      </Dialog><Dialog
+      </Dialog>
+
+      {/* Assigned To History Modal */}
+      <Dialog
         open={isAssignedToModalOpen}
         onClose={() => setIsAssignedToModalOpen(false)}
         className="relative z-50"
       >
         <div
           className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-          aria-hidden="true" />
+          aria-hidden="true"
+        />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
             <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
@@ -1691,14 +1777,18 @@ Edited Profile  </h3>
             )}
           </Dialog.Panel>
         </div>
-      </Dialog><Dialog
+      </Dialog>
+
+      {/* Assignment Confirmation Modal */}
+      <Dialog
         open={showAssignConfirmation}
         onClose={() => setShowAssignConfirmation(false)}
         className="relative z-50"
       >
         <div
           className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-          aria-hidden="true" />
+          aria-hidden="true"
+        />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-xs bg-white p-6 rounded-2xl shadow-lg text-center">
             <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
@@ -1724,21 +1814,25 @@ Edited Profile  </h3>
           </Dialog.Panel>
         </div>
       </Dialog>
-      {/* Move the following JSX inside the main return statement */}
+
+      {/* Success Message */}
       {editSuccess && (
         <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
           Profile updated successfully!
         </div>
       )}
 
+      {/* Edit Profile Modal */}
       {isEditModalOpen && profile && (
         <EditProfileForm
           profile={profile}
           onClose={handleCloseEditModal}
           onSave={handleSaveProfile}
+          isReadOnly={profile.bactive === false}
         />
       )}
 
+      {/* Full Details Modal */}
       {showDetails && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
           <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-lg sm:max-w-xl md:max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg relative">
@@ -1793,7 +1887,7 @@ Edited Profile  </h3>
                 <span>
                   <span className="font-medium">Organisation:</span>{" "}
                   {profile.corganization || "-"}
-                </span>{" "}
+                </span>
               </div>
               
               <div className="flex items-start gap-3">
@@ -1803,20 +1897,6 @@ Edited Profile  </h3>
                   {profile.iproject_value || "-"}
                 </span>
               </div>
-              {/* <div className="flex items-start gap-3">
-                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Potential:</span>{" "}
-                  {profile.lead_potential?.clead_name || "-"}
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Status:</span>{" "}
-                  {profile.lead_status?.clead_name || "-"}
-                </span>
-              </div> */}
               <div className="flex items-start gap-3">
                 <FiUser className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
                 <span>
@@ -1883,11 +1963,8 @@ Edited Profile  </h3>
       )}
 
       <DemoSessionDetails leadId={leadId} />
-      </>
-    
-    
-  )
+    </>
+  );
 };
-
 
 export default ProfileCard;

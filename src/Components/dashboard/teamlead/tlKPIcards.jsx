@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 export default function KPIStats(data) {
+  console.log("KPIStats data:", data);
   const [hotCount, setHotCount] = useState(0);
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);
@@ -76,9 +77,10 @@ export default function KPIStats(data) {
         else if (potential === "COLD") cold++;
 
         if (status === "Won") won++;
+        if (status==="lead");
 
-        if (lead.bisConverted === false) { 
-          deals++;
+        if (lead.bisConverted === true) { 
+          won++;
         }
       }
     });

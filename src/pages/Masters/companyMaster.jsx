@@ -252,7 +252,7 @@ export default function CompanyMaster() {
              activeStatusPayloadKey: 'is_active',
             updatedDtPayloadKey: { post: null, put: null }, 
             modifierIdPayloadKey: { post: null, put: null }, 
-            additionalFields: ['description'],
+            // additionalFields: ['description'],
 
             basePostPayload: {
                 source_name: '',

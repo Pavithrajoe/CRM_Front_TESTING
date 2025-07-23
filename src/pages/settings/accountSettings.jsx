@@ -240,7 +240,7 @@ const AccountSettings = () => {
           </div>
         ))}
 
-        <div className="flex flex-col">
+        {/* <div className="flex flex-col">
           <label className="text-xs text-gray-600 mb-1">City ID</label>
           <input
             type="number"
@@ -254,7 +254,7 @@ const AccountSettings = () => {
             min={1}
           />
           {errors.cityId && <p className="text-red-500 text-xs mt-1">{errors.cityId}</p>}
-        </div>
+        </div> */}
       </div>
 
       <div className="border-t pt-4 mb-6 space-y-3">

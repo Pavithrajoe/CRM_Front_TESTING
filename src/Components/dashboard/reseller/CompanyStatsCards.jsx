@@ -5,7 +5,7 @@ import { ENDPOINTS } from "../../../api/constraints";
 
 const CompanyStatsCards = () => {
   const [stats, setStats] = useState({
-    totalCompanies: 0,
+    totalCompanies: 0,s
     activeCompanies: 0,
     inactiveCompanies: 0,
   });

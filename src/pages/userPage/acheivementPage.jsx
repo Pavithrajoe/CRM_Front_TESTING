@@ -6,7 +6,7 @@ import { ENDPOINTS } from '../../api/constraints';
 import { UserContext } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
-// Reusable ToggleSwitch component
+// Reusable ToggleSwitch component (keeping it as is, not directly related to the error)
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
     <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
         <span className="text-gray-700 font-medium">{label}</span>
@@ -38,16 +38,14 @@ function AcheivementDashboard({ userId }) {
         totalLeads: 0,
         highestValueLead: { iproject_value: 0, dcreated_dt: null, convertToDealTime: null },
         highestAchievedMonth: { month: '', count: 0 },
-        historicalRevenueData: [],
+        historicalRevenueData: [], // Ensure this is initialized as an array
     });
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    // State variable to explicitly trigger data fetch when filter is applied or cleared
     const [filterTrigger, setFilterTrigger] = useState(0); 
-    // State to manage the behavior of setting default dates only on the first load
     const [isInitialLoad, setIsInitialLoad] = useState(true); 
 
     // --- Helper Functions for Formatting ---
@@ -90,6 +88,7 @@ function AcheivementDashboard({ userId }) {
             setError("Authentication token missing. Please log in.");
             setLoading(false);
             toast.error("Please login to view achievements.");
+            navigate('/login'); // Redirect to login if no token
             return;
         }
         if (!userId) {
@@ -98,17 +97,15 @@ function AcheivementDashboard({ userId }) {
             return;
         }
 
-        // Validation for date range before fetching
         if (start && end && new Date(start) > new Date(end)) {
             toast.error("Start date cannot be after end date.");
             setLoading(false);
+            // Ensure historicalRevenueData is cleared or set to empty array on validation error
             setAchievements(prev => ({ ...prev, historicalRevenueData: [] })); 
             return;
         }
 
         try {
-            // Construct the URL and append the date filters. 
-            // This is where the filter parameters are sent to the backend.
             const url = new URL(`${ENDPOINTS.USER_ACHIEVEMENTS}/${userId}`);
             
             if (start) {
@@ -143,7 +140,7 @@ function AcheivementDashboard({ userId }) {
                 totalRevenueAmount: data.totalRevenueAmount || 0,
                 highestValueLead: data.highestValueLead || { iproject_value: 0, dcreated_dt: null, convertToDealTime: null },
                 highestAchievedMonth: data.highestAchievedMonth || { month: '', count: 0 },
-                // This array should contain data filtered by dcreated_dt on the backend
+                // Crucial: Ensure historicalRevenueData is always an array
                 historicalRevenueData: Array.isArray(data.totalRevenue) ? data.totalRevenue : [], 
             });
 
@@ -151,14 +148,15 @@ function AcheivementDashboard({ userId }) {
             console.error("Error fetching achievements:", err);
             setError(err.message);
             toast.error(`Error loading achievements: ${err.message}`);
+            // Also ensure historicalRevenueData is reset on fetch error
+            setAchievements(prev => ({ ...prev, historicalRevenueData: [] }));
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, [userId, navigate]); // Added navigate to dependency array for useCallback
 
     // --- useEffect for Fetching and Initial Load ---
     useEffect(() => {
-        // Function to set the current month as default dates (YYYY-MM-DD)
         const setInitialDates = () => {
             const today = new Date();
             const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -183,7 +181,6 @@ function AcheivementDashboard({ userId }) {
             let start = startDate;
             let end = endDate;
 
-            // If it's the initial load, set the current month's dates and fetch data
             if (isInitialLoad) {
                 const dates = setInitialDates();
                 start = dates.defaultStartDate;
@@ -191,13 +188,12 @@ function AcheivementDashboard({ userId }) {
                 setIsInitialLoad(false); 
             }
             
-            // Trigger the fetch using the determined dates
             fetchAchievements(start, end);
         } else {
             setLoading(false);
         }
         
-    }, [userId, fetchAchievements, filterTrigger, isInitialLoad]);
+    }, [userId, fetchAchievements, filterTrigger, isInitialLoad, startDate, endDate]); // Added startDate, endDate to dependencies
 
     // Handler for triggering the filter when the apply icon is clicked
     const handleFilterIconClick = () => {
@@ -209,7 +205,6 @@ function AcheivementDashboard({ userId }) {
             toast.error("Start date cannot be after end date.");
             return;
         }
-        // Increment filterTrigger to initiate useEffect fetch with new dates
         setFilterTrigger(prev => prev + 1); 
         toast.info(`Applying filter...`);
     };
@@ -222,7 +217,6 @@ function AcheivementDashboard({ userId }) {
         }
         setStartDate('');
         setEndDate('');
-        // Increment filterTrigger to initiate useEffect fetch with cleared dates (all time)
         setFilterTrigger(prev => prev + 1);
         toast.info("Date filter cleared. Showing all-time data.");
     };
@@ -233,7 +227,6 @@ function AcheivementDashboard({ userId }) {
     };
 
     if (loading) {
-        // ... (Loading state UI) ...
         return (
             <div className="min-h-screen p-5 font-sans text-gray-800 flex justify-center items-center">
                 <p className="text-xl font-semibold">Achievement Dashboard {currentUserName}...</p>
@@ -243,10 +236,15 @@ function AcheivementDashboard({ userId }) {
     }
 
     if (error) {
-        // ... (Error state UI) ...
         return (
-            <div className="min-h-screen p-5 font-sans text-gray-800 flex justify-center items-center">
-                <p className="text-xl font-semibold text-red-600">Error: {error}</p>
+            <div className="min-h-screen p-5 font-sans text-gray-800 flex flex-col justify-center items-center">
+                <p className="text-xl font-semibold text-red-600 mb-4">Error: {error}</p>
+                <button
+                    onClick={() => navigate('/dashboard')} // Example: navigate to a safe page
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Go to Dashboard
+                </button>
                 <ToastContainer />
             </div>
         );
@@ -305,7 +303,7 @@ function AcheivementDashboard({ userId }) {
                             {formatCurrency(achievements.highestValueLead?.iproject_value || 0)}
                         </div>
                         <div className="achievement-card-trend flex items-center text-sm text-red-600 font-semibold">
-                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : '-'}
+                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : 'Nil'}
                         </div>
                     </div>
 
@@ -334,7 +332,8 @@ function AcheivementDashboard({ userId }) {
                 <div className="historical-section-header flex flex-col sm:flex-row justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Historical Revenue Details</h2>
                     <div className="date-filter-inputs flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                        {/* <input
+                        {/* Re-added date inputs */}
+                        <input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
@@ -348,7 +347,7 @@ function AcheivementDashboard({ userId }) {
                             onChange={(e) => setEndDate(e.target.value)}
                             className="block w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 shadow-sm transition duration-200"
                             aria-label="End Date"
-                        /> */}
+                        />
                         
                         {/* Apply Filter Icon */}
                         <i 
@@ -377,7 +376,8 @@ function AcheivementDashboard({ userId }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {achievements.historicalRevenueData.length > 0 ? (
+                            {/* Defensive check for historicalRevenueData before map */}
+                            {Array.isArray(achievements.historicalRevenueData) && achievements.historicalRevenueData.length > 0 ? (
                                 achievements.historicalRevenueData.map((row, index) => (
                                     <tr key={row.iProject_id || index} className="hover:bg-gray-50 transition-colors duration-150">
                                         <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>

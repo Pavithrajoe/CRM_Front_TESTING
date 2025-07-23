@@ -169,7 +169,7 @@ export default function DealsTable() {
   return (
     <div className="bg-white rounded-3xl p-6 w-full">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <h2 className="text-2xl font-semibold text-black">Active Deals</h2>
+        <h2 className="text-2xl font-semibold text-black"> Won List</h2>
         <input
           type="search"
           placeholder="Search here"

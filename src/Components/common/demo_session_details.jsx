@@ -32,9 +32,9 @@ const theme = createTheme({
 
 // Utility function to format date to DD/MM/YYYY
 const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
+  if (!dateString) return '-';
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'N/A';
+  if (isNaN(date.getTime())) return '-';
 
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
@@ -101,6 +101,14 @@ const DemoSessionDetails = ({ leadId }) => {
     const startTime = formData.dDemoSessionStartTime || selectedSession.dDemoSessionStartTime;
     const endTime = formData.dDemoSessionEndTime || selectedSession.dDemoSessionEndTime;
 
+    // Client-side validation for mandatory fields
+    if (!formData.cDemoSessionType || !formData.cPlace || !startTime || !endTime || !formData.notes || (formData.demoSessionAttendees || []).length === 0) {
+      setSnackMessage('All fields are mandatory!');
+      setSnackSeverity('warning');
+      setSnackOpen(true);
+      return;
+    }
+
     if (new Date(endTime) < new Date(startTime)) {
       setSnackMessage('End time must be after the start time!');
       setSnackSeverity('warning');
@@ -158,16 +166,44 @@ const DemoSessionDetails = ({ leadId }) => {
               <Divider sx={{ mb: 2 }} />
 
               {/* Displaying Dates in DD/MM/YYYY */}
-              <Typography><strong>Start Time:</strong> {formatDate(session.dDemoSessionStartTime)}</Typography>
-              <Typography><strong>End Time:</strong> {formatDate(session.dDemoSessionEndTime)}</Typography>
-              <Typography><strong>{session.cDemoSessionType === 'online' ? 'Meeting Link' : 'Place'}:</strong> {session.cPlace}</Typography>
-              <Typography><strong>Notes:</strong> {session.notes || '—'}</Typography>
-              <Typography mt={2}><strong>Created By:</strong> {session.createdBy?.cFull_name || 'N/A'}</Typography>
+              <Typography>
+                <strong>Start Time:</strong> {formatDate(session.dDemoSessionStartTime)}
+              </Typography>
+              <Typography>
+                <strong>
+                  End Time:
+                  <span className="text-red-600">*</span>
+                </strong>{' '}
+                {formatDate(session.dDemoSessionEndTime)}
+              </Typography>
+              <Typography>
+                <strong>{session.cDemoSessionType === 'online' ? 'Meeting Link' : 'Place'}:</strong> {session.cPlace}
+              </Typography>
+              <Typography>
+                <strong>
+                  Notes:
+                  <span className="text-red-600">*</span>
+                </strong>{' '}
+                {session.notes || '—'}
+              </Typography>
+              <Typography mt={2}>
+                <strong>
+                  Created By: <span className="text-red-600">*</span>
+                </strong>{' '}
+                {session.createdBy?.cFull_name || 'N/A'}
+              </Typography>
               {session.updatedBy && (
-                <Typography><strong>Updated By:</strong> {session.updatedBy?.cFull_name}</Typography>
+                <Typography>
+                  <strong>
+                    Updated By: <span className="text-red-600">*</span>
+                  </strong>{' '}
+                  {session.updatedBy?.cFull_name}
+                </Typography>
               )}
 
-              <Typography mt={2}><strong>Attendees:</strong></Typography>
+              <Typography mt={2}>
+                <strong>Attendees:</strong>
+              </Typography>
               <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
                 {(session.attendees || []).map((attendee) => (
                   <Chip
@@ -178,7 +214,9 @@ const DemoSessionDetails = ({ leadId }) => {
                 ))}
               </Box>
 
-              <Button onClick={() => openEditDialog(session)} variant="contained" sx={{ mt: 2 }} color="primary">Edit</Button>
+              <Button onClick={() => openEditDialog(session)} variant="contained" sx={{ mt: 2 }} color="primary">
+                Edit
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -197,10 +235,12 @@ const DemoSessionDetails = ({ leadId }) => {
                 setFormData((prev) => ({
                   ...prev,
                   cDemoSessionType: newType,
-                  cPlace: ''
+                  cPlace: '', // Clear place when session type changes
                 }));
               }}
               sx={{ mt: 2 }}
+              required // Mark as required
+              InputLabelProps={{ shrink: true }}
             >
               <MenuItem value="online">Online</MenuItem>
               <MenuItem value="offline">Offline</MenuItem>
@@ -213,6 +253,8 @@ const DemoSessionDetails = ({ leadId }) => {
               placeholder={formData.cDemoSessionType === 'online' ? 'G-Meet Link' : 'Enter location'}
               onChange={(e) => setFormData({ ...formData, cPlace: e.target.value })}
               sx={{ mt: 2 }}
+              required // Mark as required
+              InputLabelProps={{ shrink: true }}
             />
 
             <TextField
@@ -223,6 +265,7 @@ const DemoSessionDetails = ({ leadId }) => {
               value={toInputDateTime(formData.dDemoSessionStartTime)}
               onChange={(e) => setFormData({ ...formData, dDemoSessionStartTime: e.target.value })}
               sx={{ mt: 2 }}
+              required // Mark as required
             />
 
             <TextField
@@ -233,6 +276,7 @@ const DemoSessionDetails = ({ leadId }) => {
               value={toInputDateTime(formData.dDemoSessionEndTime)}
               onChange={(e) => setFormData({ ...formData, dDemoSessionEndTime: e.target.value })}
               sx={{ mt: 2 }}
+              required // Mark as required
             />
 
             <TextField
@@ -243,9 +287,14 @@ const DemoSessionDetails = ({ leadId }) => {
               value={formData.notes || ''}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               sx={{ mt: 2 }}
+              required // Mark as required
+              InputLabelProps={{ shrink: true }}
             />
 
-            <Typography sx={{ mt: 2 }}><strong>Attendees:</strong></Typography>
+            <Typography sx={{ mt: 2 }}>
+              <strong>Attendees:</strong>
+              <span className="text-red-600">*</span>
+            </Typography>
             <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
               {/* Display existing attendees and newly added attendees */}
               {(formData.demoSessionAttendees || []).map((attendee) => (
@@ -273,12 +322,21 @@ const DemoSessionDetails = ({ leadId }) => {
                   demoSessionAttendees: newVal
                 }));
               }}
-              renderInput={(params) => <TextField {...params} label="Add/Remove Attendees" sx={{ mt: 2 }} />}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Add/Remove Attendees"
+                  sx={{ mt: 2 }}
+                  required // Mark as required
+                />
+              )}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} variant="contained" color="primary">Save</Button>
+            <Button onClick={handleUpdate} variant="contained" color="primary">
+              Save
+            </Button>
           </DialogActions>
         </Dialog>
 

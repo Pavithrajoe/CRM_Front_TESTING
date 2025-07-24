@@ -84,6 +84,7 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   </div>
 );
 
+
 const SettingsPage = () => {
   const { userId: urlUserId } = useParams();
   const { users } = useContext(UserContext);
@@ -105,59 +106,61 @@ const SettingsPage = () => {
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [usernameError, setUsernameError] = useState('');
-  const [toggelestats, setToggelestats] = useState({
-    
-    userId : urlUserId ,
-    whatsapp: false,
-    mail: false,
-    website: false,
-    phone: false,
-});
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!urlUserId) {
-        if (users && users.length > 0) {
-          setName(users[0].cFull_name || '');
-          setUsername(users[0].cUser_name || '');
-          setEmail(users[0].cEmail || '');
-        }
-        setLoadingProfile(false);
-        return;
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    if (!urlUserId) {
+      if (users && users.length > 0) {
+        const user = users[0];
+        setName(user.cFull_name || '');
+        setUsername(user.cUser_name || '');
+        setEmail(user.cEmail || '');
+        // Set access settings from user data
+        setWhatsappActive(user.whatsapp_access || false);
+        setMailActive(user.mail_access || false);
+        setWebsiteActive(user.website_access || false);
+        setPhoneActive(user.phone_access || false);
       }
+      setLoadingProfile(false);
+      return;
+    }
 
-      setLoadingProfile(true);
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
-        toast.error("Authentication required to fetch user details.");
-        setLoadingProfile(false);
-        return;
-      }
+    setLoadingProfile(true);
+    const authToken = localStorage.getItem("token");
+    if (!authToken) {
+      toast.error("Authentication required to fetch user details.");
+      setLoadingProfile(false);
+      return;
+    }
 
-      try {
-        const response = await fetch(`${ENDPOINTS.USER_GET}/${urlUserId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-        });
+    try {
+      const response = await fetch(`${ENDPOINTS.USER_GET}/${urlUserId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Error fetching user details");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Error fetching user details");
 
-        setName(data.cFull_name || '');
-        setUsername(data.cUser_name || '');
-        setEmail(data.cEmail || '');
-      } catch (err) {
-        console.error("Error fetching user details:", err);
-        toast.error("Failed to load user profile: " + err.message);
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-    fetchUserProfile();
-  }, [urlUserId, users]);
+      setName(data.cFull_name || '');
+      setUsername(data.cUser_name || '');
+      setEmail(data.cEmail || '');
+      // Set access settings from user data
+      setWhatsappActive(data.whatsapp_access || false);
+      setMailActive(data.mail_access || false);
+      setWebsiteActive(data.website_access || false);
+      setPhoneActive(data.phone_access || false);
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+      toast.error("Failed to load user profile: " + err.message);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+  fetchUserProfile();
+}, [urlUserId, users]);
 
   const fetchGeneralSettings = async () => {
     setLoadingSettings(true);
@@ -178,6 +181,7 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
+      console.log("General Settings Data:", data);
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       
       const settings = data.result && Array.isArray(data.result) && data.result.length > 0
@@ -261,96 +265,55 @@ const SettingsPage = () => {
     }
   };
 
-  const handleSaveChanges = async () => {
-    const isNameValid = validateName();
-    const isEmailValid = validateEmail();
-    const isUsernameValid = validateUsername();
+const handleSaveChanges = async () => {
+  const isNameValid = validateName();
+  const isEmailValid = validateEmail();
+  const isUsernameValid = validateUsername();
 
-    if (!isNameValid || !isEmailValid || !isUsernameValid) {
-      toast.error('Please fix validation errors before saving');
-      return;
+  if (!isNameValid || !isEmailValid || !isUsernameValid) {
+    toast.error('Please fix validation errors before saving');
+    return;
+  }
+
+  setIsSaving(true);
+  const authToken = localStorage.getItem("token");
+  if (!authToken) {
+    toast.error("Authentication required to save changes.");
+    setIsSaving(false);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        cFull_name: name,
+        cUser_name: username,
+        cEmail: email,
+        whatsapp_access: whatsappActive,
+        mail_access: mailActive,
+        website_access: websiteActive,
+        phone_access: phoneActive,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to update profile');
     }
 
-    setIsSaving(true);
-    const authToken = localStorage.getItem("token");
-    if (!authToken) {
-      toast.error("Authentication required to save changes.");
-      setIsSaving(false);
-      return;
-    }
-
-    try {
-      const profileUpdateResponse = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          cFull_name: name,
-          cUser_name: username,
-          cEmail: email,
-        }),
-      });
-
-      const profileUpdateResult = await profileUpdateResponse.json();
-      if (!profileUpdateResponse.ok) {
-        throw new Error(profileUpdateResult.message || 'Failed to update profile');
-      }
-
-      try {
-        let generalSettingsResponse = await fetch(ENDPOINTS.GENERAL_SETTINGS_UPDATE, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            whatsapp_active: whatsappActive,
-            mail_active: mailActive,
-            website_active: websiteActive,
-            phone_active: phoneActive,
-          }),
-        });
-
-        if (!generalSettingsResponse.ok) {
-          const errorData = await generalSettingsResponse.json();
-          if (generalSettingsResponse.status === 404 && errorData.error === "General setting not found for this user and company") {
-            generalSettingsResponse = await fetch(ENDPOINTS.GENERAL_SETTINGS_UPDATE, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`,
-              },
-              body: JSON.stringify({
-                whatsapp_active: whatsappActive,
-                mail_active: mailActive,
-                website_active: websiteActive,
-                phone_active: phoneActive,
-              }),
-            });
-
-            if (!generalSettingsResponse.ok) {
-              throw new Error(errorData.message || generalSettingsResponse.statusText || 'Failed to create general settings');
-            }
-          } else {
-            throw new Error(errorData.message || generalSettingsResponse.statusText || 'Failed to update general settings');
-          }
-        }
-      } catch (gsError) {
-        console.error('Error with general settings operation:', gsError);
-        toast.error(`Failed to save general settings: ${gsError.message}`);
-      }
-
-      toast.success('Changes saved successfully!');
-      await fetchGeneralSettings();
-    } catch (error) {
-      console.error('Error saving changes:', error);
-      toast.error(`Failed to save changes: ${error.message}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    toast.success('Changes saved successfully!');
+  } catch (error) {
+    console.error('Error saving changes:', error);
+    toast.error(`Failed to save changes: ${error.message}`);
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
@@ -391,41 +354,76 @@ const SettingsPage = () => {
     }
   };
 
-  useEffect(() => {
-    const setToggleStates = async () => {
-      try {
-        const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
+const updateCallLogAccess = async () => {
+  try {
+    const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: Number(urlUserId),
+        isMailActive: mailActive,
+        isPhoneActive: phoneActive,
+        isWebsiteActive: websiteActive,
+        isWhatsappActive: whatsappActive,
+      }),
+    });
 
-          headers: {
-            Authorization:`Bearer ${localStorage.getItem("token")}`,
-            'Content-Type': 'application/json',
-          },
-           body: JSON.stringify({
-                userId : urlUserId,
-                isMailActive: mail_active,
-                isPhoneActive: phone_active,
-                isWebsiteActive: websiteActive,
-                isWhatsappActive: phoneActive,
-              }),
+    const data = await response.json();
 
-        
-      });  
-      
-      const data = await response.json();
-console.log("Call log access data:", data);
-      if (!response.ok) throw new Error(data.message || 'Failed to fetch call log access');
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update call log access');
     }
-      
-      catch (error) {
-        console.error('Error fetching call log access:', error);
-        
-      }
-   
+
+    // Update local state with the response data
+    if (data.result) {
+      setMailActive(data.result.isMailActive || false);
+      setPhoneActive(data.result.isPhoneActive || false);
+      setWebsiteActive(data.result.isWebsiteActive || false);
+      setWhatsappActive(data.result.isWhatsappActive || false);
+    }
+
+    toast.success(data.Message || "Access saved successfully.");
+    return true;
+  } catch (error) {
+    console.error('Error updating call log access:', error);
+    toast.error(`Failed to update access: ${error.message}`);
+    return false;
+  }
+};
+
+const handleToggle = async (type) => {
+  // Save original state in case we need to revert
+  const originalState = {
+    whatsapp: whatsappActive,
+    mail: mailActive,
+    website: websiteActive,
+    phone: phoneActive
+  };
+
+  // Update local state immediately for responsive UI
+  switch(type) {
+    case 'whatsapp': setWhatsappActive(prev => !prev); break;
+    case 'mail': setMailActive(prev => !prev); break;
+    case 'website': setWebsiteActive(prev => !prev); break;
+    case 'phone': setPhoneActive(prev => !prev); break;
+    default: break;
   }
 
-
-  }, [urlUserId]);
+  // Then make the API call
+  const success = await updateCallLogAccess();
   
+  // If the API call failed, revert the state
+  if (!success) {
+    setWhatsappActive(originalState.whatsapp);
+    setMailActive(originalState.mail);
+    setWebsiteActive(originalState.website);
+    setPhoneActive(originalState.phone);
+  }
+};
+
   const handleUploadPicture = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -514,8 +512,18 @@ console.log("Call log access data:", data);
                 </label>
                 <p className="text-xs text-gray-500 mt-2">Max size 500kb</p>
               </div> 
+       
             </div>
+            
           )}
+                 <div className=" justify-center mt-8 pt-6 border-t border-gray-200">
+          <Button
+            text={isSaving ? 'Saving...' : 'Save All Changes'}
+            onClick={handleSaveChanges}
+            disabled={isSaving}
+            className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
+          />
+        </div>
         </section>
 
         <div className="section-divider"></div>
@@ -576,53 +584,49 @@ console.log("Call log access data:", data);
         <div className="section-divider"></div>
 
         <section className="animate-fade-in-down">
-  <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
-    Communication Channel Activation
-  </h2>
-  {isLoading ? (
-    <div className="animate-pulse space-y-3">
-      <div className="h-10 bg-gray-200 rounded-md"></div>
-      <div className="h-10 bg-gray-200 rounded-md"></div>
-      <div className="h-10 bg-gray-200 rounded-md"></div>
-      <div className="h-10 bg-gray-200 rounded-md"></div>
-    </div>
-  ) : (
-    <>
-      <ToggleSwitch 
-        label="WhatsApp " 
-        isChecked={whatsappActive} 
-        onToggle={() => setWhatsappActive(!whatsappActive)} 
-        note="Click to activate/deactivate WhatsApp communication."
-      />
-      <ToggleSwitch 
-        label="Mail " 
-        isChecked={mailActive} 
-        onToggle={() => setMailActive(!mailActive)} 
-        note="Click to activate/deactivate email communication."
-      />
-      <ToggleSwitch 
-        label="Website " 
-        isChecked={websiteActive} 
-        onToggle={() => setWebsiteActive(!websiteActive)} 
-        note="Click to activate/deactivate website notifications."
-      />
-      <ToggleSwitch 
-        label="Phone " 
-        isChecked={phoneActive} 
-        onToggle={() => setPhoneActive(!phoneActive)} 
-        note="Click to activate/deactivate phone communication."
-      />
-    </>
-  )}
-</section>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
+            Communication Channel Activation
+          </h2>
+          {isLoading ? (
+            <div className="animate-pulse space-y-3">
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+              <div className="h-10 bg-gray-200 rounded-md"></div>
+            </div>
+          ) : (
+            <>
+              <ToggleSwitch 
+                label="WhatsApp" 
+                isChecked={whatsappActive} 
+                onToggle={() => handleToggle('whatsapp')}
+              />
+              <ToggleSwitch 
+                label="Mail" 
+                isChecked={mailActive} 
+                onToggle={() => handleToggle('mail')}
+              />
+              <ToggleSwitch 
+                label="Website" 
+                isChecked={websiteActive} 
+                onToggle={() => handleToggle('website')}
+              />
+              <ToggleSwitch 
+                label="Phone" 
+                isChecked={phoneActive} 
+                onToggle={() => handleToggle('phone')}
+              />
+            </>
+          )}
+        </section>
 
         <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
-          <Button
-            text={isSaving ? 'Saving...' : 'Save All Changes'}
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-            className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
-          />
+         <Button
+  text={isSaving ? 'Saving...' : 'Save the Access'}
+  onClick={updateCallLogAccess}
+  disabled={isSaving}
+  className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
+/>
         </div>
       </div>
 

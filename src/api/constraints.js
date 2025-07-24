@@ -108,6 +108,8 @@ export const ENDPOINTS = {
   STATUS_REMARKS: `${BASE_URL}/lead-status-remark`,
   FIRST_RESPONSE_FOR_LEAD: `${BASE_URL}/reports/first-response-time`,
 
+  MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
+
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,

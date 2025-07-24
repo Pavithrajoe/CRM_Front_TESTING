@@ -22,9 +22,14 @@ import { useNavigate } from "react-router-dom";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import Confetti from 'react-confetti';
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
+  const navigate = useNavigate();
+  const { showPopup } = usePopup();
+
+  // State declarations
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
@@ -34,8 +39,8 @@ const LeadDetailView = () => {
   const [lostReasons, setLostReasons] = useState([]);
   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
   const [lostDescription, setLostDescription] = useState("");
-  const { showPopup } = usePopup();
-  const navigate = useNavigate();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [immediateWonStatus, setImmediateWonStatus] = useState(false);
   const [isMailOpen, setIsMailOpen] = useState(false);
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
@@ -45,6 +50,14 @@ const LeadDetailView = () => {
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
+  //email templates 
+
+  const [templates, setTemplates] = useState([]);
+const [templatesLoading, setTemplatesLoading] = useState(false);
+
+  // Derived state
+  const isLeadActive = !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
+  const showActionButtons = !loading && isLeadActive;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
@@ -65,24 +78,28 @@ const LeadDetailView = () => {
       const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
       if (!userId) throw new Error("User not authenticated");
 
-      // First convert to deal
+      setImmediateWonStatus(true);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+
       const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!convertResponse.ok) {
+        setImmediateWonStatus(false);
+        setShowConfetti(false);
         throw new Error("Failed to convert lead to deal");
       }
 
-      // Then save the remark
       const remarkPayload = {
         remark: remarkData.remark.trim(),
         leadId: parseInt(leadId),
-        leadStatusId: leadData?.ileadstatus_id, // Use current status ID
+        leadStatusId: leadData?.ileadstatus_id,
         createBy: userId,
         ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
       };
@@ -136,7 +153,7 @@ const LeadDetailView = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: "Lost",
@@ -158,6 +175,7 @@ const LeadDetailView = () => {
       setIsLost(true);
       setIsDeal(false);
       setIsWon(false);
+      setImmediateWonStatus(false);
       fetchLeadData();
     } catch (error) {
       console.error("Error marking lead as lost:", error);
@@ -176,7 +194,7 @@ const LeadDetailView = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           sent_to: sentTo,
@@ -211,12 +229,11 @@ const LeadDetailView = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        console.error("Failed to fetch lead data. Status:", response.status);
         throw new Error("Failed to fetch lead data");
       }
 
@@ -225,16 +242,21 @@ const LeadDetailView = () => {
       setIsDeal(data.bisConverted);
       setIsLost(!data.bactive);
 
-      if (data.clead_status_name?.toLowerCase() === 'won') {
+      if (data.bisConverted === "true" || data.bisConverted === true || data.clead_status_name?.toLowerCase() === 'won') {
         setIsWon(true);
         setIsDeal(true);
         setIsLost(false);
+        setImmediateWonStatus(true);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
       } else if (!data.bactive) {
         setIsWon(false);
         setIsLost(true);
+        setImmediateWonStatus(false);
       } else {
         setIsWon(false);
         setIsLost(false);
+        setImmediateWonStatus(false);
       }
 
       setSentTo(data.cemail || "");
@@ -251,7 +273,7 @@ const LeadDetailView = () => {
       const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) throw new Error("Failed to fetch lost reasons");
@@ -353,47 +375,70 @@ const LeadDetailView = () => {
     "background",
   ];
 
-  const isLeadActive = !isLost && !isWon;
-  const showActionButtons = !loading && isLeadActive;
-  const showLostButton = !loading && isLeadActive;
+  const fetchTemplates = async () => {
+  try {
+    setTemplatesLoading(true);
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) throw new Error("Failed to fetch templates");
+    
+    const data = await response.json();
+    setTemplates(data.data || []);
+  } catch (error) {
+    console.error("Error fetching templates:", error);
+    showPopup("Error", "Failed to load email templates", "error");
+  } finally {
+    setTemplatesLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (isMailOpen) {
+    fetchTemplates();
+  }
+}, [isMailOpen]);
+
+const applyTemplate = (template) => {
+  setMailSubject(template.mailTitle);
+  setMailContent(template.mailBody);
+};
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
-      {/* Left Sidebar - Profile and Action Cards */}
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={500}
+        />
+      )}
+
       <div className="w-full lg:w-1/4 p-2 sm:p-3 md:p-4">
         <div className="sticky top-4 z-10 space-y-4">
           <ProfileCard 
             leadId={leadId} 
-            isReadOnly={isLost || isWon} 
-            
+            isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true} 
           />
           {isLeadActive && <ActionCard leadId={leadId} />}
         </div>
       </div>
 
       <div className="w-full md:w-full lg:w-full p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <StatusBar 
-            leadId={leadId} 
-            leadData={leadData} 
-            isLost={isLost} 
-            isWon={isWon} 
-          />
-          {!loading && isWon && (
-            <div className="flex items-center gap-2 text-green-600 text-sm sm:text-lg font-semibold bg-green-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow">
-              <span role="img" aria-label="won">🎉</span> WON
-            </div>
-          )}
-          {!loading && isLost && (
-            <div className="flex items-center gap-2 text-red-600 text-sm sm:text-lg font-semibold bg-red-50 px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow">
-              <span role="img" aria-label="lost">😞</span> LOST
-            </div>
-          )}
-        </div>
+        <StatusBar 
+          leadId={leadId} 
+          leadData={leadData} 
+          isLost={isLost} 
+          isWon={isWon || immediateWonStatus || leadData?.bisConverted === true} 
+        />
 
-        {/* Tabs and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          {/* Tabs - Always visible but some functionality may be limited */}
           <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
             {["Activity", "Comments", "Reminders"].map((label, idx) => (
               <button
@@ -410,10 +455,10 @@ const LeadDetailView = () => {
             ))}
           </div>
 
-          {/* Action Buttons - Only shown for active leads */}
           {showActionButtons && (
             <div className="flex gap-2 sm:gap-3 flex-wrap justify-end sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
               <button
+
                 onClick={() => setIsMailOpen(true)}
                 className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-full shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm"
                 title="Email"
@@ -421,15 +466,16 @@ const LeadDetailView = () => {
                 <MdEmail size={16} className="hidden sm:block" /> 
                 <span>Email</span>
               </button>
-              {!loading && !isWon && (
-              <button
-                className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow transition text-xs sm:text-sm"
-                onClick={handleWonClick}
-              >
-                Won
-              </button>
+              
+              {!(leadData?.bisConverted === true) && (
+                <button
+                  className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow transition text-xs sm:text-sm"
+                  onClick={handleWonClick}
+                >
+                  Won
+                </button>
               )}
-
+              
               <button
                 className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow-inner transition text-xs sm:text-sm"
                 onClick={handleLostClick}
@@ -440,15 +486,18 @@ const LeadDetailView = () => {
           )}
         </div>
 
-        {/* Tab Content - Always visible */}
         <Box className="mt-4 relative z-0 w-full">
-          {tabIndex === 0 && <LeadTimeline leadId={leadId} isReadOnly={isLost || isWon} />}
+          {tabIndex === 0 && (
+            <LeadTimeline 
+              leadId={leadId} 
+              isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true} 
+            />
+          )}
           {tabIndex === 1 && <Comments leadId={leadId} />}
           {tabIndex === 2 && <RemainderPage leadId={leadId} />}
         </Box>
       </div>
 
-      {/* Won Remark Dialog */}
       <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
         <DialogTitle>Enter Won Details</DialogTitle>
         <DialogContent>
@@ -478,7 +527,6 @@ const LeadDetailView = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Lost Reason Modal */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md sm:max-w-lg md:max-w-xl">
@@ -541,74 +589,170 @@ const LeadDetailView = () => {
           </div>
         </div>
       )}
-
-      {/* Email Modal */}
-      {isMailOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
-          style={{ backdropFilter: "blur(8px)" }}
+{isMailOpen && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+    style={{ backdropFilter: "blur(8px)" }}
+  >
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-full md:max-w-[80%] h-[90%] flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 flex items-center gap-2">
+          <MdEmail className="text-blue-600" size={24} />
+          Compose Email
+        </h2>
+        <button 
+          onClick={() => setIsMailOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
         >
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-lg md:max-w-xl flex flex-col">
-            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">📩 Send Your Mail</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                sendEmail();
-              }}
-              className="flex flex-col flex-grow space-y-3 sm:space-y-4"
-            >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 h-full">
+        {/* Templates Section */}
+        <div className="w-full md:w-1/3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-lg text-blue-800">Email Templates</h3>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search templates..."
+                className="pl-8 pr-3 py-1 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          {templatesLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="text-center py-8 text-blue-600">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <p>No templates available</p>
+            </div>
+          ) : (
+            <div className="space-y-3 h-[calc(100%-50px)] overflow-y-auto pr-2">
+              {templates.map((template) => (
+                <div
+                  key={template.mailTemplateId}
+                  className="p-4 bg-white border border-blue-100 rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                  onClick={() => applyTemplate(template)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <MdEmail className="text-blue-600" size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-800">{template.mailTitle}</h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Email Form Section */}
+        <div className="w-full md:w-2/3 flex flex-col">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendEmail();
+            }}
+            className="flex flex-col flex-grow space-y-4 bg-blue-50 p-4 rounded-xl border border-blue-200"
+          >
+            <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block font-medium text-sm sm:text-base">To</label>
-                <input
-                  type="email"
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-xl text-sm sm:text-base"
-                  value={sentTo}
-                  onChange={(e) => setSentTo(e.target.value)}
-                  required
-                />
+                <label className="block text-sm font-medium text-blue-700 mb-1">To</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    className="w-full border border-blue-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={sentTo}
+                    onChange={(e) => setSentTo(e.target.value)}
+                    required
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400">
+                    <FaWhatsapp className="cursor-pointer hover:text-green-500" 
+                      onClick={() => window.open(`https://wa.me/${leadData?.cMobileNo}`, '_blank')} 
+                    />
+                    <FaPhone className="cursor-pointer hover:text-blue-600 mt-1" 
+                      onClick={() => window.open(`tel:${leadData?.cMobileNo}`)} 
+                    />
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="block font-medium text-sm sm:text-base">Subject</label>
+                <label className="block text-sm font-medium text-blue-700 mb-1">Subject</label>
                 <input
                   type="text"
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-xl text-sm sm:text-base"
+                  className="w-full border border-blue-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={mailSubject}
                   onChange={(e) => setMailSubject(e.target.value)}
                   required
                 />
               </div>
-              <div className="flex-grow flex flex-col min-h-0">
-                <label className="block font-medium mb-1 text-sm sm:text-base">Message</label>
-                <div className="border rounded-xl overflow-hidden">
-                  <ReactQuill
-                    theme="snow"
-                    value={mailContent}
-                    onChange={setMailContent}
-                    modules={modules}
-                    formats={formats}
-                    className="h-[150px] sm:h-[200px] overflow-y-auto"
-                  />
-                </div>
+            </div>
+
+            <div className="flex-grow flex flex-col">
+              <label className="block text-sm font-medium text-blue-700 mb-1">Message</label>
+              <div className="border border-blue-300 rounded-lg overflow-hidden bg-white flex-grow">
+                <ReactQuill
+                  theme="snow"
+                  value={mailContent}
+                  onChange={setMailContent}
+                  modules={{
+                    ...modules,
+                    toolbar: [
+                      [{ 'header': [1, 2, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{'color': []}, {'background': []}],
+                      [{'list': 'ordered'}, {'list': 'bullet'}],
+                      ['link'],
+                      ['clean']
+                    ]
+                  }}
+                  formats={formats}
+                  className="h-full min-h-[200px] sm:min-h-[300px]"
+                  style={{ border: 'none' }}
+                />
               </div>
-              <div className="flex justify-end space-x-2 mt-3 sm:mt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsMailOpen(false)}
-                  className="bg-gray-700 px-3 sm:px-4 py-1 sm:py-2 rounded-full text-white text-sm sm:text-base"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-900 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full text-sm sm:text-base hover:bg-green-900"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsMailOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2"
+              >
+                <MdEmail size={16} />
+                Send Email
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

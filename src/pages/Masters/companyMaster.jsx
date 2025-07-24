@@ -381,6 +381,70 @@ export default function CompanyMaster() {
     },
     skipCompanyIdInjection: false
 },
+{
+    title: 'Email Template',
+    value: 'Email Template Masters',
+    modalKey: 'Email Template',
+    idKey: 'mailTemplateId',
+    payloadKey: 'mailTitle',
+    responseKey: 'data',
+    // idLocation: 'query',
+
+    // API Endpoints
+    get: ENDPOINTS.MAIL_TEMPLATE,
+    post: ENDPOINTS.MAIL_TEMPLATE,
+    put: ENDPOINTS.MAIL_TEMPLATE,
+ delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mailTemplateId=${id}&status=false`,
+    idLocation: 'query',
+    // Payload configuration    
+    basePostPayload: {
+        mailTitle: '',
+        mailBody: ''
+    },
+    basePutPayload: {},
+
+    // Fields to include in POST/PUT requests
+    postPayloadFields: [
+        "mailTitle",
+        "mailBody",
+        "icompany_id",
+        "createdBy"
+    ],
+    putPayloadFields: [
+        "mailTemplateId",
+        "mailTitle",
+        "mailBody",
+        "icompany_id",
+        "updatedBy"
+    ],
+
+    // Field mappings between frontend and backend
+    payloadMapping: {
+        mailTemplateId: 'mailTemplateId',
+        mailTitle: 'mailTitle',
+        mailBody: 'mailBody',
+        icompany_id: 'icompany_id',
+        createdBy: 'createdBy',
+        updatedBy: 'updatedBy'
+    },
+
+    // User and timestamp configuration
+    modifierIdPayloadKey: {
+        post: 'createdBy',
+        put: 'updatedBy'
+    },
+    updatedDtPayloadKey: {
+        post: null, // Handled by backend
+        put: null   // Handled by backend
+    },
+
+    // No active status field for email templates
+    activeStatusPayloadKey: null,
+
+    // Additional configuration
+    skipCompanyIdInjection: false,
+    additionalFields: ['mailBody'] // Indicates there's an additional textarea field
+},
         { // Corrected Label Master configuration
             title: 'Label ',
             value: 'Lead Form Labels',

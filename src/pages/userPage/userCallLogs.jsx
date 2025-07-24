@@ -1,12 +1,12 @@
-import React, { useEffect, useContext, useState ,useMemo} from 'react';
+import React, { useEffect, useContext, useState, useMemo } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
 import { Filter, RotateCcw } from 'lucide-react';
-import  { ENDPOINTS } from '../../api/constraints';
+import { ENDPOINTS } from '../../api/constraints';
 
-function UserCallLogs({userId}) {
-    console.log(userId);    
+function UserCallLogs({ userId }) {
+    console.log(userId);
     const { users } = useContext(UserContext);
 
     const [callLogs, setCallLogs] = useState([]);
@@ -17,26 +17,45 @@ function UserCallLogs({userId}) {
     const [filterTrigger, setFilterTrigger] = useState(0);
 
     const [callStats, setCallStats] = useState({
-        totalCalls:0,
-        incomingCalls:0,
-        outgoingCalls:0,
-        missedCalls:0,
-        rejectedCalls:0
+        totalCalls: 0,
+        incomingCalls: 0,
+        outgoingCalls: 0,
+        missedCalls: 0,
+        rejectedCalls: 0
     });
 
-   
-     
+    // Hardcoding the user_email as per the request (though you are passing userId as prop)
+    // It's generally better to use the prop userId if it's dynamic
+    const userEmailToFetch = 'gayathirinagaraj.inklidox@gmail.com';
 
- 
-    // Hardcoding the user_email as per the request
-    const userEmailToFetch = 'gayathirinagaraj.inklidox@gmail.com'; 
+    // Helper to format date to YYYY-MM-DD for input type="date"
+    const getFormattedDateForInput = (date) => {
+        if (!date) return '';
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
-    const formatDate = (isoString) => {
+    // Helper to get first and last day of current month
+    const getCurrentMonthDates = () => {
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        return {
+            firstDay: getFormattedDateForInput(firstDayOfMonth),
+            lastDay: getFormattedDateForInput(lastDayOfMonth)
+        };
+    };
+
+    // Helper to format date to DD:MM:YYYY for display
+    const formatDateForDisplay = (isoString) => {
         if (!isoString) return 'Nil';
         const date = new Date(isoString);
         return date.toLocaleDateString('en-IN', {
             day: '2-digit',
-            month: '2-digit',
+            month: '2-numeric',
             year: 'numeric',
         });
     };
@@ -64,6 +83,14 @@ function UserCallLogs({userId}) {
         return `${pad(hours)} h ${pad(minutes)} m ${pad(remainingSeconds)} s`;
     };
 
+    // Initialize dates to current month on component mount
+    useEffect(() => {
+        const { firstDay, lastDay } = getCurrentMonthDates();
+        setStartDate(firstDay);
+        setEndDate(lastDay);
+        setFilterTrigger(prev => prev + 1); // Trigger initial fetch with current month's dates
+    }, []);
+
     const handleFilterClick = () => {
         if (!startDate && !endDate) {
             toast.warn("Please select at least a start or end date to filter.");
@@ -78,12 +105,12 @@ function UserCallLogs({userId}) {
     };
 
     const handleResetFilter = () => {
-        setStartDate('');
-        setEndDate('');
+        const { firstDay, lastDay } = getCurrentMonthDates();
+        setStartDate(firstDay);
+        setEndDate(lastDay);
         setFilterTrigger(prev => prev + 1);
-        toast.info("Filter reset. Showing all logs.");
+        toast.info("Filter reset. Showing current month's logs.");
     };
-    
 
     useEffect(() => {
         const fetchCallLogs = async () => {
@@ -92,26 +119,22 @@ function UserCallLogs({userId}) {
 
             try {
                 const token = localStorage.getItem('token');
+                const baseUrl = ENDPOINTS.CALL_LOGS;
 
-                // Constructing URL with user_email as a query parameter
-                           const baseUrl = ENDPOINTS.CALL_LOGS;
-           
                 const queryParams = new URLSearchParams();
-                queryParams.append('user_email', userId); // Appen9d the hardcoded email
+                queryParams.append('user_email', userId || userEmailToFetch); // Use userId prop if available, otherwise fallback
+                
+                // Only append startDate and endDate if they are set
+                if (startDate) {
+                    queryParams.append('startDate', startDate);
+                }
+                if (endDate) {
+                    queryParams.append('endDate', endDate);
+                }
 
-                // if (startDate) {
-                //     queryParams.append('startDate', startDate);
-                // }
-                // if (endDate) {
-                //     queryParams.append('endDate', endDate);
-                // }
+                const url = `${baseUrl}?${queryParams.toString()}`;
 
-                const url = `${baseUrl}?${queryParams}`;
-                // const url = `${baseUrl}?user_email`;
-
-                console.log("The URL is,", url);
-
-                console.log("Fetching call logs for user email (hardcoded):", userEmailToFetch, "from URL:", url);
+                console.log("Fetching call logs from URL:", url);
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -145,26 +168,34 @@ function UserCallLogs({userId}) {
             }
         };
 
+        // Fetch logs when filterTrigger changes or userId changes
         fetchCallLogs();
-    }, [ userEmailToFetch]); // Add userEmailToFetch to dependencies
-    
- useEffect(() => {
-  if (!callLogs || callLogs.length === 0) return;
+    }, [filterTrigger, userId, startDate, endDate]);
 
-  const stats = {
-    totalCalls: callLogs.length,
-    incomingCalls: callLogs.filter(log => log.call_type_id === 1).length,
-    outgoingCalls: callLogs.filter(log => log.call_type_id === 2).length,
-    missedCalls: callLogs.filter(log => log.call_type_id === 3).length,
-    rejectedCalls: callLogs.filter(log => log.call_type_id === 4).length,
-  };
+    useEffect(() => {
+        if (!callLogs || callLogs.length === 0) {
+            setCallStats({
+                totalCalls: 0,
+                incomingCalls: 0,
+                outgoingCalls: 0,
+                missedCalls: 0,
+                rejectedCalls: 0
+            });
+            return;
+        }
 
-  setCallStats(stats);
-}, [callLogs]);
+        const stats = {
+            totalCalls: callLogs.length,
+            incomingCalls: callLogs.filter(log => log.call_type_id === 1).length,
+            outgoingCalls: callLogs.filter(log => log.call_type_id === 2).length,
+            missedCalls: callLogs.filter(log => log.call_type_id === 3).length,
+            rejectedCalls: callLogs.filter(log => log.call_type_id === 4).length,
+        };
 
-      
+        setCallStats(stats);
+    }, [callLogs]);
 
-       return (
+    return (
         <div className="min-h-screen p-6 bg-blue-50 text-gray-800 font-sans">
             <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-2xl border border-blue-200">
                 <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">User Call Logs</h2>
@@ -177,22 +208,21 @@ function UserCallLogs({userId}) {
                         <div className="text-3xl font-bold text-blue-900">{callStats.totalCalls}</div>
                         <div className="text-sm text-blue-600 mt-2">All call activities</div>
                     </div>
-                    
-                    {/* Incoming Calls Card */}
-                        <div className="bg-gradient-to-br from-yellow-50 to-yellow-300 p-6 rounded-xl shadow-lg border border-red-200">
 
+                    {/* Incoming Calls Card */}
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200">
                         <div className="text-base text-green-800 font-medium mb-2">Incoming Calls</div>
                         <div className="text-3xl font-bold text-green-900">{callStats.incomingCalls}</div>
                         <div className="text-sm text-green-600 mt-2">Received calls</div>
                     </div>
-                    
+
                     {/* Outgoing Calls Card */}
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg border border-purple-200">
                         <div className="text-base text-purple-800 font-medium mb-2">Outgoing Calls</div>
                         <div className="text-3xl font-bold text-purple-900">{callStats.outgoingCalls}</div>
                         <div className="text-sm text-purple-600 mt-2">Dialed calls</div>
                     </div>
-                    
+
                     {/* Missed Calls Card */}
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-lg border border-orange-200">
                         <div className="text-base text-orange-800 font-medium mb-2">Missed Calls</div>
@@ -200,28 +230,15 @@ function UserCallLogs({userId}) {
                         <div className="text-sm text-orange-600 mt-2">Unanswered calls</div>
                     </div>
                     {/* Rejected Calls Card */}
-
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200">
-                        <div className="text-base text-orange-800 font-medium mb-2">Rejected Calls</div>
-                        <div className="text-3xl font-bold text-orange-900">{callStats.rejectedCalls}</div>
-                        <div className="text-sm text-orange-600 mt-2">Rejections</div>
-                    </div>               
-
-                    {/* Card 4: Highest Value Deal Closed */}
-                    {/* <div className="achievement-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
-                        <div className="achievement-card-title text-base text-red-800 font-medium mb-2">Highest Value Deal Closed</div>
-                        <div className="achievement-card-metric text-2xl font-bold text-red-900 mb-2">
-                            {formatCurrency(achievements.highestValueLead?.iproject_value || 0)}
-                        </div>
-                        <div className="achievement-card-trend flex items-center text-sm text-red-600 font-semibold">
-                            {achievements.highestValueLead?.convertToDealTime ? ` on ${formatDate(achievements.highestValueLead.convertToDealTime)}` : '-'}
-                        </div> */}
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200">
+                        <div className="text-base text-red-800 font-medium mb-2">Rejected Calls</div>
+                        <div className="text-3xl font-bold text-red-900">{callStats.rejectedCalls}</div>
+                        <div className="text-sm text-red-600 mt-2">Rejections</div>
                     </div>
-
-                
+                </div>
 
                 {/* Filter and Reset Buttons */}
-                <div className="flex flex-col md:flex-row items-center justify-end mb-8 space-y-4 md:space-y-0 md:space-x-4 p-4 bg-blue-50 rounded-lg shadow-inner"> {/* Blue-themed filter section */}
+                <div className="flex flex-col md:flex-row items-center justify-end mb-8 space-y-4 md:space-y-0 md:space-x-4 p-4 bg-blue-50 rounded-lg shadow-inner">
                     <div className="flex items-center space-x-2">
                         <label htmlFor="startDate" className="text-sm font-semibold text-blue-700">From:</label>
                         <input
@@ -261,12 +278,11 @@ function UserCallLogs({userId}) {
                 </div>
 
                 {/* Call Logs Table */}
-                <div className="overflow-x-auto overflow-y-scroll h-[550px] shadow-lg rounded-lg border border-blue-300"> {/* Blue border for table container */}
-                    <table className="min-w-full divide-y divide-blue-200"> {/* Blue divider */}
-                        <thead className="bg-blue-700 text-white sticky top-0 shadow-md"> {/* Darker blue header */}
+                <div className="overflow-x-auto overflow-y-scroll h-[550px] shadow-lg rounded-lg border border-blue-300">
+                    <table className="min-w-full divide-y divide-blue-200">
+                        <thead className="bg-blue-700 text-white sticky top-0 shadow-md">
                             <tr>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">S.No</th>
-                                {/* <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Call ID</th> */}
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">User Name</th>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Mobile Number</th>
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Call Type</th>
@@ -275,7 +291,7 @@ function UserCallLogs({userId}) {
                                 <th className="p-4 text-center border-b border-blue-600 font-bold text-sm whitespace-nowrap">Duration</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-blue-100"> {/* Lighter blue divider for rows */}
+                        <tbody className="bg-white divide-y divide-blue-100">
                             {loading ? (
                                 <tr>
                                     <td colSpan="8" className="p-4 text-center text-blue-600 font-medium">Loading call logs...</td>
@@ -286,24 +302,23 @@ function UserCallLogs({userId}) {
                                 </tr>
                             ) : callLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="p-4 text-center text-gray-500">No call logs found for this user.</td>
+                                    <td colSpan="8" className="p-4 text-center text-gray-500">No call logs found for this user within the selected date range.</td>
                                 </tr>
                             ) : (
                                 callLogs.map((log, index) => {
-                                    const userName = log.caller_name || (users.find(u => u.iUser_id === log.user_id)?.cFull_name || '-');
+                                    const userName = log.caller_name || (users.find(u => u.iUser_id === log.user_id)?.cFull_name || '-')
 
                                     return (
-                                        <tr key={log.call_id || index} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out"> {/* Blue hover for rows */}
+                                        <tr key={log.call_id || index} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out">
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{index + 1}</td>
-                                            {/* <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{log.call_id}</td> */}
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{userName}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{log.call_log_number}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>
                                                 {log.call_type_id === 1 ? "Incoming" :
-                                                 log.call_type_id === 2 ? "Outgoing" :
-                                                 log.call_type_id === 3 ? "Missed" : "Rejected"}
+                                                    log.call_type_id === 2 ? "Outgoing" :
+                                                        log.call_type_id === 3 ? "Missed" : "Rejected"}
                                             </td>
-                                            <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{formatDate(log.call_time)}</td>
+                                            <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{formatDateForDisplay(log.call_time)}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{formatTime(log.call_time)}</td>
                                             <td className='p-4 text-center border-b border-blue-100 text-gray-800 text-base'>{formatDuration(log.duration)}</td>
                                         </tr>
@@ -313,7 +328,7 @@ function UserCallLogs({userId}) {
                         </tbody>
                     </table>
                 </div>
-            </div> {/* Closing div for max-w-7xl container */}
+            </div>
             <ToastContainer position="bottom-right" autoClose={3000} />
         </div>
     );

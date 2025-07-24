@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { X, Search, Filter } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
@@ -39,8 +42,7 @@ const ReminderForm = () => {
   const [form, setForm] = useState({
     title: "",
     content: "",
-    reminderDate: "",
-    time: "",
+    reminderDateTime: new Date(), // Initialize with current date/time
     priority: "Normal",
     assignt_to: "",
     ilead_id: Number(leadId),
@@ -66,17 +68,9 @@ const ReminderForm = () => {
   // Set current date and time when the form is shown
   useEffect(() => {
     if (showForm) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-
-      setForm((prevForm) => ({
+      setForm(prevForm => ({
         ...prevForm,
-        reminderDate: `${year}-${month}-${day}`,
-        time: `${hours}:${minutes}`,
+        reminderDateTime: new Date() // Sets to current date/time
       }));
     }
   }, [showForm]);
@@ -155,32 +149,45 @@ const ReminderForm = () => {
       }));
     }
   };
+  const formatDateTime = (date) => {
+  if (!date) return "";
+  
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const seconds = String(d.getSeconds()).padStart(2, "0");
+  
+  return `${day}:${month}:${year} ${hours}.${minutes}.${seconds}`;
+};
 
   const validateForm = () => {
-    if (!form.title || !form.content || !form.reminderDate || !form.time) {
-      toast.error(
-        "Please fill in all required fields (Title, Description, Date, Time)."
-      );
+    if (!form.title || !form.content || !form.reminderDateTime) {
+      toast.error("Please fill in all required fields (Title, Description, Date & Time).");
       return false;
     }
-    const selectedDateTime = new Date(`${form.reminderDate}T${form.time}`);
-    const now = new Date();
-    if (selectedDateTime < now) {
+    
+    if (form.reminderDateTime < new Date()) {
       toast.error("Reminder date and time must be in the future.");
       return false;
     }
+    
     return true;
   };
 
   const handleSubmit = async (e, status) => {
     e.preventDefault();
+    
     if (!validateForm()) return;
 
     setSubmitting(true);
-    const data = { ...form, status };
-    data.reminderDate = new Date(
-      `${form.reminderDate}T${form.time}`
-    ).toISOString();
+    const data = { 
+      ...form,
+      reminderDate: form.reminderDateTime.toISOString(),
+      status 
+    };
     data.assignt_to = Number(form.assignt_to);
 
     try {
@@ -205,8 +212,7 @@ const ReminderForm = () => {
       setForm({
         title: "",
         content: "",
-        reminderDate: "",
-        time: "",
+        reminderDateTime: new Date(),
         priority: "Normal",
         assignt_to: "",
         ilead_id: Number(leadId),
@@ -293,6 +299,7 @@ const ReminderForm = () => {
     return matchesSearch && matchesDate;
   });
 
+
   return (
     <div className="relative min-h-screen bg-[#f8f8f8] p-6 font-sans text-base leading-relaxed text-gray-900">
       <ToastContainer position="top-right" autoClose={5000} />
@@ -328,15 +335,15 @@ const ReminderForm = () => {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
             <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
-            <label className="block text-sm text-gray-700">
-              From
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-              />
-            </label>
+           <label className="block text-sm text-gray-700">
+  From
+  <input
+    type="date"
+    value={fromDate}
+    onChange={(e) => setFromDate(e.target.value)}
+    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+  />
+</label>
             <label className="block text-sm text-gray-700">
               To
               <input
@@ -561,29 +568,29 @@ const ReminderForm = () => {
                   ))}
                 </select>
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">
-                  Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                  name="reminderDate"
-                  value={form.reminderDate}
-                  onChange={handleChange}
-                  required
-                />
-
-                <label className="block text-sm mb-4 font-semibold text-gray-700">
-                  Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="time"
-                  className="w-full border border-gray-300 p-3 mb-8 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                  name="time"
-                  value={form.time}
-                  onChange={handleChange}
-                  required
-                />
+         <LocalizationProvider dateAdapter={AdapterDateFns}>
+  <div className="mb-6">
+    <label className="block text-sm mb-2 font-semibold text-gray-700">
+      Date & Time <span className="text-red-500">*</span>
+    </label>
+    <DateTimePicker
+      value={form.reminderDateTime}
+      onChange={(newValue) => 
+        setForm(prev => ({ ...prev, reminderDateTime: newValue }))
+      }
+      minDateTime={new Date()}
+      format="dd/MM/yyyy HH.mm.ss" // This is the format pattern
+      slotProps={{
+        textField: {
+          fullWidth: true,
+          variant: 'outlined',
+          className: 'bg-gray-50',
+        },
+      }}
+      className="w-full"
+    />
+  </div>
+</LocalizationProvider>
 
                 <div className="flex gap-4">
                   <button

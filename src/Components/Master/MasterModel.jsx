@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { PlusCircle, Edit, Trash2, X } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; 
 
 const getNestedObject = (obj, path) => {
   return path.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -761,6 +763,25 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
         : null;
 
 
+        const modules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link'],
+    ['clean']
+  ],
+};
+
+const formats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link'
+];
+
+
+
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[90vh] flex flex-col">
@@ -947,7 +968,7 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
       </h3>
     </div>
   )}
-
+{/* 
  <div className="mb-4">
   <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
     {master.modalKey || master.title}:
@@ -986,7 +1007,66 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
     </p>
   )}
 </div>
-</div>
+{/* Main Input Field with Smart Length Validation */}
+<div className="mb-4">
+  <label htmlFor={master.payloadKey} className="block text-sm font-medium text-gray-700 mb-1">
+    {master.modalKey || master.title}:
+    {/* Character counter - only show for text inputs that need validation */}
+    {(master.title !== 'Email Template' || master.payloadKey !== 'mailBody') && (
+      <span className="ml-2 text-xs text-green-500">
+        {formData[master.payloadKey]?.length || 0}/50
+      </span>
+    )}
+  </label>
+
+  {/* Conditional rendering based on field type */}
+  {master.title === 'Email Template' && master.payloadKey === 'mailBody' ? (
+    <textarea
+      id={master.payloadKey}
+      name={master.payloadKey}
+      rows={6}
+      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+      value={formData[master.payloadKey] || ''}
+      onChange={handleChange}
+      required
+      disabled={isSaving}
+    />
+  ) : (
+    <input
+      id={master.payloadKey}
+      name={master.payloadKey}
+      type="text"
+      className={`mt-1 block w-full border h-50 ${
+        formData[master.payloadKey]?.length > 0 && 
+        (formData[master.payloadKey]?.length < 3 || formData[master.payloadKey]?.length > 50)
+          ? 'border-red-500' 
+          : 'border-gray-300'
+      } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+      value={formData[master.payloadKey] || ''}
+      onChange={handleChange}
+      required
+      minLength={3}
+      maxLength={50}
+      disabled={isSaving}
+    />
+  )}
+
+  {/* Validation message - only for fields with length restrictions */}
+  {(master.title !== 'Email Template' || master.payloadKey !== 'mailBody') && 
+   formData[master.payloadKey]?.length > 0 && (
+    <p className={`mt-1 text-xs ${
+      formData[master.payloadKey]?.length < 3 || formData[master.payloadKey]?.length > 500
+        ? 'text-red-600'
+        : 'text-green-600'
+    }`}>
+      {formData[master.payloadKey]?.length < 3
+        ? 'Minimum 3 characters required'
+        : formData[master.payloadKey]?.length > 9990
+        ? 'Maximum 9990 characters exceeded'
+        : 'Valid length'}
+    </p>
+  )}
+</div> 
                             {/* Order ID Input Field (Conditionally Rendered) */}
                             {master.title === "Status" && shouldFieldBeRendered('orderId', formData) && (
                                 <div className="mb-4">
@@ -1053,7 +1133,9 @@ const handleEditSubIndustryClick = (subIndustryItem) => {
                                     </button>
                                 )}
                             </div>
+                                     </div>
                         </form>
+               
                     </div>
                 </div>
             </div>

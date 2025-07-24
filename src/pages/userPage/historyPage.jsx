@@ -132,8 +132,8 @@ function HistoryDashboard({ userId }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans p-4 md:p-6">
-            <div className="dashboard-container mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+        <div className="  font-sans p-4 md:p-6">
+            <div className="dashboard-container ">
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-00 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">
                     Activity & Reminder History
                 </h2>

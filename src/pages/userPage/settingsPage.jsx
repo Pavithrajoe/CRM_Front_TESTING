@@ -439,26 +439,8 @@ const handleToggle = async (type) => {
   const isLoading = loadingProfile || loadingSettings;
 
   return (
-    <div className="p-4 md:p-6 bg-gray-100 min-h-screen font-sans">
-      <style>
-        {`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .animate-fade-in-down {
-          animation: fadeInDown 0.6s ease-out forwards;
-        }
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .section-divider {
-          height: 1px;
-          background: linear-gradient(to right, transparent, #cbd5e1, transparent);
-          margin: 3rem 0;
-        }
-        `}
-      </style>
-      <div className="bg-white p-6 md:p-8 space-y-8 rounded-xl shadow-2xl max-w-6xl w-full mx-auto border border-gray-200">
+    <div className="  font-sans">
+      <div className="bg-white p-6 space-y-8 rounded-xl w-full mx-auto">
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Personal Information</h2>
           {isLoading ? (

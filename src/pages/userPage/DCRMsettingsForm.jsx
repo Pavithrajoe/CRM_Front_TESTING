@@ -96,8 +96,8 @@ const DCRMSettingsForm = ({ userId, onClose, onSuccess }) => {
       });
 
       const userData = await userResponse.json();
-      console.log('User Creation Response:', userResponse.body);
-      console.log('User Creation Response:', userData.message.user.id);
+      // console.log('User Creation Response:', userResponse.body);
+      // console.log('User Creation Response:', userData.message.user.id);
 
       if (!userResponse.ok) {
         throw new Error(userData.message || 'Failed to create DCRM user');

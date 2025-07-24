@@ -53,7 +53,9 @@ const LeadDetailView = () => {
   //email templates 
 
   const [templates, setTemplates] = useState([]);
-const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  // New state for email sending loading
+  const [isSendingMail, setIsSendingMail] = useState(false);
 
   // Derived state
   const isLeadActive = !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
@@ -188,6 +190,7 @@ const [templatesLoading, setTemplatesLoading] = useState(false);
   };
 
   const sendEmail = async () => {
+    setIsSendingMail(true); // Set loading to true when sending starts
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
@@ -219,6 +222,8 @@ const [templatesLoading, setTemplatesLoading] = useState(false);
     } catch (error) {
       console.error("Error sending mail:", error);
       showPopup("Error", "Something went wrong while sending email", "error");
+    } finally {
+      setIsSendingMail(false); // Set loading to false when sending completes (success or failure)
     }
   };
 
@@ -376,38 +381,38 @@ const [templatesLoading, setTemplatesLoading] = useState(false);
   ];
 
   const fetchTemplates = async () => {
-  try {
-    setTemplatesLoading(true);
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    if (!response.ok) throw new Error("Failed to fetch templates");
-    
-    const data = await response.json();
-    setTemplates(data.data || []);
-  } catch (error) {
-    console.error("Error fetching templates:", error);
-    showPopup("Error", "Failed to load email templates", "error");
-  } finally {
-    setTemplatesLoading(false);
-  }
-};
+    try {
+      setTemplatesLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-useEffect(() => {
-  if (isMailOpen) {
-    fetchTemplates();
-  }
-}, [isMailOpen]);
+      if (!response.ok) throw new Error("Failed to fetch templates");
 
-const applyTemplate = (template) => {
-  setMailSubject(template.mailTitle);
-  setMailContent(template.mailBody);
-};
+      const data = await response.json();
+      setTemplates(data.data || []);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      showPopup("Error", "Failed to load email templates", "error");
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isMailOpen) {
+      fetchTemplates();
+    }
+  }, [isMailOpen]);
+
+  const applyTemplate = (template) => {
+    setMailSubject(template.mailTitle);
+    setMailContent(template.mailBody);
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
@@ -458,7 +463,6 @@ const applyTemplate = (template) => {
           {showActionButtons && (
             <div className="flex gap-2 sm:gap-3 flex-wrap justify-end sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
               <button
-
                 onClick={() => setIsMailOpen(true)}
                 className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-full shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm"
                 title="Email"
@@ -596,8 +600,8 @@ const applyTemplate = (template) => {
   >
     <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-full md:max-w-[80%] h-[90%] flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-blue-800 flex items-center gap-2">
-          <MdEmail className="text-blue-600" size={24} />
+        <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
+          <MdEmail className="text-black-600" size={24} />
           Compose Email
         </h2>
         <button 
@@ -612,9 +616,9 @@ const applyTemplate = (template) => {
 
       <div className="flex flex-col md:flex-row gap-4 h-full">
         {/* Templates Section */}
-        <div className="w-full md:w-1/3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+        <div className="w-full md:w-1/3 p-4 rounded-xl border border-black-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg text-blue-800">Email Templates</h3>
+            <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
             <div className="relative">
               <input
                 type="text"
@@ -629,7 +633,7 @@ const applyTemplate = (template) => {
 
           {templatesLoading ? (
             <div className="flex justify-center items-center h-40">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 "></div>
             </div>
           ) : templates.length === 0 ? (
             <div className="text-center py-8 text-blue-600">
@@ -643,15 +647,15 @@ const applyTemplate = (template) => {
               {templates.map((template) => (
                 <div
                   key={template.mailTemplateId}
-                  className="p-4 bg-white border border-blue-100 rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                  className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all duration-200"
                   onClick={() => applyTemplate(template)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-2 rounded-lg">
+                    <div className="p-2 rounded-lg">
                       <MdEmail className="text-blue-600" size={18} />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-blue-800">{template.mailTitle}</h4>
+                      <h4 className="font-semibold ">{template.mailTitle}</h4>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                         {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
                       </p>
@@ -664,97 +668,110 @@ const applyTemplate = (template) => {
         </div>
 
         {/* Email Form Section */}
-        <div className="w-full md:w-2/3 flex flex-col">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendEmail();
-            }}
-            className="flex flex-col flex-grow space-y-4 bg-blue-50 p-4 rounded-xl border border-blue-200"
-          >
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-blue-700 mb-1">To</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    className="w-full border border-blue-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={sentTo}
-                    onChange={(e) => setSentTo(e.target.value)}
-                    required
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400">
-                    <FaWhatsapp className="cursor-pointer hover:text-green-500" 
-                      onClick={() => window.open(`https://wa.me/${leadData?.cMobileNo}`, '_blank')} 
-                    />
-                    <FaPhone className="cursor-pointer hover:text-blue-600 mt-1" 
-                      onClick={() => window.open(`tel:${leadData?.cMobileNo}`)} 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-blue-700 mb-1">Subject</label>
-                <input
-                  type="text"
-                  className="w-full border border-blue-300 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={mailSubject}
-                  onChange={(e) => setMailSubject(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex-grow flex flex-col">
-              <label className="block text-sm font-medium text-blue-700 mb-1">Message</label>
-              <div className="border border-blue-300 rounded-lg overflow-hidden bg-white flex-grow">
-                <ReactQuill
-                  theme="snow"
-                  value={mailContent}
-                  onChange={setMailContent}
-                  modules={{
-                    ...modules,
-                    toolbar: [
-                      [{ 'header': [1, 2, false] }],
-                      ['bold', 'italic', 'underline', 'strike'],
-                      [{'color': []}, {'background': []}],
-                      [{'list': 'ordered'}, {'list': 'bullet'}],
-                      ['link'],
-                      ['clean']
-                    ]
-                  }}
-                  formats={formats}
-                  className="h-full min-h-[200px] sm:min-h-[300px]"
-                  style={{ border: 'none' }}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsMailOpen(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2"
-              >
-                <MdEmail size={16} />
-                Send Email
-              </button>
-            </div>
-          </form>
+       <div className="w-full md:w-2/3 flex flex-col">
+  <form
+    onSubmit={(e) => {
+      e.preventDefault();
+      sendEmail();
+    }}
+    className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-lg"
+  >
+    <div className="grid grid-cols-1 gap-4">
+      {/* To Field */}
+      <div>
+        <label className="block text-sm font-medium text-gray-800 mb-1">To</label>
+        <div className="relative">
+          <input
+            type="email"
+            className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+            placeholder="example@email.com"
+            value={sentTo}
+            onChange={(e) => setSentTo(e.target.value)}
+            required
+          />
+          
         </div>
       </div>
+
+      {/* Subject Field */}
+      <div>
+        <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
+        <input
+          type="text"
+          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+          value={mailSubject}
+          onChange={(e) => setMailSubject(e.target.value)}
+          placeholder="Write subject..."
+          required
+        />
+      </div>
     </div>
-  </div>
-)}
+
+    {/* Message Editor */}
+    <div className="flex-grow flex flex-col">
+      <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
+      <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
+        <ReactQuill
+          theme="snow"
+          value={mailContent}
+          onChange={setMailContent}
+          modules={{
+            ...modules,
+            toolbar: [
+              [{ header: [1, 2, false] }],
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ color: [] }, { background: [] }],
+              [{ list: 'ordered' }, { list: 'bullet' }],
+              ['link'],
+              ['clean'],
+            ],
+          }}
+          formats={formats}
+          className="h-full min-h-[200px] sm:min-h-[300px]"
+          style={{ border: 'none' }}
+        />
+      </div>
     </div>
-  );
+
+    {/* Action Buttons */}
+    <div className="flex justify-end space-x-3 pt-2">
+      <button
+        type="button"
+        onClick={() => setIsMailOpen(false)}
+        className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+        disabled={isSendingMail} // Disable button while sending
+      >
+        {isSendingMail ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>Sending...</span>
+          </>
+        ) : (
+          <>
+            <MdEmail size={16} />
+            <span>Send Email</span>
+          </>
+        )}
+      </button>
+    </div>
+  </form>
+</div>
+
+      </div> {/* This is the correct closing div for the flex-col md:flex-row gap-4 h-full */}
+    </div> {/* This is the correct closing div for the fixed inset-0 bg-black bg-opacity-50 ... */}
+
+    </div> // This is the final closing div for the component's top-level div
+
+)};
+</div>
+);
 };
+
 
 export default LeadDetailView;

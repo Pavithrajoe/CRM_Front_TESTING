@@ -171,134 +171,131 @@ function LogUserCallLogs() {
     };
 
     return (
-        <div className="flex mt-[-80px]">
-            <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
-                <div className="flex justify-between items-center mb-6">
-                    <TeamleadHeader />
-                    <ProfileHeader />
-                </div>
-                
-                <div className="min-h-[100vh] text-gray-800">
-                    <ToastContainer position="bottom-right" autoClose={3000} />
-                    <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-2xl border border-blue-200">
-                        <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">User Call Logs</h2>
+      <div className="flex mt-[-80px] font-[San Francisco,-apple-system,BlinkMacSystemFont]">
+  <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
+    <div className="flex justify-between items-center mb-6">
+      <TeamleadHeader />
+      <ProfileHeader />
+    </div>
 
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200">
-                                <div className="text-base text-blue-800 font-medium mb-2">Total Calls</div>
-                                <div className="text-3xl font-bold text-blue-900">{callStats.totalCalls}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200">
-                                <div className="text-base text-green-800 font-medium mb-2">Incoming Calls</div>
-                                <div className="text-3xl font-bold text-green-900">{callStats.incomingCalls}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg border border-purple-200">
-                                <div className="text-base text-purple-800 font-medium mb-2">Outgoing Calls</div>
-                                <div className="text-3xl font-bold text-purple-900">{callStats.outgoingCalls}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl shadow-lg border border-orange-200">
-                                <div className="text-base text-orange-800 font-medium mb-2">Missed Calls</div>
-                                <div className="text-3xl font-bold text-orange-900">{callStats.missedCalls}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200">
-                                <div className="text-base text-red-800 font-medium mb-2">Rejected Calls</div>
-                                <div className="text-3xl font-bold text-red-900">{callStats.rejectedCalls}</div>
-                            </div>
-                        </div>
+    <div className=" mx-auto">
+      <ToastContainer position="bottom-right" autoClose={3000} />
 
-                        {/* Filter Controls */}
-                        <div className="flex flex-col md:flex-row items-center justify-end mb-8 gap-4 p-4 bg-blue-50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-semibold text-blue-700">From:</label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="p-2 border border-blue-300 rounded-md"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-semibold text-blue-700">To:</label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="p-2 border border-blue-300 rounded-md"
-                                />
-                            </div>
-                            <button
-                                onClick={handleFilter}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
-                            >
-                                <Filter size={18} /> Filter
-                            </button>
-                            <button
-                                onClick={handleReset}
-                                className="px-4 py-2 bg-gray-600 text-white rounded-lg flex items-center gap-2"
-                            >
-                                <RotateCcw size={18} /> Reset
-                            </button>
-                        </div>
+      <div className=" rounded-3xl">
+        <h2 className="text-3xl font-semibold text-blue-900 mb-10 text-center tracking-tight">
+          📞 User Call Logs
+        </h2>
 
-                        {/* Call Logs Table */}
-                        <div className="overflow-x-auto rounded-lg border border-blue-300">
-                            <table className="min-w-full divide-y divide-blue-200">
-                                <thead className="bg-blue-700 text-white">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">S.No</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">User</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">Number</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">Time</th>
-                                        <th className="px-4 py-3 text-left text-sm font-semibold">Duration</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-blue-200">
-                                    {loading ? (
-                                        <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center">Loading...</td>
-                                        </tr>
-                                    ) : error ? (
-                                        <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center text-red-600">{error}</td>
-                                        </tr>
-                                    ) : filteredLogs.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center text-gray-500">
-                                                No call logs found{startDate || endDate ? ' for selected date range' : ''}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        filteredLogs.map((log, index) => {
-                                            const userName = log.caller_name || 
-                                                (Array.isArray(users) ? users.find(u => u.iUser_id === log.user_id)?.cFull_name : '-') || '-';
-                                            
-                                            return (
-                                                <tr key={index} className="hover:bg-blue-50">
-                                                    <td className="px-4 py-3">{index + 1}</td>
-                                                    <td className="px-4 py-3">{userName}</td>
-                                                    <td className="px-4 py-3">{log.call_log_number}</td>
-                                                    <td className="px-4 py-3">
-                                                        {log.call_type_id === 1 ? "Incoming" :
-                                                         log.call_type_id === 2 ? "Outgoing" :
-                                                         log.call_type_id === 3 ? "Missed" : "Rejected"}
-                                                    </td>
-                                                    <td className="px-4 py-3">{formatDisplayDate(log.call_time)}</td>
-                                                    <td className="px-4 py-3">{formatTime(log.call_time)}</td>
-                                                    <td className="px-4 py-3">{formatDuration(log.duration)}</td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </main>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 mb-12">
+          {[
+            { label: 'Total Calls', value: callStats.totalCalls, color: 'blue' },
+            { label: 'Incoming Calls', value: callStats.incomingCalls, color: 'green' },
+            { label: 'Outgoing Calls', value: callStats.outgoingCalls, color: 'purple' },
+            { label: 'Missed Calls', value: callStats.missedCalls, color: 'orange' },
+            { label: 'Rejected Calls', value: callStats.rejectedCalls, color: 'red' },
+          ].map(({ label, value, color }, idx) => (
+            <div
+              key={idx}
+              className={`rounded-2xl p-4 border border-${color}-100 shadow-sm bg-gradient-to-tr from-${color}-50 to-${color}-100`}
+            >
+              <div className={`text-sm font-medium text-${color}-800 mb-1`}>{label}</div>
+              <div className={`text-2xl font-bold text-${color}-900`}>{value}</div>
+            </div>
+          ))}
         </div>
+
+        {/* Filter Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 p-4 bg-white/70 backdrop-blur-md border border-blue-100 rounded-2xl mb-8 shadow-inner">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-blue-700 font-medium">From:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="p-2 rounded-full border border-blue-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-blue-700 font-medium">To:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="p-2 rounded-full border border-blue-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+          <button
+            onClick={handleFilter}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-200 shadow-md flex items-center gap-2"
+          >
+            <Filter size={16} /> Filter
+          </button>
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-full transition-all duration-200 shadow-md flex items-center gap-2"
+          >
+            <RotateCcw size={16} /> Reset
+          </button>
+        </div>
+
+        {/* Call Logs Table */}
+        <div className="overflow-x-auto rounded-2xl border border-blue-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] bg-white/80">
+          <table className="min-w-full divide-y divide-blue-100">
+            <thead className="bg-blue-600 text-white">
+              <tr>
+                {['S.No', 'User', 'Number', 'Type', 'Date', 'Time', 'Duration'].map((header, i) => (
+                  <th key={i} className="px-4 py-3 text-left text-sm font-semibold tracking-wide">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 text-sm">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-4 text-center text-blue-700">Loading...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-4 text-center text-red-600">{error}</td>
+                </tr>
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-4 text-center text-gray-500">
+                    No call logs found{startDate || endDate ? ' for selected date range' : ''}
+                  </td>
+                </tr>
+              ) : (
+                filteredLogs.map((log, index) => {
+                  const userName = log.caller_name ||
+                    (Array.isArray(users) ? users.find(u => u.iUser_id === log.user_id)?.cFull_name : '-') || '-';
+
+                  return (
+                    <tr key={index} className="hover:bg-blue-50 transition-all duration-150">
+                      <td className="px-4 py-3">{index + 1}</td>
+                      <td className="px-4 py-3">{userName}</td>
+                      <td className="px-4 py-3">{log.call_log_number}</td>
+                      <td className="px-4 py-3">
+                        {log.call_type_id === 1 ? "Incoming" :
+                          log.call_type_id === 2 ? "Outgoing" :
+                            log.call_type_id === 3 ? "Missed" : "Rejected"}
+                      </td>
+                      <td className="px-4 py-3">{formatDisplayDate(log.call_time)}</td>
+                      <td className="px-4 py-3">{formatTime(log.call_time)}</td>
+                      <td className="px-4 py-3">{formatDuration(log.duration)}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
     );
 }
 

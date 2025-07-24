@@ -22,12 +22,14 @@ const ProfileHeader = () => {
   const [displayedNotifications, setDisplayedNotifications] = useState([]);
   const [bellNotificationCount, setBellNotificationCount] = useState(0);
   const [showLeadForm, setShowLeadForm] = useState(false);
+  const [showAppMenu, setShowAppMenu] = useState(false);
 
   const lastAcknowledgedUnreadCount = useRef(0);
   const hasPushedNotification = useRef(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
+  const appMenuRef = useRef(null);
 
   useEffect(() => {
     const persistedCount = parseInt(localStorage.getItem(LAST_UNREAD_COUNT_KEY) || '0', 10);
@@ -151,6 +153,9 @@ const ProfileHeader = () => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
+      if (appMenuRef.current && !appMenuRef.current.contains(event.target)) {
+        setShowAppMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -191,7 +196,6 @@ const ProfileHeader = () => {
 
   return (
     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
-   
       <button
         onClick={handleLeadFormOpen}
         className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
@@ -305,22 +309,42 @@ const ProfileHeader = () => {
             >
               Logout
             </button>
-
-            
           </div>
-          
-          
+        )}
+      </div>
+
+      {/* App Menu Icon + Dropdown */}
+      <div className="relative" ref={appMenuRef}>
+        <img
+          src="../../../public/images/nav/menu.svg"
+          alt="App Menu"
+          className="h-6 w-6 cursor-pointer"
+          onClick={() => setShowAppMenu(!showAppMenu)}
+        />
+        {showAppMenu && (
+         <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 text-sm p-2" style={{marginTop:'16px'}}>
+  <div className="grid grid-cols-2 gap-2">
+    <a
+      href="https://expense.inklidox.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
+    >
+      <img src=""/> OExpense
+    </a>
+    <a
+      href="https://hrms.inklidox.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
+    >
+      🧑‍💼 OHRMS
+    </a>
+  </div>
+</div>
 
         )}
-        
       </div>
-       <a href="https://expense.inklidox.com/" class="inline-block">
-    <img
-        src="../../../public/images/nav/menu.svg"
-        alt="Expense Link"
-        class="h-6 w-6"
-    />
-</a>  
     </div>
   );
 };

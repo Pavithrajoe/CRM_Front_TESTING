@@ -242,19 +242,21 @@ const TargetDashboard = ({ userId }) => {
   }
 
   return (
-    <div className="p-4 md:p-6 mx-auto bg-gray-50 min-h-screen rounded-lg shadow-xl">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-blue-800 border-b-4 border-blue-500 pb-2 animate-fade-in-down">
-          Sales Target Dashboard
-        </h2>
-        <button
-          onClick={() => setShowAddTargetModal(true)}
-          className="p-2 rounded-full hover:bg-blue-700 text-white shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-300"
-          title="Set New Target"
-        >
-          <img src={goalIcon} alt="Set Target" className="w-8 h-8" />
-        </button>
-      </div>
+     <div className="  font-sans p-4 md:p-6">
+            <div className="dashboard-container">
+  <div className="flex justify-between items-center mb-8 border-b-4 border-blue-400 pb-3 animate-fade-in-down">
+    <h2 className="text-3xl md:text-4xl font-extrabold text-blue-800 text-left tracking-tight">
+      Sales Target Dashboard
+    </h2>
+    <button
+      onClick={() => setShowAddTargetModal(true)}
+      className="p-2 rounded-full text-white shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none "
+      title="Set New Target"
+    >
+      <img src={goalIcon} alt="Set Target" className="w-8 h-8" />
+    </button>
+  </div>
+</div>
 
       {/* Date Filters and Target ID Selector section removed */}
 

@@ -1097,15 +1097,28 @@ const formats = [
                                         <label htmlFor={field} className="block text-sm font-medium text-gray-700 mb-1">
                                             {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                                         </label>
-                                        <input
-                                            id={field}
-                                            name={field}
-                                            type="text"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                            value={formData[field] || ''}
-                                            onChange={handleChange}
-                                            disabled={isSaving}
-                                        />
+                                       {field === "mailBody" ? (
+    <ReactQuill
+    theme="snow"
+    value={formData["mailBody"] || ''}
+    onChange={(value) =>
+      handleChange({ target: { name: "mailBody", value } })
+    }
+    readOnly={isSaving}
+    className="mt-1 mb-4 "
+  />
+) : (
+  <input
+    id={field}
+    name={field}
+    type="text"
+    className="mt-1 block w-full border border-blue-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+    value={formData[field] || ''}
+    onChange={handleChange}
+    disabled={isSaving}
+  />
+)}
+
                                     </div>
                                 );
                             })}

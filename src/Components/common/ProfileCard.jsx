@@ -465,7 +465,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   // Helper function to get input classes with read-only state
   const getInputClasses = (hasError) => {
     let classes = `mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none transition-all duration-200 text-sm ${
-      hasError ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "border-blue-300 focus:ring-blue-600 focus:border-blue-600"
+      hasError ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "focus:ring-blue-600 "
     }`;
     if (isReadOnly) {
       classes += " bg-gray-100 cursor-not-allowed";
@@ -474,7 +474,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   };
 
   const getDropdownButtonClasses = () => {
-    let classes = "w-20 border border-blue-300 rounded-lg py-2 px-3 text-gray-800 text-sm bg-blue-50 flex items-center justify-between";
+    let classes = "w-20 border rounded-lg py-2 px-3 text-gray-800 text-sm  flex items-center justify-between";
     if (isReadOnly) {
       classes += " bg-gray-100 cursor-not-allowed";
     }
@@ -490,13 +490,13 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   };
 
   // --- Theme Classes ---
-  const labelClasses = "block text-sm font-medium text-blue-800 mb-1";
+  const labelClasses = "block text-sm font-medium  mb-1";
   const errorTextClasses = "text-red-500 text-xs mt-1";
-  const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 text-blue-900";
+  const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 ";
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative border-2 border-blue-500">
+      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative  ">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors"
@@ -504,7 +504,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
           <FiX size={24} />
         </button>
 
-        <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 mb-6 border-b pb-3 border-blue-200">
+        <h3 className="text-xl sm:text-2xl font-semibold mb-6 border-b pb-3 ">
           {isReadOnly ? "View Lead Profile" : "Edit Lead Profile"}
         </h3>
 
@@ -563,7 +563,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
                     {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                   </button>
                   {isPhoneCountryCodeOpen && countryCodes.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
                       {countryCodes.map((code) => (
                         <div
                           key={code}
@@ -615,7 +615,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
                     {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                   </button>
                   {isWhatsappCountryCodeOpen && countryCodes.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
                       {countryCodes.map((code) => (
                         <div
                           key={code}
@@ -707,7 +707,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
                 disabled={isReadOnly || Potential.length === 0}
               />
               {isPotentialDropdownOpen && Potential.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
                   {Potential.filter(potential =>
                     potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
                   ).map((potential) => (
@@ -998,7 +998,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-blue-200 mt-6">
+          <div className="flex justify-end space-x-3 pt-4 border-t mt-6">
             <button
               type="submit"
               className={getSaveButtonClasses()}

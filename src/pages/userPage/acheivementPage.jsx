@@ -251,8 +251,8 @@ function AcheivementDashboard({ userId }) {
     }
 
     return (
-        <div className="min-h-screen p-5 text-gray-800 bg-gray-50">
-            <div className="dashboard-container mx-auto p-8 rounded-lg bg-white shadow-xl border border-gray-200">
+        <div className="min-h-screen text-gray-800">
+            <div className="dashboard-container mx-auto p-8 rounded-lg bg-white">
                 
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight animate-fade-in-down">
                     Achievements Dashboard

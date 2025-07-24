@@ -154,7 +154,7 @@ const Comments = () => {
     new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
   return (
-    <div className="relative bg-white border rounded-2xl shadow-md overflow-hidden transition-all duration-300">
+    <div className="relative bg-white border overflow-hidden transition-all duration-300">
       <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 rounded-t-2xl">
         <input
           type="text"

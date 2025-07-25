@@ -72,14 +72,14 @@ const [data, setData] = useState({});
     <>
 
      <div
-            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            className="bg-white border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
             onClick={handleTotalLeadClick}
           >
   <div className="flex justify-between items-start">
     <p className="text-sm font-bold text-gray-900">Total Leads</p>
     <div className="bg-blue-100 text-blue-600 rounded-full p-2">
       <UserPlus className="w-4 h-4" />
-    </div>
+    </div>  
   </div>
   <h2 className="text-2xl font-bold mt-2">{data.totalLeads ?? 0}</h2>
 </div>
@@ -89,7 +89,7 @@ const [data, setData] = useState({});
   onClick={handleTotalLostClick}
 >
         <div className="flex justify-between items-start">
-          <p className="text-sm font-bold text-gray-900">Total Deals</p>
+          <p className="text-sm font-bold text-gray-900">Converted Leads</p>
           <div className="bg-blue-100 text-blue-600 rounded-full p-2">
             <Briefcase className="w-4 h-4" />
           </div>

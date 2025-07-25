@@ -247,9 +247,10 @@ const ReminderForm = () => {
       const data = await response.json();
       if (response.ok) {
         setReminderList(data.message);
-      } else {
-        toast.error("Failed to fetch reminders");
-      }
+      } 
+      // else {
+      //   toast.error("Failed to fetch reminders");
+      // }
     } catch (e) {
       console.error(e);
     }

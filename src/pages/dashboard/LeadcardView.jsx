@@ -36,6 +36,30 @@ const [importError, setImportError] = useState(null);
 const [importSuccess, setImportSuccess] = useState(false);
 const [roleID, setRoleID] = useState();
 
+  const [websiteActive, setWebsiteActive] = useState(false);
+
+   useEffect(() => {
+      // Get the entire user data from localStorage
+      const storedUserData = localStorage.getItem('user');
+      if (storedUserData) {
+        try {
+          const parsedData = JSON.parse(storedUserData);
+          const webiteAccess = parsedData?.website_access === true;
+          setWebsiteActive(webiteAccess);
+  
+          // Optional: Keep it in flat localStorage for legacy use
+          localStorage.setItem('website_access', webiteAccess);
+        } catch (error) {
+          console.error('Error parsing user_data:', error);
+        }
+      } else {
+        // Fallback to previous method
+        const webiteAccess = localStorage.getItem('website_access') === 'true';
+        setWebsiteActive(webiteAccess);
+      }
+    }, []);
+
+
     useEffect(() => {
         if (location.state?.activeTab) {
             setSelectedFilter(location.state.activeTab);
@@ -711,44 +735,51 @@ const handleImportSubmit = async () => {
 
           <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
   <div className="flex flex-wrap gap-2">
-    {['all', 'leads', 'deals', 'websiteLeads', 'assignedToMe', 'lost'].map((filterKey) => (
-      <button
-        key={filterKey}
-        onClick={() => {
-          setSelectedFilter(filterKey);
-          setSearchTerm('');
-          setFromDate('');
-          setToDate('');
-          setCurrentPage(1);
-          setSortConfig({ key: null, direction: 'ascending' });
-        }}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-          selectedFilter === filterKey
-            ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        {filterKey === 'all'
-          ? 'All Leads'
-          : filterKey === 'leads'
-            ? 'Leads'
-            : filterKey === 'websiteLeads'
-              ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
-              : filterKey === 'deals'
-                ? 'Won'
-                : filterKey === 'lost'
-                  ? 'Lost'
-                  : 'Assigned to Me'}
-      </button>
-    ))}
-  </div>
+  {[
+    'all',
+    'leads',
+    ...(websiteActive ? ['websiteLeads'] : []), // Conditionally include websiteLeads
+    'deals',
+    'assignedToMe',
+    'lost'
+  ].map((filterKey) => (
+    <button
+      key={filterKey}
+      onClick={() => {
+        setSelectedFilter(filterKey);
+        setSearchTerm('');
+        setFromDate('');
+        setToDate('');
+        setCurrentPage(1);
+        setSortConfig({ key: null, direction: 'ascending' });
+      }}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+        selectedFilter === filterKey
+          ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
+          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+      }`}
+    >
+      {filterKey === 'all'
+        ? 'All Leads'
+        : filterKey === 'leads'
+          ? 'Leads'
+          : filterKey === 'websiteLeads'
+            ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
+            : filterKey === 'deals'
+              ? 'Won'
+              : filterKey === 'lost'
+                ? 'Lost'
+                : 'Assigned to Me'}
+    </button>
+  ))}
+</div>
   
 {setRoleID && (
     <button 
         onClick={() => setShowImportModal(true)}
         className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition'
     >
-        Import
+        Import Leads
     </button>   
 )}
 </div>
@@ -819,10 +850,33 @@ const handleImportSubmit = async () => {
                     </div>
                 </div>
             )}
-            {showImportModal && (
+   {showImportModal && (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
             <h2 className="text-lg font-medium text-gray-800">Import Leads</h2>
+            
+            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">
+                <p className="font-medium">Import Instructions:</p>
+                <ul className="list-disc pl-5 space-y-1 mt-1">
+                    <li>Use the template below to ensure proper formatting</li>
+                    <li>Required fields: Name, Email or Phone</li>
+                    <li>Supported file types: .xlsx, .xls, .csv</li>
+                    <li>Max file size: 5MB</li>
+                </ul>
+            </div>
+
+            <div className="flex justify-center mb-4">
+ <a
+    href="../../../public/files/import_leads.xls"
+    download="Leads_Import_Template.xls"
+    className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+>
+    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+    </svg>
+    Download Import Template
+</a>
+            </div>
             
             {importError && (
                 <div className="text-red-600 text-sm p-2 bg-red-50 rounded-md">

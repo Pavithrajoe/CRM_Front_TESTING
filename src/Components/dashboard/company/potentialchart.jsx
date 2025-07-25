@@ -7,8 +7,11 @@ const PotentialChart = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const COLORS = ['#2E8B57', '#FF9800', '#03A9F4', '#FF5722']; 
-
+  const COLORS = [
+    '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19A3', '#19FFED',
+    '#80FF19', '#FF4F19', '#198CFF', '#8019FF', '#CC66FF', '#FF6666', '#66FFCC',
+    '#FFCC66', '#66CCFF', '#CCFF66'
+  ];
 
   const getCompanyIdAndToken = () => {
     const token = localStorage.getItem('token');
@@ -17,7 +20,6 @@ const PotentialChart = () => {
       return null;
     }
     try {
-    
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(atob(base64));
@@ -28,7 +30,6 @@ const PotentialChart = () => {
     }
   };
 
- 
   useEffect(() => {
     const fetchData = async () => {
       const authData = getCompanyIdAndToken();
@@ -39,7 +40,6 @@ const PotentialChart = () => {
       }
 
       try {
-
         const response = await fetch(`${ENDPOINTS.COMPANY_GET}`, {
           headers: {
             Authorization: `Bearer ${authData.token}`,
@@ -47,64 +47,27 @@ const PotentialChart = () => {
           },
         });
 
-
         if (!response.ok) {
           const errorBody = await response.text();
-        //  console.error(`API Error - Status: ${response.status}, Body: ${errorBody}`);
-          throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}. Details: ${errorBody}`);
         }
 
         const result = await response.json();
-
-        // Extract the main 'data' object from the API result
         const dataFromApi = result?.data || {};
 
-        // Extract lead potential distribution and lost leads counts
-        const distribution = dataFromApi?.leadPotentialDistribution || {};
-        const hotCount = distribution.hot || 0;
-        const warmCount = distribution.warm || 0;
-        const coldCount = distribution.cold || 0;
-        // lostLeads is directly under dataFromApi, not leadPotentialDistribution
-        const lostCount = dataFromApi.lostLeads || 0;
+        const groupedByPotentialName = dataFromApi.groupedByPotentialName || {};
+        const groupedByPotentialNamePercentage = dataFromApi.groupedByPotentialNamePercentage || {};
 
-        // Calculate the total count for all categories to determine percentages
-        const totalChartableLeads = hotCount + warmCount + coldCount + lostCount;
+        const formattedData = Object.keys(groupedByPotentialNamePercentage).map(key => ({
+          name: key,
+          value: parseFloat(groupedByPotentialNamePercentage[key]),
+          count: groupedByPotentialName[key] || 0,
+          percent: `${parseFloat(groupedByPotentialNamePercentage[key]).toFixed(2)}%`,
+        }));
 
-        // Helper function to calculate percentage for each lead type
-        const calculatePercentage = (count) => {
-          if (totalChartableLeads === 0) return 0;
-          return (count / totalChartableLeads) * 100;
-        };
+        const filteredData = formattedData.filter(item => item.value > 0);
 
-        // Format data for the Recharts PieChart
-        const formattedData = [
-          {
-            name: 'Hot Lead',
-            value: calculatePercentage(hotCount),
-            count: hotCount,
-            percent: `${calculatePercentage(hotCount).toFixed(2)}%`,
-          },
-          {
-            name: 'Warm Lead',
-            value: calculatePercentage(warmCount),
-            count: warmCount,
-            percent: `${calculatePercentage(warmCount).toFixed(2)}%`,
-          },
-          {
-            name: 'Cold Lead',
-            value: calculatePercentage(coldCount),
-            count: coldCount,
-            percent: `${calculatePercentage(coldCount).toFixed(2)}%`,
-          },
-          {
-            name: 'Lost Lead',
-            value: calculatePercentage(lostCount),
-            count: lostCount,
-            percent: `${calculatePercentage(lostCount).toFixed(2)}%`,
-          },
-        ];
-
-        setChartData(formattedData);
+        setChartData(filteredData);
         setLoading(false);
       } catch (err) {
         console.error('API Error during fetch:', err);
@@ -114,9 +77,8 @@ const PotentialChart = () => {
     };
 
     fetchData();
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []);
 
-  // Custom Tooltip component for the Pie Chart
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const { name, count, percent } = payload[0].payload;
@@ -131,16 +93,14 @@ const PotentialChart = () => {
     return null;
   };
 
-  // Display loading state
   if (loading) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow border h-[50px] flex items-center justify-center">
+      <div className="bg-white p-4 rounded-lg shadow border h-[300px] flex items-center justify-center">
         <p>Loading chart data...</p>
       </div>
     );
   }
 
-  // Display error state
   if (error) {
     return (
       <div className="bg-white p-4 rounded-lg shadow border h-full flex items-center justify-center text-red-600">
@@ -149,38 +109,34 @@ const PotentialChart = () => {
     );
   }
 
-  // Calculate total leads displayed in the chart for the header
   const totalLeadsDisplayed = chartData.reduce((sum, item) => sum + item.count, 0);
-
-  // Check if there's valid data to display the chart
   const hasValidChartData = chartData.some(item => item.value > 0);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow border h-full flex flex-col">
-      <h2 className="text-lg font-semibold mb-2">Lead Status Distribution</h2>
+      <h2 className="text-lg font-semibold mb-2">Lead Potential Distribution</h2>
       <p className="text-sm text-gray-500 mb-4 text-center">
         Total Leads: {totalLeadsDisplayed}
       </p>
 
-     
       <div className="flex-grow flex items-center justify-center">
         {hasValidChartData ? (
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={350}> {/* Increased height here */}
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
-                cy="60%"
+                cy="50%" // Adjusted center slightly for more room below
                 startAngle={180}
-                endAngle={0}
-                innerRadius={80}
-                outerRadius={100}
-                paddingAngle={5}
+                endAngle={-180} // Changed to full circle for better label distribution
+                innerRadius={60} // Adjusted inner radius
+                outerRadius={120} // Increased outer radius for a bigger chart
+                paddingAngle={3} // Slightly reduced padding for tighter fit if many slices
                 dataKey="value"
-                label={({ name,}) =>
-                  `${name} `
-                }
-                labelLine={false}
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} // Display name and percentage
+                labelLine={true} // Ensure label lines are shown
+                // Added a style to the label to make it larger
+                labelStyle={{ fontSize: '14px', fill: '#333' }}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -190,7 +146,7 @@ const PotentialChart = () => {
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500">No lead potential data available to display chart.</p>
+          <p className="text-gray-500">No lead potential data available to display the chart.</p>
         )}
       </div>
 

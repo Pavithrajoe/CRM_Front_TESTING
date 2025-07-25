@@ -598,7 +598,7 @@ const LeadDetailView = () => {
     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
     style={{ backdropFilter: "blur(8px)" }}
   >
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-full md:max-w-[80%] h-[90%] flex flex-col">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-full md:max-w-[90%] h-[90%] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
           <MdEmail className="text-black-600" size={24} />
@@ -614,20 +614,20 @@ const LeadDetailView = () => {
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 h-full">
+      <div className="flex flex-col md:flex-row gap-4 h-[70vh]">
         {/* Templates Section */}
-        <div className="w-full md:w-1/3 p-4 rounded-xl border border-black-200">
+        <div className="w-full md:w-1/2 p-4 rounded-xl border border-black-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
             <div className="relative">
-              <input
+              {/* <input
                 type="text"
                 placeholder="Search templates..."
                 className="pl-8 pr-3 py-1 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
-              <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              /> */}
+              {/* <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              </svg> */}
             </div>
           </div>
 
@@ -647,7 +647,7 @@ const LeadDetailView = () => {
               {templates.map((template) => (
                 <div
                   key={template.mailTemplateId}
-                  className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                  className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
                   onClick={() => applyTemplate(template)}
                 >
                   <div className="flex items-start gap-3">
@@ -674,7 +674,7 @@ const LeadDetailView = () => {
       e.preventDefault();
       sendEmail();
     }}
-    className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-lg"
+    className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl h-80px shadow-"
   >
     <div className="grid grid-cols-1 gap-4">
       {/* To Field */}
@@ -708,7 +708,7 @@ const LeadDetailView = () => {
     </div>
 
     {/* Message Editor */}
-    <div className="flex-grow flex flex-col">
+    <div className="flex-grow flex flex-col h-100px">
       <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
       <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
         <ReactQuill
@@ -727,7 +727,7 @@ const LeadDetailView = () => {
             ],
           }}
           formats={formats}
-          className="h-full min-h-[200px] sm:min-h-[300px]"
+          className="h-full min-h-[100px] sm:min-h-[100px]"
           style={{ border: 'none' }}
         />
       </div>

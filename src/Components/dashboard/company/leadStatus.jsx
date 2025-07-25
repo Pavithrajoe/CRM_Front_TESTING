@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from 'recharts';
-import { ENDPOINTS } from '../../../api/constraints'; 
+import { ENDPOINTS } from '../../../api/constraints';
 
 const LeadStatusChart = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTimeRange, setSelectedTimeRange] = useState('today');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('today'); // Still present, but not used for data filtering in this example
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const timeRangeOptions = {
@@ -59,12 +59,22 @@ const LeadStatusChart = () => {
 
       const result = await response.json();
       const stageCounts = result?.data?.stageCounts || {};
-      
-      // Transform the fetched stage counts and remove leading/trailing whitespace from stage names
-      const transformedData = Object.entries(stageCounts).map(([stage, count]) => ({
-        name: stage.trim(), // Use .trim() to remove leading/trailing whitespace
-        "Lead Status": count
-      }));
+
+      // Transform the fetched stage counts into an array suitable for Recharts.
+      // Sort by orderId if available, otherwise by name.
+      const transformedData = Object.entries(stageCounts)
+        .map(([stage, details]) => ({
+          name: stage.trim(), // Use .trim() to remove leading/trailing whitespace
+          "Lead Status": details.count,
+          orderId: details.orderId // Keep orderId for sorting
+        }))
+        // Sort the data by orderId. If orderId is the same, sort by name.
+        .sort((a, b) => {
+          if (a.orderId && b.orderId) {
+            return a.orderId - b.orderId;
+          }
+          return a.name.localeCompare(b.name); // Fallback to alphabetical if no orderId
+        });
 
       setChartData(transformedData);
     } catch (err) {
@@ -72,7 +82,7 @@ const LeadStatusChart = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // selectedTimeRange is not in dependency array as it doesn't filter data from this API call
 
   useEffect(() => {
     fetchLeadStatusData();
@@ -104,7 +114,7 @@ const LeadStatusChart = () => {
   // Loading and Error handling UI
   if (loading) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow h-64 flex items-center justify-center">
+      <div className="bg-white p-4 rounded-lg shadow h-[400px] flex items-center justify-center">
         <p>Loading sales pipeline data...</p>
       </div>
     );
@@ -112,19 +122,25 @@ const LeadStatusChart = () => {
 
   if (error) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow h-64 flex items-center justify-center text-red-600">
+      <div className="bg-white p-4 rounded-lg shadow h-[400px] flex items-center justify-center text-red-600">
         <p>Error: {error.message}</p>
       </div>
     );
   }
 
-  // Main component rendering
   return (
-    <div className="bg-white p-4 h-[80vh] rounded-lg shadow">
+    <div className="bg-white p-4 h-[80vh] rounded-lg shadow flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Sales Pipeline Stages</h2>
-        {/* Time Range Dropdown */}
+        {/* Time Range Dropdown - Logic remains the same, not connected to data fetching here */}
         <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {timeRangeOptions[selectedTimeRange]}
+            <span className="ml-2">&#9662;</span> {/* Dropdown arrow */}
+          </button>
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10">
               {Object.entries(timeRangeOptions).map(([key, value]) => (
@@ -140,43 +156,54 @@ const LeadStatusChart = () => {
           )}
         </div>
       </div>
-      <div style={{ width: '100%', height: 500 }}>
+      <div className="flex-grow"> {/* Use flex-grow to take available space */}
         {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            No lead status data available for this time range.
+            No lead status data available.
           </div>
         ) : (
-          <ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"> {/* Ensure chart fills its parent */}
             <LineChart
               data={chartData}
-              margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+              margin={{
+                top: 20,    // Increased top margin
+                right: 40,  // Increased right margin
+                left: 30,   // Increased left margin
+                bottom: 100, // Significantly increased bottom margin for rotated labels
+              }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              {/* X-axis for stage names, rotated for readability */}
               <XAxis
                 dataKey="name"
                 type="category"
-                angle={-45} 
-                textAnchor="end"
-                height={90} 
-                interval={0}
+                angle={-45} // Rotate labels by -45 degrees
+                textAnchor="end" // Anchor text to the end of the tick for better alignment
+                height={120} // Give more height to the X-axis to prevent label overlap
+                interval={0} // Ensure all labels are shown
+                tick={{ fontSize: 12 }} // Adjust font size of X-axis labels
               />
-              <YAxis 
-                label={{ value: 'Number of Leads', angle: -90, position: 'insideLeft' }} 
-                tickFormatter={formatYAxisTick} // Apply the custom formatter
-                allowDecimals={false} // Prevent decimal ticks
-                // Optional: set a dynamic domain to ensure ticks start from 0 and go up in whole numbers
-                domain={[0, 'dataMax + 1']} 
+              <YAxis
+                label={{
+                  value: 'Number of Leads',
+                  angle: -90,
+                  position: 'insideLeft',
+                  dy: 50, // Adjust vertical position of Y-axis label
+                  style: { textAnchor: 'middle', fontSize: '14px' } // Style Y-axis label
+                }}
+                tickFormatter={formatYAxisTick}
+                allowDecimals={false}
+                domain={[0, (dataMax) => Math.max(dataMax, 1)]} // Ensure Y-axis starts from 0 and handles single-item data
+                tick={{ fontSize: 12 }} // Adjust font size of Y-axis labels
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
+              <Legend verticalAlign="top" height={36} /> {/* Adjust legend position for more chart space */}
               <Line
                 type="linear"
                 dataKey="Lead Status"
                 stroke="#164CA1"
-                strokeWidth={1}
-                dot={{ r: 6 }}
-                activeDot={{ r:8, stroke: '#164CA3', strokeWidth: 1 }}
+                strokeWidth={2} // Slightly thicker line
+                dot={{ r: 4 }} // Smaller dots
+                activeDot={{ r: 6, stroke: '#164CA3', strokeWidth: 2 }} // Active dot size
               />
             </LineChart>
           </ResponsiveContainer>

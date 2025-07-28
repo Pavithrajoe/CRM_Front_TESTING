@@ -3,33 +3,30 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 export default function KPIStats(data) {
-  console.log("KPIStats data:", data);
+  // console.log("KPIStats data:", data);
   const [hotCount, setHotCount] = useState(0);
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);
   const [wonCount, setWonCount] = useState(0);
-  const [ActiveCount, setActiveCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0); // Renamed from ActiveCount to activeCount for convention
   const [lostCount, setLostCount] = useState(0);
 
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
-  const [error, setError] = useState(null); 
-  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  
   useEffect(() => {
     let extractedUserId = null;
     let tokenFromStorage = null;
 
     try {
       tokenFromStorage = localStorage.getItem('token');
-      //console.log("Token from localStorage:", tokenFromStorage);
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
         extractedUserId = decodedToken.user_id;
-        //console.log("Extracted User ID:", extractedUserId);
         if (!extractedUserId) {
           throw new Error("User ID not found in token.");
         }
@@ -39,14 +36,14 @@ export default function KPIStats(data) {
     } catch (e) {
       console.error("Error retrieving or decoding token:", e);
       setError(`Authentication error: ${e.message}. Please log in again.`);
-      setLoading(false); 
+      setLoading(false);
       return;
     }
 
     if (extractedUserId && tokenFromStorage) {
       setCurrentUserId(extractedUserId);
       setCurrentToken(tokenFromStorage);
-      setLoading(false); 
+      setLoading(false);
     } else {
       setError("User ID or authentication token is missing after processing.");
       setLoading(false);
@@ -56,31 +53,37 @@ export default function KPIStats(data) {
   const leads = data?.data?.leads || [];
 
   useEffect(() => {
-    let hot = 0,
-      warm = 0,
-      cold = 0,
-      won = 0,
-      lost = 0,
-      deals = 0; 
+    let hot = 0;
+    let warm = 0;
+    let cold = 0;
+    let won = 0;
+    let lost = 0;
+    let active = 0;
 
     leads.forEach((lead) => {
       if (lead.bactive === false) {
+        // A lead is lost if bactive is false
         lost++;
-      }
+      } else {
+        // These are active leads (bactive === true)
+        active++;
 
-      if (lead.bactive === true) {
-        const potential = lead.lead_potential?.clead_name;
-        const status = lead.lead_status?.clead_name;
-
-        if (potential === "HOT") hot++;
-        else if (potential === "WARM") warm++;
-        else if (potential === "COLD") cold++;
-
-        if (status === "Won") won++;
-        if (status==="lead");
-
-        if (lead.bisConverted === true) { 
+        // Check for 'Won' leads
+        if (lead.bisConverted === true) {
           won++;
+        }
+
+        // Check for Hot, Warm, Cold only if not converted yet and active
+        // Assuming 'Won' leads are not also 'Hot/Warm/Cold' in the same context
+        if (lead.bisConverted === false) {
+          const potential = lead.lead_potential?.clead_name;
+          if (potential === "HOT") {
+            hot++;
+          } else if (potential === "WARM") {
+            warm++;
+          } else if (potential === "COLD") {
+            cold++;
+          }
         }
       }
     });
@@ -89,7 +92,7 @@ export default function KPIStats(data) {
     setWarmCount(warm);
     setColdCount(cold);
     setWonCount(won);
-    setActiveCount(deals); 
+    setActiveCount(active);
     setLostCount(lost);
   }, [leads]);
 
@@ -136,7 +139,7 @@ export default function KPIStats(data) {
     );
   }
 
-    const handleTotalLeadsClick = () => {
+  const handleTotalLeadsClick = () => {
     navigate('/leadcardview', { state: { activeTab: 'leads' } });
   };
 
@@ -149,16 +152,16 @@ export default function KPIStats(data) {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div
-            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
             onClick={handleTotalLeadsClick}
           >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
                Active Leads
             </h3>
-            <p className="text-2xl font-bold text-gray-900">{ActiveCount}</p>
+            <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
           </div>
           <div
-            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer" 
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
             onClick={handleTotalLostClick}
           >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">

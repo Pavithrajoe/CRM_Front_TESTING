@@ -66,19 +66,21 @@ const formatDateForDisplay = (dateString) => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString; // fallback
 
+  // Format date as DD/MM/YYYY
   const datePart = date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
 
+  // Format time as HH:MM AM/PM (with uppercase AM/PM)
   const timePart = date
     .toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
     })
-    .replace(/am|pm/i, (match) => match.toUpperCase());
+    .replace(/(am|pm)/i, (match) => match.toUpperCase()); // Convert 'am'/'pm' to 'AM'/'PM'
 
   return `${datePart}, ${timePart}`;
 };

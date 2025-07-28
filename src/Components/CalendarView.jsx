@@ -617,7 +617,7 @@ const CalendarView = () => {
 
   // Helper to format date for table display
   const formatDateForTable = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return '-';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Invalid Date'; // Handle invalid date strings
     return date.toLocaleString('en-GB', {
@@ -629,6 +629,18 @@ const CalendarView = () => {
       hour12: true
     }).replace(',', ''); // Remove comma for cleaner display
   };
+  // Helper function to format date as DD-MM-YYYY
+const formatDateDMY = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Invalid Date';
+  
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}/${month}/${year}`;
+};
 
   return (
     <div>
@@ -709,8 +721,7 @@ const CalendarView = () => {
 
         {/* Reminders and Calendar Events for Selected Date Column */}
         <div className="max-h-[395px] overflow-y-auto bg-white rounded-2xl shadow-lg p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
-          <h2 className="text-xl font-bold text-gray-800">Reminders for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
-          <div className="flex gap-6 text-sm mb-4 text-gray-600">
+<h2 className="text-xl font-bold text-gray-800">Reminders for {formatDateDMY(selectedDate)}</h2>          <div className="flex gap-6 text-sm mb-4 text-gray-600">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Reminder
             </div>
@@ -773,8 +784,7 @@ const CalendarView = () => {
             <p className="text-gray-500">No reminders found for this date.</p>
           )}
 
-          <h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
-          {loading ? (
+<h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {formatDateDMY(selectedDate)}</h2>          {loading ? (
             <div className="flex justify-center items-center h-full">
               <CircularProgress size={30} color="inherit" />
             </div>
@@ -900,13 +910,13 @@ const CalendarView = () => {
         )}
 
         {(fromDate || toDate) && activeTab === 'reminders' && (
-          <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
-            Filter:{' '}
-            {fromDate && <strong>{new Date(fromDate).toLocaleDateString('en-GB')}</strong>}
-            {fromDate && toDate && ' to '}
-            {toDate && <strong>{new Date(toDate).toLocaleDateString('en-GB')}</strong>}
-            {' '} ({showEnded ? 'Ended' : 'Upcoming'})
-          </p>
+        <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
+  Filter:{' '}
+  {fromDate && <strong>{formatDateDMY(fromDate)}</strong>}
+  {fromDate && toDate && ' to '}
+  {toDate && <strong>{formatDateDMY(toDate)}</strong>}
+  {' '} ({showEnded ? 'Ended' : 'Upcoming'})
+</p>
         )}
 
         {loading ? (
@@ -918,12 +928,12 @@ const CalendarView = () => {
             <table className="min-w-full text-sm text-gray-800 table-auto">
               <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
                 <tr>
-                  <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
+                  <th className="px-4 py-3 border-b text-center w-[50px]">S.no</th>
                   {activeTab === 'reminders' ? (
                     <>
 
-                      <th className="px-4 py-3 border-b text-left w-[12%]">Lead</th>
-                      <th className="px-4 py-3 border-b text-center w-[35%]">Reminder</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Reminder</th>
                       <th className="px-4 py-3 border-b text-left w-[12%]">Created by</th> 
                       <th className="px-4 py-3 border-b text-left w-[12%]">Assigned to</th> 
                       <th className="px- py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
@@ -931,7 +941,7 @@ const CalendarView = () => {
                   ) : (
                     <>
                       <th className="px-4 py-3 border-b text-left w-[16%]">Event Title</th>
-                      <th className="px-4 py-3 border-b text-center w-[30%]">Description</th>
+                      <th className="px-4 py-3 border-b text-left w-[30%]">Description</th>
                       <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
                       <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
                       <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
@@ -979,15 +989,8 @@ const CalendarView = () => {
                         </td>
 
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-                          {new Date(item.dremainder_dt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true // To show AM/PM
-                          }).replace(/\//g, '-').toUpperCase()}
-                        </td>
+  {formatDateDMY(item.dremainder_dt)}
+</td>
                         
 
                       </>
@@ -1004,7 +1007,13 @@ const CalendarView = () => {
                         </td>
                        
 
-                        <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+                       <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+  {formatDateDMY(item.dremainder_dt)} {new Date(item.dremainder_dt).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })}
+</td> <td className="px-4 py-3 border-b align-top whitespace-nowrap">
                           {new Date(item.devent_startdt).toLocaleString('en-GB', {
                             day: '2-digit',
                             month: '2-digit',

@@ -71,7 +71,7 @@ const UserPage = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched users:", data);
+      // console.log("Fetched users:", data);
       const companyUsers = data.filter((user) => user.iCompany_id === companyId);
       setUsers(companyUsers); // Set all company users
     } catch (err) {

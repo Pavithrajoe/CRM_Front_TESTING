@@ -181,7 +181,7 @@ useEffect(() => {
       });
 
       const data = await response.json();
-      console.log("General Settings Data:", data);
+      // console.log("General Settings Data:", data);
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       
       const settings = data.result && Array.isArray(data.result) && data.result.length > 0

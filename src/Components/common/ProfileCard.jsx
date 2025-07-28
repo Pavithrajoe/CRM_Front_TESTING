@@ -458,7 +458,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
       };
       onSave(formDataToSave);
     } else {
-      console.log("Form has validation errors:", errors);
+      // console.log("Form has validation errors:", errors);
     }
   };
 

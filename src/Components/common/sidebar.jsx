@@ -163,7 +163,7 @@ const Sidebar = () => {
           </Tabs>
         </Box>
 
-        <div className="flex-1 overflow-x-hidden overflow-y-scroll w-full h-full p-4">
+        <div className="flex-1 overflow-x-hidden w-full h-full p-4">
           <Outlet />
         </div>
       </div>

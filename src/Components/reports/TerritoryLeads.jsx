@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ENDPOINTS } from "../../api/constraints"; // Assuming this path is correct for your API endpoints
+import { ENDPOINTS } from "../../api/constraints";
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,28 +10,23 @@ import {
   ArcElement,
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
-import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react"; // Icons from Lucide React
-import { Listbox } from "@headlessui/react"; // Headless UI for accessible dropdown
-import { FaRupeeSign, FaArrowLeft } from "react-icons/fa"; // Font Awesome icons
-import { useNavigate } from "react-router-dom"; // React Router for navigation
-import { HiDownload } from "react-icons/hi"; // Heroicons for download icon
-
-// Import xlsx and file-saver for Excel export
+import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react";
+import { Listbox } from "@headlessui/react";
+import { FaRupeeSign, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { HiDownload } from "react-icons/hi";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-// Register Chart.js components
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement);
 
 const TerritoryLeadsAnalytics = () => {
-  // State variables for data, selected territory, and pagination
   const [data, setData] = useState(null);
   const [territory, setTerritory] = useState("All Territories");
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 10; // Number of leads to display per page
-  const navigate = useNavigate(); // Hook for programmatic navigation
+  const leadsPerPage = 10;
+  const navigate = useNavigate();
 
-  // useEffect hook to fetch data from the API on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,37 +34,30 @@ const TerritoryLeadsAnalytics = () => {
           method: "GET",
           headers: {
             "content-type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Get token from local storage
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
         if (!response.ok) {
           throw new Error(`Failed to fetch territory leads data: ${response.statusText}`);
         }
-
         const responseData = await response.json();
-        setData(responseData.data); // Set the fetched data to state
+        setData(responseData.data);
       } catch (err) {
         console.error("Error fetching territory leads data:", err);
-        // TODO: Implement user-friendly error display (e.g., toast notification)
       }
     };
+    fetchData();
+  }, []);
 
-    fetchData(); // Call the fetch function
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Display loading message if data hasn't been fetched yet
   if (!data) {
     return <div className="text-center mt-10 text-gray-500">Loading analytics data...</div>;
   }
 
-  // Generate a list of all available territories including "All Territories" option
   const allTerritories = ["All Territories", ...Object.keys(data.leadsPerTerritory)];
 
-  // Helper function to merge data for "All Territories" view
   const getMergedData = () => {
-    if (territory !== "All Territories") return null; // Only merge if "All Territories" is selected
+    if (territory !== "All Territories") return null;
 
-    // Helper to sum counts from nested objects
     const mergeCounts = (objects) => {
       const merged = {};
       for (const obj of Object.values(objects)) {
@@ -80,7 +68,6 @@ const TerritoryLeadsAnalytics = () => {
       return merged;
     };
 
-    // Calculate totals across all territories
     const totalLeads = Object.values(data.leadsPerTerritory).reduce((a, b) => a + b, 0);
     const totalRevenue = Object.values(data.revenuePerTerritory).reduce((a, b) => a + b, 0);
     const totalConverted = Object.values(data.conversionPerTerritory).reduce(
@@ -99,22 +86,18 @@ const TerritoryLeadsAnalytics = () => {
     };
   };
 
-  const merged = getMergedData(); // Get merged data for "All Territories"
-
-  // Filter the main lead list based on the selected territory
+  const merged = getMergedData();
   const leadList = data.lead_list || [];
   const filteredLeads =
     territory === "All Territories"
       ? leadList
       : leadList.filter((lead) => lead.city?.cCity_name === territory);
 
-  // Pagination calculations for the lead list table
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
 
-  // Determine which data to use for charts and cards based on territory selection
   const statusData = territory === "All Territories" ? merged.status : data.statusPerTerritory[territory];
   const sourceData =
     territory === "All Territories" ? merged.sources : data.sourceBreakdownPerTerritory[territory];
@@ -123,20 +106,18 @@ const TerritoryLeadsAnalytics = () => {
   const revenue = territory === "All Territories" ? merged.totalRevenue : data.revenuePerTerritory[territory];
   const totalLeads = territory === "All Territories" ? merged.totalLeads : data.leadsPerTerritory[territory];
 
-  // Data configuration for the Bar chart (Leads by Status)
   const barChartData = {
-    labels: Object.keys(statusData || {}), // Ensure labels are based on available keys
+    labels: Object.keys(statusData || {}),
     datasets: [
       {
         label: "Leads",
-        data: Object.values(statusData || {}), // Ensure data is based on available values
-        backgroundColor: "#007AFF", // A pleasant blue color
-        borderRadius: 5, // Rounded bars
+        data: Object.values(statusData || {}),
+        backgroundColor: "#007AFF",
+        borderRadius: 5,
       },
     ],
   };
 
-  // Data configuration for the Pie chart (Lead Source Breakdown)
   const pieChartData = {
     labels: Object.keys(sourceData || {}),
     datasets: [
@@ -144,27 +125,18 @@ const TerritoryLeadsAnalytics = () => {
         label: "Sources",
         data: Object.values(sourceData || {}),
         backgroundColor: [
-          "#34C759", // Green
-          "#FF9500", // Orange
-          "#FF2D55", // Red
-          "#AF52DE", // Purple
-          "#5AC8FA", // Light Blue
-          "#C69C6D", // Brownish
-          "#8E8E93", // Gray
+          "#34C759", "#FF9500", "#FF2D55", "#AF52DE", "#5AC8FA", "#C69C6D", "#8E8E93",
         ],
-        hoverOffset: 4, // Slightly move segments on hover
+        hoverOffset: 4,
       },
     ],
   };
 
-  // Common chart options for responsive design and basic appearance
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // Allows flexible height/width
+    maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false, // Hide default legend as it's not needed for these charts
-      },
+      legend: { display: false },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         titleColor: '#fff',
@@ -175,92 +147,53 @@ const TerritoryLeadsAnalytics = () => {
     },
     scales: {
       y: {
-        ticks: {
-          precision: 0, // Ensure whole numbers for Y-axis ticks
-          font: { size: 11 },
-          color: '#6B7280', // Text color for ticks
-        },
-        grid: {
-            color: '#E5E7EB', // Light grid lines
-        }
+        ticks: { precision: 0, font: { size: 11 }, color: '#6B7280' },
+        grid: { color: '#E5E7EB' }
       },
       x: {
-        ticks: {
-          font: { size: 11 },
-          color: '#6B7280', // Text color for ticks
-        },
-        grid: {
-            display: false, // Hide x-axis grid lines
-        }
+        ticks: { font: { size: 11 }, color: '#6B7280' },
+        grid: { display: false }
       },
     },
   };
 
-  // Function to determine CSS classes for lead status badges
   function getStatusColor(status) {
     switch (status?.toLowerCase()) {
-      case "new":
-        return "bg-blue-100 text-blue-700";
-      case "contacted":
-        return "bg-yellow-100 text-yellow-700";
-      case "qualified":
-        return "bg-green-100 text-green-700";
-      case "lost":
-        return "bg-red-100 text-red-700";
-      case "converted":
-        return "bg-purple-100 text-purple-700";
-      case "won":
-        return "bg-teal-100 text-teal-700"; // Changed to teal for "Won" to differentiate from "Qualified"
-      default:
-        return "bg-gray-100 text-gray-600";
+      case "new": return "bg-blue-100 text-blue-700";
+      case "contacted": return "bg-yellow-100 text-yellow-700";
+      case "qualified": return "bg-green-100 text-green-700";
+      case "lost": return "bg-red-100 text-red-700";
+      case "converted": return "bg-purple-100 text-purple-700";
+      case "won": return "bg-teal-100 text-teal-700";
+      default: return "bg-gray-100 text-gray-600";
     }
   }
 
-  // Function to handle Excel export for the filtered lead list
   const exportToExcel = () => {
     if (filteredLeads.length === 0) {
       alert("No data to export for the current selection.");
       return;
     }
-
-    const headers = [
-      "S.No",
-      "Lead Name",
-      "Email",
-      "Phone",
-      "Status",
-      "Project Value",
-      "City",
-    ];
-
+    const headers = ["S.No", "Lead Name", "Email", "Phone", "Status", "Project Value", "City"];
     const dataForExport = filteredLeads.map((lead, index) => ({
       "S.No": index + 1,
       "Lead Name": lead.lead_name || "-",
       "Email": lead.mail || "-",
       "Phone": lead.phone || "-",
       "Status": lead.lead_status || "-",
-      "Project Value": lead.project_value || 0, // Default to 0 if null/undefined
+      "Project Value": lead.project_value || 0,
       "City": lead.city?.cCity_name || "-",
     }));
-
-    // Create a worksheet from JSON data
     const ws = XLSX.utils.json_to_sheet(dataForExport, { header: headers });
-
-    // Create a new workbook and append the worksheet
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Territory Leads"); // Sheet name
-
-    // Write the workbook to an ArrayBuffer
+    XLSX.utils.book_append_sheet(wb, ws, "Territory Leads");
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-
-    // Create a Blob and save the file using file-saver
     const dataBlob = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(dataBlob, `territory_leads_${territory.replace(/\s/g, '_').toLowerCase()}.xlsx`);
   };
 
   return (
     <div className="p-4 mx-auto font-[system-ui] bg-gray-50 min-h-screen">
-      {/* Header and Back Button */}
       <div className="flex items-center mb-6">
         <button
           onClick={() => navigate("/reportpage")}
@@ -272,13 +205,12 @@ const TerritoryLeadsAnalytics = () => {
         <h1 className="text-2xl font-bold text-gray-900 text-center">Territory-Based Analytics</h1>
       </div>
 
-      {/* Territory Selection Dropdown */}
       <div className="mb-8 flex justify-center">
         <Listbox
           value={territory}
           onChange={(value) => {
             setTerritory(value);
-            setCurrentPage(1); // Reset to first page when territory changes
+            setCurrentPage(1);
           }}
         >
           <div className="relative w-64">
@@ -307,7 +239,6 @@ const TerritoryLeadsAnalytics = () => {
         </Listbox>
       </div>
 
-      {/* Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card icon={<Users size={18} />} title="Total Leads" value={totalLeads} />
         <Card icon={<FaRupeeSign size={18} />} title="Revenue" value={`₹${revenue.toLocaleString()}`} />
@@ -315,30 +246,25 @@ const TerritoryLeadsAnalytics = () => {
         <Card icon={<PieChart size={18} />} title="Won Rate" value={conversionData.conversionRate} />
       </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Leads by Status Bar Chart */}
         <div className="bg-white rounded-2xl shadow-md p-4 h-[280px] flex flex-col">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Leads by Status</h3>
-          <div className="flex-grow w-full h-[200px]"> {/* Chart container */}
+          <div className="flex-grow w-full h-[200px]">
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
-        {/* Lead Source Breakdown Pie Chart */}
         <div className="bg-white rounded-2xl shadow-md p-4 h-[280px] flex flex-col">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Lead Source Breakdown</h3>
-          <div className="flex-grow w-full h-[200px] flex justify-center items-center"> {/* Centered chart container */}
-            <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} /> {/* No scales for pie chart */}
+          <div className="flex-grow w-full h-[200px] flex justify-center items-center">
+            <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} />
           </div>
         </div>
       </div>
 
-      {/* Lead List Table with Pagination and Export */}
       <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 shadow-xl">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
           <h3 className="text-xl font-bold text-gray-900">Lead List: {territory}</h3>
-          {/* Export Button for Excel */}
           <button
             onClick={exportToExcel}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
@@ -388,8 +314,8 @@ const TerritoryLeadsAnalytics = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && ( // Only show pagination if there's more than 1 page
+        {/* Pagination Controls - Using Option 1: Current Page with Neighboring Pages and Ellipses */}
+        {totalPages > 1 && (
           <div className="flex justify-center items-center space-x-3 mt-8">
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
@@ -398,22 +324,64 @@ const TerritoryLeadsAnalytics = () => {
             >
               Prev
             </button>
-
-            {/* Render page number buttons */}
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-4 py-2 rounded-full font-semibold transition-all ${
-                  currentPage === i + 1
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-
+            {(() => {
+              const pageNumbers = [];
+              const maxPagesToShow = 5;
+              let startPage, endPage;
+              if (totalPages <= maxPagesToShow) {
+                startPage = 1;
+                endPage = totalPages;
+              } else {
+                const middle = Math.floor(maxPagesToShow / 2);
+                startPage = currentPage - middle;
+                endPage = currentPage + middle;
+                if (startPage < 1) {
+                  startPage = 1;
+                  endPage = maxPagesToShow;
+                }
+                if (endPage > totalPages) {
+                  endPage = totalPages;
+                  startPage = totalPages - maxPagesToShow + 1;
+                  if (startPage < 1) {
+                    startPage = 1;
+                  }
+                }
+              }
+              if (startPage > 1) {
+                pageNumbers.push(1);
+                if (startPage > 2) {
+                  pageNumbers.push("...");
+                }
+              }
+              for (let i = startPage; i <= endPage; i++) {
+                pageNumbers.push(i);
+              }
+              if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                  pageNumbers.push("...");
+                }
+                pageNumbers.push(totalPages);
+              }
+              return pageNumbers.map((page, index) =>
+                page === "..." ? (
+                  <span key={`ellipsis-${index}`} className="px-2 py-2 text-gray-700">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-full font-semibold transition-all ${
+                      currentPage === page
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              );
+            })()}
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
@@ -428,7 +396,6 @@ const TerritoryLeadsAnalytics = () => {
   );
 };
 
-// Reusable Card component for displaying key metrics
 const Card = ({ icon, title, value }) => (
   <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center text-center transition-all hover:shadow-lg transform hover:-translate-y-1">
     <div className="text-blue-600 mb-1">{icon}</div>

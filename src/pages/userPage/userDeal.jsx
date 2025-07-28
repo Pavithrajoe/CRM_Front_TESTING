@@ -70,7 +70,7 @@ const UserDeals = () => {
                     url.searchParams.append('endDate', dateFilterTo);
                 }
 
-                console.log(`Fetching deals from: ${url.toString()}`);
+                // console.log(`Fetching deals from: ${url.toString()}`);
 
                 const response = await axios.get(url.toString(), { // Use url.toString() for axios
                     headers: { Authorization: `Bearer ${token}` },
@@ -78,7 +78,7 @@ const UserDeals = () => {
 
                 // Ensure data is an array, defaulting to empty array if not
                 const data = Array.isArray(response.data?.Response) ? response.data.Response : [];
-                console.log("Response data for user deals:", data);
+                // console.log("Response data for user deals:", data);
 
                 setDeals(data);
                 setFilteredDeals(data); // Initially, filteredDeals is the same as deals

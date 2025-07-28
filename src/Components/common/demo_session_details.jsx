@@ -41,7 +41,7 @@ const DemoSessionDetails = ({ leadId }) => {
   const [originalAttendees, setOriginalAttendees] = useState([]);
 
   const fetchDemoDetails = async () => {
-    console.log(`[Frontend Request] Attempting to fetch for leadId: ${leadId}`);
+    // console.log(`[Frontend Request] Attempting to fetch for leadId: ${leadId}`);
     if (!leadId) {
       console.warn("fetchDemoDetails: leadId is undefined or null. Aborting fetch.");
       setSessions([]);
@@ -54,7 +54,7 @@ const DemoSessionDetails = ({ leadId }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Raw GET Demo Session API Response:', res.data);
+      // console.log('Raw GET Demo Session API Response:', res.data);
 
       if (res.data.Message && Array.isArray(res.data.Message) && res.data.Message.length > 0) {
         const rawSessionData = res.data.Message[0];
@@ -89,7 +89,7 @@ const DemoSessionDetails = ({ leadId }) => {
             }
           })),
         };
-        console.log('Successfully formatted session for state:', formattedSession);
+        // console.log('Successfully formatted session for state:', formattedSession);
         setSessions([formattedSession]);
       } else {
         console.warn("API response 'Message' is empty or not an array. Response:", res.data);
@@ -118,7 +118,7 @@ const DemoSessionDetails = ({ leadId }) => {
           ...user,
           cFull_name: user.cFull_name || `User ID ${user.iUser_id}`
       })) || []);
-      console.log('Fetched Users:', res.data);
+      // console.log('Fetched Users:', res.data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       setSnackMessage('Failed to load user list.');
@@ -154,7 +154,7 @@ const DemoSessionDetails = ({ leadId }) => {
       dDemoSessionStartTime: toInputDateTime(session.dDemoSessionStartTime),
       dDemoSessionEndTime: toInputDateTime(session.dDemoSessionEndTime),
     });
-    console.log('Opening Edit Dialog. Initial formData.demoSessionAttendees:', initialAttendeesForForm);
+    // console.log('Opening Edit Dialog. Initial formData.demoSessionAttendees:', initialAttendeesForForm);
     setOpenDialog(true);
   };
 
@@ -162,9 +162,9 @@ const DemoSessionDetails = ({ leadId }) => {
     const token = localStorage.getItem('token');
     const { cDemoSessionType, cPlace, dDemoSessionStartTime, dDemoSessionEndTime, notes, demoSessionAttendees } = formData;
 
-    console.log('FormData before validation and payload creation:', formData);
-    console.log('Attendees in formData (from Autocomplete selection):', demoSessionAttendees);
-    console.log('Original Attendees:', originalAttendees);
+    // console.log('FormData before validation and payload creation:', formData);
+    // console.log('Attendees in formData (from Autocomplete selection):', demoSessionAttendees);
+    // console.log('Original Attendees:', originalAttendees);
 
     if (!cDemoSessionType || !cPlace || !dDemoSessionStartTime || !dDemoSessionEndTime || !notes || (demoSessionAttendees || []).length === 0) {
       setSnackMessage('All fields are mandatory, and at least one attendee is required!');
@@ -231,7 +231,7 @@ const DemoSessionDetails = ({ leadId }) => {
       demoSessionAttendees: payloadAttendees,
     };
 
-    console.log('Sending PUT Payload:', payload);
+    // console.log('Sending PUT Payload:', payload);
 
     try {
       await axios.put(ENDPOINTS.DEMO_SESSION_EDIT, payload, {
@@ -385,7 +385,7 @@ const DemoSessionDetails = ({ leadId }) => {
                   ...prev,
                   demoSessionAttendees: newVal,
                 }));
-                console.log('Autocomplete onChange: newVal (selected attendees):', newVal);
+                // console.log('Autocomplete onChange: newVal (selected attendees):', newVal);
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Add/Remove Attendees" sx={{ mt: 2 }} required />

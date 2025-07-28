@@ -25,40 +25,50 @@ const LeadCardViewPage = () => {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentToken, setCurrentToken] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' }); 
+    const [sortConfig, setSortConfig] = useState({ key: 'dmodified_dt', direction: 'descending' }); // Default sort by modified date descending
     const leadsPerPage = 12;
     const [showLostLeads, setShowLostLeads] = useState(true);
     const [showLostDeals, setShowLostDeals] = useState(true);
     const [showImportModal, setShowImportModal] = useState(false);
-const [selectedFile, setSelectedFile] = useState(null);
-const [importLoading, setImportLoading] = useState(false);
-const [importError, setImportError] = useState(null);
-const [importSuccess, setImportSuccess] = useState(false);
-const [roleID, setRoleID] = useState();
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [importLoading, setImportLoading] = useState(false);
+    const [importError, setImportError] = useState(null);
+    const [importSuccess, setImportSuccess] = useState(false);
+    const [roleID, setRoleID] = useState();
+    const [websiteActive, setWebsiteActive] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [converted, setConverted] = useState(false);
 
-  const [websiteActive, setWebsiteActive] = useState(false);
+    // Set up event listener for custom refresh events
+    useEffect(() => {
+        const handleRefreshEvent = () => {
+            setRefreshTrigger(prev => prev + 1);
+        };
 
-   useEffect(() => {
-      // Get the entire user data from localStorage
-      const storedUserData = localStorage.getItem('user');
-      if (storedUserData) {
-        try {
-          const parsedData = JSON.parse(storedUserData);
-          const webiteAccess = parsedData?.website_access === true;
-          setWebsiteActive(webiteAccess);
-  
-          // Optional: Keep it in flat localStorage for legacy use
-          localStorage.setItem('website_access', webiteAccess);
-        } catch (error) {
-          console.error('Error parsing user_data:', error);
-        }
-      } else {
-        // Fallback to previous method
-        const webiteAccess = localStorage.getItem('website_access') === 'true';
-        setWebsiteActive(webiteAccess);
-      }
+        window.addEventListener('leadDataUpdated', handleRefreshEvent);
+        
+        return () => {
+            window.removeEventListener('leadDataUpdated', handleRefreshEvent);
+        };
     }, []);
 
+    useEffect(() => {
+        const storedUserData = localStorage.getItem('user');
+        if (storedUserData) {
+            try {
+                const parsedData = JSON.parse(storedUserData);
+                const webiteAccess = parsedData?.website_access === true;
+                setWebsiteActive(webiteAccess);
+                
+                localStorage.setItem('website_access', webiteAccess);
+            } catch (error) {
+                console.error('Error parsing user_data:', error);
+            }
+        } else {
+            const webiteAccess = localStorage.getItem('website_access') === 'true';
+            setWebsiteActive(webiteAccess);
+        }
+    }, []);
 
     useEffect(() => {
         if (location.state?.activeTab) {
@@ -73,16 +83,11 @@ const [roleID, setRoleID] = useState();
 
         try {
             tokenFromStorage = localStorage.getItem('token');
-            console.log("Token from local storage:", tokenFromStorage); 
-
             if (tokenFromStorage) {
                 const decodedToken = jwtDecode(tokenFromStorage);
                 extractedUserId = decodedToken.user_id;
                 extractedRoleID = decodedToken.role_id;
                 
-                //console.log("Decoded Token:", decodedToken);
-                console.log("Extracted Role_id:", extractedRoleID);
-
                 if (!extractedUserId) {
                     throw new Error("User ID (user_id) not found in decoded token payload.");
                 }
@@ -90,7 +95,6 @@ const [roleID, setRoleID] = useState();
                 console.error("Authentication token not found in local storage. Please log in.");
                 setError("Authentication required. Please log in.");
                 setLoading(false);
-                // navigate('/login');
                 return;
             }
         } catch (e) {
@@ -178,17 +182,7 @@ const [roleID, setRoleID] = useState();
             }
             const matchesDate = isWithinDateRange(dateToFilter);
 
-            const isConverted = item.bisConverted === true || item.bisConverted === 'true' ;
-            // if (item.clead_owner === currentUserId && isConverted) {
-                // console.log(
-                //     "isConverted for testing:", isConverted,
-                //     "for item:", item.clead_name || item.cdeal_name,
-                //     " | currentUserId:", currentUserId,
-                //     " | clead_owner:", item.clead_owner
-                // );
-            // }
-                        //const isConverted = (item.bisConverted === true || item.bisConverted === 'true') && item.clead_owner === extractedUserId;
-            //console.log("isConverted for testing:", isConverted, "for item:", item.clead_name || item.cdeal_name);
+            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
             const isActive = item.bactive === true || item.bactive === 'true';
             const isWebsite = item.website_lead === true || item.website_lead === 'true';
 
@@ -213,7 +207,7 @@ const [roleID, setRoleID] = useState();
 
             return matchesSearch && matchesDate;
         });
-    }, [searchTerm, fromDate, toDate, isWithinDateRange, selectedFilter, showLostLeads, showLostDeals]);
+    }, [searchTerm, fromDate, toDate, selectedFilter, showLostLeads, showLostDeals]);
 
     const fetchLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) {
@@ -244,6 +238,7 @@ const [roleID, setRoleID] = useState();
             }
 
             const data = await res.json();
+            // Sort by modified date descending by default
             const sorted = (Array.isArray(data.details) ? data.details : []).sort(
                 (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
             );
@@ -259,49 +254,48 @@ const [roleID, setRoleID] = useState();
     }, [currentUserId, currentToken]);
 
     const fetchDeals = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-        setLoading(false);
-        return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-        const response = await fetch(`${ENDPOINTS.GET_DEALS}`, {
-            method: "GET",
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-            throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
+        if (!currentUserId || !currentToken) {
+            setLoading(false);
+            return;
         }
-        const result = await response.json();
-        const rawFetchedDeals = Array.isArray(result) ? result : result.data || [];
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${ENDPOINTS.GET_DEALS}`, {
+                method: "GET",
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        // console.log("Raw Result from API:", result);
-        // console.log("Raw fetchedDeals before filtering:", rawFetchedDeals);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+                throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
+            }
+            const result = await response.json();
+            const rawFetchedDeals = Array.isArray(result) ? result : result.data || [];
 
-        const filteredDeals = rawFetchedDeals.filter(item => {
-            const isOwnedByCurrentUser = item.clead_owner === currentUserId;
-            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
-            return isOwnedByCurrentUser && isConverted;
-        });
+            const filteredDeals = rawFetchedDeals.filter(item => {
+                const isOwnedByCurrentUser = item.clead_owner === currentUserId;
+                const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+                return isOwnedByCurrentUser && isConverted;
+            });
 
-        console.log("Filtered Deals (for 'deals' tab logic):", filteredDeals);
+            // Sort deals by modified date descending
+            const sortedDeals = filteredDeals.sort(
+                (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
+            );
+            setDeals(sortedDeals);
 
-        setDeals(filteredDeals);
-
-    } catch (err) {
-        console.error("Error fetching deals:", err);
-        setError(`Failed to fetch deals: ${err.message}`);
-        setDeals([]);
-    } finally {
-        setLoading(false);
-    }
-}, [currentUserId, currentToken]);
+        } catch (err) {
+            console.error("Error fetching deals:", err);
+            setError(`Failed to fetch deals: ${err.message}`);
+            setDeals([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentUserId, currentToken]);
 
     const fetchLostLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) {
@@ -325,6 +319,7 @@ const [roleID, setRoleID] = useState();
             }
 
             const data = await res.json();
+            // Sort lost leads by modified date descending
             const sortedLost = (Array.isArray(data.data) ? data.data : [])
                 .sort((a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0));
             setLostLeads(sortedLost);
@@ -392,7 +387,7 @@ const [roleID, setRoleID] = useState();
                     ...(correspondingLead || {}),
                     dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
                     dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
-                    dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt, // Ensure update date is present
+                    dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt,
                     clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
                     corganization: correspondingLead?.corganization || assigned.corganization || '-',
                     cemail: correspondingLead?.cemail || assigned.cemail || '-',
@@ -405,7 +400,9 @@ const [roleID, setRoleID] = useState();
                     website_lead: isWebsiteAssigned,
                     iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
                 };
-            }).filter(lead => lead.bactive === true || lead.bactive === 'true'); // Filter for active assigned leads
+            }).filter(lead => lead.bactive === true || lead.bactive === 'true');
+            
+            // Sort assigned leads by modified date descending
             const sortedAssigned = mergedLeads.sort(
                 (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt || 0) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt || 0)
             );
@@ -419,12 +416,11 @@ const [roleID, setRoleID] = useState();
         }
     }, [currentUserId, currentToken]);
 
-
     useEffect(() => {
         if (!currentUserId || !currentToken) return;
 
         setCurrentPage(1);
-        setSortConfig({ key: null, direction: 'ascending' }); 
+        // Keep the existing sort config (modified date descending by default)
 
         if (selectedFilter !== 'lost') {
             setShowLostLeads(true);
@@ -438,30 +434,23 @@ const [roleID, setRoleID] = useState();
         } else if (selectedFilter === 'lost') {
             fetchLostLeads();
         } else {
-            fetchLeads(); // for 'all', 'leads', 'websiteLeads'
+            fetchLeads();
         }
-    }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchDeals, fetchAssignedLeads, fetchLostLeads]);
+    }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchDeals, fetchAssignedLeads, fetchLostLeads, refreshTrigger]);
 
-    // Sorting logic
     const handleSort = useCallback((key) => {
         setSortConfig(prevSortConfig => {
             let direction = 'ascending';
             if (prevSortConfig.key === key && prevSortConfig.direction === 'ascending') {
                 direction = 'descending';
             }
-            // console.log(`handleSort called. Key: "${key}", New Direction: "${direction}"`); 
-            // console.log("Previous sortConfig:", prevSortConfig); 
-            const newSortConfig = { key, direction };
-            // console.log("New sortConfig set to:", newSortConfig);
-            return newSortConfig;
+            return { key, direction };
         });
     }, []);
 
     const dataToDisplay = useMemo(() => {
         let data = [];
         if (selectedFilter === 'deals') {
-            // const userDeals = deals?.filter((d) => d.i_created_by === currentUserId);
-            // data = applyFilters(userDeals, false);
             data = applyFilters(deals, false);
         } else if (selectedFilter === 'assignedToMe') {
             data = applyFilters(assignedLeads, true);
@@ -470,12 +459,11 @@ const [roleID, setRoleID] = useState();
         } else {
             data = applyFilters(allLeads, false);
         }
-        // console.log("dataToDisplay (filtered data):", data.length, "items"); 
         return data;
     }, [selectedFilter, deals, assignedLeads, lostLeads, allLeads, applyFilters]);
 
     const sortedData = useMemo(() => {
-                let sortableItems = [...dataToDisplay]; 
+        let sortableItems = [...dataToDisplay]; 
 
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
@@ -544,7 +532,6 @@ const [roleID, setRoleID] = useState();
                         aValue = String(a[sortConfig.key] || '').toLowerCase();
                         bValue = String(b[sortConfig.key] || '').toLowerCase();
                 }
-                // console.log(`Comparing ${sortConfig.key}: A=${aValue}, B=${bValue}`); 
                 if (aValue < bValue) {
                     return sortConfig.direction === 'ascending' ? -1 : 1;
                 }
@@ -554,14 +541,8 @@ const [roleID, setRoleID] = useState();
                 return 0;
             });
         }
-        // console.log("Sorted Data (first 5):", sortableItems.slice(0, 5).map(item => ({ 
-        //     name: item.clead_name || item.cdeal_name,
-        //     modified: item.dmodified_dt || item.d_modified_date,
-        //     sortKey: sortConfig.key ? (item[sortConfig.key] || (item.lead_status ? item.lead_status.clead_name : '')) : '-'
-        // })));
         return sortableItems;
     }, [dataToDisplay, sortConfig]);
-
 
     const totalPages = Math.ceil(sortedData.length / leadsPerPage); 
     const displayedData = sortedData.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage);
@@ -573,9 +554,9 @@ const [roleID, setRoleID] = useState();
 
     const handleFilterApply = () => {
         if (new Date(toDate) < new Date(fromDate)) {
-    alert("The 'To' date cannot be earlier than the 'From' date.");
-    return;
-  }
+            alert("The 'To' date cannot be earlier than the 'From' date.");
+            return;
+        }
         setCurrentPage(1);
         setShowFilterModal(false);
     };
@@ -589,7 +570,7 @@ const [roleID, setRoleID] = useState();
         setShowFilterModal(false);
         setShowLostLeads(true);
         setShowLostDeals(true);
-        setSortConfig({ key: null, direction: 'ascending' }); 
+        setSortConfig({ key: 'dmodified_dt', direction: 'descending' }); // Reset to default sort
         fetchLeads(); 
     }
 
@@ -604,6 +585,85 @@ const [roleID, setRoleID] = useState();
         return ' ↕'; 
     };
 
+    const handleImportSubmit = async () => {
+        if (!selectedFile) {
+            setImportError("Please select a file to import");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        setImportLoading(true);
+        setImportError(null);
+        setImportSuccess(false);
+
+        try {
+            const response = await fetch(ENDPOINTS.EXCEL_IMPORT, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                },
+                body: formData,
+            });
+
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                let errorMessage = "Import failed";
+                
+                if (responseData.Message) {
+                    if (typeof responseData.Message === 'object' && responseData.Message.Message) {
+                        errorMessage = responseData.Message.Message;
+                    } else if (typeof responseData.Message === 'string') {
+                        errorMessage = responseData.Message;
+                    }
+                } else if (responseData.detail) {
+                    errorMessage = responseData.detail;
+                } else if (responseData.message) {
+                    errorMessage = responseData.message;
+                } else if (responseData.errors) {
+                    if (Array.isArray(responseData.errors)) {
+                        errorMessage = responseData.errors.join('\n');
+                    } else if (typeof responseData.errors === 'object') {
+                        errorMessage = Object.entries(responseData.errors)
+                            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                            .join('\n');
+                    } else {
+                        errorMessage = responseData.errors;
+                    }
+                } else {
+                    errorMessage = `Server error: ${response.status}`;
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            setImportSuccess(true);
+            setTimeout(() => {
+                fetchLeads();
+                setShowImportModal(false);
+                setSelectedFile(null);
+                // Trigger refresh by dispatching custom event
+                window.dispatchEvent(new Event('leadDataUpdated'));
+            }, 1500);
+        } catch (err) {
+            console.error("Import error:", err);
+            let userErrorMessage = err.message;
+            
+            if (err.message.includes("Industry") && err.message.includes("not found")) {
+                const allowedIndustriesMatch = err.message.match(/Allowed: (.+)$/);
+                if (allowedIndustriesMatch) {
+                    userErrorMessage = `Invalid industry. Allowed industries are: ${allowedIndustriesMatch[1]}`;
+                }
+            }
+            
+            setImportError(userErrorMessage);
+        } finally {
+            setImportLoading(false);
+        }
+    };
+
     if (loading) {
         return <Loader />;
     }
@@ -611,78 +671,6 @@ const [roleID, setRoleID] = useState();
     if (error) {
         return <div className="text-center py-8 text-red-600 font-medium">{error}</div>;
     }
-const handleImportSubmit = async () => {
-    if (!selectedFile) {
-        setImportError("Please select a file to import");
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    setImportLoading(true);
-    setImportError(null);
-    setImportSuccess(false);
-
-    try {
-        const response = await fetch(ENDPOINTS.EXCEL_IMPORT, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${currentToken}`,
-            },
-            body: formData,
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-            // Handle 400 Bad Request with specific error details
-            if (response.status === 400) {
-                let errorDetails = "";
-                
-                // Check for different error response formats
-                if (responseData.detail) {
-                    // Handle case where error details are in 'detail' field
-                    errorDetails = responseData.detail;
-                } else if (responseData.errors) {
-                    // Handle validation errors (might be an array or object)
-                    if (Array.isArray(responseData.errors)) {
-                        errorDetails = responseData.errors.join('\n');
-                    } else if (typeof responseData.errors === 'object') {
-                        errorDetails = Object.entries(responseData.errors)
-                            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-                            .join('\n');
-                    } else {
-                        errorDetails = responseData.errors;
-                    }
-                } else if (responseData.message) {
-                    errorDetails = responseData.message;
-                } else {
-                    errorDetails = "Invalid file format or missing required fields";
-                }
-
-                throw new Error(errorDetails);
-            } else {
-                throw new Error(responseData.message || `Server error: ${response.status}`);
-            }
-        }
-
-        setImportSuccess(true);
-        // Refresh the leads after successful import
-        setTimeout(() => {
-            fetchLeads();
-            setShowImportModal(false);
-            setSelectedFile(null);
-        }, 1500);
-    } catch (err) {
-        console.error("Import error:", err);
-        // Display the exact error message from backend
-        setImportError(err.message || "An error occurred during import. Please check your file and try again.");
-    } finally {
-        setImportLoading(false);
-    }
-};
-// const isAdminUser = ['administrator', 'superadmin'].includes(extractedRoleID?.toLowerCase());
 
     return (
         <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
@@ -703,7 +691,6 @@ const handleImportSubmit = async () => {
                             else if (selectedFilter === 'assignedToMe') fetchAssignedLeads();
                             else if (selectedFilter === 'lost') fetchLostLeads();
                             else fetchLeads();
-                            setSortConfig({ key: null, direction: 'ascending' });
                         }}
                         title="Refresh"
                         className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
@@ -733,56 +720,55 @@ const handleImportSubmit = async () => {
                 </div>
             </div>
 
-          <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
-  <div className="flex flex-wrap gap-2">
-  {[
-    'all',
-    'leads',
-    ...(websiteActive ? ['websiteLeads'] : []), // Conditionally include websiteLeads
-    'deals',
-    'assignedToMe',
-    'lost'
-  ].map((filterKey) => (
-    <button
-      key={filterKey}
-      onClick={() => {
-        setSelectedFilter(filterKey);
-        setSearchTerm('');
-        setFromDate('');
-        setToDate('');
-        setCurrentPage(1);
-        setSortConfig({ key: null, direction: 'ascending' });
-      }}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-        selectedFilter === filterKey
-          ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
-          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-      }`}
-    >
-      {filterKey === 'all'
-        ? 'All Leads'
-        : filterKey === 'leads'
-          ? 'Leads'
-          : filterKey === 'websiteLeads'
-            ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
-            : filterKey === 'deals'
-              ? 'Won'
-              : filterKey === 'lost'
-                ? 'Lost'
-                : 'Assigned to Me'}
-    </button>
-  ))}
-</div>
-  
-{setRoleID && (
-    <button 
-        onClick={() => setShowImportModal(true)}
-        className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition'
-    >
-        Import Leads
-    </button>   
-)}
-</div>
+            <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        'all',
+                        'leads',
+                        ...(websiteActive ? ['websiteLeads'] : []),
+                        'deals',
+                        'assignedToMe',
+                        'lost'
+                    ].map((filterKey) => (
+                        <button
+                            key={filterKey}
+                            onClick={() => {
+                                setSelectedFilter(filterKey);
+                                setSearchTerm('');
+                                setFromDate('');
+                                setToDate('');
+                                setCurrentPage(1);
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                                selectedFilter === filterKey
+                                    ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                        >
+                            {filterKey === 'all'
+                                ? 'All Leads'
+                                : filterKey === 'leads'
+                                    ? 'Leads'
+                                    : filterKey === 'websiteLeads'
+                                        ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
+                                        : filterKey === 'deals'
+                                            ? 'Won'
+                                            : filterKey === 'lost'
+                                                ? 'Lost'
+                                                : 'Assigned to Me'}
+                        </button>
+                    ))}
+                </div>
+                
+                {roleID && (
+                    <button 
+                        onClick={() => setShowImportModal(true)}
+                        className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap'
+                    >
+                        Import Leads
+                    </button>   
+                )}
+            </div>
 
             {selectedFilter === 'lost' && (
                 <div className="flex flex-wrap gap-4 mt-4 items-center">
@@ -805,7 +791,6 @@ const handleImportSubmit = async () => {
                         <span>Show Lost Deals</span>
                     </label>
                 </div>
-                
             )}
 
             {showFilterModal && (
@@ -826,7 +811,7 @@ const handleImportSubmit = async () => {
                             <input
                                 type="date"
                                 value={toDate}
-                                onChange={(e) => setToDate(e.target.value) }
+                                onChange={(e) => setToDate(e.target.value)}
                                 className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
                             />
                         </label>
@@ -850,98 +835,100 @@ const handleImportSubmit = async () => {
                     </div>
                 </div>
             )}
-   {showImportModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-medium text-gray-800">Import Leads</h2>
-            
-            <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">
-                <p className="font-medium">Import Instructions:</p>
-                <ul className="list-disc pl-5 space-y-1 mt-1">
-                    <li>Use the template below to ensure proper formatting</li>
-                    <li>Required fields: Name, Email or Phone</li>
-                    <li>Supported file types: .xlsx, .xls, .csv</li>
-                    <li>Max file size: 5MB</li>
-                </ul>
-            </div>
 
-            <div className="flex justify-center mb-4">
- <a
-    href="../../../public/files/import_leads.xls"
-    download="Leads_Import_Template.xls"
-    className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
->
-    <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-    </svg>
-    Download Import Template
-</a>
-            </div>
-            
-            {importError && (
-                <div className="text-red-600 text-sm p-2 bg-red-50 rounded-md">
-                    {importError}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+                        <h2 className="text-lg font-medium text-gray-800">Import Leads</h2>
+                        
+                        <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">
+                            <p className="font-medium">Import Instructions:</p>
+                            <ul className="list-disc pl-5 space-y-1 mt-1">
+                                <li>Use the template below to ensure proper formatting</li>
+                                <li>Required fields: Name, Email or Phone</li>
+                                <li>Supported file types: .xlsx, .xls, .csv</li>
+                                <li>Max file size: 5MB</li>
+                            </ul>
+                        </div>
+
+                        <div className="flex justify-center mb-4">
+                            <a
+                                href="../../../public/files/import_leads.xls"
+                                download="Leads_Import_Template.xls"
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                            >
+                                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                Download Import Template
+                            </a>
+                        </div>
+                        
+                        {importError && (
+                            <div className="text-red-600 text-sm p-3 bg-red-50 rounded-md border border-red-200">
+                                <div className="font-medium mb-1">Import Error:</div>
+                                <div>{importError}</div>
+                            </div>
+                        )}
+                        
+                        {importSuccess && (
+                            <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
+                                Leads imported successfully!
+                            </div>
+                        )}
+
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                            <input 
+                                type="file" 
+                                id="file-upload"
+                                accept=".xlsx,.xls,.csv"
+                                onChange={(e) => setSelectedFile(e.target.files[0])}
+                                className="hidden"
+                            />
+                            <label 
+                                htmlFor="file-upload" 
+                                className="cursor-pointer flex flex-col items-center justify-center"
+                            >
+                                <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <span className="text-sm text-gray-600">
+                                    {selectedFile ? selectedFile.name : "Click to select Excel file"}
+                                </span>
+                            </label>
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-4">
+                            <button
+                                onClick={() => {
+                                    setShowImportModal(false);
+                                    setSelectedFile(null);
+                                    setImportError(null);
+                                    setImportSuccess(false);
+                                }}
+                                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleImportSubmit}
+                                disabled={!selectedFile || importLoading}
+                                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {importLoading ? (
+                                    <span className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Importing...
+                                    </span>
+                                ) : "Import"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
-            
-            {importSuccess && (
-                <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
-                    Leads imported successfully!
-                </div>
-            )}
-
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
-                <input 
-                    type="file" 
-                    id="file-upload"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    className="hidden"
-                />
-                <label 
-                    htmlFor="file-upload" 
-                    className="cursor-pointer flex flex-col items-center justify-center"
-                >
-                    <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <span className="text-sm text-gray-600">
-                        {selectedFile ? selectedFile.name : "Click to select Excel file"}
-                    </span>
-                </label>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-                <button
-                    onClick={() => {
-                        setShowImportModal(false);
-                        setSelectedFile(null);
-                        setImportError(null);
-                        setImportSuccess(false);
-                    }}
-                    className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-                >
-                    Cancel
-                </button>
-                <button 
-                    onClick={handleImportSubmit}
-                    disabled={!selectedFile || importLoading}
-                    className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {importLoading ? (
-                        <span className="flex items-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Importing...
-                        </span>
-                    ) : "Import"}
-                </button>
-            </div>
-        </div>
-    </div>
-)}
 
             {displayedData.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm sm:text-base py-8">
@@ -1008,72 +995,29 @@ const handleImportSubmit = async () => {
                                         ? 'Deal Lost'
                                         : 'Lead Lost';
                                     statusBgColor = getStatusColor('lost');
+                                } else {
+                                    if (isItemCurrentlyLost) {
+                                        statusText = item.lead_status?.clead_name
+                                            ? `${item.lead_status.clead_name} (Lost)`
+                                            : isConverted
+                                            ? 'Deal Lost'
+                                            : 'Lead Lost';
+                                        statusBgColor = getStatusColor('lost');
+                                    } else if (isConverted) {
+                                        statusText = 'Deal';
+                                        statusBgColor = getStatusColor('deal');
+                                    } else if (item.website_lead === true || item.website_lead === 'true') {
+                                        statusText = 'Website Lead';
+                                        statusBgColor = getStatusColor('website lead');
+                                    } else {
+                                        statusText = item.lead_status?.clead_name || 'Lead';
+                                        statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
+                                    }
                                 }
-// else if (selectedFilter === 'lost') {
-//     statusText = item.lead_status?.clead_name
-//         ? `${item.lead_status.clead_name} (Lost)`
-//         : isConverted
-//         ? 'Deal Lost'
-//         : 'Lead Lost';
-//     statusBgColor = getStatusColor('lost');
-// } 
-else {
-    if (isItemCurrentlyLost) {
-        statusText = item.lead_status?.clead_name
-            ? `${item.lead_status.clead_name} (Lost)`
-            : isConverted
-            ? 'Deal Lost'
-            : 'Lead Lost';
-        statusBgColor = getStatusColor('lost');
-    } else if (isConverted) {
-        statusText = 'Deal';
-        statusBgColor = getStatusColor('deal');
-    } else {
-        statusText = item.lead_status?.clead_name || 'Lead';
-        statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
-    }
-}
 
-
-                                // let statusText;
-                                // let statusBgColor;
-
-                                // if (selectedFilter === 'assignedToMe') {
-                                //     statusText = item.statusDisplay;
-                                //     statusBgColor = item.statusColor;
-                                // } else if (selectedFilter === 'lost') {
-                                //     statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
-                                //     statusBgColor = getStatusColor('lost');
-                                // } else {
-                                //     if (isItemCurrentlyLost) {
-                                //         if (isConverted) {
-                                //             statusText = 'Deal Lost';
-                                //         } else {
-                                //             statusText = `${item.lead_status?.clead_name || 'Lead'} (Lost)`;
-                                //         }
-                                //         statusBgColor = getStatusColor('lost');
-                                //     } else {
-                                //         if (isConverted) {
-                                //             statusText = 'Deal';
-                                //             statusBgColor = getStatusColor('deal');
-                                //         } 
-                                //         // else if (item.website_lead === true || item.website_lead === 'true') {
-                                //         //     statusText = 'Website Lead';
-                                //         //     statusBgColor = getStatusColor('website lead');
-                                //         // } 
-                                //         else if (item.website_lead === true || item.website_lead === 'true') {
-                                //                 statusText = (<> Website Lead <FaGlobe className="inline ml-1 text-blue-600" /> </>);
-                                //                 statusBgColor = getStatusColor('website lead');
-                                //             }
-                                //              else {
-                                //             statusText = item.lead_status?.clead_name || 'Lead';
-                                //             statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
-                                //         }
-                                //     }
-                                // }
                                 return (
                                     <div
-                                        key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`} // More robust key
+                                        key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                         onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
                                         className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}
                                     >
@@ -1095,7 +1039,7 @@ else {
                                             <>
                                                 <div>{item.iassigned_by_name || '-'}</div>
                                                 <div>{formatDate(item.dcreate_dt)}</div>
-                                                <div>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div> {/* Use dupdate_dt here for display */}
+                                                <div>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div>
                                             </>
                                         )}
                                         <div>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
@@ -1131,13 +1075,7 @@ else {
                                         ? 'Deal Lost'
                                         : 'Lead Lost';
                                     statusBgColor = getStatusColor('lost');
-                                }
-
-                                // else if (selectedFilter === 'lost') {
-                                //     statusText = isConverted ? 'Deal Lost' : 'Lead Lost';
-                                //     statusBgColor = getStatusColor('lost');
-                                // }
-                                 else {
+                                } else {
                                     if (isItemCurrentlyLost) {
                                         if (isConverted) {
                                             statusText = 'Deal Lost';
@@ -1157,30 +1095,21 @@ else {
                                             statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');
                                         }
                                     }
-                                    
                                 }
-
-                              
 
                                 return (
                                     <div
                                         key={item.ilead_id || item.i_deal_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                         onClick={() => goToDetail(item.ilead_id || item.i_deal_id)}
                                         className="relative bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
-                                        >
+                                    >
                                         {(item.website_lead === true || item.website_lead === 'true') && (
                                             <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
-                                            <FaGlobe size={18} />
+                                                <FaGlobe size={18} />
                                             </div>
                                         )}
 
                                         <div>
-                                            {viewMode === 'grid' && (item.website_lead === true || item.website_lead === 'true') && (
-                                                <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
-                                                    <FaGlobe size={18} />
-                                                </div>
-                                                )}
-                                           
                                             <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                                 {item.clead_name || item.cdeal_name || '-'}
                                             </h3>
@@ -1206,7 +1135,6 @@ else {
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                            {/* Status Display */}
                                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBgColor}`}>
                                                 {statusText}
                                             </span>

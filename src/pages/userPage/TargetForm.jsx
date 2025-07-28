@@ -4,8 +4,8 @@ import { ENDPOINTS} from '../../api/constraints'; // Adjust the import path as n
 
 export default function SalesForm({ onClose }) {
   // const ENDPOINTS = {
-  //   USER_POST: "http://192.168.1.75:3000/api/user-target",
-  //   USER_GET: "http://192.168.1.75:3000/api/users",
+  //  USER_POST: "http://192.168.1.75:3000/api/user-target",
+  //  USER_GET: "http://192.168.1.75:3000/api/users",
   // };
 
   const getCurrentDateTimeLocal = () => {
@@ -17,7 +17,7 @@ export default function SalesForm({ onClose }) {
 
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${day}-${month}-${year}T${hours}:${minutes}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}`; // Changed to YYYY-MM-DDTHH:mm for proper datetime-local input
   };
 
   const token = localStorage.getItem("token");
@@ -41,7 +41,7 @@ export default function SalesForm({ onClose }) {
     salesValue: '',
     formDate: getCurrentDateTimeLocal(),
     toDate: '',
-    assignedTo: '', // Will store cFull_name
+    assignedTo: '', // Will store iUser_id
     assignedBy: currentUserId?.toString() || '',
     createdBy: currentUserId?.toString() || '',
   });
@@ -67,8 +67,6 @@ export default function SalesForm({ onClose }) {
           "Content-Type": "application/json",
         },
       });
-            console.log("users", response.data)
-
 
       if (!response.ok) {
         throw new Error("Failed to fetch users.");
@@ -76,11 +74,10 @@ export default function SalesForm({ onClose }) {
 
       const data = await response.json();
       const filtered = data.filter(user =>
-  user.iCompany_id === companyId && (user.bactive === true || user.bactive === 1 || user.bactive === "true")
-);
+        user.iCompany_id === companyId && (user.bactive === true || user.bactive === 1 || user.bactive === "true")
+      );
 
-
-      setCompanyUsers(filtered); // ✅ FIXED
+      setCompanyUsers(filtered);
 
       const currentUser = filtered.find(user => user.iUser_id === currentUserId);
       if (currentUser) {
@@ -92,21 +89,23 @@ export default function SalesForm({ onClose }) {
         }));
       }
 
+      // If there's only one active user and no user is assigned yet,
+      // pre-select that user.
       if (filtered.length === 1 && !formData.assignedTo) {
         setFormData(prev => ({
           ...prev,
-          assignedTo: filtered[0].cFull_name,
+          assignedTo: filtered[0].iUser_id.toString(), // Store iUser_id
         }));
       }
     } catch (err) {
       console.error("Error fetching users:", err);
       setUsersError("Failed to load users. Please try again.");
     }
-  }, [token, currentUserId, formData.assignedTo]);
+  }, [token, currentUserId, getCompanyId, formData.assignedTo]); // Added getCompanyId to dependency array
 
   useEffect(() => {
     fetchCompanyUsers();
-  }, [fetchCompanyUsers]);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,7 +151,7 @@ export default function SalesForm({ onClose }) {
       salesValue: parseFloat(formData.salesValue),
       fromDate: formatDate(formData.formDate),
       toDate: formatDate(formData.toDate),
-      assignedTo: formData.assignedTo, // cFull_name
+      assignedTo: parseInt(formData.assignedTo), // Send iUser_id
       assignedBy: parseInt(formData.assignedBy),
       createdBy: parseInt(formData.createdBy),
     };
@@ -176,7 +175,7 @@ export default function SalesForm({ onClose }) {
         salesValue: '',
         formDate: getCurrentDateTimeLocal(),
         toDate: '',
-        assignedTo: '',
+        assignedTo: '', // Reset assignedTo
       }));
 
       setTimeout(() => onClose(), 1500);
@@ -199,8 +198,7 @@ export default function SalesForm({ onClose }) {
         {usersError && <div className="bg-red-100 p-3 rounded text-red-700 mb-4">Error: {usersError}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-       
-
+        
           <div>
             <label className="block mb-1">From Date <span className='text-red-600'>*</span></label>
             <input
@@ -224,7 +222,7 @@ export default function SalesForm({ onClose }) {
             />
             {errors.toDate && <p className="text-red-500 text-sm mt-1">{errors.toDate}</p>}
           </div>
-             <div>
+            <div>
             <label className="block mb-1">Sales Value <span className='text-red-600'>*</span></label>
             <input
               type="number"
@@ -243,15 +241,11 @@ export default function SalesForm({ onClose }) {
             <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
             <select
               name="assignedTo"
-              value={companyUsers.find(user => user.
-cUser_name
- === formData.assignedTo)?.cUser_name|| ''}
+              value={formData.assignedTo} // Now formData.assignedTo holds iUser_id
               onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedUser = companyUsers.find(u => u.cUser_name.toString() === selectedId);
                 setFormData(prev => ({
                   ...prev,
-                  assignedTo: selectedUser?.cUser_name || ''
+                  assignedTo: e.target.value // Store the iUser_id directly
                 }));
               }}
               className="w-full border p-2 rounded"

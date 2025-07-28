@@ -15,7 +15,7 @@ const RemainderPage = () => {
         <div >
         </div>
 
-        <div className="w-full overflow-x-hidden shadow rounded bg-white">
+        <div className="w-full overflow-x-hidden shadow rounded bg-[#f8f8f8]">
       <RemainderForm  leadId={leadId}  />
     </div>
     </div>

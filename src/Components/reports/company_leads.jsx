@@ -401,12 +401,17 @@ const CompanyLeads = () => {
                   <td className="px-4 py-3 text-sm text-gray-700">{lead.lead_sources?.source_name || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{lead.cemail || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{lead.iphone_no || '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {lead.dcreated_dt
-                      ? new Date(lead.dcreated_dt).toLocaleDateString('en-GB') // This gives DD/MM/YYYY
-                        .replace(/\//g, '-') // Convert to DD-MM-YYYY
-                      : '-'}
-                  </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+  {lead.dcreated_dt
+    ? (() => {
+        const date = new Date(lead.dcreated_dt);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      })()
+    : '-'}
+</td>
 
                   <td className="px-4 py-3 text-sm text-gray-700">{lead.user?.cFull_name || '-'}</td>
                   <td className="px-4 py-3 text-sm w-10">

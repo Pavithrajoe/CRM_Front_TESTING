@@ -70,143 +70,113 @@ const TargetDashboard = ({ userId }) => {
 
   const [selectedTargetId] = useState(4); // Example default value
 
-  const fetchTargetMetrics = useCallback(async () => {
-    setLoadingTable(true);
-    setLoadingSummary(true);
+const fetchTargetMetrics = useCallback(async () => {
+  setLoadingTable(true);
+  setLoadingSummary(true);
 
-    const token = localStorage.getItem("token");
-    if (!userId || !token) {
-      setOverallError("Authentication error. Please log in again.");
-      setLoadingSummary(false);
-      setLoadingTable(false);
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!userId || !token) {
+    setOverallError("Authentication error. Please log in again.");
+    setLoadingSummary(false);
+    setLoadingTable(false);
+    return;
+  }
 
-    const fromDateAPI = formatDateForAPI(selectedFromDate);
-    const toDateAPI = formatDateForAPI(selectedToDate, true);
+  const fromDateAPI = formatDateForAPI(selectedFromDate);
+  const toDateAPI = formatDateForAPI(selectedToDate, true);
 
-    try {
-      const response = await axios.get(`${ENDPOINTS.GET_METRICS_TARGET}/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          fromDate: fromDateAPI,
-          toDate: toDateAPI,
-          // targetId: selectedTargetId, // Uncomment if your API supports filtering by target ID
-        }
-      });
-      
-
-      const metricsArray = Array.isArray(response.data) ? response.data : [];
-      // console.log("1. Raw data received from API:", metricsArray);
-
-      const formattedMetrics = metricsArray.map((metric, index) => {
-        const target = parseFloat(metric.bsales_value || 0);
-        const achieved = parseFloat(metric.achieved_amount || 0);
-        const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
-
-        const createdAtDate = metric.created_at ? new Date(metric.created_at) : null;
-        const rawFromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
-        const rawToDate = metric.dto_date ? new Date(metric.dto_date) : null;
-
-        if (createdAtDate && isNaN(createdAtDate.getTime())) console.warn(`Invalid created_at for metric ID ${metric.id || index}:`, metric.created_at);
-        if (rawFromDate && isNaN(rawFromDate.getTime())) console.warn(`Invalid dfrom_date for metric ID ${metric.id || index}:`, metric.dfrom_date);
-        if (rawToDate && isNaN(rawToDate.getTime())) console.warn(`Invalid dto_date for metric ID ${metric.id || index}:`, metric.dto_date);
-
-        // Define options for DD/MM/YYYY format
-        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-
-        return {
-          id: metric.id || `metric-${index}`,
-          metricName: metric.metric_name || "Sales Target (Assigned)",
-          targetValue: target,
-          achieved: achieved,
-          completed: completedPercentage,
-          status: metric.status || "-",
-          // Use 'en-GB' locale for DD/MM/YYYY format
-          fromDate: rawFromDate ? rawFromDate.toLocaleDateString('en-GB', dateOptions) : "-",
-          toDate: rawToDate ? rawToDate.toLocaleDateString('en-GB', dateOptions) : "-",
-          rawFromDate: rawFromDate,
-          rawToDate: rawToDate,
-          createdAt: createdAtDate,
-          assignedTo: metric.AssignedTo || "-",
-          assignedBy: metric.AssignedBy || "-",
-          createdBy: metric.CreatedBy || "-",
-        };
-      }).filter(Boolean);
-
-      console.log("2. Formatted Metrics (check date objects and values):", formattedMetrics);
-
-      setTableMetrics(formattedMetrics);
-
-      // --- Calculate Summary Data for Current Month "Active/Starting" Targets ---
-      let totalCurrentMonthSalesTarget = 0;
-      let totalCurrentMonthAchievedValue = 0;
-      let totalCurrentMonthCompletionRate = 0;
-      let targetsAssignedOverallCount = formattedMetrics.length;
-
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-
-      // console.log(`3. Current Month for summary filtering: ${currentMonth + 1}/${currentYear}`);
-
-      const currentMonthRelevantTargets = formattedMetrics.filter(metric => {
-        if (!metric.rawFromDate || isNaN(metric.rawFromDate.getTime())) {
-          return false;
-        }
-        const isCurrentMonthFromDate = metric.rawFromDate.getMonth() === currentMonth && metric.rawFromDate.getFullYear() === currentYear;
-        return isCurrentMonthFromDate;
-      });
-
-      // console.log("4. Targets starting in current month (for summary cards):", currentMonthRelevantTargets);
-
-      currentMonthRelevantTargets.forEach(metric => {
-        totalCurrentMonthSalesTarget += metric.targetValue;
-        totalCurrentMonthAchievedValue += metric.achieved;
-      });
-
-      if (totalCurrentMonthSalesTarget > 0) {
-        totalCurrentMonthCompletionRate = ((totalCurrentMonthAchievedValue / totalCurrentMonthSalesTarget) * 100).toFixed(2);
-      } else {
-        totalCurrentMonthCompletionRate = "0.00";
+  try {
+    const response = await axios.get(`${ENDPOINTS.GET_METRICS_TARGET}/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        fromDate: fromDateAPI,
+        toDate: toDateAPI,
       }
+    });
 
-      
+    // Handle the response structure with userTargets array
+    const metricsArray = response.data.userTargets || [];
+    const totalTargets = response.data.totalTarget || 0;
 
-      setSummaryData({
-        salesTarget: totalCurrentMonthSalesTarget,
-        achievedValue: totalCurrentMonthAchievedValue,
-        completionRate: parseFloat(totalCurrentMonthCompletionRate),
-        targetsAssigned: targetsAssignedOverallCount,
-      });
+    const formattedMetrics = metricsArray.map((metric, index) => {
+      const target = parseFloat(metric.bsales_value || 0);
+      const achieved = parseFloat(metric.achievedAmount || 0);
+      const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
 
-      // --- Prepare Bar Chart Data (Total Current Month Summary) ---
-      const chartDataForTotalMonth = [{
-        name: "Current Month",
-        targetValue: totalCurrentMonthSalesTarget,
-        achievedValue: totalCurrentMonthAchievedValue,
-        completion: parseFloat(totalCurrentMonthCompletionRate),
-      }];
+      const fromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
+      const toDate = metric.dto_date ? new Date(metric.dto_date) : null;
 
-      // console.log("6. Final Bar Chart Data (targetTrendsData - Total Month):", chartDataForTotalMonth);
-      setTargetTrendsData(chartDataForTotalMonth);
+      // Define options for DD/MM/YYYY format
+      const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
 
-    } catch (error) {
-      console.error("Error fetching target metrics:", error);
-      setTableMetrics([]);
-      setSummaryData({
-        salesTarget: 0,
-        achievedValue: 0,
-        completionRate: 0,
-        targetsAssigned: 0,
-      });
-      setTargetTrendsData([]);
-      setOverallError("Failed to load dashboard data. Please try again.");
-    } finally {
-      setLoadingSummary(false);
-      setLoadingTable(false);
+      return {
+        id: metric.isalesId || `metric-${index}`,
+        metricName: "Sales Target", // Default name since not in response
+        targetValue: target,
+        achieved: achieved,
+        completed: completedPercentage,
+        status: metric.bactive ? "Active" : "Inactive",
+        fromDate: fromDate ? fromDate.toLocaleDateString('en-GB', dateOptions) : "-",
+        toDate: toDate ? toDate.toLocaleDateString('en-GB', dateOptions) : "-",
+        rawFromDate: fromDate,
+        rawToDate: toDate,
+        assignedTo: metric.AssignedTo || "-",
+        assignedBy: metric.AssignedBy || "-",
+        createdBy: metric.createdBy || "-",
+      };
+    });
+
+    setTableMetrics(formattedMetrics);
+
+    // Calculate summary data
+    let totalSalesTarget = 0;
+    let totalAchievedValue = 0;
+    let totalCompletionRate = 0;
+
+    metricsArray.forEach(metric => {
+      const target = parseFloat(metric.bsales_value || 0);
+      const achieved = parseFloat(metric.achievedAmount || 0);
+      totalSalesTarget += target;
+      totalAchievedValue += achieved;
+    });
+
+    if (totalSalesTarget > 0) {
+      totalCompletionRate = ((totalAchievedValue / totalSalesTarget) * 100).toFixed(2);
     }
-  }, [userId, selectedFromDate, selectedToDate]); // Removed selectedTargetId if not used for filtering API
+
+    setSummaryData({
+      salesTarget: totalSalesTarget,
+      achievedValue: totalAchievedValue,
+      completionRate: parseFloat(totalCompletionRate),
+      targetsAssigned: totalTargets, // Using the totalTarget from response
+    });
+
+    // Prepare chart data
+    const chartData = [{
+      name: "Target Overview",
+      targetValue: totalSalesTarget,
+      achievedValue: totalAchievedValue,
+      completion: parseFloat(totalCompletionRate),
+    }];
+
+    setTargetTrendsData(chartData);
+
+  } catch (error) {
+    console.error("Error fetching target metrics:", error);
+    setTableMetrics([]);
+    setSummaryData({
+      salesTarget: 0,
+      achievedValue: 0,
+      completionRate: 0,
+      targetsAssigned: 0,
+    });
+    setTargetTrendsData([]);
+    setOverallError("Failed to load dashboard data. Please try again.");
+  } finally {
+    setLoadingSummary(false);
+    setLoadingTable(false);
+  }
+}, [userId, selectedFromDate, selectedToDate]);
 
   useEffect(() => {
     if (!userId) {

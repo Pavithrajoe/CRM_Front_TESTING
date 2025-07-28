@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle } from 'lucide-react';
+import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react'; // Import X, Calendar, User icons
 import {
   Dialog,
   DialogTitle,
@@ -8,6 +8,7 @@ import {
   DialogActions,
   Button,
   Autocomplete,
+  IconButton, // Import IconButton for the close button
 } from '@mui/material';
 import { useToast } from '../context/ToastContext';
 import Confetti from 'react-confetti';
@@ -18,7 +19,6 @@ import { ENDPOINTS } from '../api/constraints';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-
 
 const mandatoryInputStages = ['Proposal', 'Won'];
 
@@ -33,7 +33,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [dialogValue, setDialogValue] = useState({
     demoSessionType: '',
     demoSessionStartTime: null, // Change to null for initial state with DateTimePicker
-    demoSessionEndTime: null,   // Change to null
+    demoSessionEndTime: null, // Change to null
     notes: '',
     place: '',
     demoSessionAttendees: [],
@@ -68,7 +68,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 id: item.ilead_status_id,
                 name: item.clead_name,
                 order: item.orderId || 9999,
-                bactive: item.bactive
+                bactive: item.bactive,
               };
             })
             .sort((a, b) => a.order - b.order)
@@ -111,7 +111,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   }, [stages, leadData]);
 
   // Helper function to format date to DD/MM/YYYY
-  const formatDateOnly = (dateString) => {
+  const formatDateOnly = dateString => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
@@ -143,7 +143,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       setDialogValue({
         demoSessionType: '',
         demoSessionStartTime: new Date(), // Initialize with current Date object
-        demoSessionEndTime: null,       // Initialize as null
+        demoSessionEndTime: null, // Initialize as null
         notes: '',
         place: '',
         demoSessionAttendees: [],
@@ -225,7 +225,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         const body = {
           demoSessionType,
           demoSessionStartTime: demoSessionStartTime.toISOString(), // Convert to ISO string for API
-          demoSessionEndTime: demoSessionEndTime.toISOString(),     // Convert to ISO string for API
+          demoSessionEndTime: demoSessionEndTime.toISOString(), // Convert to ISO string for API
           notes,
           place,
           leadId: parseInt(leadId),
@@ -334,47 +334,70 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   }, []);
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}> {/* Wrap with LocalizationProvider */}
-      <div className="w-full px-2 py-6">
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      {/* Main Status Bar Container - Explicitly sets width and centers it */}
+      <div className="w-11/12 md:w-5/6 lg:w-4/5 xl:w-[90%] mx-auto px-4 py-6">
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
-        <div className="flex items-center justify-between relative">
+        {/* This flex container now explicitly takes w-full to ensure it uses all available space */}
+        <div className="flex items-center justify-between  w-full">
           {stages.map((stage, index) => {
             const isCompleted = index < currentStageIndex;
             const isActive = index === currentStageIndex;
             const isClickable = index > currentStageIndex && !isLost && !isWon && stage.bactive;
-            const matchedRemark = statusRemarks.find((r) => r.lead_status_id === stage.id);
+            const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
 
             return (
-              <div key={stage.id} className="flex flex-col items-center flex-1">
-                <div
-                  onClick={() => isClickable ? handleStageClick(index, stage.id) : null}
-                  className={`relative flex items-center justify-center w-10 h-10 rounded-full
-                    ${isCompleted
-                      ? 'bg-green-600 text-white'
-                      : isActive
-                      ? 'bg-blue-600 text-white'
-                      : isClickable
-                      ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
-                      : stage.bactive === false
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'}
-                    transition-colors duration-200`}
-                  title={stage.bactive === false
-                    ? 'This status is inactive'
-                    : matchedRemark ? matchedRemark.lead_status_remarks : ''}
-                >
-                  {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
+              <React.Fragment key={stage.id}>
+                <div className="flex flex-col items-center flex-1">
+                  <div
+                    onClick={() => (isClickable ? handleStageClick(index, stage.id) : null)}
+                    className={`relative flex items-center justify-center w-10 h-10 rounded-full
+                      ${
+                        isCompleted
+                          ? 'bg-green-600 text-white'
+                          : isActive
+                          ? 'bg-blue-600 text-white'
+                          : isClickable
+                          ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+                          : stage.bactive === false
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      }
+                      transition-colors duration-200`}
+                    title={
+                      stage.bactive === false
+                        ? 'This status is inactive'
+                        : matchedRemark
+                        ? matchedRemark.lead_status_remarks
+                        : ''
+                    }
+                  >
+                    {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
+                  </div>
+                  <span
+                    className={`mt-2 text-sm text-center ${
+                      stage.bactive === false ? 'text-gray-400' : ''
+                    }`}
+                  >
+                    {stage.name}
+                    {stage.bactive === false && (
+                      <span className="block text-xs text-red-500">(Inactive)</span>
+                    )}
+                  </span>
                 </div>
-                <span className={`mt-2 text-sm text-center ${
-                  stage.bactive === false ? 'text-gray-400' : ''
-                }`}>
-                  {stage.name}
-                  {stage.bactive === false && (
-                    <span className="block text-xs text-red-500">(Inactive)</span>
-                  )}
-                </span>
-              </div>
+                {/* Add connecting line if it's not the last stage */}
+                {index < stages.length - 1 && (
+                  <div
+                    className={`flex-1 h-1 mx-2 -mt-12 z-0
+                      ${
+                        isCompleted
+                          ? 'border-t-2 border-dotted border-green-600' // Dotted green line for completed
+                          : 'border-t-2 border-dotted border-gray-300' // Dotted gray line for not completed
+                      }`}
+                  ></div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -382,7 +405,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         {isWon && (
           <div className="flex justify-center mt-4">
             <div className="flex items-center gap-2 text-green-600 text-lg font-semibold bg-green-50 px-4 py-2 rounded-full shadow">
-              <span role="img" aria-label="deal">🎉</span> WON
+              <span role="img" aria-label="deal">
+                🎉
+              </span>{' '}
+              WON
             </div>
           </div>
         )}
@@ -400,93 +426,133 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   onChange={(e, newValue) =>
                     setDialogValue(prev => ({ ...prev, demoSessionType: newValue }))
                   }
-                  renderInput={(params) => (
+                  renderInput={params => (
                     <TextField
                       {...params}
-                      label={<span>Session Type <span className="text-red-600">*</span></span>}
+                      label={
+                        <span>
+                          Session Type <span className="text-red-600">*</span>
+                        </span>
+                      }
                       sx={{ mt: 2 }}
-                      // required
+                      required // Added required
                       InputLabelProps={{ shrink: true }}
                     />
                   )}
                 />
                 <DateTimePicker
-                  label={<span>Start Time <span className="text-red-600">*</span></span>}
+                  label={
+                    <span>
+                      Start Time <span className="text-red-600">*</span>
+                    </span>
+                  }
                   value={dialogValue.demoSessionStartTime}
-                  onChange={(newValue) =>
+                  onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
                   }
                   format="dd/MM/yyyy hh:mm a" // Explicitly set display format
-                  slotProps={{ textField: { fullWidth: true, sx: { mt: 2 }, InputLabelProps: { shrink: true } } }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      sx: { mt: 2 },
+                      InputLabelProps: { shrink: true },
+                      required: true, // Added required
+                    },
+                  }}
                 />
                 <DateTimePicker
-                  label={<span>End Time <span className="text-red-600">*</span></span>}
+                  label={
+                    <span>
+                      End Time <span className="text-red-600">*</span>
+                    </span>
+                  }
                   value={dialogValue.demoSessionEndTime}
-                  onChange={(newValue) =>
+                  onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
                   }
                   format="dd/MM/yyyy hh:mm a" // Explicitly set display format
-                  slotProps={{ textField: { fullWidth: true, sx: { mt: 2 }, InputLabelProps: { shrink: true } } }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      sx: { mt: 2 },
+                      InputLabelProps: { shrink: true },
+                      required: true, // Added required
+                    },
+                  }}
                 />
                 <TextField
-                  label={<span>Notes <span className="text-red-600">*</span></span>}
+                  label={
+                    <span>
+                      Notes <span className="text-red-600">*</span>
+                    </span>
+                  }
                   fullWidth
                   multiline
                   rows={2}
                   sx={{ mt: 2 }}
                   value={dialogValue.notes || ''}
-                  onChange={(e) =>
-                    setDialogValue(prev => ({ ...prev, notes: e.target.value }))
-                  }
-                  // required
+                  onChange={e => setDialogValue(prev => ({ ...prev, notes: e.target.value }))}
+                  required // Added required
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                  label={<span>Place / Link <span className="text-red-600">*</span></span>}
+                  label={
+                    <span>
+                      Place / Link <span className="text-red-600">*</span>
+                    </span>
+                  }
                   fullWidth
                   sx={{ mt: 2 }}
                   value={dialogValue.place || ''}
-                  onChange={(e) =>
-                    setDialogValue(prev => ({ ...prev, place: e.target.value }))
-                  }
-                  // required
+                  onChange={e => setDialogValue(prev => ({ ...prev, place: e.target.value }))}
+                  required // Added required
                   InputLabelProps={{ shrink: true }}
                 />
                 <Autocomplete
                   multiple
                   options={users}
-                  getOptionLabel={(option) => option?.cFull_name || ''}
+                  getOptionLabel={option => option?.cFull_name || ''}
                   isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
                   value={dialogValue.demoSessionAttendees || []}
                   onChange={(e, newValue) =>
                     setDialogValue(prev => ({ ...prev, demoSessionAttendees: newValue }))
                   }
-                  renderInput={(params) => (
+                  renderInput={params => (
                     <TextField
                       {...params}
-                      label={<span>Attendees <span className="text-red-600">*</span></span>}
+                      label={
+                        <span>
+                          Attendees <span className="text-red-600">*</span>
+                        </span>
+                      }
                       sx={{ mt: 2 }}
-                      // required
+                      required // Added required
                     />
                   )}
                 />
               </>
             ) : (
               <TextField
-                label={<span>Enter Value <span className="text-red-600">*</span></span>}
+                label={
+                  <span>
+                    Enter Value <span className="text-red-600">*</span>
+                  </span>
+                }
                 fullWidth
                 type="number"
                 value={dialogValue}
-                onChange={(e) => setDialogValue(e.target.value)}
+                onChange={e => setDialogValue(e.target.value)}
                 sx={{ mt: 2 }}
-                // required
+                required // Added required
                 InputLabelProps={{ shrink: true }}
               />
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={handleDialogSave} variant="contained">Save</Button>
+            <Button onClick={handleDialogSave} variant="contained">
+              Save
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -494,13 +560,17 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           <DialogTitle>Enter Remark</DialogTitle>
           <DialogContent>
             <TextField
-              label={<span>Remark <span className="text-red-600">*</span></span>}
+              label={
+                <span>
+                  Remark <span className="text-red-600">*</span>
+                </span>
+              }
               fullWidth
               multiline
               rows={3}
-              // required
+              required // Added required
               value={remarkData.remark}
-              onChange={(e) => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
+              onChange={e => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />
@@ -509,32 +579,35 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               type="number"
               fullWidth
               value={remarkData.projectValue}
-              onChange={(e) => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
+              onChange={e => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-            <Button onClick={handleRemarkSubmit} variant="contained">Submit</Button>
+            <Button onClick={handleRemarkSubmit} variant="contained">
+              Submit
+            </Button>
           </DialogActions>
         </Dialog>
 
         {statusRemarks.length > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
-            <div className="flex w-full overflow-x-scroll space-x-4 px-2 py-4 relative">
+            <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
               {statusRemarks.map((remark, index) => (
                 <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
                   {index !== statusRemarks.length - 1 && (
                     <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
                   )}
                   <div
-                    className="font-sans bg-white w-[200px] shadow-xxl border border-blue-700 border-l-4 border-r-blue-800 rounded-3xl p-4 space-y-2 min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
+                    // Individual remark card width: adapted to fill 90% of the overall parent width divided by ~5 cards
+                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] min-w-[200px] max-w-[350px] shadow-xxl border border-blue-700 border-l-4 border-r-blue-800 rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
                     onClick={() => setSelectedRemark(remark)}
                   >
                     <div className="space-y-2 text-sm">
-                      <p className="text-sm break-words line-clamp-2">
+                      <p className="text-sm break-words line-clamp-3">
                         <strong>Remark:</strong> {remark.lead_status_remarks}
                       </p>
                       <p className="text-sm">
@@ -554,23 +627,108 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           </div>
         )}
 
-        <Dialog open={!!selectedRemark} onClose={() => setSelectedRemark(null)}>
-          <DialogTitle>Remark Details</DialogTitle>
-          <DialogContent dividers sx={{ borderRadius: '12px' }}>
+        {/* Timeline Detail Dialog (Updated from Remark Details) */}
+        <Dialog
+          open={!!selectedRemark}
+          onClose={() => setSelectedRemark(null)}
+          PaperProps={{
+            sx: {
+              borderRadius: '18px', // Rounded corners for the entire dialog
+              overflow: 'hidden', // Ensure content respects the rounded corners
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '16px 24px 0', // Adjust padding for title
+              position: 'relative', // For absolute positioning of close button
+              color: '#333',
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+            }}
+          >
+            Timeline Detail
+            <IconButton
+              aria-label="close"
+              onClick={() => setSelectedRemark(null)}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+                color: theme => theme.palette.grey[500],
+                backgroundColor: 'rgba(0,0,0,0.05)', // Subtle background for the 'x' button
+                borderRadius: '0%',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                },
+              }}
+            >
+              <X size={15} />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent
+            // Removed 'dividers' as it creates lines that clash with the desired design
+            sx={{
+              padding: '24px', // Standard padding
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center', // Center content horizontally
+              textAlign: 'center', // Center text within content
+              minWidth: { xs: '90%', sm: '350px', md: '400px' }, // Adjusted min-width for the new layout
+              maxWidth: '450px', // Adjusted max-width
+            }}
+          >
             {selectedRemark && (
-              <div className="space-y-2 text-sm">
-                <p className="text-sm break-words"><strong>Remark:</strong> {selectedRemark.lead_status_remarks}</p>
-                <p className="text-sm"><strong>Created By:</strong> {selectedRemark.createdBy || '-'}</p>
-                <p className="text-sm">
-                  <strong>Date:</strong> {formatDateOnly(selectedRemark.dcreated_dt)}
+              <>
+                {/* Circular Icon/Status Indicator */}
+                <div
+                  className="w-24 h-24 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    backgroundColor: '#4CAF50', // Green background as in the image
+                    // border: '4px #F0F4F8', // Lighter border
+                    boxShadow: '0px 5px 15px rgba(0,0,0,0.1)', // Subtle shadow
+                  }}
+                >
+                  {/* You can customize this icon based on the status name if needed */}
+                  {/* For now, just a generic 'NEW' text or a checkmark */}
+                  <span className="text-white text-base font-semibold">
+                    {selectedRemark.status_name || '-'}
+                  </span>
+                </div>
+
+                {/* Status Name */}
+                <p className="text-xl font-bold text-gray-900 mb-4">
+                  {selectedRemark.status_name || '-'}
                 </p>
-                <p className="text-sm"><strong>Status:</strong> {selectedRemark.status_name}</p>
-              </div>
+
+                {/* Main Remark Content */}
+                <p className="text-sm text-gray-700 break-words w-3/4 p-6 leading-relaxed mb-6">
+                  {selectedRemark.lead_status_remarks}
+                </p>
+
+                {/* Date and Created By at the bottom */}
+                <div className="w-full flex justify-between items-center text-gray-600 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Calendar size={16} className="text-gray-900" />
+                    <span className="text-red-600">
+                      {formatDateOnly(selectedRemark.dcreated_dt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <User size={16} className="text-gray-900" />
+                    <span className="text-red-600">{selectedRemark.createdBy || '-'}</span>
+                  </div>
+                </div>
+              </>
             )}
           </DialogContent>
-          <DialogActions>
+          {/* DialogActions are not needed if the 'x' button is the only action */}
+          {/* <DialogActions>
             <Button onClick={() => setSelectedRemark(null)}>Close</Button>
-          </DialogActions>
+          </DialogActions> */}
         </Dialog>
 
         {showConfetti && <Confetti />}

@@ -150,43 +150,43 @@ const ReminderForm = () => {
     }
   };
   const formatDateTime = (date) => {
-  if (!date) return "";
-  
-  const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const seconds = String(d.getSeconds()).padStart(2, "0");
-  
-  return `${day}:${month}:${year} ${hours}.${minutes}.${seconds}`;
-};
+    if (!date) return "";
+
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+
+    return `${day}/${month}/${year} ${hours} ${minutes} ${seconds}`;
+  };
 
   const validateForm = () => {
     if (!form.title || !form.content || !form.reminderDateTime) {
       toast.error("Please fill in all required fields (Title, Description, Date & Time).");
       return false;
     }
-    
+
     if (form.reminderDateTime < new Date()) {
       toast.error("Reminder date and time must be in the future.");
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e, status) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setSubmitting(true);
-    const data = { 
+    const data = {
       ...form,
       reminderDate: form.reminderDateTime.toISOString(),
-      status 
+      status
     };
     data.assignt_to = Number(form.assignt_to);
 
@@ -247,7 +247,7 @@ const ReminderForm = () => {
       const data = await response.json();
       if (response.ok) {
         setReminderList(data.message);
-      } 
+      }
       // else {
       //   toast.error("Failed to fetch reminders");
       // }
@@ -302,30 +302,31 @@ const ReminderForm = () => {
 
 
   return (
-    <div className="relative min-h-screen bg-[#f8f8f8] p-6 font-sans text-base leading-relaxed text-gray-900">
+    <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full md:w-[90%] lg:w-[85%] font-sans text-base leading-relaxed text-gray-900 mx-auto">
       <ToastContainer position="top-right" autoClose={5000} />
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm w-[80%] sm:w-auto flex-grow">
           <Search className="text-gray-500" size={18} />
           <input
             type="text"
             placeholder="Search reminders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-transparent outline-none text-sm font-medium"
+            className="bg-transparent outline-none text-sm font-medium w-full"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={() => setShowFilterModal(true)}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700"
+            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0"
+            aria-label="Filter Reminders"
           >
             <Filter size={20} color="white" />
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-5 py-2 rounded-full shadow-md hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full shadow-md hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base"
           >
             + Add Reminder
           </button>
@@ -334,39 +335,39 @@ const ReminderForm = () => {
 
       {showFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm sm:max-w-md space-y-4">
             <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
-           <label className="block text-sm text-gray-700">
-  From
-  <input
-    type="date"
-    value={fromDate}
-    onChange={(e) => setFromDate(e.target.value)}
-    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-  />
-</label>
+            <label className="block text-sm text-gray-700">
+              From
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+              />
+            </label>
             <label className="block text-sm text-gray-700">
               To
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
               />
             </label>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => {
                   resetFilters();
                   setShowFilterModal(false);
                 }}
-                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600"
+                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-150 ease-in-out text-sm"
               >
                 Reset
               </button>
               <button
                 onClick={() => setShowFilterModal(false)}
-                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out text-sm"
               >
                 Cancel
               </button>
@@ -375,7 +376,7 @@ const ReminderForm = () => {
                   applyFilters();
                   setShowFilterModal(false);
                 }}
-                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition duration-150 ease-in-out text-sm"
               >
                 Apply
               </button>
@@ -394,10 +395,10 @@ const ReminderForm = () => {
           filteredReminders.map((reminder) => (
             <div
               key={reminder.iremainder_id}
-              className="py-5 px-6 hover:bg-gray-50 transition duration-150 rounded-2xl"
+              className="py-5 px-4 sm:px-6 hover:bg-gray-50 transition duration-150 rounded-2xl"
             >
-              <div className="flex justify-between items-start">
-                <div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div className="mb-3 sm:mb-0">
                   <h3 className="text-md font-semibold text-gray-900">
                     📌 {reminder.cremainder_title}
                   </h3>
@@ -419,7 +420,7 @@ const ReminderForm = () => {
                     <span className="font-semibold">{reminder.assigned_to}</span>
                   </div>
                 </div>
-                <div className="text-right text-sm text-gray-600 whitespace-nowrap">
+                <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
                   <p className="font-medium text-blue-700">
                     {(() => {
                       const d = new Date(reminder.dremainder_dt);
@@ -429,7 +430,7 @@ const ReminderForm = () => {
                       const hours = String(d.getHours()).padStart(2, "0");
                       const minutes = String(d.getMinutes()).padStart(2, "0");
                       const seconds = String(d.getSeconds()).padStart(2, "0");
-                      return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+                      return `${day}/${month}/${year} ${hours} ${minutes} ${seconds}`;
                     })()}
                   </p>
                 </div>
@@ -446,8 +447,8 @@ const ReminderForm = () => {
             className="fixed inset-0 bg-black bg-opacity-40 z-40"
             onClick={() => setShowForm(false)}
           />
-          <div className="fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-xl z-50 transition-transform duration-500 rounded-l-3xl">
-            <div className="p-6 h-full overflow-y-auto relative">
+          <div className="fixed top-0 right-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/3 xl:w-1/3 2xl:max-w-xl h-[100vh] bg-white shadow-xl z-50 transition-transform duration-500 rounded-l-3xl">
+            <div className="p-6 h-[100vh] overflow-y-scroll relative">
               <button
                 className="absolute top-4 right-4 text-gray-600 hover:text-black"
                 onClick={() => setShowForm(false)}
@@ -455,15 +456,15 @@ const ReminderForm = () => {
               >
                 <X size={24} />
               </button>
-              <h2 className="font-semibold text-lg mt-5 mb-6">New Reminder</h2>
+              <h2 className="font-semibold text-lg sm:text-xl mt-5 mb-6">New Reminder</h2>
 
               <form onSubmit={(e) => handleSubmit(e, "submitted")}>
-                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                <label className="block text-sm sm:text-base mb-2 font-semibold text-gray-700">
                   Title <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2 mb-6">
                   <input
-                    className="flex-grow border border-gray-300 p-3 rounded-xl bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                    className="flex-grow border border-gray-300 p-3 rounded-xl bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm sm:text-base"
                     name="title"
                     value={form.title}
                     onChange={handleChange}
@@ -473,12 +474,12 @@ const ReminderForm = () => {
                   />
                 </div>
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                <label className="block text-sm sm:text-base mb-2 font-semibold text-gray-700">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <div className="relative mb-6">
                   <textarea
-                    className="w-full border border-gray-300 p-3 rounded-xl bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition h-28 resize-none pr-14"
+                    className="w-full border border-gray-300 p-3 rounded-xl bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition h-28 resize-none pr-14 text-sm sm:text-base"
                     name="content"
                     value={form.content}
                     onChange={handleChange}
@@ -518,12 +519,12 @@ const ReminderForm = () => {
                   </p>
                 )}
 
-                <label className="block text-sm mb-2 font-semibold text-gray-700">
+                <label className="block text-sm sm:text-base mb-2 font-semibold text-gray-700">
                   Priority <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="priority"
-                  className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                  className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm sm:text-base"
                   value={form.priority}
                   onChange={handleChange}
                 >
@@ -534,7 +535,7 @@ const ReminderForm = () => {
                 </select>
 
                 <div className="flex items-center justify-between mb-4">
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm sm:text-base font-semibold text-gray-700">
                     Assign To <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -547,7 +548,7 @@ const ReminderForm = () => {
                     />
                     <label
                       htmlFor="assignToMe"
-                      className="text-sm text-gray-700 cursor-pointer select-none"
+                      className="text-sm sm:text-base text-gray-700 cursor-pointer select-none"
                     >
                       Assign to me
                     </label>
@@ -556,7 +557,7 @@ const ReminderForm = () => {
 
                 <select
                   name="assignt_to"
-                  className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                  className="w-full border border-gray-300 p-3 mb-6 rounded-xl bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm sm:text-base"
                   value={form.assignt_to}
                   onChange={handleChange}
                   disabled={assignToMe}
@@ -569,34 +570,37 @@ const ReminderForm = () => {
                   ))}
                 </select>
 
-         <LocalizationProvider dateAdapter={AdapterDateFns}>
-  <div className="mb-6">
-    <label className="block text-sm mb-2 font-semibold text-gray-700">
-      Date & Time <span className="text-red-500">*</span>
-    </label>
-    <DateTimePicker
-      value={form.reminderDateTime}
-      onChange={(newValue) => 
-        setForm(prev => ({ ...prev, reminderDateTime: newValue }))
-      }
-      minDateTime={new Date()}
-      format="dd/MM/yyyy HH.mm.ss" // This is the format pattern
-      slotProps={{
-        textField: {
-          fullWidth: true,
-          variant: 'outlined',
-          className: 'bg-gray-50',
-        },
-      }}
-      className="w-full"
-    />
-  </div>
-</LocalizationProvider>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <div className="mb-6">
+                    <label className="block text-sm sm:text-base mb-2 font-semibold text-gray-700">
+                      Date & Time <span className="text-red-500">*</span>
+                    </label>
+                    <DateTimePicker
+                      value={form.reminderDateTime}
+                      onChange={(newValue) =>
+                        setForm(prev => ({ ...prev, reminderDateTime: newValue }))
+                      }
+                      minDateTime={new Date()}
+                      format="dd/MM/yyyy HH mm ss"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          variant: 'outlined',
+                          className: 'bg-gray-50 text-sm sm:text-base',
+                          inputProps: {
+                            className: 'p-3 rounded-xl border border-gray-300 bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition'
+                          }
+                        },
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                </LocalizationProvider>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition font-semibold"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition font-semibold w-full sm:w-auto text-sm sm:text-base"
                     disabled={submitting}
                   >
                     {submitting ? "Submitting..." : "Submit Reminder"}
@@ -604,10 +608,9 @@ const ReminderForm = () => {
                   {/* <button
                     type="button"
                     onClick={(e) => handleSubmit(e, "draft")}
-                    className="bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition font-semibold"
+                    className="bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition font-semibold w-full sm:w-auto text-sm sm:text-base"
                     disabled={submitting}
                   >
-                  
                     Save as Draft
                   </button> */}
                 </div>

@@ -44,7 +44,7 @@ export default function MasterForm({
   const additionalFieldsString = JSON.stringify(additionalFields);
 
   useEffect(() => {
-    console.log("[MasterForm] useEffect triggered. editingItem:", editingItem);
+    // console.log("[MasterForm] useEffect triggered. editingItem:", editingItem);
     if (editingItem) {
       const newFormData = {
         [payloadKey]: editingItem[modalKey] || '',
@@ -57,7 +57,7 @@ export default function MasterForm({
       setFormData(newFormData);
       setFormError(null);
       setFormLoading(false);
-      console.log("[MasterForm] Form set to EDIT mode. formData:", newFormData, "formLoading: false");
+      // console.log("[MasterForm] Form set to EDIT mode. formData:", newFormData, "formLoading: false");
     } else {
       const resetState = {
         [payloadKey]: '',
@@ -69,32 +69,32 @@ export default function MasterForm({
       setFormData(resetState);
       setFormError(null);
       setFormLoading(false);
-      console.log("[MasterForm] Form set to ADD mode. formData:", resetState, "formLoading: false");
+      // console.log("[MasterForm] Form set to ADD mode. formData:", resetState, "formLoading: false");
     }
   }, [editingItem, payloadKey, modalKey, additionalFieldsString]); // Use the stringified version here
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`[MasterForm] handleChange - Name: ${name}, Value: ${value}`);
+    // console.log(`[MasterForm] handleChange - Name: ${name}, Value: ${value}`);
     setFormData((prevData) => {
       const updatedData = {
         ...prevData,
         [name]: value,
       };
-      console.log("[MasterForm] formData updated:", updatedData);
+      // console.log("[MasterForm] formData updated:", updatedData);
       return updatedData;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("[MasterForm] handleSubmit called. Setting formLoading to true.");
+    // console.log("[MasterForm] handleSubmit called. Setting formLoading to true.");
     setFormLoading(true);
     setFormError(null);
 
     if (!formData[payloadKey].trim()) {
       setFormError(`Please enter a ${master.title.toLowerCase()} name.`);
-      console.log("[MasterForm] Validation failed. Setting formLoading to false.");
+      // console.log("[MasterForm] Validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
@@ -102,18 +102,18 @@ export default function MasterForm({
     const parsedCompanyId = companyId ? parseInt(companyId, 10) : null;
     const parsedUserId = userId ? parseInt(userId, 10) : null;
 
-    console.log("[MasterForm] Raw companyId from prop:", companyId, "Parsed:", parsedCompanyId);
-    console.log("[MasterForm] Raw userId from prop:", userId, "Parsed:", parsedUserId);
+    // console.log("[MasterForm] Raw companyId from prop:", companyId, "Parsed:", parsedCompanyId);
+    // console.log("[MasterForm] Raw userId from prop:", userId, "Parsed:", parsedUserId);
 
     if (parsedCompanyId === null || isNaN(parsedCompanyId)) {
       setFormError("Company ID is missing or invalid. Please log in again.");
-      console.log("[MasterForm] Company ID validation failed. Setting formLoading to false.");
+      // console.log("[MasterForm] Company ID validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
     if (parsedUserId === null || isNaN(parsedUserId)) {
       setFormError("User ID is missing or invalid. Please log in again.");
-      console.log("[MasterForm] User ID validation failed. Setting formLoading to false.");
+      // console.log("[MasterForm] User ID validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
@@ -128,7 +128,7 @@ export default function MasterForm({
         const itemId = editingItem[idKey];
         if (!itemId) {
           setFormError(`Item ID (${idKey}) is missing for update.`);
-          console.log("[MasterForm] Item ID missing for update. Setting formLoading to false.");
+          // console.log("[MasterForm] Item ID missing for update. Setting formLoading to false.");
           setFormLoading(false);
           return;
         }
@@ -170,29 +170,29 @@ export default function MasterForm({
       if (master.title === 'Sub Industry') {
         if (parentContext?.id) {
           finalPayload['iindustry_id'] = parentContext.id;
-          console.log(`[MasterForm] Adding iindustry_id from parentContext for POST: ${parentContext.id}`);
+          // console.log(`[MasterForm] Adding iindustry_id from parentContext for POST: ${parentContext.id}`);
         } else if (editingItem?.iindustry_id) {
           finalPayload['iindustry_id'] = editingItem.iindustry_id;
-          console.log(`[MasterForm] Retaining iindustry_id from editingItem for PUT: ${editingItem.iindustry_id}`);
+          // console.log(`[MasterForm] Retaining iindustry_id from editingItem for PUT: ${editingItem.iindustry_id}`);
         } else {
           console.warn("[MasterForm] Sub Industry operation without a parent industry ID.");
         }
       }
 
-      console.log("[MasterForm] Final Payload being sent:", finalPayload);
-      console.log(`[MasterForm] Request URL: ${requestUrl}`);
+      // console.log("[MasterForm] Final Payload being sent:", finalPayload);
+      // console.log(`[MasterForm] Request URL: ${requestUrl}`);
 
       if (editingItem) {
         console.log("[MasterForm] Submitting PUT request.");
         response = await axios.put(requestUrl, finalPayload);
         alert(`${master.title} updated successfully!`);
       } else {
-        console.log("[MasterForm] Submitting POST request.");
+        // console.log("[MasterForm] Submitting POST request.");
         response = await axios.post(requestUrl, finalPayload);
         alert(`${master.title} added successfully!`);
       }
 
-      console.log('[MasterForm] API Response:', response.data);
+      // console.log('[MasterForm] API Response:', response.data);
       onSaveSuccess();
     } catch (err) {
       console.error("[MasterForm] Error saving item:", err);
@@ -201,12 +201,12 @@ export default function MasterForm({
       }
       setFormError("Failed to save item: " + (err.response?.data?.message || err.message || "Unknown error."));
     } finally {
-      console.log("[MasterForm] Form submission complete. Setting formLoading to false.");
+      // console.log("[MasterForm] Form submission complete. Setting formLoading to false.");
       setFormLoading(false);
     }
   };
 
-  console.log("[MasterForm] Current formLoading state (render):", formLoading);
+  // console.log("[MasterForm] Current formLoading state (render):", formLoading);
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border border-blue-200 rounded-md bg-white shadow-sm">

@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { 
+import {
   Box,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  TextField
+  TextField,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
 import RemainderPage from "../pages/RemainderPage";
 import StatusBar from "./StatusBar";
 import LeadTimeline from "../Components/LeadTimeline";
-import ActionCard from "../Components/common/ActrionCard";
+import ActionCard from "../Components/common/ActrionCard"; // Typo: Should be ActionCard
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { FaPhone, FaWhatsapp } from "react-icons/fa";
+import { FaPhone, FaWhatsapp } from "react-icons/fa"; // Not used in this snippet but kept for completeness
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import Confetti from 'react-confetti';
+import Confetti from "react-confetti";
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
@@ -49,16 +49,16 @@ const LeadDetailView = () => {
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
-  //email templates 
-
+  const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
+  //email templates
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   // New state for email sending loading
   const [isSendingMail, setIsSendingMail] = useState(false);
 
   // Derived state
-  const isLeadActive = !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
+  const isLeadActive =
+    !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
@@ -66,7 +66,7 @@ const LeadDetailView = () => {
 
   const handleWonClick = () => {
     setShowRemarkDialog(true);
-    setRemarkData({ remark: '', projectValue: '' });
+    setRemarkData({ remark: "", projectValue: "" });
   };
 
   const handleRemarkSubmit = async () => {
@@ -271,6 +271,11 @@ const LeadDetailView = () => {
       setLoading(false);
     }
   };
+   useEffect(() => {
+        if (leadId) {
+            fetchLeadData();
+        }
+    }, [leadId]);
 
   const fetchLostReasons = async () => {
     try {
@@ -415,7 +420,7 @@ const LeadDetailView = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100 relative overflow-x-hidden">
+    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -425,35 +430,37 @@ const LeadDetailView = () => {
         />
       )}
 
-      <div className="w-full lg:w-1/4 p-2 sm:p-3 md:p-4">
+      {/* Left Column: Profile Card & Action Card */}
+      <div className="w-full lg:w-1/4 xl:w-1/5 p-2 sm:p-3 md:p-4">
         <div className="sticky top-4 z-10 space-y-4">
-          <ProfileCard 
-            leadId={leadId} 
-            isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true} 
+          <ProfileCard
+            leadId={leadId}
+            isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
           />
           {isLeadActive && <ActionCard leadId={leadId} />}
         </div>
       </div>
 
-      <div className="w-full md:w-full lg:w-full p-4">
-        <StatusBar 
-          leadId={leadId} 
-          leadData={leadData} 
-          isLost={isLost} 
-          isWon={isWon || immediateWonStatus || leadData?.bisConverted === true} 
+      {/* Right Column: Status Bar, Tabs, and Content */}
+      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+        <StatusBar
+          leadId={leadId}
+          leadData={leadData}
+          isLost={isLost}
+          isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
 
+        {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
           <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
             {["Activity", "Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx
+                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${tabIndex === idx
                     ? "bg-white shadow text-blue-600"
                     : "text-gray-500 hover:bg-white hover:text-blue-600"
-                }`}
+                  }`}
               >
                 {label}
               </button>
@@ -461,27 +468,31 @@ const LeadDetailView = () => {
           </div>
 
           {showActionButtons && (
-            <div className="flex gap-2 sm:gap-3 flex-wrap justify-end sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+            <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+            
               <button
-                onClick={() => setIsMailOpen(true)}
-                className="bg-white hover:bg-blue-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-full shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm"
-                title="Email"
-              >
-                <MdEmail size={16} className="hidden sm:block" /> 
-                <span>Email</span>
-              </button>
               
+                onClick={() => setIsMailOpen(true)}
+                className="bg-white hover:bg-yellow-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                title="Email"
+              > <div className="w-px h-5 bg-gray-300"></div>
+                <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} />
+                 <div className="w-px h-5 bg-gray-300"></div>
+                {/* <span>Email</span> */}
+              </button>
+               
+
               {!(leadData?.bisConverted === true) && (
                 <button
-                  className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow transition text-xs sm:text-sm"
+                  className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl shadow transition text-xs sm:text-sm md:text-base"
                   onClick={handleWonClick}
                 >
                   Won
                 </button>
               )}
-              
+
               <button
-                className="bg-red-100 text-red-600 hover:bg-red-200 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-full shadow-inner transition text-xs sm:text-sm"
+                className="bg-red-300 text-red-600 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl shadow-inner transition text-xs sm:text-sm md:text-base"
                 onClick={handleLostClick}
               >
                 Lost
@@ -490,11 +501,12 @@ const LeadDetailView = () => {
           )}
         </div>
 
+        {/* Tab Content */}
         <Box className="mt-4 relative z-0 w-full">
           {tabIndex === 0 && (
-            <LeadTimeline 
-              leadId={leadId} 
-              isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true} 
+            <LeadTimeline
+              leadId={leadId}
+              isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
             />
           )}
           {tabIndex === 1 && <Comments leadId={leadId} />}
@@ -502,6 +514,7 @@ const LeadDetailView = () => {
         </Box>
       </div>
 
+      {/* Remark Dialog for 'Won' */}
       <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
         <DialogTitle>Enter Won Details</DialogTitle>
         <DialogContent>
@@ -531,10 +544,11 @@ const LeadDetailView = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Lead Lost Reason Dialog */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-md sm:max-w-lg md:max-w-xl">
-            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
@@ -593,185 +607,172 @@ const LeadDetailView = () => {
           </div>
         </div>
       )}
-{isMailOpen && (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
-    style={{ backdropFilter: "blur(8px)" }}
-  >
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-md sm:max-w-full md:max-w-[90%] h-[90%] flex flex-col">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
-          <MdEmail className="text-black-600" size={24} />
-          Compose Email
-        </h2>
-        <button 
-          onClick={() => setIsMailOpen(false)}
-          className="text-gray-500 hover:text-gray-700"
+
+      {/* Email Compose Dialog */}
+      {isMailOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          style={{ backdropFilter: "blur(8px)" }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
+                <img src="../../public/images/detailview/email.svg" className="text-black-600" size={24} />
+                Compose Email
+              </h2>
+              <button
+                onClick={() => setIsMailOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-      <div className="flex flex-col md:flex-row gap-4 h-[70vh]">
-        {/* Templates Section */}
-        <div className="w-full md:w-1/2 p-4 rounded-xl border border-black-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
-            <div className="relative">
-              {/* <input
-                type="text"
-                placeholder="Search templates..."
-                className="pl-8 pr-3 py-1 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-              /> */}
-              {/* <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg> */}
-            </div>
-          </div>
+            <div className="flex flex-col md:flex-row gap-4 flex-grow">
+              {/* Templates Section */}
+              <div className="w-full md:w-1/2 lg:w-2/5 p-4 rounded-xl border border-black-200 overflow-hidden">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
+                </div>
 
-          {templatesLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 "></div>
-            </div>
-          ) : templates.length === 0 ? (
-            <div className="text-center py-8 text-blue-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <p>No templates available</p>
-            </div>
-          ) : (
-            <div className="space-y-3 h-[calc(100%-50px)] overflow-y-auto pr-2">
-              {templates.map((template) => (
-                <div
-                  key={template.mailTemplateId}
-                  className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-                  onClick={() => applyTemplate(template)}
+                {templatesLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 "></div>
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="text-center py-8 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <p>No templates available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-auto pr-2">
+                    {templates.map((template) => (
+                      <div
+                        key={template.mailTemplateId}
+                        className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+                        onClick={() => applyTemplate(template)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg">
+                            <MdEmail className="text-blue-600" size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold ">{template.mailTitle}</h4>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                              {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Email Form Section */}
+              <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendEmail();
+                  }}
+                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg">
-                      <MdEmail className="text-blue-600" size={18} />
-                    </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* To Field */}
                     <div>
-                      <h4 className="font-semibold ">{template.mailTitle}</h4>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
-                      </p>
+                      <label className="block text-sm font-medium text-gray-800 mb-1">To</label>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                          placeholder="example@email.com"
+                          value={sentTo}
+                          onChange={(e) => setSentTo(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Subject Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
+                      <input
+                        type="text"
+                        className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                        value={mailSubject}
+                        onChange={(e) => setMailSubject(e.target.value)}
+                        placeholder="Write subject..."
+                        required
+                      />
                     </div>
                   </div>
-                </div>
-              ))}
+
+                  {/* Message Editor */}
+                  <div className="flex-grow flex flex-col">
+                    <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
+                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
+                      <ReactQuill
+                        theme="snow"
+                        value={mailContent}
+                        onChange={setMailContent}
+                        modules={{
+                          ...modules,
+                          toolbar: [
+                            [{ header: [1, 2, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ color: [] }, { background: [] }],
+                            [{ list: 'ordered' }, { list: 'bullet' }],
+                            ['link'],
+                            ['clean'],
+                          ],
+                        }}
+                        formats={formats}
+                        className="h-full min-h-[100px] sm:min-h-[150px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[300px]"
+                        style={{ border: 'none' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMailOpen(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                      disabled={isSendingMail} // Disable button while sending
+                    >
+                      {isSendingMail ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <MdEmail size={16} />
+                          <span>Send Email</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Email Form Section */}
-       <div className="w-full md:w-2/3 flex flex-col">
-  <form
-    onSubmit={(e) => {
-      e.preventDefault();
-      sendEmail();
-    }}
-    className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl h-80px shadow-"
-  >
-    <div className="grid grid-cols-1 gap-4">
-      {/* To Field */}
-      <div>
-        <label className="block text-sm font-medium text-gray-800 mb-1">To</label>
-        <div className="relative">
-          <input
-            type="email"
-            className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-            placeholder="example@email.com"
-            value={sentTo}
-            onChange={(e) => setSentTo(e.target.value)}
-            required
-          />
-          
-        </div>
-      </div>
-
-      {/* Subject Field */}
-      <div>
-        <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
-        <input
-          type="text"
-          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-          value={mailSubject}
-          onChange={(e) => setMailSubject(e.target.value)}
-          placeholder="Write subject..."
-          required
-        />
-      </div>
+      )}
     </div>
-
-    {/* Message Editor */}
-    <div className="flex-grow flex flex-col h-100px">
-      <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
-      <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
-        <ReactQuill
-          theme="snow"
-          value={mailContent}
-          onChange={setMailContent}
-          modules={{
-            ...modules,
-            toolbar: [
-              [{ header: [1, 2, false] }],
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ color: [] }, { background: [] }],
-              [{ list: 'ordered' }, { list: 'bullet' }],
-              ['link'],
-              ['clean'],
-            ],
-          }}
-          formats={formats}
-          className="h-full min-h-[100px] sm:min-h-[100px]"
-          style={{ border: 'none' }}
-        />
-      </div>
-    </div>
-
-    {/* Action Buttons */}
-    <div className="flex justify-end space-x-3 pt-2">
-      <button
-        type="button"
-        onClick={() => setIsMailOpen(false)}
-        className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-        disabled={isSendingMail} // Disable button while sending
-      >
-        {isSendingMail ? (
-          <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>Sending...</span>
-          </>
-        ) : (
-          <>
-            <MdEmail size={16} />
-            <span>Send Email</span>
-          </>
-        )}
-      </button>
-    </div>
-  </form>
-</div>
-
-      </div> {/* This is the correct closing div for the flex-col md:flex-row gap-4 h-full */}
-    </div> {/* This is the correct closing div for the fixed inset-0 bg-black bg-opacity-50 ... */}
-
-    </div> // This is the final closing div for the component's top-level div
-
-)};
-</div>
-);
+  );
 };
-
 
 export default LeadDetailView;

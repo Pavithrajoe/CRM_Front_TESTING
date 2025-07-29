@@ -446,25 +446,25 @@ const LeadForm = ({ onClose, onSuccess }) => {
         error = "Lead Name is required";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Lead Name can only contain letters and spaces";
-      } else if (value.length > 40) {
-        error = "Lead Name cannot exceed 20 characters";
+      } else if (value.length > 100) {
+        error = "Lead Name cannot exceed 100 characters";
       }
     }
     if (name === "clead_address1") {
       if (!value) {
         error = "Lead Address is required";
-      } else if (value.length > 150) {
-        error = "Lead Address cannot exceed 150 characters";
+      } else if (value.length > 200) {
+        error = "Lead Address cannot exceed 200 characters";
       }
     }
     if (name === "clead_address2") {
-      if (value.length > 150) {
-        error = "Lead Address cannot exceed 150 characters";
+      if (value.length > 200) {
+        error = "Lead Address cannot exceed 200 characters";
       }
     }
     if (name === "clead_address3") {
-      if (value.length > 150) {
-        error = "Lead Address cannot exceed 150 characters";
+      if (value.length > 200) {
+        error = "Lead Address cannot exceed 200 characters";
       }
     }
     if (name === "cwebsite") {
@@ -479,8 +479,8 @@ const LeadForm = ({ onClose, onSuccess }) => {
         error = "Organization Name is required";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Organization Name can only contain letters and spaces";
-      } else if (value.length > 70) {
-        error = "Organization Name cannot exceed 70 characters";
+      } else if (value.length > 100) {
+        error = "Organization Name cannot exceed 100 characters";
       }
     }
 

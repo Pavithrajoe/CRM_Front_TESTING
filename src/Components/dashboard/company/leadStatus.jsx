@@ -130,7 +130,7 @@ const LeadStatusChart = () => {
 
   return (
     <div className="bg-white p-4 h-[80vh] rounded-lg shadow flex flex-col">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center ">
         <h2 className="text-lg font-semibold">Sales Pipeline Stages</h2>
         {/* Time Range Dropdown - Logic remains the same, not connected to data fetching here */}
         <div className="relative">
@@ -162,7 +162,7 @@ const LeadStatusChart = () => {
             No lead status data available.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%"> {/* Ensure chart fills its parent */}
+          <ResponsiveContainer width="100%" > {/* Ensure chart fills its parent */}
             <LineChart
               data={chartData}
               margin={{

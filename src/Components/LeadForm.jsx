@@ -434,8 +434,8 @@ const LeadForm = ({ onClose, onSuccess }) => {
       if (value && !emailRegex.test(value)) {
         error = "Invalid email format";
       }
-      else if (value.length > 50) {
-        error = "Lead Name cannot exceed 50 characters";
+      else if (value.length > 70) {
+        error = "Lead Name cannot exceed 70 characters";
       }
     }
     if (name === "cpincode" && value && !/^\d{6}$/.test(value)) {
@@ -446,7 +446,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
         error = "Lead Name is required";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Lead Name can only contain letters and spaces";
-      } else if (value.length > 20) {
+      } else if (value.length > 40) {
         error = "Lead Name cannot exceed 20 characters";
       }
     }

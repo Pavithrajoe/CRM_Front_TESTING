@@ -6,6 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints"; // Ensure this path is correct
 import Slide from '@mui/material/Slide';
 import { useNavigate } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 // Utility for Snackbar transitions
 function SlideTransition(props) {
@@ -575,27 +576,7 @@ const CalendarView = () => {
     }
   };
 
-  // // Navigation functions
-  // const goToDetail = (id) => {
-  //       navigate(`/leaddetailview/${id}`);
-  //   };
 
-  // const goToCalendarEventDetail = (id) => {
-  //   console.log(`Navigating to calendar event detail for ID: ${id}`);
-  //   if (id) {
-  //     // IMPORTANT: Replace '/calendareventdetail/${id}' with your actual route for calendar event details
-  //     navigate(`/leaddetailview/${id}`);
-  //   } else {
-  //     console.warn("Attempted to navigate to calendar event detail with a falsy ID:", id);
-  //     setSnackbar({
-  //       open: true,
-  //       message: 'Calendar Event ID not found for navigation.',
-  //       severity: 'warning'
-  //     });
-  //   }
-  // };
-
-  // Callback after creating an event to refresh data
   const handleItemCreated = () => {
     fetchRemindersAndEventsForSelectedDate(); // Refresh for current calendar date
     fetchAllUserReminders(); // Refresh for "All Reminders" list
@@ -645,10 +626,10 @@ const formatDateDMY = (dateString) => {
   return (
     <div>
       {/* Top Section: Calendar and Daily Reminders/Events */}
-      <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
+      <div className="flex w-full p-8 rounded-3xl bg-white/80 transition-transform duration-300">
         {/* Calendar Column */}
         <div className="w-1/2 flex flex-col mb-1 mr-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 transition-transform duration-300 hover:scale-[1.01]">
+          <div className="bg-white rounded-2xl p-6 transition-transform duration-300 hover:scale-[1.01]">
             <Calendar
               onChange={setSelectedDate}
               value={selectedDate}
@@ -705,7 +686,7 @@ const formatDateDMY = (dateString) => {
                 className="w-[180px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
               >
                 <FaPlus className="mr-2" />
-                Create Calendar Event
+                Create Event
               </button>
 
               <button
@@ -720,8 +701,9 @@ const formatDateDMY = (dateString) => {
         </div>
 
         {/* Reminders and Calendar Events for Selected Date Column */}
-        <div className="max-h-[395px] overflow-y-auto bg-white rounded-2xl shadow-lg p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
-<h2 className="text-xl font-bold text-gray-800">Reminders for {formatDateDMY(selectedDate)}</h2>          <div className="flex gap-6 text-sm mb-4 text-gray-600">
+        <div className="max-h-[418px] overflow-y-auto bg-white rounded-2xl p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
+<h2 className="text-xl font-bold text-gray-800">Reminders for {formatDateDMY(selectedDate)}</h2>       
+   <div className="flex gap-6 text-sm mb-4 text-gray-600">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Reminder
             </div>
@@ -748,18 +730,23 @@ const formatDateDMY = (dateString) => {
                       <FaRegSquare className="text-lg" />
                     )}
                   </button>
+<Link to={`/leaddetailview/${reminder.ilead_id}`} className="flex-1 space-y-1 p-2 rounded-md transition">
 
                   <div className="flex-1 space-y-1">
                     <h3 className="text-md font-semibold text-gray-800">{reminder.cremainder_title}</h3>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUserAlt className="mr-2 text-xs" />
-                      Created By: <span className="font-medium">{reminder.created_by}</span> {/* Assuming 'created_by' exists */}
+                      Created By: <span className="font-medium">{reminder.icreated_by}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUserAlt className="mr-2 text-xs" />
                       Assigned To: <span className="font-medium">{reminder.assigned_to}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{reminder.cremainder_content}</p>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <FaUserAlt className="mr-2 text-xs" />
+                      Lead Name: <span className="font-medium">{reminder.ilead_id}</span>
+                    </div>
+                    <p className="font-semibold text-gray-600">{reminder.cremainder_content}</p>
                     <div
                       className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold
                       ${reminder.priority === 'High'
@@ -772,6 +759,7 @@ const formatDateDMY = (dateString) => {
                       Priority: {reminder.priority}
                     </div>
                   </div>
+                  </Link>
 
                   <div className="text-xs text-black bg-yellow-400 px-3 py-1 rounded-full flex items-center">
                     <FaClock className="mr-1" />
@@ -784,7 +772,8 @@ const formatDateDMY = (dateString) => {
             <p className="text-gray-500">No reminders found for this date.</p>
           )}
 
-<h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {formatDateDMY(selectedDate)}</h2>          {loading ? (
+<h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {formatDateDMY(selectedDate)}</h2>       
+   {loading ? (
             <div className="flex justify-center items-center h-full">
               <CircularProgress size={30} color="inherit" />
             </div>
@@ -818,10 +807,10 @@ const formatDateDMY = (dateString) => {
       </div>
 
       {/* Bottom Section: All Reminders/Calendar Events Table */}
-      <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
+      <div className="w-full rounded-xl p-5 bg-white border border-gray-200 mt-5">
         <div className="flex border-b border-gray-200 mb-6">
           <button
-            className={`py-3 px-6 text-lg font-semibold ${activeTab === 'reminders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
+            className={`py-3 px-6 text-lg font-bold ${activeTab === 'reminders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
               } transition-colors duration-200`}
             onClick={() => {
               setActiveTab('reminders');
@@ -928,15 +917,15 @@ const formatDateDMY = (dateString) => {
             <table className="min-w-full text-sm text-gray-800 table-auto">
               <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
                 <tr>
-                  <th className="px-4 py-3 border-b text-center w-[50px]">S.no</th>
+                  <th className="px-4 py-3 border-b text-left w-[10%]">S.no</th>
                   {activeTab === 'reminders' ? (
                     <>
 
                       <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
                       <th className="px-4 py-3 border-b text-left w-[15%]">Reminder</th>
                       <th className="px-4 py-3 border-b text-left w-[12%]">Created by</th> 
-                      <th className="px-4 py-3 border-b text-left w-[12%]">Assigned to</th> 
-                      <th className="px- py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
+                      <th className="px-4 py-3 border-b text-left w-[14%]">Assigned to</th> 
+                      <th className="px- py-3 border-b text-left w-[12%] whitespace-nowrap">Date</th>
                     </>
                   ) : (
                     <>
@@ -956,7 +945,7 @@ const formatDateDMY = (dateString) => {
                     onClick={
                       activeTab === 'reminders' && item.ilead_id
                         ? () => {
-                          console.log("Clicked reminder row. Navigating to lead ID:", item.ilead_id);
+                          // console.log("Clicked reminder row. Navigating to lead ID:", item.ilead_id);
                           goToDetail(item.ilead_id);
                         }
                         : activeTab === 'calendarEvents' && item.icalender_event
@@ -968,13 +957,13 @@ const formatDateDMY = (dateString) => {
                     }
                     className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out cursor-pointer"
                   >
-                    <td className="px-4 py-3 border-b text-center font-medium align-top">
+                    <td className="px-4 py-3 border-b text-left font-medium align-top">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
                     {activeTab === 'reminders' ? (
                       <>
 
-                        <td className="px-4 py-3 border-b align-top break-words">
+                        <td className="px-4 py-3 border-b align-left break-words">
                           {item.lead_name}
                         </td>
                         

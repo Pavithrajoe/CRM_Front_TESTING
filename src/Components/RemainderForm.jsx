@@ -302,7 +302,7 @@ const ReminderForm = () => {
 
 
   return (
-    <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full md:w-[90%] lg:w-[85%] font-sans text-base leading-relaxed text-gray-900 mx-auto">
+    <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full  font-sans text-base leading-relaxed text-gray-900 mx-auto">
       <ToastContainer position="top-right" autoClose={5000} />
 
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">

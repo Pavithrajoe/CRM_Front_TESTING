@@ -99,7 +99,7 @@ export default function LeadTimeline({ leadId }) {
   return (
     <div className="relative  w-full px-4 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Container for timeline content - ensures centering and max width */}
-      <div className="max-w-5xl h-[130vh] mx-auto"> 
+      <div className=" h-[130vh] mx-auto"> 
         <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">Lead Activity Timeline</h2>
         
         {loading && (
@@ -153,7 +153,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-end pr-8">
                   {isLeft && (
                     <article
-                      className="bg-white border border-blue-500 border-t-8 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >
@@ -222,7 +222,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-start pl-8">
                   {!isLeft && (
                     <article
-                      className="bg-white border border-blue-600 border-b-8 rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >

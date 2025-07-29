@@ -332,7 +332,7 @@ const fetchTargetMetrics = useCallback(async () => {
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200 h-[350px] rounded-lg overflow-y-scroll">
               <thead>
-                <tr className="bg-gray-100 text-left text-gray-600 uppercase text-xs sm:text-sm leading-normal">
+                <tr className="bg-gray-100 text-left uppercase text-xs sm:text-sm leading-normal">
                   <th className="p-3 sm:p-4 border-b border-gray-200">S.No</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned To</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned By</th>
@@ -346,24 +346,14 @@ const fetchTargetMetrics = useCallback(async () => {
               </thead>
               <tbody className="text-gray-700 text-sm font-light">
                 {tableMetrics.map((row, index) => (
-                  <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{index + 1}</td>
+                  <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 font-semibold">
+                    <td className="p-3 whitespace-nowrap">{index + 1}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedTo}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedBy}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.targetValue.toLocaleString('en-IN')}</td>
-                    {/* <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.achieved.toLocaleString('en-IN')}</td> */}
                     <td className="p-3 sm:p-4 whitespace-nowrap font-medium">{row.completed}%</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.fromDate}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">{row.toDate}</td>
-                    {/* <td className="p-3 sm:p-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        row.status === "Assigned" ? "bg-blue-100 text-blue-700" :
-                        row.status === "Completed" ? "bg-green-100 text-green-700" :
-                        "bg-gray-100 text-gray-700"
-                      }`}>
-                        {row.status}
-                      </span>
-                    </td> */}
                   </tr>
                 ))}
                 {tableMetrics.length === 0 && (

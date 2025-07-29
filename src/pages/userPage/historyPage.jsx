@@ -144,7 +144,7 @@ function HistoryDashboard({ userId }) {
                         <div className="text-base text-blue-800 font-semibold mb-2">Total Logs</div>
                         <div className="text-2xl font-bold text-blue-900 mb-2">{summaryMetrics.totalLogsByUser.toLocaleString()}</div>
                         <div className="flex items-center text-sm text-green-600 font-medium">
-                            <span className="mr-1 text-lg">&#x25B2;</span>+Overview
+                            {/* <span className="mr-1 text-lg">&#x25B2;</span>+Overview */}
                         </div>
                     </div>
                     <div className="bg-gradient-to
@@ -152,21 +152,21 @@ function HistoryDashboard({ userId }) {
                         <div className="text-base text-green-800 font-semibold mb-2">Total Activities</div>
                         <div className="text-2xl font-bold text-green-900 mb-2">{summaryMetrics.totalActivityByUser.toLocaleString()}</div>
                         <div className="flex items-center text-sm text-green-600 font-medium">
-                            <span className="mr-1 text-lg">&#x25B2;</span>+Overview
+                            {/* <span className="mr-1 text-lg">&#x25B2;</span>+Overview */}
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-md border border-yellow-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl border border-yellow-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="text-base text-yellow-800 font-semibold mb-2">Total Reminders</div>
                         <div className="text-2xl font-bold text-yellow-900 mb-2">{summaryMetrics.totalReminder.toLocaleString()}</div>
                         <div className="flex items-center text-sm text-green-600 font-medium">
-                            <span className="mr-1 text-lg">&#x25B2;</span>+Overview
+                            {/* <span className="mr-1 text-lg">&#x25B2;</span>+Overview */}
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-md border border-purple-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="text-base text-purple-800 font-semibold mb-2">Total Calendar Events</div>
                         <div className="text-2xl font-bold text-purple-900 mb-2">{summaryMetrics.totalCalendarEvent.toLocaleString()}</div>
                         <div className="flex items-center text-sm text-green-600 font-medium">
-                            <span className="mr-1 text-lg">&#x25B2;</span>+Overview
+                            {/* <span className="mr-1 text-lg">&#x25B2;</span>+Overview */}
                         </div>
                     </div>
                 </div>
@@ -177,32 +177,32 @@ function HistoryDashboard({ userId }) {
                     {/* Removed "View All" link as per your original code's comment */}
                 </div>
 
-                <div className="overflow-x-auto shadow-lg overflow-y-scroll h-[40vh]  rounded-xl border border-gray-200">
+                <div className="overflow-x-auto overflow-y-scroll h-[45vh]  rounded-xl border border-gray-200">
                     <table className="min-w-full divide-y divide-gray-200 bg-white overflow-y-scroll">
                         <thead className="bg-gray-50 font-semibold text-lg">
                             <tr>
                                 
-                                <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">S.No</th>
-                                  <th scope="col" className="px-6 py-3 text-center break-words font-semibold text-lg text-gray-800 uppercase tracking-wider">Lead Name</th>
-                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Reminder Title</th>
-                              
-                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Priority</th>
-                                <th scope="col" className="px-6 py-3 text-center break-words  font-semibold text-lg text-gray-800 uppercase tracking-wider">Timestamp</th>
+                                <th scope="col" className="px-6 py-3 text-left break-words font-bold text-sm text-gray-800 uppercase ">S.No</th>
+                                  <th scope="col" className="px-6 py-3 text-left break-words font-bold text-sm text-gray-800 uppercase ">Lead Name</th>
+                                <th scope="col" className="px-6 py-3 text-left break-words  font-bold text-sm text-gray-800 uppercase ">Reminder Title</th>
+                                <th scope="col" className="px-6 py-3 text-left break-words  font-bold text-sm text-gray-800 uppercase ">Priority</th>
+                                <th scope="col" className="px-6 py-3 text-left break-words  font-bold text-sm text-gray-800 uppercase ">Timestamp</th>
+
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {activityData.length > 0 ? activityData.map((item, index) => (
                                 <tr key={item.id || `activity-${index}`} className="hover:bg-blue-50 transition-colors duration-150 ease-in-out">
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm font-medium text-gray-900">{index + 1}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.lead_name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-left break-words  text-sm font-medium text-gray-900">{index + 1}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-left  break-words text-sm text-gray-700">{item.lead_name}</td>
 
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700 capitalize">{item.activitytype?.replace(/_/g, ' ')}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words text-sm text-gray-700">{item.priority || '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center break-words  text-sm text-gray-700">{formatDateTime(item.activitytimestamp)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-left  break-words  text-sm text-gray-700 capitalize">{item.activitytype?.replace(/_/g, ' ')}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-left  break-words text-sm text-gray-700">{item.priority || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-left  break-words  text-sm text-gray-700">{formatDateTime(item.activitytimestamp)}</td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="5" className="text-center py-8 text-lg text-gray-500">No recent activity found.</td>
+                                    <td colSpan="5" className="text-left py-8 text-lg text-gray-500">No recent activity found.</td>
                                 </tr>
                             )}
                         </tbody>

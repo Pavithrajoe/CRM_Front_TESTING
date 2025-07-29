@@ -365,14 +365,14 @@ function AcheivementDashboard({ userId }) {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto overflow-y-scroll h-[550px] shadow-lg rounded-lg border border-gray-200">
+                <div className="overflow-x-auto overflow-y-scroll h-[590px] rounded-lg border border-gray-200">
                     <table className="historical-table w-full border-collapse">
                         <thead>
                             <tr className="bg-gray-50">
-                                <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">S.No</th>
-                                <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Project Values</th>
-                                <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Created Date</th>
-                                <th className="p-4 text-center border-b border-gray-200 font-semibold text-gray-700 uppercase text-sm whitespace-nowrap">Conversion Time</th> 
+                                <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">S.No</th>
+                                <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Project Values</th>
+                                <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Created Date</th>
+                                <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Conversion Time</th> 
                             </tr>
                         </thead>
                         <tbody>
@@ -380,23 +380,23 @@ function AcheivementDashboard({ userId }) {
                             {Array.isArray(achievements.historicalRevenueData) && achievements.historicalRevenueData.length > 0 ? (
                                 achievements.historicalRevenueData.map((row, index) => (
                                     <tr key={row.iProject_id || index} className="hover:bg-gray-50 transition-colors duration-150">
-                                        <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                        <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {index + 1}
                                         </td>
-                                        <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                        <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatCurrency(row.iproject_value)}
                                         </td>
-                                        <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                        <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatDate(row.dcreated_dt)}
                                         </td>
-                                        <td className={`p-4 text-center border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                        <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatTime(row.convertToDealTime)} 
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="p-6 text-center text-gray-500 bg-white">No historical revenue data available for the selected dates.</td>
+                                    <td colSpan="4" className="p-6 text-left text-gray-500 bg-white">No historical revenue data available for the selected dates.</td>
                                 </tr>
                             )}
                         </tbody>

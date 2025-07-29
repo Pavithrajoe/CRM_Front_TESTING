@@ -576,8 +576,8 @@ export default function CompanyMaster() {
 
     // --- Main Content (renders only if authentication is successful and IDs are available) ---
     return (
-        <div className="px-6 py-10 bg-gradient-to-b from-blue-50 via-white to-blue-100 min-h-screen">
-            <h1 className="text-3xl font-extrabold mb-10 text-center text-blue-800">Company Master Settings</h1>
+        <div className="px-6 py-10 min-h-screen">
+            <h1 className="text-3xl font-extrabold mb-10 text-center">Company Master Settings</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                 {MASTER_CONFIG.map((master, index) => (

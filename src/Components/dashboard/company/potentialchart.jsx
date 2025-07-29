@@ -133,7 +133,7 @@ const PotentialChart = () => {
                 outerRadius={120} // Increased outer radius for a bigger chart
                 paddingAngle={3} // Slightly reduced padding for tighter fit if many slices
                 dataKey="value"
-                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} // Display name and percentage
+                label={({ name, percent }) => `${name} (${(percent)}%)`} // Display name and percentage
                 labelLine={true} // Ensure label lines are shown
                 // Added a style to the label to make it larger
                 labelStyle={{ fontSize: '14px', fill: '#333' }}

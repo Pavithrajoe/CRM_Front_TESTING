@@ -181,7 +181,7 @@ const Comments = () => {
 
   return (
    <div className="w-full overflow-x-hidden h-[100vh] shadow rounded bg-[#f8f8f8]" >
-    <div className="relative bg-white mt-10 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] md:w-[95%] lg:w-[90%] xl:w-[95%] 2xl:w-[80%] mx-auto">
+    <div className="relative bg-white mt-10 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%]  lg:w-[90%] xl:w-[95%] mx-auto">
       {/* Header with Search and New Comment Button */}
       <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-3 sm:gap-0">
         <input

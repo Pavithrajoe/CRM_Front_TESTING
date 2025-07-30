@@ -177,7 +177,7 @@ const fetchTargetMetrics = useCallback(async () => {
     setLoadingTable(false);
   }
 }, [userId, selectedFromDate, selectedToDate]);
-
+~
   useEffect(() => {
     if (!userId) {
       setOverallError("User ID is missing. Cannot load dashboard.");

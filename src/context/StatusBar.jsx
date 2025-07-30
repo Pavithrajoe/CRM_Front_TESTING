@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react'; // Import X, Calendar, User icons
+import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
 import {
   Dialog,
   DialogTitle,
@@ -8,14 +8,12 @@ import {
   DialogActions,
   Button,
   Autocomplete,
-  IconButton, // Import IconButton for the close button
+  IconButton,
 } from '@mui/material';
 import { useToast } from '../context/ToastContext';
 import Confetti from 'react-confetti';
 import axios from 'axios';
 import { ENDPOINTS } from '../api/constraints';
-
-// Import from @mui/x-date-pickers
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -28,15 +26,15 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [statusRemarks, setStatusRemarks] = useState([]);
   const [error, setError] = useState(null);
   const [stageStatuses, setStageStatuses] = useState({});
-
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogValue, setDialogValue] = useState({
     demoSessionType: '',
-    demoSessionStartTime: null, // Change to null for initial state with DateTimePicker
-    demoSessionEndTime: null, // Change to null
+    demoSessionStartTime: null,
+    demoSessionEndTime: null,
     notes: '',
     place: '',
     demoSessionAttendees: [],
+    presentedByUsers: [],
   });
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -46,6 +44,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
   const [remarkStageId, setRemarkStageId] = useState(null);
   const [selectedRemark, setSelectedRemark] = useState(null);
+  const [demoSessions, setDemoSessions] = useState([]);
 
   const fetchStages = async () => {
     try {
@@ -98,9 +97,25 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }
   };
 
+  const fetchDemoSessions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${ENDPOINTS.DEMO_SESSION}?leadId=${leadId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setDemoSessions(response.data.Message || []);
+    } catch (error) {
+      console.error('Error fetching demo sessions:', error.message);
+    }
+  };
+
   useEffect(() => {
     fetchStages();
     fetchUsers();
+    fetchDemoSessions();
   }, []);
 
   useEffect(() => {
@@ -110,12 +125,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }
   }, [stages, leadData]);
 
-  // Helper function to format date to DD/MM/YYYY
   const formatDateOnly = dateString => {
     if (!dateString) return '-';
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -142,11 +156,12 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     if (stageName?.toLowerCase().includes('demo')) {
       setDialogValue({
         demoSessionType: '',
-        demoSessionStartTime: new Date(), // Initialize with current Date object
-        demoSessionEndTime: null, // Initialize as null
+        demoSessionStartTime: new Date(),
+        demoSessionEndTime: null,
         notes: '',
         place: '',
         demoSessionAttendees: [],
+        presentedByUsers: [],
       });
       setOpenDialog(true);
       return;
@@ -202,6 +217,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           notes,
           place,
           demoSessionAttendees,
+          presentedByUsers,
         } = dialogValue;
 
         if (
@@ -210,13 +226,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           !demoSessionEndTime ||
           !notes ||
           !place ||
-          !demoSessionAttendees.length
+          !demoSessionAttendees.length ||
+          !presentedByUsers.length
         ) {
           showToast('error', 'Please fill all mandatory demo session fields');
           return;
         }
 
-        // demoSessionStartTime and demoSessionEndTime are now Date objects
         if (demoSessionStartTime >= demoSessionEndTime) {
           showToast('error', 'Start time must be earlier than end time');
           return;
@@ -224,12 +240,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
         const body = {
           demoSessionType,
-          demoSessionStartTime: demoSessionStartTime.toISOString(), // Convert to ISO string for API
-          demoSessionEndTime: demoSessionEndTime.toISOString(), // Convert to ISO string for API
+          demoSessionStartTime: demoSessionStartTime.toISOString(),
+          demoSessionEndTime: demoSessionEndTime.toISOString(),
           notes,
           place,
           leadId: parseInt(leadId),
           demoSessionAttendees: demoSessionAttendees.map(u => ({ attendeeId: u.iUser_id })),
+          presentedByUsers: presentedByUsers.map(u => ({ presenetedUserId: u.iUser_id })),
         };
 
         await axios.post(`${ENDPOINTS.DEMO_SESSION_DETAILS}`, body, {
@@ -335,12 +352,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      {/* Main Status Bar Container - Explicitly sets width and centers it */}
       <div className="w-11/12 md:w-5/6 lg:w-4/5 xl:w-[90%] mx-auto px-4 py-6">
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
-        {/* This flex container now explicitly takes w-full to ensure it uses all available space */}
-        <div className="flex items-center justify-between  w-full">
+        <div className="flex items-center justify-between w-full">
           {stages.map((stage, index) => {
             const isCompleted = index < currentStageIndex;
             const isActive = index === currentStageIndex;
@@ -386,14 +401,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     )}
                   </span>
                 </div>
-                {/* Add connecting line if it's not the last stage */}
                 {index < stages.length - 1 && (
                   <div
                     className={`flex-1 h-1 mx-2 -mt-12 z-0
                       ${
                         isCompleted
-                          ? 'border-t-2 border-dotted border-green-600' // Dotted green line for completed
-                          : 'border-t-2 border-dotted border-gray-300' // Dotted gray line for not completed
+                          ? 'border-t-2 border-dotted border-green-600'
+                          : 'border-t-2 border-dotted border-gray-300'
                       }`}
                   ></div>
                 )}
@@ -413,7 +427,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           </div>
         )}
 
-        {/* Dialogs for stage info and remarks */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Enter Details</DialogTitle>
           <DialogContent>
@@ -435,7 +448,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                         </span>
                       }
                       sx={{ mt: 2 }}
-                      required // Added required
+                      // required
                       InputLabelProps={{ shrink: true }}
                     />
                   )}
@@ -450,13 +463,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
                   }
-                  format="dd/MM/yyyy hh:mm a" // Explicitly set display format
+                  format="dd/MM/yyyy HH:MM A"
                   slotProps={{
                     textField: {
                       fullWidth: true,
                       sx: { mt: 2 },
                       InputLabelProps: { shrink: true },
-                      required: true, // Added required
+                      // required: true,
                     },
                   }}
                 />
@@ -470,13 +483,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
                   }
-                  format="dd/MM/yyyy hh:mm a" // Explicitly set display format
+                  format="dd/MM/yyyy hh:mm a"
                   slotProps={{
                     textField: {
                       fullWidth: true,
                       sx: { mt: 2 },
                       InputLabelProps: { shrink: true },
-                      required: true, // Added required
+                      // required: true,
                     },
                   }}
                 />
@@ -492,7 +505,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   sx={{ mt: 2 }}
                   value={dialogValue.notes || ''}
                   onChange={e => setDialogValue(prev => ({ ...prev, notes: e.target.value }))}
-                  required // Added required
+                  // required
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
@@ -505,7 +518,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   sx={{ mt: 2 }}
                   value={dialogValue.place || ''}
                   onChange={e => setDialogValue(prev => ({ ...prev, place: e.target.value }))}
-                  required // Added required
+                  // required
                   InputLabelProps={{ shrink: true }}
                 />
                 <Autocomplete
@@ -526,7 +539,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                         </span>
                       }
                       sx={{ mt: 2 }}
-                      required // Added required
+                      // required
+                    />
+                  )}
+                />
+                <Autocomplete
+                  multiple
+                  options={users}
+                  getOptionLabel={option => option?.cFull_name || ''}
+                  isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+                  value={dialogValue.presentedByUsers || []}
+                  onChange={(e, newValue) =>
+                    setDialogValue(prev => ({ ...prev, presentedByUsers: newValue }))
+                  }
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label={
+                        <span>
+                          Presented By <span className="text-red-600">*</span>
+                        </span>
+                      }
+                      sx={{ mt: 2 }}
+                      // required
                     />
                   )}
                 />
@@ -543,7 +578,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 value={dialogValue}
                 onChange={e => setDialogValue(e.target.value)}
                 sx={{ mt: 2 }}
-                required // Added required
+                // required
                 InputLabelProps={{ shrink: true }}
               />
             )}
@@ -568,7 +603,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               fullWidth
               multiline
               rows={3}
-              required // Added required
+              // required
               value={remarkData.remark}
               onChange={e => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
               sx={{ mt: 2 }}
@@ -602,8 +637,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
                   )}
                   <div
-                    // Individual remark card width: adapted to fill 90% of the overall parent width divided by ~5 cards
-                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] min-w-[200px] max-w-[350px] shadow-xxl  rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
+                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] min-w-[200px] max-w-[350px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
                     onClick={() => setSelectedRemark(remark)}
                   >
                     <div className="space-y-2 text-sm">
@@ -627,14 +661,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           </div>
         )}
 
-        {/* Timeline Detail Dialog (Updated from Remark Details) */}
         <Dialog
           open={!!selectedRemark}
           onClose={() => setSelectedRemark(null)}
           PaperProps={{
             sx: {
-              borderRadius: '18px', // Rounded corners for the entire dialog
-              overflow: 'hidden', // Ensure content respects the rounded corners
+              borderRadius: '18px',
+              overflow: 'hidden',
             },
           }}
         >
@@ -643,8 +676,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '16px 24px 0', // Adjust padding for title
-              position: 'relative', // For absolute positioning of close button
+              padding: '16px 24px 0',
+              position: 'relative',
               color: '#333',
               fontSize: '1.25rem',
               fontWeight: 'bold',
@@ -659,7 +692,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 right: 8,
                 top: 8,
                 color: theme => theme.palette.grey[500],
-                backgroundColor: 'rgba(0,0,0,0.05)', // Subtle background for the 'x' button
+                backgroundColor: 'rgba(0,0,0,0.05)',
                 borderRadius: '0%',
                 '&:hover': {
                   backgroundColor: 'rgba(0,0,0,0.1)',
@@ -670,46 +703,38 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             </IconButton>
           </DialogTitle>
           <DialogContent
-            // Removed 'dividers' as it creates lines that clash with the desired design
             sx={{
-              padding: '24px', // Standard padding
+              padding: '24px',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center', // Center content horizontally
-              textAlign: 'center', // Center text within content
-              minWidth: { xs: '90%', sm: '350px', md: '400px' }, // Adjusted min-width for the new layout
-              maxWidth: '450px', // Adjusted max-width
+              alignItems: 'center',
+              textAlign: 'center',
+              minWidth: { xs: '90%', sm: '350px', md: '400px' },
+              maxWidth: '450px',
             }}
           >
             {selectedRemark && (
               <>
-                {/* Circular Icon/Status Indicator */}
                 <div
                   className="w-24 h-24 rounded-full flex items-center justify-center mb-4"
                   style={{
-                    backgroundColor: '#4CAF50', // Green background as in the image
-                    // border: '4px #F0F4F8', // Lighter border
-                    boxShadow: '0px 5px 15px rgba(0,0,0,0.1)', // Subtle shadow
+                    backgroundColor: '#4CAF50',
+                    boxShadow: '0px 5px 15px rgba(0,0,0,0.1)',
                   }}
                 >
-                  {/* You can customize this icon based on the status name if needed */}
-                  {/* For now, just a generic 'NEW' text or a checkmark */}
                   <span className="text-white text-base font-semibold">
                     {selectedRemark.status_name || '-'}
                   </span>
                 </div>
 
-                {/* Status Name */}
                 <p className="text-xl font-bold text-gray-900 mb-4">
                   {selectedRemark.status_name || '-'}
                 </p>
 
-                {/* Main Remark Content */}
                 <p className="text-sm text-gray-700 break-words w-3/4 p-6 leading-relaxed mb-6">
                   {selectedRemark.lead_status_remarks}
                 </p>
 
-                {/* Date and Created By at the bottom */}
                 <div className="w-full flex justify-between items-center text-gray-600 text-xs">
                   <div className="flex items-center gap-1">
                     <Calendar size={16} className="text-gray-900" />
@@ -725,10 +750,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               </>
             )}
           </DialogContent>
-          {/* DialogActions are not needed if the 'x' button is the only action */}
-          {/* <DialogActions>
-            <Button onClick={() => setSelectedRemark(null)}>Close</Button>
-          </DialogActions> */}
         </Dialog>
 
         {showConfetti && <Confetti />}

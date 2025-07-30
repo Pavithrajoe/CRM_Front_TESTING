@@ -37,11 +37,10 @@ const DemoSessionDetails = ({ leadId }) => {
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMessage, setSnackMessage] = useState('');
   const [snackSeverity, setSnackSeverity] = useState('success');
-  // New state to store original attendees when dialog opens
   const [originalAttendees, setOriginalAttendees] = useState([]);
+  const [originalPresenters, setOriginalPresenters] = useState([]);
 
   const fetchDemoDetails = async () => {
-    // console.log(`[Frontend Request] Attempting to fetch for leadId: ${leadId}`);
     if (!leadId) {
       console.warn("fetchDemoDetails: leadId is undefined or null. Aborting fetch.");
       setSessions([]);
@@ -53,8 +52,6 @@ const DemoSessionDetails = ({ leadId }) => {
       const res = await axios.get(`${ENDPOINTS.DEMO_SESSION_GET}?leadId=${leadId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      // console.log('Raw GET Demo Session API Response:', res.data);
 
       if (res.data.Message && Array.isArray(res.data.Message) && res.data.Message.length > 0) {
         const rawSessionData = res.data.Message[0];
@@ -68,6 +65,7 @@ const DemoSessionDetails = ({ leadId }) => {
           return;
         }
 
+        // Process attendees
         const uniqueAttendeesMap = new Map();
         (rawSessionData.attendees || []).forEach(att => {
             if (uniqueAttendeesMap.has(att.attendeeId)) {
@@ -76,6 +74,18 @@ const DemoSessionDetails = ({ leadId }) => {
                 }
             } else {
                 uniqueAttendeesMap.set(att.attendeeId, att);
+            }
+        });
+
+        // Process presenters
+        const uniquePresentersMap = new Map();
+        (rawSessionData.presedtedBy || []).forEach(pres => {
+            if (uniquePresentersMap.has(pres.presented_by)) {
+                if (pres.idemo_session_presented_by && !uniquePresentersMap.get(pres.presented_by).idemo_session_presented_by) {
+                    uniquePresentersMap.set(pres.presented_by, pres);
+                }
+            } else {
+                uniquePresentersMap.set(pres.presented_by, pres);
             }
         });
 
@@ -88,8 +98,15 @@ const DemoSessionDetails = ({ leadId }) => {
                 cFull_name: att.user?.cFull_name || 'Unnamed User'
             }
           })),
+          presenters: Array.from(uniquePresentersMap.values()).map(pres => ({
+            idemo_session_presented_by: pres.idemo_session_presented_by,
+            user: {
+                iUser_id: pres.presented_by,
+                cFull_name: pres.user?.cFull_name || 'Unnamed User'
+            }
+          })),
         };
-        // console.log('Successfully formatted session for state:', formattedSession);
+        
         setSessions([formattedSession]);
       } else {
         console.warn("API response 'Message' is empty or not an array. Response:", res.data);
@@ -118,7 +135,6 @@ const DemoSessionDetails = ({ leadId }) => {
           ...user,
           cFull_name: user.cFull_name || `User ID ${user.iUser_id}`
       })) || []);
-      // console.log('Fetched Users:', res.data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       setSnackMessage('Failed to load user list.');
@@ -134,9 +150,10 @@ const DemoSessionDetails = ({ leadId }) => {
     return date.toISOString().slice(0, 16);
   };
 
-  // Opens the edit dialog and initializes formData with the selected session's data
   const openEditDialog = (session) => {
     setSelectedSession(session);
+    
+    // Process attendees
     const initialAttendeesForForm = (session.attendees || [])
       .map(att => ({
           iUser_id: att.user.iUser_id,
@@ -145,29 +162,44 @@ const DemoSessionDetails = ({ leadId }) => {
       }))
       .filter(Boolean);
     
-    // Store the original attendees
+    // Process presenters
+    const initialPresentersForForm = (session.presenters || [])
+      .map(pres => ({
+          iUser_id: pres.user.iUser_id,
+          cFull_name: pres.user.cFull_name,
+          idemo_session_presented_by: pres.idemo_session_presented_by
+      }))
+      .filter(Boolean);
+
     setOriginalAttendees(initialAttendeesForForm);
+    setOriginalPresenters(initialPresentersForForm);
 
     setFormData({
       ...session,
       demoSessionAttendees: initialAttendeesForForm,
+      presentedByUsers: initialPresentersForForm,
       dDemoSessionStartTime: toInputDateTime(session.dDemoSessionStartTime),
       dDemoSessionEndTime: toInputDateTime(session.dDemoSessionEndTime),
     });
-    // console.log('Opening Edit Dialog. Initial formData.demoSessionAttendees:', initialAttendeesForForm);
+    
     setOpenDialog(true);
   };
 
   const handleUpdate = async () => {
     const token = localStorage.getItem('token');
-    const { cDemoSessionType, cPlace, dDemoSessionStartTime, dDemoSessionEndTime, notes, demoSessionAttendees } = formData;
+    const { 
+      cDemoSessionType, 
+      cPlace, 
+      dDemoSessionStartTime, 
+      dDemoSessionEndTime, 
+      notes, 
+      demoSessionAttendees,
+      presentedByUsers 
+    } = formData;
 
-    // console.log('FormData before validation and payload creation:', formData);
-    // console.log('Attendees in formData (from Autocomplete selection):', demoSessionAttendees);
-    // console.log('Original Attendees:', originalAttendees);
-
-    if (!cDemoSessionType || !cPlace || !dDemoSessionStartTime || !dDemoSessionEndTime || !notes || (demoSessionAttendees || []).length === 0) {
-      setSnackMessage('All fields are mandatory, and at least one attendee is required!');
+    if (!cDemoSessionType || !cPlace || !dDemoSessionStartTime || !dDemoSessionEndTime || !notes || 
+        (demoSessionAttendees || []).length === 0 || (presentedByUsers || []).length === 0) {
+      setSnackMessage('All fields are mandatory, and at least one attendee and presenter is required!');
       setSnackSeverity('warning');
       setSnackOpen(true);
       return;
@@ -180,10 +212,8 @@ const DemoSessionDetails = ({ leadId }) => {
       return;
     }
 
-    // Determine attendees to add/update/deactivate
+    // Prepare attendees payload
     const payloadAttendees = [];
-
-    // 1. Attendees currently selected in the form
     (demoSessionAttendees || []).forEach(selectedUser => {
       const userId = selectedUser.iUser_id;
       if (typeof userId !== 'number' || isNaN(userId)) {
@@ -197,26 +227,58 @@ const DemoSessionDetails = ({ leadId }) => {
 
       payloadAttendees.push({
         attendeeId: userId,
-        idemoSessionAttendeesId: existingAttendee ? existingAttendee.idemoSessionAttendeesId : null, // Include ID if existing
-        status: true, // Always true for actively selected attendees
+        idemoSessionAttendeesId: existingAttendee ? existingAttendee.idemoSessionAttendeesId : null,
+        status: true,
       });
     });
 
-    // 2. Attendees who were originally part of the session but are no longer selected
+    // Handle removed attendees
     originalAttendees.forEach(originalAtt => {
       const isStillSelected = (demoSessionAttendees || []).some(
         (selectedUser) => selectedUser.iUser_id === originalAtt.iUser_id
       );
 
-      if (!isStillSelected) {
-        // This attendee was removed, send with status: false
-        if (originalAtt.idemoSessionAttendeesId) { // Only send if it's an existing attendee link
-            payloadAttendees.push({
-                attendeeId: originalAtt.iUser_id,
-                idemoSessionAttendeesId: originalAtt.idemoSessionAttendeesId,
-                status: false, // Set status to false for removed attendees
-            });
-        }
+      if (!isStillSelected && originalAtt.idemoSessionAttendeesId) {
+        payloadAttendees.push({
+          attendeeId: originalAtt.iUser_id,
+          idemoSessionAttendeesId: originalAtt.idemoSessionAttendeesId,
+          status: false,
+        });
+      }
+    });
+
+    // Prepare presenters payload
+    const payloadPresenters = [];
+    (presentedByUsers || []).forEach(selectedUser => {
+      const userId = selectedUser.iUser_id;
+      if (typeof userId !== 'number' || isNaN(userId)) {
+        console.error("Payload creation error: Invalid or missing iUser_id for selected presenter:", selectedUser);
+        return;
+      }
+
+      const existingPresenter = originalPresenters.find(
+        (pres) => pres.iUser_id === userId
+      );
+
+      payloadPresenters.push({
+        presenetedUserId: userId,
+        demoSessionPresentedById: existingPresenter ? existingPresenter.idemo_session_presented_by : null,
+        status: true,
+      });
+    });
+
+    // Handle removed presenters
+    originalPresenters.forEach(originalPres => {
+      const isStillSelected = (presentedByUsers || []).some(
+        (selectedUser) => selectedUser.iUser_id === originalPres.iUser_id
+      );
+
+      if (!isStillSelected && originalPres.idemo_session_presented_by) {
+        payloadPresenters.push({
+          presenetedUserId: originalPres.iUser_id,
+          demoSessionPresentedById: originalPres.idemo_session_presented_by,
+          status: false,
+        });
       }
     });
 
@@ -229,9 +291,8 @@ const DemoSessionDetails = ({ leadId }) => {
       place: cPlace,
       leadId: selectedSession.ilead_id,
       demoSessionAttendees: payloadAttendees,
+      presentedByUsers: payloadPresenters,
     };
-
-    // console.log('Sending PUT Payload:', payload);
 
     try {
       await axios.put(ENDPOINTS.DEMO_SESSION_EDIT, payload, {
@@ -291,9 +352,9 @@ const DemoSessionDetails = ({ leadId }) => {
                 {session.updatedBy && (
                   <Typography><strong>Updated By:</strong> {session.updatedBy?.cFull_name}</Typography>
                 )}
+                
                 <Typography mt={2}><strong>Attendees:</strong></Typography>
                 <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
-                  {/* Display only active attendees here */}
                   {(session.attendees || []).filter(att => att.status !== false).map((attendee) => (
                     <Chip
                       key={`attendee-${attendee.idemoSessionAttendeesId || attendee.user.iUser_id}`}
@@ -302,6 +363,18 @@ const DemoSessionDetails = ({ leadId }) => {
                     />
                   ))}
                 </Box>
+
+                <Typography mt={2}><strong>Presented By:</strong></Typography>
+                <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+                  {(session.presenters || []).filter(pres => pres.status !== false).map((presenter) => (
+                    <Chip
+                      key={`presenter-${presenter.idemo_session_presented_by || presenter.user.iUser_id}`}
+                      label={presenter.user?.cFull_name || 'Unnamed'}
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+
                 <Button onClick={() => openEditDialog(session)} variant="contained" sx={{ mt: 2 }} color="primary">
                   Edit
                 </Button>
@@ -310,9 +383,9 @@ const DemoSessionDetails = ({ leadId }) => {
           ))
         )}
 
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Edit Demo Session</DialogTitle>
-          <DialogContent sx={{ width: 400 }}>
+          <DialogContent>
             <TextField
               label="Session Type"
               select
@@ -374,9 +447,7 @@ const DemoSessionDetails = ({ leadId }) => {
 
             <Autocomplete
               multiple
-              options={users.filter(
-                (user) => user.bactive === true
-              )}
+              options={users.filter(user => user.bactive === true)}
               getOptionLabel={(option) => option.cFull_name}
               isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
               value={formData.demoSessionAttendees || []}
@@ -385,7 +456,6 @@ const DemoSessionDetails = ({ leadId }) => {
                   ...prev,
                   demoSessionAttendees: newVal,
                 }));
-                // console.log('Autocomplete onChange: newVal (selected attendees):', newVal);
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Add/Remove Attendees" sx={{ mt: 2 }} required />
@@ -394,6 +464,32 @@ const DemoSessionDetails = ({ leadId }) => {
                 value.map((option, index) => (
                   <Chip
                     key={option.idemoSessionAttendeesId || `user-${option.iUser_id}-${index}`}
+                    label={option.cFull_name}
+                    {...getTagProps({ index })}
+                  />
+                ))
+              }
+            />
+
+            <Autocomplete
+              multiple
+              options={users.filter(user => user.bactive === true)}
+              getOptionLabel={(option) => option.cFull_name}
+              isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+              value={formData.presentedByUsers || []}
+              onChange={(e, newVal) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  presentedByUsers: newVal,
+                }));
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="Presented By" sx={{ mt: 2 }} required />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    key={option.idemo_session_presented_by || `user-${option.iUser_id}-${index}`}
                     label={option.cFull_name}
                     {...getTagProps({ index })}
                   />

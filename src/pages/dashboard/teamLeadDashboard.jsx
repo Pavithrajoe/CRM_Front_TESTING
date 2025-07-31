@@ -118,7 +118,7 @@ const LeadsDashboard = () => {
       userSelect: 'none',
     }}
   >
-    🎉 OCRM V 2.5 is here ! 🎉 
+    🎉 OCRM V 3 is here ! 🎉 
   </DialogTitle>
 
 <DialogContent
@@ -150,11 +150,12 @@ const LeadsDashboard = () => {
   }}
 >
   <ul>
-    <li>🔍 Improved Lead & Deal Tracking</li>
-    <li>📅 Smart Reminders with Alerts</li>
-    <li>📊 Enhanced KPI Insights</li>
-    <li>⚡ Blazing-fast Performance and UI Upgrades</li>
-    <li>🎙️ Voice-to-Text for Effortless Logging</li>
+   <li>📞 Advanced Call Tracking with Activity Logs & Performance Insights</li>
+<li>⚙️ Master Configurations for Full Customization & Control</li>
+<li>📧 Ready-to-Use Email Templates for Faster Communication</li>
+<li>📱 Fully Responsive UI – Works Flawlessly Across Devices</li>
+<li>🚀 Major UI/UX Upgrades for a Smoother, Modern Experience</li>
+
   </ul>
 </DialogContent>
 

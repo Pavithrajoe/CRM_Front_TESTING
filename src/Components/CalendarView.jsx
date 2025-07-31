@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone } from 'react-icons/fa';
+import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone, FaAddressCard } from 'react-icons/fa';
 import { Drawer, CircularProgress, Snackbar, Alert } from '@mui/material'; // Removed TextField and Button as they weren't directly used in the provided snippet for MUI imports
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -560,7 +560,7 @@ const CalendarView = () => {
 
   const currentTabItems = activeTab === 'reminders'
     ? filterAndSortItems(reminderList, 'dremainder_dt', 'cremainder_content', null, showEnded, true)
-    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false); // Calendar events generally don't have an "ended" filter from this view
+    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false); 
 
   // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
@@ -736,15 +736,15 @@ const formatDateDMY = (dateString) => {
                     <h3 className="text-md font-semibold text-gray-800">{reminder.cremainder_title}</h3>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUserAlt className="mr-2 text-xs" />
-                      Created By: <span className="font-medium">{reminder.icreated_by}</span>
+                      Created By:&nbsp; <span className="font-medium">{reminder.assignedBy}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
-                      <FaUserAlt className="mr-2 text-xs" />
-                      Assigned To: <span className="font-medium">{reminder.assigned_to}</span>
+                      <FaClock className="mr-2 text-xs" />
+                      Assigned To:&nbsp; <span className="font-medium">{reminder.assigned_to}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
-                      <FaUserAlt className="mr-2 text-xs" />
-                      Lead Name: <span className="font-medium">{reminder.ilead_id}</span>
+                      <FaAddressCard className="mr-2 text-xs" />
+                      Lead Name:&nbsp; <span className="font-medium">{reminder.lead.clead_name}</span>
                     </div>
                     <p className="font-semibold text-gray-600">{reminder.cremainder_content}</p>
                     <div

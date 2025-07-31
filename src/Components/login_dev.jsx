@@ -220,7 +220,7 @@ const LoginPage = () => {
       `}</style>
 
       <footer className="absolute bottom-4 text-center w-full text-gray-400 text-sm">
-        © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 2
+        © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 3.0
       </footer>
     </div>
   );

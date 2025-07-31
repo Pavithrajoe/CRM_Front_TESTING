@@ -1111,10 +1111,16 @@ const LeadCardViewPage = () => {
                                         )}
 
                                         <div>
-                                            <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
-                                                {item.clead_name || item.cdeal_name || '-'}
-                                                
-                                            </h3>
+
+                                            <div className="flex w-full justify-between items-center space-x-10">
+                              <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
+                                          {item.clead_name || item.cdeal_name || '-'}
+                                             </h3>
+
+                                     <h3 className="font-semibold text-sm text-black bg-purple-200 px-3 py-1 rounded-full truncate">
+                                                      {item.lead_potential?.clead_name || '-'}
+                                                    </h3>
+                                                        </div>
                                             <p className="text-gray-600 text-sm mb-2 truncate">
                                                 {item.corganization || item.c_organization || '-'}
                                             </p>

@@ -99,8 +99,8 @@ const Comments = () => {
         showPopup("Error", data.message || "Failed to fetch comments.", "error");
       }
     } catch (error) {
-      showPopup("Error", "Network error fetching comments.", "error");
-     // console.error("Fetch comments error:", error);
+      // showPopup("Error", "Network error fetching comments.", "error");
+      console.error("Fetch comments error:", error);
     }
   };
 

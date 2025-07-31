@@ -19,6 +19,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 const mandatoryInputStages = ['Proposal', 'Won'];
+const MAX_REMARK_LENGTH = 500;
+const MAX_NOTES_LENGTH = 200;
+const MAX_PLACE_LENGTH = 200;
 
 const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [stages, setStages] = useState([]);
@@ -36,15 +39,144 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     demoSessionAttendees: [],
     presentedByUsers: [],
   });
+  const [dialogErrors, setDialogErrors] = useState({
+    demoSessionType: '',
+    demoSessionStartTime: '',
+    demoSessionEndTime: '',
+    notes: '',
+    place: '',
+    demoSessionAttendees: '',
+    presentedByUsers: '',
+    amount: '',
+  });
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [users, setUsers] = useState([]);
   const { showToast } = useToast();
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
+  const [remarkErrors, setRemarkErrors] = useState({
+    remark: '',
+    projectValue: '',
+  });
   const [remarkStageId, setRemarkStageId] = useState(null);
   const [selectedRemark, setSelectedRemark] = useState(null);
   const [demoSessions, setDemoSessions] = useState([]);
+
+  const validateDemoSession = () => {
+    let isValid = true;
+    const newErrors = {
+      demoSessionType: '',
+      demoSessionStartTime: '',
+      demoSessionEndTime: '',
+      notes: '',
+      place: '',
+      demoSessionAttendees: '',
+      presentedByUsers: '',
+    };
+
+    if (!dialogValue.demoSessionType) {
+      newErrors.demoSessionType = 'Session type is required';
+      isValid = false;
+    } else if (!['online', 'offline'].includes(dialogValue.demoSessionType.toLowerCase())) {
+      newErrors.demoSessionType = 'Invalid session type (must be online or offline)';
+      isValid = false;
+    }
+
+    if (!dialogValue.demoSessionStartTime) {
+      newErrors.demoSessionStartTime = 'Start time is required';
+      isValid = false;
+    } else if (new Date(dialogValue.demoSessionStartTime) < new Date()) {
+      newErrors.demoSessionStartTime = 'Start time cannot be in the past';
+      isValid = false;
+    }
+
+    if (!dialogValue.demoSessionEndTime) {
+      newErrors.demoSessionEndTime = 'End time is required';
+      isValid = false;
+    } else if (dialogValue.demoSessionStartTime && 
+               new Date(dialogValue.demoSessionEndTime) <= new Date(dialogValue.demoSessionStartTime)) {
+      newErrors.demoSessionEndTime = 'End time must be after start time';
+      isValid = false;
+    }
+
+    if (!dialogValue.notes.trim()) {
+      newErrors.notes = 'Notes are required';
+      isValid = false;
+    } else if (dialogValue.notes.length > MAX_NOTES_LENGTH) {
+      newErrors.notes = `Notes cannot exceed ${MAX_NOTES_LENGTH} characters`;
+      isValid = false;
+    }
+
+    if (!dialogValue.place.trim()) {
+      newErrors.place = 'Place/link is required';
+      isValid = false;
+    } else if (dialogValue.place.length > MAX_PLACE_LENGTH) {
+      newErrors.place = `Place/link cannot exceed ${MAX_PLACE_LENGTH} characters`;
+      isValid = false;
+    }
+
+    if (dialogValue.demoSessionAttendees.length === 0) {
+      newErrors.demoSessionAttendees = 'At least one attendee is required';
+      isValid = false;
+    }
+
+    if (dialogValue.presentedByUsers.length === 0) {
+      newErrors.presentedByUsers = 'At least one presenter is required';
+      isValid = false;
+    }
+
+    setDialogErrors(newErrors);
+    return isValid;
+  };
+
+  const validateAmount = (amount) => {
+    if (!amount) {
+      setDialogErrors({ ...dialogErrors, amount: 'Amount is required' });
+      return false;
+    }
+    
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount)) {
+      setDialogErrors({ ...dialogErrors, amount: 'Amount must be a valid number' });
+      return false;
+    }
+    
+    if (numAmount <= 0) {
+      setDialogErrors({ ...dialogErrors, amount: 'Amount must be greater than 0' });
+      return false;
+    }
+    
+    setDialogErrors({ ...dialogErrors, amount: '' });
+    return true;
+  };
+
+  const validateRemark = () => {
+    let isValid = true;
+    const newErrors = {
+      remark: '',
+      projectValue: '',
+    };
+
+    if (!remarkData.remark.trim()) {
+      newErrors.remark = 'Remark is required';
+      isValid = false;
+    } else if (remarkData.remark.length > MAX_REMARK_LENGTH) {
+      newErrors.remark = `Remark cannot exceed ${MAX_REMARK_LENGTH} characters`;
+      isValid = false;
+    }
+
+    if (remarkData.projectValue && isNaN(parseFloat(remarkData.projectValue))) {
+      newErrors.projectValue = 'Project value must be a valid number';
+      isValid = false;
+    } else if (remarkData.projectValue && parseFloat(remarkData.projectValue) < 0) {
+      newErrors.projectValue = 'Project value cannot be negative';
+      isValid = false;
+    }
+
+    setRemarkErrors(newErrors);
+    return isValid;
+  };
 
   const fetchStages = async () => {
     try {
@@ -163,18 +295,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         demoSessionAttendees: [],
         presentedByUsers: [],
       });
+      setDialogErrors({
+        demoSessionType: '',
+        demoSessionStartTime: '',
+        demoSessionEndTime: '',
+        notes: '',
+        place: '',
+        demoSessionAttendees: '',
+        presentedByUsers: '',
+      });
       setOpenDialog(true);
       return;
     }
 
     if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
       setDialogValue('');
+      setDialogErrors({ ...dialogErrors, amount: '' });
       setOpenDialog(true);
       return;
     }
 
     setRemarkStageId(statusId);
     setRemarkData({ remark: '', projectValue: '' });
+    setRemarkErrors({ remark: '', projectValue: '' });
     setShowRemarkDialog(true);
   };
 
@@ -210,6 +353,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
     try {
       if (stageName?.toLowerCase().includes('demo')) {
+        if (!validateDemoSession()) return;
+
         const {
           demoSessionType,
           demoSessionStartTime,
@@ -219,24 +364,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           demoSessionAttendees,
           presentedByUsers,
         } = dialogValue;
-
-        if (
-          !demoSessionType ||
-          !demoSessionStartTime ||
-          !demoSessionEndTime ||
-          !notes ||
-          !place ||
-          !demoSessionAttendees.length ||
-          !presentedByUsers.length
-        ) {
-          showToast('error', 'Please fill all mandatory demo session fields');
-          return;
-        }
-
-        if (demoSessionStartTime >= demoSessionEndTime) {
-          showToast('error', 'Start time must be earlier than end time');
-          return;
-        }
 
         const body = {
           demoSessionType,
@@ -258,12 +385,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
         showToast('success', 'Demo session details saved!');
       } else {
-        const amount = parseFloat(dialogValue);
-        if (isNaN(amount) || amount <= 0) {
-          showToast('error', 'Please enter a valid amount');
-          return;
-        }
+        if (!validateAmount(dialogValue)) return;
 
+        const amount = parseFloat(dialogValue);
         const body = {
           caction: stageName,
           iaction_doneby: userId.iUser_id,
@@ -283,6 +407,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
       setRemarkStageId(statusId);
       setRemarkData({ remark: '', projectValue: '' });
+      setRemarkErrors({ remark: '', projectValue: '' });
       setShowRemarkDialog(true);
       setOpenDialog(false);
     } catch (e) {
@@ -291,10 +416,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   const handleRemarkSubmit = async () => {
-    if (!remarkData.remark.trim()) {
-      showToast('error', 'Remark is required');
-      return;
-    }
+    if (!validateRemark()) return;
 
     const token = localStorage.getItem('token');
     const userId = JSON.parse(localStorage.getItem('user'));
@@ -442,43 +564,33 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   renderInput={params => (
                     <TextField
                       {...params}
-                      label={
-                        <span>
-                          Session Type <span className="text-red-600">*</span>
-                        </span>
-                      }
+                      label="Session Type *"
                       sx={{ mt: 2 }}
-                      // required
+                      error={!!dialogErrors.demoSessionType}
+                      helperText={dialogErrors.demoSessionType}
                       InputLabelProps={{ shrink: true }}
                     />
                   )}
                 />
                 <DateTimePicker
-                  label={
-                    <span>
-                      Start Time <span className="text-red-600">*</span>
-                    </span>
-                  }
+                  label="Start Time *"
                   value={dialogValue.demoSessionStartTime}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
                   }
-                  format="dd/MM/yyyy HH:MM A"
+                  format="dd/MM/yyyy hh:mm a"
                   slotProps={{
                     textField: {
                       fullWidth: true,
                       sx: { mt: 2 },
+                      error: !!dialogErrors.demoSessionStartTime,
+                      helperText: dialogErrors.demoSessionStartTime,
                       InputLabelProps: { shrink: true },
-                      // required: true,
                     },
                   }}
                 />
                 <DateTimePicker
-                  label={
-                    <span>
-                      End Time <span className="text-red-600">*</span>
-                    </span>
-                  }
+                  label="End Time *"
                   value={dialogValue.demoSessionEndTime}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
@@ -488,37 +600,46 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     textField: {
                       fullWidth: true,
                       sx: { mt: 2 },
+                      error: !!dialogErrors.demoSessionEndTime,
+                      helperText: dialogErrors.demoSessionEndTime,
                       InputLabelProps: { shrink: true },
-                      // required: true,
                     },
                   }}
                 />
                 <TextField
-                  label={
-                    <span>
-                      Notes <span className="text-red-600">*</span>
-                    </span>
-                  }
+                  label="Notes *"
                   fullWidth
                   multiline
                   rows={2}
                   sx={{ mt: 2 }}
                   value={dialogValue.notes || ''}
-                  onChange={e => setDialogValue(prev => ({ ...prev, notes: e.target.value }))}
-                  // required
+                  onChange={e => {
+                    if (e.target.value.length <= MAX_NOTES_LENGTH) {
+                      setDialogValue(prev => ({ ...prev, notes: e.target.value }));
+                    }
+                  }}
+                  error={!!dialogErrors.notes}
+                  helperText={
+                    dialogErrors.notes || 
+                    `${dialogValue.notes.length}/${MAX_NOTES_LENGTH} characters`
+                  }
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                  label={
-                    <span>
-                      Place / Link <span className="text-red-600">*</span>
-                    </span>
-                  }
+                  label="Place / Link *"
                   fullWidth
                   sx={{ mt: 2 }}
                   value={dialogValue.place || ''}
-                  onChange={e => setDialogValue(prev => ({ ...prev, place: e.target.value }))}
-                  // required
+                  onChange={e => {
+                    if (e.target.value.length <= MAX_PLACE_LENGTH) {
+                      setDialogValue(prev => ({ ...prev, place: e.target.value }));
+                    }
+                  }}
+                  error={!!dialogErrors.place}
+                  helperText={
+                    dialogErrors.place || 
+                    `${dialogValue.place.length}/${MAX_PLACE_LENGTH} characters`
+                  }
                   InputLabelProps={{ shrink: true }}
                 />
                 <Autocomplete
@@ -533,13 +654,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   renderInput={params => (
                     <TextField
                       {...params}
-                      label={
-                        <span>
-                          Attendees <span className="text-red-600">*</span>
-                        </span>
-                      }
+                      label="Attendees *"
                       sx={{ mt: 2 }}
-                      // required
+                      error={!!dialogErrors.demoSessionAttendees}
+                      helperText={dialogErrors.demoSessionAttendees}
                     />
                   )}
                 />
@@ -555,30 +673,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   renderInput={params => (
                     <TextField
                       {...params}
-                      label={
-                        <span>
-                          Presented By <span className="text-red-600">*</span>
-                        </span>
-                      }
+                      label="Presented By *"
                       sx={{ mt: 2 }}
-                      // required
+                      error={!!dialogErrors.presentedByUsers}
+                      helperText={dialogErrors.presentedByUsers}
                     />
                   )}
                 />
               </>
             ) : (
               <TextField
-                label={
-                  <span>
-                    Enter Value <span className="text-red-600">*</span>
-                  </span>
-                }
+                label="Enter Value *"
                 fullWidth
                 type="number"
                 value={dialogValue}
-                onChange={e => setDialogValue(e.target.value)}
+                onChange={e => {
+                  setDialogValue(e.target.value);
+                  if (dialogErrors.amount) {
+                    validateAmount(e.target.value);
+                  }
+                }}
                 sx={{ mt: 2 }}
-                // required
+                error={!!dialogErrors.amount}
+                helperText={dialogErrors.amount}
                 InputLabelProps={{ shrink: true }}
               />
             )}
@@ -595,17 +712,21 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           <DialogTitle>Enter Remark</DialogTitle>
           <DialogContent>
             <TextField
-              label={
-                <span>
-                  Remark <span className="text-red-600">*</span>
-                </span>
-              }
+              label="Remark *"
               fullWidth
               multiline
               rows={3}
-              // required
               value={remarkData.remark}
-              onChange={e => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
+              onChange={e => {
+                if (e.target.value.length <= MAX_REMARK_LENGTH) {
+                  setRemarkData(prev => ({ ...prev, remark: e.target.value }));
+                }
+              }}
+              error={!!remarkErrors.remark}
+              helperText={
+                remarkErrors.remark || 
+                `${remarkData.remark.length}/${MAX_REMARK_LENGTH} characters`
+              }
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />
@@ -615,6 +736,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               fullWidth
               value={remarkData.projectValue}
               onChange={e => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
+              error={!!remarkErrors.projectValue}
+              helperText={remarkErrors.projectValue}
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />

@@ -434,8 +434,8 @@ const LeadForm = ({ onClose, onSuccess }) => {
       if (value && !emailRegex.test(value)) {
         error = "Invalid email format";
       }
-      else if (value.length > 70) {
-        error = "Lead Name cannot exceed 70 characters";
+      else if (value.length > 254) {
+        error = "Lead Name cannot exceed 254 characters";
       }
     }
     if (name === "cpincode" && value && !/^\d{6}$/.test(value)) {
@@ -1021,7 +1021,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
     left: "50%",
     transform: "translateX(-50%)",
     backgroundColor:
-      popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#28a745",
+      popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#176be9ff",
     color: "white",
     padding: "16px 24px",
     borderRadius: "8px",

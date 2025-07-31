@@ -395,6 +395,7 @@ const LeadCardViewPage = () => {
                     statusDisplay: statusDisplay,
                     statusColor: statusColor,
                     lead_status: correspondingLead?.lead_status || assigned.lead_status, 
+                    lead_potential: lead_potential.clead_name ,
                     bactive: isActiveAssigned,
                     bisConverted: isConvertedAssigned,
                     website_lead: isWebsiteAssigned,
@@ -1112,6 +1113,7 @@ const LeadCardViewPage = () => {
                                         <div>
                                             <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                                 {item.clead_name || item.cdeal_name || '-'}
+                                                
                                             </h3>
                                             <p className="text-gray-600 text-sm mb-2 truncate">
                                                 {item.corganization || item.c_organization || '-'}

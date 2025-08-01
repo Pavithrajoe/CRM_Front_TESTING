@@ -1370,31 +1370,31 @@ const ProfileCard = () => {
             />
           </div>
           <div className="text-center sm:text-left mt-5">
-            <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
+            <h3 className="text-lg sm:text-xl font-bold w-[180px] break-words text-gray-900">
               {profile.clead_name || "-"}
             </h3>
-            <p className="text-sm sm:text-base break-words text-gray-500">
+            <p className="text-sm sm:text-base w-[180px] break-words text-gray-500">
               {profile.corganization || "-"}
             </p>
           </div>
         </div>
 
-        <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
+        <div className="text-sm sm:text-base text-gray-700 space-y-4 pt-4">
           <div className="flex items-center gap-3">
             <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="break-words">{profile.iphone_no || "-"}</span>
+            <span className="w-[180px] break-words">{profile.iphone_no || "-"}</span>
           </div>
           <div className="flex items-center gap-3">
             <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
-            <span className="break-words">{profile.cemail || "-"}</span>
+            <span className="w-[180px] break-words">{profile.cemail || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.clead_address1 || "-"}</span>
+            <span className="bw-[180px] break-words">{profile.clead_address1 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.clead_address2 || "-"}</span>
+            <span className="w-[180px] break-words">{profile.clead_address2 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
@@ -1405,7 +1405,7 @@ const ProfileCard = () => {
                   : `https://${profile.cwebsite}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:underline w-[180px] break-words "
               >
                 {profile.cwebsite}
               </a>
@@ -1416,7 +1416,7 @@ const ProfileCard = () => {
 
           <div className="flex items-start gap-3">
             <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.corganization || "-"}</span>
+            <span className="w-[180px] break-words">{profile.corganization || "-"}</span>
           </div>
 
           {profile.bactive === false && (

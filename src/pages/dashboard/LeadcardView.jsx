@@ -37,7 +37,7 @@ const LeadCardViewPage = () => {
     const [roleID, setRoleID] = useState();
     const [websiteActive, setWebsiteActive] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [converted, setConverted] = useState(false);
+    // const [converted, setConverted] = useState(false);
 
     // Set up event listener for custom refresh events
     useEffect(() => {
@@ -332,90 +332,89 @@ const LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken]);
 
-    const fetchAssignedLeads = useCallback(async () => {
-        if (!currentUserId || !currentToken) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-            });
+const fetchAssignedLeads = useCallback(async () => {
+    if (!currentUserId || !currentToken) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+        const res = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${currentToken}`,
+            },
+        });
 
-            if (!res.ok) {
-                const errorData = await res.text();
-                throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
+        if (!res.ok) {
+            const errorData = await res.text();
+            throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
+        }
+
+        const data = await res.json();
+        const leadsAssigned = Array.isArray(data.data?.leadsAssigned) ? data.data.leadsAssigned : [];
+        const assignedEntries = Array.isArray(data.data?.assignedEntries) ? data.data.assignedEntries : [];
+
+        const leadsAssignedMap = new Map(leadsAssigned.map(lead => [lead.ilead_id, lead]));
+
+        const mergedLeads = assignedEntries.map(assigned => {
+            const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
+
+            let statusDisplay = '-';
+            let statusColor = 'bg-gray-300 text-gray-700';
+            const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
+            const isActiveAssigned = (correspondingLead?.bactive === true || correspondingLead?.bactive === 'true') || (assigned.bactive === true || assigned.bactive === 'true');
+            const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
+
+            if (isConvertedAssigned) {
+                statusDisplay = 'Won';
+                statusColor = 'bg-green-100 text-green-700';
+            } else if (!isActiveAssigned && !isConvertedAssigned) {
+                statusDisplay = 'Lost';
+                statusColor = 'bg-red-100 text-red-700';
+            } else if (isWebsiteAssigned) {
+                statusDisplay = 'Website Lead';
+                statusColor = 'bg-blue-100 text-blue-700';
+            } else {
+                statusDisplay = 'Lead';
+                statusColor = 'bg-indigo-100 text-indigo-700';
             }
 
-            const data = await res.json();
-            const leadsAssigned = Array.isArray(data.data?.leadsAssigned) ? data.data.leadsAssigned : [];
-            const assignedEntries = Array.isArray(data.data?.assignedEntries) ? data.data.assignedEntries : [];
-
-            const leadsAssignedMap = new Map(leadsAssigned.map(lead => [lead.ilead_id, lead]));
-
-            const mergedLeads = assignedEntries.map(assigned => {
-                const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
-
-                let statusDisplay = '-';
-                let statusColor = 'bg-gray-300 text-gray-700';
-                const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
-                const isActiveAssigned = (correspondingLead?.bactive === true || correspondingLead?.bactive === 'true') || (assigned.bactive === true || assigned.bactive === 'true');
-                const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
-
-                if (isConvertedAssigned) {
-                    statusDisplay = 'Won';
-                    statusColor = 'bg-green-100 text-green-700';
-                } else if (!isActiveAssigned && !isConvertedAssigned) {
-                    statusDisplay = 'Lost';
-                    statusColor = 'bg-red-100 text-red-700';
-                } else if (isWebsiteAssigned) {
-                    statusDisplay = 'Website Lead';
-                    statusColor = 'bg-blue-100 text-blue-700';
-                } else {
-                    statusDisplay = 'Lead';
-                    statusColor = 'bg-indigo-100 text-indigo-700';
-                }
-
-                return {
-                    ...assigned,
-                    ...(correspondingLead || {}),
-                    dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
-                    dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
-                    dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt,
-                    clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
-                    corganization: correspondingLead?.corganization || assigned.corganization || '-',
-                    cemail: correspondingLead?.cemail || assigned.cemail || '-',
-                    iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
-                    statusDisplay: statusDisplay,
-                    statusColor: statusColor,
-                    lead_status: correspondingLead?.lead_status || assigned.lead_status, 
-                    lead_potential: lead_potential.clead_name ,
-                    bactive: isActiveAssigned,
-                    bisConverted: isConvertedAssigned,
-                    website_lead: isWebsiteAssigned,
-                    iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
-                };
-            }).filter(lead => lead.bactive === true || lead.bactive === 'true');
-            
-            // Sort assigned leads by modified date descending
-            const sortedAssigned = mergedLeads.sort(
-                (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt || 0) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt || 0)
-            );
-            setAssignedLeads(sortedAssigned);
-        } catch (err) {
-            console.error("Failed to fetch assigned leads:", err);
-            setError(`Failed to fetch assigned leads: ${err.message}`);
-            setAssignedLeads([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentUserId, currentToken]);
+            return {
+                ...assigned,
+                ...(correspondingLead || {}),
+                dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
+                dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
+                dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt,
+                clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
+                corganization: correspondingLead?.corganization || assigned.corganization || '-',
+                cemail: correspondingLead?.cemail || assigned.cemail || '-',
+                iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
+                statusDisplay: statusDisplay,
+                statusColor: statusColor,
+                lead_status: correspondingLead?.lead_status || assigned.lead_status, 
+                lead_potential: correspondingLead?.lead_potential || assigned.lead_potential || { clead_name: '-' }, // Ensure lead_potential exists
+                bactive: isActiveAssigned,
+                bisConverted: isConvertedAssigned,
+                website_lead: isWebsiteAssigned,
+                iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
+            };
+        }).filter(lead => lead.bactive === true || lead.bactive === 'true');
+        
+        const sortedAssigned = mergedLeads.sort(
+            (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt || 0) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt || 0)
+        );
+        setAssignedLeads(sortedAssigned);
+    } catch (err) {
+        console.error("Failed to fetch assigned leads:", err);
+        setError(`Failed to fetch assigned leads: ${err.message}`);
+        setAssignedLeads([]);
+    } finally {
+        setLoading(false);
+    }
+}, [currentUserId, currentToken]);
 
     useEffect(() => {
         if (!currentUserId || !currentToken) return;
@@ -1111,16 +1110,16 @@ const LeadCardViewPage = () => {
                                         )}
 
                                         <div>
-
                                             <div className="flex w-full justify-between items-center space-x-10">
                               <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                           {item.clead_name || item.cdeal_name || '-'}
                                              </h3>
 
-                                     <h3 className="font-semibold text-sm text-black bg-purple-200 px-3 py-1 rounded-full truncate">
-                                                      {item.lead_potential?.clead_name || '-'}
+                                     <h3 className="font-semibold text-sm text-black bg-yellow-200 px-3 py-1 rounded-full truncate">
+                                              {item.lead_potential?.clead_name || item.lead_potential || '-'}
                                                     </h3>
                                                         </div>
+
                                             <p className="text-gray-600 text-sm mb-2 truncate">
                                                 {item.corganization || item.c_organization || '-'}
                                             </p>

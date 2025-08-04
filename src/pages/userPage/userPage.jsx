@@ -19,15 +19,19 @@ const UserPage = () => {
   const [view, setView] = useState("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("asc");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("active"); // State for active/inactive tab
-  const [loading, setLoading] = useState(true); // New loading state
-  const [error, setError] = useState(null); // New error state
+  const [activeTab, setActiveTab] = useState("active");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null); // State to hold the current user's role
 
   const usersPerPage = 6;
   const navigate = useNavigate();
 
-  const getCompanyId = () => {
+  /**
+   * Decodes the JWT token from local storage.
+   * @returns {object | null} The decoded token payload or null if not found/invalid.
+   */
+  const getDecodedToken = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       console.warn("No token found in localStorage.");
@@ -36,13 +40,35 @@ const UserPage = () => {
     try {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const payload = JSON.parse(atob(base64));
-      return payload.company_id || payload.iCompany_id; // Added payload.iCompany_id for robustness
+      return JSON.parse(atob(base64));
     } catch (err) {
       console.error("Error decoding token:", err);
       return null;
     }
   };
+
+  /**
+   * Retrieves the company ID from the decoded token.
+   * @returns {string | null} The company ID.
+   */
+  const getCompanyId = () => {
+    const payload = getDecodedToken();
+    return payload?.company_id || payload?.iCompany_id;
+  };
+  
+  /**
+   * Retrieves the user's role from the decoded token.
+   * @returns {string | null} The user's role in lowercase.
+   */
+  const getUserRole = () => {
+    const payload = getDecodedToken();
+    // The role name might be `role_name` or `role.cRole_name` based on your API response
+    // For now, we'll assume it's directly in the token payload.
+    return payload?.roleType?.toLowerCase();
+  };
+
+  // Function to navigate to the user creation page
+  const createUser = () => navigate('/users');
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -71,9 +97,8 @@ const UserPage = () => {
       }
 
       const data = await response.json();
-      // console.log("Fetched users:", data);
       const companyUsers = data.filter((user) => user.iCompany_id === companyId);
-      setUsers(companyUsers); // Set all company users
+      setUsers(companyUsers);
     } catch (err) {
       console.error("Error fetching users:", err);
       setError("Failed to load users. Please try again.");
@@ -84,6 +109,8 @@ const UserPage = () => {
 
   useEffect(() => {
     fetchUsers();
+    // Set the user's role on component mount.
+    setUserRole(getUserRole());
   }, [fetchUsers]);
 
   // Effect to filter users based on search term and active/inactive tab
@@ -99,16 +126,14 @@ const UserPage = () => {
         user.cjob_title?.toLowerCase().includes(lowerCaseSearchTerm) ||
         user.cCity?.toLowerCase().includes(lowerCaseSearchTerm);
 
-      // Apply active/inactive tab filter
       if (activeTab === "active") {
         return matchesSearch && user.bactive === true;
       } else if (activeTab === "inactive") {
         return matchesSearch && user.bactive === false;
       }
-      return matchesSearch; // Fallback, though tabs are strictly active/inactive
+      return matchesSearch;
     });
 
-    // Apply sorting
     const sortedUsers = [...currentFilteredUsers].sort((a, b) =>
       sortOrder === "asc"
         ? a.cFull_name.localeCompare(b.cFull_name)
@@ -116,8 +141,8 @@ const UserPage = () => {
     );
 
     setFiltered(sortedUsers);
-    setCurrentPage(1); // Reset to first page on filter/sort change
-  }, [searchTerm, users, activeTab, sortOrder]); // Depend on all filtering/sorting states
+    setCurrentPage(1);
+  }, [searchTerm, users, activeTab, sortOrder]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -125,15 +150,6 @@ const UserPage = () => {
 
   const handleSort = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
-  };
-
-  const handleCreateUserClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    fetchUsers(); // Re-fetch users after modal is closed to get updated list
   };
 
   const goToLeadsPage = (userId) => {
@@ -144,11 +160,13 @@ const UserPage = () => {
   const startIndex = (currentPage - 1) * usersPerPage;
   const displayedUsers = filtered.slice(startIndex, startIndex + usersPerPage);
 
+  // Determine if the current user has an admin-level role
+  const isAuthorized = ["admin", "administrator", "super_admin", "super_administrator", "Administrator"].includes(userRole);
+
   return (
     <div className="p-6 bg-gradient-to-b from-slate-100 to-white min-h-screen shadow-inner font-sans text-gray-800">
       <ProfileHeader />
 
-      {/* Search, Tabs & View Controls */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <input
           type="text"
@@ -157,28 +175,37 @@ const UserPage = () => {
           onChange={handleSearch}
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
-       
-
+        
         <div className="flex gap-3 items-center">
-          {/* Active/Inactive Tabs */}
           <button
             type="button"
             onClick={() => setActiveTab("active")}
             className={`px-4 py-2 rounded-xl text-sm font-semibold ${
               activeTab === "active"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-900 text-white shadow-md shadow-blue-900"
                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
             } transition-all`}
           >
             Active
           </button>
+          
+          {/* Conditional rendering for the "+ User" button */}
+          {isAuthorized && (
+            <button
+              onClick={createUser} // Navigates to the user creation page
+              className="px-4 font-mediumpx-4 py-2 rounded-xl text-sm font-semibold  bg-blue-900 shadow-md shadow-blue-900 text-white transition"
+            >
+              + User
+            </button> 
+          )}
+
           <button
             type="button"
             onClick={() => setActiveTab("inactive")}
             className={`px-4 py-2 rounded-xl text-sm font-semibold ${
               activeTab === "inactive"
                 ? "bg-blue-600 text-white"
-                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                : "bg-white border border-gray-300 shadow-md shadow-gray-900 text-gray-700 hover:bg-gray-100"
             } transition-all`}
           >
             Inactive
@@ -187,15 +214,15 @@ const UserPage = () => {
           <button
             type="button"
             onClick={handleSort}
-            className="px-4 py-2 rounded-xl text-sm bg-white border border-gray-300 shadow hover:bg-gray-50 transition-all w-32"
+            className="px-4 py-2 rounded-xl text-sm bg-white shadow-md shadow-gray-900 hover:bg-gray-50 transition-all w-32"
           >
             ↕ Sort ({sortOrder})
           </button>
           <button
             type="button"
             onClick={() => setView("grid")}
-            className={`p-2 rounded-xl border shadow-sm ${
-              view === "grid" ? "bg-blue-600 text-white" : "bg-white text-gray-600"
+            className={`p-2 rounded-xl border shadow-md shadow-gray-900 ${
+              view === "grid" ? "bg-blue-900 text-white" : "bg-white text-gray-600"
             } transition-all hover:bg-blue-100`}
           >
             <FaTh />
@@ -203,15 +230,14 @@ const UserPage = () => {
           <button
             type="button"
             onClick={() => setView("list")}
-            className={`p-2 rounded-xl border shadow-sm ${
-              view === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600"
+            className={`p-2 rounded-xl shadow-md shadow-gray-900 border border-gray-200 ${
+              view === "list" ? "bg-blue-900 text-white" : "bg-blue-900 text-white"
             } transition-all hover:bg-blue-100`}
           >
             <FaBars />
           </button>
         </div>
       </div>
-
 
       {/* Loading and Error States */}
       {loading && (
@@ -355,7 +381,6 @@ const UserPage = () => {
         )
       )}
 
-
       {/* Pagination */}
       {totalPages > 1 && !loading && !error && displayedUsers.length > 0 && (
         <div className="flex justify-center gap-2 mt-8 flex-wrap">
@@ -371,7 +396,6 @@ const UserPage = () => {
             <button
               type="button"
               key={`page-${i + 1}`}
-              // Unique key for pagination buttons
               onClick={() => setCurrentPage(i + 1)}
               className={`px-3 py-2 text-sm rounded-xl shadow-sm ${
                 currentPage === i + 1
@@ -390,27 +414,6 @@ const UserPage = () => {
           >
             Next
           </button>
-        </div>
-      )}
-
-
-      {/* User Creation Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
-          <div
-            className={`relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl transform transition-transform duration-300 ease-out ${
-              isModalOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 text-2xl"
-            >
-              &times;
-            </button>
-            <CreateUserForm onClose={closeModal} />
-          </div>
         </div>
       )}
     </div>

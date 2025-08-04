@@ -122,7 +122,7 @@ export default function LeadTimeline({ leadId }) {
         {/* Adjust the h-[...] value based on your layout. For example, h-[calc(100vh-200px)] 
             if you have a header/footer taking up 200px, or just remove the fixed height 
             and overflow-y-auto if you want the page to scroll naturally. */}
-        <div className="flex flex-col items-center space-y-8 h-full overflow-y-auto">
+        <div className="flex flex-col  items-center space-y-8 h-full overflow-y-auto">
 
           {history.map((entry, index) => {
             // Alternate content side
@@ -155,7 +155,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-end pr-8">
                   {isLeft && (
                     <article
-                      className="bg-white rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >
@@ -224,7 +224,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-start pl-8">
                   {!isLeft && (
                     <article
-                      className="bg-white rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >

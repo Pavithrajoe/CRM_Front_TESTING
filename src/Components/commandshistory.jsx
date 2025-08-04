@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
+import SearchIcon from "@mui/icons-material/Search";
+
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
@@ -28,6 +30,8 @@ const Comments = () => {
   const commentsPerPage = 10;
   const token = localStorage.getItem("token");
   const { showPopup } = usePopup();
+  const [showSearch, setShowSearch] = useState(false);
+
 
   // Effect to decode user ID from token
   useEffect(() => {
@@ -154,13 +158,20 @@ const Comments = () => {
         return false;
       }
 
-      showPopup("Success", "🎉 Comment added successfully!", "success");
+      // showPopup("Success", "🎉 Comment added successfully!", "success");
       setFormData((prev) => ({ ...prev, comments: "" }));
       setIsListening(false);
-      setShowForm(false);
-      fetchComments(); // Re-fetch comments to display the new one
+
+      // Auto-close form after 2 seconds
+      setTimeout(() => {
+        setShowForm(false);
+      }, 800);
+
+      fetchComments();
       return true;
-    } catch (error) {
+
+    } 
+    catch (error) {
       showPopup("Error", "Failed to add comment due to network error.", "error");
       console.error("Add comment error:", error);
       return false;
@@ -184,16 +195,31 @@ const Comments = () => {
     <div className="relative bg-white mt-10 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%]  lg:w-[90%] xl:w-[95%] mx-auto">
       {/* Header with Search and New Comment Button */}
       <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-3 sm:gap-0">
-        <input
-          type="text"
-          placeholder="Search comments..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 sm:px-4 sm:py-2 border rounded-xl text-sm sm:text-base w-full sm:w-3/4 md:w-1/5 lg:w-1/3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-        />
+        <div className="flex items-center gap-2 w-full sm:w-3/4 md:w-1/5 lg:w-1/3">
+          {!showSearch ? (
+            <button
+              onClick={() => setShowSearch(true)}
+              className="text-gray-600 hover:text-indigo-600 transition"
+            >
+              <SearchIcon />
+            </button>
+          ) : (
+            <input
+              type="text"
+              autoFocus
+              placeholder="Search comments..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              onBlur={() => {
+                if (searchQuery === "") setShowSearch(false); // hide if empty
+              }}
+              className="px-3 py-2 sm:px-4 sm:py-2 border rounded-xl text-sm sm:text-base w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+            />
+          )}
+        </div>
         <button
           onClick={handleNewCommentClick}
           className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-blue-700 transition text-sm sm:text-base w-full sm:w-auto"
@@ -261,7 +287,7 @@ const Comments = () => {
           >
             <div className="flex justify-between items-center mb-3 sm:mb-4">
               <h3 className="font-medium text-lg sm:text-xl text-gray-800">Add Comment</h3>
-              <button
+              {/* <button
                 onClick={() => {
                   setShowForm(false);
                   setIsListening(false);
@@ -269,7 +295,7 @@ const Comments = () => {
                 className="text-xl sm:text-2xl text-gray-500 hover:text-red-500"
               >
                 ×
-              </button>
+              </button> */}
             </div>
             <form onSubmit={async (e) => {
               const success = await handleFormSubmission(e);

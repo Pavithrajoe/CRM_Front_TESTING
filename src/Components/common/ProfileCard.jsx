@@ -1330,12 +1330,36 @@ const ProfileCard = () => {
 
   return (
     <>
-      <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6">
+<div className="max-w-[1200px] mx-auto p-6 bg-white rounded-2xl shadow-lg space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-gray-100">
           <h2 className="text-sm sm:text-sm md:text-xl font-semibold text-gray-800">
-            Lead Details
+              {profile.corganization || "-"}'s Details
           </h2>
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          
+        </div>
+        
+        {profile.isUpdated === true && (
+          <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
+            Edited Profile
+          </h3>
+          
+        )}
+
+
+        
+        
+
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
+          {/* <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+            {/* <img
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                profile.clead_name
+              )}&background=random&color=fff&rounded=true`}
+              alt="Profile"
+              className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
+            /> */}
+          {/* </div> */} 
+          <div className="flex items-center space-x-2 sm:space-x-3 ">
             <button
               onClick={() => setShowDetails(true)}
               className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
@@ -1351,50 +1375,37 @@ const ProfileCard = () => {
               <FiEdit size={15} className="sm:w-5 sm:h-5" />
             </button>
           </div>
-        </div>
-        
-        {profile.isUpdated === true && (
-          <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
-            Edited Profile
-          </h3>
-        )}
+          <div/>
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
-            <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                profile.clead_name
-              )}&background=random&color=fff&rounded=true`}
-              alt="Profile"
-              className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
-            />
-          </div>
+          
           <div className="text-center sm:text-left mt-5">
-            <h3 className="text-lg sm:text-xl font-bold break-words text-gray-900">
+            <h3 className="text-xl sm:text-xl font-bold w-[180px] break-words text-gray-900">
               {profile.clead_name || "-"}
             </h3>
-            <p className="text-sm sm:text-base break-words text-gray-500">
+            <p className="text-lg sm:text-base w-[180px] font-semibold break-words text-gray-500">
               {profile.corganization || "-"}
             </p>
           </div>
         </div>
 
-        <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
+        
+
+        <div className="text-sm sm:text-base text-gray-700 space-y-4 pt-4">
           <div className="flex items-center gap-3">
-            <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="break-words">{profile.iphone_no || "-"}</span>
+            <FiPhone className="text-gray-900 break-words w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="w-[180px] text-lg break-words text-gray-900 font-bold">{profile.iphone_no || "-"}</span>
           </div>
           <div className="flex items-center gap-3">
             <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
-            <span className="break-words">{profile.cemail || "-"}</span>
+            <span className="w-[180px] break-words">{profile.cemail || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.clead_address1 || "-"}</span>
+            <span className="bw-[180px] break-words">{profile.clead_address1 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.clead_address2 || "-"}</span>
+            <span className="w-[180px] break-words">{profile.clead_address2 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
@@ -1405,7 +1416,7 @@ const ProfileCard = () => {
                   : `https://${profile.cwebsite}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:underline w-[180px] break-words "
               >
                 {profile.cwebsite}
               </a>
@@ -1416,7 +1427,7 @@ const ProfileCard = () => {
 
           <div className="flex items-start gap-3">
             <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="break-words">{profile.corganization || "-"}</span>
+            <span className="w-[180px] break-words">{profile.corganization || "-"}</span>
           </div>
 
           {profile.bactive === false && (

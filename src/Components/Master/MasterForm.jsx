@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../utils/axiosConfig'; // Ensure correct path to your axios instance
+import axios from '../utils/axiosConfig';
 
 export default function MasterForm({
   master,
   editingItem,
   onSaveSuccess,
   onCancelEdit,
-  companyId, // Direct prop from MasterModal
-  userId,    // Direct prop from MasterModal
-  postEndpoint, // Direct prop from MasterModal (renamed from 'post' to 'postEndpoint')
-  putEndpoint,  // Direct prop from MasterModal (renamed from 'put' to 'putEndpoint')
-  parentContext // For Sub Industry specifically
+  companyId,
+  userId,
+  postEndpoint,
+  putEndpoint,
+  parentContext
 }) {
   const {
     idKey,
@@ -18,11 +18,8 @@ export default function MasterForm({
     modalKey,
     additionalFields = [],
     idLocation,
-    // Removed unused: modifierIdPayloadKey, updatedDtPayloadKey
   } = master;
 
-  // IMPORTANT: Use the dynamically injected payloads from the master object.
-  // These are guaranteed to have companyId, userId, and timestamps.
   const masterPostPayload = master.postPayload;
   const masterPutPayload = master.putPayload;
 
@@ -38,18 +35,15 @@ export default function MasterForm({
 
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [parentIndustryName, setParentIndustryName] = useState('');
 
-  // Extract JSON stringify outside of useEffect dependency array as suggested by ESLint
-  // This is technically not strictly necessary for correctness, but cleans up ESLint warning.
   const additionalFieldsString = JSON.stringify(additionalFields);
 
   useEffect(() => {
-    // console.log("[MasterForm] useEffect triggered. editingItem:", editingItem);
     if (editingItem) {
       const newFormData = {
         [payloadKey]: editingItem[modalKey] || '',
       };
-      // Use the actual additionalFields array directly here
       additionalFields.forEach(field => {
         newFormData[field] = editingItem[field] !== undefined ? editingItem[field] : '';
       });
@@ -57,44 +51,47 @@ export default function MasterForm({
       setFormData(newFormData);
       setFormError(null);
       setFormLoading(false);
-      // console.log("[MasterForm] Form set to EDIT mode. formData:", newFormData, "formLoading: false");
+
+      // Set parent industry name when editing a sub-industry
+      if (master.title === 'Sub Industry' && editingItem.iindustry_id) {
+        // If parentContext is provided, use its name
+        if (parentContext?.name) {
+          setParentIndustryName(parentContext.name);
+        } 
+        // Otherwise, try to get it from editingItem if available
+        else if (editingItem.parentIndustryName) {
+          setParentIndustryName(editingItem.parentIndustryName);
+        }
+      }
     } else {
       const resetState = {
         [payloadKey]: '',
       };
-      // Use the actual additionalFields array directly here
       additionalFields.forEach(field => {
         resetState[field] = '';
       });
       setFormData(resetState);
       setFormError(null);
       setFormLoading(false);
-      // console.log("[MasterForm] Form set to ADD mode. formData:", resetState, "formLoading: false");
+      setParentIndustryName(''); // Reset parent industry name for new items
     }
-  }, [editingItem, payloadKey, modalKey, additionalFieldsString]); // Use the stringified version here
+  }, [editingItem, payloadKey, modalKey, additionalFieldsString, master.title, parentContext]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // console.log(`[MasterForm] handleChange - Name: ${name}, Value: ${value}`);
-    setFormData((prevData) => {
-      const updatedData = {
-        ...prevData,
-        [name]: value,
-      };
-      // console.log("[MasterForm] formData updated:", updatedData);
-      return updatedData;
-    });
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log("[MasterForm] handleSubmit called. Setting formLoading to true.");
     setFormLoading(true);
     setFormError(null);
 
     if (!formData[payloadKey].trim()) {
       setFormError(`Please enter a ${master.title.toLowerCase()} name.`);
-      // console.log("[MasterForm] Validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
@@ -102,18 +99,13 @@ export default function MasterForm({
     const parsedCompanyId = companyId ? parseInt(companyId, 10) : null;
     const parsedUserId = userId ? parseInt(userId, 10) : null;
 
-    // console.log("[MasterForm] Raw companyId from prop:", companyId, "Parsed:", parsedCompanyId);
-    // console.log("[MasterForm] Raw userId from prop:", userId, "Parsed:", parsedUserId);
-
     if (parsedCompanyId === null || isNaN(parsedCompanyId)) {
       setFormError("Company ID is missing or invalid. Please log in again.");
-      // console.log("[MasterForm] Company ID validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
     if (parsedUserId === null || isNaN(parsedUserId)) {
       setFormError("User ID is missing or invalid. Please log in again.");
-      // console.log("[MasterForm] User ID validation failed. Setting formLoading to false.");
       setFormLoading(false);
       return;
     }
@@ -124,41 +116,29 @@ export default function MasterForm({
       let finalPayload = {};
 
       if (editingItem) {
-        // --- Logic for PUT request (UPDATE) ---
         const itemId = editingItem[idKey];
         if (!itemId) {
           setFormError(`Item ID (${idKey}) is missing for update.`);
-          // console.log("[MasterForm] Item ID missing for update. Setting formLoading to false.");
           setFormLoading(false);
           return;
         }
 
-        // Start with the base payload from master (dynamically injected in CompanyMaster)
         finalPayload = { ...masterPutPayload };
-        finalPayload[payloadKey] = formData[payloadKey]; // Add main form data
+        finalPayload[payloadKey] = formData[payloadKey];
 
-        // Add additional fields from formData
         additionalFields.forEach(field => {
           finalPayload[field] = formData[field];
         });
 
-        // Add the ID to the payload if idLocation is 'body'
         if (idLocation === 'body') {
-          // Adjust for specific idKey if necessary, like 'lostReasonId' for 'ilead_lost_reason_id'
           finalPayload[idKey === 'ilead_lost_reason_id' ? 'lostReasonId' : idKey] = itemId;
         }
 
-        // Determine PUT URL
         requestUrl = typeof putEndpoint === 'function' ? putEndpoint(itemId) : `${putEndpoint}/${itemId}`;
-
-
       } else {
-        // --- Logic for POST request (ADD NEW) ---
-        // Start with the base payload from master (dynamically injected in CompanyMaster)
         finalPayload = { ...masterPostPayload };
-        finalPayload[payloadKey] = formData[payloadKey]; // Add main form data
+        finalPayload[payloadKey] = formData[payloadKey];
 
-        // Add additional fields from formData
         additionalFields.forEach(field => {
           finalPayload[field] = formData[field];
         });
@@ -166,57 +146,47 @@ export default function MasterForm({
         requestUrl = postEndpoint;
       }
 
-      // --- Special handling for Sub Industry parent ID ---
       if (master.title === 'Sub Industry') {
         if (parentContext?.id) {
           finalPayload['iindustry_id'] = parentContext.id;
-          // console.log(`[MasterForm] Adding iindustry_id from parentContext for POST: ${parentContext.id}`);
         } else if (editingItem?.iindustry_id) {
           finalPayload['iindustry_id'] = editingItem.iindustry_id;
-          // console.log(`[MasterForm] Retaining iindustry_id from editingItem for PUT: ${editingItem.iindustry_id}`);
-        } else {
-          console.warn("[MasterForm] Sub Industry operation without a parent industry ID.");
         }
       }
 
-      // console.log("[MasterForm] Final Payload being sent:", finalPayload);
-      // console.log(`[MasterForm] Request URL: ${requestUrl}`);
-
       if (editingItem) {
-        console.log("[MasterForm] Submitting PUT request.");
         response = await axios.put(requestUrl, finalPayload);
-        alert(`${master.title} updated successfully!`);
       } else {
-        // console.log("[MasterForm] Submitting POST request.");
         response = await axios.post(requestUrl, finalPayload);
-        alert(`${master.title} added successfully!`);
       }
 
-      // console.log('[MasterForm] API Response:', response.data);
       onSaveSuccess();
     } catch (err) {
-      console.error("[MasterForm] Error saving item:", err);
-      if (err.response) {
-        console.error("[MasterForm] API Error Response:", err.response.data);
-      }
+      console.error("Error saving item:", err);
       setFormError("Failed to save item: " + (err.response?.data?.message || err.message || "Unknown error."));
     } finally {
-      // console.log("[MasterForm] Form submission complete. Setting formLoading to false.");
       setFormLoading(false);
     }
   };
-
-  // console.log("[MasterForm] Current formLoading state (render):", formLoading);
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border border-blue-200 rounded-md bg-white shadow-sm">
       {formError && <p className="text-red-500 text-sm text-center mb-4">{formError}</p>}
 
+      {/* Display parent industry name when editing a sub-industry */}
+      {master.title === 'Sub Industry' && editingItem && parentIndustryName && (
+        <div className="mb-4 p-2 bg-gray-50 rounded-md">
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Parent Industry:</span> {parentIndustryName}
+          </p>
+        </div>
+      )}
+
       {/* Main input field */}
       <div className="mb-4">
         <label htmlFor={payloadKey} className="block text-sm font-medium text-gray-700">
           {master.title} Name
-          {master.title === 'Sub Industry' && parentContext && (
+          {master.title === 'Sub Industry' && parentContext && !editingItem && (
             <span className="text-sm text-gray-500 ml-2"> (for {parentContext.name})</span>
           )}
         </label>
@@ -233,7 +203,7 @@ export default function MasterForm({
         />
       </div>
 
-      {/* Render additional fields dynamically */}
+      {/* Additional fields */}
       {additionalFields.map((field) => (
         <div key={field} className="mb-4">
           <label htmlFor={field} className="block text-sm font-medium text-gray-700">

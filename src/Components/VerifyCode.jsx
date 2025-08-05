@@ -2,34 +2,46 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const VerifyCode = () => {
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
   const inputsRef = useRef([]);
   const [error, setError] = useState("");
 
   const handleChange = (e, index) => {
     const value = e.target.value;
 
+    // Accept only a single digit 0-9
     if (!/^[0-9]$/.test(value)) {
       e.target.value = '';
       return;
     }
 
+    // If value entered and not the last input, focus next input
     if (value && index < inputsRef.current.length - 1) {
       inputsRef.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (e, index) => {
+    // Move focus to previous input on Backspace if current is empty
     if (e.key === 'Backspace' && !e.target.value && index > 0) {
       inputsRef.current[index - 1].focus();
     }
   };
 
   const handleVerify = () => {
-    const enteredOtp = inputsRef.current.map(input => input.value).join('');
-    const storedOtp = localStorage.getItem("reset_otp");
+    const enteredOtp = inputsRef.current.map(input => input.value).join('').trim();
+    const storedOtp = (localStorage.getItem("reset_otp") || "").trim();
+
+    console.log("Entered OTP:", enteredOtp);
+    console.log("Stored OTP:", storedOtp);
+
+    if (enteredOtp.length !== 4) {
+      setError("Please enter a 4-digit OTP.");
+      return;
+    }
 
     if (enteredOtp === storedOtp) {
+      setError("");
       navigate("/updatepassword");
     } else {
       setError("Invalid OTP. Please try again.");
@@ -40,7 +52,11 @@ const VerifyCode = () => {
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden w-full max-w-5xl space-y-10 md:space-y-0 md:space-x-20">
         <div className="bg-[radial-gradient(circle,#2563eb,#164CA1)] w-full md:w-[500px] h-[540px] flex items-center justify-center rounded-3xl">
-          <img src="/images/login/verify_code.png" alt="Verification Illustration" className="max-w-[80%] h-auto" />
+          <img 
+            src="/images/login/verify_code.png" 
+            alt="Verification Illustration" 
+            className="max-w-[80%] h-auto" 
+          />
         </div>
 
         <div className="w-full md:w-[500px] p-6 sm:p-10 flex flex-col justify-center items-center text-center">
@@ -55,6 +71,9 @@ const VerifyCode = () => {
                 onKeyDown={(e) => handleKeyDown(e, i)}
                 ref={(el) => (inputsRef.current[i] = el)}
                 className="w-12 h-12 text-center border border-gray-300 rounded-md text-lg"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="one-time-code"
               />
             ))}
           </div>

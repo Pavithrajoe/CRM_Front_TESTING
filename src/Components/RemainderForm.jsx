@@ -7,23 +7,23 @@ import { useParams } from "react-router-dom";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { usePopup } from "../context/PopupContext"; // Assuming you have a PopupContext
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
 
-// Speech recognition setup is only needed for content now
+// Speech recognition setup
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = new SpeechRecognition();
-
 mic.continuous = true;
 mic.interimResults = true;
 mic.lang = "en-US";
 
 const ReminderForm = () => {
   const { leadId } = useParams();
+  const { showPopup } = usePopup();
   const [showForm, setShowForm] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(true);
   const [users, setUsers] = useState([]);
   const [reminderList, setReminderList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -31,25 +31,25 @@ const ReminderForm = () => {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [assignToMe, setAssignToMe] = useState(false);
-
   const [isListeningContent, setIsListeningContent] = useState(false);
-  const [noteContent, setNoteContent] = useState(null);
-
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false); // State for expanding search
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
   const [form, setForm] = useState({
     title: "",
     content: "",
-    reminderDateTime: new Date(), // Initialize with current date/time
+    reminderDateTime: new Date(),
     priority: "Normal",
     assignt_to: "",
     ilead_id: Number(leadId),
   });
 
   const contentInputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
+  // Set logged in user info
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (userString) {
@@ -70,11 +70,12 @@ const ReminderForm = () => {
     if (showForm) {
       setForm(prevForm => ({
         ...prevForm,
-        reminderDateTime: new Date() // Sets to current date/time
+        reminderDateTime: new Date()
       }));
     }
   }, [showForm]);
 
+  // Speech Recognition effect
   useEffect(() => {
     if (isListeningContent) {
       mic.start();
@@ -88,17 +89,12 @@ const ReminderForm = () => {
 
     mic.onresult = (event) => {
       const transcript = Array.from(event.results)
-        .map((result) => result[0])
-        .map((result) => result.transcript)
+        .map((result) => result[0].transcript)
         .join("");
-
-      if (isListeningContent) {
-        setNoteContent(transcript);
-        setForm((prevForm) => ({
-          ...prevForm,
-          content: transcript,
-        }));
-      }
+      setForm((prevForm) => ({
+        ...prevForm,
+        content: transcript,
+      }));
     };
 
     mic.onerror = (event) => {
@@ -117,20 +113,11 @@ const ReminderForm = () => {
     }
   };
 
-  useEffect(() => {
-    const newUserFlag = localStorage.getItem("isNewUser");
-    setIsNewUser(newUserFlag !== "false");
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("isNewUser", isNewUser ? "true" : "false");
-  }, [isNewUser]);
-
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -149,44 +136,28 @@ const ReminderForm = () => {
       }));
     }
   };
-  const formatDateTime = (date) => {
-    if (!date) return "";
-
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    const seconds = String(d.getSeconds()).padStart(2, "0");
-
-    return `${day}/${month}/${year} ${hours} ${minutes} ${seconds}`;
-  };
 
   const validateForm = () => {
-    if (!form.title || !form.content || !form.reminderDateTime) {
-      toast.error("Please fill in all required fields (Title, Description, Date & Time).");
+    if (!form.title.trim() || !form.content.trim() || !form.reminderDateTime) {
+      showPopup("Error", "Please fill in all required fields (Title, Description, Date & Time).", "error");
       return false;
     }
-
     if (form.reminderDateTime < new Date()) {
-      toast.error("Reminder date and time must be in the future.");
+      showPopup("Error", "Reminder date and time must be in the future.", "error");
       return false;
     }
-
     return true;
   };
 
-  const handleSubmit = async (e, status) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setSubmitting(true);
     const data = {
       ...form,
       reminderDate: form.reminderDateTime.toISOString(),
-      status
+      status: "submitted"
     };
     data.assignt_to = Number(form.assignt_to);
 
@@ -203,12 +174,11 @@ const ReminderForm = () => {
       const result = await response.json();
 
       if (!response.ok || (result.data && result.data.error)) {
-        toast.error(
-          `Error: ${result.data?.error || result.message || "Could not add reminder"}`
-        );
+        showPopup("Error", `Error: ${result.data?.error || result.message || "Could not add reminder"}`, "error");
         return;
       }
 
+      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
       setForm({
         title: "",
         content: "",
@@ -217,15 +187,12 @@ const ReminderForm = () => {
         assignt_to: "",
         ilead_id: Number(leadId),
       });
-      setNoteContent(null);
       setAssignToMe(false);
-      toast.success(
-        status === "submitted" ? "Reminder submitted" : "Saved as draft"
-      );
       getReminder();
       setShowForm(false);
     } catch (err) {
-      toast.error("Submission failed. Try again.");
+      showPopup("Error", "Submission failed. Try again.", "error");
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -243,14 +210,10 @@ const ReminderForm = () => {
           },
         }
       );
-
       const data = await response.json();
       if (response.ok) {
         setReminderList(data.message);
       }
-      // else {
-      //   toast.error("Failed to fetch reminders");
-      // }
     } catch (e) {
       console.error(e);
     }
@@ -273,13 +236,16 @@ const ReminderForm = () => {
   }, []);
 
   const applyFilters = useCallback(() => {
-    setReminderList((prev) => [...prev]);
+    // This function can remain empty as the filter logic is in `filteredReminders`
+    // but it's good to keep for clarity if you want to add more complex filtering later.
+    setShowFilterModal(false);
   }, []);
 
   const resetFilters = useCallback(() => {
     setFromDate("");
     setToDate("");
-    setReminderList((prev) => [...prev]);
+    setSearchTerm("");
+    setShowFilterModal(false);
   }, []);
 
   const filteredReminders = reminderList.filter((reminder) => {
@@ -287,8 +253,8 @@ const ReminderForm = () => {
     const matchesSearch =
       reminder.cremainder_title.toLowerCase().includes(lowerCaseSearchTerm) ||
       reminder.cremainder_content.toLowerCase().includes(lowerCaseSearchTerm) ||
-      reminder.priority.toLowerCase().includes(lowerCaseSearchTerm) ||
-      reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm);
+      (reminder.priority && reminder.priority.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (reminder.assigned_to && reminder.assigned_to.toLowerCase().includes(lowerCaseSearchTerm));
 
     const reminderDate = new Date(reminder.dremainder_dt);
     const from = fromDate ? new Date(fromDate) : null;
@@ -300,39 +266,70 @@ const ReminderForm = () => {
     return matchesSearch && matchesDate;
   });
 
+  const formatDateTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    return d.toLocaleDateString('en-IN', options).replace(/,/, '') + ' ' + d.toLocaleTimeString('en-IN', options);
+  };
+  
+  // UseEffect to focus search input when it opens
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
 
   return (
-    <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full  font-sans text-base leading-relaxed text-gray-900 mx-auto">
+    <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full font-sans text-base leading-relaxed text-gray-900 mx-auto">
       <ToastContainer position="top-right" autoClose={5000} />
 
+      {/* Header with Search and New Reminder Button */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm w-[80%] sm:w-auto flex-grow">
-          <Search className="text-gray-500" size={18} />
+        
+        {/* Interactive Search Bar */}
+        <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto">
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search reminders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-transparent outline-none text-sm font-medium w-full"
+            className={`
+              transition-all duration-300 ease-in-out
+              bg-transparent outline-none text-sm font-medium
+              ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0'}
+            `}
           />
+          <button
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors
+              ${isSearchOpen ? 'text-blue-900' : ''}
+            `}
+            aria-label="Toggle search bar"
+          >
+            <Search size={18} />
+          </button>
         </div>
+        
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={() => setShowFilterModal(true)}
-            className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0"
+            className="p-2 rounded-full bg-blue-900 hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0"
             aria-label="Filter Reminders"
           >
             <Filter size={20} color="white" />
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full shadow-md hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base"
+            className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base"
           >
             + Add Reminder
           </button>
         </div>
       </div>
 
+      {/* Filter Modal */}
       {showFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm sm:max-w-md space-y-4">
@@ -357,25 +354,13 @@ const ReminderForm = () => {
             </label>
             <div className="flex justify-end gap-2 mt-6">
               <button
-                onClick={() => {
-                  resetFilters();
-                  setShowFilterModal(false);
-                }}
-                className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-150 ease-in-out text-sm"
+                onClick={resetFilters}
+                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out text-sm"
               >
                 Reset
               </button>
               <button
-                onClick={() => setShowFilterModal(false)}
-                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  applyFilters();
-                  setShowFilterModal(false);
-                }}
+                onClick={applyFilters}
                 className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition duration-150 ease-in-out text-sm"
               >
                 Apply
@@ -389,7 +374,7 @@ const ReminderForm = () => {
       <div className="flex flex-col divide-y divide-gray-200 bg-white rounded-3xl shadow-md overflow-hidden">
         {filteredReminders.length === 0 ? (
           <div className="text-center p-6 text-gray-500 font-medium">
-            No reminders match your criteria.
+            No reminders found.
           </div>
         ) : (
           filteredReminders.map((reminder) => (
@@ -422,16 +407,7 @@ const ReminderForm = () => {
                 </div>
                 <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
                   <p className="font-medium text-blue-700">
-                    {(() => {
-                      const d = new Date(reminder.dremainder_dt);
-                      const day = String(d.getDate()).padStart(2, "0");
-                      const month = String(d.getMonth() + 1).padStart(2, "0");
-                      const year = d.getFullYear();
-                      const hours = String(d.getHours()).padStart(2, "0");
-                      const minutes = String(d.getMinutes()).padStart(2, "0");
-                      const seconds = String(d.getSeconds()).padStart(2, "0");
-                      return `${day}/${month}/${year} ${hours} ${minutes} ${seconds}`;
-                    })()}
+                    {formatDateTime(reminder.dremainder_dt)}
                   </p>
                 </div>
               </div>
@@ -458,7 +434,7 @@ const ReminderForm = () => {
               </button>
               <h2 className="font-semibold text-lg sm:text-xl mt-5 mb-6">New Reminder</h2>
 
-              <form onSubmit={(e) => handleSubmit(e, "submitted")}>
+              <form onSubmit={handleSubmit}>
                 <label className="block text-sm sm:text-base mb-2 font-semibold text-gray-700">
                   Title <span className="text-red-500">*</span>
                 </label>
@@ -491,10 +467,8 @@ const ReminderForm = () => {
                   <button
                     type="button"
                     onClick={() => toggleListening("content")}
-                    className={`absolute top-2 right-2 px-3 py-1 rounded-full text-white text-sm select-none ${
-                      isListeningContent
-                        ? "bg-red-500 hover:bg-red-600"
-                        : "bg-red-500 hover:bg-blue-900"
+                    className={`absolute top-2 right-2 p-2 rounded-full text-white text-sm select-none ${
+                      isListeningContent ? "bg-red-500 hover:bg-red-600" : "bg-gray-100 hover:bg-green-600"
                     } transition`}
                     aria-label={
                       isListeningContent
@@ -502,15 +476,7 @@ const ReminderForm = () => {
                         : "Start listening to description"
                     }
                   >
-                    {isListeningContent ? (
-                      <>
-                        <span className="animate-pulse">🎙️</span> Stop
-                      </>
-                    ) : (
-                      <>
-                        <span>🎙️</span>
-                      </>
-                    )}
+                    {isListeningContent ? "🎙️" : "🎤"}
                   </button>
                 </div>
                 {isListeningContent && (
@@ -581,7 +547,7 @@ const ReminderForm = () => {
                         setForm(prev => ({ ...prev, reminderDateTime: newValue }))
                       }
                       minDateTime={new Date()}
-                      format="dd/MM/yyyy HH mm ss"
+                      format="dd/MM/yyyy HH:mm:ss"
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -605,14 +571,6 @@ const ReminderForm = () => {
                   >
                     {submitting ? "Submitting..." : "Submit Reminder"}
                   </button>
-                  {/* <button
-                    type="button"
-                    onClick={(e) => handleSubmit(e, "draft")}
-                    className="bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition font-semibold w-full sm:w-auto text-sm sm:text-base"
-                    disabled={submitting}
-                  >
-                    Save as Draft
-                  </button> */}
                 </div>
               </form>
             </div>

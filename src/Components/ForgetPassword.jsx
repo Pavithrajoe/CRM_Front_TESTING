@@ -9,43 +9,54 @@ const ForgetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const handleSendOTP = async () => {
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
+ const handleSendOTP = async () => {
+  if (!email.trim()) {
+    setError("Email is required");
+    return;
+  }
 
-    setError("");
-    setSuccessMessage("");
-    setLoading(true);
+  setError("");
+  setSuccessMessage("");
+  setLoading(true);
 
-    try {
-      const response = await fetch(ENDPOINTS.FORGOT_PASSWORD, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cEmail: email }),
-      });
+  try {
+    const response = await fetch(ENDPOINTS.FORGOT_PASSWORD, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cEmail: email }),
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        const extractedOtp = data.data.match(/\d+/)?.[0];
+    if (response.ok) {
+      const data = await response.json();
 
-        if (extractedOtp) {
-          localStorage.setItem("reset_email", email);
-          localStorage.setItem("reset_otp", extractedOtp);
-        }
+      // Store the OTP sent by backend in localStorage
+      const otpFromBackend = data.data?.toString() || "";
 
-        setSuccessMessage(data.message || "OTP sent successfully");
-        navigate("/verify");
+      if (!otpFromBackend) {
+        setError("Failed to get OTP from server.");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+
+      localStorage.setItem("reset_otp", otpFromBackend);
+      localStorage.setItem("reset_email", email);
+
+      setSuccessMessage("OTP sent successfully. Please check your email.");
+      
+      navigate("/verify");
+    } else {
+      const errorData = await response.json();
+      setError(errorData.message || "Failed to send OTP.");
     }
-  };
+  } catch (err) {
+    setError("Network error. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">

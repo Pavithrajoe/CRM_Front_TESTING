@@ -66,6 +66,7 @@ const ProfileHeader = () => {
       notificationDate.getFullYear() === today.getFullYear()
     );
   }, []);
+  <pfofile></pfofile>
 
   const fetchUnreadTodayNotifications = useCallback(async () => {
     const currentUserString = localStorage.getItem('user');
@@ -186,13 +187,13 @@ const ProfileHeader = () => {
     navigate('/');
   };
 
-  const createUser = () => navigate('/users');
+  // const createUser = () => navigate('/users');
   const viewAllNotifications = () => {
     setShowNotifications(false);
     navigate('/notifications');
   };
 
-  const isAdminUser = ['administrator', 'super_admin'].includes(profile.role?.toLowerCase());
+  // const isAdminUser = ['administrator', 'super_admin'].includes(profile.role?.toLowerCase());
 
   return (
     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
@@ -211,14 +212,14 @@ const ProfileHeader = () => {
         </div>
       )}
 
-      {isAdminUser && (
+      {/* {isAdminUser && (
         <button
           onClick={createUser}
           className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
         >
           + User
         </button>
-      )}
+      )} */}
 
       <div className="relative" ref={notificationRef}>
         <Bell

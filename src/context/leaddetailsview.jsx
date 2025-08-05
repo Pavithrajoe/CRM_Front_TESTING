@@ -431,7 +431,7 @@ const LeadDetailView = () => {
       )}
 
       {/* Left Column: Profile Card & Action Card */}
-      <div className="w-full lg:w-1/4 xl:w-1/5 p-2 sm:p-3 md:p-4">
+      <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
         <div className="sticky top-4 z-10 space-y-4">
           <ProfileCard
             leadId={leadId}
@@ -451,15 +451,15 @@ const LeadDetailView = () => {
         />
 
         {/* Tab Navigation and Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 rounded-full p-1 shadow-inner w-full sm:w-auto">
-            {["Activity", "Comments", "Reminders"].map((label, idx) => (
+        <div className="flex flex-col sm:flex-row flex-wrap  items-start sm:items-center justify-between gap-3 mb-4 w-full">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md shadow-blue-900 rounded-full p-1  w-full sm:w-auto">
+            {["Activity", "Follow-up", "Reminders"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
                 className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${tabIndex === idx
-                    ? "bg-white shadow text-blue-600"
-                    : "text-gray-500 hover:bg-white hover:text-blue-600"
+                    ? "bg-blue-100 shadow text-blue-900"
+                    : "text-gray-500 hover:bg-white hover:text-blue-900"
                   }`}
               >
                 {label}
@@ -473,18 +473,18 @@ const LeadDetailView = () => {
               <button
               
                 onClick={() => setIsMailOpen(true)}
-                className="bg-white hover:bg-yellow-300 text-gray-700 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl shadow transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
                 title="Email"
-              > <div className="w-px h-5 bg-gray-300"></div>
+              > <div className="w-px h-5 bg-gray-600"></div>
                 <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} />
-                 <div className="w-px h-5 bg-gray-300"></div>
+                 <div className="w-px h-5 bg-gray-600"></div>
                 {/* <span>Email</span> */}
               </button>
                
 
               {!(leadData?.bisConverted === true) && (
                 <button
-                  className="bg-green-600 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl shadow transition text-xs sm:text-sm md:text-base"
+                  className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
                   onClick={handleWonClick}
                 >
                   Won
@@ -492,7 +492,7 @@ const LeadDetailView = () => {
               )}
 
               <button
-                className="bg-red-300 text-red-600 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl shadow-inner transition text-xs sm:text-sm md:text-base"
+                className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
                 onClick={handleLostClick}
               >
                 Lost

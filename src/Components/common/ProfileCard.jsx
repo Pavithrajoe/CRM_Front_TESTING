@@ -1330,74 +1330,77 @@ const ProfileCard = () => {
 
   return (
     <>
-      <div className="max-w-2xl sm:max-w-xl md:max-w-2xl lg:max-w-2xl xl:max-w-3xl mx-auto p-4 sm:p-4 md:p-4 bg-white rounded-2xl shadow-lg space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <h2 className="text-sm sm:text-sm md:text-xl font-semibold text-gray-800">
-            Lead Details
-          </h2>
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <button
-              onClick={() => setShowDetails(true)}
-              className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-              aria-label="View Full Details"
-            >
-              <FiEye size={15} className="sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={handleEditProfile}
-              className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors shadow-md"
-              aria-label="Edit Profile"
-            >
-              <FiEdit size={15} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        </div>
+<div className="w-full p-6 lg:p-6 bg-white shadow-blue-900 rounded-3xl shadow-md">
+   <div className="flex justify-end w-full"> {/* Parent container pushes content right */}
+  <div className="flex items-center space-x-2"> {/* Button group */}
+    <button
+      onClick={() => setShowDetails(true)}
+      className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 hover:text-gray-800 transition-all duration-300 transform hover:scale-110 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+      aria-label="View Full Details"
+      title="View Details"
+    >
+      <FiEye size={18} />
+    </button>
+    <button
+      onClick={handleEditProfile}
+      className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+      aria-label="Edit Profile"
+      title="Edit Profile"
+    >
+      <FiEdit size={18} />
+    </button>
+  </div>
+</div>
+  <div className="flex items-center justify-between mt-10 border-b border-gray-100">
+    <h2 className="text-xl sm:text-2xl font-bold text-grey-600 tracking-tight">
+      {profile.corganization || "-"}'s Details
+    </h2>
+
+  </div>
+  <div class="border-t border-gray-900 my-2 w-full"></div>
+ 
+
         
-        {profile.isUpdated === true && (
-          <h3 className="text-sm sm:text-sm font-bold break-words bg-green-100 rounded-xl w-[150px] p-4 text-grey-900">
-            Edited Profile
-          </h3>
-        )}
+        <div className=" items-start and w-full sm:items-start gap-4 sm:gap-6 pt-6">
+  {/* Profile Info */}
+  <div className="flex-1 text-center sm:text-left">
+    <div className="flex flex-col sm:flex-row items-center gap-2">
+      <h3 className="text-2xl font-bold text-gray-900 break-words">
+        {profile.clead_name || "Lead Name"}
+      </h3>
+      {profile.isUpdated && (
+        <span className="inline-flex items-center px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full transition-all duration-300 transform hover:scale-105">
+          <FiCheckCircle className="w-3 h-3 mr-1" />
+          Edited Profile
+        </span>
+      )}
+    </div>
+    <p className="text-sm sm:text-base break-words text-gray-900 mt-1 font-semibold">
+      {profile.corganization || "Organization"}
+    </p>
+  </div>
 
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 pt-4">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
-            <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                profile.clead_name
-              )}&background=random&color=fff&rounded=true`}
-              alt="Profile"
-              className="w-20 h-20 shadow-lg shadow-fuchsia-200 rounded-full object-cover"
-            />
-          </div>
-          <div className="text-center sm:text-left mt-5">
-            <h3 className="text-lg sm:text-xl font-bold w-[180px] break-words text-gray-900">
-              {profile.clead_name || "-"}
-            </h3>
-            <p className="text-sm sm:text-base w-[180px] break-words text-gray-500">
-              {profile.corganization || "-"}
-            </p>
-          </div>
-        </div>
-
-        <div className="text-sm sm:text-base text-gray-700 space-y-4 pt-4">
+  
+</div>
+        <div className="text-sm sm:text-base text-gray-700 break-words space-y-3 pt-4">
           <div className="flex items-center gap-3">
-            <FiPhone className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="w-[180px] break-words">{profile.iphone_no || "-"}</span>
+            <FiPhone className="text-gray-900 break-words w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="break-words text-grey-900 font-bold">{profile.iphone_no || "-"}</span>
           </div>
           <div className="flex items-center gap-3">
-            <FiMail className="text-gray-500 w-4 h-4 words sm:w-5 sm:h-5" />
-            <span className="w-[180px] break-words">{profile.cemail || "-"}</span>
+            <FiMail className="text-gray-900 break-words w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.cemail || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
-            <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="bw-[180px] break-words">{profile.clead_address1 || "-"}</span>
+            <FiMapPin className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="bw-[180px] break-words text-grey-900 font-bold">{profile.clead_address1 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
-            <FiMove className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="w-[180px] break-words">{profile.clead_address2 || "-"}</span>
+            <FiMove className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.clead_address2 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
-            <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <TbWorld className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
             {profile.cwebsite ? (
               <a
                 href={profile.cwebsite.startsWith("http")
@@ -1405,7 +1408,7 @@ const ProfileCard = () => {
                   : `https://${profile.cwebsite}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline w-[180px] break-words "
+                className="text-blue-900 hover:underline w-[180px] break-words text-grey-900 font-bold "
               >
                 {profile.cwebsite}
               </a>
@@ -1415,8 +1418,8 @@ const ProfileCard = () => {
           </div>
 
           <div className="flex items-start gap-3">
-            <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="w-[180px] break-words">{profile.corganization || "-"}</span>
+            <FiCodesandbox className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
+            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.corganization || "-"}</span>
           </div>
 
           {profile.bactive === false && (
@@ -1566,7 +1569,7 @@ const ProfileCard = () => {
 {profile.bactive !== false && (
   <div className="flex justify-center">
     <button
-      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+      className="inline-flex items-center px-4 py-2 bg-blue-900 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
       disabled={!selectedAssignToUser}
       onClick={handleAssignButtonClick}
     >
@@ -1620,14 +1623,14 @@ const ProfileCard = () => {
       </div>
 
       {/* Attachments Section */}
-      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
+      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-blue-900 shadow-md mt-6">
         <label className="block text-sm font-medium text-gray-700 mb-4">
           Manage Attachments
         </label>
 
         <button
           onClick={() => setIsAttachmentModalOpen(true)}
-          className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-500 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md"
+          className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-900 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md"
         >
           <FiUpload className="mr-2" /> Upload New File
         </button>
@@ -1691,7 +1694,7 @@ const ProfileCard = () => {
                 <>
                   <p className="text-sm text-gray-500">
                     Drag & drop a file here, or{" "}
-                    <span className="text-blue-500 font-medium">
+                    <span className="text-blue-900 font-medium">
                       click to select
                     </span>
                   </p>
@@ -1708,7 +1711,7 @@ const ProfileCard = () => {
                   setIsAttachmentModalOpen(false);
                   setSelectedFile(null);
                 }}
-                className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 text-sm text-gray-900 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={uploading}
               >
                 Cancel
@@ -1719,7 +1722,7 @@ const ProfileCard = () => {
                 className={`px-5 py-2 text-sm font-semibold rounded-lg text-white shadow-md ${
                   uploading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600"
+                    : "bg-blue-900 hover:bg-blue-600"
                 } transition-colors`}
               >
                 {uploading ? "Uploading..." : "Upload"}

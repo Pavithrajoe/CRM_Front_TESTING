@@ -752,15 +752,15 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
         {statusRemarks.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-4">Remarks Timeline</h3>
+            <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
             <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
               {statusRemarks.map((remark, index) => (
                 <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
                   {index !== statusRemarks.length - 1 && (
-                    <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 transform -translate-y-1/2 z-0"></div>
+                    <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-blue-900 transform -translate-y-1/2 z-0"></div>
                   )}
                   <div
-                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] min-w-[200px] max-w-[350px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
+                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-blue-900  min-w-[200px] max-w-[350px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
                     onClick={() => setSelectedRemark(remark)}
                   >
                     <div className="space-y-2 text-sm">

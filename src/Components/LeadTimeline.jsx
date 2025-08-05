@@ -13,38 +13,40 @@ const activityColors = {
 
 // Helper function to get activity-specific messages
 const getActivityMessage = (activity) => {
-  const { activitytype, data, user, performedbyid } = activity;
-  const userName = user?.cFull_name || `User ${performedbyid || 'System'}`; // Fallback for performedbyid
+  const { activitytype, data, user, performedbyid, activitytimestamp } = activity;
+  const userName = user?.cFull_name || `User ${performedbyid || 'System'}`;
+  
+  // Format the activity date in DD/MM/YYYY format
+  const activityDate = new Date(activitytimestamp).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "numeric",
+    year: "numeric"
+  });
 
-  // Helper to replace generic user IDs with actual names in messages
   const personalizeMessage = (msg) =>
-    typeof msg === "string" ? msg.replace(`User ${performedbyid}`, userName).replace(`${performedbyid}`, userName) : msg; // Ensure both forms are replaced
+    typeof msg === "string" ? msg.replace(`User ${performedbyid}`, userName).replace(`${performedbyid}`, userName) : msg;
 
   switch (activitytype) {
     case "lead_created":
-      return personalizeMessage(data?.newStatus) || `Lead created by ${userName}.`;
+      return personalizeMessage(data?.newStatus) || `Lead created by ${userName} on ${activityDate}`;
     case "follow_up":
-      // Assuming `data.notes` or similar would contain follow-up details if available
-      return `Follow-up scheduled by ${userName}.`;
+      return `Follow-up scheduled by ${userName} on ${activityDate}`;
     case "proposal_sent":
-      return `Proposal sent to the client by ${userName}.`;
+      return `Proposal sent to the client by ${userName} on ${activityDate}`;
     case "comment_added":
-      return personalizeMessage(data?.newStatus) || `A comment was added by ${userName}.`;
+      return personalizeMessage(data?.newStatus) || `Comment added by ${userName} on ${activityDate}`;
     case "assigned_to_user":
-      // Refined logic to handle [object Object] more gracefully
       if (typeof data?.newStatus === "string" && data.newStatus.includes("[object Object]")) {
-        return `The lead was assigned by ${userName}.`;
+        return `Lead assigned by ${userName} on ${activityDate}`;
       }
-      return personalizeMessage(data?.newStatus) || `The lead was assigned by ${userName}.`;
+      return personalizeMessage(data?.newStatus) || `Lead assigned by ${userName} on ${activityDate}`;
     default:
-      // Capitalize and replace underscores for unhandled types
       return (
         personalizeMessage(data?.newStatus) ||
-        activitytype.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        `${activitytype.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} by ${userName} on ${activityDate}`
       );
   }
 };
-
 // Helper: Get color for a given activity type, fallback to default
 const getActivityColor = (type) => activityColors[type] || activityColors.default;
 
@@ -120,7 +122,7 @@ export default function LeadTimeline({ leadId }) {
         {/* Adjust the h-[...] value based on your layout. For example, h-[calc(100vh-200px)] 
             if you have a header/footer taking up 200px, or just remove the fixed height 
             and overflow-y-auto if you want the page to scroll naturally. */}
-        <div className="flex flex-col items-center space-y-8 h-full overflow-y-auto">
+        <div className="flex flex-col  items-center space-y-8 h-full overflow-y-auto">
 
           {history.map((entry, index) => {
             // Alternate content side
@@ -153,7 +155,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-end pr-8">
                   {isLeft && (
                     <article
-                      className="bg-white rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >
@@ -165,14 +167,14 @@ export default function LeadTimeline({ leadId }) {
                       </h3>
                       <p className="text-gray-700 text-base">{message}</p>
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
-                        <img
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
-                          alt={`Avatar of ${performedBy}`}
-                          className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
-                          loading="lazy"
-                        />
-                        <time dateTime={date.toISOString()}>{humanReadable}</time>
-                      </footer>
+  <img
+    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
+    alt={`Avatar of ${performedBy}`}
+    className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
+    loading="lazy"
+  />
+  <time dateTime={date.toISOString()}>{humanReadable}</time>
+</footer>
                     </article>
                   )}
                 </div>
@@ -222,7 +224,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-start pl-8">
                   {!isLeft && (
                     <article
-                      className="bg-white rounded-3xl shadow-lg p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >

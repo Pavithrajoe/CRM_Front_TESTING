@@ -8,8 +8,10 @@ export default function KPIStats(data) {
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);
   const [wonCount, setWonCount] = useState(0);
-  const [activeCount, setActiveCount] = useState(0); // Renamed from ActiveCount to activeCount for convention
+  const [activeCount, setActiveCount] = useState(0); 
   const [lostCount, setLostCount] = useState(0);
+  const [websiteLeadCount, setWebsiteLeadCount] = useState(0);
+
 
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
@@ -30,7 +32,8 @@ export default function KPIStats(data) {
         if (!extractedUserId) {
           throw new Error("User ID not found in token.");
         }
-      } else {
+      } 
+      else {
         throw new Error("Authentication token not found in local storage.");
       }
     } catch (e) {
@@ -44,13 +47,39 @@ export default function KPIStats(data) {
       setCurrentUserId(extractedUserId);
       setCurrentToken(tokenFromStorage);
       setLoading(false);
-    } else {
+    } 
+    else {
       setError("User ID or authentication token is missing after processing.");
       setLoading(false);
     }
   }, []);
 
   const leads = data?.data?.leads || [];
+
+  useEffect(() => {
+  const fetchLeads = async () => {
+    const response = await fetchLeadsAPI();
+    const leadsData = await response.json();
+    setLeads(leadsData); 
+
+    
+    let websiteLeadCount = 0;
+    leadsData.forEach((lead) => {
+      if (
+        lead.bisConverted === false &&
+        lead.website_lead === true &&
+        lead.bactive === false
+      ) {
+        websiteLeadCount++;
+      }
+    });
+
+    setWebsiteLeadCount(websiteLeadCount); 
+  };
+
+  fetchLeads();
+}, []);
+
 
   useEffect(() => {
     let hot = 0;
@@ -151,6 +180,22 @@ export default function KPIStats(data) {
     <div className="px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="grid grid-cols-2 gap-6">
+
+
+
+          <div
+          className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
+        >
+          <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
+            Total Leads
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">{activeCount + lostCount + wonCount}</p>
+        </div>
+
+
+
+
+
           <div
             className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
             onClick={handleTotalLeadsClick}
@@ -160,6 +205,17 @@ export default function KPIStats(data) {
             </h3>
             <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
           </div>
+
+
+          <div
+            className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
+          >
+            <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
+              Website Leads
+            </h3>
+            <p className="text-2xl font-bold text-gray-900">{websiteLeadCount}</p>
+          </div>
+
           <div
             className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
             onClick={handleTotalLostClick}

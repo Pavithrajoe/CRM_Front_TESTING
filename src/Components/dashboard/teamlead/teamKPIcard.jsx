@@ -158,7 +158,7 @@ export default function TeamKPIStats() {
       iconBg: "bg-green-500",
     },
     {
-      title: "Deals",
+      title: "Won Leads",
       value: dealCount,
       colorStart: "#8E24AA",
       colorEnd: "#9C27B0",

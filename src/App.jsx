@@ -57,6 +57,8 @@ import UserDeals from "./pages/userPage/userDeal.jsx";
 import UserReportPage from "./pages/userPage/UserReportPage.jsx";
 import UserCallLogs from "./pages/userPage/userCallLogs";
 import  LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
+import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
+import WonLeadTab from "./pages/dashboard/wonLeadTab.jsx";
 
 function App() {
   return (
@@ -92,7 +94,7 @@ function App() {
               <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
               <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
               <Route path="/lead-conversion" element={<LeadConversionPage/>}/>
-            <Route path="/company-leads" element={<CompanyLeads />} />
+             <Route path="/company-leads" element={<CompanyLeads />} />
              <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
               <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis/>}/>
               <Route path="leads" element={<LeadsDashboard />} />
@@ -105,6 +107,8 @@ function App() {
               <Route path="usercalllogs" element={<UserCallLogs />}/>
               <Route path="logusercalllogs" element={<LogUserCallLogs />} />
               <Route path="companymaster" element={<CompanyMaster />} />
+              <Route path="active-leads" element={<ActiveLeadTab />} />
+              <Route path="won-leads" element={<WonLeadTab />} />
            
 
               <Route path="companylist" element={<CompanyList />} />

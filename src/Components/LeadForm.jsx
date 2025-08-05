@@ -84,6 +84,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
   const [searchIndustry, setSearchIndustry] = useState("");
   const [isIndustryDropdownOpen, setIsIndustryDropdownOpen] = useState(false);
   const [searchSubIndustry, setSearchSubIndustry] = useState("");
+  const [filteredSubIndustries, setFilteredSubIndustries] = useState([]);
   const [isSubIndustryDropdownOpen, setIsSubIndustryDropdownOpen] = useState(false);
   const [searchSource, setSearchSource] = useState("");
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
@@ -138,6 +139,17 @@ const LeadForm = ({ onClose, onSuccess }) => {
     },
     [token]
   );
+
+  useEffect(() => {
+  if (form.cindustry_id) {
+    const newFilteredSubIndustries = leadSubIndustry.filter(
+      (sub) => sub.iindustry_parent === Number(form.cindustry_id)
+    );
+    setFilteredSubIndustries(newFilteredSubIndustries);
+  } else {
+    setFilteredSubIndustries([]);
+  }
+}, [form.cindustry_id, leadSubIndustry]);
 
   useEffect(() => {
     const fetchCountryCodes = async () => {
@@ -443,7 +455,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
     }
     if (name === "clead_name") {
       if (!value) {
-        error = "Lead Name is required";
+        error = "Lead Name is mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Lead Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -452,7 +464,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
     }
     if (name === "clead_address1") {
       if (!value) {
-        error = "Lead Address is required";
+        error = "Lead Address is mandatory";
       } else if (value.length > 200) {
         error = "Lead Address cannot exceed 200 characters";
       }
@@ -476,7 +488,7 @@ const LeadForm = ({ onClose, onSuccess }) => {
 
     if (name === "corganization") {
       if (!value) {
-        error = "Organization Name is required";
+        error = "Organization Name is mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Organization Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -485,28 +497,28 @@ const LeadForm = ({ onClose, onSuccess }) => {
     }
 
     if (name === "iphone_no" && !value) {
-      error = "Mobile Number is required";
+      error = "Mobile Number is mandatory";
     }
     if (name === "clead_address1" && !value) {
-      error = "Address Line 1 is required";
+      error = "Address Line 1 is mandatory";
     }
     if (name === "icity" && !value) {
-      error = "City is required";
+      error = "City is mandatory";
     }
     if (name === "iLeadpoten_id" && !value) {
-      error = "Lead Potential is required";
+      error = "Lead Potential is mandatory";
     }
     if (name === "iservice_id" && !value) {
-      error = "service is required";
+      error = "service is mandatory";
     }
     if (name === "ileadstatus_id" && !value) {
-      error = "Lead Status is required";
+      error = "Lead Status is mandatory";
     }
     if (name === "cindustry_id" && !value) {
-      error = "Industry is required";
+      error = "Industry is mandatory";
     }
     if (name === "lead_source_id" && !value) {
-      error = "Lead Source is required";
+      error = "Lead Source is mandatory";
     }
     if (name === "ino_employee") {
       const num = Number(value);
@@ -534,111 +546,138 @@ const LeadForm = ({ onClose, onSuccess }) => {
 
     return error;
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Define the allowed characters and the length limit
+    const allowedCharsRegex = /^[a-zA-Z0-9+\s]*$/;
+    const maxLength = 10; 
+
+    // Logic for Mobile Country Code
     if (name === "searchMobileCountryCode") {
-      setSearchMobileCountryCode(value);
-      const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
-        cc.code?.toLowerCase().includes(value.toLowerCase()) ||
-        cc.name?.toLowerCase().includes(value.toLowerCase())
-      ) : [];
-      setFilteredMobileCountryCodes(filtered);
-      setIsMobileCountryCodeDropdownOpen(true);
-    } else if (name === "searchWhatsappCountryCode") {
-      setSearchWhatsappCountryCode(value);
-      const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
-        cc.code?.toLowerCase().includes(value.toLowerCase()) ||
-        cc.name?.toLowerCase().includes(value.toLowerCase())
-      ) : [];
-      setFilteredWhatsappCountryCodes(filtered);
-      setIsWhatsappCountryCodeDropdownOpen(true);
-    } else if (name === "ino_employee" || name === "iproject_value") {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value === "" ? "" : Number(value)
-      }));
-      setErrors((prev) => ({
-        ...prev,
-        [name]: validateField(name, value),
-      }));
-    }
-    else {
-      setForm((prev) => {
-        const updated = { ...prev, [name]: value };
-
-        if (name === "iphone_no" && sameAsPhone) {
-          updated.cwhatsapp = value;
-          setErrors((prevErr) => ({
-            ...prevErr,
-            cwhatsapp: validateField("cwhatsapp", value),
-          }));
+        if (allowedCharsRegex.test(value)) {
+            if (value.length <= maxLength) {
+                setSearchMobileCountryCode(value);
+                setForm((prev) => ({ ...prev, phone_country_code: value }));
+                const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
+                    cc.code?.toLowerCase().includes(value.toLowerCase()) ||
+                    cc.name?.toLowerCase().includes(value.toLowerCase())
+                ) : [];
+                setFilteredMobileCountryCodes(filtered);
+                setIsMobileCountryCodeDropdownOpen(true);
+            }
         }
-        if (name === "phone_country_code" && sameAsPhone) {
-          updated.whatsapp_country_code = value;
-          setSearchWhatsappCountryCode(value);
+    } 
+    // Logic for Whatsapp Country Code
+    else if (name === "searchWhatsappCountryCode") {
+        if (allowedCharsRegex.test(value)) {
+            if (value.length <= maxLength) {
+                setSearchWhatsappCountryCode(value);
+                setForm((prev) => ({ ...prev, whatsapp_country_code: value }));
+                const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
+                    cc.code?.toLowerCase().includes(value.toLowerCase()) ||
+                    cc.name?.toLowerCase().includes(value.toLowerCase())
+                ) : [];
+                setFilteredWhatsappCountryCodes(filtered);
+                setIsWhatsappCountryCodeDropdownOpen(true);
+            }
         }
-
-        if (name === "cindustry_id" && prev.cindustry_id !== value) {
-          updated.csubindustry_id = "";
-          setSearchSubIndustry("");
-        }
-
-        return updated;
-      });
-
-      setErrors((prev) => ({
-        ...prev,
-        [name]: validateField(name, value),
-      }));
-    }
-
-    if (name === "searchCity") {
-      handleSearchCity(e);
+    } 
+     else if (name === "ino_employee" || name === "iproject_value") {
+        setForm((prev) => ({
+            ...prev,
+            [name]: value === "" ? "" : Number(value)
+        }));
+        setErrors((prev) => ({
+            ...prev,
+            [name]: validateField(name, value),
+        }));
+    } else if (name === "searchCity") {
+        handleSearchCity(e);
     } else if (name === "searchPotential") {
-      setSearchPotential(value);
-      setIsPotentialDropdownOpen(true);
-      if (!value) {
-        setForm((prev) => ({ ...prev, iLeadpoten_id: "" }));
-        setErrors((prev) => ({ ...prev, iLeadpoten_id: validateField("iLeadpoten_id", "") }));
-      }
+        setSearchPotential(value);
+        setIsPotentialDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({ ...prev, iLeadpoten_id: "" }));
+            setErrors((prev) => ({ ...prev, iLeadpoten_id: validateField("iLeadpoten_id", "") }));
+        }
     } else if (name === "searchStatus") {
-      setSearchStatus(value);
-      setIsStatusDropdownOpen(true);
-      if (!value) {
-        setForm((prev) => ({ ...prev, ileadstatus_id: "" }));
-        setErrors((prev) => ({ ...prev, ileadstatus_id: validateField("ileadstatus_id", "") }));
-      }
+        setSearchStatus(value);
+        setIsStatusDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({ ...prev, ileadstatus_id: "" }));
+            setErrors((prev) => ({ ...prev, ileadstatus_id: validateField("ileadstatus_id", "") }));
+        }
     } else if (name === "searchIndustry") {
-      setSearchIndustry(value);
-      setIsIndustryDropdownOpen(true);
-      if (!value) {
-        setForm((prev) => ({ ...prev, cindustry_id: "" }));
-        setErrors((prev) => ({ ...prev, cindustry_id: validateField("cindustry_id", "") }));
-      }
+        setSearchIndustry(value);
+        setIsIndustryDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({
+                ...prev,
+                cindustry_id: "",
+                csubindustry_id: "" 
+            }));
+            setSearchSubIndustry("");
+            setErrors((prev) => ({
+                ...prev,
+                cindustry_id: validateField("cindustry_id", ""),
+                csubindustry_id: validateField("csubindustry_id", "") 
+            }));
+        }
     } else if (name === "searchSubIndustry") {
-      setSearchSubIndustry(value);
-      setIsSubIndustryDropdownOpen(true);
-    }
-    else if (name === "searchSource") {
-      setSearchSource(value);
-      setIsSourceDropdownOpen(true);
-      if (!value) {
-        setForm((prev) => ({ ...prev, lead_source_id: "" }));
-        setErrors((prev) => ({ ...prev, lead_source_id: validateField("lead_source_id", "") }));
-      }
-    }
-    else if (name === "searchService") {
-      setSearchService(value);
-      setIsServiceDropdownOpen(true);
-      if (!value) {
-        setForm((prev) => ({ ...prev, iservice_id: "" }));
-        setErrors((prev) => ({ ...prev, iservice_id: validateField("iservice_id", "") }));
-      }
-    }
-  };
+        setSearchSubIndustry(value);
+        setIsSubIndustryDropdownOpen(true);
+    } else if (name === "searchSource") {
+        setSearchSource(value);
+        setIsSourceDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({ ...prev, lead_source_id: "" }));
+            setErrors((prev) => ({ ...prev, lead_source_id: validateField("lead_source_id", "") }));
+        }
+    } else if (name === "searchSource") {
+        setSearchSource(value);
+        setIsSourceDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({ ...prev, lead_source_id: "" }));
+            setErrors((prev) => ({ ...prev, lead_source_id: validateField("lead_source_id", "") }));
+        }
+    } else if (name === "searchService") {
+        setSearchService(value);
+        setIsServiceDropdownOpen(true);
+        if (!value) {
+            setForm((prev) => ({ ...prev, iservice_id: "" }));
+            setErrors((prev) => ({ ...prev, iservice_id: validateField("iservice_id", "") }));
+        }
+    } else { 
+        setForm((prev) => {
+            const updated = { ...prev, [name]: value };
 
+            if (name === "iphone_no" && sameAsPhone) {
+                updated.cwhatsapp = value;
+                setErrors((prevErr) => ({
+                    ...prevErr,
+                    cwhatsapp: validateField("cwhatsapp", value),
+                }));
+            }
+            if (name === "phone_country_code" && sameAsPhone) {
+                updated.whatsapp_country_code = value;
+                setSearchWhatsappCountryCode(value);
+            }
+
+            if (name === "cindustry_id" && prev.cindustry_id !== value) {
+                updated.csubindustry_id = "";
+                setSearchSubIndustry("");
+            }
+
+            return updated;
+        });
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: validateField(name, value),
+        }));
+    }
+};
   const handleSelectDropdownItem = (
     fieldName,
     itemId,
@@ -720,8 +759,10 @@ const LeadForm = ({ onClose, onSuccess }) => {
     }
   };
 
+
   const handleBlur = (e) => {
     const { name, value } = e.target;
+    
     if (name === "searchMobileCountryCode") {
       if (!Array.isArray(countryCodes) || !countryCodes.some(cc => cc.code === value)) {
         setSearchMobileCountryCode(form.phone_country_code || "+91");
@@ -732,21 +773,28 @@ const LeadForm = ({ onClose, onSuccess }) => {
         setSearchWhatsappCountryCode(form.whatsapp_country_code || "+91");
       }
       setIsWhatsappCountryCodeDropdownOpen(false);
-    } else if (name === "searchIndustry") {
-      const selectedIndustry = Array.isArray(leadIndustry) ? leadIndustry.find(ind => ind.iindustry_id === form.cindustry_id) : null;
-      if (!selectedIndustry || selectedIndustry.cindustry_name !== value) {
-        setSearchIndustry(selectedIndustry ? selectedIndustry.cindustry_name : "");
-        setForm((prev) => ({ ...prev, cindustry_id: selectedIndustry ? selectedIndustry.iindustry_id : "" }));
-      }
-      setIsIndustryDropdownOpen(false);
+    } 
+    else if (name === "searchIndustry") {
+        const selectedIndustry = Array.isArray(leadIndustry) ? leadIndustry.find(ind => ind.iindustry_id === form.cindustry_id) : null;
+        if (!selectedIndustry || selectedIndustry.cindustry_name !== value) {
+            setSearchIndustry(selectedIndustry ? selectedIndustry.cindustry_name : "");
+            setForm((prev) => ({
+                ...prev,
+                cindustry_id: selectedIndustry ? selectedIndustry.iindustry_id : "",
+                csubindustry_id: "" 
+            }));
+            setSearchSubIndustry(""); 
+        }
+        setIsIndustryDropdownOpen(false);
     } else if (name === "searchSubIndustry") {
-      const selectedSubIndustry = Array.isArray(leadSubIndustry) ? leadSubIndustry.find(subInd => subInd.isubindustry === form.csubindustry_id) : null;
-      if (!selectedSubIndustry || selectedSubIndustry.subindustry_name !== value) {
-        setSearchSubIndustry(selectedSubIndustry ? selectedSubIndustry.subindustry_name : "");
-        setForm((prev) => ({ ...prev, csubindustry_id: selectedSubIndustry ? selectedSubIndustry.isubindustry : "" }));
-      }
-      setIsSubIndustryDropdownOpen(false);
-    } else if (name === "searchPotential") {
+        const selectedSubIndustry = Array.isArray(leadSubIndustry) ? leadSubIndustry.find(subInd => subInd.isubindustry === form.csubindustry_id) : null;
+        if (!selectedSubIndustry || selectedSubIndustry.subindustry_name !== value) {
+            setSearchSubIndustry(selectedSubIndustry ? selectedSubIndustry.subindustry_name : "");
+            setForm((prev) => ({ ...prev, csubindustry_id: selectedSubIndustry ? selectedSubIndustry.isubindustry : "" }));
+        }
+        setIsSubIndustryDropdownOpen(false);
+    } 
+    else if (name === "searchPotential") {
       const selectedPotential = Array.isArray(Potential) ? Potential.find(pot => pot.ileadpoten_id === form.iLeadpoten_id) : null;
       if (!selectedPotential || selectedPotential.clead_name !== value) {
         setSearchPotential(selectedPotential ? selectedPotential.clead_name : "");
@@ -831,22 +879,22 @@ const LeadForm = ({ onClose, onSuccess }) => {
       }
     });
 
-    if (!form.clead_name) newErrors.clead_name = "Lead Name is required";
+    if (!form.clead_name) newErrors.clead_name = "Lead Name is mandatory";
     if (form.clead_name && !/^[A-Za-z\s]+$/.test(form.clead_name)) {
       newErrors.clead_name = "Lead Name can only contain letters and spaces";
     }
-    if (!form.corganization) newErrors.corganization = "Organization Name is required";
+    if (!form.corganization) newErrors.corganization = "Organization Name is mandatory";
     if (form.cwebsite && !/^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i.test(form.cwebsite)) {
       newErrors.cwebsite = "Invalid website URL format";
     }
-    if (!form.iphone_no) newErrors.iphone_no = "Mobile Number is required";
-    if (!form.clead_address1) newErrors.clead_address1 = "Address Line 1 is required";
-    if (!form.icity) newErrors.icity = "City is required";
+    if (!form.iphone_no) newErrors.iphone_no = "Mobile Number is mandatory";
+    if (!form.clead_address1) newErrors.clead_address1 = "Address Line 1 is mandatory";
+    if (!form.icity) newErrors.icity = "City is mandatory";
 
-    if (!form.iLeadpoten_id) newErrors.iLeadpoten_id = "Lead Potential is required";
-    if (!form.ileadstatus_id) newErrors.ileadstatus_id = "Lead Status is required";
-    if (!form.cindustry_id) newErrors.cindustry_id = "Industry is required";
-    if (!form.lead_source_id) newErrors.lead_source_id = "Lead Source is required";
+    if (!form.iLeadpoten_id) newErrors.iLeadpoten_id = "Lead Potential is mandatory";
+    if (!form.ileadstatus_id) newErrors.ileadstatus_id = "Lead Status is mandatory";
+    if (!form.cindustry_id) newErrors.cindustry_id = "Industry is mandatory";
+    if (!form.lead_source_id) newErrors.lead_source_id = "Lead Source is mandatory";
 
     return { ...errors, ...newErrors };
   };
@@ -929,9 +977,9 @@ const LeadForm = ({ onClose, onSuccess }) => {
           setIsPopupVisible(false);
           onClose();
           if (onSuccess) {
-            onSuccess(); // Call the success callback if provided
+            onSuccess();
           } else {
-            window.location.reload(); // Fallback to page reload
+            window.location.reload(); 
           }
         }, 3000);
       } else {
@@ -1193,7 +1241,8 @@ const LeadForm = ({ onClose, onSuccess }) => {
               displayField: "subindustry_name",
               formField: "csubindustry_id",
               error: errors.csubindustry_id,
-              disabled: !form.cindustry_id,
+              // disabled: !form.cindustry_id,
+              disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
               required: false,
               emptyType: "subindustry"
             },

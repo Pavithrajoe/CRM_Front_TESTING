@@ -111,9 +111,9 @@ export default function LeadsTable({ data }) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Assigned To
-              </th>
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Modified By
               </th>
@@ -135,7 +135,7 @@ export default function LeadsTable({ data }) {
                       {lead.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  {/* <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
                       <img
                         src={lead.avatar}
@@ -144,7 +144,7 @@ export default function LeadsTable({ data }) {
                       />
                       <span className="truncate max-w-[100px]">{lead.assignedTo}</span>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
                       <img

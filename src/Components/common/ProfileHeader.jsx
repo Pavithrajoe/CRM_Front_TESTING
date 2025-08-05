@@ -197,12 +197,7 @@ const ProfileHeader = () => {
 
   return (
     <div className="flex justify-end items-center gap-4 mb-6 relative font-[San Francisco, -apple-system, BlinkMacSystemFont]">
-      <button
-        onClick={handleLeadFormOpen}
-        className="px-5 py-2 rounded-full text-blue-600 font-medium bg-white border border-gray-300 shadow-sm hover:bg-gray-100 transition"
-      >
-        + Create Lead
-      </button>
+      
 
       {showLeadForm && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center">
@@ -265,7 +260,14 @@ const ProfileHeader = () => {
         )}
       </div>
 
-      <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={handleLeadFormOpen}
+        className="px-5 py-2 rounded-full text-white font-medium bg-blue-500 border border-gray-300 shadow-sm hover:bg-gray-800 transition"
+      >
+        + Create Lead
+      </button>
+
+      {/* <div className="relative" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
@@ -312,10 +314,10 @@ const ProfileHeader = () => {
             </button>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* App Menu Icon + Dropdown */}
-      <div className="relative" ref={appMenuRef}>
+      {/* <div className="relative" ref={appMenuRef}>
         <img
           src="../../../public/images/nav/menu.svg"
           alt="App Menu"
@@ -324,28 +326,28 @@ const ProfileHeader = () => {
         />
         {showAppMenu && (
          <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 text-sm p-2" style={{marginTop:'16px'}}>
-  <div className="grid grid-cols-2 gap-2">
-    <a
-      href="https://expense.inklidox.com/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
-    >
-      <img src=""/> OExpense
-    </a>
-    <a
-      href="https://hrms.inklidox.com/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
-    >
-      🧑‍💼 OHRMS
-    </a>
-  </div>
-</div>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href="https://expense.inklidox.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
+            >
+              <img src=""/> OExpense
+            </a>
+            <a
+              href="https://hrms.inklidox.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-2 hover:bg-gray-100 text-gray-700 rounded"
+            >
+              🧑‍💼 OHRMS
+            </a>
+          </div>
+          </div>
 
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

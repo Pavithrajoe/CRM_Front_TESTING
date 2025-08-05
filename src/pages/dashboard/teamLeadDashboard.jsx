@@ -12,8 +12,8 @@ import ProfileHeader from "@/Components/common/ProfileHeader";
 import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
 import KPIStats from "@/Components/dashboard/teamlead/tlKPIcards";
 import RemindersCard from "@/Components/dashboard/teamlead/tlremindercard";
-import LeadsTable from "@/Components/dashboard/teamlead/tlLeadcard";
-import DealsTable from "@/Components/dashboard/teamlead/tlDealcard";
+// import LeadsTable from "@/Components/dashboard/teamlead/tlLeadcard";
+// import DealsTable from "@/Components/dashboard/teamlead/tlDealcard";
 
 const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
@@ -53,9 +53,9 @@ const LeadsDashboard = () => {
 
         const data = await response.json();
         setDashboardData(data);
-       // console.log("✅ Dashboard Data:", data);
+       // console.log(" Dashboard Data:", data);
       } catch (error) {
-        // console.error("❌ Error fetching dashboard data:", error);
+        // console.error(" Error fetching dashboard data:", error);
       }
     };
 
@@ -88,8 +88,8 @@ const LeadsDashboard = () => {
         <div className="grid grid-cols-2 gap-6">
           <KPIStats data={dashboardData?.details} />
           <RemindersCard reminder_data={dashboardData?.details?.reminders} />
-          <LeadsTable data={dashboardData?.details?.leads} />
-          <DealsTable data={dashboardData?.details?.deals} />
+          {/* <LeadsTable data={dashboardData?.details?.leads} />
+          <DealsTable data={dashboardData?.details?.deals} /> */}
         </div>
       </main>
 

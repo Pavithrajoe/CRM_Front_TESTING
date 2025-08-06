@@ -19,11 +19,12 @@ const WonList = () => {
   const [currentToken, setCurrentToken] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: 'dmodified_dt', direction: 'descending' }); 
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState(null);
-  const [importSuccess, setImportSuccess] = useState(false);
+  const [companyIdFromToken, setCompanyIdFromToken] = useState(null);
+//   const [showImportModal, setShowImportModal] = useState(false);
+//   const [selectedFile, setSelectedFile] = useState(null);
+//   const [importLoading, setImportLoading] = useState(false);
+//   const [importError, setImportError] = useState(null);
+//   const [importSuccess, setImportSuccess] = useState(false);
   const [roleID, setRoleID] = useState();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -36,8 +37,10 @@ const WonList = () => {
       tokenFromStorage = localStorage.getItem('token');
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
+        // console.log('Decoded Token:', decodedToken);
         setCurrentUserId(decodedToken.user_id);
         setRoleID(decodedToken.role_id);
+        setCompanyIdFromToken(decodedToken.company_id );
         setCurrentToken(tokenFromStorage);
       } else {
         setError('Authentication required. Please log in.');
@@ -96,8 +99,9 @@ const WonList = () => {
       const filteredDeals = rawFetchedDeals.filter((item) => {
         const isOwned = item.clead_owner === currentUserId;
         const isConverted = item.bisConverted === true || item.bisConverted === 'true';
-        const bactive = item.bactive === true || item.bactive === 'true';
-        return isOwned && isConverted;
+        const isactive = item.bactive === true || item.bactive === 'true';
+        const matchesCompany = parseInt(item.icompany_id, 10) === companyIdFromToken;
+        return isOwned && isConverted && isactive && matchesCompany;
       });
 
       // Sort deals by modified date descending
@@ -119,22 +123,42 @@ const WonList = () => {
 
   // --- UI FILTERING + SEARCH + DATE ---
   const applyFilters = useCallback(
-    (data) =>
-      data.filter((item) => {
-        const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
-        // Only search on name, org, email, phone
-        const matchesSearch =
-          match(item.clead_name || item.cdeal_name) ||
-          match(item.corganization || item.c_organization) ||
-          match(item.cemail || item.c_email) ||
-          match(item.iphone_no || item.c_phone);
+  (data) =>
+    data.filter((item) => {
+      const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        match(item.clead_name || item.cdeal_name) ||
+        match(item.corganization || item.c_organization) ||
+        match(item.cemail || item.c_email) ||
+        match(item.iphone_no || item.c_phone);
 
-        const matchesDate = isWithinDateRange(item.dmodified_dt);
+      const matchesDate = isWithinDateRange(item.dmodified_dt);
 
-        return matchesSearch && matchesDate;
-      }),
-    [searchTerm, fromDate, toDate]
-  );
+      const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+      const isActive = item.bactive === true || item.bactive === 'true';
+
+      return matchesSearch && matchesDate && isConverted && isActive;
+    }),
+  [searchTerm, fromDate, toDate]
+);
+
+//   const applyFilters = useCallback(
+//     (data) =>
+//       data.filter((item) => {
+//         const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
+//         // Only search on name, org, email, phone
+//         const matchesSearch =
+//           match(item.clead_name || item.cdeal_name) ||
+//           match(item.corganization || item.c_organization) ||
+//           match(item.cemail || item.c_email) ||
+//           match(item.iphone_no || item.c_phone);
+
+//         const matchesDate = isWithinDateRange(item.dmodified_dt);
+
+//         return matchesSearch && matchesDate;
+//       }),
+//     [searchTerm, fromDate, toDate]
+//   );
 
   // --- SORT ---
   const sortedData = useMemo(() => {
@@ -298,7 +322,7 @@ const WonList = () => {
     return <div className="text-center py-8 text-red-600 font-medium">{error}</div>;
   }
 
-  // -------------------- UI --------------------
+  // UI 
   return (
     <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
       <ProfileHeader />
@@ -344,7 +368,8 @@ const WonList = () => {
 
       <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
         <div className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium">
-          Won
+          {/* Won */}
+          Our Customers
         </div>
         {/* {roleID && (
         //   <button

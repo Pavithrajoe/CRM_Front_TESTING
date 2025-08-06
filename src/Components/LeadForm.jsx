@@ -1277,6 +1277,22 @@ const LeadForm = ({ onClose, onSuccess }) => {
               error: errors.iservice_id,
               required: true,
               emptyType: "service"
+            },
+            {
+              label: "Sub service",
+              ref: serviceDropdownRef,
+              inputName: "searchService",
+              searchValue: searchService,
+              setSearch: setSearchService,
+              open: isServiceDropdownOpen,
+              setOpen: setIsServiceDropdownOpen,
+              list: filterService,
+              keyField: "isubservice_id",
+              displayField: "subservice_name",
+              formField: "iservice_id",
+              error: errors.iservice_id,
+              required: true,
+              emptyType: "subservice"
             }
           ].map(
             ({

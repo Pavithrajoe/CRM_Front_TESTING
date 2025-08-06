@@ -286,67 +286,47 @@ export default function CompanyMaster() {
             
             skipCompanyIdInjection: false, 
         },
-        {
-            title: 'Lead Lost Reason',
-            value: 'Lead Lost Reasons',
-            modalKey: 'Lost Reason', // Display label for the main input
-
-            idKey: 'ilead_lost_reason_id', // ID field name in GET response and for operations
-            payloadKey: 'cLeadLostReason', // Main input field's key for formData
-            responseKey: 'data',          // Path to the data array/object in the GET response
-
-            idLocation: 'query', // Signals ID is in query string for DELETE
-
-            get: ENDPOINTS.MASTER_LOST_REASON_GET,
-            post: ENDPOINTS.MASTER_LOST_REASON_POST,
-            put: ENDPOINTS.MASTER_LOST_REASON_PUT, // PUT still sends ID in body based on `putPayloadFields`
-
-            delete: (id, 
-              item) => {
-                const backendIdKey = 'lostReasonId'; // Backend's expected ID key in query
-                const backendActiveKey = 'isActive'; // Backend's expected active status key in query
-                const statusForDelete = false;         // Always set to false for soft delete
-                return `${ENDPOINTS.MASTER_LOST_REASON_DELETE}?${backendIdKey}=${id}&${backendActiveKey}=${statusForDelete}`;
-            },
-
-            payloadMapping: {
-                ilead_lost_reason_id: 'lostReasonId', // Map frontend ID to backend ID name for payloads
-                cLeadLostReason: 'lostReason',        // Map frontend name to backend name for payloads
-                bactive: 'isActive',                  // Map frontend active status to backend active status for payloads
-                icompany_id: 'icompany_id', // Add company ID mapping
-            },
-
-            modifierIdPayloadKey: {
-                post: 'icreated_by',
-                put: null,
-                delete: 'iupdated_by'
-            },
-            updatedDtPayloadKey: {
-                post: 'dcreated_at',
-                put: null,
-                delete: 'dmodified_at'
-            },
-
-            activeStatusPayloadKey: 'bactive', // Used for GET display and POST checkbox
-
-            basePostPayload: {
-                cLeadLostReason: '',
-                bactive: true,
-            },
-
-            baseDeletePayload: {
-                isActive: false, 
-            },
-
-            // putPayloadFields: Explicitly list fields for the PUT request body.
-            putPayloadFields: ['cLeadLostReason', 'ilead_lost_reason_id', 'icompany_id'], 
-            postPayloadFields: ['cLeadLostReason', 'bactive', 'icreated_by', 'dcreated_at', 'icompany_id'],
-            
-            skipCompanyIdInjection: false, // Set to false if company_id is explicitly needed in payload
-        },
+        
         {
     title: 'Service',
     value: 'Service Masters',
+    modalKey: 'Service',
+    idKey: 'iservice_id',
+    payloadKey: 'cservice_name',
+    responseKey: 'data',
+    idLocation: 'body',
+    modifierIdPayloadKey: {
+        post: 'icreated_by',
+        put: 'iupdated_by'
+    },
+    updatedDtPayloadKey: {
+        post: 'dcreated_at',
+        put: 'dupdated_at'
+    },
+    activeStatusPayloadKey: 'bactive',
+    get: ENDPOINTS.MASTER_SERVICE_GET,
+    post: ENDPOINTS.MASTER_SERVICE_POST,
+    put: ENDPOINTS.MASTER_SERVICE_PUT,
+    delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+    basePostPayload: { cservice_name: '' },
+    basePutPayload: {},
+    putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
+    postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
+    payloadMapping: {
+        iservice_id: 'serviceId',
+        cservice_name: 'serviceName', // Fixed typo to match API
+        bactive: 'bactive',
+        icompany_id: 'icompany_id',
+        icreated_by: 'icreated_by',
+        iupdated_by: 'iupdated_by',
+        dcreated_at: 'dcreated_at',
+        dupdated_at: 'dupdated_at'
+    },
+    skipCompanyIdInjection: false
+},
+ {
+    title: 'Sub Service',
+    value: 'Sub Service Masters',
     modalKey: 'Service',
     idKey: 'iservice_id',
     payloadKey: 'cservice_name',
@@ -445,78 +425,139 @@ export default function CompanyMaster() {
     skipCompanyIdInjection: false,
     additionalFields: ['mailBody'] // Indicates there's an additional textarea field
 },
-        { // Corrected Label Master configuration
-            title: 'Label ',
-            value: 'Lead Form Labels',
-            modalKey: 'Lead Form Title', // Display label for the main input in the modal
+        // { // Corrected Label Master configuration
+        //     title: 'Label ',
+        //     value: 'Lead Form Labels',
+        //     modalKey: 'Lead Form Title', // Display label for the main input in the modal
 
-            idKey: 'iformLabelMasterId', // The unique ID field name as it appears in the GET response object.
-            payloadKey: 'leadFormTitle', // The main form field name and the key for the primary data in payloads.
-            responseKey: 'Message', // Path to the object itself in the GET response.
+        //     idKey: 'iformLabelMasterId', // The unique ID field name as it appears in the GET response object.
+        //     payloadKey: 'leadFormTitle', // The main form field name and the key for the primary data in payloads.
+        //     responseKey: 'Message', // Path to the object itself in the GET response.
 
-            idLocation: 'body', // Indicates that the ID for PUT/DELETE is part of the request body.
+        //     idLocation: 'body', // Indicates that the ID for PUT/DELETE is part of the request body.
 
-            modifierIdPayloadKey: { 
+        //     modifierIdPayloadKey: { 
+        //         post: 'icreated_by',
+        //         put: 'iupdated_by' 
+        //     },
+        //     updatedDtPayloadKey: { 
+        //         post: 'dcreated_dt',
+        //         put: 'updated_dt'
+        //     },
+        //     activeStatusPayloadKey: 'bactive', // Example for a checkbox, if used.
+
+        //     additionalFields: ['section1Label', 'section2Label', 'section3Label'], 
+
+        //     get: ENDPOINTS.MASTER_LABEL_GET, 
+        //     post: ENDPOINTS.MASTER_LABEL_POST, 
+        //     put: ENDPOINTS.MASTER_LABEL_PUT, 
+        //     // delete: Explicitly commented out, MasterModal will hide the delete button.
+
+        //     basePostPayload: {
+        //         leadFormTitle: '',
+        //         section1Label: '',
+        //         section2Label: '',
+        //         section3Label: '',
+        //     },
+        //     basePutPayload: {}, 
+
+        //     // CORRECTED: This MUST be an array of strings
+        //     putPayloadFields: [
+        //         "iformLabelMasterId", // Include the ID if it's part of the PUT body
+        //         "leadFormTitle",
+        //         "section1Label",
+        //         "section2Label",
+        //         "section3Label",
+        //         "icompany_id", // Assuming company_id is always part of Label Master payload
+        //         "iupdated_by", // Explicitly include if updated_by is expected
+        //         "updated_dt"   // Explicitly include if updated_dt is expected
+        //     ],
+        //     postPayloadFields: [ // Define for POST as well for consistency
+        //         "leadFormTitle",
+        //         "section1Label",
+        //         "section2Label",
+        //         "section3Label",
+        //         "icompany_id",
+        //         "icreated_by",
+        //         "dcreated_dt"
+        //     ],
+            
+        //     payloadMapping: {
+        //         iformLabelMasterId: 'formLabelMastersId', 
+        //         leadFormTitle: 'leadFormTitle',
+        //         section1Label: 'section1Label',
+        //         section2Label: 'section2Label',
+        //         section3Label: 'section3Label',
+        //         icompany_id: 'icompany_id', 
+        //         icreated_by: 'icreated_by', 
+        //         iupdated_by: 'iupdated_by', 
+        //         dcreated_dt: 'dcreated_dt', 
+        //         updated_dt: 'updated_dt', 
+        //     },
+
+        //     skipCompanyIdInjection: false, 
+        // },
+
+
+        {
+            title: 'Lead Lost Reason',
+            value: 'Lead Lost Reasons',
+            modalKey: 'Lost Reason', // Display label for the main input
+
+            idKey: 'ilead_lost_reason_id', // ID field name in GET response and for operations
+            payloadKey: 'cLeadLostReason', // Main input field's key for formData
+            responseKey: 'data',          // Path to the data array/object in the GET response
+
+            idLocation: 'query', // Signals ID is in query string for DELETE
+
+            get: ENDPOINTS.MASTER_LOST_REASON_GET,
+            post: ENDPOINTS.MASTER_LOST_REASON_POST,
+            put: ENDPOINTS.MASTER_LOST_REASON_PUT, // PUT still sends ID in body based on `putPayloadFields`
+
+            delete: (id, 
+              item) => {
+                const backendIdKey = 'lostReasonId'; // Backend's expected ID key in query
+                const backendActiveKey = 'isActive'; // Backend's expected active status key in query
+                const statusForDelete = false;         // Always set to false for soft delete
+                return `${ENDPOINTS.MASTER_LOST_REASON_DELETE}?${backendIdKey}=${id}&${backendActiveKey}=${statusForDelete}`;
+            },
+
+            payloadMapping: {
+                ilead_lost_reason_id: 'lostReasonId', // Map frontend ID to backend ID name for payloads
+                cLeadLostReason: 'lostReason',        // Map frontend name to backend name for payloads
+                bactive: 'isActive',                  // Map frontend active status to backend active status for payloads
+                icompany_id: 'icompany_id', // Add company ID mapping
+            },
+
+            modifierIdPayloadKey: {
                 post: 'icreated_by',
-                put: 'iupdated_by' 
+                put: null,
+                delete: 'iupdated_by'
             },
-            updatedDtPayloadKey: { 
-                post: 'dcreated_dt',
-                put: 'updated_dt'
+            updatedDtPayloadKey: {
+                post: 'dcreated_at',
+                put: null,
+                delete: 'dmodified_at'
             },
-            activeStatusPayloadKey: 'bactive', // Example for a checkbox, if used.
 
-            additionalFields: ['section1Label', 'section2Label', 'section3Label'], 
-
-            get: ENDPOINTS.MASTER_LABEL_GET, 
-            post: ENDPOINTS.MASTER_LABEL_POST, 
-            put: ENDPOINTS.MASTER_LABEL_PUT, 
-            // delete: Explicitly commented out, MasterModal will hide the delete button.
+            activeStatusPayloadKey: 'bactive', // Used for GET display and POST checkbox
 
             basePostPayload: {
-                leadFormTitle: '',
-                section1Label: '',
-                section2Label: '',
-                section3Label: '',
+                cLeadLostReason: '',
+                bactive: true,
             },
-            basePutPayload: {}, 
 
-            // CORRECTED: This MUST be an array of strings
-            putPayloadFields: [
-                "iformLabelMasterId", // Include the ID if it's part of the PUT body
-                "leadFormTitle",
-                "section1Label",
-                "section2Label",
-                "section3Label",
-                "icompany_id", // Assuming company_id is always part of Label Master payload
-                "iupdated_by", // Explicitly include if updated_by is expected
-                "updated_dt"   // Explicitly include if updated_dt is expected
-            ],
-            postPayloadFields: [ // Define for POST as well for consistency
-                "leadFormTitle",
-                "section1Label",
-                "section2Label",
-                "section3Label",
-                "icompany_id",
-                "icreated_by",
-                "dcreated_dt"
-            ],
+            baseDeletePayload: {
+                isActive: false, 
+            },
+
+            // putPayloadFields: Explicitly list fields for the PUT request body.
+            putPayloadFields: ['cLeadLostReason', 'ilead_lost_reason_id', 'icompany_id'], 
+            postPayloadFields: ['cLeadLostReason', 'bactive', 'icreated_by', 'dcreated_at', 'icompany_id'],
             
-            payloadMapping: {
-                iformLabelMasterId: 'formLabelMastersId', 
-                leadFormTitle: 'leadFormTitle',
-                section1Label: 'section1Label',
-                section2Label: 'section2Label',
-                section3Label: 'section3Label',
-                icompany_id: 'icompany_id', 
-                icreated_by: 'icreated_by', 
-                iupdated_by: 'iupdated_by', 
-                dcreated_dt: 'dcreated_dt', 
-                updated_dt: 'updated_dt', 
-            },
+            skipCompanyIdInjection: false, // Set to false if company_id is explicitly needed in payload
+        },
 
-            skipCompanyIdInjection: false, 
-        }
     ]), []); // Empty dependency array means MASTER_CONFIG is created only once
 
     const handleTileClick = (masterItem) => {

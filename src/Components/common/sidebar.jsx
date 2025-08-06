@@ -19,7 +19,7 @@ const Sidebar = () => {
     { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
     { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },
     { iconPath: '/images/nav/userss.png', label: 'Users', route: '/userpage' },
-    { iconPath: '/images/nav/masters.png', label: 'Masters', route: '/companymaster' },
+    { iconPath: '/images/nav/masterss.png', label: 'Masters', route: '/companymaster' },
     { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
     { iconPath: '/images/nav/customers.png', label: 'Customer', route: '/settingspage/account' },
   ];

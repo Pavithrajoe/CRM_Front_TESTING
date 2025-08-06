@@ -58,7 +58,8 @@ import UserReportPage from "./pages/userPage/UserReportPage.jsx";
 import UserCallLogs from "./pages/userPage/userCallLogs";
 import  LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
-import WonLeadTab from "./pages/dashboard/wonLeadTab.jsx";
+import  WonList from './pages/customerModule/customer.jsx';
+// import WonList from "./pages/dashboard/.jsx";
 
 function App() {
   return (
@@ -108,7 +109,8 @@ function App() {
               <Route path="logusercalllogs" element={<LogUserCallLogs />} />
               <Route path="companymaster" element={<CompanyMaster />} />
               <Route path="active-leads" element={<ActiveLeadTab />} />
-              <Route path="won-leads" element={<WonLeadTab />} />
+              <Route path="customers" element={<WonList/>} />
+              
            
 
               <Route path="companylist" element={<CompanyList />} />

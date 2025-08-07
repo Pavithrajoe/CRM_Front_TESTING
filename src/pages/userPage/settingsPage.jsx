@@ -603,12 +603,12 @@ const handleToggle = async (type) => {
         </section>
 
         <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
-         <Button
+         {/* <Button
   text={isSaving ? 'Saving...' : 'Save the Access'}
   onClick={updateCallLogAccess}
   disabled={isSaving}
   className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
-/>
+/> */}
         </div>
       </div>
 

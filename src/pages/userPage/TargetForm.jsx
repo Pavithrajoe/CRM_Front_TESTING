@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X } from "lucide-react";
 import { ENDPOINTS} from '../../api/constraints'; // Adjust the import path as necessary
 
-export default function SalesForm({ onClose }) {
+export default function SalesForm({userId, 
+  defaultFromDate, 
+  defaultToDate, 
+  onClose  }) {
   // const ENDPOINTS = {
   //  USER_POST: "http://192.168.1.75:3000/api/user-target",
   //  USER_GET: "http://192.168.1.75:3000/api/users",
@@ -44,6 +47,7 @@ export default function SalesForm({ onClose }) {
     assignedTo: '', // Will store iUser_id
     assignedBy: currentUserId?.toString() || '',
     createdBy: currentUserId?.toString() || '',
+      userId: userId,
   });
 
   const [errors, setErrors] = useState({});
@@ -130,7 +134,7 @@ export default function SalesForm({ onClose }) {
 
     if (!formData.formDate) newErrors.formDate = 'From Date is required';
     if (!formData.toDate)  newErrors.toDate = 'To Date is required';
-    if (!formData.assignedTo) newErrors.assignedTo = 'Assigned To is required';
+    if (!formData.userId) newErrors.assignedTo = 'Assigned To is required';
 
     if (formData.formDate && formData.toDate && new Date(formData.formDate) >= new Date(formData.toDate)) {
       newErrors.toDate = 'To Date must be after From Date';
@@ -238,34 +242,37 @@ export default function SalesForm({ onClose }) {
           </div>
 
           <div>
-            <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
-            <select
-              name="assignedTo"
-              value={formData.assignedTo} // Now formData.assignedTo holds iUser_id
-              onChange={(e) => {
-                setFormData(prev => ({
-                  ...prev,
-                  assignedTo: e.target.value // Store the iUser_id directly
-                }));
-              }}
-              className="w-full border p-2 rounded"
-            >
-              <option value="">Select User</option>
-              {companyUsers.map(user => (
-                <option key={user.iUser_id} value={user.iUser_id}>
-                  {user.cFull_name}
-                </option>
-              ))}
-            </select>
-            {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
-          </div>
+  <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
+  
+  {/* Display user's name instead of dropdown if userId matches iUser_id */}
+  <div className="w-full border p-2 rounded bg-gray-100">
+    {companyUsers.find(user => user.iUser_id.toString() === formData.userId.toString())?.cFull_name || "No user assigned"}
+  </div>
 
-          <div>
+  {/* Optional: Keep hidden input to retain userId in form submission */}
+  <input 
+    type="hidden" 
+    name="assignedTo" 
+    value={formData.userId} 
+  />
+
+  {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
+</div>
+
+
+          {/* <div>
             <label className="block mb-1">Assigned By</label>
             <div className="bg-gray-100 p-2 rounded text-gray-700 font-medium">
               {currentUser?.cFull_name || 'Loading...'}
             </div>
-          </div>
+          </div> */}
+
+          {/* <div>
+            <label className="block mb-1">Assigned By</label>
+            <div className="bg-gray-100 p-2 rounded text-gray-700 font-medium">
+              {currentUser?.cFull_name || 'Loading...'}
+            </div>
+          </div> */}
         </div>
 
         <div className="text-center mt-6">

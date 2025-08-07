@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints'; 
+import { CaseUpper } from 'lucide-react';
 
 
 function HistoryDashboard({ userId }) {
@@ -104,7 +105,8 @@ function HistoryDashboard({ userId }) {
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true
-            });
+                
+            }).toUpperCase();
         } catch (e) {
             console.error("Error formatting date:", isoString, e);
             return 'Invalid Date';

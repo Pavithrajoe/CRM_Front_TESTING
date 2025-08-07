@@ -75,7 +75,7 @@ function AcheivementDashboard({ userId }) {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
-        });
+        }).toUpperCase()
     };
 
     // --- Data Fetching Logic (memoized) ---

@@ -368,13 +368,16 @@ const fetchTargetMetrics = useCallback(async () => {
       </div>
 
       {showAddTargetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
-          <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
-            <SalesForm
-              onClose={() => {
-                closeTargetModal();
-                handleTargetAdded();
-              }}
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
+    <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
+      <SalesForm
+        userId={userId}  
+        defaultFromDate={selectedFromDate}  
+        defaultToDate={selectedToDate}
+        onClose={() => {
+          closeTargetModal();
+          handleTargetAdded();
+        }}
             />
           </div>
         </div>

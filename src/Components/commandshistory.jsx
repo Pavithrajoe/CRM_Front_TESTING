@@ -22,9 +22,10 @@ const Comments = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isListening, setIsListening] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // State for search bar
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [editingComment, setEditingComment] = useState(null); // New state for editing
   const formRef = useRef(null);
-  const searchInputRef = useRef(null); // Ref for search input
+  const searchInputRef = useRef(null);
   const commentsPerPage = 10;
   const token = localStorage.getItem("token");
   const { showPopup } = usePopup();
@@ -113,6 +114,13 @@ const Comments = () => {
       await fetchComments();
     }
     setFormData({ comments: "", LeadId: leadId });
+    setEditingComment(null); // Ensure editing state is null for new comment
+    setShowForm(true);
+  };
+  
+  const handleEditClick = (comment) => {
+    setEditingComment(comment);
+    setFormData({ comments: comment.ccomment_content, LeadId: leadId });
     setShowForm(true);
   };
 
@@ -153,7 +161,7 @@ const Comments = () => {
         return;
       }
 
-      // showPopup("Success", "🎉 Comment added successfully!", "success");
+      showPopup("Success", "🎉 Comment added successfully!", "success");
       setFormData((prev) => ({ ...prev, comments: "" }));
       setIsListening(false);
       setShowForm(false);
@@ -162,6 +170,47 @@ const Comments = () => {
     } catch (error) {
       showPopup("Error", "Failed to add comment due to network error.", "error");
       console.error("Add comment error:", error);
+    }
+  };
+
+  const handleEditSubmission = async (e) => {
+    e.preventDefault();
+    const trimmedComment = formData.comments.trim();
+    if (trimmedComment.length === 0) {
+      showPopup("Warning", "Comment cannot be empty!", "warning");
+      return;
+    }
+    if (trimmedComment.length < 5) {
+      showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${apiEndPoint}/comments/${editingComment.icomment_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comments: trimmedComment,
+          ilead_id: Number(leadId),
+        }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        showPopup("Error", data.message || "Failed to update comment.", "error");
+        return;
+      }
+      showPopup("Success", "🎉 Comment updated successfully!", "success");
+      setEditingComment(null); // Clear the editing state
+      setFormData({ comments: "", LeadId: leadId }); // Clear form
+      setShowForm(false); // Close the form
+      fetchComments(); // Re-fetch comments
+    } catch (error) {
+      showPopup("Error", "Failed to update comment due to network error.", "error");
+      console.error("Update comment error:", error);
     }
   };
 
@@ -182,7 +231,7 @@ const Comments = () => {
   const totalPages = Math.ceil(filteredComments.length / commentsPerPage);
 
   const formatDateTime = (dateStr) =>
-    new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+    new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }).toUpperCase();
 
   return (
    <div className="w-full overflow-x-hidden h-[100vh] shadow rounded bg-[#f8f8f8]" >
@@ -219,6 +268,16 @@ const Comments = () => {
               >
                 <div className="flex justify-between items-start">
                   <span className="font-medium text-gray-900 text-sm sm:text-base">{comment.name}</span>
+                  {userId && userId === comment.iuser_id && (
+                    <button
+                      onClick={() => handleEditClick(comment)}
+                      className="text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
                 <p className="text-gray-700 text-sm mt-2 leading-normal sm:leading-relaxed">{comment.ccomment_content}</p>
                 <p className="text-xs text-gray-400 mt-2 italic">
@@ -264,23 +323,21 @@ const Comments = () => {
                        "
           >
             <div className="flex justify-between items-center mb-3 sm:mb-4">
-              <h3 className="font-medium text-lg sm:text-xl text-gray-800">Add Comment</h3>
+              <h3 className="font-medium text-lg sm:text-xl text-gray-800">
+                {editingComment ? "Edit Comment" : "Add Comment"}
+              </h3>
               <button
                 onClick={() => {
                   setShowForm(false);
                   setIsListening(false);
+                  setEditingComment(null); // Clear editing state when closing
                 }}
                 className="text-xl sm:text-2xl text-gray-500 hover:text-red-500"
               >
                 ×
               </button>
             </div>
-            <form onSubmit={async (e) => {
-              const success = await handleFormSubmission(e);
-              if (success) {
-                setIsListening(false);
-              }
-            }} className="flex flex-col h-full">
+            <form onSubmit={editingComment ? handleEditSubmission : handleFormSubmission} className="flex flex-col h-full">
               <textarea
                 name="comments"
                 onChange={handleChange}
@@ -304,7 +361,7 @@ const Comments = () => {
                   type="submit"
                   className="bg-indigo-700 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base"
                 >
-                  Submit
+                  {editingComment ? "Update" : "Submit"}
                 </button>
               </div>
             </form>

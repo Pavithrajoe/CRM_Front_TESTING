@@ -3,7 +3,7 @@ import { Line } from "react-chartjs-2";
 import { ENDPOINTS } from "../../api/constraints";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { FiUsers, FiTrendingUp, FiDollarSign, FiClock, FiPieChart } from "react-icons/fi";
+import { FiUsers, FiTrendingUp, FiClock, FiPieChart } from "react-icons/fi";
 import * as XLSX from 'xlsx'; // Import xlsx library
 import { saveAs } from 'file-saver'; // Import saveAs from file-saver
 import { HiDownload } from "react-icons/hi";
@@ -251,7 +251,7 @@ export default function SalesByStageReport() {
           />
 
           <Card
-            icon={<FiDollarSign className="w-5 h-5" />}
+            icon={<FiTrendingUp  className="w-5 h-5" />}
             title="Total Pipeline Value"
             value={`₹${stats.totalValue.toLocaleString()}`}
             description="Combined deal worth"

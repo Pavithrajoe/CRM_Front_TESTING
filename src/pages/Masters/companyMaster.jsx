@@ -151,6 +151,8 @@ export default function CompanyMaster() {
     idKey: 'isubindustry',
     payloadKey: 'subindustry_name',
     responseKey: 'response.subindustries',
+        parentIdInChildResponseKey: 'iindustry_parent',
+
 
     get: ENDPOINTS.MASTER_INDUSTRY_GET,
     // responseKey: 'response.subindustries',
@@ -201,17 +203,17 @@ export default function CompanyMaster() {
 
     isHierarchical: true,
 
-      parentMasterConfig: {
-        masterName: "INDUSTRY",
-        getEndpoint: ENDPOINTS.MASTER_INDUSTRY_GET,
-        responseKey: 'response.industry',
-        idKey: 'iindustry_id',
-        nameKey: 'cindustry_name',
-        parentIdInChildResponseKey: 'industryParent', // Must match the API response field
-        formFieldKey: 'industryParent', // Must match the form field name
-        modalLabel: 'Parent Industry',
-        required: true
-    },
+ parentMasterConfig: {
+  masterName: "INDUSTRY",
+  getEndpoint: ENDPOINTS.MASTER_INDUSTRY_GET,
+  responseKey: 'response.industry',
+  idKey: 'iindustry_id',
+  nameKey: 'cindustry_name',
+  parentIdInChildResponseKey: 'iindustry_parent', // Must match API response field
+  formFieldKey: 'industryParent', // Must match form field name
+  modalLabel: 'Parent Industry',
+  required: true
+},
 
     postPayloadFields: [
         "subindustry_name",
@@ -324,42 +326,80 @@ export default function CompanyMaster() {
     },
     skipCompanyIdInjection: false
 },
- {
-    title: 'Sub Service',
-    value: 'Sub Service Masters',
-    modalKey: 'Service',
-    idKey: 'iservice_id',
-    payloadKey: 'cservice_name',
+{
+    title: 'Sub-Service',
+    value: 'Sub-Service Masters',
+    modalKey: 'Sub Service',
+    idKey: 'isubservice_id',
+    payloadKey: 'subservice_name',
     responseKey: 'data',
-    idLocation: 'body',
-    modifierIdPayloadKey: {
-        post: 'icreated_by',
-        put: 'iupdated_by'
-    },
-    updatedDtPayloadKey: {
-        post: 'dcreated_at',
-        put: 'dupdated_at'
-    },
-    activeStatusPayloadKey: 'bactive',
-    get: ENDPOINTS.MASTER_SERVICE_GET,
-    post: ENDPOINTS.MASTER_SERVICE_POST,
-    put: ENDPOINTS.MASTER_SERVICE_PUT,
-    delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
-    basePostPayload: { cservice_name: '' },
-    basePutPayload: {},
-    putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
-    postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
+    parentIdInChildResponseKey: 'iservice_parent',
+
+    get: ENDPOINTS.SUB_SERVICE,
+    post: ENDPOINTS.SUB_SERVICE,
+    put: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
+    
+    delete: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
+
     payloadMapping: {
-        iservice_id: 'serviceId',
-        cservice_name: 'serviceName', // Fixed typo to match API
+        isubservice_id: 'isubservice_id',
+        subservice_name: 'subservice_name', // Matches API expectation
+        iservice_parent: 'serviceParent',
         bactive: 'bactive',
-        icompany_id: 'icompany_id',
-        icreated_by: 'icreated_by',
-        iupdated_by: 'iupdated_by',
-        dcreated_at: 'dcreated_at',
-        dupdated_at: 'dupdated_at'
+        created_by: 'createdBy', // Matches API expectation
+        updated_by: 'updated_by'
     },
-    skipCompanyIdInjection: false
+
+    skipCompanyIdInjection: true,
+
+    modifierIdPayloadKey: {
+        post: 'createdBy',
+        put: 'updated_by',
+    },
+
+    updatedDtPayloadKey: {
+        post: null,
+        put: null,
+        delete: null,
+    },
+
+    activeStatusPayloadKey: 'bactive',
+
+    basePostPayload: {
+        subservice_name: '', // Must match exactly what API expects
+        serviceParent: null,
+        createdBy: null, // Will be populated with user ID
+        bactive: true
+    },
+
+    baseDeletePayload: {},
+
+    isHierarchical: true,
+
+    parentMasterConfig: {
+        masterName: "SERVICE",
+        getEndpoint: ENDPOINTS.MASTER_SERVICE_GET,
+        responseKey: 'data',
+        idKey: 'iservice_id',
+        nameKey: 'cservice_name',
+        parentIdInChildResponseKey: 'iservice_parent',
+        formFieldKey: 'serviceParent',
+        modalLabel: 'Parent Service',
+        required: true
+    },
+
+    postPayloadFields: [
+        "subservice_name", // Must match API expectation exactly
+        "serviceParent",
+        "createdBy" // Must match API expectation exactly
+    ],
+
+    putPayloadFields: [
+        "subservice_name",
+        "updated_by"
+    ],
+
+    deletePayloadFields: []
 },
 {
     title: 'Email Template',

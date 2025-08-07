@@ -6,9 +6,16 @@ const allPermissions = [
   'Delete Content',
   'Manage Users',
   'Access Reports',
+  'Lead Lable Access',
+  'Comment Edit',
+  'Status Master'
+  
 ];
 
 const rolePermissionsMap = {
+  Super_admin: ['View Dashboard', 'Edit Content', 'Delete Content', 'Manage Users', 'Access Reports', 'Lead Lable Access'
+    ,'Comment Edit', 'Status Master'
+  ],
   Admin: ['View Dashboard', 'Edit Content', 'Delete Content', 'Manage Users', 'Access Reports'],
   Editor: ['View Dashboard', 'Edit Content', 'Access Reports'],
   Viewer: ['View Dashboard'],

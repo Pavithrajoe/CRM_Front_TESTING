@@ -1000,13 +1000,13 @@ export default function MasterModal({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl h-[90vh] flex flex-col">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col">
         <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">
           {master.title} Master
         </h2>
         <button
           onClick={onClose}
-          className="related top-10 right-10 ms-[600px] mt-[-65px] text-gray-500 hover:text-gray-700 text-3xl font-bold"
+          className="related top-10 right-10 ms-[800px] mt-[-65px] text-gray-500 hover:text-gray-700 text-3xl font-bold"
         >
           &times;
         </button>
@@ -1058,94 +1058,36 @@ export default function MasterModal({
               </div>
             ) : (
               <>
-                {master.title === subIndustryConfig?.title &&
-                groupedHierarchicalItems.length > 0 ? (
-                  <div className="space-y-4">
-                    {(searchTerm ? filteredGroupedItems : groupedHierarchicalItems).map((industry) => (
-                      <div
-                        key={industry[industryConfig.idKey]}
-                        className="border rounded-md p-3 bg-gray-50"
-                      >
-                        <h4 className="text-lg font-bold text-blue-800 mb-2">
-                          {industry[industryConfig.payloadKey]}
-                        </h4>
-                        {industry.children && industry.children.length > 0 ? (
-                          <ul className="pl-4 space-y-1">
-                            {industry.children.map((subindustry) => (
-                              <li
-                                key={subindustry[subIndustryConfig.idKey]}
-                                className={`p-2 border rounded-md flex justify-between items-center bg-white hover:bg-gray-100 transition-colors duration-200 ${
-                                  selectedItemForEdit &&
-                                  selectedItemForEdit.isSubIndustry &&
-                                  selectedItemForEdit[
-                                    subIndustryConfig.idKey
-                                  ] === subindustry[subIndustryConfig.idKey]
-                                    ? "bg-blue-100 border-blue-400"
-                                    : ""
-                                }`}
-                              >
-                                <span className="font-medium text-gray-700">
-                                  {subindustry[subIndustryConfig.payloadKey]}
-                                  {subIndustryConfig.activeStatusPayloadKey &&
-                                    typeof subindustry[
-                                      subIndustryConfig.activeStatusPayloadKey
-                                    ] === "boolean" && (
-                                      <span
-                                        className={`ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
-                                          subindustry[
-                                            subIndustryConfig
-                                              .activeStatusPayloadKey
-                                          ]
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-red-100 text-red-800"
-                                        }`}
-                                      >
-                                        {subindustry[
-                                          subIndustryConfig
-                                            .activeStatusPayloadKey
-                                        ]
-                                          ? "Active"
-                                          : "Inactive"}
-                                      </span>
-                                    )}
-                                </span>
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() =>
-                                      handleEditSubIndustryClick(subindustry)
-                                    }
-                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-                                    title="Edit Sub-Industry"
-                                  >
-                                    <Edit size={18} />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteSubIndustryClick(subindustry)
-                                    }
-                                    disabled={isDeleting}
-                                    className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                                    title="Delete Sub-Industry"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-600 text-sm italic ml-4">
-                            No sub-industries.
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (searchTerm ? filteredItems : existingItems).length === 0 ? (
-                  <p className="text-gray-600">
-                    {searchTerm ? 'No matching items found' : `No ${master.title} items found. Add a new one!`}
-                  </p>
-                ) : (
+{master.title === subIndustryConfig?.title &&
+  groupedHierarchicalItems.length > 0 ? (
+    <div className="space-y-4">
+      {groupedHierarchicalItems.map((industry) => (
+        <div key={industry[industryConfig.idKey]} className="border rounded-md p-3 bg-gray-50">
+          <h4 className="text-lg font-bold text-blue-800 mb-2">
+            {industry[industryConfig.payloadKey]}
+          </h4>
+          {industry.children && industry.children.length > 0 ? (
+            <ul className="pl-4 space-y-1">
+              {industry.children.map((subindustry) => (
+                <li key={subindustry[subIndustryConfig.idKey]} className="p-2 border rounded-md">
+                  <span className="font-medium">
+                    {subindustry[subIndustryConfig.payloadKey]}
+                    <span className="ml-2 text-sm text-gray-500">
+                      (Parent: {industry[industryConfig.payloadKey]})
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-600 text-sm italic ml-4">
+              No sub-industries.
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  ) : null}  
                   <ul className="space-y-2">
                     {(searchTerm ? filteredItems : existingItems).map((item) => (
                       <li
@@ -1243,7 +1185,7 @@ export default function MasterModal({
                       </li>
                     ))}
                   </ul>
-                )}
+                
               </>
             )}
           </div>
@@ -1395,7 +1337,7 @@ export default function MasterModal({
                       htmlFor="orderId"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Order ID:
+                      Sort Order:
                     </label>
                     <input
                       id="orderId"
@@ -1413,6 +1355,7 @@ export default function MasterModal({
                     />
                   </div>
                 )}
+                
 
               {master.additionalFields &&
                 master.additionalFields.map((field) => {

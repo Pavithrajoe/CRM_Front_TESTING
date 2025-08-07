@@ -155,7 +155,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-end pr-8">
                   {isLeft && (
                     <article
-                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >
@@ -224,7 +224,7 @@ export default function LeadTimeline({ leadId }) {
                 <div className="w-1/2 flex justify-start pl-8">
                   {!isLeft && (
                     <article
-                      className="bg-white shadow-md shadow-blue-900 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
                       role="region"
                       aria-live="polite"
                     >

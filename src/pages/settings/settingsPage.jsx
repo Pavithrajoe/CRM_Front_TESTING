@@ -36,6 +36,15 @@ const SettingsPage = () => {
               <li><NavLink to="support" className={navLinkClass}>Support & Services</NavLink></li>
             </ul>
           </div>
+
+           <div>
+            <h2 className="text-lg font-semibold mb-3">Access Control</h2>
+            <ul className="space-y-2">
+              <li><NavLink to="lable" className={navLinkClass}>Lable Master</NavLink></li>
+              {/* <li><NavLink to="members" className={navLinkClass}>Members</NavLink></li>
+              <li><NavLink to="support" className={navLinkClass}>Support & Services</NavLink></li> */}
+            </ul>
+          </div>
         </aside>
 
         {/* Light Main Content Area */}

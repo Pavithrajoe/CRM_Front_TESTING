@@ -202,14 +202,14 @@ const AccountSettings = () => {
 
       <div className="mb-6 flex items-center gap-4">
         <h1 className="text-[22px] font-semibold text-gray-900">Profile Settings</h1>
-        {!isProfileLoaded && (
+        {/* {!isProfileLoaded && (
           <button
             onClick={() => setShowCreatePanel(true)}
             className="ml-auto px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition"
           >
             + Create Profile
           </button>
-        )}
+        )} */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -287,15 +287,13 @@ const AccountSettings = () => {
           >
             Save Changes
           </button>
-        ) : (
-          <button
-            onClick={handleCreateProfile}
-            disabled={loading || Object.keys(errors).length > 0}
-            className="px-5 py-2 bg-blue-600 text-white text-sm rounded-full hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            Create Profile
-          </button>
-        )}
+        ) :
+         (
+          <p className="text-gray-600">Ask ur admin to update </p>
+         
+        ) 
+
+        }
       </div>
 
       <AnimatePresence>
@@ -345,13 +343,13 @@ const AccountSettings = () => {
                 >
                   Cancel
                 </button>
-                <button
+                {/* <button
                   onClick={handleCreateProfile}
                   disabled={loading || Object.keys(errors).length > 0}
                   className="px-4 py-2 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50"
                 >
                   Create Profile
-                </button>
+                </button> */}
               </div>
             </motion.div>
           </motion.div>

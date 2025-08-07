@@ -59,6 +59,7 @@ import UserCallLogs from "./pages/userPage/userCallLogs";
 import  LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
 import  WonList from './pages/customerModule/customer.jsx';
+import LableMaster from'./Components/settings/lableMaster';
 // import WonList from "./pages/dashboard/.jsx";
 
 function App() {
@@ -123,6 +124,7 @@ function App() {
               <Route path="/first-response" element={<FirstResponseTimeReport/>}/>
               <Route path="settingspage" element={<SettingsPage />}>
                 <Route path="account" element={<AccountSettings />} />
+                <Route path="lable" element={<LableMaster />} />
                 <Route path="notification" element={<NotificationSettings />} />
                 <Route path="billing" element={<BillingSettings />} />
                 <Route path="members" element={<MembersSettings />} />

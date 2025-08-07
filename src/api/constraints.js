@@ -110,6 +110,8 @@ export const ENDPOINTS = {
 
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
 
+  SUB_SERVICE: `${BASE_URL}/sub-service`,
+
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,

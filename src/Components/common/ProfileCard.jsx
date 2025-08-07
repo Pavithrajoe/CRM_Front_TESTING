@@ -8,6 +8,7 @@ import {
   FiUpload,
   FiSave,
   FiEye,
+  FiCheckCircle ,
   FiX,
   FiMove,
   FiCodesandbox,
@@ -390,8 +391,8 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
 
     if (!form.clead_name.trim()) {
       newErrors.clead_name = "Name is required.";
-    } else if (form.clead_name.trim().length > 20) {
-      newErrors.clead_name = "Name cannot exceed 20 characters.";
+    } else if (form.clead_name.trim().length > 40) {
+      newErrors.clead_name = "Name cannot exceed 40 characters.";
     }
 
     if (!form.iphone_no.trim()) {
@@ -1330,7 +1331,7 @@ const ProfileCard = () => {
 
   return (
     <>
-<div className="w-full p-6 lg:p-6 bg-white shadow-blue-900 rounded-3xl shadow-md">
+<div className="w-full p-6 lg:p-6 bg-white shadow-gray-600 rounded-3xl shadow-md">
    <div className="flex justify-end w-full"> {/* Parent container pushes content right */}
   <div className="flex items-center space-x-2"> {/* Button group */}
     <button
@@ -1364,16 +1365,21 @@ const ProfileCard = () => {
         <div className=" items-start and w-full sm:items-start gap-4 sm:gap-6 pt-6">
   {/* Profile Info */}
   <div className="flex-1 text-center sm:text-left">
-    <div className="flex flex-col sm:flex-row items-center gap-2">
-      <h3 className="text-2xl font-bold text-gray-900 break-words">
-        {profile.clead_name || "Lead Name"}
-      </h3>
+
+     <div>
       {profile.isUpdated && (
         <span className="inline-flex items-center px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full transition-all duration-300 transform hover:scale-105">
           <FiCheckCircle className="w-3 h-3 mr-1" />
           Edited Profile
         </span>
       )}
+      </div>
+    <div className="flex mt-6 flex-col sm:flex-row items-center gap-2">
+      <h3 className="text-2xl font-bold w-[240px] text-gray-900 break-words">
+        {profile.clead_name || "Lead Name"}
+      </h3>
+     
+
     </div>
     <p className="text-sm sm:text-base break-words text-gray-900 mt-1 font-semibold">
       {profile.corganization || "Organization"}
@@ -1623,7 +1629,7 @@ const ProfileCard = () => {
       </div>
 
       {/* Attachments Section */}
-      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-blue-900 shadow-md mt-6">
+      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-gray-600 shadow-md mt-6">
         <label className="block text-sm font-medium text-gray-700 mb-4">
           Manage Attachments
         </label>

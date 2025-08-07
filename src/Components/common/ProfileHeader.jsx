@@ -272,7 +272,7 @@ const ProfileHeader = () => {
 </button>
 
 
-      {/* <div className="relative" ref={dropdownRef}>
+      <div className="relative" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
@@ -319,7 +319,7 @@ const ProfileHeader = () => {
             </button>
           </div>
         )}
-      </div> */}
+      </div>
 
       {/* App Menu Icon + Dropdown */}
       {/* <div className="relative" ref={appMenuRef}>

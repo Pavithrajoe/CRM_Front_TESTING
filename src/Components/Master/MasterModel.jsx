@@ -1110,7 +1110,8 @@ export default function MasterModal({
                                 .parentIdInChildResponseKey ||
                                 master.parentMasterConfig.idKey
                             ] && (
-                              <span className="ml-2 text-sm text-gray-500">
+                        <div className="mt-2 w-full">
+                              <span className="text-md text-gray-900">
                                 (Parent:{" "}
                                 {parentOptions.find(
                                   (p) =>
@@ -1124,6 +1125,7 @@ export default function MasterModal({
                                   "N/A"}
                                 )
                               </span>
+                              </div>
                             )}
                           {master.additionalFields &&
                             master.additionalFields.map((field) => {
@@ -1151,10 +1153,10 @@ export default function MasterModal({
                             typeof item[master.activeStatusPayloadKey] ===
                               "boolean" && (
                               <span
-                                className={`ml-2 text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                                className={`ml-2 mt-2 text-xs font-semibold px-2.5 py-0.5 rounded-2xl ${
                                   item[master.activeStatusPayloadKey]
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
+                                    ? " text-green-600"
+                                    : " text-red-600"
                                 }`}
                               >
                                 {item[master.activeStatusPayloadKey]

@@ -8,141 +8,141 @@ import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
 
 const LeadCardViewPage = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [allLeads, setAllLeads] = useState([]);
-    const [assignedLeads, setAssignedLeads] = useState([]);
-    const [lostLeads, setLostLeads] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [viewMode, setViewMode] = useState('grid');
-    const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || 'all');
-    const [fromDate, setFromDate] = useState('');
-    const [toDate, setToDate] = useState('');
-    const [showFilterModal, setShowFilterModal] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [currentUserId, setCurrentUserId] = useState(null);
-    const [currentToken, setCurrentToken] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [sortConfig, setSortConfig] = useState({ key: 'dmodified_dt', direction: 'descending' }); // Default sort by modified date descending
-    const leadsPerPage = 12;
-    const [showLostLeads, setShowLostLeads] = useState(true);
-    const [showLostDeals, setShowLostDeals] = useState(true);
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [importLoading, setImportLoading] = useState(false);
-    const [importError, setImportError] = useState(null);
-    const [importSuccess, setImportSuccess] = useState(false);
-    const [roleID, setRoleID] = useState();
-    const [websiteActive, setWebsiteActive] = useState(false);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [allLeads, setAllLeads] = useState([]);
+    const [assignedLeads, setAssignedLeads] = useState([]);
+    const [lostLeads, setLostLeads] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
+    const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || 'all');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [currentToken, setCurrentToken] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState({ key: 'dmodified_dt', direction: 'descending' });
+    const leadsPerPage = 12;
+    const [showLostLeads, setShowLostLeads] = useState(true);
+    const [showLostDeals, setShowLostDeals] = useState(true);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [importLoading, setImportLoading] = useState(false);
+    const [importError, setImportError] = useState(null);
+    const [importSuccess, setImportSuccess] = useState(false);
+    const [roleID, setRoleID] = useState();
+    const [websiteActive, setWebsiteActive] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Event listener to refresh data
-    useEffect(() => {
-        const handleRefreshEvent = () => {
-            setRefreshTrigger(prev => prev + 1);
-        };
-        window.addEventListener('leadDataUpdated', handleRefreshEvent);
-        return () => {
-            window.removeEventListener('leadDataUpdated', handleRefreshEvent);
-        };
-    }, []);
+    useEffect(() => {
+        const handleRefreshEvent = () => {
+            setRefreshTrigger(prev => prev + 1);
+        };
+        window.addEventListener('leadDataUpdated', handleRefreshEvent);
+        return () => {
+            window.removeEventListener('leadDataUpdated', handleRefreshEvent);
+        };
+    }, []);
 
-    useEffect(() => {
-        const storedUserData = localStorage.getItem('user');
-        if (storedUserData) {
-            try {
-                const parsedData = JSON.parse(storedUserData);
-                const webiteAccess = parsedData?.website_access === true;
-                setWebsiteActive(webiteAccess);
-                localStorage.setItem('website_access', webiteAccess);
-            } catch (error) {
-                console.error('Error parsing user_data:', error);
-            }
-        } else {
-            const webiteAccess = localStorage.getItem('website_access') === 'true';
-            setWebsiteActive(webiteAccess);
-        }
-    }, []);
+    useEffect(() => {
+        const storedUserData = localStorage.getItem('user');
+        if (storedUserData) {
+            try {
+                const parsedData = JSON.parse(storedUserData);
+                const webiteAccess = parsedData?.website_access === true;
+                setWebsiteActive(webiteAccess);
+                localStorage.setItem('website_access', webiteAccess);
+            } catch (error) {
+                console.error('Error parsing user_data:', error);
+            }
+        } else {
+            const webiteAccess = localStorage.getItem('website_access') === 'true';
+            setWebsiteActive(webiteAccess);
+        }
+    }, []);
 
-    useEffect(() => {
-        if (location.state?.activeTab) {
-            setSelectedFilter(location.state.activeTab);
-        }
-    }, [location.state]);
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setSelectedFilter(location.state.activeTab);
+        }
+    }, [location.state]);
 
-    useEffect(() => {
-        let extractedUserId = null;
-        let extractedRoleID = null;
-        let tokenFromStorage = null;
-        try {
-            tokenFromStorage = localStorage.getItem('token');
-            if (tokenFromStorage) {
-                const decodedToken = jwtDecode(tokenFromStorage);
-                extractedUserId = decodedToken.user_id;
-                extractedRoleID = decodedToken.role_id;
-                if (!extractedUserId) {
-                    throw new Error("User ID (user_id) not found in decoded token payload.");
-                }
-            } else {
-                console.error("Authentication token not found in local storage. Please log in.");
-                setError("Authentication required. Please log in.");
-                setLoading(false);
-                return;
-            }
-        } catch (e) {
-            console.error("Error retrieving or decoding token in LeadCardViewPage:", e);
-            setError(`Authentication error: ${e.message}`);
-            setLoading(false);
-            return;
-        }
+    useEffect(() => {
+        let extractedUserId = null;
+        let extractedRoleID = null;
+        let tokenFromStorage = null;
+        try {
+            tokenFromStorage = localStorage.getItem('token');
+            if (tokenFromStorage) {
+                const decodedToken = jwtDecode(tokenFromStorage);
+                extractedUserId = decodedToken.user_id;
+                extractedRoleID = decodedToken.role_id;
+                if (!extractedUserId) {
+                    throw new Error("User ID (user_id) not found in decoded token payload.");
+                }
+            } else {
+                console.error("Authentication token not found in local storage. Please log in.");
+                setError("Authentication required. Please log in.");
+                setLoading(false);
+                return;
+            }
+        } catch (e) {
+            console.error("Error retrieving or decoding token in LeadCardViewPage:", e);
+            setError(`Authentication error: ${e.message}`);
+            setLoading(false);
+            return;
+        }
 
-        if (extractedUserId && tokenFromStorage) {
-            setCurrentUserId(extractedUserId);
-            setRoleID(extractedRoleID);
-            setCurrentToken(tokenFromStorage);
-        } else {
-            setError("Failed to obtain valid user ID or authentication token.");
-            setLoading(false);
-        }
-    }, []);
+        if (extractedUserId && tokenFromStorage) {
+            setCurrentUserId(extractedUserId);
+            setRoleID(extractedRoleID);
+            setCurrentToken(tokenFromStorage);
+        } else {
+            setError("Failed to obtain valid user ID or authentication token.");
+            setLoading(false);
+        }
+    }, []);
 
-    const formatDate = (dateStr) =>
-        dateStr
-            ? new Date(dateStr).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'numeric',
-                  year: 'numeric',
-              })
-            : '-';
+    const formatDate = (dateStr) =>
+        dateStr
+            ? new Date(dateStr).toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'numeric',
+                  year: 'numeric',
+              })
+            : '-';
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'hot':
-                return 'bg-red-700 text-white';
-            case 'warm':
-                return 'bg-yellow-500 text-white';
-            case 'cold':
-                return 'bg-blue-700 text-white';
-            case 'new':
-                return 'bg-sky-600 text-white';
-            case 'contacted':
-                return 'bg-green-500 text-white';
-            case 'interested':
-                return 'bg-purple-600 text-white';
-            case 'lost':
-            case 'closed lost':
-                return 'bg-red-700 text-white';
-            case 'pending':
-                return 'bg-orange-500 text-white';
-            case 'website lead':
-                return 'bg-blue-100 text-blue-700';
-            case 'lead':
-                return 'bg-indigo-100 text-indigo-700';
-            default:
-                return 'bg-gray-300 text-gray-700';
-        }
-    };
+    const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'hot':
+                return 'bg-red-700 text-white';
+            case 'warm':
+                return 'bg-yellow-500 text-white';
+            case 'cold':
+                return 'bg-blue-700 text-white';
+            case 'new':
+                return 'bg-sky-600 text-white';
+            case 'contacted':
+                return 'bg-green-500 text-white';
+            case 'interested':
+                return 'bg-purple-600 text-white';
+            case 'lost':
+            case 'closed lost':
+                return 'bg-red-700 text-white';
+            case 'pending':
+                return 'bg-orange-500 text-white';
+            case 'website lead':
+                return 'bg-blue-100 text-blue-700';
+            case 'lead':
+                return 'bg-indigo-100 text-indigo-700';
+            default:
+                return 'bg-gray-300 text-gray-700';
+        }
+    };
+
 
     const isWithinDateRange = (date) => {
         if (!date) return true;

@@ -1,325 +1,538 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { usePopup } from "../context/PopupContext";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { ENDPOINTS } from '../../src/api/constraints';
+import ProfileHeader from '../Components/common/ProfileHeader';
+import SettingsPage from './userPage/settingsPage';
+import HistoryDashboard from './userPage/historyPage';
+import TargetDashboard from './userPage/TargetPage';
+import AcheivementDashboard from './userPage/acheivementPage';
+import UserCallLogs from './userPage/userCallLogs';
+import DCRMSettingsForm from './userPage/DCRMsettingsForm';
+import {
+  FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
+  FaUserCircle, FaCheckCircle, FaTimesCircle
+} from 'react-icons/fa';
 
-const apiEndPoint = import.meta.env.VITE_API_URL;
+// Reusable ToggleSwitch component
+const ToggleSwitch = ({ label, isChecked, onToggle }) => (
+  <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
+    <span className="text-gray-700 font-semibold">{label}</span>
+    <div
+      onClick={onToggle}
+      className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
+        isChecked ? 'bg-green-600' : 'bg-red-400'
+      }`}
+    >
+      <div
+        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
+          isChecked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      ></div>
+    </div>
+  </div>
+);
 
-// Initialize speech recognition if available
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const mic = SpeechRecognition ? new SpeechRecognition() : null;
-if (mic) {
-  mic.continuous = true;
-  mic.interimResults = true;
-  mic.lang = "en-US";
-}
+// Reusable MessageDisplay component
+const MessageDisplay = ({ message, type, onClose }) => {
+  if (!message) return null;
 
-const Comments = () => {
-  // State management
-  const { leadId } = useParams();
-  const [state, setState] = useState({
-    comments: [],
-    showForm: false,
-    formData: { comments: "", LeadId: leadId },
-    searchQuery: "",
-    currentPage: 1,
-    isListening: false,
-    editingComment: null
-  });
-  const [user, setUser] = useState({ id: null, role: null, name: null });
-  const formRef = useRef(null);
-  const { showPopup } = usePopup();
-  const token = localStorage.getItem("token");
-  const commentsPerPage = 10;
-
-  // Memoized functions
-  const fetchComments = useCallback(async () => {
-    if (!token || !leadId) return;
-    try {
-      const response = await fetch(`${apiEndPoint}/comments/allcomment/${leadId}`, {
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setState(prev => ({
-          ...prev,
-          comments: data.result.sort((a, b) => new Date(b.icreate_dt) - new Date(a.icreate_dt))
-        }));
-      } else {
-        showPopup("Error", data.message || "Failed to fetch comments", "error");
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-    }
-  }, [token, leadId, showPopup]);
-
-  // Effects
-  useEffect(() => {
-    // Decode user from token
-    if (token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(atob(base64));
-        setUser({
-          id: payload.user_id,
-          role: payload.role?.toLowerCase(),
-          name: payload.name
-        });
-      } catch (error) {
-        console.error("Token decode error:", error);
-      }
-    }
-
-    // Initialize speech recognition
-    if (!mic) return;
-    
-    const handleMicResult = (event) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join("");
-      setState(prev => ({ ...prev, formData: { ...prev.formData, comments: transcript } }));
-    };
-
-    if (state.isListening) {
-      mic.start();
-      mic.onend = () => state.isListening && mic.start();
-      mic.onresult = handleMicResult;
-      mic.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setState(prev => ({ ...prev, isListening: false }));
-      };
-    }
-
-    return () => {
-      if (mic) {
-        mic.stop();
-        mic.onend = null;
-        mic.onresult = null;
-        mic.onerror = null;
-      }
-    };
-  }, [token, state.isListening]);
-
-  useEffect(() => { fetchComments(); }, [fetchComments]);
-
-  // Handlers
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { formData, editingComment } = state;
-    const content = formData.comments.trim();
-    
-    if (!content) {
-      showPopup("Warning", "Comment cannot be empty", "warning");
-      return;
-    }
-
-    try {
-      const isEdit = !!editingComment;
-      const url = isEdit 
-        ? `${apiEndPoint}/comments/${editingComment.icomment_id}`
-        : `${apiEndPoint}/comments`;
-      
-      const response = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          comments: content,
-          ilead_id: Number(leadId)
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Request failed");
-
-      showPopup("Success", isEdit ? "Comment updated!" : "Comment added!", "success");
-      
-      setState(prev => ({
-        ...prev,
-        formData: { comments: "", LeadId: leadId },
-        isListening: false,
-        showForm: false,
-        editingComment: null
-      }));
-      fetchComments();
-    } catch (error) {
-      showPopup("Error", error.message || "Operation failed", "error");
-      console.error("Submission error:", error);
-    }
-  };
-
-  const canEdit = (comment) => {
-    const superAdminRoles = new Set([
-      'admin',
-      'administrator',
-      'super_admin',
-      'superadmin',
-      '1' // If using numeric role IDs
-    ]);
-    return superAdminRoles.has(user.role) || user.id === comment.iuser_id;
-  };
-
-  // Derived values
-  const activeComments = state.comments.filter(c => c.bactive);
-  const filteredComments = activeComments.filter(c =>
-    c.ccomment_content?.toLowerCase().includes(state.searchQuery.toLowerCase())
-  );
-  const paginatedComments = filteredComments.slice(
-    (state.currentPage - 1) * commentsPerPage,
-    state.currentPage * commentsPerPage
-  );
-
-  const formatDate = (dateStr) => new Date(dateStr).toLocaleString("en-IN", {
-    dateStyle: "short",
-    timeStyle: "short"
-  });
+  const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
+  const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
+  const Icon = type === 'success' ? FaCheckCircle : FaTimesCircle;
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row justify-between gap-4">
-          <input
-            type="text"
-            placeholder="Search comments..."
-            value={state.searchQuery}
-            onChange={(e) => setState(prev => ({
-              ...prev,
-              searchQuery: e.target.value,
-              currentPage: 1
-            }))}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={() => setState(prev => ({
-              ...prev,
-              editingComment: null,
-              formData: { comments: "", LeadId: leadId },
-              showForm: true
-            }))}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            + New Comment
-          </button>
-        </div>
-
-        {/* Comments List */}
-        <div className="p-4 sm:p-6 space-y-4">
-          {paginatedComments.length ? (
-            paginatedComments.map(comment => (
-              <div key={comment.icomment_id} className="border rounded-xl p-4 hover:shadow-md transition">
-                <div className="flex justify-between">
-                  <h4 className="font-medium">{comment.user?.cFull_name || "Unknown"}</h4>
-                  {canEdit(comment) && (
-                    <button 
-                      onClick={() => setState(prev => ({
-                        ...prev,
-                        editingComment: comment,
-                        formData: {
-                          comments: comment.ccomment_content,
-                          LeadId: comment.ilead_id
-                        },
-                        showForm: true
-                      }))}
-                      className="text-gray-500 hover:text-blue-600"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                <p className="mt-2 text-gray-700">{comment.ccomment_content}</p>
-                <p className="mt-2 text-sm text-gray-500">
-                  {comment.imodify_dt 
-                    ? `Edited at ${formatDate(comment.imodify_dt)}`
-                    : `Posted at ${formatDate(comment.icreate_dt)}`}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p className="text-center py-8 text-gray-500">No comments found</p>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {filteredComments.length > commentsPerPage && (
-          <div className="p-4 flex justify-center gap-2">
-            {Array.from({ length: Math.ceil(filteredComments.length / commentsPerPage) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setState(prev => ({ ...prev, currentPage: i + 1 }))}
-                className={`w-10 h-10 rounded-full ${state.currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Comment Form Modal */}
-        {state.showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div ref={formRef} className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="p-4 border-b flex justify-between items-center">
-                <h3 className="text-lg font-medium">
-                  {state.editingComment ? "Edit Comment" : "Add Comment"}
-                </h3>
-                <button 
-                  onClick={() => setState(prev => ({
-                    ...prev,
-                    showForm: false,
-                    isListening: false,
-                    editingComment: null
-                  }))}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="p-4">
-                <textarea
-                  name="comments"
-                  value={state.formData.comments}
-                  onChange={(e) => setState(prev => ({
-                    ...prev,
-                    formData: { ...prev.formData, comments: e.target.value }
-                  }))}
-                  className="w-full border rounded-lg p-3 min-h-[150px] focus:ring-2 focus:ring-blue-500"
-                  placeholder="Write your comment..."
-                  required
-                />
-                
-                <div className="mt-4 flex justify-between">
-                  {mic && (
-                    <button
-                      type="button"
-                      onClick={() => setState(prev => ({ ...prev, isListening: !prev.isListening }))}
-                      className={`px-4 py-2 rounded-lg ${state.isListening ? 'bg-red-500 text-white' : 'bg-gray-200'}`}
-                    >
-                      {state.isListening ? "Stop Recording" : "Start Recording"}
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    {state.editingComment ? "Update" : "Submit"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+    <div className={`mb-4 p-3 rounded-lg text-sm flex items-center shadow-md ${bgColor} ${textColor}`}>
+      <Icon className="h-5 w-5 mr-2" />
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-auto text-current hover:opacity-75">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   );
 };
 
-export default Comments;
+// Reusable ConfirmationModal component
+const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Action" }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
+    <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl relative">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
+      <p className="text-gray-700 mb-6">{message}</p>
+      <div className="flex justify-end space-x-3">
+        <button
+          onClick={onCancel}
+          className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Enhanced DCRMSettingsForm Component
+
+const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs'];
+
+const UserProfile = () => {
+  const { userId } = useParams();
+  const [email, setEmail] = useState('');
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('Target');
+  const [showForm, setShowForm] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    cFull_name: '',
+    cUser_name: '',
+    cEmail: '',
+    cjob_title: '',
+    reports_to: ''
+  });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [reportToUsers, setReportToUsers] = useState([]);
+  const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDCRMForm, setShowDCRMForm] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalMessage, setConfirmModalMessage] = useState('');
+  const [confirmModalAction, setConfirmModalAction] = useState(null);
+
+  const showAppMessage = (message, type = 'success') => {
+    if (type === 'success') {
+      setSuccessMessage(message);
+      setErrorMessage('');
+    } else {
+      setErrorMessage(message);
+      setSuccessMessage('');
+    }
+    setTimeout(() => {
+      setSuccessMessage('');
+      setErrorMessage('');
+    }, 5000);
+  };
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        setEmail(data.cEmail);
+
+        if (!response.ok) throw new Error(data.message);
+        setUser(data);
+        setEditFormData({
+          cFull_name: data.cFull_name || '',
+          cUser_name: data.cUser_name || '',
+          cEmail: data.cEmail || '',
+          cjob_title: data.cjob_title || '',
+          reports_to: data.reports_to || '',
+        });
+      } catch (err) {
+        showAppMessage(err.message, 'error');
+      }
+    };
+    if (userId) fetchUser();
+  }, [userId]);
+
+  // Fetch users for 'Reports To'
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(ENDPOINTS.USER_GET, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message);
+        const filtered = data.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
+        setReportToUsers(filtered);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAllUsers();
+  }, [userId]);
+
+  const handleToggleUserActive = useCallback(() => {
+    if (!user || typeof user.bactive === 'undefined') {
+      console.warn("User data or bactive status not available for toggle.");
+      return;
+    }
+
+    const newStatus = !user.bactive;
+    const message = newStatus
+      ? "Are you sure you want to activate this user's account?"
+      : "Are you sure you want to deactivate this user's account? They will no longer be able to log in.";
+
+    setConfirmModalMessage(message);
+    setConfirmModalAction(() => async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ bactive: newStatus }),
+        });
+        if (!res.ok) throw new Error('Failed to update user status');
+        setUser(prev => ({ ...prev, bactive: newStatus }));
+        showAppMessage(`User account successfully set to ${newStatus ? 'active' : 'inactive'}!`, 'success');
+      } catch (err) {
+        console.error(err);
+        showAppMessage(`Failed to change user status: ${err.message}. Please try again.`, 'error');
+      } finally {
+        setShowConfirmModal(false);
+      }
+    });
+    setShowConfirmModal(true);
+  }, [user, userId]);
+
+  const handleToggleDCRM = useCallback(() => {
+    if (!user) return;
+    if (user.dcrm_enabled) {
+      setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+      setConfirmModalAction(() => async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error('Failed to disable DCRM');
+          setUser(prev => ({ ...prev, dcrm_enabled: false }));
+          showAppMessage('DCRM disabled successfully!', 'success');
+        } catch (err) {
+          console.error(err);
+          showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+        } finally {
+          setShowConfirmModal(false);
+        }
+      });
+      setShowConfirmModal(true);
+    } else {
+      setShowDCRMForm(true);
+    }
+  }, [user, userId]);
+
+  const handleDCRMSuccess = useCallback(() => {
+    setUser(prev => ({ ...prev, dcrm_enabled: true }));
+    setShowDCRMForm(false);
+    showAppMessage('DCRM user created and settings configured successfully!', 'success');
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: name === 'reports_to' ? (value === '' ? '' : parseInt(value)) : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editFormData),
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.message);
+
+      setUser(updated);
+      setShowForm(false);
+      showAppMessage('Profile updated successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      showAppMessage(`Failed to update profile: ${err.message}`, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormClose = () => {
+    setEditFormData({
+      cFull_name: user.cFull_name || '',
+      cUser_name: user.cUser_name || '',
+      cEmail: user.cEmail || '',
+      cjob_title: user.cjob_title || '',
+      reports_to: user.reports_to || '',
+    });
+    setShowForm(false);
+  };
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <p className="ml-3 text-gray-700">Loading user profile...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-4 bg-gray-50">
+      <ProfileHeader />
+
+      <MessageDisplay message={errorMessage} type="error" onClose={() => setErrorMessage('')} />
+      <MessageDisplay message={successMessage} type="success" onClose={() => setSuccessMessage('')} />
+
+      <div className="flex items-center gap-4 flex-wrap mt-6">
+        {isProfileCardVisible ? (
+          <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
+            <FaUserCircle size={60} className="text-blue-600" />
+            <div className="flex-grow">
+              <h3 className="text-lg font-semibold text-gray-800">{user.cFull_name}</h3>
+              <p className="text-sm text-gray-600">@{user.cUser_name}</p>
+              {user.bactive !== undefined && (
+                <span className={`px-2 py-1 mt-1 rounded-full text-xs font-semibold capitalize inline-block ${
+                  user.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
+                </span>
+              )}
+              {user.dcrm_enabled && (
+                <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
+                  DCRM Enabled
+                </span>
+              )}
+            </div>
+            <div className="ml-auto flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => setIsProfileCardVisible(false)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Collapse
+              </button>
+              <button
+                onClick={() => setShowForm(true)}
+                className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Edit Profile"
+              >
+                <FaEdit size={18} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <FaUserCircle
+            size={60}
+            className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
+            onClick={() => setIsProfileCardVisible(true)}
+            aria-label="Expand Profile Card"
+          />
+        )}
+
+        <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2 rounded-lg text-sm font-medium border border-gray-300 transition-colors duration-200 shadow-sm ${
+                activeTab === tab ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-grow mt-6">
+        {activeTab === 'Target' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <TargetDashboard userId={userId} />
+          </div>
+        )}
+        {activeTab === 'History' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <HistoryDashboard userId={userId} />
+          </div>
+        )}
+        {activeTab === 'Settings' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <SettingsPage userId={userId} />
+          </div>
+        )}
+        {activeTab === 'Achievement' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <AcheivementDashboard userId={userId} />
+          </div>
+        )}
+        {activeTab === 'Call Logs' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <UserCallLogs userId={email} />
+          </div>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
+          <div className="bg-white rounded-xl p-6 w-1/2 mt-10 max-w-1/2 shadow-2xl relative mb-10">
+            <button
+              onClick={handleFormClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Edit Profile</h3>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className='grid grid-cols-2 sm:grid-cols-2 gap-4'>
+
+              <div className="relative">
+                <FaUser className="absolute top-3 left-3 text-gray-500" />
+                <input
+                  type="text"
+                  name="cFull_name"
+                  placeholder="Full Name"
+                  value={editFormData.cFull_name}
+                  onChange={handleChange}
+                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                  maxLength={40}
+                />
+              </div>
+              <div className="relative">
+                <FaIdBadge className="absolute top-3 left-3 text-gray-500" />
+                <input
+                  type="text"
+                  name="cUser_name"
+                  placeholder="Username"
+                  value={editFormData.cUser_name}
+                  onChange={handleChange}
+                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                  maxLength={40}
+                />
+              </div>
+              </div>
+             
+              <div className='grid grid-cols-2 sm:grid-cols-3 gap-4'>
+                 <div className="relative">
+                <FaEnvelope className="absolute top-3 left-3 text-gray-500" />
+                <input
+                  type="email"
+                  name="cEmail"
+                  placeholder="Email"
+                  value={editFormData.cEmail}
+                  onChange={handleChange}
+                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                  maxLength={40}
+                />
+              </div>
+
+              <div className="relative">
+                <FaBriefcase className="absolute top-3 left-3 text-gray-500" />
+                <input
+                  type="text"
+                  name="cjob_title"
+                  placeholder="Job Title"
+                  value={editFormData.cjob_title}
+                  onChange={handleChange}
+                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  maxLength={40}
+                />
+              </div>
+              <div className="relative">
+                <FaUserTie className="absolute top-3 left-3 text-gray-500" />
+                <select
+                  name="reports_to"
+                  value={editFormData.reports_to}
+                  onChange={handleChange}
+                  className="w-full border p-3 pl-10 rounded-lg appearance-none bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                >
+                  <option value="">Select Reports To</option>
+                  {reportToUsers.map(u => (
+                    <option key={u.iUser_id} value={u.iUser_id}>
+                      {u.cFull_name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>
+                </div>
+              </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <ToggleSwitch
+                  label="Account Status"
+                  isChecked={user.bactive}
+                  onToggle={handleToggleUserActive}
+                />
+                <p className="text-xs text-gray-500 mt-2">Toggle to activate or deactivate this user's account.</p>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <ToggleSwitch
+                  label="DCRM Enable"
+                  isChecked={user.dcrm_enabled || false}
+                  onToggle={handleToggleDCRM}
+                />
+                <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
+              </div>
+
+              <button
+                type="submit"
+                className={`w-[150px] p-3 text-white justify-center ms-60 justify-items-center rounded-xl font-medium transition-colors transform hover:scale-105 active:scale-95 shadow-md ${
+                  isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-blue-700'
+                }`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDCRMForm && (
+        <DCRMSettingsForm
+          userId={userId}
+          onClose={() => setShowDCRMForm(false)}
+          onSuccess={handleDCRMSuccess}
+        />
+      )}
+      {showConfirmModal && (
+        <ConfirmationModal
+          message={confirmModalMessage}
+          onConfirm={confirmModalAction}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default UserProfile

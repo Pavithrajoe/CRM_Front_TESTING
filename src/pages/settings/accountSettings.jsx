@@ -60,7 +60,8 @@ const AccountSettings = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        const data = res.data;
+        const data = res.data.result;
+
         if (data && data.cCompany_name) {
           setIsProfileLoaded(true);
           setProfile({
@@ -87,10 +88,10 @@ const AccountSettings = () => {
 
   const validateField = (name, value) => {
     const newErrors = { ...errors };
-    
+
     if (name === 'companyName' && value.length > 50) {
       newErrors.companyName = 'Maximum 50 characters allowed';
-    } 
+    }
     else if (name === 'email') {
       if (value.length > 50) newErrors.email = 'Maximum 50 characters allowed';
       else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -100,9 +101,9 @@ const AccountSettings = () => {
     else if (name === 'phone') {
       if (!/^\d{10}$/.test(value)) newErrors.phone = 'Must be 10 digits';
     }
-   else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value)) {
-  newErrors.gst = 'Must be exactly 15 alphanumeric characters';
-}
+    else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value)) {
+      newErrors.gst = 'Must be exactly 15 alphanumeric characters';
+    }
     else if (name === 'website' && value.length > 50) {
       newErrors.website = 'Maximum 50 characters allowed';
     }
@@ -202,14 +203,6 @@ const AccountSettings = () => {
 
       <div className="mb-6 flex items-center gap-4">
         <h1 className="text-[22px] font-semibold text-gray-900">Profile Settings</h1>
-        {/* {!isProfileLoaded && (
-          <button
-            onClick={() => setShowCreatePanel(true)}
-            className="ml-auto px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition"
-          >
-            + Create Profile
-          </button>
-        )} */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -228,7 +221,7 @@ const AccountSettings = () => {
             <input
               type={type}
               name={name}
-              value={profile[name] || ""}
+              value={profile[name]}
               onChange={handleInputChange}
               maxLength={maxLength}
               className={`px-3 py-2 rounded-xl border ${
@@ -239,22 +232,6 @@ const AccountSettings = () => {
             {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
           </div>
         ))}
-
-        {/* <div className="flex flex-col">
-          <label className="text-xs text-gray-600 mb-1">City ID</label>
-          <input
-            type="number"
-            name="cityId"
-            value={profile.cityId}
-            onChange={handleInputChange}
-            className={`px-3 py-2 rounded-xl border ${
-              errors.cityId ? 'border-red-500' : 'border-gray-300'
-            } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
-            disabled={loading}
-            min={1}
-          />
-          {errors.cityId && <p className="text-red-500 text-xs mt-1">{errors.cityId}</p>}
-        </div> */}
       </div>
 
       <div className="border-t pt-4 mb-6 space-y-3">
@@ -287,13 +264,9 @@ const AccountSettings = () => {
           >
             Save Changes
           </button>
-        ) :
-         (
-          <p className="text-gray-600">Ask ur admin to update </p>
-         
-        ) 
-
-        }
+        ) : (
+          <p className="text-gray-600">Ask your admin to update</p>
+        )}
       </div>
 
       <AnimatePresence>
@@ -343,13 +316,6 @@ const AccountSettings = () => {
                 >
                   Cancel
                 </button>
-                {/* <button
-                  onClick={handleCreateProfile}
-                  disabled={loading || Object.keys(errors).length > 0}
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Create Profile
-                </button> */}
               </div>
             </motion.div>
           </motion.div>

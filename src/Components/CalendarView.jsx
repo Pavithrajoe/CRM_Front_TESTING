@@ -1,33 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone, FaAddressCard } from 'react-icons/fa';
-import { Drawer, CircularProgress, Snackbar, Alert } from '@mui/material'; // Removed TextField and Button as they weren't directly used in the provided snippet for MUI imports
+import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone } from 'react-icons/fa';
+import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { ENDPOINTS } from "../api/constraints"; // Ensure this path is correct
+import { ENDPOINTS } from "../api/constraints";
 import Slide from '@mui/material/Slide';
-import { useNavigate } from 'react-router-dom';
-import { Link } from "react-router-dom";
 
-// Utility for Snackbar transitions
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
 }
 
-// Helper function to get start of day in local time for date comparison
 const getStartOfDayInLocalTime = (date) => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
 };
 
-// Helper function to get end of day in local time for date comparison
 const getEndOfDayInLocalTime = (date) => {
   const d = new Date(date);
   d.setHours(23, 59, 59, 999);
   return d;
 };
 
-// MeetFormDrawer Component - for creating calendar events
 const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar }) => {
   const initialFormData = {
     ctitle: '',
@@ -43,90 +37,97 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  
+  // Ref to hold the mutable speech recognition object and the current description text
   const recognitionRef = useRef(null);
+  const descriptionRef = useRef('');
 
-
-
-
+  // Effect to manage form data based on `open` and `selectedDate`
   useEffect(() => {
-  if (open && selectedDate) {
-    const now = new Date(); // Already in IST if your system/browser is
-    const initialStartDateTime = new Date(selectedDate);
-
-    if (initialStartDateTime.toDateString() === now.toDateString()) {
-      initialStartDateTime.setHours(now.getHours() , 0, 0, 0);
-
-      if (initialStartDateTime < now) {
-        initialStartDateTime.setHours(now.getHours(), now.getMinutes()  , 0, 0);
+    if (open && selectedDate) {
+      const now = new Date();
+      const initialStartDateTime = new Date(selectedDate);
+      
+      if (initialStartDateTime.toDateString() === now.toDateString()) {
+        // Set start time to next hour if it's today
+        initialStartDateTime.setHours(now.getHours() + 1, 0, 0, 0);
+      } else {
+        // Set a default start time for future dates
+        initialStartDateTime.setHours(9, 0, 0, 0);
       }
-    } else {
-      initialStartDateTime.setHours(9, 0, 0, 0);
+
+      const endDateTime = new Date(initialStartDateTime.getTime() + 60 * 60 * 1000);
+
+      setFormData(prev => ({
+        ...prev,
+        devent_startdt: initialStartDateTime.toISOString().slice(0, 16),
+        devent_end: endDateTime.toISOString().slice(0, 16)
+      }));
+    }
+  }, [open, selectedDate]);
+  
+  // Main effect for setting up and tearing down the speech recognition API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSnackbar({
+        open: true,
+        message: "Speech Recognition not supported by your browser.",
+        severity: 'error'
+      });
+      return;
     }
 
-    // ✅ Format to 'datetime-local' (local time, no shift needed)
-    const toDatetimeLocal = (date) => {
-      const pad = (n) => (n < 10 ? "0" + n : n);
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false; // Set to false for a cleaner, single-utterance experience
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = 'en-US';
+
+    let finalTranscript = '';
+
+    recognitionRef.current.onresult = (event) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      // Update the state only with the final results to avoid choppy updates
+      const newDescription = (descriptionRef.current + ' ' + interimTranscript).trim();
+      setFormData(prev => ({ ...prev, cdescription: newDescription }));
     };
 
-    const formattedLocal = toDatetimeLocal(initialStartDateTime);
+    recognitionRef.current.onend = () => {
+      // Once recognition ends, update the description with the final result
+      // and reset the ref for the next use.
+      setFormData(prev => {
+        const finalDescription = (descriptionRef.current + ' ' + finalTranscript).trim();
+        return { ...prev, cdescription: finalDescription };
+      });
+      descriptionRef.current = finalTranscript;
+      finalTranscript = '';
+      setIsListening(false);
+    };
 
-    setFormData(prev => ({
-      ...prev,
-      devent_startdt: formattedLocal,
-      devent_end: '',
-    }));
-  }
-}, [open, selectedDate]);
-
-
-
-
-
-  useEffect(() => {
-    if (!recognitionRef.current) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setSnackbar({
-          open: true,
-          message: "Speech Recognition not supported by your browser.",
-          severity: 'error'
-        });
-        return;
-      }
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setFormData(prev => ({ ...prev, cdescription: prev.cdescription + transcript }));
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setSnackbar({
-          open: true,
-          message: `Speech recognition error: ${event.error}`,
-          severity: 'error'
-        });
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
+    recognitionRef.current.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      setSnackbar({
+        open: true,
+        message: `Speech recognition error: ${event.error}`,
+        severity: 'error'
+      });
+    };
 
     return () => {
-      if (recognitionRef.current && isListening) {
+      if (recognitionRef.current) {
         recognitionRef.current.stop();
-        setIsListening(false);
       }
     };
-  }, [isListening, setSnackbar]);
+  }, [setSnackbar]);
 
   const handleMicClick = () => {
     if (!recognitionRef.current) {
@@ -143,7 +144,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       setIsListening(false);
     } else {
       try {
-        setFormData(prev => ({ ...prev, cdescription: prev.cdescription + ' ' }));
+        // Store the current description before starting recognition
+        descriptionRef.current = formData.cdescription;
         recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
@@ -162,27 +164,21 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     e.preventDefault();
 
     const startDateLocal = new Date(formData.devent_startdt);
-    const now = new Date();
+    const endDateLocal = new Date(formData.devent_end);
 
-    if (startDateLocal < now) {
+    if (endDateLocal < startDateLocal) {
       setSnackbar({
         open: true,
-        message: 'ℹ️ Start date and time cannot be in the past!',
+        message: 'ℹ️ End date cannot be before start date!',
         severity: 'info'
       });
       return;
     }
 
-    if (formData.devent_end) {
-      const endDateLocal = new Date(formData.devent_end);
-      if (endDateLocal < startDateLocal) {
-        setSnackbar({
-          open: true,
-          message: 'ℹ️ End date cannot be before start date!',
-          severity: 'info'
-        });
-        return;
-      }
+    // Stop listening before submitting
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
     }
 
     const user_data_parsed = JSON.parse(localStorage.getItem("user"));
@@ -191,7 +187,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     const finalData = {
       ...formData,
       devent_startdt: startDateLocal.toISOString(),
-      devent_end: formData.devent_end ? new Date(formData.devent_end).toISOString() : null,
+      devent_end: endDateLocal.toISOString(),
       icreated_by: user_data_parsed.iUser_id,
       iupdated_by: user_data_parsed.iUser_id,
       dupdated_at: new Date().toISOString(),
@@ -224,10 +220,9 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
         message: '✅ Calendar Event created successfully!',
         severity: 'success',
       });
-      setFormData(initialFormData); 
+      setFormData(initialFormData);
       onCreated();
-      onClose(); 
-
+      onClose();
     } catch (error) {
       console.error('Submission error:', error);
       setSnackbar({
@@ -286,7 +281,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
                 <button
                   type="button"
                   onClick={handleMicClick}
-                  className={`absolute top-3 right-3 transition ${isListening ? 'text-red-500' : 'text-gray-500 hover:text-blue-600'}`}
+                  className={`absolute top-3 right-3 transition ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-500 hover:text-blue-600'}`}
                   title={isListening ? "Stop listening" : "Start voice input"}
                 >
                   <FaMicrophone className="w-5 h-5" />
@@ -304,12 +299,13 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">End Date <span className="text-red-500">*</span></label>
+              <label className="block text-sm text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
               <input
                 type="datetime-local"
                 value={formData.devent_end}
                 onChange={(e) => setFormData({ ...formData, devent_end: e.target.value })}
                 className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                required
               />
             </div>
             <div>
@@ -342,13 +338,14 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   );
 };
 
-// Main CalendarView Component
+
+
 const CalendarView = () => {
-  const [msg, setMsg] = useState(''); // Not directly used in UI, consider removing if not needed
+  const [msg, setMsg] = useState('');
   const [reminderList, setReminderList] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [reminders, setReminders] = useState([]); // Reminders for the selected date
-  const [calendarEvents, setCalendarEvents] = useState([]); // Calendar events for the selected date
+  const [reminders, setReminders] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -357,43 +354,28 @@ const CalendarView = () => {
     severity: 'success'
   });
   const [activeTab, setActiveTab] = useState('reminders');
-  const [loggedInUserName, setLoggedInUserName] = useState(''); // Not directly used in UI, consider removing if not needed
+  const [loggedInUserName, setLoggedInUserName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showEnded, setShowEnded] = useState(false);
-  const navigate = useNavigate();
-
-  // Auto-populate fromDate and toDate with current month's start and end
-  useEffect(() => {
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const formatForInput = (date) => date.toISOString().slice(0, 10); // YYYY-MM-DD
-
-    setFromDate(formatForInput(firstDayOfMonth));
-    setToDate(formatForInput(lastDayOfMonth));
-  }, []); // Run once on component mount
 
   useEffect(() => {
     const user_data = localStorage.getItem("user");
     if (user_data) {
       try {
         const user_data_parsed = JSON.parse(user_data);
-        setLoggedInUserName(user_data_parsed.cUser_Name); // Set logged-in user name
+        setLoggedInUserName(user_data_parsed.cUser_Name);
       } catch (error) {
         console.error("Failed to parse user data from localStorage:", error);
       }
     }
   }, []);
 
-  // Fetch reminders and events for the *currently selected* date on the calendar
   const fetchRemindersAndEventsForSelectedDate = async (date = selectedDate) => {
     const user_data = localStorage.getItem("user");
     const user_data_parsed = JSON.parse(user_data);
     let dates = new Date(date);
-    // Convert to UTC start of day for consistent API querying
     let utcStartOfDay = new Date(Date.UTC(
       dates.getFullYear(),
       dates.getMonth(),
@@ -401,8 +383,7 @@ const CalendarView = () => {
       0, 0, 0, 0
     ));
     let formattedDate = utcStartOfDay.toISOString();
-    formattedDate = formattedDate.replace('.000Z', 'Z'); // Ensure correct ISO format with 'Z'
-
+    formattedDate = formattedDate.replace('.000', '');
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -415,20 +396,14 @@ const CalendarView = () => {
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch data');
-      }
-
       const data = await response.json();
-      setReminders(data.reminders || []); // Reminders for the calendar view
-      setCalendarEvents(data.calender_event || []); // Events for the calendar view
+      setReminders(data.reminders || []);
+      setCalendarEvents(data.calender_event || []);
 
     } catch (error) {
-      console.error("Error fetching reminders/events for selected date:", error);
       setSnackbar({
         open: true,
-        message: `Failed to load data for selected date: ${error.message}`,
+        message: 'Failed to load reminders for selected date',
         severity: 'error'
       });
     } finally {
@@ -436,7 +411,6 @@ const CalendarView = () => {
     }
   };
 
-  // Toggle reminder status
   const toggleReminder = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -452,11 +426,9 @@ const CalendarView = () => {
         throw new Error('Failed to toggle reminder status');
       }
 
-      // Update reminders state for the calendar view
       setReminders(prevReminders => prevReminders.map(reminder =>
         reminder.iremainder_id === id ? { ...reminder, bactive: !reminder.bactive } : reminder
       ));
-      // Update reminderList for the "All Reminders" tab
       setReminderList(prevList => prevList.map(reminder =>
         reminder.iremainder_id === id ? { ...reminder, bactive: !reminder.bactive } : reminder
       ));
@@ -467,7 +439,6 @@ const CalendarView = () => {
         severity: 'success'
       });
     } catch (error) {
-      console.error("Error toggling reminder:", error);
       setSnackbar({
         open: true,
         message: `Failed to update reminder: ${error.message}`,
@@ -476,7 +447,6 @@ const CalendarView = () => {
     }
   };
 
-  // Fetch all user reminders for the "All Reminders" tab
   const fetchAllUserReminders = async () => {
     const token = localStorage.getItem("token");
     setLoading(true);
@@ -489,18 +459,17 @@ const CalendarView = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error in fetching user reminders");
+        setMsg("Error in fetching user reminders");
+        return;
       }
 
       const data = await response.json();
-      setReminderList(data.data || []); // This populates the data for the 'All Reminders' tab
+      setReminderList(data.data || []);
     } catch (e) {
-      console.error("Can't fetch all user reminders:", e);
-      setMsg("Can't fetch user reminders"); // Consider removing this state if not used for UI
+      setMsg("Can't fetch user reminders");
       setSnackbar({
         open: true,
-        message: `Failed to load all reminders: ${e.message}`,
+        message: 'Failed to load all reminders.',
         severity: 'error'
       });
     } finally {
@@ -508,9 +477,8 @@ const CalendarView = () => {
     }
   };
 
-  // Filter and sort logic for table data
   const filterAndSortItems = (items, dateKey, contentKey, endTimeKey = null, showEndedState, applyDateFilters) => {
-    const now = new Date(); // Current time for comparison
+    const now = new Date();
 
     const filtered = items.filter((item) => {
       const searchMatch =
@@ -534,10 +502,9 @@ const CalendarView = () => {
 
         dateRangeMatch = (!from || itemEndDateTime >= from) && (!to || itemStartDateTime <= to);
 
-        // Logic for "Show Ended" vs "Show Upcoming"
-        if (showEndedState) { // If "Show Ended" is active, show only items that have ended
+        if (showEndedState) {
           timeStatusMatch = itemEndDateTime <= now;
-        } else { // If "Show Upcoming" is active, show only items that are in the future or ongoing
+        } else {
           timeStatusMatch = itemEndDateTime > now;
         }
       }
@@ -545,24 +512,22 @@ const CalendarView = () => {
       return searchMatch && dateRangeMatch && timeStatusMatch;
     });
 
-    // Sorting logic
     return filtered.sort((a, b) => {
       const sortDateA = endTimeKey && a[endTimeKey] ? new Date(a[endTimeKey]) : new Date(a[dateKey]);
       const sortDateB = endTimeKey && b[endTimeKey] ? new Date(b[endTimeKey]) : new Date(b[dateKey]);
 
       if (showEndedState && applyDateFilters) {
-        return sortDateB.getTime() - sortDateA.getTime(); // Newest first for ended
+        return sortDateB.getTime() - sortDateA.getTime();
       } else {
-        return sortDateA.getTime() - sortDateB.getTime(); // Oldest first for upcoming
+        return sortDateA.getTime() - sortDateB.getTime();
       }
     });
   };
 
   const currentTabItems = activeTab === 'reminders'
     ? filterAndSortItems(reminderList, 'dremainder_dt', 'cremainder_content', null, showEnded, true)
-    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false); 
+    : filterAndSortItems(calendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, false);
 
-  // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -576,65 +541,32 @@ const CalendarView = () => {
     }
   };
 
-
   const handleItemCreated = () => {
-    fetchRemindersAndEventsForSelectedDate(); // Refresh for current calendar date
-    fetchAllUserReminders(); // Refresh for "All Reminders" list
+    fetchRemindersAndEventsForSelectedDate();
+    fetchAllUserReminders();
   };
 
-  // Effects to re-fetch data based on dependencies
   useEffect(() => {
     fetchRemindersAndEventsForSelectedDate();
-  }, [selectedDate]); // Re-fetch when calendar date changes
+  }, [selectedDate]);
 
   useEffect(() => {
-    fetchAllUserReminders(); // Fetch all reminders on component mount
+    fetchAllUserReminders();
   }, []);
 
-  // Reset pagination when filters/tabs change
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, showEnded, searchTerm, fromDate, toDate, reminderList, calendarEvents]);
 
-  // Helper to format date for table display
-  const formatDateForTable = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date'; // Handle invalid date strings
-    return date.toLocaleString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).replace(',', ''); // Remove comma for cleaner display
-  };
-  // Helper function to format date as DD-MM-YYYY
-const formatDateDMY = (dateString) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Invalid Date';
-  
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  
-  return `${day}/${month}/${year}`;
-};
-
   return (
     <div>
-      {/* Top Section: Calendar and Daily Reminders/Events */}
-      <div className="flex w-full p-8 rounded-3xl bg-white/80 transition-transform duration-300">
-        {/* Calendar Column */}
+      <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
         <div className="w-1/2 flex flex-col mb-1 mr-6">
-          <div className="bg-white rounded-2xl p-6 transition-transform duration-300 hover:scale-[1.01]">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 transition-transform duration-300 hover:scale-[1.01]">
             <Calendar
               onChange={setSelectedDate}
               value={selectedDate}
               className="border-none w-full"
-              // Custom navigation labels to use Chevron icons
               navigationLabel={({ date, view, label }) => (
                 <div className="flex items-center justify-between px-6 mb-2">
                   <FaChevronLeft
@@ -658,18 +590,16 @@ const formatDateDMY = (dateString) => {
                   />
                 </div>
               )}
-              // Hide default navigation buttons
               prevLabel={null}
               nextLabel={null}
-              // Custom tile styling for selected date and today
               tileClassName={({ date }) => {
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Normalize to start of day
+                today.setHours(0, 0, 0, 0);
                 const selected = new Date(selectedDate);
-                selected.setHours(0, 0, 0, 0); // Normalize to start of day
+                selected.setHours(0, 0, 0, 0);
 
                 const tile = new Date(date);
-                tile.setHours(0, 0, 0, 0); // Normalize to start of day
+                tile.setHours(0, 0, 0, 0);
 
                 if (tile.getTime() === selected.getTime()) {
                   return 'bg-black text-white rounded-full';
@@ -686,7 +616,7 @@ const formatDateDMY = (dateString) => {
                 className="w-[180px] bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
               >
                 <FaPlus className="mr-2" />
-                Create Event
+                Calendar Event
               </button>
 
               <button
@@ -700,10 +630,9 @@ const formatDateDMY = (dateString) => {
           </div>
         </div>
 
-        {/* Reminders and Calendar Events for Selected Date Column */}
-        <div className="max-h-[418px] overflow-y-auto bg-white rounded-2xl p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
-<h2 className="text-xl font-bold text-gray-800">Reminders for {formatDateDMY(selectedDate)}</h2>       
-   <div className="flex gap-6 text-sm mb-4 text-gray-600">
+        <div className="max-h-[395px] overflow-y-auto bg-white rounded-2xl shadow-lg p-6 space-y-6 pr-2 w-1/2 transition-transform duration-300 hover:scale-[1.01]">
+          <h2 className="text-xl font-bold text-gray-800">Reminders for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
+          <div className="flex gap-6 text-sm mb-4 text-gray-600">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span> Reminder
             </div>
@@ -712,11 +641,7 @@ const formatDateDMY = (dateString) => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-full">
-              <CircularProgress size={30} color="inherit" />
-            </div>
-          ) : reminders.length > 0 ? (
+          {reminders.length > 0 ? (
             reminders.map(reminder => (
               <div key={reminder.iremainder_id} className="border-b pb-4 last:border-0 transition-all">
                 <div className="flex items-start gap-4">
@@ -730,23 +655,14 @@ const formatDateDMY = (dateString) => {
                       <FaRegSquare className="text-lg" />
                     )}
                   </button>
-<Link to={`/leaddetailview/${reminder.ilead_id}`} className="flex-1 space-y-1 p-2 rounded-md transition">
 
                   <div className="flex-1 space-y-1">
                     <h3 className="text-md font-semibold text-gray-800">{reminder.cremainder_title}</h3>
                     <div className="flex items-center text-sm text-gray-600">
                       <FaUserAlt className="mr-2 text-xs" />
-                      Created By:&nbsp; <span className="font-medium">{reminder.assignedBy}</span>
+                      Assigned To: <span className="font-medium">{reminder.assigned_to}</span>
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaClock className="mr-2 text-xs" />
-                      Assigned To:&nbsp; <span className="font-medium">{reminder.assigned_to}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaAddressCard className="mr-2 text-xs" />
-                      Lead Name:&nbsp; <span className="font-medium">{reminder.lead.clead_name}</span>
-                    </div>
-                    <p className="font-semibold text-gray-600">{reminder.cremainder_content}</p>
+                    <p className="text-sm text-gray-600">{reminder.cremainder_content}</p>
                     <div
                       className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold
                       ${reminder.priority === 'High'
@@ -759,11 +675,17 @@ const formatDateDMY = (dateString) => {
                       Priority: {reminder.priority}
                     </div>
                   </div>
-                  </Link>
 
                   <div className="text-xs text-black bg-yellow-400 px-3 py-1 rounded-full flex items-center">
                     <FaClock className="mr-1" />
-                    {formatDateForTable(reminder.dremainder_dt)}
+                    {new Date(reminder.dremainder_dt).toLocaleString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
                   </div>
                 </div>
               </div>
@@ -772,12 +694,8 @@ const formatDateDMY = (dateString) => {
             <p className="text-gray-500">No reminders found for this date.</p>
           )}
 
-<h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {formatDateDMY(selectedDate)}</h2>       
-   {loading ? (
-            <div className="flex justify-center items-center h-full">
-              <CircularProgress size={30} color="inherit" />
-            </div>
-          ) : calendarEvents.length > 0 ? (
+          <h2 className="text-xl font-bold text-gray-800 pt-2">Calendar Events for {selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</h2>
+          {calendarEvents.length > 0 ? (
             calendarEvents.map(event => (
               <div key={event.icalender_event} className="border-b pb-4 last:border-0">
                 <div className="flex items-start justify-between gap-4">
@@ -787,7 +705,14 @@ const formatDateDMY = (dateString) => {
                   </div>
                   <div className="text-xs text-white bg-blue-600 px-3 py-1 rounded-full flex items-center">
                     <FaClock className="mr-1" />
-                    {formatDateForTable(event.devent_startdt)}
+                    {new Date(event.devent_startdt).toLocaleString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }).toUpperCase()}
                   </div>
                 </div>
               </div>
@@ -806,15 +731,13 @@ const formatDateDMY = (dateString) => {
         />
       </div>
 
-      {/* Bottom Section: All Reminders/Calendar Events Table */}
-      <div className="w-full rounded-xl p-5 bg-white border border-gray-200 mt-5">
+      <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
         <div className="flex border-b border-gray-200 mb-6">
           <button
-            className={`py-3 px-6 text-lg font-bold ${activeTab === 'reminders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
+            className={`py-3 px-6 text-lg font-semibold ${activeTab === 'reminders' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-800'
               } transition-colors duration-200`}
             onClick={() => {
               setActiveTab('reminders');
-              setShowEnded(false); // Reset showEnded when switching tabs
             }}
           >
             📅 All Reminders
@@ -824,14 +747,12 @@ const formatDateDMY = (dateString) => {
               } transition-colors duration-200`}
             onClick={() => {
               setActiveTab('calendarEvents');
-              setShowEnded(false); // Reset showEnded when switching tabs
             }}
           >
             🗓️ All Calendar Events
           </button>
         </div>
 
-        {/* Filter/Search for Reminders Tab */}
         {activeTab === 'reminders' && (
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mb-5">
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -870,7 +791,7 @@ const formatDateDMY = (dateString) => {
                       message: 'To date should be after From date',
                       severity: 'error',
                     });
-                    setToDate(''); // Clear invalid To date
+                    setToDate('');
                     return;
                   }
                   setToDate(newToDate);
@@ -899,41 +820,35 @@ const formatDateDMY = (dateString) => {
         )}
 
         {(fromDate || toDate) && activeTab === 'reminders' && (
-        <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
-  Filter:{' '}
-  {fromDate && <strong>{formatDateDMY(fromDate)}</strong>}
-  {fromDate && toDate && ' to '}
-  {toDate && <strong>{formatDateDMY(toDate)}</strong>}
-  {' '} ({showEnded ? 'Ended' : 'Upcoming'})
-</p>
+          <p className="text-xs text-blue-600 mb-4 font-medium tracking-wide">
+            Filter:{' '}
+            {fromDate && <strong>{new Date(fromDate).toLocaleDateString('en-GB')}</strong>}
+            {fromDate && toDate && ' to '}
+            {toDate && <strong>{new Date(toDate).toLocaleDateString('en-GB')}</strong>}
+          </p>
         )}
 
-        {loading ? (
-          <div className="min-h-[180px] flex items-center justify-center">
-            <CircularProgress size={40} color="inherit" />
-          </div>
-        ) : paginatedCurrentItems.length > 0 ? (
+        {paginatedCurrentItems.length > 0 ? (
           <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs">
             <table className="min-w-full text-sm text-gray-800 table-auto">
               <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
                 <tr>
-                  <th className="px-4 py-3 border-b text-left w-[10%]">S.no</th>
+                  <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
                   {activeTab === 'reminders' ? (
                     <>
-
+                      <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
                       <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
-                      <th className="px-4 py-3 border-b text-left w-[15%]">Reminder</th>
-                      <th className="px-4 py-3 border-b text-left w-[12%]">Created by</th> 
-                      <th className="px-4 py-3 border-b text-left w-[14%]">Assigned to</th> 
-                      <th className="px- py-3 border-b text-left w-[12%] whitespace-nowrap">Date</th>
+                      <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-4 py-3 border-b text-left w-[16%]">Event Title</th>
+                      <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
                       <th className="px-4 py-3 border-b text-left w-[30%]">Description</th>
                       <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
-                      <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
-                      <th className="px-11 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
+                      <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
                     </>
                   )}
                 </tr>
@@ -942,31 +857,13 @@ const formatDateDMY = (dateString) => {
                 {paginatedCurrentItems.map((item, index) => (
                   <tr
                     key={activeTab === 'reminders' ? item.iremainder_id : item.icalender_event}
-                    onClick={
-                      activeTab === 'reminders' && item.ilead_id
-                        ? () => {
-                          // console.log("Clicked reminder row. Navigating to lead ID:", item.ilead_id);
-                          goToDetail(item.ilead_id);
-                        }
-                        : activeTab === 'calendarEvents' && item.icalender_event
-                          ? () => {
-                            console.log("Clicked calendar event row. Navigating to event ID:", item.icalender_event);
-                            goToCalendarEventDetail(item.icalender_event);
-                          }
-                          : null // If no valid ID for navigation, do nothing
-                    }
-                    className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out cursor-pointer"
+                    className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"
                   >
-                    <td className="px-4 py-3 border-b text-left font-medium align-top">
+                    <td className="px-4 py-3 border-b text-center font-medium align-top">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
                     {activeTab === 'reminders' ? (
                       <>
-
-                        <td className="px-4 py-3 border-b align-left break-words">
-                          {item.lead_name}
-                        </td>
-                        
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.cremainder_content}
                         </td>
@@ -976,12 +873,15 @@ const formatDateDMY = (dateString) => {
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.assigned_to}
                         </td>
-
+                        <td className="px-4 py-3 border-b align-top break-words">
+                          {item.lead_name}
+                        </td>
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-  {formatDateDMY(item.dremainder_dt)}
-</td>
-                        
-
+                          {new Date(item.dremainder_dt).toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </td>
                       </>
                     ) : (
                       <>
@@ -989,41 +889,23 @@ const formatDateDMY = (dateString) => {
                           {item.ctitle}
                         </td>
                         <td className="px-4 py-3 border-b align-top break-words">
-                          {item.cdescription || '-'}
+                          {item.cdescription || 'N/A'}
                         </td>
                         <td className="px-4 py-3 border-b align-top break-words">
                           {item.recurring_task || 'None'}
                         </td>
-                       
-
-                       <td className="px-4 py-3 border-b align-top whitespace-nowrap">
-  {formatDateDMY(item.dremainder_dt)} {new Date(item.dremainder_dt).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  })}
-</td> <td className="px-4 py-3 border-b align-top whitespace-nowrap">
+                        <td className="px-4 py-3 border-b align-top whitespace-nowrap">
                           {new Date(item.devent_startdt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          }).replace(/\//g, '-').toUpperCase()}
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
                         </td>
-
                         <td className="px-4 py-3 border-b align-top whitespace-nowrap">
                           {new Date(item.devent_end).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          }).replace(/\//g, '-').toUpperCase()}
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
                         </td>
-                        
                       </>
                     )}
                   </tr>
@@ -1066,7 +948,6 @@ const formatDateDMY = (dateString) => {
         )}
       </div>
 
-      {/* Snackbar for Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

@@ -11,6 +11,7 @@ export default function KPIStats(data) {
   const [activeCount, setActiveCount] = useState(0); 
   const [lostCount, setLostCount] = useState(0);
   const [websiteLeadCount, setWebsiteLeadCount] = useState(0);
+  const [lead,setLead] = useState(0);
 
 
   const [currentUserId, setCurrentUserId] = useState(null);

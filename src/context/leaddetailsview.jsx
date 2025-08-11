@@ -11,15 +11,16 @@ import {
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
+import Tasks from "../Components/task";
 import RemainderPage from "../pages/RemainderPage";
 import StatusBar from "./StatusBar";
 import LeadTimeline from "../Components/LeadTimeline";
-import ActionCard from "../Components/common/ActrionCard"; // Typo: Should be ActionCard
+import ActionCard from "../Components/common/ActrionCard"; 
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import { FaPhone, FaWhatsapp } from "react-icons/fa"; // Not used in this snippet but kept for completeness
+// import { FaPhone, FaWhatsapp } from "react-icons/fa"; // Not used in this snippet but kept for completeness
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
@@ -48,6 +49,7 @@ const LeadDetailView = () => {
   const [isWon, setIsWon] = useState(false);
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
+  const [ccRecipients, setCcRecipients] = useState("");
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
   //email templates
@@ -189,43 +191,45 @@ const LeadDetailView = () => {
     await lostLead();
   };
 
-  const sendEmail = async () => {
-    setIsSendingMail(true); // Set loading to true when sending starts
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          sent_to: sentTo,
-          mailSubject,
-          mailContent,
-        }),
-      });
+const sendEmail = async () => {
+  setIsSendingMail(true);
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        sent_to: sentTo,
+        cc_to: ccRecipients, // Add this line
+        mailSubject,
+        mailContent,
+      }),
+    });
 
-      const resData = await response.json();
+    const resData = await response.json();
 
-      if (!response.ok) {
-        console.error("Failed to send mail. Backend says:", resData);
-        showPopup("Error", resData.message || "Failed to send mail", "error");
-        return;
-      }
-
-      showPopup("Success", "Email sent successfully!", "success");
-      setIsMailOpen(false);
-      setSentTo("");
-      setMailSubject("");
-      setMailContent("");
-    } catch (error) {
-      console.error("Error sending mail:", error);
-      showPopup("Error", "Something went wrong while sending email", "error");
-    } finally {
-      setIsSendingMail(false); // Set loading to false when sending completes (success or failure)
+    if (!response.ok) {
+      console.error("Failed to send mail. Backend says:", resData);
+      showPopup("Error", resData.message || "Failed to send mail", "error");
+      return;
     }
-  };
+
+    showPopup("Success", "Email sent successfully!", "success");
+    setIsMailOpen(false);
+    setSentTo("");
+    setCcRecipients(""); // Clear CC field after sending
+    setMailSubject("");
+    setMailContent("");
+  } catch (error) {
+    console.error("Error sending mail:", error);
+    showPopup("Error", "Something went wrong while sending email", "error");
+  } finally {
+    setIsSendingMail(false);
+  }
+};
 
   const fetchLeadData = async () => {
     try {
@@ -453,7 +457,7 @@ const LeadDetailView = () => {
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap  items-start sm:items-center justify-between gap-3 mb-4 w-full">
           <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md shadow-blue-900 rounded-full p-1  w-full sm:w-auto">
-            {["Activity", "Follow-up", "Reminders"].map((label, idx) => (
+            {["Activity", "Comments", "Reminders", "Follow-up"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
@@ -511,6 +515,7 @@ const LeadDetailView = () => {
           )}
           {tabIndex === 1 && <Comments leadId={leadId} />}
           {tabIndex === 2 && <RemainderPage leadId={leadId} />}
+          {tabIndex === 3 && <Tasks leadId={leadId} />}
         </Box>
       </div>
 
@@ -614,7 +619,7 @@ const LeadDetailView = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
           style={{ backdropFilter: "blur(8px)" }}
         >
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
+          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
                 <img src="../../public/images/detailview/email.svg" className="text-black-600" size={24} />
@@ -632,7 +637,7 @@ const LeadDetailView = () => {
 
             <div className="flex flex-col md:flex-row gap-4 flex-grow">
               {/* Templates Section */}
-              <div className="w-full md:w-1/2 lg:w-2/5 p-4 rounded-xl border border-black-200 overflow-hidden">
+              <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-black-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
                 </div>
@@ -674,7 +679,7 @@ const LeadDetailView = () => {
               </div>
 
               {/* Email Form Section */}
-              <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col">
+              <div className="w-full md:w-1/2 lg:w-3/5 h-[550px] overflow-y-scroll flex flex-col">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -697,6 +702,22 @@ const LeadDetailView = () => {
                         />
                       </div>
                     </div>
+                  
+
+                    {/* CC Field */}
+<div>
+  <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
+  <div className="relative">
+    <input
+      type="email"
+      className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+      placeholder="cc@example.com (separate multiple with commas)"
+      value={ccRecipients}
+      onChange={(e) => setCcRecipients(e.target.value)}
+      multiple
+    />
+  </div>
+</div>
 
                     {/* Subject Field */}
                     <div>

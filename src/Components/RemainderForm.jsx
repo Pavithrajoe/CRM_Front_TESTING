@@ -149,54 +149,69 @@ const ReminderForm = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    setSubmitting(true);
-    const data = {
-      ...form,
-      reminderDate: form.reminderDateTime.toISOString(),
-      status: "submitted"
-    };
-    data.assignt_to = Number(form.assignt_to);
+  setSubmitting(true);
 
-    try {
-      const response = await fetch(`${apiEndPoint}/reminder`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || (result.data && result.data.error)) {
-        showPopup("Error", `Error: ${result.data?.error || result.message || "Could not add reminder"}`, "error");
-        return;
-      }
-
-      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
-      setForm({
-        title: "",
-        content: "",
-        reminderDateTime: new Date(),
-        priority: "Normal",
-        assignt_to: "",
-        ilead_id: Number(leadId),
-      });
-      setAssignToMe(false);
-      getReminder();
-      setShowForm(false);
-    } catch (err) {
-      showPopup("Error", "Submission failed. Try again.", "error");
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
+  const data = {
+    ...form,
+    reminderDate: form.reminderDateTime.toISOString(),
+    status: "submitted",
+    assignt_to: Number(form.assignt_to),
   };
+
+  try {
+    const response = await fetch(`${apiEndPoint}/reminder`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    let result;
+    try {
+      result = await response.json(); // try parsing JSON
+    } catch {
+      result = {}; // fallback if body is empty or invalid JSON
+    }
+
+    if (!response.ok) {
+      // Try to get error message from multiple common locations
+      const errorMsg =
+        result?.data?.error ||
+        result?.error ||
+        result?.message ||
+        (typeof result === "string" ? result : "Could not add reminder");
+
+      showPopup("Error", `Error: ${errorMsg}`, "error");
+      return;
+    }
+
+    // ✅ success
+    showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+    setForm({
+      title: "",
+      content: "",
+      reminderDateTime: new Date(),
+      priority: "Normal",
+      assignt_to: "",
+      ilead_id: Number(leadId),
+    });
+    setAssignToMe(false);
+    getReminder();
+    setShowForm(false);
+  } catch (err) {
+    console.error(err);
+    showPopup("Error", "Submission failed. Try again.", "error");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const getReminder = async () => {
     try {

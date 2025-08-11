@@ -274,25 +274,39 @@ const ProfileHeader = () => {
 
       <div className="relative" ref={dropdownRef}>
         <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => setShowDropdown(!showDropdown)}
-        >
-          <label htmlFor="profile-upload">
-            <img
-              src={profile.cProfile_pic || logo}
-              alt="avatar"
-              className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow"
-            />
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            id="profile-upload"
-            onChange={() => {}}
-            className="hidden"
-          />
-          <div className="text-xl text-gray-600">▾</div>
-        </div>
+  className="flex items-center gap-2 cursor-pointer"
+  onClick={() => setShowDropdown(!showDropdown)}
+>
+  <label htmlFor="profile-upload">
+    {profile.cProfile_pic ? (
+      <img
+        src={profile.cProfile_pic}
+        alt="avatar"
+        className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow"
+      />
+    ) : (
+       <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      profile.name
+
+                    )}&background=random&color=fff&rounded=true`}
+                    alt="Profile"
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+    )}
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    id="profile-upload"
+    onChange={() => {}}
+    className="hidden"
+  />
+
+  <div className="text-xl text-gray-600">▾</div>
+</div>
+
 
         {showDropdown && (
           <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">

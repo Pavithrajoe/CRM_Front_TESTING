@@ -112,6 +112,9 @@ export const ENDPOINTS = {
 
   SUB_SERVICE: `${BASE_URL}/sub-service`,
 
+  TASK: `${BASE_URL}/task`,
+  TASK_LEAD: `${BASE_URL}/task/lead`,
+
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,

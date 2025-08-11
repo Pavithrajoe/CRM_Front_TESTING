@@ -134,7 +134,7 @@ export default function SalesForm({userId,
 
     if (!formData.formDate) newErrors.formDate = 'From Date is required';
     if (!formData.toDate)  newErrors.toDate = 'To Date is required';
-    if (!formData.userId) newErrors.assignedTo = 'Assigned To is required';
+  if (!formData.userId) newErrors.assignedTo = 'Assigned To is required';
 
     if (formData.formDate && formData.toDate && new Date(formData.formDate) >= new Date(formData.toDate)) {
       newErrors.toDate = 'To Date must be after From Date';
@@ -151,14 +151,15 @@ export default function SalesForm({userId,
     setIsSubmitting(true);
     const formatDate = (dt) => `${dt.replace('T', ' ')}:00`;
 
-    const body = {
-      salesValue: parseFloat(formData.salesValue),
-      fromDate: formatDate(formData.formDate),
-      toDate: formatDate(formData.toDate),
-      assignedTo: parseInt(formData.assignedTo), // Send iUser_id
-      assignedBy: parseInt(formData.assignedBy),
-      createdBy: parseInt(formData.createdBy),
-    };
+   const body = {
+  salesValue: parseFloat(formData.salesValue),
+  fromDate: formatDate(formData.formDate),
+  toDate: formatDate(formData.toDate),
+  assignedTo: parseInt(formData.userId),   // ✅ Always matches the displayed user!
+  assignedBy: parseInt(formData.assignedBy),
+  createdBy: parseInt(formData.createdBy),
+};
+
 
     try {
       const res = await fetch(ENDPOINTS.USER_POST, {

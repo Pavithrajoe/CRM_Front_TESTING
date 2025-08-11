@@ -60,6 +60,7 @@ import  LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
 import  WonList from './pages/customerModule/customer.jsx';
 import LableMaster from'./Components/settings/lableMaster';
+import Tasks from './Components/task.jsx'
 // import WonList from "./pages/dashboard/.jsx";
 
 function App() {
@@ -92,6 +93,7 @@ function App() {
                <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
               <Route path="userpage" element={<UserPage />} />
               <Route path="commandpage" element={<Commandpage />} />
+              <Route path="task" element={<Tasks/>} />
               <Route path="/users" element={<CreateUserForm />} />
               <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
               <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />

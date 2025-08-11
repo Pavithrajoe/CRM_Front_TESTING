@@ -24,11 +24,15 @@ import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
 import DemoSessionDetails from "./demo_session_details";
+import { ENDPOINTS } from "../../api/constraints";
+import { usePopup } from "../../context/PopupContext";
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
+    const { showPopup } = usePopup(); // Get the showPopup function from context
+
   const token = localStorage.getItem("token");
 
   let userId = "";
@@ -51,6 +55,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const [form, setForm] = useState({
     iLeadpoten_id: profile?.iLeadpoten_id || "",
     iservice_id: profile?.iservice_id || "",
+    isubservice_id: profile?.isubservice_id || "",
     ileadstatus_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
     csubindustry_id: profile?.csubindustry_id || "",
@@ -94,7 +99,8 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const [searchSubIndustry, setSearchSubIndustry] = useState("");
   const [searchSource, setSearchSource] = useState("");
   const [isUpdated, setIsUpdated] = useState(false);
-
+  const [subService, setSubService] = useState([]);
+  const [searchSubService, setSearchSubService] = useState("");
   const cityDropdownRef = useRef(null);
   const potentialDropdownRef = useRef(null);
   const serviceDropdownRef = useRef(null);
@@ -104,6 +110,8 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const sourceDropdownRef = useRef(null);
   const phoneCountryCodeRef = useRef(null);
   const whatsappCountryCodeRef = useRef(null);
+  const [successMessage, setSuccessMessage] = useState("");
+
 
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [isPotentialDropdownOpen, setIsPotentialDropdownOpen] = useState(false);
@@ -114,6 +122,8 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
   const [isPhoneCountryCodeOpen, setIsPhoneCountryCodeOpen] = useState(false);
   const [isWhatsappCountryCodeOpen, setIsWhatsappCountryCodeOpen] = useState(false);
+  const subServiceDropdownRef = useRef(null);
+const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false);
 
   const fetchDropdownData = async (endpoint, setData, dataName, transformFn) => {
     try {
@@ -208,6 +218,28 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     }
   };
 
+      const fetchSubService = async () => {
+    try {
+      const response = await fetch(ENDPOINTS.SUB_SERVICE, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Can't fetch sub services");
+        return;
+      }
+
+      const rawData = await response.json();
+      console.log("Sub-service response:", rawData);
+      setSubService(rawData.data || []);
+    } catch (e) {
+      console.error("Error in fetching sub services:", e);
+    }
+  };
   const fetchIndustryAndSubIndustry = async () => {
     try {
       const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
@@ -238,6 +270,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     fetchCitiesData();
     fetchCountryCodes();
     fetchService();
+    fetchSubService();
     fetchIndustryAndSubIndustry();
   }, [token]);
 
@@ -255,6 +288,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
       setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'csubindustry_id', setSearchSubIndustry);
       setInitialDropdownValue(source, 'source_id', 'source_name', 'lead_source_id', setSearchSource);
       setInitialDropdownValue(cities, 'icity_id', 'cCity_name', 'icity', setSearchCity);
+      setInitialDropdownValue(subService, 'isubservice_id', 'subservice_name', 'isubservice_id', setSearchSubService);
     }
   }, [profile, Potential, status, leadIndustry, leadSubIndustry, source, cities, service]);
 
@@ -285,10 +319,15 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
   };
 
-  const handleServiceSelect = (iservice_id, cservice_name) => {
+   const handleServiceSelect = (iservice_id, cservice_name) => {
     if (isReadOnly) return;
-    setForm((prev) => ({ ...prev, iservice_id: iservice_id }));
+    setForm(prev => ({ 
+      ...prev, 
+      iservice_id: iservice_id,
+      isubservice_id: "" 
+    }));
     setSearchService(cservice_name);
+    setSearchSubService("");
     setIsServiceDropdownOpen(false);
     setErrors((prev) => ({ ...prev, iservice_id: "" }));
   };
@@ -318,6 +357,13 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     setIsSubIndustryDropdownOpen(false);
     setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
   };
+   const handleSubServiceSelect = (subServiceId, subServiceName) => {
+    if (isReadOnly) return;
+    setForm(prev => ({ ...prev, isubservice_id: subServiceId }));
+    setSearchSubService(subServiceName);
+    setIsSubServiceDropdownOpen(false);
+    setErrors((prev) => ({ ...prev, isubservice_id: "" }));
+  };
 
   const handleSourceSelect = (sourceId, sourceName) => {
     if (isReadOnly) return;
@@ -342,6 +388,9 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const filteredSubIndustries = leadSubIndustry.filter(
     (sub) => sub.iindustry_parent === form.cindustry_id
   );
+const filteredSubServices = subService.filter(
+  (sub) => sub.iservice_parent === form.iservice_id
+);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -351,6 +400,9 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
       if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
         setIsPotentialDropdownOpen(false);
       }
+      if (subServiceDropdownRef.current && !subServiceDropdownRef.current.contains(event.target)) {
+  setIsSubServiceDropdownOpen(false);
+}
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
         setIsStatusDropdownOpen(false);
       }
@@ -440,28 +492,46 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
       newErrors.csubindustry_id = "Sub-Industry is required.";
     }
+    
+    if (form.iservice_id && !form.isubservice_id && filteredSubServices.length > 0) {
+      newErrors.isubservice_id = "Sub-Service is required.";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReadOnly) {
       onClose();
       return;
     }
+
     if (validateForm()) {
       const formDataToSave = {
         ...form,
         iphone_no: form.phone_country_code + form.iphone_no,
         cwhatsapp: form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "",
       };
-      onSave(formDataToSave);
-    } else {
-      // console.log("Form has validation errors:", errors);
+
+      try {
+        await onSave(formDataToSave);
+        showPopup("Success", "Profile updated successfully!", "success"); // Show popup
+      } catch (error) {
+        showPopup("Error", "Failed to update profile.", "error"); // Show error popup
+        console.error("Error saving profile:", error);
+      }
     }
   };
+
+
+  useEffect(() => {
+  if (successMessage) {
+    const timeout = setTimeout(() => setSuccessMessage(""), 3000);
+    return () => clearTimeout(timeout);
+  }
+}, [successMessage]);
+
 
   // Helper function to get input classes with read-only state
   const getInputClasses = (hasError) => {
@@ -497,7 +567,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative  ">
+      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors"
@@ -840,7 +910,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
             </div>
 
             {/* Services Dropdown */}
-            <div className="relative" ref={serviceDropdownRef}>
+            {/* <div className="relative" ref={serviceDropdownRef}>
               <label htmlFor="iservice_id" className={labelClasses}>
                 Services:
               </label>
@@ -875,7 +945,85 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
                 </div>
               )}
               {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
-            </div>
+            </div> */}
+            {/* Sub-Services Dropdown */}
+{/* Services Dropdown */}
+      <div className="relative" ref={serviceDropdownRef}>
+        <label htmlFor="iservice_id" className={labelClasses}>
+          Services:
+        </label>
+        <input
+          type="text"
+          value={searchService}
+          onChange={(e) => {
+            if (isReadOnly) return;
+            setSearchService(e.target.value);
+            setIsServiceDropdownOpen(true);
+            setErrors((prev) => ({ ...prev, iservice_id: "" }));
+          }}
+          onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
+          className={getInputClasses(errors.iservice_id)}
+          placeholder="Select Services"
+          readOnly={isReadOnly || service.length === 0}
+          disabled={isReadOnly || service.length === 0}
+        />
+        {isServiceDropdownOpen && service.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+            {service.filter(serviceItem =>
+              serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
+            ).map((serviceItem) => (
+              <div
+                key={serviceItem.iservice_id}
+                className={dropdownItemClasses}
+                onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
+              >
+                {serviceItem.cservice_name}
+              </div>
+            ))}
+          </div>
+        )}
+        {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
+      </div>
+
+      {/* Sub-Services Dropdown */}
+      <div className="relative" ref={subServiceDropdownRef}>
+        <label htmlFor="isubservice_id" className={labelClasses}>
+          Sub-Services: {form.iservice_id && filteredSubServices.length > 0 && <span className="text-red-500">*</span>}
+        </label>
+        <input
+          type="text"
+          value={searchSubService}
+          onChange={(e) => {
+            if (isReadOnly) return;
+            setSearchSubService(e.target.value);
+            setIsSubServiceDropdownOpen(true);
+            setErrors((prev) => ({ ...prev, isubservice_id: "" }));
+          }}
+          onClick={() => !isReadOnly && setIsSubServiceDropdownOpen(true)}
+          className={getInputClasses(errors.isubservice_id)}
+          placeholder="Select Sub-Services"
+          readOnly={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+          disabled={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+        />
+        {isSubServiceDropdownOpen && form.iservice_id && filteredSubServices.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+            {filteredSubServices
+              .filter(subServiceItem =>
+                subServiceItem.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+              )
+              .map((subServiceItem) => (
+                <div
+                  key={subServiceItem.isubservice_id}
+                  className={dropdownItemClasses}
+                  onClick={() => handleSubServiceSelect(subServiceItem.isubservice_id, subServiceItem.subservice_name)}
+                >
+                  {subServiceItem.subservice_name}
+                </div>
+              ))}
+          </div>
+        )}
+        {errors.isubservice_id && <p className={errorTextClasses}>{errors.isubservice_id}</p>}
+      </div>
 
             {/* City Dropdown */}
             <div className="relative" ref={cityDropdownRef}>
@@ -1017,8 +1165,15 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
                 Cancel
               </button>
             )}
+            
+
           </div>
         </form>
+        {successMessage && (
+  <div className="mb-4 text-green-600 bg-green-100 border border-green-300 rounded px-4 py-2">
+    {successMessage}
+  </div>
+)}
       </div>
     </div>
   );
@@ -1043,6 +1198,7 @@ const ProfileCard = () => {
   const [assignedToList, setAssignedToList] = useState([]);
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
   const [showAssignConfirmation, setShowAssignConfirmation] = useState(false);
+
 
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
@@ -1265,6 +1421,7 @@ const ProfileCard = () => {
       alert("Failed to assign lead.");
     }
   };
+  
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {

@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { PlusCircle, Edit, Trash2, X } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { IntroModal } from "./IntroModal";
+
 
 // Utility function to format input to capitalize first letter
 const formatMasterName = (name) => {
@@ -33,6 +35,22 @@ export default function MasterModal({
   const [parentOptions, setParentOptions] = useState([]);
   const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+    const [showIntro, setShowIntro] = useState(true);
+    // In MasterModal.js
+// const [showIntro, setShowIntro] = useState(() => {
+//   const seen = localStorage.getItem(`seenIntro_${master?.title}`);
+//   return seen !== 'true';
+// });
+
+// const handleCloseIntro = () => {
+//   localStorage.setItem(`seenIntro_${master.title}`, 'true');
+//   setShowIntro(false);
+// };
+
+// if (showIntro) {
+//   return <IntroModal masterTitle={master.title} onClose={handleCloseIntro} />;
+// }
+
 
   const isLabelMaster = useMemo(
     () => master?.title === "Label Master",
@@ -646,6 +664,8 @@ export default function MasterModal({
     }
   };
 
+  
+
   const handleDelete = async (itemId) => {
     if (!master) {
       toast.error("Master configuration is missing. Cannot delete.");
@@ -945,6 +965,8 @@ export default function MasterModal({
     selectedItemForEdit,
   ]);
 
+  
+
   if (!master) {
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -964,6 +986,9 @@ export default function MasterModal({
         </div>
       </div>
     );
+  }
+   if (showIntro) {
+    return <IntroModal masterTitle={master.title} onClose={() => setShowIntro(false)} />;
   }
 
   const parentLabel =

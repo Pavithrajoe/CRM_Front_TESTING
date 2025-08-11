@@ -50,6 +50,7 @@ export const UserProvider = ({ children }) => {
 
       const data = await res.json();
       const companyUsers = data.filter((user) => user.iCompany_id === cid);
+      console.log("result",)
 
       setUsers(companyUsers);
       localStorage.setItem("users", JSON.stringify(companyUsers));

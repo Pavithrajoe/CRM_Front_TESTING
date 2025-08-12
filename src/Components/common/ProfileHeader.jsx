@@ -206,6 +206,16 @@ const ProfileHeader = () => {
           </div>
         </div>
       )}
+       <button
+  onClick={handleLeadFormOpen}
+  className="px-5 py-2 rounded-full text-white font-medium 
+             bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
+             border border-blue-300 shadow-lg 
+             hover:from-blue-600 hover:to-blue-800 
+             animate-pulse transition duration-300"
+>
+  + Create Lead
+</button>
 
       {/* {isAdminUser && (
         <button
@@ -260,16 +270,7 @@ const ProfileHeader = () => {
         )}
       </div>
 
-      <button
-  onClick={handleLeadFormOpen}
-  className="px-5 py-2 rounded-full text-white font-medium 
-             bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
-             border border-blue-300 shadow-lg 
-             hover:from-blue-600 hover:to-blue-800 
-             animate-pulse transition duration-300"
->
-  + Create Lead
-</button>
+     
 
 
       <div className="relative" ref={dropdownRef}>

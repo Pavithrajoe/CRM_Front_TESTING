@@ -7,6 +7,8 @@ import "react-quill/dist/quill.snow.css";
 import { IntroModal } from "./IntroModal";
 
 
+
+
 // Utility function to format input to capitalize first letter
 const formatMasterName = (name) => {
   if (!name) return '';
@@ -35,6 +37,7 @@ export default function MasterModal({
   const [parentOptions, setParentOptions] = useState([]);
   const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [openParents,setOpenParents] = useState('');
     const [showIntro, setShowIntro] = useState(true);
     // In MasterModal.js
 // const [showIntro, setShowIntro] = useState(() => {
@@ -50,6 +53,56 @@ export default function MasterModal({
 // if (showIntro) {
 //   return <IntroModal masterTitle={master.title} onClose={handleCloseIntro} />;
 // }
+
+
+const groupSubItemsByParent = (items, config) => {
+  if (!config || !config.isHierarchical || !config.parentMasterConfig) {
+    return [];
+  }
+
+  const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
+  const parentNameKey = config.parentMasterConfig.nameKey || "name";
+  const childPayloadKey = config.payloadKey;
+
+  
+
+
+  
+  // First, group items by their parent ID
+  const grouped = items.reduce((acc, item) => {
+    const parentId = item[parentIdKey];
+    if (!acc[parentId]) {
+      acc[parentId] = {
+        parentId,
+        children: []
+      };
+    }
+    acc[parentId].children.push(item);
+    return acc;
+  }, {});
+
+  // Then, enrich with parent names from parentOptions
+  return Object.values(grouped).map(group => ({
+    ...group,
+    parentName: parentOptions.find(p => p[config.parentMasterConfig.idKey] === group.parentId)?.[parentNameKey] || "Unknown Parent"
+  }));
+};
+const groupedSubItems = useMemo(() => {
+  if (!master?.isHierarchical) return [];
+  
+  const grouped = groupSubItemsByParent(existingItems, master);
+  
+  // Apply search filter if searchTerm exists
+  if (!searchTerm) return grouped;
+  
+  return grouped.map(group => ({
+    ...group,
+    children: group.children.filter(child => {
+      const mainField = child[master.payloadKey]?.toString().toLowerCase() || '';
+      return mainField.includes(searchTerm);
+    })
+  })).filter(group => group.children.length > 0);
+}, [existingItems, master, parentOptions, searchTerm]);
 
 
   const isLabelMaster = useMemo(
@@ -85,12 +138,12 @@ export default function MasterModal({
 
   // Filtered items based on search term
   const filteredItems = useMemo(() => {
-    if (!searchTerm) return existingItems;
-    return existingItems.filter(item => {
-      const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
-      return mainField.includes(searchTerm);
-    });
-  }, [existingItems, searchTerm, master.payloadKey]);
+  if (!searchTerm || master?.isHierarchical) return existingItems;
+  return existingItems.filter(item => {
+    const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
+    return mainField.includes(searchTerm);
+  });
+}, [existingItems, searchTerm, master]);
 
   // Filtered hierarchical items based on search term
   const filteredGroupedItems = useMemo(() => {
@@ -1077,144 +1130,167 @@ export default function MasterModal({
               </svg>
             </div>
 
-            {isLoadingItems ? (
-              <div className="flex justify-center items-center h-full">
-                <p>Loading items...</p>
+   {isLoadingItems ? (
+  <div className="flex justify-center items-center h-full">
+    <p>Loading items...</p>
+  </div>
+) : (
+  <>
+    {master.isHierarchical ? (
+      <div className="space-y-4">
+        {groupedSubItems.length > 0 ? (
+          groupedSubItems.map(group => (
+            <div key={group.parentId} className="mb-4 border rounded-md">
+              {/* Parent Section Header */}
+              <div
+                onClick={() =>
+                  setOpenParents(prev => ({
+                    ...prev,
+                    [group.parentId]: !prev[group.parentId]
+                  }))
+                }
+                className="bg-gray-100 p-3 font-medium cursor-pointer flex justify-between items-center"
+              >
+                <span className="font-semibold text-blue-700">
+                  {group.parentName}
+                </span>
+                <span className="text-gray-500 text-sm">
+                  {openParents[group.parentId] ? '▼' : '▶'} ({group.children.length}{' '}
+                  {master.title.includes("Industry") ? "sub-industries" : "sub-services"})
+                </span>
               </div>
-            ) : (
-              <>
-{master.title === subIndustryConfig?.title &&
-  groupedHierarchicalItems.length > 0 ? (
-    <div className="space-y-4">
-      {groupedHierarchicalItems.map((industry) => (
-        <div key={industry[industryConfig.idKey]} className="border rounded-md p-3 bg-gray-50">
-          <h4 className="text-lg font-bold text-blue-800 mb-2">
-            {industry[industryConfig.payloadKey]}
-          </h4>
-          {industry.children && industry.children.length > 0 ? (
-            <ul className="pl-4 space-y-1">
-              {industry.children.map((subindustry) => (
-                <li key={subindustry[subIndustryConfig.idKey]} className="p-2 border rounded-md">
-                  <span className="font-medium">
-                    {subindustry[subIndustryConfig.payloadKey]}
-                    <span className="ml-2 text-sm text-gray-500">
-                      (Parent: {industry[industryConfig.payloadKey]})
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600 text-sm italic ml-4">
-              No sub-industries.
-            </p>
-          )}
-        </div>
-      ))}
-    </div>
-  ) : null}  
-                  <ul className="space-y-2">
-                    {(searchTerm ? filteredItems : existingItems).map((item) => (
-                      <li
-                        key={item[master.idKey]}
-                        className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200
-                          ${
-                            selectedItemForEdit &&
-                            selectedItemForEdit[master.idKey] ===
-                              item[master.idKey]
-                              ? "bg-blue-100 border-blue-400"
-                              : "bg-gray-50 hover:bg-gray-100"
-                          }`}
-                      >
+
+              {/* Children List (expandable) */}
+              {openParents[group.parentId] && (
+                <ul className="divide-y divide-gray-200">
+                  {group.children.map(child => (
+                    <li
+                      key={child[master.idKey]}
+                      className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
+                        selectedItemForEdit &&
+                        selectedItemForEdit[master.idKey] === child[master.idKey]
+                          ? "bg-blue-100 border-blue-400"
+                          : "bg-white"
+                      }`}
+                    >
+                      <div>
                         <span className="font-medium text-gray-800">
-                          {item[master.payloadKey]}
-                          {master.isHierarchical &&
-                            master.parentMasterConfig &&
-                            item[
-                              master.parentMasterConfig
-                                .parentIdInChildResponseKey ||
-                                master.parentMasterConfig.idKey
-                            ] && (
-                        <div className="mt-2 w-full">
-                              <span className="text-md text-gray-900">
-                                (Parent:{" "}
-                                {parentOptions.find(
-                                  (p) =>
-                                    p[master.parentMasterConfig.idKey] ===
-                                    item[
-                                      master.parentMasterConfig
-                                        .parentIdInChildResponseKey ||
-                                      master.parentMasterConfig.idKey
-                                    ]
-                                )?.[master.parentMasterConfig.nameKey] ||
-                                  "N/A"}
-                                )
-                              </span>
-                              </div>
-                            )}
-                          {master.additionalFields &&
-                            master.additionalFields.map((field) => {
-                              if (
-                                master.isHierarchical &&
-                                master.parentMasterConfig &&
-                                field ===
-                                  (master.parentMasterConfig.formFieldKey ||
-                                    "parentId")
-                              ) {
-                                return null;
-                              }
-                              return (
-                                item[field] && (
-                                  <span
-                                    key={field}
-                                    className="ml-2 text-sm text-gray-500"
-                                  >
-                                    ({item[field]})
-                                  </span>
-                                )
-                              );
-                            })}
-                          {master.activeStatusPayloadKey &&
-                            typeof item[master.activeStatusPayloadKey] ===
-                              "boolean" && (
-                              <span
-                                className={`ml-2 mt-2 text-xs font-semibold px-2.5 py-0.5 rounded-2xl ${
-                                  item[master.activeStatusPayloadKey]
-                                    ? " text-green-600"
-                                    : " text-red-600"
-                                }`}
-                              >
-                                {item[master.activeStatusPayloadKey]
-                                  ? "Active"
-                                  : "Inactive"}
-                              </span>
-                            )}
+                          {child[master.payloadKey]}
                         </span>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => setSelectedItemForEdit(item)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          {!isLabelMaster && (
-                            <button
-                              onClick={() => handleDelete(item[master.idKey])}
-                              disabled={isDeleting || !master.delete}
-                              className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                              title="Delete"
+                        {master.activeStatusPayloadKey &&
+                          child[master.activeStatusPayloadKey] !== undefined && (
+                            <span
+                              className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                                child[master.activeStatusPayloadKey]
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                             >
-                              <Trash2 size={18} />
-                            </button>
+                              {child[master.activeStatusPayloadKey]
+                                ? 'Active'
+                                : 'Inactive'}
+                            </span>
                           )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                
-              </>
-            )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setSelectedItemForEdit(child)}
+                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(child[master.idKey])}
+                          className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100"
+                          title="Delete"
+                          disabled={isDeleting || !master.delete}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-4">
+            {searchTerm ? 'No matching items found' : 'No items available'}
+          </p>
+        )}
+      </div>
+    ) : (
+      <ul className="space-y-2">
+        {filteredItems.length > 0 ? (
+          filteredItems.map((item) => (
+            <li
+              key={item[master.idKey]}
+              className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
+                selectedItemForEdit &&
+                selectedItemForEdit[master.idKey] === item[master.idKey]
+                  ? "bg-blue-100 border-blue-400"
+                  : "bg-gray-50 hover:bg-gray-100"
+              }`}
+            >
+              <div className="flex flex-col">
+                <span className="font-medium text-gray-800">
+                  {item[master.payloadKey]}
+                </span>
+                {master.additionalFields &&
+                  master.additionalFields.map((field) => {
+                    if (
+                      master.isHierarchical &&
+                      master.parentMasterConfig &&
+                      field ===
+                        (master.parentMasterConfig.formFieldKey ||
+                          "parentId")
+                    ) {
+                      return null;
+                    }
+                    return (
+                      item[field] && (
+                        <span
+                          key={field}
+                          className="text-sm text-gray-500"
+                        >
+                          {item[field]}
+                        </span>
+                      )
+                    );
+                  })}
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setSelectedItemForEdit(item)}
+                  className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
+                  title="Edit"
+                >
+                  <Edit size={18} />
+                </button>
+                {!isLabelMaster && (
+                  <button
+                    onClick={() => handleDelete(item[master.idKey])}
+                    disabled={isDeleting || !master.delete}
+                    className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
+            </li>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-4">
+            {searchTerm ? 'No matching items found' : 'No items available'}
+          </p>
+        )}
+      </ul>
+    )}
+  </>
+)}
           </div>
 
           {/* Form for Add/Edit (Right Side) */}

@@ -114,6 +114,7 @@ export const ENDPOINTS = {
 
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,
+  PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
 
   //DCRM Integration API
 

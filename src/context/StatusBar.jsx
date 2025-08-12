@@ -22,6 +22,8 @@ const mandatoryInputStages = ['Proposal', 'Won'];
 const MAX_REMARK_LENGTH = 500;
 const MAX_NOTES_LENGTH = 200;
 const MAX_PLACE_LENGTH = 200;
+const MAX_PROPOSAL_NOTES_LENGTH = 500;
+
 
 const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [stages, setStages] = useState([]);
@@ -54,6 +56,23 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [users, setUsers] = useState([]);
   const { showToast } = useToast();
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
+
+  const [proposalSendModes, setProposalSendModes] = useState([]);
+const [openProposalDialog, setOpenProposalDialog] = useState(false);
+const [proposalDialogValue, setProposalDialogValue] = useState({
+  proposalSendModeId: null,
+  preparedBy: null,
+  verifiedBy: null,
+  sendBy: null,
+  notes: '',
+});
+const [proposalDialogErrors, setProposalDialogErrors] = useState({
+  proposalSendModeId: '',
+  preparedBy: '',
+  verifiedBy: '',
+  sendBy: '',
+  notes: '',
+});
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
   const [remarkErrors, setRemarkErrors] = useState({
     remark: '',
@@ -178,6 +197,71 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     return isValid;
   };
 
+
+  const fetchProposalSendModes = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${ENDPOINTS.PROPOSAL_SEND_MODES}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch proposal send modes');
+    const data = await response.json();
+    setProposalSendModes(data);
+  } catch (err) {
+    console.error('Error fetching proposal send modes:', err.message);
+  }
+};
+
+// Add to useEffect
+useEffect(() => {
+  fetchStages();
+  fetchUsers();
+  fetchDemoSessions();
+  fetchProposalSendModes(); // Add this line
+}, []);
+
+const validateProposal = () => {
+  let isValid = true;
+  const newErrors = {
+    proposalSendModeId: '',
+    preparedBy: '',
+    verifiedBy: '',
+    sendBy: '',
+    notes: '',
+  };
+
+  if (!proposalDialogValue.proposalSendModeId) {
+    newErrors.proposalSendModeId = 'Send mode is required';
+    isValid = false;
+  }
+
+  if (!proposalDialogValue.preparedBy) {
+    newErrors.preparedBy = 'Prepared by is required';
+    isValid = false;
+  }
+
+  if (!proposalDialogValue.verifiedBy) {
+    newErrors.verifiedBy = 'Verified by is required';
+    isValid = false;
+  }
+
+  if (!proposalDialogValue.sendBy) {
+    newErrors.sendBy = 'Send by is required';
+    isValid = false;
+  }
+
+  if (proposalDialogValue.notes.length > MAX_PROPOSAL_NOTES_LENGTH) {
+    newErrors.notes = `Notes cannot exceed ${MAX_PROPOSAL_NOTES_LENGTH} characters`;
+    isValid = false;
+  }
+
+  setProposalDialogErrors(newErrors);
+  return isValid;
+};
+
   const fetchStages = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -266,60 +350,118 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     return `${day}/${month}/${year}`;
   };
 
-  const handleStageClick = (clickedIndex, statusId) => {
-    if (stageStatuses[statusId] === false) {
-      showToast('error', 'This status is currently inactive and cannot be selected');
-      return;
-    }
+const handleStageClick = (clickedIndex, statusId) => {
+  if (stageStatuses[statusId] === false) {
+    showToast('error', 'This status is currently inactive and cannot be selected');
+    return;
+  }
 
-    if (isLost || isWon) {
-      showToast('info', 'Cannot change status for a lost or won lead.');
-      return;
-    }
+  if (isLost || isWon) {
+    showToast('info', 'Cannot change status for a lost or won lead.');
+    return;
+  }
 
-    if (clickedIndex <= currentStageIndex) {
-      showToast('info', 'Cannot go back or re-select current stage.');
-      return;
-    }
+  if (clickedIndex <= currentStageIndex) {
+    showToast('info', 'Cannot go back or re-select current stage.');
+    return;
+  }
 
-    const stageName = stages[clickedIndex]?.name;
-    setDialogStageIndex(clickedIndex);
+  const stageName = stages[clickedIndex]?.name;
+  setDialogStageIndex(clickedIndex);
 
-    if (stageName?.toLowerCase().includes('demo')) {
-      setDialogValue({
-        demoSessionType: '',
-        demoSessionStartTime: new Date(),
-        demoSessionEndTime: null,
-        notes: '',
-        place: '',
-        demoSessionAttendees: [],
-        presentedByUsers: [],
-      });
-      setDialogErrors({
-        demoSessionType: '',
-        demoSessionStartTime: '',
-        demoSessionEndTime: '',
-        notes: '',
-        place: '',
-        demoSessionAttendees: '',
-        presentedByUsers: '',
-      });
-      setOpenDialog(true);
-      return;
-    }
+  if (stageName?.toLowerCase().includes('demo')) {
+    setDialogValue({
+      demoSessionType: '',
+      demoSessionStartTime: new Date(),
+      demoSessionEndTime: null,
+      notes: '',
+      place: '',
+      demoSessionAttendees: [],
+      presentedByUsers: [],
+    });
+    setDialogErrors({
+      demoSessionType: '',
+      demoSessionStartTime: '',
+      demoSessionEndTime: '',
+      notes: '',
+      place: '',
+      demoSessionAttendees: '',
+      presentedByUsers: '',
+    });
+    setOpenDialog(true);
+    return;
+  }
 
-    if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
-      setDialogValue('');
-      setDialogErrors({ ...dialogErrors, amount: '' });
-      setOpenDialog(true);
-      return;
-    }
+  if (stageName?.toLowerCase() === 'proposal') {
+    setProposalDialogValue({
+      proposalSendModeId: null,
+      preparedBy: null,
+      verifiedBy: null,
+      sendBy: null,
+      notes: '',
+    });
+    setProposalDialogErrors({
+      proposalSendModeId: '',
+      preparedBy: '',
+      verifiedBy: '',
+      sendBy: '',
+      notes: '',
+    });
+    setOpenProposalDialog(true);
+    return;
+  }
 
+  if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
+    setDialogValue('');
+    setDialogErrors({ ...dialogErrors, amount: '' });
+    setOpenDialog(true);
+    return;
+  }
+
+  setRemarkStageId(statusId);
+  setRemarkData({ remark: '', projectValue: '' });
+  setRemarkErrors({ remark: '', projectValue: '' });
+  setShowRemarkDialog(true);
+};
+
+const handleProposalSubmit = async () => {
+  if (!validateProposal()) return;
+
+  const token = localStorage.getItem('token');
+  const statusId = stages[dialogStageIndex]?.id;
+
+  try {
+    const payload = {
+      leadId: parseInt(leadId),
+      proposalSendModeId: proposalDialogValue.proposalSendModeId.id, // Use the id from our hardcoded options
+      preparedBy: proposalDialogValue.preparedBy.iUser_id,
+      verifiedBy: proposalDialogValue.verifiedBy.iUser_id,
+      sendBy: proposalDialogValue.sendBy.iUser_id,
+      notes: proposalDialogValue.notes,
+    };
+
+    await axios.post(ENDPOINTS.PROPOSAL, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    showToast('success', 'Proposal details saved!');
     setRemarkStageId(statusId);
     setRemarkData({ remark: '', projectValue: '' });
     setRemarkErrors({ remark: '', projectValue: '' });
     setShowRemarkDialog(true);
-  };
+    setOpenProposalDialog(false);
+  } catch (e) {
+    showToast('error', e?.response?.data?.message || e.message || 'Failed to save proposal details');
+  }
+};
+
+const PROPOSAL_SEND_MODES = [
+  { id: 1, name: 'Online' },
+  { id: 2, name: 'Offline' }
+];
 
   const updateStage = async (newIndex, statusId) => {
     try {
@@ -749,6 +891,119 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+<Dialog 
+  open={openProposalDialog} 
+  onClose={() => setOpenProposalDialog(false)}
+  maxWidth="sm" // Can be 'xs', 'sm', 'md', 'lg', 'xl'
+  fullWidth // Makes the dialog take the full width of its maxWidth
+>  
+
+<DialogTitle>Enter Proposal Details</DialogTitle>
+  <DialogContent>
+    <Autocomplete
+      fullWidth
+      options={PROPOSAL_SEND_MODES}
+      getOptionLabel={(option) => option.name}
+      isOptionEqualToValue={(option, value) => option.id === value.id}
+      value={proposalDialogValue.proposalSendModeId || null}
+      onChange={(e, newValue) =>
+        setProposalDialogValue(prev => ({ ...prev, proposalSendModeId: newValue }))
+      }
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Send Mode *"
+          sx={{ mt: 2 }}
+          error={!!proposalDialogErrors.proposalSendModeId}
+          helperText={proposalDialogErrors.proposalSendModeId}
+        />
+      )}
+    />
+    <Autocomplete
+      fullWidth
+      options={users}
+      getOptionLabel={option => option?.cFull_name || ''}
+      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+      value={proposalDialogValue.preparedBy || null}
+      onChange={(e, newValue) =>
+        setProposalDialogValue(prev => ({ ...prev, preparedBy: newValue }))
+      }
+      renderInput={params => (
+        <TextField
+          {...params}
+          label="Prepared By *"
+          sx={{ mt: 2 }}
+          error={!!proposalDialogErrors.preparedBy}
+          helperText={proposalDialogErrors.preparedBy}
+        />
+      )}
+    />
+    <Autocomplete
+      fullWidth
+      options={users}
+      getOptionLabel={option => option?.cFull_name || ''}
+      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+      value={proposalDialogValue.verifiedBy || null}
+      onChange={(e, newValue) =>
+        setProposalDialogValue(prev => ({ ...prev, verifiedBy: newValue }))
+      }
+      renderInput={params => (
+        <TextField
+          {...params}
+          label="Verified By *"
+          sx={{ mt: 2 }}
+          error={!!proposalDialogErrors.verifiedBy}
+          helperText={proposalDialogErrors.verifiedBy}
+        />
+      )}
+    />
+    <Autocomplete
+      fullWidth
+      options={users}
+      getOptionLabel={option => option?.cFull_name || ''}
+      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+      value={proposalDialogValue.sendBy || null}
+      onChange={(e, newValue) =>
+        setProposalDialogValue(prev => ({ ...prev, sendBy: newValue }))
+      }
+      renderInput={params => (
+        <TextField
+          {...params}
+          label="Send By *"
+          sx={{ mt: 2 }}
+          error={!!proposalDialogErrors.sendBy}
+          helperText={proposalDialogErrors.sendBy}
+        />
+      )}
+    />
+    <TextField
+      label="Notes (optional)"
+      fullWidth
+      multiline
+      rows={3}
+      value={proposalDialogValue.notes}
+      onChange={e => {
+        if (e.target.value.length <= MAX_PROPOSAL_NOTES_LENGTH) {
+          setProposalDialogValue(prev => ({ ...prev, notes: e.target.value }));
+        }
+      }}
+      error={!!proposalDialogErrors.notes}
+      helperText={
+        proposalDialogErrors.notes || 
+        `${proposalDialogValue.notes.length}/${MAX_PROPOSAL_NOTES_LENGTH} characters`
+      }
+      sx={{ mt: 2 }}
+      InputLabelProps={{ shrink: true }}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenProposalDialog(false)}>Cancel</Button>
+    <Button onClick={handleProposalSubmit} variant="contained">
+      Save
+    </Button>
+  </DialogActions>
+</Dialog>
 
         {statusRemarks.length > 0 && (
           <div className="mt-6">

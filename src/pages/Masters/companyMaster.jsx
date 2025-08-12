@@ -334,6 +334,8 @@ export default function CompanyMaster() {
     payloadKey: 'subservice_name',
     responseKey: 'data',
     parentIdInChildResponseKey: 'iservice_parent',
+    parentNameInChildResponseKey: 'service.cservice_name', 
+
 
     get: ENDPOINTS.SUB_SERVICE,
     post: ENDPOINTS.SUB_SERVICE,

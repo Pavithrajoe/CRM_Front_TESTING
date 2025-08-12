@@ -5,6 +5,7 @@ import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ENDPOINTS } from "../api/constraints";
+import { Search, X } from "lucide-react";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = SpeechRecognition ? new SpeechRecognition() : null;
@@ -28,7 +29,10 @@ const Tasks = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false); // State to toggle search bar
+
   const formRef = useRef(null);
+  const searchInputRef = useRef(null); // Ref for search input
 
   const [formData, setFormData] = useState({
     ctitle: "",
@@ -66,7 +70,7 @@ const Tasks = () => {
   // Fetch company users
   const fetchUsers = useCallback(async () => {
     if (!companyId || !token) return;
-    
+
     setLoadingUsers(true);
     try {
       const response = await axios.get(ENDPOINTS.USER_GET, {
@@ -74,14 +78,14 @@ const Tasks = () => {
       });
 
       const usersData = response.data?.result || response.data?.data || response.data || [];
-      
-      const activeCompanyUsers = usersData.filter(user => 
-        user.iCompany_id === companyId && 
+
+      const activeCompanyUsers = usersData.filter(user =>
+        user.iCompany_id === companyId &&
         (user.bactive === true || user.bactive === 1 || user.bactive === "true")
       );
-      
+
       setCompanyUsers(activeCompanyUsers);
-      
+
     } catch (error) {
       console.error("Failed to fetch users:", {
         error: error.message,
@@ -97,16 +101,16 @@ const Tasks = () => {
   // Fetch tasks
   const fetchTasks = useCallback(async () => {
     if (!token || !leadId) return;
-    
+
     setLoadingTasks(true);
     try {
       const response = await axios.get(`${ENDPOINTS.TASK_LEAD}/${leadId}`, {
-        headers: { 
-          "Content-Type": "application/json", 
-          Authorization: `Bearer ${token}` 
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
       });
-      
+
       if (response.data.success) {
         const sortedTasks = response.data.data.sort(
           (a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt)
@@ -117,8 +121,8 @@ const Tasks = () => {
       }
     } catch (error) {
       showPopup(
-        "Error", 
-        error.response?.data?.message || error.message || "Failed to fetch tasks.", 
+        "Error",
+        error.response?.data?.message || error.message || "Failed to fetch tasks.",
         "error"
       );
       console.error("Fetch tasks error:", error);
@@ -136,42 +140,42 @@ const Tasks = () => {
     loadData();
   }, [fetchUsers, fetchTasks]);
 
- // Speech recognition effect
-useEffect(() => {
-  if (!mic) {
-    console.warn("Speech Recognition API not supported in this browser.");
-    return;
-  }
+  // Speech recognition effect
+  useEffect(() => {
+    if (!mic) {
+      console.warn("Speech Recognition API not supported in this browser.");
+      return;
+    }
 
-  mic.onresult = (event) => {
-    // Loop through only NEW results
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        const transcript = event.results[i][0].transcript.trim();
-        setFormData(prev => ({
-          ...prev,
-          ctask_content:
-            prev.ctask_content +
-            (prev.ctask_content ? " " : "") +
-            transcript
-        }));
+    mic.onresult = (event) => {
+      // Loop through only NEW results
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript.trim();
+          setFormData(prev => ({
+            ...prev,
+            ctask_content:
+              prev.ctask_content +
+              (prev.ctask_content ? " " : "") +
+              transcript
+          }));
+        }
       }
-    }
-  };
+    };
 
-  if (isListening) {
-    mic.start();
-  } else {
-    mic.stop();
-  }
-
-  return () => {
-    if (mic) {
+    if (isListening) {
+      mic.start();
+    } else {
       mic.stop();
-      mic.onresult = null;
     }
-  };
-}, [isListening]);
+
+    return () => {
+      if (mic) {
+        mic.stop();
+        mic.onresult = null;
+      }
+    };
+  }, [isListening]);
 
 
   // Form handlers
@@ -201,7 +205,7 @@ useEffect(() => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     let updatedValue = value;
 
     if (name === "iassigned_to" || name === "inotify_to") {
@@ -228,17 +232,17 @@ useEffect(() => {
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();
-    
+
     if (formData.ctitle.trim().length < 3) {
       showPopup("Warning", "Title must be at least 3 characters long.", "warning");
       return;
     }
-    
+
     if (formData.ctask_content.trim().length < 5) {
       showPopup("Warning", "Description must be at least 5 characters long.", "warning");
       return;
     }
-    
+
     const payload = {
       ...formData,
       ilead_id: Number(leadId),
@@ -248,7 +252,7 @@ useEffect(() => {
 
     try {
       let response;
-      
+
       if (editingTask) {
         response = await axios.put(
           `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
@@ -256,21 +260,21 @@ useEffect(() => {
             ...payload,
             iupdated_by: userId,
           },
-          { 
-            headers: { Authorization: `Bearer ${token}` } 
+          {
+            headers: { Authorization: `Bearer ${token}` }
           }
         );
       } else {
         response = await axios.post(
-          ENDPOINTS.TASK, 
-          { 
-            ...payload, 
-            icreated_by: userId 
+          ENDPOINTS.TASK,
+          {
+            ...payload,
+            icreated_by: userId
           },
           {
-            headers: { 
-              "Content-Type": "application/json", 
-              Authorization: `Bearer ${token}` 
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
             },
           }
         );
@@ -286,8 +290,8 @@ useEffect(() => {
       }
     } catch (error) {
       showPopup(
-        "Error", 
-        error.response?.data?.message || error.message || "Failed to save task.", 
+        "Error",
+        error.response?.data?.message || error.message || "Failed to save task.",
         "error"
       );
       console.error("Task submission error:", error);
@@ -296,12 +300,12 @@ useEffect(() => {
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
-    
+
     try {
       const response = await axios.delete(`${ENDPOINTS.TASK}/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.data.success) {
         showPopup("Success", "Task deleted successfully.", "success");
         await fetchTasks();
@@ -310,8 +314,8 @@ useEffect(() => {
       }
     } catch (error) {
       showPopup(
-        "Error", 
-        error.response?.data?.message || error.message || "Failed to delete task.", 
+        "Error",
+        error.response?.data?.message || error.message || "Failed to delete task.",
         "error"
       );
       console.error("Delete task error:", error);
@@ -331,34 +335,57 @@ useEffect(() => {
   const formatDateTime = (dateStr) =>
     dateStr
       ? new Date(dateStr)
-          .toLocaleString("en-IN", {
-            dateStyle: "short",
-            timeStyle: "short",
-          })
-          .toUpperCase()
+        .toLocaleString("en-IN", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
+        .toUpperCase()
       : "N/A";
 
   const canEditOrDeleteTask = (task) => {
     return userId === task.icreated_by;
   };
 
+  // Focus the search input when it opens
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
   return (
     <div className="w-full overflow-x-hidden h-[100vh] shadow rounded bg-[#f8f8f8]">
       <div className="relative bg-white mt-10 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto">
-        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-3 sm:gap-0">
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-2 sm:px-4 sm:py-2 border rounded-xl text-sm sm:text-base w-full sm:w-3/4 md:w-1/5 lg:w-1/3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-          />
+        <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-4">
+          <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`
+                transition-all duration-300 ease-in-out
+                bg-transparent outline-none text-sm font-medium
+                ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0'}
+              `}
+            />
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors
+                ${isSearchOpen ? 'text-blue-900' : ''}
+              `}
+              aria-label="Toggle search bar"
+            >
+              <Search size={18} />
+            </button>
+          </div>
           <button
             onClick={handleNewTaskClick}
-            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-blue-700 transition text-sm sm:text-base w-full sm:w-auto"
+            className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base"
           >
             + New Task
           </button>
@@ -376,8 +403,8 @@ useEffect(() => {
             </p>
           ) : (
             currentTasks.map((task) => (
-              <div 
-                key={task.itask_id} 
+              <div
+                key={task.itask_id}
                 className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out relative"
               >
                 <div className="flex justify-between items-start">
@@ -386,18 +413,18 @@ useEffect(() => {
                   </span>
                   {canEditOrDeleteTask(task) && (
                     <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleEditClick(task)} 
-                        className="text-gray-400 hover:text-blue-500 transition-colors duration-200" 
+                      <button
+                        onClick={() => handleEditClick(task)}
+                        className="text-gray-400 hover:text-blue-500 transition-colors duration-200"
                         title="Edit task"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button 
-                        onClick={() => handleDeleteTask(task.itask_id)} 
-                        className="text-gray-400 hover:text-red-500 transition-colors duration-200" 
+                      <button
+                        onClick={() => handleDeleteTask(task.itask_id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                         title="Delete task"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -439,8 +466,8 @@ useEffect(() => {
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                    currentPage === i + 1 
-                      ? "bg-indigo-600 text-white shadow" 
+                    currentPage === i + 1
+                      ? "bg-indigo-600 text-white shadow"
                       : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                   }`}
                 >
@@ -454,8 +481,8 @@ useEffect(() => {
         {showForm && (
           <>
             <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity"></div>
-            <div 
-              ref={formRef} 
+            <div
+              ref={formRef}
               className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 z-50 transition-all duration-300"
             >
               <div className="flex justify-between items-center mb-3 sm:mb-4">
@@ -472,7 +499,7 @@ useEffect(() => {
                   ×
                 </button>
               </div>
-              
+
               <form onSubmit={handleFormSubmission} className="flex flex-col h-full space-y-4">
                 <input
                   type="text"
@@ -483,7 +510,7 @@ useEffect(() => {
                   placeholder="Task Title *"
                   required
                 />
-                
+
                 <textarea
                   name="ctask_content"
                   onChange={handleChange}
@@ -492,15 +519,15 @@ useEffect(() => {
                   placeholder="Task Description *"
                   required
                 />
-                
+
                 <div className="flex justify-between items-center mt-3 sm:mt-4">
                   {mic && (
                     <button
                       type="button"
                       onClick={() => setIsListening((prev) => !prev)}
                       className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                        isListening 
-                          ? "bg-red-500 text-white animate-pulse" 
+                        isListening
+                          ? "bg-red-500 text-white animate-pulse"
                           : "bg-gray-300 text-black"
                       }`}
                     >
@@ -508,7 +535,7 @@ useEffect(() => {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -530,7 +557,7 @@ useEffect(() => {
                       ))}
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Notify to
@@ -551,7 +578,7 @@ useEffect(() => {
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium  text-gray-700">
                     Due Date <span className="text-red-600">*</span>
@@ -567,7 +594,7 @@ useEffect(() => {
                     required
                   />
                 </div>
-                
+
                 <button
                   type="submit"
                   className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"

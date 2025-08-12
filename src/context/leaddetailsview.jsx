@@ -20,7 +20,6 @@ import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-// import { FaPhone, FaWhatsapp } from "react-icons/fa"; // Not used in this snippet but kept for completeness
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
@@ -52,10 +51,8 @@ const LeadDetailView = () => {
   const [ccRecipients, setCcRecipients] = useState("");
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
-  //email templates
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
-  // New state for email sending loading
   const [isSendingMail, setIsSendingMail] = useState(false);
 
   // Derived state
@@ -191,45 +188,45 @@ const LeadDetailView = () => {
     await lostLead();
   };
 
-const sendEmail = async () => {
-  setIsSendingMail(true);
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        sent_to: sentTo,
-        cc_to: ccRecipients, // Add this line
-        mailSubject,
-        mailContent,
-      }),
-    });
+  const sendEmail = async () => {
+    setIsSendingMail(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sent_to: sentTo,
+          cc: ccRecipients, // Using 'cc' instead of 'cc_to' to match your example payload
+          mailSubject,
+          mailContent,
+        }),
+      });
 
-    const resData = await response.json();
+      const resData = await response.json();
 
-    if (!response.ok) {
-      console.error("Failed to send mail. Backend says:", resData);
-      showPopup("Error", resData.message || "Failed to send mail", "error");
-      return;
+      if (!response.ok) {
+        console.error("Failed to send mail. Backend says:", resData);
+        showPopup("Error", resData.message || "Failed to send mail", "error");
+        return;
+      }
+
+      showPopup("Success", "Email sent successfully!", "success");
+      setIsMailOpen(false);
+      setSentTo("");
+      setCcRecipients("");
+      setMailSubject("");
+      setMailContent("");
+    } catch (error) {
+      console.error("Error sending mail:", error);
+      showPopup("Error", "Something went wrong while sending email", "error");
+    } finally {
+      setIsSendingMail(false);
     }
-
-    showPopup("Success", "Email sent successfully!", "success");
-    setIsMailOpen(false);
-    setSentTo("");
-    setCcRecipients(""); // Clear CC field after sending
-    setMailSubject("");
-    setMailContent("");
-  } catch (error) {
-    console.error("Error sending mail:", error);
-    showPopup("Error", "Something went wrong while sending email", "error");
-  } finally {
-    setIsSendingMail(false);
-  }
-};
+  };
 
   const fetchLeadData = async () => {
     try {
@@ -275,11 +272,12 @@ const sendEmail = async () => {
       setLoading(false);
     }
   };
-   useEffect(() => {
-        if (leadId) {
-            fetchLeadData();
-        }
-    }, [leadId]);
+
+  useEffect(() => {
+    if (leadId) {
+      fetchLeadData();
+    }
+  }, [leadId]);
 
   const fetchLostReasons = async () => {
     try {
@@ -457,7 +455,7 @@ const sendEmail = async () => {
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap  items-start sm:items-center justify-between gap-3 mb-4 w-full">
           <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md shadow-blue-900 rounded-full p-1  w-full sm:w-auto">
-            {["Activity", "Comments", "Reminders", "Follow-up"].map((label, idx) => (
+            {["Activity", "Task","Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
@@ -482,7 +480,6 @@ const sendEmail = async () => {
               > <div className="w-px h-5 bg-gray-600"></div>
                 <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} />
                  <div className="w-px h-5 bg-gray-600"></div>
-                {/* <span>Email</span> */}
               </button>
                
 
@@ -513,9 +510,10 @@ const sendEmail = async () => {
               isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
             />
           )}
-          {tabIndex === 1 && <Comments leadId={leadId} />}
-          {tabIndex === 2 && <RemainderPage leadId={leadId} />}
-          {tabIndex === 3 && <Tasks leadId={leadId} />}
+          {tabIndex === 1 && <Tasks leadId={leadId} />}
+          {tabIndex === 2 && <Comments leadId={leadId} />}
+          {tabIndex === 3 && <RemainderPage leadId={leadId} />}
+          
         </Box>
       </div>
 
@@ -705,19 +703,18 @@ const sendEmail = async () => {
                   
 
                     {/* CC Field */}
-<div>
-  <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
-  <div className="relative">
-    <input
-      type="email"
-      className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-      placeholder="cc@example.com (separate multiple with commas)"
-      value={ccRecipients}
-      onChange={(e) => setCcRecipients(e.target.value)}
-      multiple
-    />
-  </div>
-</div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                          placeholder="cc@example.com (separate multiple with commas)"
+                          value={ccRecipients}
+                          onChange={(e) => setCcRecipients(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
                     {/* Subject Field */}
                     <div>
@@ -771,7 +768,7 @@ const sendEmail = async () => {
                     <button
                       type="submit"
                       className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                      disabled={isSendingMail} // Disable button while sending
+                      disabled={isSendingMail}
                     >
                       {isSendingMail ? (
                         <>

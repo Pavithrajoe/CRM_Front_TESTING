@@ -7,7 +7,8 @@ import { useParams } from "react-router-dom";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { usePopup } from "../context/PopupContext"; // Assuming you have a PopupContext
+import { format } from 'date-fns'; // Import the format function from date-fns
+import { usePopup } from "../context/PopupContext";
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
@@ -33,7 +34,7 @@ const ReminderForm = () => {
   const [assignToMe, setAssignToMe] = useState(false);
   const [isListeningContent, setIsListeningContent] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // State for expanding search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -149,69 +150,66 @@ const ReminderForm = () => {
     return true;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  setSubmitting(true);
+    setSubmitting(true);
 
-  const data = {
-    ...form,
-    reminderDate: form.reminderDateTime.toISOString(),
-    status: "submitted",
-    assignt_to: Number(form.assignt_to),
-  };
+    const data = {
+      ...form,
+      reminderDate: form.reminderDateTime.toISOString(),
+      status: "submitted",
+      assignt_to: Number(form.assignt_to),
+    };
 
-  try {
-    const response = await fetch(`${apiEndPoint}/reminder`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    let result;
     try {
-      result = await response.json(); // try parsing JSON
-    } catch {
-      result = {}; // fallback if body is empty or invalid JSON
+      const response = await fetch(`${apiEndPoint}/reminder`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        result = {};
+      }
+
+      if (!response.ok) {
+        const errorMsg =
+          result?.data?.error ||
+          result?.error ||
+          result?.message ||
+          (typeof result === "string" ? result : "Could not add reminder");
+
+        showPopup("Error", `Error: ${errorMsg}`, "error");
+        return;
+      }
+
+      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+      setForm({
+        title: "",
+        content: "",
+        reminderDateTime: new Date(),
+        priority: "Normal",
+        assignt_to: "",
+        ilead_id: Number(leadId),
+      });
+      setAssignToMe(false);
+      getReminder();
+      setShowForm(false);
+    } catch (err) {
+      console.error(err);
+      showPopup("Error", "Submission failed. Try again.", "error");
+    } finally {
+      setSubmitting(false);
     }
-
-    if (!response.ok) {
-      // Try to get error message from multiple common locations
-      const errorMsg =
-        result?.data?.error ||
-        result?.error ||
-        result?.message ||
-        (typeof result === "string" ? result : "Could not add reminder");
-
-      showPopup("Error", `Error: ${errorMsg}`, "error");
-      return;
-    }
-
-    // ✅ success
-    showPopup("Success", "🎉 Reminder submitted successfully!", "success");
-    setForm({
-      title: "",
-      content: "",
-      reminderDateTime: new Date(),
-      priority: "Normal",
-      assignt_to: "",
-      ilead_id: Number(leadId),
-    });
-    setAssignToMe(false);
-    getReminder();
-    setShowForm(false);
-  } catch (err) {
-    console.error(err);
-    showPopup("Error", "Submission failed. Try again.", "error");
-  } finally {
-    setSubmitting(false);
-  }
-};
-
+  };
 
   const getReminder = async () => {
     try {
@@ -251,8 +249,6 @@ const ReminderForm = () => {
   }, []);
 
   const applyFilters = useCallback(() => {
-    // This function can remain empty as the filter logic is in `filteredReminders`
-    // but it's good to keep for clarity if you want to add more complex filtering later.
     setShowFilterModal(false);
   }, []);
 
@@ -280,15 +276,15 @@ const ReminderForm = () => {
 
     return matchesSearch && matchesDate;
   });
-
-  const formatDateTime = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    return d.toLocaleDateString('en-IN', options).replace(/,/, '') + ' ' + d.toLocaleTimeString('en-IN', options);
-  };
   
-  // UseEffect to focus search input when it opens
+  // Use a reliable library function for formatting
+  const formatDisplayDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid Date";
+    return format(date, 'dd/MM/yyyy hh:mm a'); // Example: 12/08/2025 01:43 PM
+  };
+
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -301,8 +297,6 @@ const ReminderForm = () => {
 
       {/* Header with Search and New Reminder Button */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        
-        {/* Interactive Search Bar */}
         <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto">
           <input
             ref={searchInputRef}
@@ -386,49 +380,49 @@ const ReminderForm = () => {
       )}
 
       {/* Reminder List */}
-      <div className="flex flex-col divide-y divide-gray-200 bg-white rounded-3xl shadow-md overflow-hidden">
-        {filteredReminders.length === 0 ? (
-          <div className="text-center p-6 text-gray-500 font-medium">
-            No reminders found.
-          </div>
-        ) : (
-          filteredReminders.map((reminder) => (
-            <div
-              key={reminder.iremainder_id}
-              className="py-5 px-4 sm:px-6 hover:bg-gray-50 transition duration-150 rounded-2xl"
-            >
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                <div className="mb-3 sm:mb-0">
-                  <h3 className="text-md font-semibold text-gray-900">
-                    📌 {reminder.cremainder_title}
-                  </h3>
-                  <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                    {reminder.cremainder_content}
-                  </p>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Created by:{" "}
-                    <span className="font-semibold">{reminder.created_by}</span>
+      <div className="relative bg-white mt-5 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto shadow">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+          {filteredReminders.length === 0 ? (
+            <p className="text-center text-gray-400 text-sm sm:text-base py-8">No reminders found.</p>
+          ) : (
+            filteredReminders.map((reminder) => (
+              <div
+                key={reminder.iremainder_id}
+                className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <div className="mb-3 sm:mb-0">
+                    <h3 className="text-md font-semibold text-gray-900">
+                      📌 {reminder.cremainder_title}
+                    </h3>
+                    <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+                      {reminder.cremainder_content}
+                    </p>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Created by:{" "}
+                      <span className="font-semibold">{reminder.created_by}</span>
+                    </div>
+                    <div className="text-xs mt-1 text-gray-600">
+                      Priority:{" "}
+                      <span className="font-semibold">
+                        {reminder.priority || "Normal"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Assigned to:{" "}
+                      <span className="font-semibold">{reminder.assigned_to}</span>
+                    </div>
                   </div>
-                  <div className="text-xs mt-1 text-gray-600">
-                    Priority:{" "}
-                    <span className="font-semibold">
-                      {reminder.priority || "Normal"}
-                    </span>
+                  <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
+                    <p className="font-medium text-blue-700">
+                      {formatDisplayDateTime(reminder.dremainder_dt)}
+                    </p>
                   </div>
-                  <div className="text-xs text-gray-600">
-                    Assigned to:{" "}
-                    <span className="font-semibold">{reminder.assigned_to}</span>
-                  </div>
-                </div>
-                <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
-                  <p className="font-medium text-blue-700">
-                    {formatDateTime(reminder.dremainder_dt)}
-                  </p>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       {/* Reminder Form Drawer */}

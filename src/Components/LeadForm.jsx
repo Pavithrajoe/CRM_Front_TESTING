@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
-const LeadForm = ({ onClose, onSuccess }) => {
+// const LeadForm = ({ onClose, onSuccess }) => {
+  const LeadForm = ({ onClose, onSuccess, clientType }) => {
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = "";
@@ -21,6 +23,17 @@ const LeadForm = ({ onClose, onSuccess }) => {
     console.error("Invalid or missing JWT token");
   }
 
+  // const [existingLeadsList, setExistingLeadsList] = useState([]);
+  // const [isLeadListVisible, setIsLeadListVisible] = useState(false);
+  // const [searchError, setSearchError] = useState('');
+  // const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
+  // const [backendError, setBackendError] = useState("");
+  const [foundLeads, setFoundLeads] = useState([]); 
+  // const [isSearching, setIsSearching] = useState(false);
+// new for new/exis
+  const [isExistingClientForm, setIsExistingClientForm] = useState(false);
+  const [existingClientMobile, setExistingClientMobile] = useState("");
+  const [existingClientData, setExistingClientData] = useState(null);
   const [form, setForm] = useState({
     iLeadpoten_id: "",
     ileadstatus_id: "",
@@ -51,7 +64,8 @@ const LeadForm = ({ onClose, onSuccess }) => {
     clead_source: "",
     cresponded_by: userId,
     modified_by: userId,
-    iservice_id: ""
+    iservice_id: "",
+    isubservice_id: "" 
   });
 
   const [formLabels, setFormLabels] = useState({
@@ -99,10 +113,14 @@ const LeadForm = ({ onClose, onSuccess }) => {
   const [filteredWhatsappCountryCodes, setFilteredWhatsappCountryCodes] = useState([]);
   const [service, setService] = useState([]);
   const [isSave, setIsSave] = useState(false);
-
+  // sub service
+  const [subServiceList, setSubServiceList] = useState([]);
+  const [filteredSubService, setFilteredSubService] = useState([]); 
+  const [searchSubService, setSearchSubService] = useState(""); 
+  const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false); 
+  const subServiceDropdownRef = useRef(null); 
   const formRef = useRef(null);
   const saveTriggerRef = useRef(false);
-
   const cityDropdownRef = useRef(null);
   const potentialDropdownRef = useRef(null);
   const statusDropdownRef = useRef(null);
@@ -112,6 +130,281 @@ const LeadForm = ({ onClose, onSuccess }) => {
   const serviceDropdownRef = useRef(null);
   const mobileCountryCodeRef = useRef(null);
   const whatsappCountryCodeRef = useRef(null);
+  const [searchMobile, setSearchMobile] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+
+
+
+  // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
+  useEffect(() => {
+  if (existingClientData) {
+    // Extract phone number parts
+    const phoneNum = existingClientData.iphone_no || "";
+    const phoneMatch = phoneNum.match(/^(\+\d{1,3})(.*)$/);
+    const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
+    const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
+
+    // Extract WhatsApp number parts
+    const waNum = existingClientData.whatsapp_number || "";
+    const waMatch = waNum.match(/^(\+\d{1,3})(.*)$/);
+    const waCountryCode = waMatch ? waMatch[1] : "+91";
+    const waWithoutCode = waMatch ? waMatch[2] : waNum;
+
+    setForm(prev => ({
+      ...prev, // always preserve latest state
+      iLeadpoten_id: existingClientData.iLeadpoten_id || "",
+      ileadstatus_id: existingClientData.ileadstatus_id || "",
+      cindustry_id: existingClientData.cindustry_id || "",
+      csubindustry_id: existingClientData.isubindustry || "",
+      lead_source_id: existingClientData.lead_source_id || "",
+      ino_employee: existingClientData.ino_employee || "",
+      iproject_value: existingClientData.iproject_value || "",
+      clead_name: existingClientData.clead_name || "",
+      cemail: existingClientData.cemail || "",
+      corganization: existingClientData.corganization || "",
+      cwebsite: existingClientData.cwebsite || "",
+      icity: existingClientData.clead_city || "",
+      iphone_no: phoneWithoutCode || "",
+      phone_country_code: phoneCountryCode || "+91",
+      clead_address1: existingClientData.clead_address1 || "",
+      cwhatsapp: waWithoutCode || "",
+      whatsapp_country_code: waCountryCode || "",
+      clead_address2: existingClientData.clead_address2 || "",
+      clead_address3: existingClientData.clead_address3 || "",
+      cstate: existingClientData.cstate || "",
+      cdistrict: existingClientData.cdistrict || "",
+      cpincode: existingClientData.cpincode || "",
+      ccountry: existingClientData.ccountry || "",
+      iservice_id: existingClientData.iservice_id || "",
+      isubservice_id: existingClientData.isubservice_id || "",
+    }));
+
+    // Update dropdown search text fields
+    const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
+    if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+
+    const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
+    if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+
+    const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
+    if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+
+    const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
+    if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+
+    const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
+    if (selectedSource) setSearchSource(selectedSource.source_name);
+
+    const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
+    if (selectedService) setSearchService(selectedService.cservice_name);
+
+    const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
+    if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
+
+    const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
+    if (selectedCity) setSearchCity(selectedCity.cCity_name);
+  }
+}, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
+
+  // --- END OF NEW LOGIC ---
+
+  // for new/existing client
+  const resetForm = () => {
+    setForm({
+      iLeadpoten_id: "",
+      ileadstatus_id: "",
+      cindustry_id: "",
+      csubindustry_id: "",
+      lead_source_id: "",
+      ino_employee: 0,
+      iproject_value: 0,
+      clead_name: "",
+      cemail: "",
+      corganization: "",
+      cwebsite: "",
+      icity: "",
+      iphone_no: "",
+      phone_country_code: "+91",
+      cgender: 1,
+      clogo: "logo.png",
+      clead_address1: "",
+      cwhatsapp: "",
+      whatsapp_country_code: "+91",
+      clead_address2: "",
+      clead_address3: "",
+      cstate: "",
+      cdistrict: "",
+      cpincode: "",
+      ccountry: "",
+      clead_owner: userId,
+      clead_source: "",
+      cresponded_by: userId,
+      modified_by: userId,
+      iservice_id: "",
+      isubservice_id: "" 
+    });
+    setErrors({});
+    setSearchCity("");
+    setSearchPotential("");
+    setSearchStatus("");
+    setSearchIndustry("");
+    setSearchSubIndustry("");
+    setSearchSource("");
+    setSearchService("");
+    setSearchSubService("");
+    setSameAsPhone(false);
+  };
+  
+  const toggleSame = () => {
+    if (!sameAsPhone) {
+      setForm((prev) => ({
+        ...prev,
+        cwhatsapp: prev.iphone_no,
+        whatsapp_country_code: prev.phone_country_code,
+      }));
+    }
+    setSameAsPhone(!sameAsPhone);
+  };
+
+const checkExisting = async (fieldName, fieldValue) => {
+    if (!fieldValue) return;
+
+    let body = {};
+    if (fieldName === "iphone_no" || fieldName === "cwhatsapp") {
+      body = { phonenumber: `${form.phone_country_code}${fieldValue}` };
+    } else if (fieldName === "cemail") {
+      body = { email: fieldValue };
+    }
+
+    try {
+      const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (Array.isArray(data.data) && data.data.length > 0) {
+        setPopupMessage(`A lead with this ${fieldName} already exists`);
+        setIsPopupVisible(true);
+      }
+    } catch (err) {
+      console.error("Error checking existing lead:", err);
+    }
+  };
+
+const handleSearchExistingLead = async () => {
+
+  if (!searchMobile && !searchEmail) {
+    setPopupMessage("Please enter either mobile number or email to search");
+    setIsPopupVisible(true);
+
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+        setIsPopupVisible(false);
+    }, 3000);
+
+    return;
+}
+  setLoading(true);
+  setFoundLeads([]);
+
+  try {
+    let body = {};
+
+    if (searchMobile) {
+      // Always include country code if searching by phone
+      body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
+    } else if (searchEmail) {
+      body = { email: searchEmail };
+    }
+
+    const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const resData = await res.json();
+    console.log("Existing lead search response:", resData);
+
+    if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
+      setFoundLeads(resData.data);
+
+    } else {
+      setPopupMessage(resData.Message || "No existing lead found.");
+      setIsPopupVisible(true);
+    }
+  } catch (error) {
+    console.error("Search error:", error);
+    setPopupMessage("Failed to search for leads. Please try again.");
+    setIsPopupVisible(true);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+const handleSelectLead = async (leadId) => {
+  setLoading(true);
+  try {
+    const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`Error fetching lead details [${res.status}]:`, text);
+      throw new Error(`Server returned ${res.status}`);
+    }
+
+    const resData = await res.json();
+
+if (resData && resData.ilead_id) {
+  // Extract dynamic country code like +91, +1, +971, etc.
+  const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
+  const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
+
+  const newFormData = {
+    ...form,
+    ...resData,
+    iphone_no: resData.iphone_no?.replace(phoneCode, "").trim() || "",
+    cwhatsapp: resData.whatsapp_number?.replace(whatsappCode, "").trim() || "",
+    phone_country_code: phoneCode,
+    whatsapp_country_code: whatsappCode,
+  };
+
+  setForm(newFormData);
+  setExistingClientData(resData);
+
+  const validationErrors = validateForm(newFormData);
+  setErrors(validationErrors);
+}
+
+else {
+      setPopupMessage("Lead details not found for this ID");
+      setIsPopupVisible(true);
+    }
+  } catch (error) {
+    console.error("Fetch lead details error:", error);
+    setPopupMessage("Failed to load lead details. Please try again.");
+    setIsPopupVisible(true);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchDropdownData = useCallback(
     async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {
@@ -150,6 +443,32 @@ const LeadForm = ({ onClose, onSuccess }) => {
     setFilteredSubIndustries([]);
   }
 }, [form.cindustry_id, leadSubIndustry]);
+
+// for sub service
+useEffect(() => {
+  fetchDropdownData(
+    "sub-service",
+    setSubServiceList,
+    "sub services",
+    (res) => Array.isArray(res?.data) ? res.data : []
+  );
+}, [fetchDropdownData]);
+
+// for sub service filtering
+useEffect(() => {
+  if (form.iservice_id) {
+    const filtered = subServiceList.filter(
+      (sub) =>
+        sub.iservice_parent === Number(form.iservice_id) &&
+        sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+    );
+    setFilteredSubService(filtered);
+  } else {
+    setFilteredSubService([]);
+    setSearchSubService("");
+  }
+}, [form.iservice_id, searchSubService, subServiceList]);
+
 
   useEffect(() => {
     const fetchCountryCodes = async () => {
@@ -546,138 +865,158 @@ const LeadForm = ({ onClose, onSuccess }) => {
 
     return error;
   };
-  const handleChange = (e) => {
-    const { name, value } = e.target;
 
-    // Define the allowed characters and the length limit
-    const allowedCharsRegex = /^[a-zA-Z0-9+\s]*$/;
-    const maxLength = 10; 
+const splitPhoneNumber = (fullPhoneNumber) => {
+  if (!fullPhoneNumber) {
+    return {
+      countryCode: '+91', 
+      nationalNumber: '',
+    };
+  }
 
-    // Logic for Mobile Country Code
-    if (name === "searchMobileCountryCode") {
-        if (allowedCharsRegex.test(value)) {
-            if (value.length <= maxLength) {
-                setSearchMobileCountryCode(value);
-                setForm((prev) => ({ ...prev, phone_country_code: value }));
-                const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
-                    cc.code?.toLowerCase().includes(value.toLowerCase()) ||
-                    cc.name?.toLowerCase().includes(value.toLowerCase())
-                ) : [];
-                setFilteredMobileCountryCodes(filtered);
-                setIsMobileCountryCodeDropdownOpen(true);
-            }
-        }
-    } 
-    // Logic for Whatsapp Country Code
-    else if (name === "searchWhatsappCountryCode") {
-        if (allowedCharsRegex.test(value)) {
-            if (value.length <= maxLength) {
-                setSearchWhatsappCountryCode(value);
-                setForm((prev) => ({ ...prev, whatsapp_country_code: value }));
-                const filtered = Array.isArray(countryCodes) ? countryCodes.filter(cc =>
-                    cc.code?.toLowerCase().includes(value.toLowerCase()) ||
-                    cc.name?.toLowerCase().includes(value.toLowerCase())
-                ) : [];
-                setFilteredWhatsappCountryCodes(filtered);
-                setIsWhatsappCountryCodeDropdownOpen(true);
-            }
-        }
-    } 
-     else if (name === "ino_employee" || name === "iproject_value") {
-        setForm((prev) => ({
-            ...prev,
-            [name]: value === "" ? "" : Number(value)
-        }));
-        setErrors((prev) => ({
-            ...prev,
-            [name]: validateField(name, value),
-        }));
-    } else if (name === "searchCity") {
-        handleSearchCity(e);
-    } else if (name === "searchPotential") {
-        setSearchPotential(value);
-        setIsPotentialDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({ ...prev, iLeadpoten_id: "" }));
-            setErrors((prev) => ({ ...prev, iLeadpoten_id: validateField("iLeadpoten_id", "") }));
-        }
-    } else if (name === "searchStatus") {
-        setSearchStatus(value);
-        setIsStatusDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({ ...prev, ileadstatus_id: "" }));
-            setErrors((prev) => ({ ...prev, ileadstatus_id: validateField("ileadstatus_id", "") }));
-        }
-    } else if (name === "searchIndustry") {
-        setSearchIndustry(value);
-        setIsIndustryDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({
-                ...prev,
-                cindustry_id: "",
-                csubindustry_id: "" 
-            }));
-            setSearchSubIndustry("");
-            setErrors((prev) => ({
-                ...prev,
-                cindustry_id: validateField("cindustry_id", ""),
-                csubindustry_id: validateField("csubindustry_id", "") 
-            }));
-        }
-    } else if (name === "searchSubIndustry") {
-        setSearchSubIndustry(value);
-        setIsSubIndustryDropdownOpen(true);
-    } else if (name === "searchSource") {
-        setSearchSource(value);
-        setIsSourceDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({ ...prev, lead_source_id: "" }));
-            setErrors((prev) => ({ ...prev, lead_source_id: validateField("lead_source_id", "") }));
-        }
-    } else if (name === "searchSource") {
-        setSearchSource(value);
-        setIsSourceDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({ ...prev, lead_source_id: "" }));
-            setErrors((prev) => ({ ...prev, lead_source_id: validateField("lead_source_id", "") }));
-        }
-    } else if (name === "searchService") {
-        setSearchService(value);
-        setIsServiceDropdownOpen(true);
-        if (!value) {
-            setForm((prev) => ({ ...prev, iservice_id: "" }));
-            setErrors((prev) => ({ ...prev, iservice_id: validateField("iservice_id", "") }));
-        }
-    } else { 
-        setForm((prev) => {
-            const updated = { ...prev, [name]: value };
+  if (!fullPhoneNumber.startsWith('+')) {
+    return {
+      countryCode: '+91', 
+      nationalNumber: fullPhoneNumber,
+    };
+  }
 
-            if (name === "iphone_no" && sameAsPhone) {
-                updated.cwhatsapp = value;
-                setErrors((prevErr) => ({
-                    ...prevErr,
-                    cwhatsapp: validateField("cwhatsapp", value),
-                }));
-            }
-            if (name === "phone_country_code" && sameAsPhone) {
-                updated.whatsapp_country_code = value;
-                setSearchWhatsappCountryCode(value);
-            }
+  // Updated regex to handle an optional space after the country code
+  const regexMatch = fullPhoneNumber.match(/^\+(\d{1,4})\s*(.*)/);
 
-            if (name === "cindustry_id" && prev.cindustry_id !== value) {
-                updated.csubindustry_id = "";
-                setSearchSubIndustry("");
-            }
+  if (regexMatch && regexMatch.length === 3) {
+    return {
+      countryCode: `+${regexMatch[1]}`,
+      nationalNumber: regexMatch[2],
+    };
+  }
 
-            return updated;
-        });
+  // If no space is present, use the original regex as a fallback
+  const fallbackMatch = fullPhoneNumber.match(/^\+(\d{1,4})(.*)/);
+  if (fallbackMatch && fallbackMatch.length === 3) {
+    return {
+      countryCode: `+${fallbackMatch[1]}`,
+      nationalNumber: fallbackMatch[2],
+    };
+  }
 
-        setErrors((prev) => ({
-            ...prev,
-            [name]: validateField(name, value),
-        }));
-    }
+  return {
+    countryCode: '+91', // Default country code
+    nationalNumber: fullPhoneNumber,
+  };
 };
+
+// State setters lookup for the search inputs, to replace eval()
+const searchSetters = {
+  searchMobileCountryCode: setSearchMobileCountryCode,
+  searchWhatsappCountryCode: setSearchWhatsappCountryCode,
+  searchCity: setSearchCity,
+  searchPotential: setSearchPotential,
+  searchStatus: setSearchStatus,
+  searchIndustry: setSearchIndustry,
+  searchSubIndustry: setSearchSubIndustry,
+  searchSource: setSearchSource,
+  searchService: setSearchService,
+  searchSubService: setSearchSubService
+};
+
+const dropdownOpenSetters = {
+  searchMobileCountryCode: setIsMobileCountryCodeDropdownOpen,
+  searchWhatsappCountryCode: setIsWhatsappCountryCodeDropdownOpen,
+  searchCity: setIsCityDropdownOpen,
+  searchPotential: setIsPotentialDropdownOpen,
+  searchStatus: setIsStatusDropdownOpen,
+  searchIndustry: setIsIndustryDropdownOpen,
+  searchSubIndustry: setIsSubIndustryDropdownOpen,
+  searchSource: setIsSourceDropdownOpen,
+  searchService: setIsServiceDropdownOpen,
+  searchSubService: setIsSubServiceDropdownOpen
+};
+
+const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  if (name === 'existingClientMobile') {
+    setExistingClientMobile(value);
+    const error = validateField(name, value);
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+    return;
+  }
+
+  if (name.startsWith("search")) {
+    if (searchSetters[name]) {
+      searchSetters[name](value);
+    }
+    if (dropdownOpenSetters[name]) {
+      dropdownOpenSetters[name](true);
+    }
+
+    if (name === "searchMobileCountryCode") {
+      setForm(prev => ({ ...prev, iphone_country_code: value }));
+    } else if (name === "searchWhatsappCountryCode") {
+      setForm(prev => ({ ...prev, cwhatsapp_country_code: value }));
+    }
+    return; 
+  }
+
+  setForm((prev) => {
+    let updated = { ...prev, [name]: value };
+
+    if (name === 'iphone_no') {
+      const { countryCode, nationalNumber } = splitPhoneNumber(value);
+      if (countryCode) updated.iphone_country_code = countryCode;
+      updated.iphone_no = nationalNumber;
+    }
+    
+    if (name === 'cwhatsapp' && !sameAsPhone) {
+      const { countryCode, nationalNumber } = splitPhoneNumber(value);
+      if (countryCode) updated.cwhatsapp_country_code = countryCode;
+      updated.cwhatsapp = nationalNumber;
+    }
+
+    if (name === "iphone_no" && sameAsPhone) {
+      updated.cwhatsapp = updated.iphone_no;
+      updated.cwhatsapp_country_code = updated.iphone_country_code;
+    }
+    if (name === "iphone_country_code" && sameAsPhone) {
+      updated.cwhatsapp_country_code = updated.iphone_country_code;
+      updated.cwhatsapp = updated.iphone_no;
+    }
+    
+    if (name === "cindustry_id" && prev.cindustry_id !== value) {
+      updated.csubindustry_id = "";
+      setSearchSubIndustry("");
+    }
+
+    if (name === "iservice_id" && prev.iservice_id !== value) {
+      updated.isubservice_id = "";
+      setSearchSubService("");
+    }
+
+    if (!value) {
+      if (name === "searchIndustry") {
+        updated = { ...updated, cindustry_id: "", csubindustry_id: "" };
+        setSearchSubIndustry("");
+      }
+      if (name === "searchService") {
+        updated = { ...updated, iservice_id: "", isubservice_id: "" };
+        setSearchSubService("");
+      }
+    }
+    
+    return updated;
+  });
+
+  const error = validateField(name, value);
+  setErrors((prev) => ({
+    ...prev,
+    [name]: error,
+  }));
+};
+
   const handleSelectDropdownItem = (
     fieldName,
     itemId,
@@ -710,70 +1049,22 @@ const LeadForm = ({ onClose, onSuccess }) => {
     setErrors((prev) => ({ ...prev, [countryCodeFieldName]: undefined }));
   };
 
-  const checkExisting = async (fieldName, value) => {
-    if (!value || (fieldName !== "cemail" && !/^\d{10}$/.test(value))) return;
-    if (fieldName === "cemail" && value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return;
-
-    try {
-      const response = await fetch(`${apiEndPoint}/check-existing-lead`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          field: fieldName,
-          value: value,
-          company_id: company_id,
-        }),
-      });
-
-      if (!response.ok) {
-        return;
-      }
-
-      const data = await response.json();
-      if (data.exists) {
-        const message = `This ${fieldName
-          .replace("iphone_no", "phone")
-          .replace("cwhatsapp", "WhatsApp")
-          .replace("cemail", "email")} already exists.`;
-        setAlertMessage(message);
-        setIsAlertVisible(true);
-        setTimeout(() => {
-          setIsAlertVisible(false);
-        }, 10000);
-        setErrors((prev) => ({ ...prev, [fieldName]: message }));
-      } else {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          if (newErrors[fieldName]?.includes("already exists")) {
-            newErrors[fieldName] = undefined;
-          }
-          newErrors[fieldName] = validateField(fieldName, value) || newErrors[fieldName];
-          return newErrors;
-        });
-      }
-    } catch (error) {
-      console.error(`Error checking existing ${fieldName}:`, error);
-    }
-  };
-
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
     if (name === "searchMobileCountryCode") {
-      if (!Array.isArray(countryCodes) || !countryCodes.some(cc => cc.code === value)) {
-        setSearchMobileCountryCode(form.phone_country_code || "+91");
-      }
+      // Always keep whatever user typed
+      setSearchMobileCountryCode(value);
+      setForm(prev => ({ ...prev, phone_country_code: value }));
       setIsMobileCountryCodeDropdownOpen(false);
-    } else if (name === "searchWhatsappCountryCode") {
-      if (!Array.isArray(countryCodes) || !countryCodes.some(cc => cc.code === value)) {
-        setSearchWhatsappCountryCode(form.whatsapp_country_code || "+91");
-      }
-      setIsWhatsappCountryCodeDropdownOpen(false);
     } 
+    else if (name === "searchWhatsappCountryCode") {
+      setSearchWhatsappCountryCode(value);
+      setForm(prev => ({ ...prev, whatsapp_country_code: value }));
+      setIsWhatsappCountryCodeDropdownOpen(false);
+    }
+
     else if (name === "searchIndustry") {
         const selectedIndustry = Array.isArray(leadIndustry) ? leadIndustry.find(ind => ind.iindustry_id === form.cindustry_id) : null;
         if (!selectedIndustry || selectedIndustry.cindustry_name !== value) {
@@ -823,189 +1114,195 @@ const LeadForm = ({ onClose, onSuccess }) => {
         setForm((prev) => ({ ...prev, iservice_id: selectedService ? selectedService.iservice_id : "" }));
       }
       setIsServiceDropdownOpen(false);
-    }
-
-    if (name === "iphone_no" || name === "cwhatsapp" || name === "cemail") {
-      checkExisting(name, value);
-    }
+    } 
+    else if (name === "searchSubService") {
+  const selectedSubService = subServiceList.find(sub => sub.isubservice_id === form.isubservice_id);
+  if (!selectedSubService || selectedSubService.subservice_name !== value) {
+    setSearchSubService(selectedSubService ? selectedSubService.subservice_name : "");
+    setForm((prev) => ({
+      ...prev,
+      isubservice_id: selectedSubService ? selectedSubService.isubservice_id : ""
+    }));
+  }
+  setIsSubServiceDropdownOpen(false);
+}
+    // if (name === "iphone_no" || name === "cwhatsapp" || name === "cemail") {
+    //   checkExisting(name, value);
+    // }
     setErrors((prev) => ({
       ...prev,
       [name]: validateField(name, value),
     }));
   };
 
-  const toggleSame = (e) => {
-    const checked = e.target.checked;
-    setSameAsPhone(checked);
-    if (checked) {
-      setForm((prev) => {
-        const newWhatsapp = prev.iphone_no;
-        const newWhatsappCountryCode = prev.phone_country_code;
-        setErrors((prevErr) => ({
-          ...prevErr,
-          cwhatsapp: validateField("cwhatsapp", newWhatsapp),
-        }));
+const validateForm = () => {
+    let newErrors = {};
 
-        setSearchWhatsappCountryCode(newWhatsappCountryCode);
-        return {
-          ...prev,
-          cwhatsapp: newWhatsapp,
-          whatsapp_country_code: newWhatsappCountryCode,
-        };
-      });
-      if (errors.iphone_no && !errors.cwhatsapp) {
-        setErrors((prev) => ({ ...prev, cwhatsapp: errors.iphone_no }));
-      } else if (
-        !errors.iphone_no &&
-        errors.cwhatsapp === `This whatsapp number already exists.`
-      ) {
-        setErrors((prev) => ({ ...prev, cwhatsapp: undefined }));
-      }
-    } else {
-      setForm((prev) => ({ ...prev, cwhatsapp: "", whatsapp_country_code: "" }));
-      setSearchWhatsappCountryCode("");
-      setErrors((prev) => ({ ...prev, cwhatsapp: undefined }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    Object.keys(form).forEach((key) => {
-      if (!["cstate", "cdistrict", "ccountry", "clogo", "cgender", "clead_owner", "cresponded_by", "modified_by", "clead_source", "phone_country_code", "whatsapp_country_code", "csubindustry_id", "ino_employee", "iproject_value"].includes(key)) {
-        const error = validateField(key, form[key]);
-        if (error) {
-          newErrors[key] = error;
+    if (isExistingClientForm) {
+        const existingMobileError = validateField("existingClientMobile", existingClientMobile);
+        if (existingMobileError) {
+            newErrors.existingClientMobile = existingMobileError;
         }
-      }
+
+        if (!existingClientData) {
+            newErrors.ilead_id = "Please select a lead from the search results.";
+        }
+        
+        return newErrors;
+    }
+
+    ["clead_name", "corganization", "clead_address1"].forEach((field) => {
+        const error = validateField(field, form[field]);
+        if (error) newErrors[field] = error;
     });
 
-    if (!form.clead_name) newErrors.clead_name = "Lead Name is mandatory";
-    if (form.clead_name && !/^[A-Za-z\s]+$/.test(form.clead_name)) {
-      newErrors.clead_name = "Lead Name can only contain letters and spaces";
+    ["iLeadpoten_id", "icity", "ileadstatus_id", "cindustry_id", "lead_source_id", "iservice_id"].forEach((field) => {
+        const error = validateField(field, form[field]);
+        if (error) newErrors[field] = error;
+    });
+
+    const employeeError = validateField("ino_employee", form.ino_employee);
+    if (employeeError) newErrors.ino_employee = employeeError;
+    const projectValueError = validateField("iproject_value", form.iproject_value);
+    if (projectValueError) newErrors.iproject_value = projectValueError;
+
+    const phoneError = validateField("iphone_no", form.iphone_no);
+    if (phoneError) newErrors.iphone_no = phoneError;
+    
+    if (form.cwhatsapp && !sameAsPhone) {
+        const whatsappError = validateField("cwhatsapp", form.cwhatsapp);
+        if (whatsappError) newErrors.cwhatsapp = whatsappError;
     }
-    if (!form.corganization) newErrors.corganization = "Organization Name is mandatory";
-    if (form.cwebsite && !/^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i.test(form.cwebsite)) {
-      newErrors.cwebsite = "Invalid website URL format";
+    
+    const websiteError = validateField("cwebsite", form.cwebsite);
+    if (websiteError) newErrors.cwebsite = websiteError;
+    const emailError = validateField("cemail", form.cemail);
+    if (emailError) newErrors.cemail = emailError;
+
+    return newErrors;
+};
+
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  let validationErrors = {};
+  let formValid = true;
+  if (isExistingClientForm && !existingClientData) {
+    if (!existingClientMobile || existingClientMobile.length !== 10) {
+      validationErrors.existingClientMobile = "Please enter a valid 10-digit mobile number.";
     }
-    if (!form.iphone_no) newErrors.iphone_no = "Mobile Number is mandatory";
-    if (!form.clead_address1) newErrors.clead_address1 = "Address Line 1 is mandatory";
-    if (!form.icity) newErrors.icity = "City is mandatory";
-
-    if (!form.iLeadpoten_id) newErrors.iLeadpoten_id = "Lead Potential is mandatory";
-    if (!form.ileadstatus_id) newErrors.ileadstatus_id = "Lead Status is mandatory";
-    if (!form.cindustry_id) newErrors.cindustry_id = "Industry is mandatory";
-    if (!form.lead_source_id) newErrors.lead_source_id = "Lead Source is mandatory";
-
-    return { ...errors, ...newErrors };
-  };
-
-  const [backendError, setBackendError] = useState("");
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const validationErrors = validateForm();
     setErrors(validationErrors);
-
-    const hasErrors = Object.keys(validationErrors).some((key) => validationErrors[key]);
-
-    if (hasErrors) {
-      const combinedErrorMessages = Object.values(validationErrors).filter(Boolean).join(", ");
-      setAlertMessage(`Please correct the following errors: ${combinedErrorMessages}`);
-      setIsAlertVisible(true);
-      setTimeout(() => {
-        setIsAlertVisible(false);
-      }, 10000);
+    
+    if (Object.keys(validationErrors).length > 0) {
       setLoading(false);
       return;
     }
+    
+    setLoading(false);
+    return;
+  }
+  
+  if (!isExistingClientForm || existingClientData) {
+    
+    validationErrors = validateForm();
+    setErrors(validationErrors);
+    formValid = Object.keys(validationErrors).length === 0;
 
-    try {
-      const formData = {
-        bactive: true,
-        cemail: form.cemail,
-        cgender: 1,
-        cimage: "noimg.png",
-        clead_address1: form.clead_address1,
-        clead_address2: form.clead_address2,
-        clead_address3: form.clead_address3,
-        clead_city: Number(form.icity),
-        clead_name: form.clead_name,
-        clead_owner: userId,
-        clogo: "logo.png",
-        corganization: form.corganization,
-        cresponded_by: userId,
-        ileadstatus_id: Number(form.ileadstatus_id),
-        cindustry_id: Number(form.cindustry_id),
-        isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
-        iLeadpoten_id: Number(form.iLeadpoten_id),
-        cwebsite: form.cwebsite,
-        dmodified_dt: new Date().toISOString(),
-        ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
-        icity: Number(form.icity),
-        icompany_id: company_id,
-        iphone_no: `${form.phone_country_code}${form.iphone_no}`,
-        iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
-        modified_by: userId,
-        iuser_tags: userId,
-        iservice_id: form.iservice_id,
-        lead_source_id: Number(form.lead_source_id),
-        whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
-      };
+    if (!formValid) {
+      console.log("Validation failed with errors:", validationErrors);
+      setLoading(false);
+      return;
+    }
+  }
+  try {
+    const formData = {
+      bactive: true,
+      cemail: form.cemail,
+      cgender: 1,
+      cimage: "noimg.png",
+      clead_address1: form.clead_address1,
+      clead_address2: form.clead_address2,
+      clead_address3: form.clead_address3,
+      clead_city: Number(form.icity),
+      clead_name: form.clead_name,
+      clead_owner: userId,
+      clogo: "logo.png",
+      corganization: form.corganization,
+      cresponded_by: userId,
+      ileadstatus_id: Number(form.ileadstatus_id),
+      cindustry_id: Number(form.cindustry_id),
+      isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
+      iLeadpoten_id: Number(form.iLeadpoten_id),
+      cwebsite: form.cwebsite,
+      dmodified_dt: new Date().toISOString(),
+      ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
+      icity: Number(form.icity),
+      icompany_id: company_id,
+      iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+      iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
+      modified_by: userId,
+      iuser_tags: userId,
+      iservice_id: form.iservice_id,
+      isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
+      lead_source_id: Number(form.lead_source_id),
+      whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+    };
 
-      if (saveTriggerRef.current) {
-        formData.save = true;
-        saveTriggerRef.current = false;
-      }
+    if (saveTriggerRef.current) {
+      formData.save = true;
+      saveTriggerRef.current = false;
+    }
 
-      const res = await fetch(`${apiEndPoint}/lead`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+    const res = await fetch(`${apiEndPoint}/lead`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
 
-      const resData = await res.json();
+    const resData = await res.json();
 
-      if (res.ok) {
-        setPopupMessage("Lead created successfully!");
-        setIsPopupVisible(true);
+    if (res.ok) {
+      setPopupMessage("Lead created successfully!");
+      setIsPopupVisible(true);
 
-        setTimeout(() => {
-          setIsPopupVisible(false);
-          onClose();
-          if (onSuccess) {
-            onSuccess();
-          } else {
-            window.location.reload(); 
-          }
-        }, 3000);
-      } else {
-        const errorMessage =
-          resData.details ||
-          resData.message ||
-          resData.error ||
-          "Failed to create lead.";
+      setTimeout(() => {
+        setIsPopupVisible(false);
+        onClose();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
+      }, 3000);
+    } else {
+      const errorMessage =
+        resData.details ||
+        resData.message ||
+        resData.error ||
+        "Failed to create lead.";
 
-        setPopupMessage(errorMessage);
-        setIsPopupVisible(true);
-        setTimeout(() => {
-          setIsPopupVisible(false);
-        }, 10000);
-      }
-    } catch (error) {
-      console.error("Submit error:", error);
-      setPopupMessage("Failed to create lead due to an error.");
+      setPopupMessage(errorMessage);
       setIsPopupVisible(true);
       setTimeout(() => {
         setIsPopupVisible(false);
-      }, 1000);
-    } finally {
-      setLoading(false);
+      }, 10000);
     }
-  };
+  } catch (error) {
+    console.error("Submit error:", error);
+    setPopupMessage("Failed to create lead due to an error.");
+    setIsPopupVisible(true);
+    setTimeout(() => {
+      setIsPopupVisible(false);
+    }, 1000);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const filteredPotential = Array.isArray(Potential)
     ? Potential.filter((item) =>
@@ -1053,7 +1350,10 @@ const LeadForm = ({ onClose, onSuccess }) => {
         : "Please select an industry first",
       source: "No lead sources found. Please create sources in the master section.",
       city: "No cities found. Please create cities in the master section.",
-      default: "Data not available. Please check your connection or contact support."
+      default: "Data not available. Please check your connection or contact support.",
+      subservice: form.iservice_id
+        ? "No sub-services found for this service. Please create sub-services in the master section."
+        : "Please select a service first",
     };
 
     return (
@@ -1153,507 +1453,678 @@ const LeadForm = ({ onClose, onSuccess }) => {
           <X size={24} />
         </button>
 
-        <h2 className="text-2xl font-bold text-center">
-          {formLabels.leadFormTitle}
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-center">
+            {formLabels.leadFormTitle}
+          </h2>
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center text-gray-700">
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                checked={!isExistingClientForm}
+                onChange={() => {
+                  setIsExistingClientForm(false);
+                                setExistingClientData(null);
+                                setExistingClientMobile("");
+                                setFoundLeads([]);
+                                resetForm();
+                }}
+              />
+              <span className="ml-2">New Lead</span>
+            </label>
+            <label className="flex items-center text-gray-700">
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                checked={isExistingClientForm}
+                onChange={() => {
+                  setIsExistingClientForm(true);
+                                setExistingClientData(null);
+                                setExistingClientMobile("");
+                                setFoundLeads([]);
+                                resetForm();
+                }}
+              />
+              <span className="ml-2">Existing Lead</span>
+            </label>
+          </div>
+        </div>
 
-        <h3 className="text-lg font-semibold mt-6">{formLabels.section1Label}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {basicLeadFields.map(({ label, name, required, value, readOnly }) => (
-            <div key={name}>
-              <label className="text-sm font-medium">
-                {label} {required && <span className="text-red-500">*</span>}
+        {/* --- EXISTING LEAD SEARCH SECTION --- */}
+{isExistingClientForm && (
+    <div className="space-y-6 mb-6">
+        <h3 className="text-lg font-semibold mt-6">Search Existing Lead</h3>
+
+
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+  {/* Mobile Search */}
+  <div>
+    <label className="block text-sm font-medium mb-1">Mobile Number</label>
+    <div className="flex items-center">
+      {/* Country code input and dropdown */}
+      <div className="relative" ref={mobileCountryCodeRef}>
+        <input
+          type="text"
+          name="searchMobileCountryCode"
+          value={searchMobileCountryCode}
+          onChange={handleChange}
+          onFocus={() => setIsMobileCountryCodeDropdownOpen(true)}
+          onBlur={handleBlur}
+          placeholder="+XXX"
+          className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
+        />
+        {isMobileCountryCodeDropdownOpen && (
+          <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
+            {Array.isArray(filteredMobileCountryCodes) &&
+            filteredMobileCountryCodes.length > 0 ? (
+              filteredMobileCountryCodes.map((cc) => (
+                <div
+                  key={cc.code}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    handleSelectCountryCode("phone", cc.code, cc.code);
+                  }}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                >
+                  {cc.code} ({cc.name})
+                </div>
+              ))
+            ) : (
+              <EmptyDropdownMessage type="country" />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Phone number input */}
+      <input
+        type="text"
+        name="searchMobile"
+        value={searchMobile}
+        onChange={(e) => {
+          setSearchMobile(e.target.value);
+          if (e.target.value) setSearchEmail(""); 
+        }}
+        placeholder="Enter mobile number"
+        className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+    </div>
+  </div>
+
+  {/* Email Search */}
+  <div>
+    <label className="text-sm font-medium">Email Address</label>
+    <input
+      type="email"
+      name="searchEmail"
+      value={searchEmail}
+      onChange={(e) => {
+        setSearchEmail(e.target.value);
+        if (e.target.value) setSearchMobile(""); // clear mobile if email is entered
+      }}
+      placeholder="Enter email address"
+      className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+    />
+  </div>
+
+  {/* Search Button */}
+  <div className="col-span-2">
+    <button
+      onClick={handleSearchExistingLead}
+      disabled={loading}
+      className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
+        loading ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+    >
+      {loading ? "Searching..." : "Search"}
+    </button>
+  </div>
+</div>
+
+        {/* Loading and results display below */}
+        {loading && (
+            <p className="text-blue-600 text-sm">Searching for leads...</p>
+        )}
+
+        {foundLeads.length > 0 && (
+            <div className="flex flex-col relative w-full md:w-1/2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lead Name <span className="text-red-500">*</span>
+                </label>
+                <select
+                    name="ilead_id"
+                    value={form.ilead_id || ''}
+                    onChange={(e) => handleSelectLead(e.target.value)}
+                    className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                    <option value="">Select an existing lead...</option>
+                    {foundLeads.map((lead) => (
+                        <option key={lead.ilead_id} value={lead.ilead_id}>
+                            {lead.clead_name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        )}
+    </div>
+)}
+
+  {!isExistingClientForm || existingClientData ? (
+    <>
+      <h3 className="text-lg font-semibold mt-6">{formLabels.section1Label}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+
+      {basicLeadFields.map(({ label, name, required, value, readOnly }) => (
+  <div key={name}>
+    <label className="text-sm font-medium">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type="text"
+      name={name}
+      value={value !== undefined ? value : form[name]}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder={`Enter ${label.toLowerCase()}`}
+      className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+      readOnly={readOnly}
+    />
+    {errors[name] && (
+      <p className="text-red-600 text-sm">{errors[name]}</p>
+    )}
+  </div>
+))}
+
+
+        {[
+          {
+            label: "Lead potential",
+            ref: potentialDropdownRef,
+            inputName: "searchPotential",
+            searchValue: searchPotential,
+            setSearch: setSearchPotential,
+            open: isPotentialDropdownOpen,
+            setOpen: setIsPotentialDropdownOpen,
+            list: filteredPotential,
+            keyField: "ileadpoten_id",
+            displayField: "clead_name",
+            formField: "iLeadpoten_id",
+            error: errors.iLeadpoten_id,
+            required: true,
+            emptyType: "potential"
+          },
+          {
+            label: "Lead status",
+            ref: statusDropdownRef,
+            inputName: "searchStatus",
+            searchValue: searchStatus,
+            setSearch: setSearchStatus,
+            open: isStatusDropdownOpen,
+            setOpen: setIsStatusDropdownOpen,
+            list: filteredStatus,
+            keyField: "ilead_status_id",
+            displayField: "clead_name",
+            formField: "ileadstatus_id",
+            error: errors.ileadstatus_id,
+            required: true,
+            emptyType: "status"
+          },
+          {
+            label: "Industry",
+            ref: industryDropdownRef,
+            inputName: "searchIndustry",
+            searchValue: searchIndustry,
+            setSearch: setSearchIndustry,
+            open: isIndustryDropdownOpen,
+            setOpen: setIsIndustryDropdownOpen,
+            list: filteredIndustry,
+            keyField: "iindustry_id",
+            displayField: "cindustry_name",
+            formField: "cindustry_id",
+            error: errors.cindustry_id,
+            required: true,
+            emptyType: "industry"
+          },
+          {
+            label: "Sub-Industry",
+            ref: subIndustryDropdownRef,
+            inputName: "searchSubIndustry",
+            searchValue: searchSubIndustry,
+            setSearch: setSearchSubIndustry,
+            open: isSubIndustryDropdownOpen,
+            setOpen: setIsSubIndustryDropdownOpen,
+            list: filteredSubIndustry,
+            keyField: "isubindustry",
+            displayField: "subindustry_name",
+            formField: "csubindustry_id",
+            error: errors.csubindustry_id,
+            disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
+            required: false,
+            emptyType: "subindustry"
+          },
+          {
+            label: "Lead source",
+            ref: sourceDropdownRef,
+            inputName: "searchSource",
+            searchValue: searchSource,
+            setSearch: setSearchSource,
+            open: isSourceDropdownOpen,
+            setOpen: setIsSourceDropdownOpen,
+            list: filteredSource,
+            keyField: "source_id",
+            displayField: "source_name",
+            formField: "lead_source_id",
+            error: errors.lead_source_id,
+            required: true,
+            emptyType: "source"
+          },
+          {
+            label: "Lead service",
+            ref: serviceDropdownRef,
+            inputName: "searchService",
+            searchValue: searchService,
+            setSearch: setSearchService,
+            open: isServiceDropdownOpen,
+            setOpen: setIsServiceDropdownOpen,
+            list: filterService,
+            keyField: "iservice_id",
+            displayField: "cservice_name",
+            formField: "iservice_id",
+            error: errors.iservice_id,
+            required: true,
+            emptyType: "service"
+          },
+          {
+            label: "Sub Service",
+            ref: subServiceDropdownRef,
+            inputName: "searchSubService",
+            searchValue: searchSubService,
+            setSearch: setSearchSubService,
+            open: isSubServiceDropdownOpen,
+            setOpen: setIsSubServiceDropdownOpen,
+            list: filteredSubService,
+            keyField: "isubservice_id",
+            displayField: "subservice_name",
+            formField: "isubservice_id",
+            error: errors.isubservice_id,
+            disabled: !form.iservice_id || filteredSubService.length === 0,
+            required: false,
+            emptyType: "subservice"
+          },
+        ].map(
+          ({
+            label,
+            ref,
+            inputName,
+            searchValue,
+            setSearch,
+            open,
+            setOpen,
+            list,
+            keyField,
+            displayField,
+            formField,
+            error,
+            disabled = false,
+            required = false,
+            emptyType
+          }) => (
+            <div className="flex flex-col relative" key={formField} ref={ref}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+                {required && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="text"
-                name={name}
-                value={value !== undefined ? value : form[name]}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder={`Enter ${label.toLowerCase()}`}
-                className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                readOnly={readOnly}
+                placeholder={`Search ${label.toLowerCase()}...`}
+                className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none ${
+                  disabled ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
+                value={searchValue}
+                onChange={(e) => handleChange({ target: { name: inputName, value: e.target.value } })}
+                onFocus={() => !disabled && setOpen(true)}
+                disabled={disabled}
               />
-              {errors[name] && (
-                <p className="text-red-600 text-sm">{errors[name]}</p>
+              {open && (
+                <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
+                  {Array.isArray(list) && list.length > 0 ? (
+                    list.map((item) => (
+                      <div
+                        key={item[keyField]}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                          handleSelectDropdownItem(
+                            formField,
+                            item[keyField],
+                            item[displayField],
+                            setSearch,
+                            setOpen
+                          )
+                        }
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {item[displayField]}
+                      </div>
+                    ))
+                  ) : (
+                    <EmptyDropdownMessage type={emptyType} />
+                  )}
+                </div>
               )}
+              {error && <p className="text-red-600 text-sm">{error}</p>}
             </div>
-          ))}
-          {[
-            {
-              label: "Lead potential",
-              ref: potentialDropdownRef,
-              inputName: "searchPotential",
-              searchValue: searchPotential,
-              setSearch: setSearchPotential,
-              open: isPotentialDropdownOpen,
-              setOpen: setIsPotentialDropdownOpen,
-              list: filteredPotential,
-              keyField: "ileadpoten_id",
-              displayField: "clead_name",
-              formField: "iLeadpoten_id",
-              error: errors.iLeadpoten_id,
-              required: true,
-              emptyType: "potential"
-            },
-            {
-              label: "Lead status",
-              ref: statusDropdownRef,
-              inputName: "searchStatus",
-              searchValue: searchStatus,
-              setSearch: setSearchStatus,
-              open: isStatusDropdownOpen,
-              setOpen: setIsStatusDropdownOpen,
-              list: filteredStatus,
-              keyField: "ilead_status_id",
-              displayField: "clead_name",
-              formField: "ileadstatus_id",
-              error: errors.ileadstatus_id,
-              required: true,
-              emptyType: "status"
-            },
-            {
-              label: "Industry",
-              ref: industryDropdownRef,
-              inputName: "searchIndustry",
-              searchValue: searchIndustry,
-              setSearch: setSearchIndustry,
-              open: isIndustryDropdownOpen,
-              setOpen: setIsIndustryDropdownOpen,
-              list: filteredIndustry,
-              keyField: "iindustry_id",
-              displayField: "cindustry_name",
-              formField: "cindustry_id",
-              error: errors.cindustry_id,
-              required: true,
-              emptyType: "industry"
-            },
-            {
-              label: "Sub-Industry",
-              ref: subIndustryDropdownRef,
-              inputName: "searchSubIndustry",
-              searchValue: searchSubIndustry,
-              setSearch: setSearchSubIndustry,
-              open: isSubIndustryDropdownOpen,
-              setOpen: setIsSubIndustryDropdownOpen,
-              list: filteredSubIndustry,
-              keyField: "isubindustry",
-              displayField: "subindustry_name",
-              formField: "csubindustry_id",
-              error: errors.csubindustry_id,
-              // disabled: !form.cindustry_id,
-              disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
-              required: false,
-              emptyType: "subindustry"
-            },
-            {
-              label: "Lead source",
-              ref: sourceDropdownRef,
-              inputName: "searchSource",
-              searchValue: searchSource,
-              setSearch: setSearchSource,
-              open: isSourceDropdownOpen,
-              setOpen: setIsSourceDropdownOpen,
-              list: filteredSource,
-              keyField: "source_id",
-              displayField: "source_name",
-              formField: "lead_source_id",
-              error: errors.lead_source_id,
-              required: true,
-              emptyType: "source"
-            },
-            {
-              label: "Lead service",
-              ref: serviceDropdownRef,
-              inputName: "searchService",
-              searchValue: searchService,
-              setSearch: setSearchService,
-              open: isServiceDropdownOpen,
-              setOpen: setIsServiceDropdownOpen,
-              list: filterService,
-              keyField: "iservice_id",
-              displayField: "cservice_name",
-              formField: "iservice_id",
-              error: errors.iservice_id,
-              required: true,
-              emptyType: "service"
-            },
-            {
-              label: "Sub service",
-              ref: serviceDropdownRef,
-              inputName: "searchService",
-              searchValue: searchService,
-              setSearch: setSearchService,
-              open: isServiceDropdownOpen,
-              setOpen: setIsServiceDropdownOpen,
-              list: filterService,
-              keyField: "isubservice_id",
-              displayField: "subservice_name",
-              formField: "iservice_id",
-              error: errors.iservice_id,
-              required: true,
-              emptyType: "subservice"
-            }
-          ].map(
-            ({
-              label,
-              ref,
-              inputName,
-              searchValue,
-              setSearch,
-              open,
-              setOpen,
-              list,
-              keyField,
-              displayField,
-              formField,
-              error,
-              disabled = false,
-              required = false,
-              emptyType
-            }) => (
-              <div className="flex flex-col relative" key={formField} ref={ref}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {label}
-                  {required && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="text"
-                  placeholder={`Search ${label.toLowerCase()}...`}
-                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none ${
-                    disabled ? "bg-gray-100 cursor-not-allowed" : ""
-                  }`}
-                  value={searchValue}
-                  onChange={(e) => handleChange({ target: { name: inputName, value: e.target.value } })}
-                  onFocus={() => !disabled && setOpen(true)}
-                  disabled={disabled}
-                />
-                {open && (
-                  <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                    {Array.isArray(list) && list.length > 0 ? (
-                      list.map((item) => (
-                        <div
-                          key={item[keyField]}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() =>
-                            handleSelectDropdownItem(
-                              formField,
-                              item[keyField],
-                              item[displayField],
-                              setSearch,
-                              setOpen
-                            )
-                          }
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {item[displayField]}
-                        </div>
-                      ))
-                    ) : (
-                      <EmptyDropdownMessage type={emptyType} />
-                    )}
-                  </div>
-                )}
-                {error && <p className="text-red-600 text-sm">{error}</p>}
-              </div>
-            )
+          )
+        )}
+        <div>
+          <label className="text-sm font-medium">No. of employees <span className="text-red-600">*</span> </label>
+          <input
+            type="number"
+            name="ino_employee"
+            value={form.ino_employee === 0 ? "" : form.ino_employee}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="Enter number of employees"
+            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            min="0"
+          />
+          {errors.ino_employee && (
+            <p className="text-red-600 text-sm">{errors.ino_employee}</p>
           )}
-          <div>
-            <label className="text-sm font-medium">No. of employees</label>
-            <input
-              type="number"
-              name="ino_employee"
-              value={form.ino_employee === 0 ? "" : form.ino_employee}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter number of employees"
-              className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-              min="0"
-            />
-            {errors.ino_employee && (
-              <p className="text-red-600 text-sm">{errors.ino_employee}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium">Project Value</label>
-            <input
-              type="number"
-              name="iproject_value"
-              value={form.iproject_value === 0 ? "" : form.iproject_value}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter project value"
-              className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-              min="0"
-            />
-            {errors.iproject_value && (
-              <p className="text-red-600 text-sm">{errors.iproject_value}</p>
-            )}
-          </div>
         </div>
-
-        <hr className="my-6 " />
-
-        <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {contactInfoFields.map(({ label, name, required, type, value, readOnly }) => {
-            if (type === "phone" || type === "whatsapp") {
-              const numberFieldName = type === "phone" ? "iphone_no" : "cwhatsapp";
-              const searchCountryCodeState = type === "phone" ? searchMobileCountryCode : searchWhatsappCountryCode;
-              const isDropdownOpen = type === "phone" ? isMobileCountryCodeDropdownOpen : isWhatsappCountryCodeDropdownOpen;
-              const setIsDropdownOpen = type === "phone" ? setIsMobileCountryCodeDropdownOpen : setIsWhatsappCountryCodeDropdownOpen;
-              const filteredCodes = type === "phone" ? filteredMobileCountryCodes : filteredWhatsappCountryCodes;
-              const dropdownRef = type === "phone" ? mobileCountryCodeRef : whatsappCountryCodeRef;
-              const searchInputName = type === "phone" ? "searchMobileCountryCode" : "searchWhatsappCountryCode";
-
-              return (
-                <div key={name}>
-                  <label className="text-sm font-medium">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
-                  <div className="flex mt-1">
-                    <div className="relative" ref={dropdownRef}>
-                      <input
-                        type="text"
-                        name={searchInputName}
-                        value={searchCountryCodeState}
-                        onChange={handleChange}
-                        onFocus={() => setIsDropdownOpen(true)}
-                        onBlur={handleBlur}
-                        placeholder="+XXX"
-                        className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
-                        disabled={name === "cwhatsapp" && sameAsPhone}
-                      />
-                      {isDropdownOpen && (
-                        <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
-                          {Array.isArray(filteredCodes) && filteredCodes.length > 0 ? (
-                            filteredCodes.map((cc) => (
-                              <div
-                                key={cc.code}
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => {
-                                  handleSelectCountryCode(type, cc.code, cc.code);
-                                }}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                              >
-                                {cc.code} ({cc.name})
-                              </div>
-                            ))
-                          ) : (
-                            <EmptyDropdownMessage type="country" />
-                          )}
-                        </div>
-                      )}
-                    </div>
+        <div>
+          <label className="text-sm font-medium">Project Value</label>
+          <input
+            type="number"
+            name="iproject_value"
+            value={form.iproject_value === 0 ? "" : form.iproject_value}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="Enter project value"
+            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            min="0"
+          />
+          {errors.iproject_value && (
+            <p className="text-red-600 text-sm">{errors.iproject_value}</p>
+          )}
+        </div>
+      </div>
+      <hr className="my-6 " />
+      <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {contactInfoFields.map(({ label, name, required, type, value, readOnly }) => {
+          if (type === "phone" || type === "whatsapp") {
+            const numberFieldName = type === "phone" ? "iphone_no" : "cwhatsapp";
+            const searchCountryCodeState = type === "phone" ? searchMobileCountryCode : searchWhatsappCountryCode;
+            const isDropdownOpen = type === "phone" ? isMobileCountryCodeDropdownOpen : isWhatsappCountryCodeDropdownOpen;
+            const setIsDropdownOpen = type === "phone" ? setIsMobileCountryCodeDropdownOpen : setIsWhatsappCountryCodeDropdownOpen;
+            const filteredCodes = type === "phone" ? filteredMobileCountryCodes : filteredWhatsappCountryCodes;
+            const dropdownRef = type === "phone" ? mobileCountryCodeRef : whatsappCountryCodeRef;
+            const searchInputName = type === "phone" ? "searchMobileCountryCode" : "searchWhatsappCountryCode";
+            return (
+              <div key={name}>
+                <label className="text-sm font-medium">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <div className="flex mt-1">
+                  <div className="relative" ref={dropdownRef}>
                     <input
                       type="text"
-                      name={numberFieldName}
-                      value={form[numberFieldName]}
+                      name={searchInputName}
+                      value={searchCountryCodeState}
                       onChange={handleChange}
+                      onFocus={() => setIsDropdownOpen(true)}
                       onBlur={handleBlur}
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                      className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="+XXX"
+                      className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
                       disabled={name === "cwhatsapp" && sameAsPhone}
                     />
-                  </div>
-                  {errors[numberFieldName] && (
-                    <p className="text-red-600 text-sm">{errors[numberFieldName]}</p>
-                  )}
-                  {name === "iphone_no" && (
-                    <label className="inline-flex items-center mt-2">
-                      <input
-                        type="checkbox"
-                        checked={sameAsPhone}
-                        onChange={toggleSame}
-                        className="mr-2"
-                      />
-                      WhatsApp same as phone
-                    </label>
-                  )}
-                </div>
-              );
-            } else {
-              return (
-                <div key={name}>
-                  <label className="text-sm font-medium">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    name={name}
-                    value={value !== undefined ? value : form[name]}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    placeholder={`Enter ${label.toLowerCase()}`}
-                    className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    readOnly={readOnly}
-                  />
-                  {errors[name] && (
-                    <p className="text-red-600 text-sm">{errors[name]}</p>
-                  )}
-                </div>
-              );
-            }
-          })}
-        </div>
-
-        <hr className="my-6 " />
-
-        <h3 className="text-lg font-semibold mt-6">{formLabels.section3Label}</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {addressDetailsFields.map(({ label, name, required, type, value, readOnly }) => {
-            if (type === "searchable-select-city") {
-              return (
-                <div key={name}>
-                  <label className="text-sm font-medium">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
-                  <div className="relative mt-1" ref={cityDropdownRef}>
-                    <input
-                      type="text"
-                      placeholder={`Search ${label.toLowerCase()}`}
-                      className="w-full border px-3 py-2 rounded pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
-                      value={searchCity}
-                      onChange={handleSearchCity}
-                      onFocus={() => setIsCityDropdownOpen(true)}
-                    />
-                    {isCityDropdownOpen && (
-                      <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
-                        {Array.isArray(filteredCities) && filteredCities.length > 0 ? (
-                          filteredCities.map((city) => (
+                    {isDropdownOpen && (
+                      <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
+                        {Array.isArray(filteredCodes) && filteredCodes.length > 0 ? (
+                          filteredCodes.map((cc) => (
                             <div
-                              key={city.icity_id}
+                              key={cc.code}
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => {
-                                handleSelectDropdownItem(
-                                  "icity",
-                                  city.icity_id,
-                                  city.cCity_name,
-                                  setSearchCity,
-                                  setIsCityDropdownOpen
-                                );
+                                handleSelectCountryCode(type, cc.code, cc.code);
                               }}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                             >
-                              {city.cCity_name}
+                              {cc.code} ({cc.name})
                             </div>
                           ))
                         ) : (
-                          <EmptyDropdownMessage type="city" />
+                          <EmptyDropdownMessage type="country" />
                         )}
                       </div>
                     )}
                   </div>
-                  {errors.icity && (
-                    <p className="text-red-600 text-sm">{errors.icity}</p>
-                  )}
-                </div>
-              );
-            } else {
-              return (
-                <div key={name}>
-                  <label className="text-sm font-medium">
-                    {label} {required && <span className="text-red-500">*</span>}
-                  </label>
                   <input
                     type="text"
-                    name={name}
-                    value={value !== undefined ? value : form[name]}
+                    name={numberFieldName}
+                    value={form[numberFieldName]}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     placeholder={`Enter ${label.toLowerCase()}`}
-                    className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    readOnly={readOnly}
+                    className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    disabled={name === "cwhatsapp" && sameAsPhone}
                   />
-                  {errors[name] && (
-                    <p className="text-red-600 text-sm">{errors[name]}</p>
+                </div>
+                {errors[numberFieldName] && (
+                  <p className="text-red-600 text-sm">{errors[numberFieldName]}</p>
+                )}
+                {name === "iphone_no" && (
+                  <label className="inline-flex items-center mt-2">
+                    <input
+                      type="checkbox"
+                      checked={sameAsPhone}
+                      onChange={toggleSame}
+                      className="mr-2"
+                    />
+                    WhatsApp same as phone
+                  </label>
+                )}
+              </div>
+            );
+          } else {
+            return (
+              <div key={name}>
+                <label className="text-sm font-medium">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name={name}
+                  value={value !== undefined ? value : form[name]}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder={`Enter ${label.toLowerCase()}`}
+                  className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  readOnly={readOnly}
+                />
+                {errors[name] && (
+                  <p className="text-red-600 text-sm">{errors[name]}</p>
+                )}
+              </div>
+            );
+          }
+        })}
+      </div>
+      <hr className="my-6 " />
+      <h3 className="text-lg font-semibold mt-6">{formLabels.section3Label}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {addressDetailsFields.map(({ label, name, required, type, value, readOnly }) => {
+          if (type === "searchable-select-city") {
+            return (
+              <div key={name}>
+                <label className="text-sm font-medium">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <div className="relative mt-1" ref={cityDropdownRef}>
+                  <input
+                    type="text"
+                    placeholder={`Search ${label.toLowerCase()}`}
+                    className="w-full border px-3 py-2 rounded pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={searchCity}
+                    onChange={handleSearchCity}
+                    onFocus={() => setIsCityDropdownOpen(true)}
+                  />
+                  {isCityDropdownOpen && (
+                    <div className="absolute z-10 top-full mt-1 w-full bg-white border rounded shadow-md max-h-40 overflow-y-auto">
+                      {Array.isArray(filteredCities) && filteredCities.length > 0 ? (
+                        filteredCities.map((city) => (
+                          <div
+                            key={city.icity_id}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              handleSelectDropdownItem(
+                                "icity",
+                                city.icity_id,
+                                city.cCity_name,
+                                setSearchCity,
+                                setIsCityDropdownOpen
+                              );
+                            }}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {city.cCity_name}
+                          </div>
+                        ))
+                      ) : (
+                        <EmptyDropdownMessage type="city" />
+                      )}
+                    </div>
                   )}
                 </div>
-              );
-            }
-          })}
-        </div>
-
-        <div className="flex justify-end gap-4 pt-4">
-          <button
-            type="submit"
-            disabled={loading || Object.keys(errors).some((key) => errors[key])}
-            className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md hover:bg-blue-700 transition ${
-              loading || Object.keys(errors).some((key) => errors[key])
-                ? "opacity-70 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            {loading ? (
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
+                {errors.icity && (
+                  <p className="text-red-600 text-sm">{errors.icity}</p>
+                )}
+              </div>
+            );
+          } else {
+            return (
+              <div key={name}>
+                <label className="text-sm font-medium">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name={name}
+                  value={value !== undefined ? value : form[name]}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder={`Enter ${label.toLowerCase()}`}
+                  className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  readOnly={readOnly}
                 />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                />
-              </svg>
-            ) : (
-              "Create Lead"
-            )}
-          </button>
-        </div>
+                {errors[name] && (
+                  <p className="text-red-600 text-sm">{errors[name]}</p>
+                )}
+              </div>
+            );
+          }
+        })}
+      </div>
+    </>
+  ) : null}
+  
+         <div className="flex justify-end gap-4 pt-4">
+                <button
+                    type="submit"
+                    // disabled={loading || Object.keys(errors).some((key) => errors[key])}
+                    // disabled={ loading || (isExistingClientForm ? !existingClientData || Object.keys(errors).some((key) => errors[key]): Object.keys(errors).some((key) => errors[key])
+                    //   )
+                    // }
 
-        {isAlertVisible && (
-          <div style={alertStyle}>
-            <span>{alertMessage}</span>
-          </div>
-        )}
-      </form>
-      {isPopupVisible && (
-        <div style={popupStyle}>
-          <span>{popupMessage}</span>
-          {popupMessage.includes("already exists") ? (
-            <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-              <button
-                onClick={() => setIsPopupVisible(false)}
-                style={{ ...buttonStyle, backgroundColor: "#ccc" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  saveTriggerRef.current = true;
-                  formRef.current?.requestSubmit();
-                  setIsPopupVisible(false);
-                }}
-                style={{ ...buttonStyle, backgroundColor: "#28a745" }}
-              >
-                Save Anyway
-              </button>
+                    disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
+
+                    className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md hover:bg-blue-700 transition ${
+                        loading || Object.keys(errors).some((key) => errors[key])
+                            ? "opacity-70 cursor-not-allowed"
+                            : ""
+                    }`}
+                >
+                    {loading ? (
+                        <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                            />
+                            <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                        </svg>
+                    ) : (
+                        "Create Lead"
+                    )}
+                </button>
             </div>
-          ) : (
-            <button
-              onClick={() => setIsPopupVisible(false)}
-              style={closeButtonStyle}
-              aria-label="Close popup"
-            >
-              &times;
-            </button>
-          )}
-        </div>
-      )}
+
+            {isAlertVisible && (
+                <div style={alertStyle}>
+                    <span>{alertMessage}</span>
+                </div>
+            )}
+        </form>
+        {isPopupVisible && (
+            <div style={popupStyle}>
+                <span>{popupMessage}</span>
+                {popupMessage.includes("already exists") ? (
+                    <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                        <button
+                            onClick={() => setIsPopupVisible(false)}
+                            style={{ ...buttonStyle, backgroundColor: "#ccc" }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                saveTriggerRef.current = true;
+                                formRef.current?.requestSubmit();
+                                setIsPopupVisible(false);
+                            }}
+                            style={{ ...buttonStyle, backgroundColor: "#28a745" }}
+                        >
+                            Save Anyway
+                        </button>
+                    </div>
+                ) : (
+                  !popupMessage.includes("Please enter either mobile number or email") && (
+        <button
+          onClick={() => setIsPopupVisible(false)}
+          style={closeButtonStyle}
+          aria-label="Close popup"
+        >
+          &times;
+        </button>
+      )
+                    // <button
+                    //     onClick={() => setIsPopupVisible(false)}
+                    //     style={closeButtonStyle}
+                    //     aria-label="Close popup"
+                    // >
+                    //     &times;
+                    // </button>
+                )}
+            </div>
+        )}
     </div>
-  );
+);
 };
+
 
 export default LeadForm;

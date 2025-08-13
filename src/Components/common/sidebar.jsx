@@ -13,10 +13,10 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const fullMenuItems = [
-    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leads' },
-    { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
+    { iconPath: '/images/nav/home.png', label: 'Home', route: '/active-leads' },
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/customers.png', label: 'Customer', route: '/customers' },
+    { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
     { iconPath: '/images/nav/userss.png', label: 'Users', route: '/userpage' },
     { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
     { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },

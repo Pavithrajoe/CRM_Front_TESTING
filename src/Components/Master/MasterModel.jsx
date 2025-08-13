@@ -1203,76 +1203,85 @@ export default function MasterModal({
                   </div>
                 ) : (
                   <ul className="space-y-2">
-                    {filteredItems.length > 0 ? (
-                      filteredItems.map((item) => (
-                        <li
-                          key={item[master.idKey]}
-                          className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
-                            selectedItemForEdit &&
-                            selectedItemForEdit[master.idKey] === item[master.idKey]
-                              ? "bg-blue-100 border-blue-400"
-                              : "bg-gray-50 hover:bg-gray-100"
-                          }`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-800">
-                              {item[master.payloadKey]}
-                              {master.title === "Status" && item.orderId !== undefined && (
-                                <span className="ml-2 text-sm text-gray-500">
-                                  (Order: {item.orderId})
-                                </span>
-                              )}
-                            </span>
-                            {master.additionalFields &&
-                              master.additionalFields.map((field) => {
-                                if (
-                                  master.isHierarchical &&
-                                  master.parentMasterConfig &&
-                                  field ===
-                                    (master.parentMasterConfig.formFieldKey ||
-                                      "parentId")
-                                ) {
-                                  return null;
-                                }
-                                return (
-                                  item[field] && (
-                                    <span
-                                      key={field}
-                                      className="text-sm text-gray-500"
-                                    >
-                                      {item[field]}
-                                    </span>
-                                  )
-                                );
-                              })}
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => setSelectedItemForEdit(item)}
-                              className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            {!isLabelMaster && (
-                              <button
-                                onClick={() => handleDelete(item[master.idKey])}
-                                disabled={isDeleting || !master.delete}
-                                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            )}
-                          </div>
-                        </li>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">
-                        {searchTerm ? 'No matching items found' : 'No items available'}
-                      </p>
-                    )}
-                  </ul>
+  {filteredItems.length > 0 ? (
+    filteredItems
+      .sort((a, b) => {
+        // Handle cases where orderId might be undefined or null
+        const orderA = a.orderId !== undefined && a.orderId !== null ? a.orderId : Number.MAX_SAFE_INTEGER;
+        const orderB = b.orderId !== undefined && b.orderId !== null ? b.orderId : Number.MAX_SAFE_INTEGER;
+        
+        // Sort in ascending order (lowest orderId first)
+        return orderA - orderB;
+      })
+      .map((item) => (
+        <li
+          key={item[master.idKey]}
+          className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
+            selectedItemForEdit &&
+            selectedItemForEdit[master.idKey] === item[master.idKey]
+              ? "bg-blue-100 border-blue-400"
+              : "bg-gray-50 hover:bg-gray-100"
+          }`}
+        >
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-800">
+              {item[master.payloadKey]}
+              {master.title === "Status" && item.orderId !== undefined && (
+                <span className="ml-2 text-sm text-grey-500">
+                  (Order: {item.orderId})
+                </span>
+              )}
+            </span>
+            {master.additionalFields &&
+              master.additionalFields.map((field) => {
+                if (
+                  master.isHierarchical &&
+                  master.parentMasterConfig &&
+                  field ===
+                    (master.parentMasterConfig.formFieldKey ||
+                      "parentId")
+                ) {
+                  return null;
+                }
+                return (
+                  item[field] && (
+                    <span
+                      key={field}
+                      className="text-sm text-gray-500"
+                    >
+                      {item[field]}
+                    </span>
+                  )
+                );
+              })}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setSelectedItemForEdit(item)}
+              className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            {!isLabelMaster && (
+              <button
+                onClick={() => handleDelete(item[master.idKey])}
+                disabled={isDeleting || !master.delete}
+                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+                title="Delete"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
+        </li>
+      ))
+  ) : (
+    <p className="text-gray-500 text-center py-4">
+      {searchTerm ? 'No matching items found' : 'No items available'}
+    </p>
+  )}
+</ul>
                 )}
               </>
             )}

@@ -17,6 +17,7 @@ import { ENDPOINTS } from '../api/constraints';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 
 const mandatoryInputStages = ['Proposal', 'Won'];
 const MAX_REMARK_LENGTH = 500;
@@ -725,6 +726,11 @@ const handleProposalSubmit = async () => {
                 />
                 <DateTimePicker
                   label="Start Time *"
+                   viewRenderers={{
+            hours: renderTimeViewClock,
+            minutes: renderTimeViewClock,
+            seconds: renderTimeViewClock,
+          }}
                   value={dialogValue.demoSessionStartTime}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
@@ -743,6 +749,11 @@ const handleProposalSubmit = async () => {
                 <DateTimePicker
                   label="End Time *"
                   value={dialogValue.demoSessionEndTime}
+                   viewRenderers={{
+            hours: renderTimeViewClock,
+            minutes: renderTimeViewClock,
+            seconds: renderTimeViewClock,
+          }}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
                   }
@@ -1029,7 +1040,7 @@ const handleProposalSubmit = async () => {
                     <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
                   )}
                   <div
-                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-gray-600  min-w-[200px] max-w-[350px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-40 overflow-hidden z-10 cursor-pointer transition"
+                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-gray-200  min-w-[200px] max-w-[250px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-55 overflow-hidden z-10 cursor-pointer transition p-5"
                     onClick={() => setSelectedRemark(remark)}
                   >
                     <div className="space-y-2 text-sm">
@@ -1063,37 +1074,44 @@ const handleProposalSubmit = async () => {
             },
           }}
         >
-          <DialogTitle
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '16px 24px 0',
-              position: 'relative',
-              color: '#333',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-            }}
-          >
-            Timeline Detail
-            <IconButton
-              aria-label="close"
-              onClick={() => setSelectedRemark(null)}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                color: theme => theme.palette.grey[500],
-                backgroundColor: 'rgba(0,0,0,0.05)',
-                borderRadius: '0%',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.1)',
-                },
-              }}
-            >
-              <X size={15} />
-            </IconButton>
-          </DialogTitle>
+         <DialogTitle
+  sx={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '20px 24px 16px',
+    position: 'relative',
+    color: '#1a1a1a',
+    fontSize: '1.5rem',
+    fontWeight: 600,
+    borderBottom: '1px solid #e0e0e0',
+    backgroundColor: '#fafafa',
+  }}
+>
+  Timeline Detail
+  <IconButton
+    aria-label="close"
+    onClick={() => setSelectedRemark(null)}
+    sx={{
+      position: 'absolute',
+      right: 12,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      color: (theme) => theme.palette.grey[600],
+      backgroundColor: 'transparent',
+      borderRadius: '50%',
+      padding: '6px',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        transform: 'translateY(-50%) rotate(90deg)',
+      },
+    }}
+  >
+    <X size={18} />
+  </IconButton>
+</DialogTitle>
+
           <DialogContent
             sx={{
               padding: '24px',
@@ -1108,7 +1126,7 @@ const handleProposalSubmit = async () => {
             {selectedRemark && (
               <>
                 <div
-                  className="w-24 h-24 rounded-full flex items-center justify-center mb-4"
+                  className="w-24 h-10 flex mt-2 items-center justify-center mb-4"
                   style={{
                     backgroundColor: '#4CAF50',
                     boxShadow: '0px 5px 15px rgba(0,0,0,0.1)',
@@ -1119,24 +1137,24 @@ const handleProposalSubmit = async () => {
                   </span>
                 </div>
 
-                <p className="text-xl font-bold text-gray-900 mb-4">
+                {/* <p className="text-xl font-bold text-gray-900 mb-4">
                   {selectedRemark.status_name || '-'}
-                </p>
+                </p> */}
 
-                <p className="text-sm text-gray-700 break-words w-3/4 p-6 leading-relaxed mb-6">
+                <p className="text-sm text-gray-700 break-words w-3/4 p-6 leading-relaxed mb-6 font-bold ">
                   {selectedRemark.lead_status_remarks}
                 </p>
 
                 <div className="w-full flex justify-between items-center text-gray-600 text-xs">
                   <div className="flex items-center gap-1">
                     <Calendar size={16} className="text-gray-900" />
-                    <span className="text-red-600">
+                    <span className="text-blue-600 font-bold text-sm">
                       {formatDateOnly(selectedRemark.dcreated_dt)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <User size={16} className="text-gray-900" />
-                    <span className="text-red-600">{selectedRemark.createdBy || '-'}</span>
+                    <span className="text-blue-600 font-bold text-sm">{selectedRemark.createdBy || '-'}</span>
                   </div>
                 </div>
               </>

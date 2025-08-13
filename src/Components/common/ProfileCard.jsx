@@ -1488,9 +1488,19 @@ const ProfileCard = () => {
 
   return (
     <>
-<div className="w-full p-6 lg:p-6 bg-white shadow-gray-600 rounded-3xl shadow-md">
+<div className="w-full p-6 lg:p-6 bg-white rounded-3xl shadow-md">
    <div className="flex justify-end w-full"> {/* Parent container pushes content right */}
-  <div className="flex items-center space-x-2"> {/* Button group */}
+
+</div>
+  <div className="flex items-center justify-between  border-b border-gray-100">
+    <h2 className="text-xl sm:text-2xl text-grey-600 tracking-tight">
+      {profile.corganization || "-"}'s Details
+    </h2>
+    
+
+  </div>
+  <div class="border-t border-gray-900 my-2 w-full "></div>
+   <div className="flex items-center space-x-2 justify-end "> {/* Button group */}
     <button
       onClick={() => setShowDetails(true)}
       className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 hover:text-gray-800 transition-all duration-300 transform hover:scale-110 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
@@ -1508,18 +1518,9 @@ const ProfileCard = () => {
       <FiEdit size={18} />
     </button>
   </div>
-</div>
-  <div className="flex items-center justify-between mt-10 border-b border-gray-100">
-    <h2 className="text-xl sm:text-2xl font-bold text-grey-600 tracking-tight">
-      {profile.corganization || "-"}'s Details
-    </h2>
-
-  </div>
-  <div class="border-t border-gray-900 my-2 w-full"></div>
- 
 
         
-        <div className=" items-start and w-full sm:items-start gap-4 sm:gap-6 pt-6">
+        <div className=" items-start and w-full sm:items-startsm:gap-6 pt-6">
   {/* Profile Info */}
   <div className="flex-1 text-center sm:text-left">
 
@@ -1556,11 +1557,11 @@ const ProfileCard = () => {
           </div>
           <div className="flex items-start gap-3">
             <FiMapPin className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="bw-[180px] break-words text-grey-900 font-bold">{profile.clead_address1 || "-"}</span>
+            <span className="bw-[180px] break-words text-grey-900 ">{profile.clead_address1 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <FiMove className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.clead_address2 || "-"}</span>
+            <span className="w-[180px] break-words text-grey-900 ">{profile.clead_address2 || "-"}</span>
           </div>
           <div className="flex items-start gap-3">
             <TbWorld className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
@@ -1571,7 +1572,7 @@ const ProfileCard = () => {
                   : `https://${profile.cwebsite}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-900 hover:underline w-[180px] break-words text-grey-900 font-bold "
+                className="text-blue-900 hover:underline w-[180px] break-words text-grey-900"
               >
                 {profile.cwebsite}
               </a>
@@ -1582,7 +1583,7 @@ const ProfileCard = () => {
 
           <div className="flex items-start gap-3">
             <FiCodesandbox className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.corganization || "-"}</span>
+            <span className="w-[180px] break-words text-grey-900">{profile.corganization || "-"}</span>
           </div>
 
           {profile.bactive === false && (
@@ -1786,7 +1787,7 @@ const ProfileCard = () => {
       </div>
 
       {/* Attachments Section */}
-      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-gray-600 shadow-md mt-6">
+      <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-md mt-6">
         <label className="block text-sm font-medium text-gray-700 mb-4">
           Manage Attachments
         </label>

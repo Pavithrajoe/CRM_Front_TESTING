@@ -55,7 +55,7 @@ const ReminderFormDrawer = ({
           </div>
 
           <div>
-            <label className="text-sm block mb-2">Date *</label>
+            <label className="text-sm block mb-2">  *</label>
             <input
               type="date"
               name="date"

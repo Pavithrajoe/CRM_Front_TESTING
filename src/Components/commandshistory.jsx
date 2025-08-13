@@ -161,7 +161,7 @@ const Comments = () => {
         return;
       }
 
-      showPopup("Success", "🎉 Comment added successfully!", "success");
+      // showPopup("Success", "🎉 Comment added successfully!", "success");
       setFormData((prev) => ({ ...prev, comments: "" }));
       setIsListening(false);
       setShowForm(false);

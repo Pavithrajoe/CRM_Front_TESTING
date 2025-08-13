@@ -9,6 +9,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { format } from 'date-fns'; // Import the format function from date-fns
 import { usePopup } from "../context/PopupContext";
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
@@ -191,7 +192,7 @@ const ReminderForm = () => {
         return;
       }
 
-      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+      // showPopup("Success", "🎉 Reminder submitted successfully!", "success");
       setForm({
         title: "",
         content: "",
@@ -552,6 +553,11 @@ const ReminderForm = () => {
                     </label>
                     <DateTimePicker
                       value={form.reminderDateTime}
+  viewRenderers={{
+            hours: renderTimeViewClock,
+            minutes: renderTimeViewClock,
+            seconds: renderTimeViewClock,
+          }}
                       onChange={(newValue) =>
                         setForm(prev => ({ ...prev, reminderDateTime: newValue }))
                       }

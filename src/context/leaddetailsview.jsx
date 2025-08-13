@@ -454,7 +454,7 @@ const LeadDetailView = () => {
 
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap  items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md shadow-blue-900 rounded-full p-1  w-full sm:w-auto">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md  rounded-full p-1  w-full sm:w-auto">
             {["Activity", "Task","Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}

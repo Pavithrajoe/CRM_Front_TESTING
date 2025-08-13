@@ -177,6 +177,15 @@ const UserPage = () => {
         />
         
         <div className="flex gap-3 items-center">
+             {/* Conditional rendering for the "+ User" button */}
+          {isAuthorized && (
+            <button
+              onClick={createUser} // Navigates to the user creation page
+              className="px-4 font-mediumpx-4 py-2 rounded-xl text-sm font-semibold  bg-blue-900 shadow-md  text-white transition"
+            >
+              + User
+            </button> 
+          )}
           <button
             type="button"
             onClick={() => setActiveTab("active")}
@@ -189,15 +198,7 @@ const UserPage = () => {
             Active
           </button>
           
-          {/* Conditional rendering for the "+ User" button */}
-          {isAuthorized && (
-            <button
-              onClick={createUser} // Navigates to the user creation page
-              className="px-4 font-mediumpx-4 py-2 rounded-xl text-sm font-semibold  bg-blue-900 shadow-md shadow-blue-900 text-white transition"
-            >
-              + User
-            </button> 
-          )}
+       
 
           <button
             type="button"

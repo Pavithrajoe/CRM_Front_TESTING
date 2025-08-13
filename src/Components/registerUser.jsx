@@ -214,7 +214,7 @@ export default function CreateUserForm({ onClose }) { // Remove the invalid defa
           <X size={24} />
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-800">🚀 Create User</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-800"> Create User</h2>
 
         {successMsg && (
           <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg mb-4 text-center">

@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
 import axios from "axios";
-import DatePicker from "react-datepicker";
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+
 import "react-datepicker/dist/react-datepicker.css";
 import { ENDPOINTS } from "../api/constraints";
 import { Search, X } from "lucide-react";
@@ -281,7 +285,7 @@ const Tasks = () => {
       }
 
       if (response.data.success || response.data.message === "Task Added Successfully") {
-        showPopup("Success", "🎉 Task saved successfully!", "success");
+        // showPopup("Success", "🎉 Task saved successfully!", "success");
         setShowForm(false);
         setIsListening(false);
         await fetchTasks();
@@ -578,23 +582,29 @@ const Tasks = () => {
                     </select>
                   </div>
                 </div>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
 
                 <div>
                   <label className="block text-sm font-medium  text-gray-700">
                     Due Date <span className="text-red-600">*</span>
                   </label>
-                  <DatePicker
+                  <DateTimePicker
                     selected={formData.task_date}
+                      viewRenderers={{
+            hours: renderTimeViewClock,
+            minutes: renderTimeViewClock,
+            seconds: renderTimeViewClock,
+          }}
                     onChange={handleDateChange}
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     dateFormat="MMMM d, yyyy h:mm aa"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 p-5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    className="pr-10 py-2 p-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                     required
                   />
                 </div>
-
+                </LocalizationProvider>
                 <button
                   type="submit"
                   className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"

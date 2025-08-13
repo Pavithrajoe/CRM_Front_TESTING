@@ -70,7 +70,7 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
   });
 
   const [formLabels, setFormLabels] = useState({
-    leadFormTitle: "🚀 Let's Get Started - Create a New Lead",
+    leadFormTitle: "Create a New Lead",
     section1Label: "Lead Details",
     section2Label: "Contact Information",
     section3Label: "Address Details",
@@ -138,18 +138,7 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
-    // console.log("--- useEffect Triggered ---");
-    // console.log("existingClientData:", existingClientData);
-    // console.log("Potential list:", Potential);
-    // console.log("Status list:", status);
-    // console.log("Lead Industry list:", leadIndustry);
-    // console.log("Lead sub Industry list:", leadSubIndustry);
-    // console.log("Source list:", source);
-    // console.log("Service list:", service);
-    // console.log("Sub Service list:", subServiceList);
-    // console.log("City list:", cities);
    
-    // The guard condition is still essential.
     if (existingClientData &&
         Potential.length > 0 &&
         status.length > 0 &&
@@ -237,16 +226,7 @@ useEffect(() => {
         // console.log("Selected City:", selectedCity);
 
     } else {
-        // console.log("Guard condition failed. Form not populated.");
-        // console.log("existingClientData is present:", !!existingClientData);
-        // console.log("Potential list is populated:", Potential.length > 0);
-        // console.log("Status list is populated:", status.length > 0);
-        // console.log("Lead Industry list is populated:", leadIndustry.length > 0);
-        // console.log("Lead Sub Industry list is populated:", leadSubIndustry.length > 0);
-        // console.log("Source list is populated:", source.length > 0);
-        // console.log("Service list is populated:", service.length > 0);
-        // console.log("Sub Service list is populated:", subServiceList.length > 0);
-        // console.log("City list is populated:", cities.length > 0);
+    
       
     }
 }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
@@ -341,6 +321,15 @@ const checkExisting = async (fieldName, fieldValue) => {
       console.error("Error checking existing lead:", err);
     }
   };
+  
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 const handleSearchExistingLead = async () => {
   // Check if both fields are empty
@@ -372,15 +361,7 @@ const handleSearchExistingLead = async () => {
       return;
     }
   }
-    // setPopupMessage("Please enter either mobile number or email to search");
-    // setIsPopupVisible(true);
 
-    // // Auto hide after 3 seconds
-    // setTimeout(() => {
-    //     setIsPopupVisible(false);
-    // }, 3000);
-
-    // return;
 
   setLoading(true);
   setFoundLeads([]);
@@ -846,7 +827,7 @@ useEffect(() => {
     }
     if (name === "clead_name") {
       if (!value) {
-        error = "Lead Name is mandatory";
+        error = "*Mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Lead Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -855,7 +836,7 @@ useEffect(() => {
     }
     if (name === "clead_address1") {
       if (!value) {
-        error = "Lead Address is mandatory";
+        error = "*Mandatory";
       } else if (value.length > 200) {
         error = "Lead Address cannot exceed 200 characters";
       }
@@ -879,7 +860,7 @@ useEffect(() => {
 
     if (name === "corganization") {
       if (!value) {
-        error = "Organization Name is mandatory";
+        error = "*Mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Organization Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -888,28 +869,28 @@ useEffect(() => {
     }
 
     if (name === "iphone_no" && !value) {
-      error = "Mobile Number is mandatory";
+      error = "*Mandatory";
     }
     if (name === "clead_address1" && !value) {
-      error = "Address Line 1 is mandatory";
+      error = "*Mandatory";
     }
     if (name === "icity" && !value) {
-      error = "City is mandatory";
+      error = "*Mandatory";
     }
     if (name === "iLeadpoten_id" && !value) {
-      error = "Lead Potential is mandatory";
+      error = "*Mandatory";
     }
     if (name === "iservice_id" && !value) {
-      error = "service is mandatory";
+      error = "*Mandatory";
     }
     if (name === "ileadstatus_id" && !value) {
-      error = "Lead Status is mandatory";
+      error = "*Mandatory";
     }
     if (name === "cindustry_id" && !value) {
-      error = "Industry is mandatory";
+      error = "*Mandatory";
     }
     if (name === "lead_source_id" && !value) {
-      error = "Lead Source is mandatory";
+      error = "*Mandatory";
     }
     if (name === "ino_employee") {
       const num = Number(value);
@@ -1436,23 +1417,20 @@ const handleSubmit = async (e) => {
   };
 
   const popupStyle = {
-    position: "fixed",
-    bottom: "20px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    backgroundColor:
-      popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#176be9ff",
-    color: "white",
-    padding: "16px 24px",
-    borderRadius: "8px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    zIndex: 50,
-    opacity: 1,
-    transition: "opacity 0.3s ease-in-out",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  };
+  position: "absolute",
+  bottom: "-95%",
+  left: "50%",
+  transform: "translateX(-50%)",
+  backgroundColor: "#ffffffff",
+  padding: "16px 24px",
+  borderRadius: "8px",
+  boxShadow: "3px 4px 10px rgba(255, 0, 0, 0.86)",
+  zIndex: 1000,
+  minWidth: "300px",
+  textAlign: "center",
+  borderRadius:"10px"
+};
+
 
   const closeButtonStyle = {
     background: "none",
@@ -2154,10 +2132,10 @@ const handleSubmit = async (e) => {
             <div style={popupStyle}>
                 <span>{popupMessage}</span>
                 {popupMessage.includes("already exists") ? (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                    <div style={{  display: "flex", gap: "10px", paddingTop:"15px" }}>
                         <button
                             onClick={() => setIsPopupVisible(false)}
-                            style={{ ...buttonStyle, backgroundColor: "#ccc" }}
+                            style={{ ...buttonStyle, backgroundColor: "#860606ff",color:"white" }}
                         >
                             Cancel
                         </button>
@@ -2167,7 +2145,7 @@ const handleSubmit = async (e) => {
                                 formRef.current?.requestSubmit();
                                 setIsPopupVisible(false);
                             }}
-                            style={{ ...buttonStyle, backgroundColor: "#28a745" }}
+                            style={{ ...buttonStyle, backgroundColor: "#28a745",color:"white" }}
                         >
                             Save Anyway
                         </button>
@@ -2182,13 +2160,7 @@ const handleSubmit = async (e) => {
           &times;
         </button>
       )
-                    // <button
-                    //     onClick={() => setIsPopupVisible(false)}
-                    //     style={closeButtonStyle}
-                    //     aria-label="Close popup"
-                    // >
-                    //     &times;
-                    // </button>
+                    
                 )}
             </div>
         )}

@@ -68,7 +68,7 @@ const TargetDashboard = ({ userId }) => {
     return lastDayOfMonth;
   });
 
-  const [selectedTargetId] = useState(4); // Example default value
+  // const [selectedTargetId] = useState(4); // Example default value
 
 const fetchTargetMetrics = useCallback(async () => {
   setLoadingTable(true);
@@ -177,7 +177,7 @@ const fetchTargetMetrics = useCallback(async () => {
     setLoadingTable(false);
   }
 }, [userId, selectedFromDate, selectedToDate]);
-~
+
   useEffect(() => {
     if (!userId) {
       setOverallError("User ID is missing. Cannot load dashboard.");
@@ -330,7 +330,7 @@ const fetchTargetMetrics = useCallback(async () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 h-[350px] rounded-lg overflow-y-scroll">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-100 text-left uppercase text-xs sm:text-sm leading-normal">
                   <th className="p-3 sm:p-4 border-b border-gray-200">S.No</th>
@@ -344,16 +344,16 @@ const fetchTargetMetrics = useCallback(async () => {
                   {/* <th className="p-3 sm:p-4 border-b border-gray-200">Status</th> */}
                 </tr>
               </thead>
-              <tbody className="text-gray-700 text-sm font-light">
+              <tbody className="text-gray-700 text-sm font-light divide-y divide-gray-200">
                 {tableMetrics.map((row, index) => (
-                  <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 font-semibold">
-                    <td className="p-3 whitespace-nowrap">{index + 1}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedTo}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{row.assignedBy}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">₹{row.targetValue.toLocaleString('en-IN')}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap font-medium">{row.completed}%</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{row.fromDate}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{row.toDate}</td>
+                  <tr key={row.id} className="hover:bg-gray-50 transition-colors duration-150 font-semibold">
+                    <td className="p-3">{index + 1}</td>
+                    <td className="p-3">{row.assignedTo}</td>
+                    <td className="p-3">{row.assignedBy}</td>
+                    <td className="p-3">₹{row.targetValue.toLocaleString('en-IN')}</td>
+                    <td className="p-3 font-medium">{row.completed}%</td>
+                    <td className="p-3">{row.fromDate}</td>
+                    <td className="p-3">{row.toDate}</td>
                   </tr>
                 ))}
                 {tableMetrics.length === 0 && (
@@ -371,8 +371,8 @@ const fetchTargetMetrics = useCallback(async () => {
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
     <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
       <SalesForm
-        userId={userId}  
-        defaultFromDate={selectedFromDate}  
+        userId={userId}
+        defaultFromDate={selectedFromDate}
         defaultToDate={selectedToDate}
         onClose={() => {
           closeTargetModal();

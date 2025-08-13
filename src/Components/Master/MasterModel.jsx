@@ -6,10 +6,6 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { IntroModal } from "./IntroModal";
 
-
-
-
-// Utility function to format input to capitalize first letter
 const formatMasterName = (name) => {
   if (!name) return '';
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -37,115 +33,85 @@ export default function MasterModal({
   const [parentOptions, setParentOptions] = useState([]);
   const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [openParents,setOpenParents] = useState('');
-    const [showIntro, setShowIntro] = useState(true);
-    // In MasterModal.js
-// const [showIntro, setShowIntro] = useState(() => {
-//   const seen = localStorage.getItem(`seenIntro_${master?.title}`);
-//   return seen !== 'true';
-// });
-
-// const handleCloseIntro = () => {
-//   localStorage.setItem(`seenIntro_${master.title}`, 'true');
-//   setShowIntro(false);
-// };
-
-// if (showIntro) {
-//   return <IntroModal masterTitle={master.title} onClose={handleCloseIntro} />;
-// }
-
-
-const groupSubItemsByParent = (items, config) => {
-  if (!config || !config.isHierarchical || !config.parentMasterConfig) {
-    return [];
-  }
-
-  const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
-  const parentNameKey = config.parentMasterConfig.nameKey || "name";
-  const childPayloadKey = config.payloadKey;
-
-  
-
-
-  
-  // First, group items by their parent ID
-  const grouped = items.reduce((acc, item) => {
-    const parentId = item[parentIdKey];
-    if (!acc[parentId]) {
-      acc[parentId] = {
-        parentId,
-        children: []
-      };
-    }
-    acc[parentId].children.push(item);
-    return acc;
-  }, {});
-
-  // Then, enrich with parent names from parentOptions
-  return Object.values(grouped).map(group => ({
-    ...group,
-    parentName: parentOptions.find(p => p[config.parentMasterConfig.idKey] === group.parentId)?.[parentNameKey] || "Unknown Parent"
-  }));
-};
-const groupedSubItems = useMemo(() => {
-  if (!master?.isHierarchical) return [];
-  
-  const grouped = groupSubItemsByParent(existingItems, master);
-  
-  // Apply search filter if searchTerm exists
-  if (!searchTerm) return grouped;
-  
-  return grouped.map(group => ({
-    ...group,
-    children: group.children.filter(child => {
-      const mainField = child[master.payloadKey]?.toString().toLowerCase() || '';
-      return mainField.includes(searchTerm);
-    })
-  })).filter(group => group.children.length > 0);
-}, [existingItems, master, parentOptions, searchTerm]);
-
+  const [openParents, setOpenParents] = useState({});
+  const [showIntro, setShowIntro] = useState(true);
 
   const isLabelMaster = useMemo(
     () => master?.title === "Label Master",
     [master]
   );
 
-  // Helper to check if all label fields are empty (for Label Master)
   const areLabelFieldsEmpty = useMemo(() => {
     if (!isLabelMaster) return false;
-
     const requiredLabelFields = [
       "leadFormTitle",
       "section1Label",
       "section2Label",
       "section3Label",
     ];
-
     return requiredLabelFields.every(
       (field) => !formData[field] || formData[field].length === 0
     );
   }, [formData, isLabelMaster]);
 
-  // New state for all lead sources, used for filtering the dropdown
   const [allLeadSourceItems, setAllLeadSourceItems] = useState([]);
-  const [isLoadingAllLeadSourceItems, setIsLoadingAllLeadSourceItems] =
-    useState(false);
+  const [isLoadingAllLeadSourceItems, setIsLoadingAllLeadSourceItems] = useState(false);
 
-  // Get specific configs for hierarchical data processing
   const industryConfig = masterConfigs?.INDUSTRY;
   const subIndustryConfig = masterConfigs?.SUB_INDUSTRIES;
   const leadSourceConfig = masterConfigs?.LEAD_SOURCE;
 
-  // Filtered items based on search term
-  const filteredItems = useMemo(() => {
-  if (!searchTerm || master?.isHierarchical) return existingItems;
-  return existingItems.filter(item => {
-    const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
-    return mainField.includes(searchTerm);
-  });
-}, [existingItems, searchTerm, master]);
+  const groupSubItemsByParent = (items, config) => {
+    if (!config || !config.isHierarchical || !config.parentMasterConfig) {
+      return [];
+    }
 
-  // Filtered hierarchical items based on search term
+    const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
+    const parentNameKey = config.parentMasterConfig.nameKey || "name";
+    const childPayloadKey = config.payloadKey;
+
+    const grouped = items.reduce((acc, item) => {
+      const parentId = item[parentIdKey];
+      if (!acc[parentId]) {
+        acc[parentId] = {
+          parentId,
+          children: []
+        };
+      }
+      acc[parentId].children.push(item);
+      return acc;
+    }, {});
+
+    return Object.values(grouped).map(group => ({
+      ...group,
+      parentName: parentOptions.find(p => p[config.parentMasterConfig.idKey] === group.parentId)?.[parentNameKey] || "Unknown Parent"
+    }));
+  };
+
+  const groupedSubItems = useMemo(() => {
+    if (!master?.isHierarchical) return [];
+    
+    const grouped = groupSubItemsByParent(existingItems, master);
+    
+    if (!searchTerm) return grouped;
+    
+    return grouped.map(group => ({
+      ...group,
+      children: group.children.filter(child => {
+        const mainField = child[master.payloadKey]?.toString().toLowerCase() || '';
+        return mainField.includes(searchTerm);
+      })
+    })).filter(group => group.children.length > 0);
+  }, [existingItems, master, parentOptions, searchTerm]);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm || master?.isHierarchical) return existingItems;
+    return existingItems.filter(item => {
+      const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
+      return mainField.includes(searchTerm);
+    });
+  }, [existingItems, searchTerm, master]);
+
   const filteredGroupedItems = useMemo(() => {
     if (!searchTerm) return groupedHierarchicalItems;
     return groupedHierarchicalItems.map(industry => ({
@@ -157,7 +123,6 @@ const groupedSubItems = useMemo(() => {
     })).filter(industry => industry.children.length > 0);
   }, [groupedHierarchicalItems, searchTerm, subIndustryConfig?.payloadKey]);
 
-  // Helper to evaluate conditional rendering rules
   const shouldFieldBeRendered = useCallback(
     (fieldName, currentFormData) => {
       if (!master.conditionalFields || master.conditionalFields.length === 0) {
@@ -438,7 +403,6 @@ const groupedSubItems = useMemo(() => {
     setFormData((prev) => {
       let newValue = value;
       
-      // Apply formatting for the master name field
       if (name === master.payloadKey) {
         newValue = formatMasterName(value);
       }
@@ -488,6 +452,20 @@ const groupedSubItems = useMemo(() => {
 
     if (validationError) {
       setApiError(validationError);
+      return;
+    }
+
+    // Check for duplicate entry
+    const isDuplicate = existingItems.some(item => {
+      if (selectedItemForEdit && item[master.idKey] === selectedItemForEdit[master.idKey]) {
+        return false;
+      }
+      return item[master.payloadKey].toLowerCase() === formData[master.payloadKey].toLowerCase();
+    });
+
+    if (isDuplicate) {
+      setApiError(`${master.title} with this name already exists`);
+      toast.error(`${master.title} with this name already exists`);
       return;
     }
 
@@ -716,8 +694,6 @@ const groupedSubItems = useMemo(() => {
       setIsSaving(false);
     }
   };
-
-  
 
   const handleDelete = async (itemId) => {
     if (!master) {
@@ -1018,32 +994,6 @@ const groupedSubItems = useMemo(() => {
     selectedItemForEdit,
   ]);
 
-  
-
-  if (!master) {
-    return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl text-center">
-          <h2 className="text-xl font-bold mb-4 text-red-600">
-            Error: Master configuration not provided.
-          </h2>
-          <p>
-            Please ensure a valid master configuration is passed to the modal.
-          </p>
-          <button
-            onClick={onClose}
-            className="mt-4 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-   if (showIntro) {
-    return <IntroModal masterTitle={master.title} onClose={() => setShowIntro(false)} />;
-  }
-
   const parentLabel =
     master.isHierarchical && master.parentMasterConfig
       ? master.parentMasterConfig.modalLabel ||
@@ -1075,6 +1025,31 @@ const groupedSubItems = useMemo(() => {
     "bullet",
     "link",
   ];
+
+  if (!master) {
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl text-center">
+          <h2 className="text-xl font-bold mb-4 text-red-600">
+            Error: Master configuration not provided.
+          </h2>
+          <p>
+            Please ensure a valid master configuration is passed to the modal.
+          </p>
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showIntro) {
+    return <IntroModal masterTitle={master.title} onClose={() => setShowIntro(false)} />;
+  }
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1130,167 +1105,177 @@ const groupedSubItems = useMemo(() => {
               </svg>
             </div>
 
-   {isLoadingItems ? (
-  <div className="flex justify-center items-center h-full">
-    <p>Loading items...</p>
-  </div>
-) : (
-  <>
-    {master.isHierarchical ? (
-      <div className="space-y-4">
-        {groupedSubItems.length > 0 ? (
-          groupedSubItems.map(group => (
-            <div key={group.parentId} className="mb-4 border rounded-md">
-              {/* Parent Section Header */}
-              <div
-                onClick={() =>
-                  setOpenParents(prev => ({
-                    ...prev,
-                    [group.parentId]: !prev[group.parentId]
-                  }))
-                }
-                className="bg-gray-100 p-3 font-medium cursor-pointer flex justify-between items-center"
-              >
-                <span className="font-semibold text-blue-700">
-                  {group.parentName}
-                </span>
-                <span className="text-gray-500 text-sm">
-                  {openParents[group.parentId] ? '▼' : '▶'} ({group.children.length}{' '}
-                  {master.title.includes("Industry") ? "sub-industries" : "sub-services"})
-                </span>
+            {isLoadingItems ? (
+              <div className="flex justify-center items-center h-full">
+                <p>Loading items...</p>
               </div>
-
-              {/* Children List (expandable) */}
-              {openParents[group.parentId] && (
-                <ul className="divide-y divide-gray-200">
-                  {group.children.map(child => (
-                    <li
-                      key={child[master.idKey]}
-                      className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
-                        selectedItemForEdit &&
-                        selectedItemForEdit[master.idKey] === child[master.idKey]
-                          ? "bg-blue-100 border-blue-400"
-                          : "bg-white"
-                      }`}
-                    >
-                      <div>
-                        <span className="font-medium text-gray-800">
-                          {child[master.payloadKey]}
-                        </span>
-                        {master.activeStatusPayloadKey &&
-                          child[master.activeStatusPayloadKey] !== undefined && (
-                            <span
-                              className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                                child[master.activeStatusPayloadKey]
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {child[master.activeStatusPayloadKey]
-                                ? 'Active'
-                                : 'Inactive'}
+            ) : (
+              <>
+                {master.isHierarchical ? (
+                  <div className="space-y-4">
+                    {groupedSubItems.length > 0 ? (
+                      groupedSubItems.map(group => (
+                        <div key={group.parentId} className="mb-4 border rounded-md">
+                          {/* Parent Section Header */}
+                          <div
+                            onClick={() =>
+                              setOpenParents(prev => ({
+                                ...prev,
+                                [group.parentId]: !prev[group.parentId]
+                              }))
+                            }
+                            className="bg-gray-100 p-3 font-medium cursor-pointer flex justify-between items-center"
+                          >
+                            <span className="font-semibold text-blue-700">
+                              {group.parentName}
                             </span>
+                            <span className="text-gray-500 text-sm">
+                              {openParents[group.parentId] ? '▼' : '▶'} ({group.children.length}{' '}
+                              {master.title.includes("Industry") ? "sub-industries" : "sub-services"})
+                            </span>
+                          </div>
+
+                          {/* Children List (expandable) */}
+                          {openParents[group.parentId] && (
+                            <ul className="divide-y divide-gray-200">
+                              {group.children.map(child => (
+                                <li
+                                  key={child[master.idKey]}
+                                  className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
+                                    selectedItemForEdit &&
+                                    selectedItemForEdit[master.idKey] === child[master.idKey]
+                                      ? "bg-blue-100 border-blue-400"
+                                      : "bg-white"
+                                  }`}
+                                >
+                                  <div>
+                                    <span className="font-medium text-gray-800">
+                                      {child[master.payloadKey]}
+                                      {master.title === "Status" && child.orderId !== undefined && (
+                                        <span className="ml-2 text-sm text-gray-500">
+                                          (Order: {child.orderId})
+                                        </span>
+                                      )}
+                                    </span>
+                                    {master.activeStatusPayloadKey &&
+                                      child[master.activeStatusPayloadKey] !== undefined && (
+                                        <span
+                                          className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                                            child[master.activeStatusPayloadKey]
+                                              ? 'bg-green-100 text-green-800'
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {child[master.activeStatusPayloadKey]
+                                            ? 'Active'
+                                            : 'Inactive'}
+                                        </span>
+                                      )}
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => setSelectedItemForEdit(child)}
+                                      className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                                      title="Edit"
+                                    >
+                                      <Edit size={18} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(child[master.idKey])}
+                                      className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100"
+                                      title="Delete"
+                                      disabled={isDeleting || !master.delete}
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
                           )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setSelectedItemForEdit(child)}
-                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
-                          title="Edit"
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">
+                        {searchTerm ? 'No matching items found' : 'No items available'}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {filteredItems.length > 0 ? (
+                      filteredItems.map((item) => (
+                        <li
+                          key={item[master.idKey]}
+                          className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
+                            selectedItemForEdit &&
+                            selectedItemForEdit[master.idKey] === item[master.idKey]
+                              ? "bg-blue-100 border-blue-400"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
                         >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(child[master.idKey])}
-                          className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100"
-                          title="Delete"
-                          disabled={isDeleting || !master.delete}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-500 text-center py-4">
-            {searchTerm ? 'No matching items found' : 'No items available'}
-          </p>
-        )}
-      </div>
-    ) : (
-      <ul className="space-y-2">
-        {filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
-            <li
-              key={item[master.idKey]}
-              className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
-                selectedItemForEdit &&
-                selectedItemForEdit[master.idKey] === item[master.idKey]
-                  ? "bg-blue-100 border-blue-400"
-                  : "bg-gray-50 hover:bg-gray-100"
-              }`}
-            >
-              <div className="flex flex-col">
-                <span className="font-medium text-gray-800">
-                  {item[master.payloadKey]}
-                </span>
-                {master.additionalFields &&
-                  master.additionalFields.map((field) => {
-                    if (
-                      master.isHierarchical &&
-                      master.parentMasterConfig &&
-                      field ===
-                        (master.parentMasterConfig.formFieldKey ||
-                          "parentId")
-                    ) {
-                      return null;
-                    }
-                    return (
-                      item[field] && (
-                        <span
-                          key={field}
-                          className="text-sm text-gray-500"
-                        >
-                          {item[field]}
-                        </span>
-                      )
-                    );
-                  })}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setSelectedItemForEdit(item)}
-                  className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-                  title="Edit"
-                >
-                  <Edit size={18} />
-                </button>
-                {!isLabelMaster && (
-                  <button
-                    onClick={() => handleDelete(item[master.idKey])}
-                    disabled={isDeleting || !master.delete}
-                    className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-800">
+                              {item[master.payloadKey]}
+                              {master.title === "Status" && item.orderId !== undefined && (
+                                <span className="ml-2 text-sm text-gray-500">
+                                  (Order: {item.orderId})
+                                </span>
+                              )}
+                            </span>
+                            {master.additionalFields &&
+                              master.additionalFields.map((field) => {
+                                if (
+                                  master.isHierarchical &&
+                                  master.parentMasterConfig &&
+                                  field ===
+                                    (master.parentMasterConfig.formFieldKey ||
+                                      "parentId")
+                                ) {
+                                  return null;
+                                }
+                                return (
+                                  item[field] && (
+                                    <span
+                                      key={field}
+                                      className="text-sm text-gray-500"
+                                    >
+                                      {item[field]}
+                                    </span>
+                                  )
+                                );
+                              })}
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setSelectedItemForEdit(item)}
+                              className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            {!isLabelMaster && (
+                              <button
+                                onClick={() => handleDelete(item[master.idKey])}
+                                disabled={isDeleting || !master.delete}
+                                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">
+                        {searchTerm ? 'No matching items found' : 'No items available'}
+                      </p>
+                    )}
+                  </ul>
                 )}
-              </div>
-            </li>
-          ))
-        ) : (
-          <p className="text-gray-500 text-center py-4">
-            {searchTerm ? 'No matching items found' : 'No items available'}
-          </p>
-        )}
-      </ul>
-    )}
-  </>
-)}
+              </>
+            )}
           </div>
 
           {/* Form for Add/Edit (Right Side) */}
@@ -1300,6 +1285,38 @@ const groupedSubItems = useMemo(() => {
                 ? `Edit Existing ${master.modalKey || master.title}`
                 : `Add New ${master.modalKey || master.title}`}
             </h3>
+            
+            {/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
+{selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
+  <div className="mb-3">
+    <h3 className="text-lg font-semibold text-blue-700">
+      Parent: {(() => {
+        const parentId = selectedItemForEdit[
+          master.parentMasterConfig.parentIdInChildResponseKey || "parentId"
+        ];
+        const matchedParent = parentOptions.find(
+          (parent) => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+        );
+        return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
+      })()}
+    </h3>
+  </div>
+)}{selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Services") && (
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-blue-700">
+                  Parent: {(() => {
+                    const parentId = selectedItemForEdit[
+                      master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
+                    ];
+                    const matchedParent = parentOptions.find(
+                      parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+                    );
+                    return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
+                  })()}
+                </h3>
+              </div>
+            )}
+
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1328,7 +1345,7 @@ const groupedSubItems = useMemo(() => {
                       onChange={handleChange}
                       required={master.parentMasterConfig.required}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isSaving}
+                      disabled={isSaving || (selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Services"))}
                     >
                       <option value="">Select a {parentLabel}</option>
                       {parentOptions.map((parent) => (
@@ -1346,91 +1363,73 @@ const groupedSubItems = useMemo(() => {
                 )}
 
               <div className="mb-4">
-                {selectedItemForEdit &&
-                  master.payloadKey === "subindustry_name" && (
-                    <div className="mb-3">
-                      <h3 className="text-lg font-semibold text-blue-700">
-                        Industry:{" "}
-                        {(() => {
-                          const matchedIndustry = parentOptions.find(
-                            (industry) =>
-                              String(industry.iindustry_id) ===
-                              String(selectedItemForEdit.iindustry_parent)
-                          );
-                          return matchedIndustry?.cindustry_name || "Not Found";
-                        })()}
-                      </h3>
-                    </div>
-                  )}
-                <div className="mb-4">
-                  <label
-                    htmlFor={master.payloadKey}
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    {master.modalKey || master.title}:
-                    {(master.title !== "Email Template" ||
-                      master.payloadKey !== "mailBody") && (
-                      <span className="ml-2 text-xs text-green-500">
-                        {formData[master.payloadKey]?.length || 0}/50
-                      </span>
-                    )}
-                  </label>
-
-                  {master.title === "Email Template" &&
-                  master.payloadKey === "mailBody" ? (
-                    <ReactQuill
-                      theme="snow"
-                      value={formData["mailBody"] || ""}
-                      onChange={(value) =>
-                        handleChange({
-                          target: { name: "mailBody", value },
-                        })
-                      }
-                      readOnly={isSaving}
-                      className="mt-1 mb-4"
-                      modules={modules}
-                      formats={formats}
-                    />
-                  ) : (
-                    <input
-                      id={master.payloadKey}
-                      name={master.payloadKey}
-                      type="text"
-                      className={`mt-1 block w-full border h-50 ${
-                        formData[master.payloadKey]?.length > 0 &&
-                        (formData[master.payloadKey]?.length < 3 ||
-                          formData[master.payloadKey]?.length > 50)
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-                      value={formData[master.payloadKey] || ""}
-                      onChange={handleChange}
-                      required
-                      minLength={3}
-                      maxLength={50}
-                      disabled={isSaving}
-                    />
-                  )}
-
+                <label
+                  htmlFor={master.payloadKey}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {master.modalKey || master.title}:
                   {(master.title !== "Email Template" ||
-                    master.payloadKey !== "mailBody") &&
-                    formData[master.payloadKey]?.length > 0 && (
-                      <p
-                        className={`mt-1 text-xs ${
-                          formData[master.payloadKey]?.length < 3 ||
-                          formData[master.payloadKey]?.length > 50
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {formData[master.payloadKey]?.length < 3
-                          ? "Minimum 3 characters required"
-                          : formData[master.payloadKey]?.length > 50
-                          ? "Maximum 50 characters exceeded"
-                          : "Valid length"}
-                      </p>
-                    )}
-                </div>
+                    master.payloadKey !== "mailBody") && (
+                    <span className="ml-2 text-xs text-green-500">
+                      {formData[master.payloadKey]?.length || 0}/50
+                    </span>
+                  )}
+                </label>
+
+                {master.title === "Email Template" &&
+                master.payloadKey === "mailBody" ? (
+                  <ReactQuill
+                    theme="snow"
+                    value={formData["mailBody"] || ""}
+                    onChange={(value) =>
+                      handleChange({
+                        target: { name: "mailBody", value },
+                      })
+                    }
+                    readOnly={isSaving}
+                    className="mt-1 mb-4"
+                    modules={modules}
+                    formats={formats}
+                  />
+                ) : (
+                  <input
+                    id={master.payloadKey}
+                    name={master.payloadKey}
+                    type="text"
+                    className={`mt-1 block w-full border h-50 ${
+                      formData[master.payloadKey]?.length > 0 &&
+                      (formData[master.payloadKey]?.length < 3 ||
+                        formData[master.payloadKey]?.length > 50)
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+                    value={formData[master.payloadKey] || ""}
+                    onChange={handleChange}
+                    required
+                    minLength={3}
+                    maxLength={50}
+                    disabled={isSaving}
+                  />
+                )}
+
+                {(master.title !== "Email Template" ||
+                  master.payloadKey !== "mailBody") &&
+                  formData[master.payloadKey]?.length > 0 && (
+                    <p
+                      className={`mt-1 text-xs ${
+                        formData[master.payloadKey]?.length < 3 ||
+                        formData[master.payloadKey]?.length > 50
+                          ? "text-red-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {formData[master.payloadKey]?.length < 3
+                        ? "Minimum 3 characters required"
+                        : formData[master.payloadKey]?.length > 50
+                        ? "Maximum 50 characters exceeded"
+                        : "Valid length"}
+                    </p>
+                  )}
               </div>
 
               {master.title === "Status" &&
@@ -1458,7 +1457,6 @@ const groupedSubItems = useMemo(() => {
                     />
                   </div>
                 )}
-                
 
               {master.additionalFields &&
                 master.additionalFields.map((field) => {
@@ -1544,4 +1542,4 @@ const groupedSubItems = useMemo(() => {
       </div>
     </div>
   );
-}
+};

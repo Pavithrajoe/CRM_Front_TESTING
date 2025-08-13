@@ -204,7 +204,7 @@ function HistoryDashboard({ userId }) {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="5" className="text-left py-8 text-lg text-gray-500">No recent activity found.</td>
+                                    <td colSpan="5" className="text-center w-full py-8 text-lg text-gray-500">No recent activity found.</td>
                                 </tr>
                             )}
                         </tbody>

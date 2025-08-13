@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useContext, useMemo, useCallback } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Corrected import path here
+import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
-import { Filter, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Filter, RotateCcw, ArrowUp, ArrowDown, PlusCircle } from 'lucide-react';
 import { ENDPOINTS } from '../../api/constraints';
 import TeamleadHeader from '../../Components/dashboard/teamlead/tlHeader';
 import ProfileHeader from '../../Components/common/ProfileHeader';
+import LeadForm from '../../Components/LeadForm'; 
 
 function LogUserCallLogs() {
     const { users } = useContext(UserContext);
@@ -19,7 +20,11 @@ function LogUserCallLogs() {
 
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [currentPage, setCurrentPage] = useState(1);
-    const [logsPerPage] = useState(10); // Number of logs per page
+    const [logsPerPage] = useState(10);
+
+    // New state for the lead form
+    const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+    const [leadFormInitialData, setLeadFormInitialData] = useState(null);
 
     const [callStats, setCallStats] = useState({
         totalCalls: 0,
@@ -142,7 +147,7 @@ function LogUserCallLogs() {
             }
             const callDate = new Date(log.call_time).toISOString().split('T')[0];
             const meetsStart = !startDate || callDate >= startDate;
-            const meetsEnd = !endDate || callDate >= endDate; // Corrected: should be <= for end date
+            const meetsEnd = !endDate || callDate <= endDate; // Corrected to use <= for end date
             return meetsStart && meetsEnd;
         });
 
@@ -221,33 +226,28 @@ function LogUserCallLogs() {
         setCurrentPage(1); // Reset to first page on sort
     };
 
-    // MODIFIED getSortIcon function for persistent visibility
     const getSortIcon = (key) => {
-        // If this is the currently sorted column, show the active arrow
         if (sortConfig.key === key) {
             return sortConfig.direction === 'ascending' ? (
-                <ArrowUp size={14} className="ml-1 inline" /> // Larger, active up arrow
+                <ArrowUp size={14} className="ml-1 inline" />
             ) : (
-                <ArrowDown size={14} className="ml-1 inline" /> // Larger, active down arrow
+                <ArrowDown size={14} className="ml-1 inline" />
             );
         }
-        // If this column is not currently sorted, show both arrows (neutral state)
-        // using a lighter color and smaller size to distinguish from active sort.
         return (
-            <div className="ml-1 inline-flex flex-col justify-center"> {/* Added justify-center for vertical alignment */}
-                <ArrowUp size={10} className="text-white opacity-40 -mb-0.5" /> {/* Smaller, faded up arrow */}
-                <ArrowDown size={10} className="text-white opacity-40 -mt-0.5" /> {/* Smaller, faded down arrow */}
+            <div className="ml-1 inline-flex flex-col justify-center">
+                <ArrowUp size={10} className="text-white opacity-40 -mb-0.5" />
+                <ArrowDown size={10} className="text-white opacity-40 -mt-0.5" />
             </div>
         );
     };
-
 
     const handleFilter = () => {
         if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
             toast.error('Start date cannot be after end date');
             return;
         }
-        setCurrentPage(1); // Reset to first page on filter application
+        setCurrentPage(1);
         toast.success('Filter applied');
     };
 
@@ -257,6 +257,23 @@ function LogUserCallLogs() {
         setSortConfig({ key: null, direction: 'ascending' });
         setCurrentPage(1);
         toast.info('All filters cleared and data reset');
+    };
+
+    // New function to handle the "+" button click
+    const handleAddLeadClick = (log) => {
+        // Prepare initial data for the lead form
+        const initialData = {
+            phoneNumber: log.call_log_number,
+            callerName: log.caller_name || '',
+            // You can add more data from the log here
+        };
+        setLeadFormInitialData(initialData);
+        setIsLeadFormOpen(true);
+    };
+
+    const closeLeadForm = () => {
+        setIsLeadFormOpen(false);
+        setLeadFormInitialData(null);
     };
 
     return (
@@ -333,10 +350,7 @@ function LogUserCallLogs() {
                             <table className="min-w-full divide-y divide-blue-100">
                                 <thead className="bg-blue-600 text-white">
                                     <tr>
-                                        {/* Static S.No header */}
                                         <th className="px-4 py-3 text-left text-sm font-semibold tracking-wide">S.No</th>
-
-                                        {/* Sortable Headers */}
                                         {[
                                             { label: 'User', key: 'userName' },
                                             { label: 'Number', key: 'call_log_number' },
@@ -354,20 +368,21 @@ function LogUserCallLogs() {
                                                 </button>
                                             </th>
                                         ))}
+                                        <th className="px-4 py-3 text-left text-sm font-semibold tracking-wide">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 text-sm">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center text-blue-700">Loading...</td>
+                                            <td colSpan="8" className="px-4 py-4 text-center text-blue-700">Loading...</td>
                                         </tr>
                                     ) : error ? (
                                         <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center text-red-600">{error}</td>
+                                            <td colSpan="8" className="px-4 py-4 text-center text-red-600">{error}</td>
                                         </tr>
                                     ) : currentLogs.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" className="px-4 py-4 text-center text-gray-500">
+                                            <td colSpan="8" className="px-4 py-4 text-center text-gray-500">
                                                 No call logs found{startDate || endDate ? ' for selected date range' : ''}
                                             </td>
                                         </tr>
@@ -389,6 +404,15 @@ function LogUserCallLogs() {
                                                     <td className="px-4 py-3">{formatDisplayDate(log.call_time)}</td>
                                                     <td className="px-4 py-3">{formatTime(log.call_time)}</td>
                                                     <td className="px-4 py-3">{formatDuration(log.duration)}</td>
+                                                    <td className="px-4 py-3">
+                                                        <button
+                                                            onClick={() => handleAddLeadClick(log)}
+                                                            className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                                            title="Add as Lead"
+                                                        >
+                                                            <PlusCircle size={20} />
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             );
                                         })
@@ -428,6 +452,24 @@ function LogUserCallLogs() {
                     </div>
                 </div>
             </main>
+
+            {/* Lead Form Modal */}
+            {isLeadFormOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-4">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-semibold text-blue-900">Add New Lead</h3>
+                            <button onClick={closeLeadForm} className="text-gray-500 hover:text-gray-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        {/* Assuming your LeadForm component accepts initialData and an onClose prop */}
+                        <LeadForm initialData={leadFormInitialData} onClose={closeLeadForm} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

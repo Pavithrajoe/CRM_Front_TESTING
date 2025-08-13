@@ -57,7 +57,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const { showToast } = useToast();
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
 
-  const [proposalSendModes, setProposalSendModes] = useState([]);
+const [proposalSendModes, setProposalSendModes] = useState([]);
 const [openProposalDialog, setOpenProposalDialog] = useState(false);
 const [proposalDialogValue, setProposalDialogValue] = useState({
   proposalSendModeId: null,
@@ -198,10 +198,10 @@ const [proposalDialogErrors, setProposalDialogErrors] = useState({
   };
 
 
-  const fetchProposalSendModes = async () => {
+const fetchProposalSendModes = async () => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${ENDPOINTS.PROPOSAL_SEND_MODES}`, {
+    const response = await fetch(`${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}`, {
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -209,9 +209,13 @@ const [proposalDialogErrors, setProposalDialogErrors] = useState({
     });
     if (!response.ok) throw new Error('Failed to fetch proposal send modes');
     const data = await response.json();
-    setProposalSendModes(data);
+    
+    // Access the nested array correctly
+    const modes = data?.data?.data || [];
+    setProposalSendModes(modes);
   } catch (err) {
     console.error('Error fetching proposal send modes:', err.message);
+    setProposalSendModes([]);
   }
 };
 
@@ -220,7 +224,7 @@ useEffect(() => {
   fetchStages();
   fetchUsers();
   fetchDemoSessions();
-  fetchProposalSendModes(); // Add this line
+  fetchProposalSendModes(); 
 }, []);
 
 const validateProposal = () => {
@@ -431,21 +435,25 @@ const handleProposalSubmit = async () => {
   const statusId = stages[dialogStageIndex]?.id;
 
   try {
+ 
+
     const payload = {
       leadId: parseInt(leadId),
-      proposalSendModeId: proposalDialogValue.proposalSendModeId.id, // Use the id from our hardcoded options
-      preparedBy: proposalDialogValue.preparedBy.iUser_id,
-      verifiedBy: proposalDialogValue.verifiedBy.iUser_id,
-      sendBy: proposalDialogValue.sendBy.iUser_id,
+      proposalSendModeId: proposalDialogValue.proposalSendModeId?.proposal_send_mode_id, // Use the correct property name
+      preparedBy: proposalDialogValue.preparedBy?.iUser_id,
+      verifiedBy: proposalDialogValue.verifiedBy?.iUser_id,
+      sendBy: proposalDialogValue.sendBy?.iUser_id,
       notes: proposalDialogValue.notes,
     };
 
-    await axios.post(ENDPOINTS.PROPOSAL, payload, {
+
+    const response = await axios.post(ENDPOINTS.PROPOSAL, payload, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     });
+
 
     showToast('success', 'Proposal details saved!');
     setRemarkStageId(statusId);
@@ -454,14 +462,15 @@ const handleProposalSubmit = async () => {
     setShowRemarkDialog(true);
     setOpenProposalDialog(false);
   } catch (e) {
+    console.error('Error submitting proposal:', e);
+    console.error('Error response:', e.response?.data);
     showToast('error', e?.response?.data?.message || e.message || 'Failed to save proposal details');
   }
 };
-
-const PROPOSAL_SEND_MODES = [
-  { id: 1, name: 'Online' },
-  { id: 2, name: 'Offline' }
-];
+// const PROPOSAL_SEND_MODES = [
+//   { id: 1, name: 'Online' },
+//   { id: 2, name: 'Offline' }
+// ];
 
   const updateStage = async (newIndex, statusId) => {
     try {
@@ -901,25 +910,30 @@ const PROPOSAL_SEND_MODES = [
 
 <DialogTitle>Enter Proposal Details</DialogTitle>
   <DialogContent>
-    <Autocomplete
-      fullWidth
-      options={PROPOSAL_SEND_MODES}
-      getOptionLabel={(option) => option.name}
-      isOptionEqualToValue={(option, value) => option.id === value.id}
-      value={proposalDialogValue.proposalSendModeId || null}
-      onChange={(e, newValue) =>
-        setProposalDialogValue(prev => ({ ...prev, proposalSendModeId: newValue }))
-      }
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Send Mode *"
-          sx={{ mt: 2 }}
-          error={!!proposalDialogErrors.proposalSendModeId}
-          helperText={proposalDialogErrors.proposalSendModeId}
-        />
-      )}
+   <Autocomplete
+  fullWidth
+  options={proposalSendModes}
+  getOptionLabel={(option) => option?.name || ''}
+  isOptionEqualToValue={(option, value) => 
+    option?.proposal_send_mode_id === value?.proposal_send_mode_id
+  }
+  value={proposalDialogValue.proposalSendModeId || null}
+  onChange={(e, newValue) =>
+    setProposalDialogValue(prev => ({ 
+      ...prev, 
+      proposalSendModeId: newValue 
+    }))
+  }
+  renderInput={(params) => (
+    <TextField
+      {...params}
+      label="Send Mode *"
+      sx={{ mt: 2 }}
+      error={!!proposalDialogErrors.proposalSendModeId}
+      helperText={proposalDialogErrors.proposalSendModeId}
     />
+  )}
+/>
     <Autocomplete
       fullWidth
       options={users}

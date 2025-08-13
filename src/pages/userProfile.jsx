@@ -133,7 +133,11 @@ const UserProfile = () => {
         setEmail(data.cEmail);
 
         if (!response.ok) throw new Error(data.message);
-        setUser(data);
+        
+        // Ensure that the user state is updated with the fetched data
+        // This is crucial for the DCRM toggle to reflect the correct state on refresh
+        setUser(data); 
+
         setEditFormData({
           cFull_name: data.cFull_name || '',
           cUser_name: data.cUser_name || '',
@@ -238,6 +242,7 @@ const UserProfile = () => {
   }, [user, userId]);
 
   const handleDCRMSuccess = useCallback(() => {
+    // This function is called from the DCRMSettingsForm on successful creation
     setUser(prev => ({ ...prev, dcrm_enabled: true }));
     setShowDCRMForm(false);
     showAppMessage('DCRM user created and settings configured successfully!', 'success');
@@ -319,6 +324,7 @@ const UserProfile = () => {
                   {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
                 </span>
               )}
+              {/* Correctly display DCRM status from the user state */}
               {user.dcrm_enabled && (
                 <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
                   DCRM Enabled
@@ -436,9 +442,9 @@ const UserProfile = () => {
                 />
               </div>
               </div>
-             
+              
               <div className='grid grid-cols-2 sm:grid-cols-3 gap-4'>
-                 <div className="relative">
+                <div className="relative">
                 <FaEnvelope className="absolute top-3 left-3 text-gray-500" />
                 <input
                   type="email"
@@ -518,10 +524,16 @@ const UserProfile = () => {
       )}
 
       {showDCRMForm && (
-        <DCRMSettingsForm
+        <DCRMSettingsForm 
           userId={userId}
+          userProfile={user}
           onClose={() => setShowDCRMForm(false)}
-          onSuccess={handleDCRMSuccess}
+          onSuccess={(createdUser) => {
+            // After successful creation, update the user state to show the toggle is ON and the DCRM label
+            setUser(prev => ({ ...prev, dcrm_enabled: true }));
+            setShowDCRMForm(false);
+            showAppMessage('DCRM user created successfully!', 'success');
+          }}
         />
       )}
       {showConfirmModal && (
@@ -535,4 +547,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile
+export default UserProfile;

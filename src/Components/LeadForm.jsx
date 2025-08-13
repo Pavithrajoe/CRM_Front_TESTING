@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 // const LeadForm = ({ onClose, onSuccess }) => {
   const LeadForm = ({ onClose, onSuccess, clientType }) => {
@@ -23,17 +23,18 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     console.error("Invalid or missing JWT token");
   }
 
-  // const [existingLeadsList, setExistingLeadsList] = useState([]);
-  // const [isLeadListVisible, setIsLeadListVisible] = useState(false);
-  // const [searchError, setSearchError] = useState('');
-  // const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
-  // const [backendError, setBackendError] = useState("");
+  const [existingLeadsList, setExistingLeadsList] = useState([]);
+  const [isLeadListVisible, setIsLeadListVisible] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
+  const [backendError, setBackendError] = useState("");
   const [foundLeads, setFoundLeads] = useState([]); 
-  // const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 // new for new/exis
   const [isExistingClientForm, setIsExistingClientForm] = useState(false);
   const [existingClientMobile, setExistingClientMobile] = useState("");
   const [existingClientData, setExistingClientData] = useState(null);
+
   const [form, setForm] = useState({
     iLeadpoten_id: "",
     ileadstatus_id: "",
@@ -136,74 +137,118 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
-  useEffect(() => {
-  if (existingClientData) {
-    // Extract phone number parts
-    const phoneNum = existingClientData.iphone_no || "";
-    const phoneMatch = phoneNum.match(/^(\+\d{1,3})(.*)$/);
-    const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
-    const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
+useEffect(() => {
+    // console.log("--- useEffect Triggered ---");
+    // console.log("existingClientData:", existingClientData);
+    // console.log("Potential list:", Potential);
+    // console.log("Status list:", status);
+    // console.log("Lead Industry list:", leadIndustry);
+    // console.log("Lead sub Industry list:", leadSubIndustry);
+    // console.log("Source list:", source);
+    // console.log("Service list:", service);
+    // console.log("Sub Service list:", subServiceList);
+    // console.log("City list:", cities);
+   
+    // The guard condition is still essential.
+    if (existingClientData &&
+        Potential.length > 0 &&
+        status.length > 0 &&
+        leadIndustry.length > 0 &&
+        leadSubIndustry.length > 0 &&
+        source.length > 0 &&
+        service.length > 0 &&
+        subServiceList.length > 0 &&
+        cities.length > 0
+    ) {
+        console.log("Guard condition passed. Populating form...");
 
-    // Extract WhatsApp number parts
-    const waNum = existingClientData.whatsapp_number || "";
-    const waMatch = waNum.match(/^(\+\d{1,3})(.*)$/);
-    const waCountryCode = waMatch ? waMatch[1] : "+91";
-    const waWithoutCode = waMatch ? waMatch[2] : waNum;
+        // Extract phone number parts
+        const phoneNum = existingClientData.iphone_no || "";
+        const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
+        const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
+        const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
 
-    setForm(prev => ({
-      ...prev, // always preserve latest state
-      iLeadpoten_id: existingClientData.iLeadpoten_id || "",
-      ileadstatus_id: existingClientData.ileadstatus_id || "",
-      cindustry_id: existingClientData.cindustry_id || "",
-      csubindustry_id: existingClientData.isubindustry || "",
-      lead_source_id: existingClientData.lead_source_id || "",
-      ino_employee: existingClientData.ino_employee || "",
-      iproject_value: existingClientData.iproject_value || "",
-      clead_name: existingClientData.clead_name || "",
-      cemail: existingClientData.cemail || "",
-      corganization: existingClientData.corganization || "",
-      cwebsite: existingClientData.cwebsite || "",
-      icity: existingClientData.clead_city || "",
-      iphone_no: phoneWithoutCode || "",
-      phone_country_code: phoneCountryCode || "+91",
-      clead_address1: existingClientData.clead_address1 || "",
-      cwhatsapp: waWithoutCode || "",
-      whatsapp_country_code: waCountryCode || "",
-      clead_address2: existingClientData.clead_address2 || "",
-      clead_address3: existingClientData.clead_address3 || "",
-      cstate: existingClientData.cstate || "",
-      cdistrict: existingClientData.cdistrict || "",
-      cpincode: existingClientData.cpincode || "",
-      ccountry: existingClientData.ccountry || "",
-      iservice_id: existingClientData.iservice_id || "",
-      isubservice_id: existingClientData.isubservice_id || "",
-    }));
+        // Extract WhatsApp number parts
+        const waNum = existingClientData.whatsapp_number || "";
+        const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
+        const waCountryCode = waMatch ? waMatch[1] : "+91";
+        const waWithoutCode = waMatch ? waMatch[2] : waNum;
 
-    // Update dropdown search text fields
-    const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
-    if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+        setForm(prev => ({
+            ...prev,
+            iLeadpoten_id: existingClientData.iLeadpoten_id || "",
+            ileadstatus_id: existingClientData.ileadstatus_id || "",
+            cindustry_id: existingClientData.cindustry_id || "",
+            csubindustry_id: existingClientData.isubindustry || "",
+            lead_source_id: existingClientData.lead_source_id || "",
+            ino_employee: existingClientData.ino_employee || "",
+            iproject_value: existingClientData.iproject_value || "",
+            clead_name: existingClientData.clead_name || "",
+            cemail: existingClientData.cemail || "",
+            corganization: existingClientData.corganization || "",
+            cwebsite: existingClientData.cwebsite || "",
+            icity: existingClientData.clead_city || "",
+            iphone_no: phoneWithoutCode || "",
+            phone_country_code: phoneCountryCode || "+91",
+            clead_address1: existingClientData.clead_address1 || "",
+            cwhatsapp: waWithoutCode || "",
+            whatsapp_country_code: waCountryCode || "+91",
+            clead_address2: existingClientData.clead_address2 || "",
+            clead_address3: existingClientData.clead_address3 || "",
+            cstate: existingClientData.cstate || "",
+            cdistrict: existingClientData.cdistrict || "",
+            cpincode: existingClientData.cpincode || "",
+            ccountry: existingClientData.ccountry || "",
+            iservice_id: existingClientData.iservice_id || "",
+            isubservice_id: existingClientData.isubservice_id || "",
+        }));
 
-    const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
-    if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+        // Update dropdown search text fields
+        const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
+        if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+        // console.log("Selected Potential:", selectedPotential);
 
-    const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
-    if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+        const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
+        if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+        // console.log("Selected Status:", selectedStatus);
 
-    const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
-    if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+        const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
+        if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+        // console.log("Selected Industry:", selectedIndustry);
 
-    const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
-    if (selectedSource) setSearchSource(selectedSource.source_name);
+        const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
+        if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+        // console.log("Selected Sub-Industry:", selectedSubIndustry);
 
-    const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
-    if (selectedService) setSearchService(selectedService.cservice_name);
+        const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
+        if (selectedSource) setSearchSource(selectedSource.source_name);
+        // console.log("Selected Source:", selectedSource);
 
-    const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
-    if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
+        const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
+        if (selectedService) setSearchService(selectedService.cservice_name);
+        // console.log("Selected Service:", selectedService);
 
-    const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
-    if (selectedCity) setSearchCity(selectedCity.cCity_name);
-  }
+        const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
+        if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
+        // console.log("Selected Sub-Service:", selectedSubService);
+
+        const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
+        if (selectedCity) setSearchCity(selectedCity.cCity_name);
+        // console.log("Selected City:", selectedCity);
+
+    } else {
+        // console.log("Guard condition failed. Form not populated.");
+        // console.log("existingClientData is present:", !!existingClientData);
+        // console.log("Potential list is populated:", Potential.length > 0);
+        // console.log("Status list is populated:", status.length > 0);
+        // console.log("Lead Industry list is populated:", leadIndustry.length > 0);
+        // console.log("Lead Sub Industry list is populated:", leadSubIndustry.length > 0);
+        // console.log("Source list is populated:", source.length > 0);
+        // console.log("Service list is populated:", service.length > 0);
+        // console.log("Sub Service list is populated:", subServiceList.length > 0);
+        // console.log("City list is populated:", cities.length > 0);
+      
+    }
 }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
 
   // --- END OF NEW LOGIC ---
@@ -298,18 +343,45 @@ const checkExisting = async (fieldName, fieldValue) => {
   };
 
 const handleSearchExistingLead = async () => {
-
+  // Check if both fields are empty
   if (!searchMobile && !searchEmail) {
     setPopupMessage("Please enter either mobile number or email to search");
     setIsPopupVisible(true);
-
-    // Auto hide after 3 seconds
-    setTimeout(() => {
-        setIsPopupVisible(false);
-    }, 3000);
-
+    setTimeout(() => setIsPopupVisible(false), 3000);
     return;
-}
+  }
+
+  // Validate mobile number if entered
+  if (searchMobile) {
+    const mobileRegex = /^[0-9]{10}$/; // digits only, length 6-15
+    if (!mobileRegex.test(searchMobile)) {
+      setPopupMessage("Mobile number must contain only 10 digits");
+      setIsPopupVisible(true);
+      setTimeout(() => setIsPopupVisible(false), 3000);
+      return;
+    }
+  }
+
+  // Validate email if entered
+  if (searchEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(searchEmail)) {
+      setPopupMessage("Please enter a valid email address");
+      setIsPopupVisible(true);
+      setTimeout(() => setIsPopupVisible(false), 3000);
+      return;
+    }
+  }
+    // setPopupMessage("Please enter either mobile number or email to search");
+    // setIsPopupVisible(true);
+
+    // // Auto hide after 3 seconds
+    // setTimeout(() => {
+    //     setIsPopupVisible(false);
+    // }, 3000);
+
+    // return;
+
   setLoading(true);
   setFoundLeads([]);
 
@@ -351,7 +423,6 @@ const handleSearchExistingLead = async () => {
   }
 };
 
-
 const handleSelectLead = async (leadId) => {
   setLoading(true);
   try {
@@ -384,6 +455,7 @@ if (resData && resData.ilead_id) {
     phone_country_code: phoneCode,
     whatsapp_country_code: whatsappCode,
   };
+  console.log("New Form Data to be set:", newFormData); 
 
   setForm(newFormData);
   setExistingClientData(resData);
@@ -2032,46 +2104,44 @@ const handleSubmit = async (e) => {
   ) : null}
   
          <div className="flex justify-end gap-4 pt-4">
-                <button
-                    type="submit"
-                    // disabled={loading || Object.keys(errors).some((key) => errors[key])}
-                    // disabled={ loading || (isExistingClientForm ? !existingClientData || Object.keys(errors).some((key) => errors[key]): Object.keys(errors).some((key) => errors[key])
-                    //   )
-                    // }
 
-                    disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
+          <button
+    type="submit"
+    disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
 
-                    className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md hover:bg-blue-700 transition ${
-                        loading || Object.keys(errors).some((key) => errors[key])
-                            ? "opacity-70 cursor-not-allowed"
-                            : ""
-                    }`}
-                >
-                    {loading ? (
-                        <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                            />
-                        </svg>
-                    ) : (
-                        "Create Lead"
-                    )}
-                </button>
+    className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md transition
+        ${
+            loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key]))
+                ? "opacity-70 cursor-not-allowed"
+                : "hover:bg-blue-700"
+        }`
+    }
+>
+    {loading ? (
+        <svg
+            className="animate-spin h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+        >
+            <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+            />
+            <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+        </svg>
+    ) : (
+        "Create Lead"
+    )}
+</button>
             </div>
 
             {isAlertVisible && (

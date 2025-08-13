@@ -403,13 +403,70 @@ export default function CompanyMaster() {
 
     deletePayloadFields: []
 },
+
+{
+    title: 'Proposal Send Mode',
+    value: 'Proposal Send Modes',
+    modalKey: 'ProposalSendMode',
+    idKey: 'proposal_send_mode_id', 
+    payloadKey: 'name', 
+    
+    // Updated response handling for nested structure
+    responseKey: 'data.data', // Now points to the actual array of items
+    dropdownOptions: {
+        labelKey: 'name',                  // Display text in dropdown
+        valueKey: 'proposal_send_mode_id'  // Value to store
+    },
+    
+    // Filter only active items for dropdown (optional)
+    filterDropdownItems: (items) => items.filter(item => item.bactive === true),
+
+    idLocation: 'params',
+    postPayloadFields: ["name", "bactive"],
+    putPayloadFields: ["name", "bactive"],
+    payloadMapping: {
+        name: "name",
+        bactive: "bactive"
+    },
+    
+    // Status and modifier keys
+    activeStatusPayloadKey: 'bactive',
+    modifierIdPayloadKey: {
+        post: 'created_by',
+        put: 'updated_by'
+    },
+    updatedDtPayloadKey: {
+        post: 'created_dt',
+        put: 'updated_dt'
+    },
+
+    // Base payload structures
+    basePostPayload: { 
+        name: '', 
+        bactive: true,
+        created_by: userId,  // Ensure this is injected
+        created_dt: new Date().toISOString() 
+    },
+    basePutPayload: { 
+        updated_by: userId,   // Ensure this is injected
+        updated_dt: new Date().toISOString() 
+    },
+
+    // API endpoints
+    get: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
+    post: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
+    put: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
+    delete: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
+    skipCompanyIdInjection: true,
+    conditionalFields: []
+},
 {
     title: 'Email Template',
     value: 'Email Template Masters',
     modalKey: 'Email Template',
     idKey: 'mailTemplateId',
     payloadKey: 'mailTitle',
-    responseKey: 'data',
+    responseKey: 'data.data',
     // idLocation: 'query',
 
     // API Endpoints

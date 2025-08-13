@@ -396,7 +396,7 @@ function AcheivementDashboard({ userId }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="p-6 text-left text-gray-500 bg-white">No historical revenue data available for the selected dates.</td>
+                                    <td colSpan="4" className="p-6 text-center w-full text-gray-500 bg-white">No historical revenue data available for the selected dates.</td>
                                 </tr>
                             )}
                         </tbody>

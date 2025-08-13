@@ -32,8 +32,8 @@ const VerifyCode = () => {
     const enteredOtp = inputsRef.current.map(input => input.value).join('').trim();
     const storedOtp = (localStorage.getItem("reset_otp") || "").trim();
 
-    console.log("Entered OTP:", enteredOtp);
-    console.log("Stored OTP:", storedOtp);
+    // console.log("Entered OTP:", enteredOtp);
+    // console.log("Stored OTP:", storedOtp);
 
     if (enteredOtp.length !== 4) {
       setError("Please enter a 4-digit OTP.");

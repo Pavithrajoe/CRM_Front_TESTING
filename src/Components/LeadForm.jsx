@@ -149,7 +149,7 @@ useEffect(() => {
         subServiceList.length > 0 &&
         cities.length > 0
     ) {
-        console.log("Guard condition passed. Populating form...");
+        // console.log("Guard condition passed. Populating form...");
 
         // Extract phone number parts
         const phoneNum = existingClientData.iphone_no || "";
@@ -386,7 +386,7 @@ const handleSearchExistingLead = async () => {
     });
 
     const resData = await res.json();
-    console.log("Existing lead search response:", resData);
+    // console.log("Existing lead search response:", resData);
 
     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
       setFoundLeads(resData.data);
@@ -436,7 +436,7 @@ if (resData && resData.ilead_id) {
     phone_country_code: phoneCode,
     whatsapp_country_code: whatsappCode,
   };
-  console.log("New Form Data to be set:", newFormData); 
+  // console.log("New Form Data to be set:", newFormData); 
 
   setForm(newFormData);
   setExistingClientData(resData);

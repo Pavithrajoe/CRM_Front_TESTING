@@ -234,7 +234,7 @@ const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false);
       }
 
       const rawData = await response.json();
-      console.log("Sub-service response:", rawData);
+      // console.log("Sub-service response:", rawData);
       setSubService(rawData.data || []);
     } catch (e) {
       console.error("Error in fetching sub services:", e);

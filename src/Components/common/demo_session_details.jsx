@@ -21,7 +21,7 @@ const formatDate = (dateString) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) {
-    console.warn(`Invalid date string provided to formatDate: ${dateString}`);
+    // console.warn(`Invalid date string provided to formatDate: ${dateString}`);
     return '-';
   }
   const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
@@ -57,7 +57,7 @@ const DemoSessionDetails = ({ leadId }) => {
         const rawSessionData = res.data.Message[0];
 
         if (rawSessionData.ilead_id !== parseInt(leadId, 10)) {
-          console.warn(`[Data Mismatch] API returned session for ilead_id: ${rawSessionData.ilead_id}, but requested leadId was: ${leadId}.`);
+          // console.warn(`[Data Mismatch] API returned session for ilead_id: ${rawSessionData.ilead_id}, but requested leadId was: ${leadId}.`);
           setSessions([]);
           setSnackMessage(`No demo sessions found for the requested lead ID ${leadId}. Data received belongs to lead ID ${rawSessionData.ilead_id}.`);
           setSnackSeverity('warning');
@@ -109,7 +109,7 @@ const DemoSessionDetails = ({ leadId }) => {
         
         setSessions([formattedSession]);
       } else {
-        console.warn("API response 'Message' is empty or not an array. Response:", res.data);
+        // console.warn("API response 'Message' is empty or not an array. Response:", res.data);
         setSnackMessage(`No demo sessions found for lead ID ${leadId}.`);
         setSnackSeverity('info');
         setSnackOpen(true);

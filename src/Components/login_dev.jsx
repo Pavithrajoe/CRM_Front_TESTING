@@ -70,7 +70,7 @@ const LoginPage = () => {
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
-        navigate('/leads');
+        navigate('/active-leads');
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
       }
@@ -220,7 +220,7 @@ const LoginPage = () => {
       `}</style>
 
       <footer className="absolute bottom-4 text-center w-full text-gray-400 text-sm">
-        © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 3.0
+        © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 3.1
       </footer>
     </div>
   );

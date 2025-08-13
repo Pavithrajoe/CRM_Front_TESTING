@@ -8,7 +8,7 @@ export const UserProvider = ({ children }) => {
   const [companyId, setCompanyId] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  // Utility: Get token from localStorage or cookie
+  // ✅ Get token from localStorage or cookie
   const getToken = () => {
     const token = localStorage.getItem("token");
     if (token) return token;
@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
     return match ? match[2] : null;
   };
 
-  // Utility: Decode JWT token to extract payload
+  // ✅ Decode JWT token
   const decodeToken = useCallback(() => {
     const token = getToken();
     if (!token) return null;
@@ -32,7 +32,17 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch and filter users by company ID
+  // ✅ Logout user
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("users");
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    setUsers([]);
+    setCompanyId(null);
+    setUserId(null);
+  }, []);
+
+  // ✅ Fetch and filter users by company ID
   const fetchUsersFromAPI = useCallback(async (cid) => {
     try {
       const token = getToken();
@@ -50,7 +60,6 @@ export const UserProvider = ({ children }) => {
 
       const data = await res.json();
       const companyUsers = data.filter((user) => user.iCompany_id === cid);
-      console.log("result",)
 
       setUsers(companyUsers);
       localStorage.setItem("users", JSON.stringify(companyUsers));
@@ -59,10 +68,17 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
-  // Initial setup
+  // ✅ Initial setup
   useEffect(() => {
     const payload = decodeToken();
     if (!payload) return;
+
+    // Auto logout if token expired
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      console.warn("Token expired, logging out...");
+      logout();
+      return;
+    }
 
     const cid = payload.company_id || payload.iCompany_id;
     const uid = payload.user_id || payload.iUser_id;
@@ -76,17 +92,29 @@ export const UserProvider = ({ children }) => {
     } else if (cid) {
       fetchUsersFromAPI(cid);
     }
-  }, [decodeToken, fetchUsersFromAPI]);
+  }, [decodeToken, fetchUsersFromAPI, logout]);
 
-  // Sync users to localStorage
+  // ✅ Sync users to localStorage
   useEffect(() => {
     if (Array.isArray(users)) {
       localStorage.setItem("users", JSON.stringify(users));
     }
   }, [users]);
 
+  // ✅ Logged-in status
+  const isLoggedIn = !!getToken();
+
   return (
-    <UserContext.Provider value={{ users, setUsers, companyId, userId }}>
+    <UserContext.Provider
+      value={{
+        users,
+        setUsers,
+        companyId,
+        userId,
+        isLoggedIn,
+        logout,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
@@ -70,7 +71,7 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
   });
 
   const [formLabels, setFormLabels] = useState({
-    leadFormTitle: "Create a New Lead",
+    leadFormTitle: "🚀 Let's Get Started - Create a New Lead",
     section1Label: "Lead Details",
     section2Label: "Contact Information",
     section3Label: "Address Details",
@@ -138,7 +139,18 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
+    // console.log("--- useEffect Triggered ---");
+    // console.log("existingClientData:", existingClientData);
+    // console.log("Potential list:", Potential);
+    // console.log("Status list:", status);
+    // console.log("Lead Industry list:", leadIndustry);
+    // console.log("Lead sub Industry list:", leadSubIndustry);
+    // console.log("Source list:", source);
+    // console.log("Service list:", service);
+    // console.log("Sub Service list:", subServiceList);
+    // console.log("City list:", cities);
    
+    // The guard condition is still essential.
     if (existingClientData &&
         Potential.length > 0 &&
         status.length > 0 &&
@@ -149,7 +161,7 @@ useEffect(() => {
         subServiceList.length > 0 &&
         cities.length > 0
     ) {
-        // console.log("Guard condition passed. Populating form...");
+        console.log("Guard condition passed. Populating form...");
 
         // Extract phone number parts
         const phoneNum = existingClientData.iphone_no || "";
@@ -226,7 +238,16 @@ useEffect(() => {
         // console.log("Selected City:", selectedCity);
 
     } else {
-    
+        // console.log("Guard condition failed. Form not populated.");
+        // console.log("existingClientData is present:", !!existingClientData);
+        // console.log("Potential list is populated:", Potential.length > 0);
+        // console.log("Status list is populated:", status.length > 0);
+        // console.log("Lead Industry list is populated:", leadIndustry.length > 0);
+        // console.log("Lead Sub Industry list is populated:", leadSubIndustry.length > 0);
+        // console.log("Source list is populated:", source.length > 0);
+        // console.log("Service list is populated:", service.length > 0);
+        // console.log("Sub Service list is populated:", subServiceList.length > 0);
+        // console.log("City list is populated:", cities.length > 0);
       
     }
 }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
@@ -321,15 +342,6 @@ const checkExisting = async (fieldName, fieldValue) => {
       console.error("Error checking existing lead:", err);
     }
   };
-  
-const toTitleCase = (str) => {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
 
 const handleSearchExistingLead = async () => {
   // Check if both fields are empty
@@ -362,7 +374,6 @@ const handleSearchExistingLead = async () => {
     }
   }
 
-
   setLoading(true);
   setFoundLeads([]);
 
@@ -370,7 +381,6 @@ const handleSearchExistingLead = async () => {
     let body = {};
 
     if (searchMobile) {
-      // Always include country code if searching by phone
       body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
     } else if (searchEmail) {
       body = { email: searchEmail };
@@ -386,7 +396,7 @@ const handleSearchExistingLead = async () => {
     });
 
     const resData = await res.json();
-    // console.log("Existing lead search response:", resData);
+    console.log("Existing lead search response:", resData);
 
     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
       setFoundLeads(resData.data);
@@ -424,7 +434,6 @@ const handleSelectLead = async (leadId) => {
     const resData = await res.json();
 
 if (resData && resData.ilead_id) {
-  // Extract dynamic country code like +91, +1, +971, etc.
   const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
   const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
 
@@ -436,7 +445,7 @@ if (resData && resData.ilead_id) {
     phone_country_code: phoneCode,
     whatsapp_country_code: whatsappCode,
   };
-  // console.log("New Form Data to be set:", newFormData); 
+  console.log("New Form Data to be set:", newFormData); 
 
   setForm(newFormData);
   setExistingClientData(resData);
@@ -457,7 +466,6 @@ else {
     setLoading(false);
   }
 };
-
 
   const fetchDropdownData = useCallback(
     async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {
@@ -827,7 +835,8 @@ useEffect(() => {
     }
     if (name === "clead_name") {
       if (!value) {
-        error = "*Mandatory";
+        // error = "Lead Name is mandatory";
+        error = "Mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Lead Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -836,7 +845,7 @@ useEffect(() => {
     }
     if (name === "clead_address1") {
       if (!value) {
-        error = "*Mandatory";
+        error = "Mandatory";
       } else if (value.length > 200) {
         error = "Lead Address cannot exceed 200 characters";
       }
@@ -860,7 +869,7 @@ useEffect(() => {
 
     if (name === "corganization") {
       if (!value) {
-        error = "*Mandatory";
+        error = "Mandatory";
       } else if (!/^[A-Za-z\s]+$/.test(value)) {
         error = "Organization Name can only contain letters and spaces";
       } else if (value.length > 100) {
@@ -869,35 +878,35 @@ useEffect(() => {
     }
 
     if (name === "iphone_no" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "clead_address1" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "icity" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "iLeadpoten_id" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "iservice_id" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "ileadstatus_id" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "cindustry_id" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "lead_source_id" && !value) {
-      error = "*Mandatory";
+      error = "Mandatory";
     }
     if (name === "ino_employee") {
       const num = Number(value);
       if (value !== "" && (isNaN(num) || !Number.isInteger(num))) {
         error = "Must be a valid whole number";
       } else if (value !== "" && num <= 0) {
-        error = "Number must be greater than 0";
+        error = "Mandatory && Number must be greater than 0";
       } else if (value !== "" && num > 999999) {
         error = "Number must be less than 1 million";
       }
@@ -1416,7 +1425,28 @@ const handleSubmit = async (e) => {
     );
   };
 
-  const popupStyle = {
+  // const popupStyle = {
+  //   position: "fixed",
+  //   bottom: "20px",
+  //   // right: "20px",
+  //   left: "50%",
+  //   transform: "translateX(-50%)",
+  //   backgroundColor:
+  //     popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#176be9ff",
+  //   color: "white",
+  //   padding: "16px 24px",
+  //   borderRadius: "8px",
+  //   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  //   zIndex: 50,
+  //   opacity: 1,
+  //   transition: "opacity 0.3s ease-in-out",
+  //   display: "flex",
+  //   alignItems: "center",
+  //   justifyContent: "space-between",
+  // };
+
+
+    const popupStyle = {
   position: "absolute",
   bottom: "-95%",
   left: "50%",
@@ -1430,7 +1460,6 @@ const handleSubmit = async (e) => {
   textAlign: "center",
   borderRadius:"10px"
 };
-
 
   const closeButtonStyle = {
     background: "none",
@@ -1515,10 +1544,10 @@ const handleSubmit = async (e) => {
                 checked={!isExistingClientForm}
                 onChange={() => {
                   setIsExistingClientForm(false);
-                                setExistingClientData(null);
-                                setExistingClientMobile("");
-                                setFoundLeads([]);
-                                resetForm();
+                  setExistingClientData(null);
+                  setExistingClientMobile("");
+                  setFoundLeads([]);
+                  resetForm();
                 }}
               />
               <span className="ml-2">New Lead</span>
@@ -1530,10 +1559,10 @@ const handleSubmit = async (e) => {
                 checked={isExistingClientForm}
                 onChange={() => {
                   setIsExistingClientForm(true);
-                                setExistingClientData(null);
-                                setExistingClientMobile("");
-                                setFoundLeads([]);
-                                resetForm();
+                  setExistingClientData(null);
+                  setExistingClientMobile("");
+                  setFoundLeads([]);
+                  resetForm();
                 }}
               />
               <span className="ml-2">Existing Lead</span>
@@ -2085,8 +2114,10 @@ const handleSubmit = async (e) => {
 
           <button
     type="submit"
+    // Use this single, unified condition for the 'disabled' attribute.
     disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
 
+    // Use the exact same condition to control the visual state.
     className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md transition
         ${
             loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key]))
@@ -2132,10 +2163,10 @@ const handleSubmit = async (e) => {
             <div style={popupStyle}>
                 <span>{popupMessage}</span>
                 {popupMessage.includes("already exists") ? (
-                    <div style={{  display: "flex", gap: "10px", paddingTop:"15px" }}>
+                    <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
                         <button
                             onClick={() => setIsPopupVisible(false)}
-                            style={{ ...buttonStyle, backgroundColor: "#860606ff",color:"white" }}
+                            style={{ ...buttonStyle, backgroundColor: "#ccc" }}
                         >
                             Cancel
                         </button>
@@ -2145,7 +2176,7 @@ const handleSubmit = async (e) => {
                                 formRef.current?.requestSubmit();
                                 setIsPopupVisible(false);
                             }}
-                            style={{ ...buttonStyle, backgroundColor: "#28a745",color:"white" }}
+                            style={{ ...buttonStyle, backgroundColor: "#28a745" }}
                         >
                             Save Anyway
                         </button>
@@ -2160,7 +2191,13 @@ const handleSubmit = async (e) => {
           &times;
         </button>
       )
-                    
+                    // <button
+                    //     onClick={() => setIsPopupVisible(false)}
+                    //     style={closeButtonStyle}
+                    //     aria-label="Close popup"
+                    // >
+                    //     &times;
+                    // </button>
                 )}
             </div>
         )}

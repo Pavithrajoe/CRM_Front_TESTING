@@ -14,33 +14,35 @@ const InputField = ({ name, label, value, onChange, error, type = 'text', requir
   const inputType = isPassword && showPassword ? 'text' : type;
 
   return (
-    <div className="relative">
+    <div>
       <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <input
-        type={inputType}
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        readOnly={readOnly}
-        className={`w-full px-4 py-2 border rounded-lg ${
-          error ? 'border-red-500' : 'border-gray-300'
-        } focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none transition ${
-          readOnly ? 'bg-gray-100 cursor-not-allowed' : ''
-        }`}
-        placeholder={readOnly ? '' : `Enter ${label.toLowerCase()}`}
-        required={required}
-      />
-      {isPassword && (
-        <span
-          onClick={togglePasswordVisibility}
-          className="absolute top-[38px] right-3 text-gray-500 cursor-pointer"
-        >
-          {showPassword ? <FaEye /> : <FaEyeSlash />  }
-        </span>
-      )}
+      <div className="relative">
+        <input
+          type={inputType}
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+          className={`w-full px-4 py-2 border rounded-lg ${
+            error ? 'border-red-500' : 'border-gray-300'
+          } focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none transition ${
+            readOnly ? 'bg-gray-100 cursor-not-allowed' : ''
+          }`}
+          placeholder={readOnly ? '' : `Enter ${label.toLowerCase()}`}
+          required={required}
+        />
+        {isPassword && (
+          <span
+            onClick={togglePasswordVisibility}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
+          >
+            {showPassword ? <FaEye /> : <FaEyeSlash />}
+          </span>
+        )}
+      </div>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
@@ -48,14 +50,16 @@ const InputField = ({ name, label, value, onChange, error, type = 'text', requir
 
 
 const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
+  // Initialize formData with safe access to nested properties
   const [formData, setFormData] = useState({
     user_name: userProfile?.cUser_name || '',
     user_email: userProfile?.cEmail || '',
-    password_hash: generateRandomPassword(), // Auto-generate password
+    password_hash: generateRandomPassword(),
     phone_number: userProfile?.phone || '',
-    company_name: userProfile?.company || 'Default Company',
+    company_name: userProfile?.company?.cCompany_name || '', // Safely access nested property
     gender: 'Male',
-    user_role: 'manager'
+    user_role: 'manager',
+    DCRM_enabled: userProfile?.DCRM_enabled || false,
   });
 
   const [errors, setErrors] = useState({});
@@ -75,7 +79,8 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
         ...prev,
         user_name: userProfile.cUser_name || '',
         user_email: userProfile.cEmail || '',
-        company_name: userProfile.company || prev.company_name
+        company_name: userProfile.company?.cCompany_name || prev.company_name, // Safely access nested property
+        DCRM_enabled: userProfile.DCRM_enabled || false,
       }));
     }
   }, [userProfile]);
@@ -90,7 +95,7 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
         return value.length >= 8 ? '' : 'Minimum 8 characters required';
       case 'phone_number':
         return value ? /^\d{10}$/.test(value) ? '' : 'Must be exactly 10 digits' : '';
-      case 'company_name':
+      case 'company_name': // Correct field name for validation
         return value.trim().length >= 2 ? '' : 'Minimum 2 characters required';
       default:
         return '';
@@ -98,13 +103,15 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+
+    setFormData(prev => ({ ...prev, [name]: newValue }));
     setApiError('');
     setSuccessMessage('');
 
     if (errors[name]) {
-      const error = validateField(name, value);
+      const error = validateField(name, newValue);
       setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
@@ -118,7 +125,7 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
     // Validate all fields
     const newErrors = {};
     Object.keys(formData).forEach(field => {
-      if (field !== 'gender' && field !== 'user_role') {
+      if (field !== 'gender' && field !== 'user_role' && field !== 'DCRM_enabled') {
         const error = validateField(field, formData[field]);
         if (error) newErrors[field] = error;
       }
@@ -138,9 +145,10 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
         user_email: formData.user_email.trim(),
         password_hash: formData.password_hash,
         phone_number: formData.phone_number,
-        company_name: formData.company_name.trim(),
+        company_name: formData.company_name.trim(), // Use formData.company_name directly
         gender: formData.gender,
-        user_role: formData.user_role
+        user_role: formData.user_role,
+        DCRM_enabled: formData.DCRM_enabled,
       };
 
       const response = await fetch(ENDPOINTS.DCRM_SETTINGS, {
@@ -155,7 +163,6 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Correctly handle specific duplicate user error from the backend
         if (data.message && typeof data.message === 'string' && data.message.includes('already exists')) {
           throw new Error('A DCRM user with this email already exists. Please disable the existing user first.');
         } else {
@@ -240,7 +247,6 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
               onChange={handleChange}
               error={errors.password_hash}
               required
-              
             />
             <InputField
               name="phone_number"
@@ -286,6 +292,23 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
                 </select>
               </div>
             </div>
+
+            {/* DCRM Toggle Switch */}
+            {/* <div className="flex items-center justify-between">
+              <label htmlFor="DCRM_enabled" className="text-sm font-medium text-gray-700">DCRM Enabled</label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="DCRM_enabled"
+                  name="DCRM_enabled"
+                  checked={formData.DCRM_enabled}
+                  onChange={handleChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div> */}
+
           </div>
 
           <button

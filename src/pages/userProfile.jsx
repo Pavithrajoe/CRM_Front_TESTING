@@ -77,8 +77,6 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   </div>
 );
 
-// Enhanced DCRMSettingsForm Component
-
 const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs'];
 
 const UserProfile = () => {
@@ -175,6 +173,7 @@ const UserProfile = () => {
     fetchAllUsers();
   }, [userId]);
 
+  // Handler for the new 'User Status' toggle
   const handleToggleUserActive = useCallback(() => {
     if (!user || typeof user.bactive === 'undefined') {
       console.warn("User data or bactive status not available for toggle.");
@@ -211,39 +210,40 @@ const UserProfile = () => {
     setShowConfirmModal(true);
   }, [user, userId]);
 
-  const handleToggleDCRM = useCallback(() => {
-    if (!user) return;
-    if (user.dcrm_enabled) {
-      setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
-      setConfirmModalAction(() => async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+ const handleToggleDCRM = useCallback(() => {
+  if (!user) return;
+  if (user.DCRM_enabled) {
+    setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+    setConfirmModalAction(() => async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-          if (!response.ok) throw new Error('Failed to disable DCRM');
-          setUser(prev => ({ ...prev, dcrm_enabled: false }));
-          showAppMessage('DCRM disabled successfully!', 'success');
-        } catch (err) {
-          console.error(err);
-          showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
-        } finally {
-          setShowConfirmModal(false);
-        }
-      });
-      setShowConfirmModal(true);
-    } else {
-      setShowDCRMForm(true);
-    }
-  }, [user, userId]);
+        if (!response.ok) throw new Error('Failed to disable DCRM');
+        setUser(prev => ({ ...prev, DCRM_enabled: false }));
+        showAppMessage('DCRM disabled successfully!', 'success');
+      } catch (err) {
+        console.error(err);
+        showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+      } finally {
+        setShowConfirmModal(false);
+      }
+    });
+    setShowConfirmModal(true);
+  } else {
+    setShowDCRMForm(true);
+  }
+}, [user, userId]);
 
   const handleDCRMSuccess = useCallback(() => {
     // This function is called from the DCRMSettingsForm on successful creation
-    setUser(prev => ({ ...prev, dcrm_enabled: true }));
+    // FIX: Changed 'dcrm_enabled' to 'DCRM_enabled' to match API response casing
+    setUser(prev => ({ ...prev, DCRM_enabled: true })); 
     setShowDCRMForm(false);
     showAppMessage('DCRM user created and settings configured successfully!', 'success');
   }, []);
@@ -325,11 +325,11 @@ const UserProfile = () => {
                 </span>
               )}
               {/* Correctly display DCRM status from the user state */}
-              {user.dcrm_enabled && (
-                <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
-                  DCRM Enabled
-                </span>
-              )}
+              {user.DCRM_enabled && (
+  <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
+    DCRM Enabled
+  </span>
+)}
             </div>
             <div className="ml-auto flex flex-col sm:flex-row gap-2">
               <button
@@ -490,10 +490,10 @@ const UserProfile = () => {
                 </div>
               </div>
               </div>
-
+              
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
-                  label="Account Status"
+                  label="User Status"
                   isChecked={user.bactive}
                   onToggle={handleToggleUserActive}
                 />
@@ -503,7 +503,7 @@ const UserProfile = () => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
                   label="DCRM Enable"
-                  isChecked={user.dcrm_enabled || false}
+                  isChecked={user.DCRM_enabled || false}
                   onToggle={handleToggleDCRM}
                 />
                 <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
@@ -529,8 +529,7 @@ const UserProfile = () => {
           userProfile={user}
           onClose={() => setShowDCRMForm(false)}
           onSuccess={(createdUser) => {
-            // After successful creation, update the user state to show the toggle is ON and the DCRM label
-            setUser(prev => ({ ...prev, dcrm_enabled: true }));
+            setUser(prev => ({ ...prev, DCRM_enabled: true }));
             setShowDCRMForm(false);
             showAppMessage('DCRM user created successfully!', 'success');
           }}

@@ -39,6 +39,7 @@ export default function CompanyMaster() {
             setIsLoading(false); // Stop loading
         }
     }, []); 
+    
 
     const MASTER_CONFIG = useMemo(() => ([
        {
@@ -461,12 +462,14 @@ export default function CompanyMaster() {
     conditionalFields: []
 },
 {
-    title: 'Email Template',
-    value: 'Email Template Masters',
-    modalKey: 'Email Template',
-    idKey: 'mailTemplateId',
-    payloadKey: 'mailTitle',
-    responseKey: 'data.data',
+  title: 'Email Template',
+  value: 'Email Template Masters',
+  modalKey: 'Email Template',
+  idKey: 'mailTemplateId',
+  payloadKey: 'mailTitle', // Used for list view display
+  responseKey: 'data',
+  isRichText: true, // Add this flag to indicate mailBody uses ReactQuill
+  richTextField: 'mailBody', // Explicitly specify which field is rich text
     // idLocation: 'query',
 
     // API Endpoints

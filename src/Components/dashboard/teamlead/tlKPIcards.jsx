@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -12,8 +13,6 @@ export default function KPIStats(data) {
   const [lostCount, setLostCount] = useState(0);
   const [websiteLeadCount, setWebsiteLeadCount] = useState(0);
   const [lead,setLead] = useState(0);
-
-
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
   const [error, setError] = useState(null);
@@ -62,7 +61,6 @@ export default function KPIStats(data) {
     const response = await fetchLeadsAPI();
     const leadsData = await response.json();
     setLeads(leadsData); 
-
     
     let websiteLeadCount = 0;
     leadsData.forEach((lead) => {
@@ -82,49 +80,94 @@ export default function KPIStats(data) {
 }, []);
 
 
-  useEffect(() => {
-    let hot = 0;
-    let warm = 0;
-    let cold = 0;
-    let won = 0;
-    let lost = 0;
-    let active = 0;
+useEffect(() => {
+  let hot = 0;
+  let warm = 0;
+  let cold = 0;
+  let won = 0;
+  let lost = 0;
+  let active = 0;
+  let websiteLeads = 0;
 
-    leads.forEach((lead) => {
-      if (lead.bactive === false) {
-        // A lead is lost if bactive is false
-        lost++;
-      } else {
-        // These are active leads (bactive === true)
-        active++;
+  leads.forEach((lead) => {
+    // Lost
+    if (lead.bactive === false) {
+      lost++;
+    }
 
-        // Check for 'Won' leads
-        if (lead.bisConverted === true) {
-          won++;
-        }
+    // Active (bactive true AND not converted)
+    if (lead.bactive === true && lead.bisConverted === false && lead.website_lead === false) {
+      active++;
+    }
 
-        // Check for Hot, Warm, Cold only if not converted yet and active
-        // Assuming 'Won' leads are not also 'Hot/Warm/Cold' in the same context
-        if (lead.bisConverted === false) {
-          const potential = lead.lead_potential?.clead_name;
-          if (potential === "HOT") {
-            hot++;
-          } else if (potential === "WARM") {
-            warm++;
-          } else if (potential === "COLD") {
-            cold++;
-          }
-        }
-      }
-    });
+    // Won
+    if (lead.bisConverted === true && lead.bactive === true) {
+      won++;
+    }
 
-    setHotCount(hot);
-    setWarmCount(warm);
-    setColdCount(cold);
-    setWonCount(won);
-    setActiveCount(active);
-    setLostCount(lost);
-  }, [leads]);
+    // Hot/Warm/Cold
+    const potential = lead.lead_potential?.clead_name?.toUpperCase();
+    if (potential === "HOT") hot++;
+    else if (potential === "WARM") warm++;
+    else if (potential === "COLD") cold++;
+
+    // Website Leads
+    if (lead.bisConverted === false && lead.website_lead === true && lead.bactive === true) {
+      websiteLeads++;
+    }
+  });
+
+  setHotCount(hot);
+  setWarmCount(warm);
+  setColdCount(cold);
+  setWonCount(won);
+  setActiveCount(active);
+  setLostCount(lost);
+  setWebsiteLeadCount(websiteLeads);
+}, [leads]);
+
+  //   let hot = 0;
+  //   let warm = 0;
+  //   let cold = 0;
+  //   let won = 0;
+  //   let lost = 0;
+  //   let active = 0;
+
+  //   leads.forEach((lead) => {
+  //     if (lead.bactive === false) {
+  //       // A lead is lost if bactive is false
+  //       lost++;
+  //     } else {
+  //       // These are active leads (bactive === true)
+  //       active++;
+
+  //       // Check for 'Won' leads
+  //       if (lead.bisConverted === true) {
+  //         won++;
+  //       }
+
+  //       // Check for Hot, Warm, Cold only if not converted yet and active
+  //       // Assuming 'Won' leads are not also 'Hot/Warm/Cold' in the same context
+  //       if (lead.bisConverted === false) {
+  //         const potential = lead.lead_potential?.clead_name;
+  //         if (potential === "HOT") {
+  //           hot++;
+  //         } else if (potential === "WARM") {
+  //           warm++;
+  //         } else if (potential === "COLD") {
+  //           cold++;
+  //         }
+  //       }
+  //     }
+  //   });
+
+  //   setHotCount(hot);
+  //   setWarmCount(warm);
+  //   setColdCount(cold);
+  //   setWonCount(won);
+  //   setActiveCount(active);
+  //   setLostCount(lost);
+  // }, [leads]);
 
   const kpiData = [
     {
@@ -169,8 +212,16 @@ export default function KPIStats(data) {
     );
   }
 
+  const handleTotalLeadClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'all' } });
+  };
+
   const handleTotalLeadsClick = () => {
     navigate('/leadcardview', { state: { activeTab: 'leads' } });
+  };
+
+  const handleWebiteLeadClick = () => {
+    navigate('/leadcardview', { state: { activeTab: 'websiteLeads' } });
   };
 
   const handleTotalLostClick = () => {
@@ -181,21 +232,15 @@ export default function KPIStats(data) {
     <div className="px-4 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="grid grid-cols-2 gap-6">
-
-
-
           <div
           className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
+          onClick={handleTotalLeadClick}
         >
           <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
             Total Leads
           </h3>
           <p className="text-2xl font-bold text-gray-900">{activeCount + lostCount + wonCount}</p>
         </div>
-
-
-
-
 
           <div
             className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
@@ -210,6 +255,7 @@ export default function KPIStats(data) {
 
           <div
             className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
+            onClick={handleWebiteLeadClick}
           >
             <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
               Website Leads

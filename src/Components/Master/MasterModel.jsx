@@ -5,6 +5,8 @@ import { PlusCircle, Edit, Trash2, X } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { IntroModal } from "./IntroModal";
+import { convert } from 'html-to-text';
+
 
 const formatMasterName = (name) => {
   if (!name) return '';
@@ -1202,80 +1204,55 @@ export default function MasterModal({
                     )}
                   </div>
                 ) : (
-                  <ul className="space-y-2">
+  <ul className="space-y-2">
   {filteredItems.length > 0 ? (
-    filteredItems
-      .sort((a, b) => {
-        // Handle cases where orderId might be undefined or null
-        const orderA = a.orderId !== undefined && a.orderId !== null ? a.orderId : Number.MAX_SAFE_INTEGER;
-        const orderB = b.orderId !== undefined && b.orderId !== null ? b.orderId : Number.MAX_SAFE_INTEGER;
-        
-        // Sort in ascending order (lowest orderId first)
-        return orderA - orderB;
-      })
-      .map((item) => (
-        <li
-          key={item[master.idKey]}
-          className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
-            selectedItemForEdit &&
-            selectedItemForEdit[master.idKey] === item[master.idKey]
-              ? "bg-blue-100 border-blue-400"
-              : "bg-gray-50 hover:bg-gray-100"
-          }`}
-        >
-          <div className="flex flex-col">
-            <span className="font-medium text-gray-800">
-              {item[master.payloadKey]}
-              {master.title === "Status" && item.orderId !== undefined && (
-                <span className="ml-2 text-sm text-grey-500">
-                  (Order: {item.orderId})
-                </span>
-              )}
-            </span>
-            {master.additionalFields &&
-              master.additionalFields.map((field) => {
-                if (
-                  master.isHierarchical &&
-                  master.parentMasterConfig &&
-                  field ===
-                    (master.parentMasterConfig.formFieldKey ||
-                      "parentId")
-                ) {
-                  return null;
-                }
-                return (
-                  item[field] && (
-                    <span
-                      key={field}
-                      className="text-sm text-gray-500"
-                    >
-                      {item[field]}
-                    </span>
-                  )
-                );
+    filteredItems.map((item) => (
+      <li
+        key={item[master.idKey]}
+        className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
+          selectedItemForEdit &&
+          selectedItemForEdit[master.idKey] === item[master.idKey]
+            ? "bg-blue-100 border-blue-400"
+            : "bg-gray-50 hover:bg-gray-100"
+        }`}
+      >
+        <div className="flex flex-col w-full">
+          <span className="font-medium text-gray-800">
+            {item[master.payloadKey]}
+          </span>
+          {master.title === "Email Template" && item.mailBody && (
+            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+              {convert(item.mailBody, {
+                wordwrap: false,
+                selectors: [
+                  { selector: 'a', options: { ignoreHref: true } },
+                  { selector: 'img', format: 'skip' }
+                ]
               })}
-          </div>
-          <div className="flex space-x-2">
+            </div>
+          )}
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setSelectedItemForEdit(item)}
+            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
+            title="Edit"
+          >
+            <Edit size={18} />
+          </button>
+          {!isLabelMaster && (
             <button
-              onClick={() => setSelectedItemForEdit(item)}
-              className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-              title="Edit"
+              onClick={() => handleDelete(item[master.idKey])}
+              disabled={isDeleting || !master.delete}
+              className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+              title="Delete"
             >
-              <Edit size={18} />
+              <Trash2 size={18} />
             </button>
-            {!isLabelMaster && (
-              <button
-                onClick={() => handleDelete(item[master.idKey])}
-                disabled={isDeleting || !master.delete}
-                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                title="Delete"
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
-          </div>
-        </li>
-      ))
+          )}
+        </div>
+      </li>
+    ))
   ) : (
     <p className="text-gray-500 text-center py-4">
       {searchTerm ? 'No matching items found' : 'No items available'}
@@ -1296,6 +1273,7 @@ export default function MasterModal({
             </h3>
             
             {/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
+{/* Show parent name when editing hierarchical items */}
 {selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
   <div className="mb-3">
     <h3 className="text-lg font-semibold text-blue-700">
@@ -1310,21 +1288,7 @@ export default function MasterModal({
       })()}
     </h3>
   </div>
-)}{selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Services") && (
-              <div className="mb-3">
-                <h3 className="text-lg font-semibold text-blue-700">
-                  Parent: {(() => {
-                    const parentId = selectedItemForEdit[
-                      master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
-                    ];
-                    const matchedParent = parentOptions.find(
-                      parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
-                    );
-                    return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
-                  })()}
-                </h3>
-              </div>
-            )}
+)}
 
             <form
               onSubmit={(e) => {
@@ -1385,9 +1349,12 @@ export default function MasterModal({
                   )}
                 </label>
 
+      
+
                 {master.title === "Email Template" &&
                 master.payloadKey === "mailBody" ? (
                   <ReactQuill
+
                     theme="snow"
                     value={formData["mailBody"] || ""}
                     onChange={(value) =>

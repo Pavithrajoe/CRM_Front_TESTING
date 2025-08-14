@@ -100,6 +100,21 @@ export default function LeadsTable() {
     }
     return map;
   }, [subordinatesData]);
+const formatDateTime = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Invalid Date";
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day}-${month}-${year} ${hours}:${minutes}`; // DD-MM-YYYY HH:MM
+};
+
+
 
   const leads = useMemo(() => {
     return leadsData
@@ -115,7 +130,7 @@ export default function LeadsTable() {
         status: item.lead_status?.clead_name || "Unknown",
         assignedTo: item.user?.cFull_name || "Unassigned", 
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
-        time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
+        time: formatDateTime(item.dmodified_dt).toLocaleString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
           hour12: true,

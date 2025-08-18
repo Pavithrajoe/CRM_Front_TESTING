@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
@@ -24,13 +23,13 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
     console.error("Invalid or missing JWT token");
   }
 
-  const [existingLeadsList, setExistingLeadsList] = useState([]);
-  const [isLeadListVisible, setIsLeadListVisible] = useState(false);
-  const [searchError, setSearchError] = useState('');
-  const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
-  const [backendError, setBackendError] = useState("");
-  const [foundLeads, setFoundLeads] = useState([]); 
-  const [isSearching, setIsSearching] = useState(false);
+  // const [existingLeadsList, setExistingLeadsList] = useState([]);
+  // const [isLeadListVisible, setIsLeadListVisible] = useState(false);
+  // const [searchError, setSearchError] = useState('');
+  // const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
+  // const [backendError, setBackendError] = useState("");
+  // const [foundLeads, setFoundLeads] = useState([]); 
+  // const [isSearching, setIsSearching] = useState(false);
 // new for new/exis
   const [isExistingClientForm, setIsExistingClientForm] = useState(false);
   const [existingClientMobile, setExistingClientMobile] = useState("");
@@ -254,7 +253,6 @@ useEffect(() => {
 
   // --- END OF NEW LOGIC ---
 
-  // for new/existing client
   const resetForm = () => {
     setForm({
       iLeadpoten_id: "",
@@ -343,33 +341,32 @@ const checkExisting = async (fieldName, fieldValue) => {
     }
   };
 
+  // for existing lead form
+
+  const showPopup = (message, duration = 3000) => {
+  setPopupMessage(message);
+  setIsPopupVisible(true);
+  setTimeout(() => setIsPopupVisible(false), duration);
+};
+
 const handleSearchExistingLead = async () => {
-  // Check if both fields are empty
   if (!searchMobile && !searchEmail) {
-    setPopupMessage("Please enter either mobile number or email to search");
-    setIsPopupVisible(true);
-    setTimeout(() => setIsPopupVisible(false), 3000);
+    showPopup("Please enter either mobile number or email to search");
     return;
   }
 
-  // Validate mobile number if entered
   if (searchMobile) {
-    const mobileRegex = /^[0-9]{10}$/; // digits only, length 6-15
-    if (!mobileRegex.test(searchMobile)) {
-      setPopupMessage("Mobile number must contain only 10 digits");
-      setIsPopupVisible(true);
-      setTimeout(() => setIsPopupVisible(false), 3000);
+    const mobileRegex = /^[0-9]{6,15}$/;
+    if (!mobileRegex.test(searchMobile.trim())) {
+      showPopup("Mobile number must contain only 6 to 15 digits");
       return;
     }
   }
 
-  // Validate email if entered
   if (searchEmail) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(searchEmail)) {
-      setPopupMessage("Please enter a valid email address");
-      setIsPopupVisible(true);
-      setTimeout(() => setIsPopupVisible(false), 3000);
+    if (!emailRegex.test(searchEmail.trim())) {
+      showPopup("Please enter a valid email address");
       return;
     }
   }
@@ -378,13 +375,9 @@ const handleSearchExistingLead = async () => {
   setFoundLeads([]);
 
   try {
-    let body = {};
-
-    if (searchMobile) {
-      body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
-    } else if (searchEmail) {
-      body = { email: searchEmail };
-    }
+    const body = searchMobile
+      ? { phonenumber: `${searchMobileCountryCode}${searchMobile.trim()}` }
+      : { email: searchEmail.trim() };
 
     const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
       method: "POST",
@@ -396,19 +389,15 @@ const handleSearchExistingLead = async () => {
     });
 
     const resData = await res.json();
-    console.log("Existing lead search response:", resData);
 
     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
       setFoundLeads(resData.data);
-
     } else {
-      setPopupMessage(resData.Message || "No existing lead found.");
-      setIsPopupVisible(true);
+      showPopup(resData.Message || "No existing lead found.");
     }
   } catch (error) {
     console.error("Search error:", error);
-    setPopupMessage("Failed to search for leads. Please try again.");
-    setIsPopupVisible(true);
+    showPopup("Failed to search for leads. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -434,6 +423,7 @@ const handleSelectLead = async (leadId) => {
     const resData = await res.json();
 
 if (resData && resData.ilead_id) {
+  // Extract dynamic country code like +91, +1, +971, etc.
   const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
   const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
 
@@ -817,9 +807,9 @@ useEffect(() => {
     if (
       (name === "iphone_no" || name === "cwhatsapp") &&
       value &&
-      !/^\d{10}$/.test(value)
+      !/^\d{6,15}$/.test(value)
     ) {
-      error = "Must be exactly 10 digits";
+      error = "Must be between 6 and 15 digits";  
     }
     if (name === "cemail") {
       const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -830,9 +820,13 @@ useEffect(() => {
         error = "Lead Name cannot exceed 254 characters";
       }
     }
-    if (name === "cpincode" && value && !/^\d{6}$/.test(value)) {
-      error = "Upto 6-digit pincode allowed";
+    // if (name === "cpincode" && value && !/^\d{10}$/.test(value)) {
+    //   error = "Upto 10-digit pincode allowed";
+    // }
+    if (name === "cpincode" && value && !/^\d{6,10}$/.test(value)) {
+      error = "Pincode must be between 6 and 10 digits";
     }
+
     if (name === "clead_name") {
       if (!value) {
         // error = "Lead Name is mandatory";
@@ -996,88 +990,102 @@ const dropdownOpenSetters = {
 };
 
 const handleChange = (e) => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
+    let newErrors = {};
 
-  if (name === 'existingClientMobile') {
-    setExistingClientMobile(value);
+    // Handles validation for the existing client mobile field
+    if (name === 'existingClientMobile') {
+        setExistingClientMobile(value);
+        const error = validateField(name, value);
+        setErrors((prev) => ({ ...prev, [name]: error }));
+        return;
+    }
+
+    // Handles updates for search inputs (like dropdown search)
+    if (name.startsWith("search")) {
+        if (searchSetters[name]) {
+            searchSetters[name](value);
+        }
+        if (dropdownOpenSetters[name]) {
+            dropdownOpenSetters[name](true);
+        }
+
+        if (!value) {
+            if (name === "searchPotential") setForm(prev => ({ ...prev, iLeadpoten_id: "" }));
+            if (name === "searchStatus") setForm(prev => ({ ...prev, ileadstatus_id: "" }));
+            
+            if (name === "searchIndustry") {
+                setForm(prev => ({ ...prev, cindustry_id: "", csubindustry_id: "" }));
+                setSearchSubIndustry(""); 
+            }
+
+            if (name === "searchSource") setForm(prev => ({ ...prev, lead_source_id: "" }));
+            
+            if (name === "searchService") {
+                setForm(prev => ({ ...prev, iservice_id: "", isubservice_id: "" }));
+                setSearchSubService("");
+            }
+
+            if (name === "searchCity") setForm(prev => ({ ...prev, icity: "" }));
+        }
+
+        // Handles country code search inputs
+        if (name === "searchMobileCountryCode") {
+            setForm(prev => ({ ...prev, iphone_country_code: value }));
+        } else if (name === "searchWhatsappCountryCode") {
+            setForm(prev => ({ ...prev, cwhatsapp_country_code: value }));
+        }
+        return;
+    }
+
+    // Main form state update logic
+    setForm((prev) => {
+        let updated = { ...prev, [name]: value };
+
+        // Handle phone number splitting
+        if (name === 'iphone_no') {
+            const { countryCode, nationalNumber } = splitPhoneNumber(value);
+            if (countryCode) updated.iphone_country_code = countryCode;
+            updated.iphone_no = nationalNumber;
+        }
+
+        // Handle WhatsApp number splitting
+        if (name === 'cwhatsapp' && !sameAsPhone) {
+            const { countryCode, nationalNumber } = splitPhoneNumber(value);
+            if (countryCode) updated.cwhatsapp_country_code = countryCode;
+            updated.cwhatsapp = nationalNumber;
+        }
+
+        // Sync WhatsApp with phone if checkbox is checked
+        if (sameAsPhone) {
+            if (name === "iphone_no") {
+                updated.cwhatsapp = updated.iphone_no;
+            }
+            if (name === "iphone_country_code") {
+                updated.cwhatsapp_country_code = updated.iphone_country_code;
+            }
+        }
+        
+        // This is where you handle the dependent reset on the primary field change
+        if (name === "cindustry_id" && prev.cindustry_id !== value) {
+            updated.csubindustry_id = "";
+            setSearchSubIndustry("");
+        }
+
+        if (name === "iservice_id" && prev.iservice_id !== value) {
+            updated.isubservice_id = "";
+            setSearchSubService("");
+        }
+
+        return updated;
+    });
+
+    // Validate the field after the main form state is updated
     const error = validateField(name, value);
-    setErrors((prev) => ({
-      ...prev,
-      [name]: error,
-    }));
-    return;
-  }
-
-  if (name.startsWith("search")) {
-    if (searchSetters[name]) {
-      searchSetters[name](value);
-    }
-    if (dropdownOpenSetters[name]) {
-      dropdownOpenSetters[name](true);
-    }
-
-    if (name === "searchMobileCountryCode") {
-      setForm(prev => ({ ...prev, iphone_country_code: value }));
-    } else if (name === "searchWhatsappCountryCode") {
-      setForm(prev => ({ ...prev, cwhatsapp_country_code: value }));
-    }
-    return; 
-  }
-
-  setForm((prev) => {
-    let updated = { ...prev, [name]: value };
-
-    if (name === 'iphone_no') {
-      const { countryCode, nationalNumber } = splitPhoneNumber(value);
-      if (countryCode) updated.iphone_country_code = countryCode;
-      updated.iphone_no = nationalNumber;
-    }
-    
-    if (name === 'cwhatsapp' && !sameAsPhone) {
-      const { countryCode, nationalNumber } = splitPhoneNumber(value);
-      if (countryCode) updated.cwhatsapp_country_code = countryCode;
-      updated.cwhatsapp = nationalNumber;
-    }
-
-    if (name === "iphone_no" && sameAsPhone) {
-      updated.cwhatsapp = updated.iphone_no;
-      updated.cwhatsapp_country_code = updated.iphone_country_code;
-    }
-    if (name === "iphone_country_code" && sameAsPhone) {
-      updated.cwhatsapp_country_code = updated.iphone_country_code;
-      updated.cwhatsapp = updated.iphone_no;
-    }
-    
-    if (name === "cindustry_id" && prev.cindustry_id !== value) {
-      updated.csubindustry_id = "";
-      setSearchSubIndustry("");
-    }
-
-    if (name === "iservice_id" && prev.iservice_id !== value) {
-      updated.isubservice_id = "";
-      setSearchSubService("");
-    }
-
-    if (!value) {
-      if (name === "searchIndustry") {
-        updated = { ...updated, cindustry_id: "", csubindustry_id: "" };
-        setSearchSubIndustry("");
-      }
-      if (name === "searchService") {
-        updated = { ...updated, iservice_id: "", isubservice_id: "" };
-        setSearchSubService("");
-      }
-    }
-    
-    return updated;
-  });
-
-  const error = validateField(name, value);
-  setErrors((prev) => ({
-    ...prev,
-    [name]: error,
-  }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
 };
+
+
 
   const handleSelectDropdownItem = (
     fieldName,
@@ -1252,8 +1260,11 @@ const handleSubmit = async (e) => {
   let validationErrors = {};
   let formValid = true;
   if (isExistingClientForm && !existingClientData) {
-    if (!existingClientMobile || existingClientMobile.length !== 10) {
-      validationErrors.existingClientMobile = "Please enter a valid 10-digit mobile number.";
+    // if (!existingClientMobile || existingClientMobile.length !== 10) {
+    //   validationErrors.existingClientMobile = "Please enter a valid 10-digit mobile number.";
+    // }
+    if (!existingClientMobile || existingClientMobile.length < 6 || existingClientMobile.length > 15) {
+      validationErrors.existingClientMobile = "Please enter a valid mobile number (6 to 15 digits).";
     }
     setErrors(validationErrors);
     
@@ -1425,41 +1436,20 @@ const handleSubmit = async (e) => {
     );
   };
 
-  // const popupStyle = {
-  //   position: "fixed",
-  //   bottom: "20px",
-  //   // right: "20px",
-  //   left: "50%",
-  //   transform: "translateX(-50%)",
-  //   backgroundColor:
-  //     popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#176be9ff",
-  //   color: "white",
-  //   padding: "16px 24px",
-  //   borderRadius: "8px",
-  //   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-  //   zIndex: 50,
-  //   opacity: 1,
-  //   transition: "opacity 0.3s ease-in-out",
-  //   display: "flex",
-  //   alignItems: "center",
-  //   justifyContent: "space-between",
-  // };
+     const popupStyle = {
+      position: "fixed",               
+      top: "130%",                    
+      left: "50%",                     
+      transform: "translate(-50%, -50%)",
+      backgroundColor: "#f9f9f9ff",
+      padding: "16px 24px",
+      borderRadius: "10px",
+      boxShadow: "3px 4px 10px rgba(0, 81, 255, 0.86)",
+      zIndex: 10000,             
+      minWidth: "300px",
+      textAlign: "center",
+    };
 
-
-    const popupStyle = {
-  position: "absolute",
-  bottom: "-95%",
-  left: "50%",
-  transform: "translateX(-50%)",
-  backgroundColor: "#ffffffff",
-  padding: "16px 24px",
-  borderRadius: "8px",
-  boxShadow: "3px 4px 10px rgba(255, 0, 0, 0.86)",
-  zIndex: 1000,
-  minWidth: "300px",
-  textAlign: "center",
-  borderRadius:"10px"
-};
 
   const closeButtonStyle = {
     background: "none",
@@ -1716,8 +1706,6 @@ const handleSubmit = async (e) => {
     )}
   </div>
 ))}
-
-
         {[
           {
             label: "Lead potential",
@@ -2158,15 +2146,19 @@ const handleSubmit = async (e) => {
                     <span>{alertMessage}</span>
                 </div>
             )}
+
+            
         </form>
+
+        
         {isPopupVisible && (
             <div style={popupStyle}>
                 <span>{popupMessage}</span>
                 {popupMessage.includes("already exists") ? (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                    <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
                         <button
                             onClick={() => setIsPopupVisible(false)}
-                            style={{ ...buttonStyle, backgroundColor: "#ccc" }}
+                            style={{ ...buttonStyle, backgroundColor: "#8d8b8bff", borderRadius: "5px" }}
                         >
                             Cancel
                         </button>
@@ -2176,7 +2168,7 @@ const handleSubmit = async (e) => {
                                 formRef.current?.requestSubmit();
                                 setIsPopupVisible(false);
                             }}
-                            style={{ ...buttonStyle, backgroundColor: "#28a745" }}
+                            style={{ ...buttonStyle, backgroundColor: "#34b352ff", borderRadius: "10px" }}
                         >
                             Save Anyway
                         </button>

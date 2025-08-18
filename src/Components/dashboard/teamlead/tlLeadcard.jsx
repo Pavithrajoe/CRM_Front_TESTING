@@ -21,8 +21,8 @@ export default function LeadsTable({ data }) {
         time: (() => {
           const dateObj = new Date(item.dmodified_dt);
           const datePart = dateObj
-            .toLocaleDateString("en-GB") // DD/MM/YYYY
-            .replace(/\//g, "-");
+            .toLocaleDateString("en-GB"); // DD/MM/YYYY
+            // .replace(/\//g, "/");
           const timePart = dateObj
             .toLocaleTimeString("en-US", {
               hour: "2-digit",

@@ -10,6 +10,7 @@ const ActiveLeadTab = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
 
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) return;

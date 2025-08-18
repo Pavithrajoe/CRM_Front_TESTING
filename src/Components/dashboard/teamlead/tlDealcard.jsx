@@ -12,7 +12,7 @@ export default function DealsTable() {
   const [dealsData, setDealsData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null); // This is the numerical user ID
+  const [currentUserId, setCurrentUserId] = useState(null); 
   const [currentToken, setCurrentToken] = useState(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function DealsTable() {
 
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
-        extractedUserId = decodedToken.user_id; // This is the numerical user ID
+        extractedUserId = decodedToken.user_id; 
 
         if (!extractedUserId) {
           throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -32,7 +32,8 @@ export default function DealsTable() {
       } else {
         throw new Error("Authentication token not found in local storage. Please log in.");
       }
-    } catch (e) {
+    } 
+    catch (e) {
       console.error("Error retrieving or decoding token in DealsTable:", e);
       setError(`Authentication error: ${e.message}`);
       setLoading(false);
@@ -73,11 +74,13 @@ export default function DealsTable() {
 
       setDealsData(result || []);
 
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("Error fetching deals:", err);
       setError(`Failed to fetch deals: ${err.message}. Please try again later.`);
       setDealsData([]); 
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   }, [currentUserId, currentToken]); 
@@ -110,7 +113,7 @@ export default function DealsTable() {
             const dateObj = new Date(item.dmodified_dt);
             const datePart = dateObj
               .toLocaleDateString("en-GB") // DD/MM/YYYY
-              .replace(/\//g, "-");
+              .replace(/\//g, "/");
             const timePart = dateObj
               .toLocaleTimeString("en-US", {
                 hour: "2-digit",
@@ -127,9 +130,8 @@ export default function DealsTable() {
         .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || [] 
 
     );
-  }, [dealsData, currentUserId]); // Add currentUserId to dependency array
+  }, [dealsData, currentUserId]); 
 
-  // The rest of your component (filteredDeals, totalPages, paginatedDeals, return JSX) remains the same
   const filteredDeals = useMemo(() => {
     const term = search.toLowerCase();
     return deals.filter(

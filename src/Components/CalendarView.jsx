@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone } from 'react-icons/fa';
-import { Drawer, TextField, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Drawer, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import { format } from 'date-fns';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
@@ -25,12 +30,12 @@ const getEndOfDayInLocalTime = (date) => {
 const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar }) => {
   const initialFormData = {
     ctitle: '',
-    devent_startdt: '',
+    devent_startdt: null,
     cdescription: '',
     icreated_by: '',
     iupdated_by: '',
-    devent_end: '',
-    dupdated_at: new Date().toISOString(),
+    devent_end: null,
+    dupdated_at: new Date(),
     recurring_task: ''
   };
 
@@ -38,21 +43,17 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   
-  // Ref to hold the mutable speech recognition object and the current description text
   const recognitionRef = useRef(null);
   const descriptionRef = useRef('');
 
-  // Effect to manage form data based on `open` and `selectedDate`
   useEffect(() => {
     if (open && selectedDate) {
       const now = new Date();
       const initialStartDateTime = new Date(selectedDate);
       
       if (initialStartDateTime.toDateString() === now.toDateString()) {
-        // Set start time to next hour if it's today
         initialStartDateTime.setHours(now.getHours() + 1, 0, 0, 0);
       } else {
-        // Set a default start time for future dates
         initialStartDateTime.setHours(9, 0, 0, 0);
       }
 
@@ -60,13 +61,13 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
       setFormData(prev => ({
         ...prev,
-        devent_startdt: initialStartDateTime.toISOString().slice(0, 16),
-        devent_end: endDateTime.toISOString().slice(0, 16)
+        devent_startdt: initialStartDateTime,
+        devent_end: endDateTime
       }));
     }
   }, [open, selectedDate]);
-  
-  // Main effect for setting up and tearing down the speech recognition API
+
+  // Speech recognition setup (same as before)
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -79,7 +80,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
 
     recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = false; // Set to false for a cleaner, single-utterance experience
+    recognitionRef.current.continuous = false;
     recognitionRef.current.interimResults = true;
     recognitionRef.current.lang = 'en-US';
 
@@ -95,14 +96,11 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
           interimTranscript += transcript;
         }
       }
-      // Update the state only with the final results to avoid choppy updates
       const newDescription = (descriptionRef.current + ' ' + interimTranscript).trim();
       setFormData(prev => ({ ...prev, cdescription: newDescription }));
     };
 
     recognitionRef.current.onend = () => {
-      // Once recognition ends, update the description with the final result
-      // and reset the ref for the next use.
       setFormData(prev => {
         const finalDescription = (descriptionRef.current + ' ' + finalTranscript).trim();
         return { ...prev, cdescription: finalDescription };
@@ -144,7 +142,6 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       setIsListening(false);
     } else {
       try {
-        // Store the current description before starting recognition
         descriptionRef.current = formData.cdescription;
         recognitionRef.current.start();
         setIsListening(true);
@@ -160,22 +157,31 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
   };
 
+  // Add the missing handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const startDateLocal = new Date(formData.devent_startdt);
-    const endDateLocal = new Date(formData.devent_end);
+    const startDate = formData.devent_startdt;
+    const endDate = formData.devent_end;
 
-    if (endDateLocal < startDateLocal) {
+    if (!startDate || !endDate) {
       setSnackbar({
         open: true,
-        message: 'ℹ️ End date cannot be before start date!',
-        severity: 'info'
+        message: 'Please select both start and end dates',
+        severity: 'error'
       });
       return;
     }
 
-    // Stop listening before submitting
+    if (endDate < startDate) {
+      setSnackbar({
+        open: true,
+        message: 'End date cannot be before start date',
+        severity: 'error'
+      });
+      return;
+    }
+
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -186,8 +192,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
     const finalData = {
       ...formData,
-      devent_startdt: startDateLocal.toISOString(),
-      devent_end: endDateLocal.toISOString(),
+      devent_startdt: startDate.toISOString(),
+      devent_end: endDate.toISOString(),
       icreated_by: user_data_parsed.iUser_id,
       iupdated_by: user_data_parsed.iUser_id,
       dupdated_at: new Date().toISOString(),
@@ -209,7 +215,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
         const errorData = await response.json();
         setSnackbar({
           open: true,
-          message: `❌ Failed to create calendar event: ${errorData.message || 'Try again!'}`,
+          message: `Failed to create calendar event: ${errorData.message || 'Try again!'}`,
           severity: 'error',
         });
         return;
@@ -217,7 +223,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
       setSnackbar({
         open: true,
-        message: '✅ Calendar Event created successfully!',
+        message: 'Calendar Event created successfully!',
         severity: 'success',
       });
       setFormData(initialFormData);
@@ -227,7 +233,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       console.error('Submission error:', error);
       setSnackbar({
         open: true,
-        message: '🚨 Something went wrong while creating the reminder.',
+        message: 'Something went wrong while creating the event.',
         severity: 'error',
       });
     } finally {
@@ -235,108 +241,133 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
   };
 
+
   return (
-    <Drawer anchor="right" open={open} onClose={onClose}>
-      <div className={`fixed top-0 right-0 h-full w-[50%] sm:w-[400px] md:w-[360px] bg-white rounded-l-2xl shadow-2xl z-50 transition-all duration-500 ease-in-out transform ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="relative p-6 h-full overflow-y-auto">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-black transition duration-200"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Drawer anchor="right" open={open} onClose={onClose}>
+        <div className={`fixed top-0 right-0 h-full w-[50%] sm:w-[400px] md:w-[360px] bg-white rounded-l-2xl shadow-2xl z-50 transition-all duration-500 ease-in-out transform ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="relative p-6 h-full overflow-y-auto">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-black transition duration-200"
+              aria-label="Close"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">Calendar Event</h2>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Title <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={formData.ctitle}
-                onChange={(e) => setFormData({ ...formData, ctitle: e.target.value })}
-                placeholder="Calendar Event title"
-                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                maxLength={100}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Description</label>
-              <div className="relative">
-                <textarea
-                  value={formData.cdescription}
-                  onChange={(e) => setFormData({ ...formData, cdescription: e.target.value })}
-                  placeholder="Optional details…"
-                  className="w-full px-4 py-2 rounded-xl bg-gray-100 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition pr-10"
-                  maxLength={300}
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">Calendar Event</h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Title <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={formData.ctitle}
+                  onChange={(e) => setFormData({ ...formData, ctitle: e.target.value })}
+                  placeholder="Calendar Event title"
+                  className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  maxLength={100}
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={handleMicClick}
-                  className={`absolute top-3 right-3 transition ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-500 hover:text-blue-600'}`}
-                  title={isListening ? "Stop listening" : "Start voice input"}
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Description</label>
+                <div className="relative">
+                  <textarea
+                    value={formData.cdescription}
+                    onChange={(e) => setFormData({ ...formData, cdescription: e.target.value })}
+                    placeholder="Optional details…"
+                    className="w-full px-4 py-2 rounded-xl bg-gray-100 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition pr-10"
+                    maxLength={300}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleMicClick}
+                    className={`absolute top-3 right-3 transition ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-500 hover:text-blue-600'}`}
+                    title={isListening ? "Stop listening" : "Start voice input"}
+                  >
+                    <FaMicrophone className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Start Date<span className="text-red-500">*</span></label>
+                <DateTimePicker
+                  value={formData.devent_startdt}
+                  onChange={(newValue) => setFormData({ ...formData, devent_startdt: newValue })}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
+                  format="dd/MM/yyyy HH:mm"
+                  className="w-full"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      className: 'w-full',
+                    },
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
+                <DateTimePicker
+                  value={formData.devent_end}
+                  onChange={(newValue) => setFormData({ ...formData, devent_end: newValue })}
+                  minDateTime={formData.devent_startdt}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
+                  format="dd/MM/yyyy HH:mm"
+                  className="w-full"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      className: 'w-full',
+                    },
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Recurring Task</label>
+                <select
+                  name="recurring_task"
+                  value={formData.recurring_task ?? ""}
+                  onChange={(e) => setFormData({ ...formData, recurring_task: e.target.value === "" ? null : e.target.value })}
+                  className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
-                  <FaMicrophone className="w-5 h-5" />
+                  <option value="">None</option>
+                  <option value="Quarter">Quarter</option>
+                  <option value="Half_year">Half-year</option>
+                  <option value="Year">Year</option>
+                </select>
+              </div>
+              <div className="flex justify-center mt-6">
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-black hover:bg-gray-900 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={20} color="inherit" /> : 'Submit'}
                 </button>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Start Date<span className="text-red-500">*</span></label>
-              <input
-                type="datetime-local"
-                value={formData.devent_startdt}
-                onChange={(e) => setFormData({ ...formData, devent_startdt: e.target.value })}
-                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
-              <input
-                type="datetime-local"
-                value={formData.devent_end}
-                onChange={(e) => setFormData({ ...formData, devent_end: e.target.value })}
-                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Recurring Task</label>
-              <select
-                name="recurring_task"
-                value={formData.recurring_task ?? ""}
-                onChange={(e) => setFormData({ ...formData, recurring_task: e.target.value === "" ? null : e.target.value })}
-                className="w-full px-4 py-2 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              >
-                <option value="">None</option>
-                <option value="Quarter">Quarter</option>
-                <option value="Half_year">Half-year</option>
-                <option value="Year">Year</option>
-              </select>
-            </div>
-            <div className="flex justify-center mt-6">
-              <button
-                type="submit"
-                className="w-full py-2 bg-black hover:bg-gray-900 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={20} color="inherit" /> : 'Submit'}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
-      </div>
-    </Drawer>
+      </Drawer>
+    </LocalizationProvider>
   );
 };
+
 
 
 

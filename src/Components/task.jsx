@@ -234,6 +234,7 @@ const Tasks = () => {
     setFormData(prev => ({ ...prev, task_date: date }));
   };
 
+  // MODIFIED handleFormSubmission function
   const handleFormSubmission = async (e) => {
     e.preventDefault();
 
@@ -285,9 +286,14 @@ const Tasks = () => {
       }
 
       if (response.data.success || response.data.message === "Task Added Successfully") {
+        // Explicitly stop the microphone here.
+        if (mic && isListening) {
+          mic.stop();
+        }
+        setIsListening(false);
+
         // showPopup("Success", "🎉 Task saved successfully!", "success");
         setShowForm(false);
-        setIsListening(false);
         await fetchTasks();
       } else {
         showPopup("Error", response.data.message || "Failed to save task.", "error");
@@ -583,18 +589,17 @@ const Tasks = () => {
                   </div>
                 </div>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-
                 <div>
-                  <label className="block text-sm font-medium  text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Due Date <span className="text-red-600">*</span>
                   </label>
                   <DateTimePicker
                     selected={formData.task_date}
-                      viewRenderers={{
-            hours: renderTimeViewClock,
-            minutes: renderTimeViewClock,
-            seconds: renderTimeViewClock,
-          }}
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
                     onChange={handleDateChange}
                     showTimeSelect
                     timeFormat="HH:mm"

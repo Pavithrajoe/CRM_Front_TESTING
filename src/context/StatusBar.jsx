@@ -1126,7 +1126,7 @@ const handleProposalSubmit = async () => {
             {selectedRemark && (
               <>
                 <div
-                  className="w-24 h-10 flex mt-2 items-center justify-center mb-4"
+                  className="w-24 h-10 flex mt-2 items-center rounded-full justify-center mb-4"
                   style={{
                     backgroundColor: '#4CAF50',
                     boxShadow: '0px 5px 15px rgba(0,0,0,0.1)',

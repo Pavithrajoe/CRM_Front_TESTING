@@ -6,7 +6,7 @@ import { Filter, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
 import { ENDPOINTS } from '../../api/constraints';
 import TeamleadHeader from '../../Components/dashboard/teamlead/tlHeader';
 import ProfileHeader from '../../Components/common/ProfileHeader';
-import LeadForm from '../../Components/LeadForm'; 
+import LeadForm from '../../Components/LeadForm';
 
 function LogUserCallLogs() {
     const { users } = useContext(UserContext);
@@ -17,12 +17,12 @@ function LogUserCallLogs() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [loggedInUserEmail, setLoggedInUserEmail] = useState(null);
+    const [isDefaultFilter, setIsDefaultFilter] = useState(true);
 
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [currentPage, setCurrentPage] = useState(1);
     const [logsPerPage] = useState(10);
 
-    // Lead form state
     const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
     const [leadFormInitialData, setLeadFormInitialData] = useState(null);
 
@@ -104,6 +104,7 @@ function LogUserCallLogs() {
         const { start, end } = getCurrentMonthDates();
         setStartDate(start);
         setEndDate(end);
+        setIsDefaultFilter(true);
     }, [getCurrentMonthDates]);
 
     // Get logged in user email
@@ -185,21 +186,36 @@ function LogUserCallLogs() {
 
     // Memoized filtered and sorted logs
     const filteredAndSortedLogs = useMemo(() => {
-        let filtered = callLogs.filter(log => {
-            if (!log || !log.call_time) return false;
-            
-            if (!startDate && !endDate) return true;
-            
-            try {
-                const callDate = new Date(log.call_time).toISOString().split('T')[0];
-                const meetsStart = !startDate || callDate >= startDate;
-                const meetsEnd = !endDate || callDate <= endDate;
-                return meetsStart && meetsEnd;
-            } catch (error) {
-                console.warn('Invalid call_time format:', log.call_time);
-                return false;
-            }
-        });
+        let filtered = [...callLogs];
+
+        if (isDefaultFilter) {
+            // Apply current month filter by default
+            const { start, end } = getCurrentMonthDates();
+            filtered = filtered.filter(log => {
+                if (!log || !log.call_time) return false;
+                try {
+                    const callDate = new Date(log.call_time).toISOString().split('T')[0];
+                    return callDate >= start && callDate <= end;
+                } catch (error) {
+                    console.warn('Invalid call_time format:', log.call_time);
+                    return false;
+                }
+            });
+        } else if (startDate || endDate) {
+            // Apply custom date filter when not in default mode
+            filtered = filtered.filter(log => {
+                if (!log || !log.call_time) return false;
+                try {
+                    const callDate = new Date(log.call_time).toISOString().split('T')[0];
+                    const meetsStart = !startDate || callDate >= startDate;
+                    const meetsEnd = !endDate || callDate <= endDate;
+                    return meetsStart && meetsEnd;
+                } catch (error) {
+                    console.warn('Invalid call_time format:', log.call_time);
+                    return false;
+                }
+            });
+        }
 
         if (sortConfig.key) {
             filtered.sort((a, b) => {
@@ -257,7 +273,7 @@ function LogUserCallLogs() {
             });
         }
         return filtered;
-    }, [callLogs, startDate, endDate, sortConfig, users, getCallTypeString]);
+    }, [callLogs, startDate, endDate, sortConfig, users, getCallTypeString, isDefaultFilter, getCurrentMonthDates]);
 
     // Update stats whenever filteredAndSortedLogs changes
     useEffect(() => {
@@ -299,7 +315,7 @@ function LogUserCallLogs() {
                 ? 'descending' : 'ascending';
             return { key, direction };
         });
-        setCurrentPage(1); // Reset to first page on sort
+        setCurrentPage(1);
     }, []);
 
     const getSortIcon = useCallback((key) => {
@@ -323,25 +339,23 @@ function LogUserCallLogs() {
             toast.error('Start date cannot be after end date');
             return;
         }
+        setIsDefaultFilter(false);
         setCurrentPage(1);
         toast.success('Filter applied successfully');
     }, [startDate, endDate]);
 
     const handleReset = useCallback(() => {
-        const { start, end } = getCurrentMonthDates();
-        setStartDate(start);
-        setEndDate(end);
+        setStartDate('');
+        setEndDate('');
+        setIsDefaultFilter(false);
         setSortConfig({ key: null, direction: 'ascending' });
         setCurrentPage(1);
-        toast.info('Filters reset to current month');
-    }, [getCurrentMonthDates]);
+        toast.info('Showing all call logs');
+    }, []);
 
-    // Handle add lead functionality
     const handleAddLeadClick = useCallback((log) => {
         if (!log || !log.call_log_number) {
             toast.error('Invalid call log data');
-
-            
             return;
         }
         
@@ -411,8 +425,11 @@ function LogUserCallLogs() {
                                 <input
                                     id="startDate"
                                     type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                                    value={isDefaultFilter ? getCurrentMonthDates().start : startDate}
+                                    onChange={(e) => {
+                                        setIsDefaultFilter(false);
+                                        setStartDate(e.target.value);
+                                    }}
                                     className="p-2 rounded-full border border-blue-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 />
                             </div>
@@ -421,8 +438,11 @@ function LogUserCallLogs() {
                                 <input
                                     id="endDate"
                                     type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
+                                    value={isDefaultFilter ? getCurrentMonthDates().end : endDate}
+                                    onChange={(e) => {
+                                        setIsDefaultFilter(false);
+                                        setEndDate(e.target.value);
+                                    }}
                                     className="p-2 rounded-full border border-blue-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 />
                             </div>
@@ -430,13 +450,13 @@ function LogUserCallLogs() {
                                 onClick={handleFilter}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-200 shadow-md flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             >
-                                <Filter size={16} /> Filter
+                                <Filter size={16} /> {isDefaultFilter ? 'Current Month' : 'Apply Filter'}
                             </button>
                             <button
                                 onClick={handleReset}
                                 className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-full transition-all duration-200 shadow-md flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
                             >
-                                <RotateCcw size={16} /> Reset
+                                <RotateCcw size={16} /> Show All
                             </button>
                         </div>
 
@@ -495,8 +515,8 @@ function LogUserCallLogs() {
                                         <tr>
                                             <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                                                 <div className="flex flex-col items-center">
-                                                    <span>No call logs found{startDate || endDate ? ' for selected date range' : ''}</span>
-                                                    {(startDate || endDate) && (
+                                                    <span>No call logs found</span>
+                                                    {(!isDefaultFilter && (startDate || endDate)) && (
                                                         <button 
                                                             onClick={handleReset}
                                                             className="mt-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors duration-200"
@@ -558,7 +578,6 @@ function LogUserCallLogs() {
                                     Previous
                                 </button>
                                 
-                                {/* Page numbers with ellipsis for large page counts */}
                                 {totalPages <= 7 ? (
                                     Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                         <button

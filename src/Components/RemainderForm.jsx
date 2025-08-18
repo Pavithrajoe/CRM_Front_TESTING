@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { format } from 'date-fns'; // Import the format function from date-fns
+import { format } from 'date-fns';
 import { usePopup } from "../context/PopupContext";
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 
@@ -17,10 +17,9 @@ const token = localStorage.getItem("token");
 // Speech recognition setup
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
-const mic = new SpeechRecognition();
-mic.continuous = true;
-mic.interimResults = true;
-mic.lang = "en-US";
+
+// We will instantiate this inside the component to avoid issues
+let mic = null;
 
 const ReminderForm = () => {
   const { leadId } = useParams();
@@ -77,16 +76,16 @@ const ReminderForm = () => {
     }
   }, [showForm]);
 
-  // Speech Recognition effect
+  // Mic Logic
   useEffect(() => {
-    if (isListeningContent) {
-      mic.start();
-      mic.onend = () => {
-        if (isListeningContent) mic.start();
-      };
+    if (SpeechRecognition) {
+      mic = new SpeechRecognition();
+      mic.continuous = false;
+      mic.interimResults = true;
+      mic.lang = "en-US";
     } else {
-      mic.stop();
-      mic.onend = () => {};
+      console.error("Speech Recognition API is not supported in this browser.");
+      return;
     }
 
     mic.onresult = (event) => {
@@ -104,14 +103,36 @@ const ReminderForm = () => {
       setIsListeningContent(false);
     };
 
+    mic.onend = () => {
+      setIsListeningContent(false);
+    };
+
     return () => {
       mic.stop();
+      mic.onresult = null;
+      mic.onerror = null;
+      mic.onend = null;
     };
-  }, [isListeningContent]);
+  }, []);
 
   const toggleListening = (field) => {
     if (field === "content") {
-      setIsListeningContent((prevState) => !prevState);
+      setIsListeningContent((prevState) => {
+        if (!prevState) {
+          try {
+            mic.start();
+          } catch (e) {
+            console.error("Failed to start mic:", e);
+          }
+        } else {
+          setForm(prevForm => ({
+            ...prevForm,
+            content: prevForm.content.trim(),
+          }));
+          mic.stop();
+        }
+        return !prevState;
+      });
     }
   };
 
@@ -191,8 +212,10 @@ const ReminderForm = () => {
         showPopup("Error", `Error: ${errorMsg}`, "error");
         return;
       }
+      
+      // FIX: Uncommented this line to show the success popup
+      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
 
-      // showPopup("Success", "🎉 Reminder submitted successfully!", "success");
       setForm({
         title: "",
         content: "",
@@ -277,13 +300,12 @@ const ReminderForm = () => {
 
     return matchesSearch && matchesDate;
   });
-  
-  // Use a reliable library function for formatting
+
   const formatDisplayDateTime = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     if (isNaN(date)) return "Invalid Date";
-    return format(date, 'dd/MM/yyyy hh:mm a'); // Example: 12/08/2025 01:43 PM
+    return format(date, 'dd/MM/yyyy hh:mm a');
   };
 
   useEffect(() => {
@@ -321,7 +343,7 @@ const ReminderForm = () => {
             <Search size={18} />
           </button>
         </div>
-        
+
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={() => setShowFilterModal(true)}
@@ -478,7 +500,7 @@ const ReminderForm = () => {
                     type="button"
                     onClick={() => toggleListening("content")}
                     className={`absolute top-2 right-2 p-2 rounded-full text-white text-sm select-none ${
-                      isListeningContent ? "bg-red-500 hover:bg-red-600" : "bg-gray-100 hover:bg-green-600"
+                      isListeningContent ? "bg-red-500 hover:bg-red-600" : "bg-gray-100 hover:bg-blue-900"
                     } transition`}
                     aria-label={
                       isListeningContent
@@ -553,11 +575,11 @@ const ReminderForm = () => {
                     </label>
                     <DateTimePicker
                       value={form.reminderDateTime}
-  viewRenderers={{
-            hours: renderTimeViewClock,
-            minutes: renderTimeViewClock,
-            seconds: renderTimeViewClock,
-          }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
                       onChange={(newValue) =>
                         setForm(prev => ({ ...prev, reminderDateTime: newValue }))
                       }

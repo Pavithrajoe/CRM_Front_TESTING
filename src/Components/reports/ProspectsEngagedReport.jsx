@@ -19,9 +19,7 @@ import { saveAs } from 'file-saver'; // Import saveAs from file-saver for downlo
 // Register Chart.js components that will be used
 ChartJS.register(BarElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-// Helper function to format decimal days into human-readable days and hours
-// This function is not directly used in the ProspectsEngagedReport but is often
-// found in related lead management contexts, so it's kept for completeness.
+
 const formatDecimalDaysToDaysHours = (decimalDays) => {
   const numDays = parseFloat(decimalDays);
   if (isNaN(numDays) || numDays < 0) return '0 Days';

@@ -70,7 +70,7 @@ const LoginPage = () => {
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
-        navigate('/active-leads');
+        navigate('/leads');
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
       }

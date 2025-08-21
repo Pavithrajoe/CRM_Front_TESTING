@@ -567,8 +567,18 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-      <div className="block bg-white p-4 sm:p-8 rounded-2xl max-w-5xl w-full shadow-lg overflow-y-auto h-[90vh] relative">
-        <button
+<div className="
+  block bg-white p-4 sm:p-6 md:p-8 
+  rounded-lg sm:rounded-xl md:rounded-2xl 
+  w-[70vw]  
+  min-w-[300px]   
+  max-w-[1200px]  
+  shadow-md sm:shadow-lg
+  overflow-y-auto
+  h-[80vh] sm:h-[85vh]
+  fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+  mx-4  
+">        <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors"
         >

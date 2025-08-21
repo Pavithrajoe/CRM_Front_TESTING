@@ -8,6 +8,15 @@ import {
   DialogActions,
   Button,
   TextField,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Chip,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
@@ -15,20 +24,20 @@ import Tasks from "../Components/task";
 import RemainderPage from "../pages/RemainderPage";
 import StatusBar from "./StatusBar";
 import LeadTimeline from "../Components/LeadTimeline";
-import ActionCard from "../Components/common/ActrionCard"; 
+import ActionCard from "../Components/common/ActrionCard";
+import QuotationList from "../Components/common/QuotationForm";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
+import { FaFilePdf, FaEye, FaEdit } from 'react-icons/fa';
+import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
-  const navigate = useNavigate();
   const { showPopup } = usePopup();
-
   // State declarations
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -49,11 +58,18 @@ const LeadDetailView = () => {
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
   const [ccRecipients, setCcRecipients] = useState("");
-  const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-  const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
+  // const [showRemarkDialog, setShowRemarkDialog] = useState(false);
+  // const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [isSendingMail, setIsSendingMail] = useState(false);
+
+  // New states for Quotation
+  const [showQuotationForm, setShowQuotationForm] = useState(false);
+  const [quotations, setQuotations] = useState([]);
+  const [showQuotationsList, setShowQuotationsList] = useState(false);
+  const [quotationsLoading, setQuotationsLoading] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState(null);
 
   // Derived state
   const isLeadActive =
@@ -63,25 +79,73 @@ const LeadDetailView = () => {
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
-  const handleWonClick = () => {
-    setShowRemarkDialog(true);
-    setRemarkData({ remark: "", projectValue: "" });
+  // Extract company info from localStorage
+  const extractAllUserInfo = () => {
+    try {
+      // 1. Prioritize JWT Token for extraction
+      const token = localStorage.getItem("token");
+      let userData = null;
+
+      if (token) {
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = atob(base64Payload);
+        userData = JSON.parse(decodedPayload);
+      } else {
+        // 2. Fallback to 'user' key if no token exists
+        const storedUserData = localStorage.getItem("user");
+        if (storedUserData) {
+          userData = JSON.parse(storedUserData);
+        } else {
+          // No user data found at all
+          throw new Error("User data not found in localStorage.");
+        }
+      }
+
+      // Extract and set company data
+      const companyData = {
+        company_id: userData.company_id,
+        icurrency_id: userData.icurrency_id || 2, // Use a default value
+        iCreated_by: userData.user_id,
+      };
+      setCompanyInfo(userData);
+
+      // Extract and set user details for display
+      setLoggedInUserName(userData.cFull_name || userData.fullName || "User");
+      setLoggedInCompanyName(userData.company_name || userData.organization || "Your Company");
+
+      // Extract and set website access status
+      // const isWebsiteActive = userData.website_access === true;
+      // setWebsiteActive(isWebsiteActive);
+      // localStorage.setItem('website_access', isWebsiteActive); // Optional: Save for other components
+      
+      console.log("Extracted company info:", companyData);
+      console.log("Extracted user details:", userData);
+
+    } catch (error) {
+      console.error("Error extracting user info:", error);
+      showPopup("Error", "Failed to load user and company information", "error");
+    }
   };
 
-  const handleRemarkSubmit = async () => {
-    if (!remarkData.remark.trim()) {
-      showPopup("Error", "Remark is required", "error");
-      return;
+  useEffect(() => {
+    if (leadId) {
+      fetchLeadData();
+      fetchLostReasons();
+      fetchQuotations();
+      extractAllUserInfo(); // Call the consolidated function
     }
+  }, [leadId]);
 
+  // New handler for Won button
+  const handleWonClick = () => {
+    setShowQuotationForm(true);
+  };
+
+  const handleQuotationCreated = async (quotationData) => {
     try {
       const token = localStorage.getItem("token");
       const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
       if (!userId) throw new Error("User not authenticated");
-
-      setImmediateWonStatus(true);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
 
       const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
         method: "PUT",
@@ -92,37 +156,22 @@ const LeadDetailView = () => {
       });
 
       if (!convertResponse.ok) {
-        setImmediateWonStatus(false);
-        setShowConfetti(false);
         throw new Error("Failed to convert lead to deal");
       }
 
-      const remarkPayload = {
-        remark: remarkData.remark.trim(),
-        leadId: parseInt(leadId),
-        leadStatusId: leadData?.ileadstatus_id,
-        createBy: userId,
-        ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
-      };
+      setImmediateWonStatus(true);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
 
-      const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(remarkPayload),
-      });
-
-      if (!remarkResponse.ok) {
-        throw new Error("Failed to submit remark");
-      }
-
-      showPopup("Success", "Lead marked as won and remark saved!", "success");
+      showPopup("Success", "Lead marked as won and deal created!", "success");
       setIsDeal(true);
       setIsWon(true);
       setIsLost(false);
-      setShowRemarkDialog(false);
+      setShowQuotationForm(false);
+      
+      // Add the new quotation to the list
+      setQuotations(prev => [quotationData, ...prev]);
+      
       fetchLeadData();
     } catch (error) {
       console.error("Error marking lead as won:", error);
@@ -131,6 +180,57 @@ const LeadDetailView = () => {
   };
 
   const handleLostClick = () => setLeadLostDescriptionTrue(true);
+
+//  // Function to download PDF
+//   const handleDownloadPdf = async (quotation) => {
+//     try {
+//       const token = localStorage.getItem("token");
+//       const response = await fetch(`${ENDPOINTS.QUOTATION_PDF}/${quotation.iQuotation_id}`, {
+//         method: "GET",
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       if (!response.ok) {
+//         throw new Error("Failed to download PDF");
+//       }
+
+//       const blob = await response.blob();
+//       const url = window.URL.createObjectURL(blob);
+//       const a = document.createElement('a');
+//       a.href = url;
+//       a.download = `Quotation-${quotation.cQuote_number}.pdf`;
+//       document.body.appendChild(a);
+//       a.click();
+//       window.URL.revokeObjectURL(url);
+//       document.body.removeChild(a);
+      
+//       showPopup('Success', `PDF downloaded successfully!`, 'success');
+//     } catch (error) {
+//       console.error("Error downloading PDF:", error);
+//       showPopup('Error', error.message || 'Failed to download PDF', 'error');
+//     }
+//   };
+  const handleDownloadPdf = async (quotation) => {
+    try {
+      // Check if we have all required data
+      if (!companyInfo || !leadData) {
+        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+        return;
+      }
+      
+      // Generate PDF using the imported function
+      generateQuotationPDF(quotation, companyInfo, leadData);
+      
+      showPopup('Success', `PDF generated successfully!`, 'success');
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+    }
+  };
+
+  
 
   const lostLead = async () => {
     try {
@@ -200,7 +300,7 @@ const LeadDetailView = () => {
         },
         body: JSON.stringify({
           sent_to: sentTo,
-          cc: ccRecipients, // Using 'cc' instead of 'cc_to' to match your example payload
+          cc: ccRecipients,
           mailSubject,
           mailContent,
         }),
@@ -273,11 +373,36 @@ const LeadDetailView = () => {
     }
   };
 
-  useEffect(() => {
-    if (leadId) {
-      fetchLeadData();
+  // New function to fetch quotations
+  const fetchQuotations = async () => {
+    setQuotationsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch quotations");
+      }
+
+      const data = await response.json();
+      console.log("quotations data:", data);
+      setQuotations(data.data || []);
+      setShowQuotationsList(true);
+    } catch (error) {
+      console.error("Error fetching quotations:", error);
+      showPopup("Error", error.message || "Failed to fetch quotations", "error");
+    } finally {
+      setQuotationsLoading(false);
     }
-  }, [leadId]);
+  };
+
+ 
 
   const fetchLostReasons = async () => {
     try {
@@ -315,8 +440,8 @@ const LeadDetailView = () => {
         const userInfoString = localStorage.getItem("userInfo");
         if (userInfoString) {
           const userInfo = JSON.parse(userInfoString);
-          setLoggedInUserName(userInfo.cFull_name || userInfo.fullName || userInfo.name || userInfo.cUser_name || "User");
-          setLoggedInCompanyName(userInfo.company_name || userInfo.company || userInfo.organization || userInfo.orgName || "Your Company");
+          setLoggedInUserName(userInfo.cFull_name || userInfo.iUser_id || userInfo.name || userInfo.cUser_name || "User");
+          setLoggedInCompanyName(userInfo.company_id || userInfo.company_name || userInfo.organization || userInfo.orgName || "Your Company");
         }
       }
     } catch (error) {
@@ -327,9 +452,12 @@ const LeadDetailView = () => {
   };
 
   useEffect(() => {
-    fetchLeadData();
-    fetchLostReasons();
-    getUserInfoFromLocalStorage();
+    if (leadId) {
+      fetchLeadData();
+      fetchLostReasons();
+      getUserInfoFromLocalStorage();
+      fetchQuotations(); // Load quotations when component mounts
+    }
   }, [leadId]);
 
   useEffect(() => {
@@ -452,54 +580,119 @@ const LeadDetailView = () => {
           isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
 
+        {/* Display Quotations if any */}
+        {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
+          <Box className="mb-4">
+            <Typography variant="h6" gutterBottom className="flex items-center">
+              <FaEye className="mr-2" /> Quotations
+            </Typography>
+            <Grid container spacing={2}>
+              {quotations.map((quotation) => (
+                <Grid item xs={12} md={6} key={quotation.iQuotation_id}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <div className="flex justify-between items-start mb-2">
+                        <Typography variant="h6" component="h3">
+                          {quotation.cQuote_number}
+                        </Typography>
+                        <Chip 
+                          label={`$${quotation.fTotal_amount.toFixed(2)}`} 
+                          color="primary" 
+                          size="small" 
+                        />
+                      </div>
+                      <Typography variant="body2" color="textSecondary" gutterBottom>
+                        Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="body2" paragraph>
+                        {quotation.cTerms}
+                      </Typography>
+                      <div className="flex justify-between mt-3">
+                        <Button
+                          size="small"
+                          startIcon={<FaFilePdf />}
+                          onClick={() => handleDownloadPdf(quotation)}
+                          variant="outlined"
+                        >
+                          Download PDF
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            // You can implement view details functionality here
+                            showPopup('Info', `Viewing details for ${quotation.cQuote_number}`, 'info');
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+
         {/* Tab Navigation and Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap  items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md  rounded-full p-1  w-full sm:w-auto">
-            {["Activity", "Task","Comments", "Reminders"].map((label, idx) => (
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+            {["Activity", "Task", "Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
                 onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${tabIndex === idx
+                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+                  tabIndex === idx
                     ? "bg-blue-100 shadow text-blue-900"
                     : "text-gray-500 hover:bg-white hover:text-blue-900"
-                  }`}
+                }`}
               >
                 {label}
               </button>
             ))}
           </div>
 
-          {showActionButtons && (
-            <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-            
+          <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+            {/* Quotation Button (only visible when Won) */}
+            {(isWon || immediateWonStatus || leadData?.bisConverted) && (
               <button
-              
-                onClick={() => setIsMailOpen(true)}
-                className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
-                title="Email"
-              > <div className="w-px h-5 bg-gray-600"></div>
-                <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} />
-                 <div className="w-px h-5 bg-gray-600"></div>
-              </button>
-               
-
-              {!(leadData?.bisConverted === true) && (
-                <button
-                  className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
-                  onClick={handleWonClick}
-                >
-                  Won
-                </button>
-              )}
-
-              <button
-                className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
-                onClick={handleLostClick}
+                onClick={() => setShowQuotationsList(true)}
+                className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
               >
-                Lost
+                <FaEye className="mr-1" /> View All Quotations
               </button>
-            </div>
-          )}
+            )}
+            
+            {showActionButtons && (
+              <>
+                <button
+                  onClick={() => setIsMailOpen(true)}
+                  className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                  title="Email"
+                >
+                  <div className="w-px h-5 bg-gray-600"></div>
+                  <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
+                  <div className="w-px h-5 bg-gray-600"></div>
+                </button>
+
+                {!(leadData?.bisConverted === true) && (
+                  <button
+                    className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    onClick={handleWonClick}
+                  >
+                    <FaEdit className="mr-1" /> Create Quotation
+                  </button>
+                )}
+
+                <button
+                  className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
+                  onClick={handleLostClick}
+                >
+                  Lost
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Tab Content */}
@@ -513,40 +706,76 @@ const LeadDetailView = () => {
           {tabIndex === 1 && <Tasks leadId={leadId} />}
           {tabIndex === 2 && <Comments leadId={leadId} />}
           {tabIndex === 3 && <RemainderPage leadId={leadId} />}
-          
         </Box>
       </div>
 
-      {/* Remark Dialog for 'Won' */}
-      <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
-        <DialogTitle>Enter Won Details</DialogTitle>
-        <DialogContent>
-          <TextField
-            label={<span>Remark <span className="text-red-600">*</span></span>}
-            fullWidth
-            multiline
-            rows={3}
-            value={remarkData.remark}
-            onChange={(e) => setRemarkData(prev => ({ ...prev, remark: e.target.value }))}
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Project Value"
-            type="number"
-            fullWidth
-            value={remarkData.projectValue}
-            onChange={(e) => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
+      {/* Quotation Form Dialog */}
+      <QuotationList
+        open={showQuotationForm}
+        onClose={() => setShowQuotationForm(false)}
+        leadId={leadId}
+        leadData={leadData}
+        companyInfo={companyInfo}
+        quotations={quotations}
+ 
+        onQuotationCreated={handleQuotationCreated}
+      />
+
+      {/* Quotations List Dialog */}
+      <Dialog open={showQuotationsList} onClose={() => setShowQuotationsList(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <div className="flex items-center">
+            <FaEye className="mr-2" /> All Quotations for Lead
+          </div>
+        </DialogTitle>
+        <DialogContent dividers>
+          {quotationsLoading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height={200}>
+              <CircularProgress />
+            </Box>
+          ) : quotations.length > 0 ? (
+            <List>
+              {quotations.map((quotation) => (
+                <ListItem key={quotation.iQuotation_id} disablePadding className="border-b last:border-0 py-3">
+                  <ListItemText
+                    primary={
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold">{quotation.cQuote_number}</span>
+                        <Chip 
+                          label={`$${quotation.fTotal_amount.toFixed(2)}`} 
+                          color="primary" 
+                          size="small" 
+                        />
+                      </div>
+                    }
+                    secondary={
+                      <div>
+                        <div>Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}</div>
+                        <div className="mt-1">{quotation.cTerms}</div>
+                      </div>
+                    }
+                  />
+                  <Button
+                    startIcon={<FaFilePdf />}
+                    onClick={() => handleDownloadPdf(quotation)}
+                    variant="outlined"
+                    className="ml-2"
+                    size="small"
+                  >
+                    PDF
+                  </Button>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <p className="text-center text-gray-500 py-4">No quotations found for this lead.</p>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-          <Button onClick={handleRemarkSubmit} variant="contained">Submit</Button>
+          <Button onClick={() => setShowQuotationsList(false)}>Close</Button>
         </DialogActions>
       </Dialog>
-
+      
       {/* Lead Lost Reason Dialog */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
@@ -620,7 +849,7 @@ const LeadDetailView = () => {
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
-                <img src="../../public/images/detailview/email.svg" className="text-black-600" size={24} />
+                <img src="../../public/images/detailview/email.svg" className="text-black-600" size={24} alt="Email icon" />
                 Compose Email
               </h2>
               <button
@@ -647,7 +876,7 @@ const LeadDetailView = () => {
                 ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-blue-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 极市汇仪L7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <p>No templates available</p>
                   </div>
@@ -701,7 +930,6 @@ const LeadDetailView = () => {
                       </div>
                     </div>
                   
-
                     {/* CC Field */}
                     <div>
                       <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
@@ -718,7 +946,7 @@ const LeadDetailView = () => {
 
                     {/* Subject Field */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
+                      <label className="block text-sm font-medium text极市汇仪-gray-800 mb-1">Subject</label>
                       <input
                         type="text"
                         className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
@@ -732,8 +960,8 @@ const LeadDetailView = () => {
 
                   {/* Message Editor */}
                   <div className="flex-grow flex flex-col">
-                    <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
-                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
+                    <label className="block text-sm font-medium text-gray-800极市汇仪 mb-1">Message</label>
+                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex极市汇仪-grow shadow-inner">
                       <ReactQuill
                         theme="snow"
                         value={mailContent}
@@ -761,7 +989,7 @@ const LeadDetailView = () => {
                     <button
                       type="button"
                       onClick={() => setIsMailOpen(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
+                      className极市汇仪="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
                     >
                       Cancel
                     </button>

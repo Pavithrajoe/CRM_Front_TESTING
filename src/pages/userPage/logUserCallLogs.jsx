@@ -391,7 +391,7 @@ function LogUserCallLogs() {
                     <ProfileHeader />
                 </div>
 
-                <div className="mx-auto max-w-7xl">
+                <div className="mx-auto max-w-full">
                     <ToastContainer 
                         position="bottom-right" 
                         autoClose={3000}

@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 // const LeadForm = ({ onClose, onSuccess }) => {
   const LeadForm = ({ onClose, onSuccess, clientType }) => {
@@ -28,12 +28,13 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
   // const [searchError, setSearchError] = useState('');
   // const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
   // const [backendError, setBackendError] = useState("");
-  // const [foundLeads, setFoundLeads] = useState([]); 
+  const [foundLeads, setFoundLeads] = useState([]); 
   // const [isSearching, setIsSearching] = useState(false);
 // new for new/exis
   const [isExistingClientForm, setIsExistingClientForm] = useState(false);
   const [existingClientMobile, setExistingClientMobile] = useState("");
   const [existingClientData, setExistingClientData] = useState(null);
+
 
   const [form, setForm] = useState({
     iLeadpoten_id: "",
@@ -134,8 +135,6 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
   const [searchMobile, setSearchMobile] = useState("");
   const [searchEmail, setSearchEmail] = useState("");
 
-
-
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
     // console.log("--- useEffect Triggered ---");
@@ -149,7 +148,6 @@ useEffect(() => {
     // console.log("Sub Service list:", subServiceList);
     // console.log("City list:", cities);
    
-    // The guard condition is still essential.
     if (existingClientData &&
         Potential.length > 0 &&
         status.length > 0 &&
@@ -253,6 +251,7 @@ useEffect(() => {
 
   // --- END OF NEW LOGIC ---
 
+  // for new/existing client
   const resetForm = () => {
     setForm({
       iLeadpoten_id: "",
@@ -300,15 +299,31 @@ useEffect(() => {
   };
   
   const toggleSame = () => {
-    if (!sameAsPhone) {
-      setForm((prev) => ({
-        ...prev,
-        cwhatsapp: prev.iphone_no,
-        whatsapp_country_code: prev.phone_country_code,
-      }));
-    }
-    setSameAsPhone(!sameAsPhone);
-  };
+    setSameAsPhone(prevSameAsPhone => {
+        const newSameAsPhone = !prevSameAsPhone;
+
+        if (newSameAsPhone) {
+            setForm(currentForm => {
+                const updatedForm = {
+                    ...currentForm,
+                    cwhatsapp: currentForm.iphone_no,
+                    whatsapp_country_code: currentForm.phone_country_code,
+                };
+                return updatedForm;
+            });
+            setSearchWhatsappCountryCode(searchMobileCountryCode);
+        } else {
+            setForm(currentForm => ({
+                ...currentForm,
+                cwhatsapp: "",
+                whatsapp_country_code: "",
+            }));
+            setSearchWhatsappCountryCode("");
+        }
+
+        return newSameAsPhone; 
+    });
+};
 
 const checkExisting = async (fieldName, fieldValue) => {
     if (!fieldValue) return;
@@ -343,30 +358,33 @@ const checkExisting = async (fieldName, fieldValue) => {
 
   // for existing lead form
 
-  const showPopup = (message, duration = 3000) => {
-  setPopupMessage(message);
-  setIsPopupVisible(true);
-  setTimeout(() => setIsPopupVisible(false), duration);
-};
-
 const handleSearchExistingLead = async () => {
+  //  both fields are empty
   if (!searchMobile && !searchEmail) {
-    showPopup("Please enter either mobile number or email to search");
+    setPopupMessage("Please enter either mobile number or email to search");
+    setIsPopupVisible(true);
+    setTimeout(() => setIsPopupVisible(false), 3000);
     return;
   }
 
+  // Validate mobile number 
   if (searchMobile) {
-    const mobileRegex = /^[0-9]{6,15}$/;
-    if (!mobileRegex.test(searchMobile.trim())) {
-      showPopup("Mobile number must contain only 6 to 15 digits");
+    const mobileRegex = /^[0-9]{6,15}$/; 
+    if (!mobileRegex.test(searchMobile)) {
+      setPopupMessage("Mobile number must contain only 6 to 15 digits"); 
+      setIsPopupVisible(true);
+      setTimeout(() => setIsPopupVisible(false), 3000);
       return;
     }
   }
 
+  // Validate email 
   if (searchEmail) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(searchEmail.trim())) {
-      showPopup("Please enter a valid email address");
+    if (!emailRegex.test(searchEmail)) {
+      setPopupMessage("Please enter a valid email address");
+      setIsPopupVisible(true);
+      setTimeout(() => setIsPopupVisible(false), 3000);
       return;
     }
   }
@@ -375,9 +393,13 @@ const handleSearchExistingLead = async () => {
   setFoundLeads([]);
 
   try {
-    const body = searchMobile
-      ? { phonenumber: `${searchMobileCountryCode}${searchMobile.trim()}` }
-      : { email: searchEmail.trim() };
+    let body = {};
+
+    if (searchMobile) {
+      body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
+    } else if (searchEmail) {
+      body = { email: searchEmail };
+    }
 
     const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
       method: "POST",
@@ -389,19 +411,24 @@ const handleSearchExistingLead = async () => {
     });
 
     const resData = await res.json();
+    console.log("Existing lead search response:", resData);
 
     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
       setFoundLeads(resData.data);
+
     } else {
-      showPopup(resData.Message || "No existing lead found.");
+      setPopupMessage(resData.Message || "No existing lead found.");
+      setIsPopupVisible(true);
     }
   } catch (error) {
     console.error("Search error:", error);
-    showPopup("Failed to search for leads. Please try again.");
+    setPopupMessage("Failed to search for leads. Please try again.");
+    setIsPopupVisible(true);
   } finally {
     setLoading(false);
   }
 };
+
 
 const handleSelectLead = async (leadId) => {
   setLoading(true);
@@ -423,7 +450,6 @@ const handleSelectLead = async (leadId) => {
     const resData = await res.json();
 
 if (resData && resData.ilead_id) {
-  // Extract dynamic country code like +91, +1, +971, etc.
   const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
   const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
 
@@ -555,20 +581,34 @@ useEffect(() => {
     fetchCountryCodes();
   }, []);
 
-  useEffect(() => {
-    if (countryCodes.length > 0) {
-      const currentPhoneCode = form.phone_country_code;
-      const currentWhatsappCode = form.whatsapp_country_code;
 
-      if (searchMobileCountryCode !== currentPhoneCode) {
-        setSearchMobileCountryCode(currentPhoneCode);
-      }
+// -- country code filter based on the search input for mobile and whatsapp numbers
 
-      if (searchWhatsappCountryCode !== currentWhatsappCode) {
-        setSearchWhatsappCountryCode(currentWhatsappCode);
-      }
+useEffect(() => {
+    if (searchMobileCountryCode) {
+        const filtered = countryCodes.filter(
+            (cc) =>
+                cc.code.toLowerCase().includes(searchMobileCountryCode.toLowerCase()) ||
+                cc.name.toLowerCase().includes(searchMobileCountryCode.toLowerCase())
+        );
+        setFilteredMobileCountryCodes(filtered);
+    } else {
+        setFilteredMobileCountryCodes(countryCodes);
     }
-  }, [form.phone_country_code, form.whatsapp_country_code, countryCodes, searchMobileCountryCode, searchWhatsappCountryCode]);
+}, [searchMobileCountryCode, countryCodes]);
+
+
+useEffect(() => {
+    const filtered = countryCodes.filter(
+      (cc) =>
+        cc.code.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase()) ||
+        cc.name.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase())
+    );
+    setFilteredWhatsappCountryCodes(filtered);
+}, [searchWhatsappCountryCode, countryCodes]);
+
+//-----------
+
 
   useEffect(() => {
     fetchDropdownData(
@@ -820,9 +860,7 @@ useEffect(() => {
         error = "Lead Name cannot exceed 254 characters";
       }
     }
-    // if (name === "cpincode" && value && !/^\d{10}$/.test(value)) {
-    //   error = "Upto 10-digit pincode allowed";
-    // }
+    
     if (name === "cpincode" && value && !/^\d{6,10}$/.test(value)) {
       error = "Pincode must be between 6 and 10 digits";
     }
@@ -937,7 +975,6 @@ const splitPhoneNumber = (fullPhoneNumber) => {
     };
   }
 
-  // Updated regex to handle an optional space after the country code
   const regexMatch = fullPhoneNumber.match(/^\+(\d{1,4})\s*(.*)/);
 
   if (regexMatch && regexMatch.length === 3) {
@@ -947,7 +984,6 @@ const splitPhoneNumber = (fullPhoneNumber) => {
     };
   }
 
-  // If no space is present, use the original regex as a fallback
   const fallbackMatch = fullPhoneNumber.match(/^\+(\d{1,4})(.*)/);
   if (fallbackMatch && fallbackMatch.length === 3) {
     return {
@@ -957,12 +993,11 @@ const splitPhoneNumber = (fullPhoneNumber) => {
   }
 
   return {
-    countryCode: '+91', // Default country code
+    countryCode: '+91', 
     nationalNumber: fullPhoneNumber,
   };
 };
 
-// State setters lookup for the search inputs, to replace eval()
 const searchSetters = {
   searchMobileCountryCode: setSearchMobileCountryCode,
   searchWhatsappCountryCode: setSearchWhatsappCountryCode,
@@ -991,9 +1026,7 @@ const dropdownOpenSetters = {
 
 const handleChange = (e) => {
     const { name, value } = e.target;
-    let newErrors = {};
 
-    // Handles validation for the existing client mobile field
     if (name === 'existingClientMobile') {
         setExistingClientMobile(value);
         const error = validateField(name, value);
@@ -1001,11 +1034,15 @@ const handleChange = (e) => {
         return;
     }
 
-    // Handles updates for search inputs (like dropdown search)
     if (name.startsWith("search")) {
-        if (searchSetters[name]) {
+        if (name === "searchMobileCountryCode") {
+            setSearchMobileCountryCode(value);
+        } else if (name === "searchWhatsappCountryCode") {
+            setSearchWhatsappCountryCode(value);
+        } else if (searchSetters[name]) {
             searchSetters[name](value);
         }
+
         if (dropdownOpenSetters[name]) {
             dropdownOpenSetters[name](true);
         }
@@ -1013,50 +1050,35 @@ const handleChange = (e) => {
         if (!value) {
             if (name === "searchPotential") setForm(prev => ({ ...prev, iLeadpoten_id: "" }));
             if (name === "searchStatus") setForm(prev => ({ ...prev, ileadstatus_id: "" }));
-            
             if (name === "searchIndustry") {
                 setForm(prev => ({ ...prev, cindustry_id: "", csubindustry_id: "" }));
                 setSearchSubIndustry(""); 
             }
-
             if (name === "searchSource") setForm(prev => ({ ...prev, lead_source_id: "" }));
-            
             if (name === "searchService") {
                 setForm(prev => ({ ...prev, iservice_id: "", isubservice_id: "" }));
                 setSearchSubService("");
             }
-
             if (name === "searchCity") setForm(prev => ({ ...prev, icity: "" }));
-        }
-
-        // Handles country code search inputs
-        if (name === "searchMobileCountryCode") {
-            setForm(prev => ({ ...prev, iphone_country_code: value }));
-        } else if (name === "searchWhatsappCountryCode") {
-            setForm(prev => ({ ...prev, cwhatsapp_country_code: value }));
         }
         return;
     }
 
-    // Main form state update logic
     setForm((prev) => {
         let updated = { ...prev, [name]: value };
 
-        // Handle phone number splitting
         if (name === 'iphone_no') {
             const { countryCode, nationalNumber } = splitPhoneNumber(value);
             if (countryCode) updated.iphone_country_code = countryCode;
             updated.iphone_no = nationalNumber;
         }
 
-        // Handle WhatsApp number splitting
         if (name === 'cwhatsapp' && !sameAsPhone) {
             const { countryCode, nationalNumber } = splitPhoneNumber(value);
             if (countryCode) updated.cwhatsapp_country_code = countryCode;
             updated.cwhatsapp = nationalNumber;
         }
 
-        // Sync WhatsApp with phone if checkbox is checked
         if (sameAsPhone) {
             if (name === "iphone_no") {
                 updated.cwhatsapp = updated.iphone_no;
@@ -1066,7 +1088,6 @@ const handleChange = (e) => {
             }
         }
         
-        // This is where you handle the dependent reset on the primary field change
         if (name === "cindustry_id" && prev.cindustry_id !== value) {
             updated.csubindustry_id = "";
             setSearchSubIndustry("");
@@ -1080,12 +1101,9 @@ const handleChange = (e) => {
         return updated;
     });
 
-    // Validate the field after the main form state is updated
     const error = validateField(name, value);
     setErrors((prev) => ({ ...prev, [name]: error }));
 };
-
-
 
   const handleSelectDropdownItem = (
     fieldName,
@@ -1124,15 +1142,31 @@ const handleChange = (e) => {
     const { name, value } = e.target;
     
     if (name === "searchMobileCountryCode") {
-      // Always keep whatever user typed
-      setSearchMobileCountryCode(value);
-      setForm(prev => ({ ...prev, phone_country_code: value }));
-      setIsMobileCountryCodeDropdownOpen(false);
-    } 
-    else if (name === "searchWhatsappCountryCode") {
-      setSearchWhatsappCountryCode(value);
-      setForm(prev => ({ ...prev, whatsapp_country_code: value }));
-      setIsWhatsappCountryCodeDropdownOpen(false);
+        const selectedCode = countryCodes.find(
+            (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
+        );
+        
+        if (selectedCode) {
+            setSearchMobileCountryCode(selectedCode.code);
+            setForm((prev) => ({ ...prev, phone_country_code: selectedCode.code }));
+        } else {
+             setSearchMobileCountryCode(form.phone_country_code);
+            setForm((prev) => ({ ...prev, phone_country_code: prev.phone_country_code }));
+        }
+        setIsMobileCountryCodeDropdownOpen(false);
+    } else if (name === "searchWhatsappCountryCode") {
+        const selectedCode = countryCodes.find(
+            (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
+        );
+        if (selectedCode) {
+            setSearchWhatsappCountryCode(selectedCode.code);
+            setForm((prev) => ({ ...prev, whatsapp_country_code: selectedCode.code }));
+        } else {
+            
+            setSearchWhatsappCountryCode(form.whatsapp_country_code);
+            setForm((prev) => ({ ...prev, whatsapp_country_code: prev.whatsapp_country_code }));
+        }
+        setIsWhatsappCountryCodeDropdownOpen(false);
     }
 
     else if (name === "searchIndustry") {
@@ -1352,7 +1386,8 @@ const handleSubmit = async (e) => {
           window.location.reload();
         }
       }, 3000);
-    } else {
+    } 
+    else {
       const errorMessage =
         resData.details ||
         resData.message ||
@@ -1365,7 +1400,8 @@ const handleSubmit = async (e) => {
         setIsPopupVisible(false);
       }, 10000);
     }
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Submit error:", error);
     setPopupMessage("Failed to create lead due to an error.");
     setIsPopupVisible(true);
@@ -1438,18 +1474,22 @@ const handleSubmit = async (e) => {
 
      const popupStyle = {
       position: "fixed",               
-      top: "130%",                    
+      top: "180%",                     
       left: "50%",                     
       transform: "translate(-50%, -50%)",
       backgroundColor: "#f9f9f9ff",
       padding: "16px 24px",
       borderRadius: "10px",
       boxShadow: "3px 4px 10px rgba(0, 81, 255, 0.86)",
-      zIndex: 10000,             
+      zIndex: 10000,                   
       minWidth: "300px",
       textAlign: "center",
     };
 
+    const topPopupStyle = {
+  ...popupStyle, 
+  top: "85%",
+};
 
   const closeButtonStyle = {
     background: "none",
@@ -1560,7 +1600,7 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        {/* --- EXISTING LEAD SEARCH SECTION --- */}
+        {/* --- EXISTING LEAD SEARCH--- */}
 {isExistingClientForm && (
     <div className="space-y-6 mb-6">
         <h3 className="text-lg font-semibold mt-6">Search Existing Lead</h3>
@@ -1626,12 +1666,13 @@ const handleSubmit = async (e) => {
   <div>
     <label className="text-sm font-medium">Email Address</label>
     <input
-      type="email"
+      // type="email"
+      type="text"
       name="searchEmail"
       value={searchEmail}
       onChange={(e) => {
         setSearchEmail(e.target.value);
-        if (e.target.value) setSearchMobile(""); // clear mobile if email is entered
+        if (e.target.value) setSearchMobile(""); 
       }}
       placeholder="Enter email address"
       className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -1822,23 +1863,8 @@ const handleSubmit = async (e) => {
             emptyType: "subservice"
           },
         ].map(
-          ({
-            label,
-            ref,
-            inputName,
-            searchValue,
-            setSearch,
-            open,
-            setOpen,
-            list,
-            keyField,
-            displayField,
-            formField,
-            error,
-            disabled = false,
-            required = false,
-            emptyType
-          }) => (
+          ({ label, ref, inputName,searchValue, setSearch, open, setOpen, list,keyField, displayField,
+            formField, error, disabled = false, required = false, emptyType }) => (
             <div className="flex flex-col relative" key={formField} ref={ref}>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {label}
@@ -2102,10 +2128,8 @@ const handleSubmit = async (e) => {
 
           <button
     type="submit"
-    // Use this single, unified condition for the 'disabled' attribute.
     disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
 
-    // Use the exact same condition to control the visual state.
     className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md transition
         ${
             loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key]))
@@ -2150,31 +2174,67 @@ const handleSubmit = async (e) => {
             
         </form>
 
-        
         {isPopupVisible && (
-            <div style={popupStyle}>
-                <span>{popupMessage}</span>
-                {popupMessage.includes("already exists") ? (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
-                        <button
-                            onClick={() => setIsPopupVisible(false)}
-                            style={{ ...buttonStyle, backgroundColor: "#8d8b8bff", borderRadius: "5px" }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={() => {
-                                saveTriggerRef.current = true;
-                                formRef.current?.requestSubmit();
-                                setIsPopupVisible(false);
-                            }}
-                            style={{ ...buttonStyle, backgroundColor: "#34b352ff", borderRadius: "10px" }}
-                        >
-                            Save Anyway
-                        </button>
-                    </div>
-                ) : (
-                  !popupMessage.includes("Please enter either mobile number or email") && (
+  <div
+      style={
+        popupMessage.includes("Please enter either mobile number or email") ||
+        popupMessage.includes("There is no leads found for") ||
+        popupMessage.includes("Mobile number must contain only 6 to 15 digits") ||
+        popupMessage.includes("Please enter a valid email address") ||
+        popupMessage.includes("Lead details not found") ||
+        popupMessage.includes("Failed to load lead details")
+          ? topPopupStyle
+          : popupStyle
+      }
+  //  style={
+  //     popupMessage.includes("already exists") ||
+  //     popupMessage.includes("Lead created successfully!") ||
+  //     popupMessage.includes("A lead with this email or mobile number already exists") // Add this line
+  //       ? popupStyle
+  //       : topPopupStyle
+  //   }
+    
+  >
+    <span>{popupMessage}</span>
+    {popupMessage.includes("already exists") ? (
+      <div
+        style={{
+          marginTop: "10px",
+          display: "flex",
+          gap: "10px",
+          justifyContent: "center",
+        }}
+      >
+        <button
+          onClick={() => setIsPopupVisible(false)}
+          style={{
+            ...buttonStyle,
+            backgroundColor: "#8d8b8bff",
+            borderRadius: "5px",
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            saveTriggerRef.current = true;
+            formRef.current?.requestSubmit();
+            setIsPopupVisible(false);
+          }}
+          style={{
+            ...buttonStyle,
+            backgroundColor: "#34b352ff",
+            borderRadius: "10px",
+          }}
+        >
+          Save Anyway
+        </button>
+      </div>
+    ) : (
+      // !popupMessage.includes(
+      //   "Please enter either mobile number or email"
+      // ) &&
+       (
         <button
           onClick={() => setIsPopupVisible(false)}
           style={closeButtonStyle}
@@ -2183,16 +2243,9 @@ const handleSubmit = async (e) => {
           &times;
         </button>
       )
-                    // <button
-                    //     onClick={() => setIsPopupVisible(false)}
-                    //     style={closeButtonStyle}
-                    //     aria-label="Close popup"
-                    // >
-                    //     &times;
-                    // </button>
-                )}
-            </div>
-        )}
+    )}
+  </div>
+)}
     </div>
 );
 };

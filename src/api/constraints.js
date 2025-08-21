@@ -96,6 +96,7 @@ export const ENDPOINTS = {
   MASTER_SERVICE_POST: `${BASE_URL}/lead-service`,
   MASTER_SERVICE_PUT: `${BASE_URL}/lead-service`,
   MASTER_SERVICE_DELETE: `${BASE_URL}/lead-service`,
+  CURRENCY: `${BASE_URL}/currency`,
 
   MASTER_LABEL_GET: `${BASE_URL}/lead-form-label`,
   MASTER_LABEL_POST: `${BASE_URL}/lead-form-label`,
@@ -107,6 +108,8 @@ export const ENDPOINTS = {
   PROSPECTS_LOST_LEADS: `${BASE_URL}/reports/prospects-lost-leads`,
   STATUS_REMARKS: `${BASE_URL}/lead-status-remark`,
   FIRST_RESPONSE_FOR_LEAD: `${BASE_URL}/reports/first-response-time`,
+  QUOTATION: `${BASE_URL}/quotation`,
+  QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
 
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
 

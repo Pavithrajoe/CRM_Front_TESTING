@@ -88,27 +88,6 @@ export default function MasterModal({
     }));
   };
 
-
-const stripPTags = (html) => {
-  if (!html) return html;
-  
-  // Create a temporary div to parse the HTML
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  
-  // Remove all p tags but keep their content
-  const paragraphs = tempDiv.querySelectorAll('p');
-  paragraphs.forEach(p => {
-    // Replace each p tag with its innerHTML plus a line break
-    p.outerHTML = p.innerHTML + '<br>';
-  });
-  
-  // Convert br tags to newlines and clean up
-  return tempDiv.innerHTML
-    .replace(/<br\s*\/?>/g, '\n')
-    .replace(/\n+/g, '\n') // Remove consecutive newlines
-    .trim();
-};
   const groupedSubItems = useMemo(() => {
     if (!master?.isHierarchical) return [];
     
@@ -418,6 +397,22 @@ const stripPTags = (html) => {
     industryConfig,
     leadSourceConfig,
   ]);
+
+const stripHtml = (html) => {
+  if (!html) return '';
+  // Convert <p> tags to newlines for good formatting
+  let text = html.replace(/<\/?p[^>]*>/gi, '\n');
+  // Replace <br> with newline
+  text = text.replace(/<\/?br[^>]*>/gi, '\n');
+  // Remove any remaining HTML tags
+  text = text.replace(/<[^>]+>/g, '');
+  // Replace multiple newlines with single newline
+  text = text.replace(/\n\s*\n/g, '\n');
+  return text.trim();
+};
+
+
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -1308,6 +1303,7 @@ const stripPTags = (html) => {
             </h3>
             
             {/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
+{/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
 {selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
   <div className="mb-3">
     <h3 className="text-lg font-semibold text-blue-700">
@@ -1322,21 +1318,39 @@ const stripPTags = (html) => {
       })()}
     </h3>
   </div>
-)}{selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Services") && (
-              <div className="mb-3">
-                <h3 className="text-lg font-semibold text-blue-700">
-                  Parent: {(() => {
-                    const parentId = selectedItemForEdit[
-                      master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
-                    ];
-                    const matchedParent = parentOptions.find(
-                      parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
-                    );
-                    return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
-                  })()}
-                </h3>
-              </div>
-            )}
+)}
+{/* {selectedItemForEdit && (
+  (master.title === "Sub-Industries" || master.title === "Sub-Services") ? (
+    <div className="mb-3">
+      <h3 className="text-lg font-semibold text-blue-700">
+        Parent: {(() => {
+          const parentId = selectedItemForEdit[
+            master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
+          ];
+          const matchedParent = parentOptions.find(
+            parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+          );
+          return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
+        })()}
+      </h3>
+    </div>
+  ) : (master.isHierarchical && master.parentMasterConfig) && (
+    <div className="mb-3">
+      <h3 className="text-lg font-semibold text-blue-700">
+        Parent: {(() => {
+          const parentId = selectedItemForEdit[
+            master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
+          ];
+          const matchedParent = parentOptions.find(
+            parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+          );
+          return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
+        })()}
+      </h3>
+    </div>
+  )
+)} */}
+
 
             <form
               onSubmit={(e) => {
@@ -1383,111 +1397,126 @@ const stripPTags = (html) => {
                   </div>
                 )}
 
-              <div className="mb-4">
-                <label
-                  htmlFor={master.payloadKey}
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  {master.modalKey || master.title}:
-                  {(master.title !== "Email Template" ||
-                    master.payloadKey !== "mailBody") && (
-                    <span className="ml-2 text-xs text-green-500">
-                      {formData[master.payloadKey]?.length || 0}/50
-                    </span>
-                  )}
-                </label>
+<div className="mb-4">
+  <label
+    htmlFor={master.payloadKey}
+    className="block text-sm font-medium text-gray-700 mb-1"
+  >
+    {master.modalKey || master.title}:
+    {master.title !== "Email Template" && (
+      <span className="ml-2 text-xs text-green-500">
+        {formData[master.payloadKey]?.length || 0}/50
+      </span>
+    )}
+  </label>
 
-               {master.title === "Email Template" && (
-  <>
-    {/* Subject field */}
-    <div className="mb-4">
-      <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-        Subject:
-      </label>
-      <input
-        id="subject"
-        name="subject"
-        type="text"
-        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-        value={formData.subject || ""}
-        onChange={handleChange}
-        required
-        disabled={isSaving}
-      />
-    </div>
+  {master.title === "Email Template" && master.payloadKey === "mailBody" ? (
+    <>
+      {/* Email Subject Field */}
+      <div className="mb-4">
+        <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+          Subject:
+        </label>
+        <input
+          id="subject"
+          name="subject"
+          type="text"
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+          value={formData.subject || ""}
+          onChange={handleChange}
+          required
+          disabled={isSaving}
+        />
+      </div>
 
-    {/* Body field */}
-    <div className="mb-4">
-      <label htmlFor="mailBody" className="block text-sm font-medium text-gray-700 mb-1">
-        Content:
-      </label>
-      <ReactQuill
-        theme="snow"
-        value={formData.mailBody || ""}
-        onChange={(value) => {
-          // Strip p tags before saving to form state
-          const cleanedValue = stripPTags(value);
-          handleChange({ target: { name: "mailBody", value: cleanedValue } });
-        }}
-        readOnly={isSaving}
-        className="mt-1 mb-4 bg-white"
-        modules={{
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['link'],
-            ['clean']
-          ],
-          clipboard: {
-            matchVisual: false,
+      {/* Email Body Editor */}
+      <div className="mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Content:
+        </label>
+        <ReactQuill
+          theme="snow"
+          value={formData["mailBody"] || ""}
+          onChange={(value) =>
+            handleChange({
+              target: { name: "mailBody", value },
+            })
           }
-        }}
-        formats={[
-          'bold', 'italic', 'underline', 'strike',
-          'link'
-        ]}
-      />
-    </div>
-  </>
-)} : (
-                  <input
-                    id={master.payloadKey}
-                    name={master.payloadKey}
-                    type="text"
-                    className={`mt-1 block w-full border h-50 ${
-                      formData[master.payloadKey]?.length > 0 &&
-                      (formData[master.payloadKey]?.length < 3 ||
-                        formData[master.payloadKey]?.length > 50)
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-                    value={formData[master.payloadKey] || ""}
-                    onChange={handleChange}
-                    required
-                    minLength={3}
-                    maxLength={50}
-                    disabled={isSaving}
-                  />
-                )}
+          readOnly={isSaving}
+          className="mt-1 mb-2 bg-white rounded-md border border-gray-300"
+          modules={{
+            toolbar: [
+              ['bold', 'italic', 'underline', 'strike'],
+              ['link'],
+              ['clean']
+            ],
+            clipboard: {
+              matchVisual: false,
+            }
+          }}
+          formats={[
+            'bold', 'italic', 'underline', 'strike',
+            'link'
+          ]}
+        />
+      </div>
 
-                {(master.title !== "Email Template" ||
-                  master.payloadKey !== "mailBody") &&
-                  formData[master.payloadKey]?.length > 0 && (
-                    <p
-                      className={`mt-1 text-xs ${
-                        formData[master.payloadKey]?.length < 3 ||
-                        formData[master.payloadKey]?.length > 50
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {formData[master.payloadKey]?.length < 3
-                        ? "Minimum 3 characters required"
-                        : formData[master.payloadKey]?.length > 50
-                        ? "Maximum 50 characters exceeded"
-                        : "Valid length"}
-                    </p>
-                  )}
-              </div>
+      {/* Plain Text Preview: Title and Body */}
+      {(formData.subject || formData.mailBody) && (
+        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+          <div className="mb-2">
+            <span className="font-semibold text-gray-700">Title:</span>
+            <span className="ml-2">{formData.subject || ''}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-gray-700">Body:</span>
+            <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+              {stripHtml(formData["mailBody"])}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  ) : (
+    <input
+      id={master.payloadKey}
+      name={master.payloadKey}
+      type="text"
+      className={`mt-1 block w-full border ${
+        formData[master.payloadKey]?.length > 0 &&
+        (formData[master.payloadKey]?.length < 3 ||
+          formData[master.payloadKey]?.length > 50)
+          ? "border-red-500"
+          : "border-gray-300"
+      } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+      value={formData[master.payloadKey] || ""}
+      onChange={handleChange}
+      required
+      minLength={3}
+      maxLength={50}
+      disabled={isSaving}
+    />
+  )}
+
+  {master.title !== "Email Template" &&
+    formData[master.payloadKey]?.length > 0 && (
+      <p
+        className={`mt-1 text-xs ${
+          formData[master.payloadKey]?.length < 3 ||
+          formData[master.payloadKey]?.length > 50
+            ? "text-red-600"
+            : "text-green-600"
+        }`}
+      >
+        {formData[master.payloadKey]?.length < 3
+          ? "Minimum 3 characters required"
+          : formData[master.payloadKey]?.length > 50
+          ? "Maximum 50 characters exceeded"
+          : "Valid length"}
+      </p>
+    )}
+</div>
+
 
               {master.title === "Status" &&
                 shouldFieldBeRendered("orderId", formData) && (

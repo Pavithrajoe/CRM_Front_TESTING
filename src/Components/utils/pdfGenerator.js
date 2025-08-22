@@ -1,289 +1,463 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export const generateQuotationPDF = (quotation, companyInfo, leadData) => {
+// ✅ Clean currency formatter (no weird prefix like ¹)
+const formatCurrency = (amount, currencyData) => {
+  if (!currencyData) return amount.toFixed(2);
+  try {
+    const formatter = new Intl.NumberFormat(currencyData.locale || "en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return formatter.format(amount);
+  } catch (error) {
+    console.error("Currency formatting error:", error);
+    return amount.toFixed(2);
+  }
+};
+
+// Currency converter
+const convertCurrency = (amount, fromCurrency, toCurrency, currencyRates) => {
+  if (fromCurrency === toCurrency) return amount;
+  if (
+    !currencyRates ||
+    !currencyRates[fromCurrency] ||
+    !currencyRates[toCurrency]
+  ) {
+    return amount;
+  }
+  const baseAmount =
+    fromCurrency === "INR" ? amount : amount / currencyRates[fromCurrency].rate;
+  return toCurrency === "INR"
+    ? baseAmount
+    : baseAmount * currencyRates[toCurrency].rate;
+};
+
+// Placeholder logo generator
+const generatePlaceholderLogo = (companyName) => {
+  const initials = companyName
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+  const ctx = canvas.getContext("2d");
+
+  ctx.beginPath();
+  ctx.arc(100, 100, 95, 0, 2 * Math.PI);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+
+  ctx.fillStyle = "#294773";
+  ctx.font = "bold 80px Helvetica";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(initials, 100, 110);
+
+  ctx.strokeStyle = "#294773";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  return canvas.toDataURL("image/png");
+};
+
+// Section header helper
+const addSectionHeader = (doc, text, y, primaryColor, margin) => {
+  doc.setFillColor(...primaryColor);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.rect(margin - 2, y - 6, 180, 8, "F");
+  doc.text(text, margin, y);
+  doc.setTextColor(0, 0, 0);
+  return y + 8;
+};
+
+export const generateQuotationPDF = (
+  quotation,
+  companyInfo,
+  leadData,
+  currencyRates
+) => {
   const doc = new jsPDF();
-  console.log("Generating PDF with quotation data:", quotation);
+  const pageHeight = doc.internal.pageSize.height;
 
-  // Extract data from API response with proper fallbacks
+  const baseCurrency = quotation?.currency_code || "INR";
+  const displayCurrency = quotation?.display_currency || baseCurrency;
+  const currencyData = currencyRates?.[displayCurrency] || {
+    code: "INR",
+    symbol: "₹",
+    locale: "en-IN",
+  };
+
+  // Company info
   const companyName =
-    quotation?.company_name || companyInfo?.company_name || "Company Name";
+    quotation?.company_details?.company_name ||
+    companyInfo?.company_name ||
+    "COMPANY NAME";
+
+  let companyLogo =
+    quotation?.company_details?.company_logo || companyInfo?.company_logo || "";
+  if (!companyLogo || companyLogo.includes("logo-placeholder")) {
+    companyLogo = generatePlaceholderLogo(companyName);
+  }
+
+  const companyDetails = quotation?.company_details || companyInfo || {};
+  const companyEmail = companyDetails.company_email || "";
+  const companyPhone = companyDetails.company_phone || "";
   const companyAddress =
-    quotation?.company_address ||
-    companyInfo?.company_address ||
-    "198, 1st Floor, VKV Complex, Rammagar, Nehru Street, Gandhipuram, Coimbatore - 641009";
-  const companyPhone = quotation?.company_phone || companyInfo?.company_phone;
-  const companyGstNo =
-    quotation?.company_gst_no || companyInfo?.company_gst_no || "";
-  // const companyEmail =
-  //   quotation?.company_email ||
-  //   companyInfo?.company_email ||
-  //   "info@bizbrandbooster.com";
-  // const website =
-  //   quotation?.company_website ||
-  //   companyInfo?.website ||
-  //   "www.bizbrandbooster.com";
+    [
+      companyDetails.company_address,
+      companyDetails.company_address2,
+      companyDetails.company_address3,
+    ]
+      .filter(Boolean)
+      .join(", ") || "";
+  const companyGstNo = companyDetails.company_gst_no || "";
+  // ✅ Expanded fallback for CIN
+  const companyCinNo =
+    companyDetails.company_cin_no ||
+    companyDetails.cin_no ||
+    companyDetails.CIN ||
+    companyInfo?.company_cin_no ||
+    companyInfo?.cin_no ||
+    companyInfo?.CIN ||
+    "";
+  const website = companyDetails.company_website || "-";
 
-  // Use the presenter from the API response or fallback
   const presentedBy =
-    quotation?.created_by_user_name ||
-    companyInfo?.cFull_name ||
-    "Sales Representative";
+    quotation?.created_by_user_name || companyInfo?.cFull_name || "Sales Rep";
 
-  // Extract lead data from API response
+  // Client info
   const leadName =
     quotation?.lead_name ||
     `${leadData?.cFirstName || ""} ${leadData?.cLastName || ""}`.trim() ||
     "Client Name";
   const leadCompany =
-    quotation?.lead_organization ||
-    leadData?.lead_organization ||
-    "Company Name";
+    quotation?.lead_organization || leadData?.cCompany || "Company Name";
   const leadAddress =
-    quotation?.lead_address || leadData?.lead_address || "Company Address";
+    quotation?.lead_address || leadData?.cAddress || "Client Address";
   const leadPhone = quotation?.lead_phone || leadData?.cPhone || "Phone Number";
-  const leadEmail = quotation?.lead_email || leadData?.cEmail || "Email";
+  const leadWebsite = quotation?.lead_website || leadData?.cWebsite || "-";
 
-  const quoteNumber = quotation?.cQuote_number || "QTN-000-000000-000";
+  // Date formatter
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "N/A";
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+  };
+
+  const quoteNumber =
+    quotation?.cQuote_number || quotation?.quote_number || "QTN-000-000000-000";
   const quoteDate = quotation?.dCreated_date
-    ? new Date(quotation.dCreated_date).toLocaleDateString()
-    : new Date().toLocaleDateString();
+    ? formatDate(quotation.dCreated_date)
+    : formatDate(new Date());
   const validUntil = quotation?.dValid_until
-    ? new Date(quotation.dValid_until).toLocaleDateString()
-    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
-  const terms = quotation?.cTerms || "Standard payment terms apply.";
+    ? formatDate(quotation.dValid_until)
+    : formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  const terms =
+    quotation?.cTerms || quotation?.terms || "Standard payment terms apply.";
 
   const margin = 15;
   let yPos = margin;
+  const primaryColor = [41, 71, 115];
+  const lightBgColor = [248, 249, 250];
 
-  // Company Header - Left aligned
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(companyName, margin, yPos);
-  yPos += 8;
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-
-  // Split address into multiple lines if needed
-  const addressLines = doc.splitTextToSize(companyAddress, 80);
-  addressLines.forEach((line) => {
-    doc.text(line, margin, yPos);
-    yPos += 5;
-  });
-
-  doc.text(`Mobile: ${companyPhone}`, margin, yPos);
-  yPos += 5;
-  // doc.text(`Email: ${companyEmail}`, margin, yPos);
-  // yPos += 5;
-  // doc.text(`Website: ${website}`, margin, yPos);
-  // yPos += 5;
-
-  if (companyGstNo) {
-    doc.text(`GST: ${companyGstNo}`, margin, yPos);
-    yPos += 5;
+  // ===== HEADER =====
+  if (companyLogo) {
+    try {
+      doc.addImage(companyLogo, "PNG", margin, 15, 30, 30);
+    } catch (error) {
+      console.error("Error adding logo:", error);
+    }
   }
 
-  yPos += 5;
+  doc
+    .setFontSize(18)
+    .setFont("helvetica", "bold")
+    .setTextColor(...primaryColor);
+  doc.text(companyName.toUpperCase(), 105, 22, { align: "center" });
 
-  // Quotation details table - Right aligned
-  const quoteDetailsX = 140;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("QUOTATION", quoteDetailsX, margin);
+  doc.setFontSize(9).setFont("helvetica", "normal").setTextColor(100, 100, 100);
+  let headerY = 40;
+  if (companyAddress) {
+    const addrLines = doc.splitTextToSize(companyAddress, 180);
+    addrLines.forEach((line) => {
+      doc.text(line, margin, headerY);
+      headerY += 5;
+    });
+  }
+  if (companyPhone) {
+    doc.text(`Phone: ${companyPhone}`, margin, headerY);
+    headerY += 5;
+  }
+  if (companyEmail) {
+    doc.text(`Email: ${companyEmail}`, margin, headerY);
+    headerY += 5;
+  }
+  if (website && website !== "-") {
+    doc.text(`Website: ${website}`, margin, headerY);
+    headerY += 5;
+  }
+  if (companyGstNo) {
+    doc.text(`GST: ${companyGstNo}`, margin, headerY);
+    headerY += 5;
+  }
+  if (companyCinNo) {
+    doc.text(`CIN: ${companyCinNo}`, margin, headerY);
+    headerY += 5;
+  }
 
-  doc.setFont("helvetica", "normal");
-  doc.text(`Quotation No: ${quoteNumber}`, quoteDetailsX, margin + 10);
-  doc.text(`Date: ${quoteDate}`, quoteDetailsX, margin + 15);
-  doc.text(`Valid Until: ${validUntil}`, quoteDetailsX, margin + 20);
+  // Quotation details box
+  const qBoxX = 200 - margin - 80;
+  const qBoxY = 35;
+  doc.setFillColor(...lightBgColor);
+  doc.roundedRect(qBoxX, qBoxY, 80, 35, 2, 2, "F");
+  doc
+    .setFontSize(14)
+    .setFont("helvetica", "bold")
+    .setTextColor(...primaryColor);
+  doc.text("QUOTATION", qBoxX + 40, qBoxY + 10, { align: "center" });
+  doc.setFontSize(9).setFont("helvetica", "normal").setTextColor(0, 0, 0);
+  doc.text(`No: ${quoteNumber}`, qBoxX + 5, qBoxY + 18);
+  doc.text(`Date: ${quoteDate}`, qBoxX + 5, qBoxY + 23);
+  doc.text(`Valid Until: ${validUntil}`, qBoxX + 5, qBoxY + 28);
+  doc.text(`Currency: ${displayCurrency}`, qBoxX + 5, qBoxY + 33);
 
-  yPos = Math.max(yPos, margin + 25);
+  yPos = Math.max(headerY, 70) + 10;
 
-  // Horizontal line separator
-  doc.line(margin, yPos, 200 - margin, yPos);
-  yPos += 10;
+  // ===== CLIENT DETAILS =====
+  yPos = addSectionHeader(doc, "CLIENT DETAILS", yPos, primaryColor, margin);
+  yPos += 4;
+  doc.setFontSize(10).setFont("helvetica", "normal").setTextColor(0, 0, 0);
+  doc.setFillColor(...lightBgColor);
+  doc.rect(margin, yPos - 4, 180, 35, "F");
+  doc.text(`Name: ${leadName}`, margin + 5, yPos);
+  yPos += 7;
+  doc.text(`Company: ${leadCompany}`, margin + 5, yPos);
+  yPos += 7;
+  doc.text(`Address: ${leadAddress}`, margin + 5, yPos);
+  yPos += 7;
+  doc.text(`Phone: ${leadPhone}`, margin + 5, yPos);
+  yPos += 7;
+  doc.text(`Website: ${leadWebsite}`, margin + 5, yPos);
+  yPos += 12;
 
-  // Client Details Section
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("CLIENT DETAILS", margin, yPos);
-  yPos += 8;
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Name: ${leadName}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Company: ${leadCompany}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Address: ${leadAddress}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Phone: ${leadPhone}`, margin, yPos);
-  yPos += 5;
-  doc.text(`Email: ${leadEmail}`, margin, yPos);
-  yPos += 15;
-
-  // Service Description header
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("SERVICE DESCRIPTION", margin, yPos);
-  yPos += 10;
-
-  // Prepare table data from API response
-  const headers = [["SERVICE", "QUANTITY", "UNIT PRICE", "TOTAL"]];
+  // ===== SERVICES =====
+  yPos = addSectionHeader(
+    doc,
+    "SERVICE DESCRIPTION",
+    yPos,
+    primaryColor,
+    margin
+  );
+  yPos += 4;
+  const headers = [
+    [
+      "Service",
+      "Duration",
+      "Units/Month",
+      "Total Units",
+      "Unit Price",
+      "Total",
+    ],
+  ];
   const tableData = [];
-
-  if (quotation.services_summary && quotation.services_summary.length > 0) {
-    quotation.services_summary.forEach((service) => {
+  const services =
+    quotation?.services_summary ||
+    quotation?.services ||
+    quotation?.items ||
+    [];
+  if (services.length > 0) {
+    services.forEach((service) => {
+      const unitPrice =
+        parseFloat(service.price || service.unit_price || service.rate || 0) ||
+        0;
+      const quantity = parseFloat(service.quantity || service.qty || 1) || 1;
+      const totalUnits = service.total_units || quantity;
+      const duration = service.duration || service.period || "-";
+      const unitsPerMonth = service.units_per_month || "-";
+      const serviceName = service.name || service.description || "Service";
+      const convertedUnitPrice = convertCurrency(
+        unitPrice,
+        baseCurrency,
+        displayCurrency,
+        currencyRates
+      );
+      const total = convertedUnitPrice * totalUnits;
       tableData.push([
-        service.name || "Service",
-        "1", // Default quantity as it's not in the API response
-        `₹${service.price || "0.00"}`,
-        `₹${service.price || "0.00"}`,
+        serviceName,
+        duration,
+        unitsPerMonth.toString(),
+        totalUnits.toString(),
+        formatCurrency(convertedUnitPrice, currencyData),
+        formatCurrency(total, currencyData),
       ]);
     });
   } else {
-    // Fallback if no services in response
-    tableData.push(["No services listed", "-", "-", "-"]);
+    tableData.push(["No services listed", "-", "-", "-", "-", "-"]);
   }
-
-  // Create table with autoTable
   autoTable(doc, {
     startY: yPos,
     head: headers,
     body: tableData,
     theme: "grid",
-    headStyles: {
-      fillColor: [41, 128, 185],
-      textColor: 255,
-      fontStyle: "bold",
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: primaryColor, textColor: 255, fontStyle: "bold" },
+    columnStyles: {
+      0: { cellWidth: 50 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 30 },
     },
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-    },
-    margin: { left: margin, right: margin },
-    tableWidth: "auto",
   });
 
-  // Update position after table
   yPos = doc.lastAutoTable.finalY + 10;
 
-  // Calculate totals
-  const subTotal =
-    quotation.fTotal_amount ||
-    quotation.services_summary?.reduce(
-      (sum, service) => sum + (parseFloat(service.price) || 0),
-      0
-    ) ||
-    0;
-
-  const cgstPercent = quotation.fCgst_percent || 9;
-  const sgstPercent = quotation.fSgst_percent || 9;
-  const cgstAmount = subTotal * (cgstPercent / 100);
-  const sgstAmount = subTotal * (sgstPercent / 100);
-  const totalAmount = subTotal + cgstAmount + sgstAmount;
-
-  // Totals table
-  const totalsX = 120;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-
-  doc.text("Sub Total", totalsX, yPos);
-  doc.text(`₹${subTotal.toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 6;
-
-  doc.text("Net Amount", totalsX, yPos);
-  doc.text(`₹${subTotal.toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 6;
-
-  doc.text(`CGST ${cgstPercent}%`, totalsX, yPos);
-  doc.text(`₹${cgstAmount.toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 6;
-
-  doc.text(`SGST ${sgstPercent}%`, totalsX, yPos);
-  doc.text(`₹${sgstAmount.toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 6;
-
-  doc.text("Total Tax", totalsX, yPos);
-  doc.text(`₹${(cgstAmount + sgstAmount).toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 6;
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Total Amount", totalsX, yPos);
-  doc.text(`₹${totalAmount.toFixed(2)}`, totalsX + 50, yPos);
-  yPos += 15;
-
-  // Project Includes
-  if (quotation.cProject_includes) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("Project Includes:", margin, yPos);
-    yPos += 6;
-
-    doc.setFont("helvetica", "normal");
-    const includesLines = doc.splitTextToSize(quotation.cProject_includes, 180);
-    includesLines.forEach((line) => {
-      doc.text(line, margin, yPos);
-      yPos += 5;
-    });
-    yPos += 5;
+  // ==== PAGE BREAK before totals ====
+  if (yPos > pageHeight - 60) {
+    doc.addPage();
+    yPos = 20;
   }
 
-  // Payment Terms
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Payment Terms:", margin, yPos);
-  yPos += 6;
+  // ===== TOTALS =====
+  const subTotalINR = services.reduce((sum, s) => {
+    const u = parseFloat(s.price || s.unit_price || s.rate || 0) || 0;
+    const q = parseFloat(s.quantity || s.qty || 1) || 1;
+    const t = s.total_units || q;
+    return sum + u * t;
+  }, 0);
+  const cgstPercent = parseFloat(quotation?.fCgst_percent || 9);
+  const sgstPercent = parseFloat(quotation?.fSgst_percent || 9);
+  const cgstAmountINR = subTotalINR * (cgstPercent / 100);
+  const sgstAmountINR = subTotalINR * (sgstPercent / 100);
+  const totalAmountINR = subTotalINR + cgstAmountINR + sgstAmountINR;
+  const subTotal = convertCurrency(
+    subTotalINR,
+    baseCurrency,
+    displayCurrency,
+    currencyRates
+  );
+  const cgstAmount = convertCurrency(
+    cgstAmountINR,
+    baseCurrency,
+    displayCurrency,
+    currencyRates
+  );
+  const sgstAmount = convertCurrency(
+    sgstAmountINR,
+    baseCurrency,
+    displayCurrency,
+    currencyRates
+  );
+  const totalAmount = convertCurrency(
+    totalAmountINR,
+    baseCurrency,
+    displayCurrency,
+    currencyRates
+  );
 
-  doc.setFont("helvetica", "normal");
-  const paymentTerms =
-    quotation.cPayment_terms ||
-    `100% Advance Payment (₹${subTotal.toFixed(2)} + ₹${(
-      cgstAmount + sgstAmount
-    ).toFixed(2)} GST = ₹${totalAmount.toFixed(2)})`;
-  const paymentLines = doc.splitTextToSize(paymentTerms, 180);
-  paymentLines.forEach((line) => {
-    doc.text(line, margin, yPos);
+  doc.setFontSize(10).setFont("helvetica", "normal").setTextColor(0, 0, 0);
+  let tx = 200 - margin - 80;
+  doc.text("Sub Total:", tx, yPos);
+  doc.text(formatCurrency(subTotal, currencyData), tx + 70, yPos, {
+    align: "right",
+  });
+  yPos += 6;
+  doc.text(`CGST ${cgstPercent}%:`, tx, yPos);
+  doc.text(formatCurrency(cgstAmount, currencyData), tx + 70, yPos, {
+    align: "right",
+  });
+  yPos += 6;
+  doc.text(`SGST ${sgstPercent}%:`, tx, yPos);
+  doc.text(formatCurrency(sgstAmount, currencyData), tx + 70, yPos, {
+    align: "right",
+  });
+  yPos += 6;
+  doc.setFont("helvetica", "bold").setTextColor(...primaryColor);
+  doc.text("Total Amount:", tx, yPos);
+  doc.text(formatCurrency(totalAmount, currencyData), tx + 70, yPos, {
+    align: "right",
+  });
+
+  yPos += 15;
+
+  // ==== PAGE BREAK before terms ====
+  if (yPos > pageHeight - 60) {
+    doc.addPage();
+    yPos = 20;
+  }
+
+  // ===== TERMS =====
+  yPos = addSectionHeader(
+    doc,
+    "TERMS & CONDITIONS",
+    yPos,
+    primaryColor,
+    margin
+  );
+  yPos += 4;
+  const termsLines = doc.splitTextToSize(terms, 180);
+  doc.setFont("helvetica", "normal").setTextColor(0, 0, 0);
+  termsLines.forEach((line) => {
+    doc.text(line, margin + 5, yPos);
     yPos += 5;
   });
   yPos += 10;
 
-  // Terms & Conditions
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Terms & Conditions:", margin, yPos);
-  yPos += 6;
+  // ==== PAGE BREAK before final total ====
+  if (yPos > pageHeight - 40) {
+    doc.addPage();
+    yPos = 20;
+  }
 
-  doc.setFont("helvetica", "normal");
-  const termsLines = doc.splitTextToSize(terms, 180);
-  termsLines.forEach((line) => {
-    doc.text(line, margin, yPos);
-    yPos += 5;
-  });
-
-  // Footer - Presented by and Thank you message
-  yPos = 270;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "italic");
-  doc.text(`Presented by: ${presentedBy}`, margin, yPos);
-  yPos += 7;
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("Thank You For Your Business!", 105, yPos, { align: "center" });
-
-  // Page number and date
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
+  // ===== FINAL TOTAL =====
+  doc.setFillColor(...primaryColor);
+  doc.rect(margin, yPos, 180, 10, "F");
+  doc.setFontSize(12).setFont("helvetica", "bold").setTextColor(255, 255, 255);
+  doc.text("TOTAL AMOUNT PAYABLE:", margin + 5, yPos + 7);
   doc.text(
-    `Quotation: ${quoteNumber} | Valid Until: ${validUntil} | Date: ${quoteDate}`,
-    105,
-    285,
-    {
-      align: "center",
-    }
+    formatCurrency(totalAmount, currencyData),
+    200 - margin - 5,
+    yPos + 7,
+    { align: "right" }
   );
 
-  // Save PDF with quote number
+  yPos += 20;
+  doc
+    .setFontSize(10)
+    .setFont("helvetica", "italic")
+    .setTextColor(100, 100, 100);
+  doc.text(`Presented by: ${presentedBy}`, margin, yPos);
+  yPos += 7;
+  doc
+    .setFontSize(11)
+    .setFont("helvetica", "bold")
+    .setTextColor(...primaryColor);
+  doc.text("Thank You For Your Business!", 105, yPos, { align: "center" });
+
+  // ===== FOOTER (always at bottom) =====
+  doc.setFontSize(8).setTextColor(100, 100, 100);
+  doc.text(
+    `Quotation: ${quoteNumber} | Valid Until: ${validUntil} | Date: ${quoteDate} | Currency: ${displayCurrency}`,
+    105,
+    pageHeight - 10,
+    { align: "center" }
+  );
+
   doc.save(`Quotation-${quoteNumber}.pdf`);
 };

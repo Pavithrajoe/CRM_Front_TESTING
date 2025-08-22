@@ -313,7 +313,7 @@ const QuotationForm = ({
         <form onSubmit={handleSubmit} id="quotation-form">
           <div className="space-y-4 py-2">
             {/* Company Details Section */}
-            <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
+            {/* <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
               <Typography variant="h6" gutterBottom>
                 Company Details
               </Typography>
@@ -366,25 +366,25 @@ const QuotationForm = ({
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth margin="dense">
                     <InputLabel>Currency</InputLabel>
-                    <Select
-                      value={formData.icurrency_id}
-                      label="Currency"
-                      onChange={(e) => setFormData({ ...formData, icurrency_id: e.target.value })}
-                      required
-                    >
-                      {currencies.map((currency) => (
-                        <MenuItem key={currency.icurrency_id} value={currency.icurrency_id}>
-                          {currency.currency_code} ({currency.symbol})
-                        </MenuItem>
-                      ))}
-                    </Select>
+                   <Select
+  value={formData.icurrency_id}
+  label="Currency"
+  onChange={(e) => setFormData({ ...formData, icurrency_id: e.target.value })}
+  required
+>
+  {currencies.map((currency) => (
+    <MenuItem key={currency.icurrency_id} value={currency.icurrency_id}>
+      {currency.currency_code} ({currency.symbol})
+    </MenuItem>
+  ))}
+</Select>
                   </FormControl>
                 </Grid>
               </Grid>
-            </Box>
+            </Box> */}
 
             {/* Lead Details Section */}
-            <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
+            {/* <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
               <Typography variant="h6" gutterBottom>
                 Client Details
               </Typography>
@@ -426,7 +426,7 @@ const QuotationForm = ({
                   />
                 </Grid>
               </Grid>
-            </Box>
+            </Box> */}
 
             {/* Quotation Details */}
             <Grid container spacing={2} mb={3}>
@@ -469,7 +469,7 @@ const QuotationForm = ({
                 {formData.services.map((service, index) => (
                   <ListItem key={index} className="px-0 pt-0 pb-2">
                     <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
+                      <Grid item xs={18} sm={6}>
                         <FormControl fullWidth>
                           <InputLabel>Service</InputLabel>
                           <Select

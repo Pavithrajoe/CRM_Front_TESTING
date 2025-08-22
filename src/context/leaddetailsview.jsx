@@ -17,6 +17,8 @@ import {
   CardContent,
   Grid,
   Chip,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
@@ -28,11 +30,11 @@ import ActionCard from "../Components/common/ActrionCard";
 import QuotationList from "../Components/common/QuotationForm";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
-import { MdEmail } from "react-icons/md";
+import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
-import { FaFilePdf, FaEye, FaEdit } from 'react-icons/fa';
+import { FaFilePdf, FaEye, FaEdit, FaDownload } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 
 const LeadDetailView = () => {
@@ -58,8 +60,6 @@ const LeadDetailView = () => {
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
   const [ccRecipients, setCcRecipients] = useState("");
-  // const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-  // const [remarkData, setRemarkData] = useState({ remark: "", projectValue: "" });
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [isSendingMail, setIsSendingMail] = useState(false);
@@ -70,6 +70,7 @@ const LeadDetailView = () => {
   const [showQuotationsList, setShowQuotationsList] = useState(false);
   const [quotationsLoading, setQuotationsLoading] = useState(false);
   const [companyInfo, setCompanyInfo] = useState(null);
+  const [expandedQuotation, setExpandedQuotation] = useState(null);
 
   // Derived state
   const isLeadActive =
@@ -112,11 +113,6 @@ const LeadDetailView = () => {
       // Extract and set user details for display
       setLoggedInUserName(userData.cFull_name || userData.fullName || "User");
       setLoggedInCompanyName(userData.company_name || userData.organization || "Your Company");
-
-      // Extract and set website access status
-      // const isWebsiteActive = userData.website_access === true;
-      // setWebsiteActive(isWebsiteActive);
-      // localStorage.setItem('website_access', isWebsiteActive); // Optional: Save for other components
       
       console.log("Extracted company info:", companyData);
       console.log("Extracted user details:", userData);
@@ -181,37 +177,6 @@ const LeadDetailView = () => {
 
   const handleLostClick = () => setLeadLostDescriptionTrue(true);
 
-//  // Function to download PDF
-//   const handleDownloadPdf = async (quotation) => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const response = await fetch(`${ENDPOINTS.QUOTATION_PDF}/${quotation.iQuotation_id}`, {
-//         method: "GET",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to download PDF");
-//       }
-
-//       const blob = await response.blob();
-//       const url = window.URL.createObjectURL(blob);
-//       const a = document.createElement('a');
-//       a.href = url;
-//       a.download = `Quotation-${quotation.cQuote_number}.pdf`;
-//       document.body.appendChild(a);
-//       a.click();
-//       window.URL.revokeObjectURL(url);
-//       document.body.removeChild(a);
-      
-//       showPopup('Success', `PDF downloaded successfully!`, 'success');
-//     } catch (error) {
-//       console.error("Error downloading PDF:", error);
-//       showPopup('Error', error.message || 'Failed to download PDF', 'error');
-//     }
-//   };
   const handleDownloadPdf = async (quotation) => {
     try {
       // Check if we have all required data
@@ -230,7 +195,18 @@ const LeadDetailView = () => {
     }
   };
 
-  
+  const toggleQuotationExpand = (quotationId, e) => {
+    // Stop event propagation to prevent the parent click handler from triggering
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (expandedQuotation === quotationId) {
+      setExpandedQuotation(null);
+    } else {
+      setExpandedQuotation(quotationId);
+    }
+  };
 
   const lostLead = async () => {
     try {
@@ -393,16 +369,13 @@ const LeadDetailView = () => {
       const data = await response.json();
       console.log("quotations data:", data);
       setQuotations(data.data || []);
-      setShowQuotationsList(true);
     } catch (error) {
       console.error("Error fetching quotations:", error);
-      showPopup("Error", error.message || "Failed to fetch quotations", "error");
+      // showPopup("Error", error.message || "Failed to fetch quotations", "error");
     } finally {
       setQuotationsLoading(false);
     }
   };
-
- 
 
   const fetchLostReasons = async () => {
     try {
@@ -526,7 +499,7 @@ const LeadDetailView = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch templates");
+      if (!response.ok极市汇仪) throw new Error("Failed to fetch templates");
 
       const data = await response.json();
       setTemplates(data.data || []);
@@ -542,7 +515,7 @@ const LeadDetailView = () => {
     if (isMailOpen) {
       fetchTemplates();
     }
-  }, [isMailOpen]);
+  },[isMailOpen]);
 
   const applyTemplate = (template) => {
     setMailSubject(template.mailTitle);
@@ -572,7 +545,7 @@ const LeadDetailView = () => {
       </div>
 
       {/* Right Column: Status Bar, Tabs, and Content */}
-      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+      <div className="w-full lg:w-3极市汇仪/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
         <StatusBar
           leadId={leadId}
           leadData={leadData}
@@ -580,63 +553,21 @@ const LeadDetailView = () => {
           isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
 
-        {/* Display Quotations if any */}
+        {/* Compact Quotation Section - REMOVED the clickable box that opens popup */}
         {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
           <Box className="mb-4">
-            <Typography variant="h6" gutterBottom className="flex items-center">
-              <FaEye className="mr-2" /> Quotations
-            </Typography>
-            <Grid container spacing={2}>
-              {quotations.map((quotation) => (
-                <Grid item xs={12} md={6} key={quotation.iQuotation_id}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <div className="flex justify-between items-start mb-2">
-                        <Typography variant="h6" component="h3">
-                          {quotation.cQuote_number}
-                        </Typography>
-                        <Chip 
-                          label={`$${quotation.fTotal_amount.toFixed(2)}`} 
-                          color="primary" 
-                          size="small" 
-                        />
-                      </div>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="body2" paragraph>
-                        {quotation.cTerms}
-                      </Typography>
-                      <div className="flex justify-between mt-3">
-                        <Button
-                          size="small"
-                          startIcon={<FaFilePdf />}
-                          onClick={() => handleDownloadPdf(quotation)}
-                          variant="outlined"
-                        >
-                          Download PDF
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            // You can implement view details functionality here
-                            showPopup('Info', `Viewing details for ${quotation.cQuote_number}`, 'info');
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+            <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
+              <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
+                {/* <MdExpandMore className="mr-2" /> */}
+                Quotation Available!
+              </Typography>
+            </div>
           </Box>
         )}
 
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p极市汇仪-1 w-full sm:w-auto">
             {["Activity", "Task", "Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
@@ -653,13 +584,13 @@ const LeadDetailView = () => {
           </div>
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-            {/* Quotation Button (only visible when Won) */}
+            {/* Quotation Button (only visible when Won) - This is the only button that opens the popup */}
             {(isWon || immediateWonStatus || leadData?.bisConverted) && (
               <button
                 onClick={() => setShowQuotationsList(true)}
                 className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
               >
-                <FaEye className="mr-1" /> View All Quotations
+                <FaEye className="mr-1" /> View Quotations
               </button>
             )}
             
@@ -717,18 +648,28 @@ const LeadDetailView = () => {
         leadData={leadData}
         companyInfo={companyInfo}
         quotations={quotations}
- 
         onQuotationCreated={handleQuotationCreated}
       />
 
       {/* Quotations List Dialog */}
-      <Dialog open={showQuotationsList} onClose={() => setShowQuotationsList(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <div className="flex items-center">
-            <FaEye className="mr-2" /> All Quotations for Lead
+      <Dialog 
+        open={showQuotationsList} 
+        onClose={() => setShowQuotationsList(false)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle className="bg-blue-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-blue-700">
+              <FaEye className="mr-2" /> Your Quotations
+            </div>
+            <IconButton onClick={() => setShowQuotationsList(false)} size="small">
+              {/* Close icon */}
+              <MdExpandLess />
+            </IconButton>
           </div>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers className="bg-gray-50">
           {quotationsLoading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height={200}>
               <CircularProgress />
@@ -736,43 +677,58 @@ const LeadDetailView = () => {
           ) : quotations.length > 0 ? (
             <List>
               {quotations.map((quotation) => (
-                <ListItem key={quotation.iQuotation_id} disablePadding className="border-b last:border-0 py-3">
-                  <ListItemText
-                    primary={
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold">{quotation.cQuote_number}</span>
-                        <Chip 
-                          label={`$${quotation.fTotal_amount.toFixed(2)}`} 
-                          color="primary" 
-                          size="small" 
-                        />
-                      </div>
-                    }
-                    secondary={
-                      <div>
-                        <div>Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}</div>
-                        <div className="mt-1">{quotation.cTerms}</div>
-                      </div>
-                    }
-                  />
-                  <Button
-                    startIcon={<FaFilePdf />}
-                    onClick={() => handleDownloadPdf(quotation)}
-                    variant="outlined"
-                    className="ml-2"
-                    size="small"
+                <div key={quotation.iQuotation_id} className="bg-white rounded-lg shadow-sm border mb-3">
+                  <ListItem 
+                    className="border-b"
                   >
-                    PDF
-                  </Button>
-                </ListItem>
+                    <ListItemText
+                      primary={<span className="font-semibold text-blue-700">{quotation.cQuote_number}</span>}
+                      secondary={<div className="text-xs text-gray-600">Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}</div>}
+                    />
+                    <div className="flex items-center">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadPdf(quotation);
+                        }}
+                        title="Download PDF"
+                      >
+                        <FaDownload />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
+                      >
+                        {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
+                      </IconButton>
+                    </div>
+                  </ListItem>
+                  <Collapse in={expandedQuotation === quotation.iQuotation_id} timeout="auto" unmountOnExit>
+                    {/* All quotation details go here */}
+                    <div className="p-4">
+                      <Typography variant="body2" className="mb-3 text-gray-700">
+                        {quotation.cTerms}
+                      </Typography>
+                      <Typography variant="body2" className="mb-3 text-gray-700">
+                        Amount: ${quotation.fTotal_amount.toFixed(2)}
+                      </Typography>
+                      {/* ...any other details needed... */}
+                    </div>
+                  </Collapse>
+                </div>
               ))}
             </List>
           ) : (
-            <p className="text-center text-gray-500 py-4">No quotations found for this lead.</p>
+            <div className="text-center py-8 text-gray-500">
+              No quotations found for this lead.
+            </div>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowQuotationsList(false)}>Close</Button>
+        <DialogActions className="bg-gray-100">
+          <Button onClick={() => setShowQuotationsList(false)} variant="outlined">
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
       
@@ -856,7 +812,7 @@ const LeadDetailView = () => {
                 onClick={() => setIsMailOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 极市汇仪24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -865,7 +821,7 @@ const LeadDetailView = () => {
             <div className="flex flex-col md:flex-row gap-4 flex-grow">
               {/* Templates Section */}
               <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-black-200">
-                <div className="flex items-center justify-between mb-4">
+                <div className="极市汇仪flex items-center justify-between mb-4">
                   <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
                 </div>
 
@@ -876,7 +832,7 @@ const LeadDetailView = () => {
                 ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-blue-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 极市汇仪L7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 极市汇仪L7.89 5.26a2 2 0 002.22 0L21 8M5 极市汇仪19h14a2 2 0 002-2极市汇仪V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <p>No templates available</p>
                   </div>
@@ -923,7 +879,7 @@ const LeadDetailView = () => {
                           type="email"
                           className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                           placeholder="example@email.com"
-                          value={sentTo}
+                          value极市汇仪={sentTo}
                           onChange={(e) => setSentTo(e.target.value)}
                           required
                         />
@@ -936,7 +892,7 @@ const LeadDetailView = () => {
                       <div className="relative">
                         <input
                           type="text"
-                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                          className="w-full bg-white/70 border border-gray极市汇仪-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                           placeholder="cc@example.com (separate multiple with commas)"
                           value={ccRecipients}
                           onChange={(e) => setCcRecipients(e.target.value)}
@@ -946,7 +902,7 @@ const LeadDetailView = () => {
 
                     {/* Subject Field */}
                     <div>
-                      <label className="block text-sm font-medium text极市汇仪-gray-800 mb-1">Subject</label>
+                      <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
                       <input
                         type="text"
                         className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
@@ -960,8 +916,8 @@ const LeadDetailView = () => {
 
                   {/* Message Editor */}
                   <div className="flex-grow flex flex-col">
-                    <label className="block text-sm font-medium text-gray-800极市汇仪 mb-1">Message</label>
-                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex极市汇仪-grow shadow-inner">
+                    <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
+                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
                       <ReactQuill
                         theme="snow"
                         value={mailContent}
@@ -985,11 +941,11 @@ const LeadDetailView = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-end space-x-3 pt-2">
+                  <div className="flex justify-end space极市汇仪-x-3 pt-2">
                     <button
                       type="button"
                       onClick={() => setIsMailOpen(false)}
-                      className极市汇仪="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
+                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
                     >
                       Cancel
                     </button>

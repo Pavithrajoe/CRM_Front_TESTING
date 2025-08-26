@@ -33,7 +33,8 @@ const Tasks = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // State to toggle search bar
+  const [isSearchOpen, setIsSearchOpen] = useState(false); 
+  const [saving, setSaving] = useState(false);
 
   const formRef = useRef(null);
   const searchInputRef = useRef(null); // Ref for search input
@@ -255,6 +256,8 @@ const Tasks = () => {
       inotify_to: formData.inotify_to === "" ? null : formData.inotify_to,
     };
 
+    setSaving(true);
+
     try {
       let response;
 
@@ -306,6 +309,9 @@ const Tasks = () => {
       );
       console.error("Task submission error:", error);
     }
+    finally {
+    setSaving(false);  // End loading
+  }
   };
 
   const handleDeleteTask = async (taskId) => {
@@ -342,15 +348,27 @@ const Tasks = () => {
   const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
-  const formatDateTime = (dateStr) =>
-    dateStr
-      ? new Date(dateStr)
-        .toLocaleString("en-IN", {
-          dateStyle: "short",
-          timeStyle: "short",
-        })
-        .toUpperCase()
-      : "N/A";
+
+  const formatDateTime = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+  // const formatDateTime = (dateStr) =>
+  //   dateStr
+  //     ? new Date(dateStr)
+  //       .toLocaleString("en-IN", {
+  //         dateStyle: "short",
+  //         timeStyle: "short",
+  //       })
+  //       .toUpperCase()
+  //     : "N/A";
 
   const canEditOrDeleteTask = (task) => {
     return userId === task.icreated_by;
@@ -593,30 +611,64 @@ const Tasks = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Due Date <span className="text-red-600">*</span>
                   </label>
+
                   <DateTimePicker
-                    selected={formData.task_date}
+                    value={formData.task_date}
+                    onChange={handleDateChange}
+                    format="dd/MM/yyyy HH:mm aa" 
                     viewRenderers={{
                       hours: renderTimeViewClock,
                       minutes: renderTimeViewClock,
                       seconds: renderTimeViewClock,
                     }}
-                    onChange={handleDateChange}
-                    showTimeSelect
-                    timeFormat="HH:mm"
-                    timeIntervals={15}
-                    dateFormat="MMMM d, yyyy h:mm aa"
-                    className="pr-10 py-2 p-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    slotProps={{
+                      textField: {
+                        className:
+                          "pr-10 py-2 p-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
+                      },
+                    }}
                     required
                   />
+                  
                 </div>
                 </LocalizationProvider>
                 <button
                   type="submit"
                   className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"
+                  disabled={loadingUsers || saving}
+                >
+                  {saving ? (
+                    <svg 
+                      className="animate-spin h-5 w-5 mr-3 text-white inline-block" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                    >
+                      <circle 
+                        className="opacity-25" 
+                        cx="12" 
+                        cy="12" 
+                        r="10" 
+                        stroke="currentColor" 
+                        strokeWidth="4"
+                      ></circle>
+                      <path 
+                        className="opacity-75" 
+                        fill="currentColor" 
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  ) : null}
+                  {saving ? (editingTask ? "Updating..." : "Saving...") : (editingTask ? "Update Task" : "Add Task")}
+                </button>
+
+                {/* <button
+                  type="submit"
+                  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"
                   disabled={loadingUsers}
                 >
                   {editingTask ? "Update Task" : "Add Task"}
-                </button>
+                </button> */}
               </form>
             </div>
           </>

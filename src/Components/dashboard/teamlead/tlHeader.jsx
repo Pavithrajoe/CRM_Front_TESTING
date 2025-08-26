@@ -10,7 +10,8 @@ export default function TeamleadHeader() {
   const isTeam = currentPath.includes('team');
   const isCallLogs = currentPath.includes('/logusercalllogs');
   const isActiveLeads = currentPath === '/active-leads';
-  const isWonLeads = currentPath === '/won-leads';
+  const isKanban = currentPath.includes('status-kanban'); 
+  // const isWonLeads = currentPath === '/won-leads';
 
   const [phoneActive, setPhoneActive] = useState(false);
 
@@ -40,7 +41,8 @@ export default function TeamleadHeader() {
     if (tab === 'team') navigate('/teamview');
     if (tab === 'calllogs') navigate('/logusercalllogs');
     if (tab === 'active-leads') navigate('/active-leads');
-    if (tab === 'won-leads') navigate('/won-leads');
+    if (tab === 'status-kanban') navigate('/status-kanban');
+    // if (tab === 'won-leads') navigate('/won-leads');
   };
 
   return (
@@ -70,14 +72,7 @@ export default function TeamleadHeader() {
         
 
         <div className="w-px h-5 bg-gray-300"></div>
-        {/* <button
-          onClick={() => handleTabClick('won-leads')}
-          className={`px-4 py-2 rounded-md text-sm font-medium ${
-            isWonLeads ? 'bg-black text-white' : 'text-black'
-          }`}
-        >
-          Won Leads
-        </button> */}
+        
         
         {/* <div className="w-px h-5 bg-gray-300"></div> */}
         <button
@@ -87,6 +82,17 @@ export default function TeamleadHeader() {
           }`}
         >
           Team Dashboard
+        </button>
+        
+        <div className="w-px h-5 bg-gray-300"></div>
+
+        <button
+          onClick={() => handleTabClick('status-kanban')}
+          className={`px-4 py-2 rounded-md text-sm font-medium ${
+            isKanban ? 'bg-black text-white' : 'text-black'
+          }`}
+        >
+          Kanban Board
         </button>
 
         {phoneActive && (

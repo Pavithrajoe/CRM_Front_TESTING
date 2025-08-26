@@ -42,9 +42,9 @@ const WonLeadTab = () => {
 
         const data = await response.json();
         setDashboardData(data);
-       // console.log("✅ Dashboard Data:", data);
+       // console.log(" Dashboard Data:", data);
       } catch (error) {
-        // console.error("❌ Error fetching dashboard data:", error);
+        // console.error(" Error fetching dashboard data:", error);
       }
     };
 

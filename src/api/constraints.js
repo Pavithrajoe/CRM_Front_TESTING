@@ -7,6 +7,7 @@ export const ENDPOINTS = {
   LOGIN: `${BASE_URL}/login`,
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,
+  STATUS: `${BASE_URL}/lead-status`,
   LEAD_STATUS: `${BASE_URL}/lead-status/company-lead`, // UPDATED 20/6
   LEAD_STATUS_ACTION: `${BASE_URL}/lead-status/action-logs`,
   LEAD: `${BASE_URL}/lead/user/`,

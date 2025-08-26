@@ -1,5 +1,3 @@
-// last update 21/08 workinh fine
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
@@ -137,7 +135,6 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
-    // console.log("--- useEffect Triggered ---");
     // console.log("existingClientData:", existingClientData);
     // console.log("Potential list:", Potential);
     // console.log("Status list:", status);
@@ -250,76 +247,6 @@ useEffect(() => {
     }
 }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
 
-//   useEffect(() => {
-//   if (existingClientData) {
-//     // Extract phone number parts
-//     const phoneNum = existingClientData.iphone_no || "";
-//     const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
-//     const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
-//     const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
-
-//     // Extract WhatsApp number parts
-//     const waNum = existingClientData.whatsapp_number || "";
-//     const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
-//     const waCountryCode = waMatch ? waMatch[1] : "+91";
-//     const waWithoutCode = waMatch ? waMatch[2] : waNum;
-
-//     setForm(prev => ({
-//       ...prev, 
-//       iLeadpoten_id: existingClientData.iLeadpoten_id || "",
-//       ileadstatus_id: existingClientData.ileadstatus_id || "",
-//       cindustry_id: existingClientData.cindustry_id || "",
-//       csubindustry_id: existingClientData.isubindustry || "",
-//       lead_source_id: existingClientData.lead_source_id || "",
-//       ino_employee: existingClientData.ino_employee || "",
-//       iproject_value: existingClientData.iproject_value || "",
-//       clead_name: existingClientData.clead_name || "",
-//       cemail: existingClientData.cemail || "",
-//       corganization: existingClientData.corganization || "",
-//       cwebsite: existingClientData.cwebsite || "",
-//       icity: existingClientData.clead_city || "",
-//       iphone_no: phoneWithoutCode || "",
-//       phone_country_code: phoneCountryCode || "+91",
-//       clead_address1: existingClientData.clead_address1 || "",
-//       cwhatsapp: waWithoutCode || "",
-//       whatsapp_country_code: waCountryCode || "",
-//       clead_address2: existingClientData.clead_address2 || "",
-//       clead_address3: existingClientData.clead_address3 || "",
-//       cstate: existingClientData.cstate || "",
-//       cdistrict: existingClientData.cdistrict || "",
-//       cpincode: existingClientData.cpincode || "",
-//       ccountry: existingClientData.ccountry || "",
-//       iservice_id: existingClientData.iservice_id || "",
-//       isubservice_id: existingClientData.isubservice_id || "",
-//     }));
-
-//     // Update dropdown search text fields
-//     const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
-//     if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
-
-//     const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
-//     if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
-
-//     const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
-//     if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
-
-//     const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
-//     if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
-
-//     const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
-//     if (selectedSource) setSearchSource(selectedSource.source_name);
-
-//     const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
-//     if (selectedService) setSearchService(selectedService.cservice_name);
-
-//     const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
-//     if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
-
-//     const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
-//     if (selectedCity) setSearchCity(selectedCity.cCity_name);
-//   }
-// }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
-
   // --- END OF NEW LOGIC ---
 
   // for new/existing client
@@ -395,16 +322,6 @@ const toggleSame = () => {
     });
 };
   
-  // const toggleSame = () => {
-  //   if (!sameAsPhone) {
-  //     setForm((prev) => ({
-  //       ...prev,
-  //       cwhatsapp: prev.iphone_no,
-  //       whatsapp_country_code: prev.phone_country_code,
-  //     }));
-  //   }
-  //   setSameAsPhone(!sameAsPhone);
-  // };
 
 const checkExisting = async (fieldName, fieldValue) => {
     if (!fieldValue) return;
@@ -437,71 +354,6 @@ const checkExisting = async (fieldName, fieldValue) => {
     }
   };
 
-  // for existing lead form
-
-//   const showPopup = (message, duration = 3000) => {
-//   setPopupMessage(message);
-//   setIsPopupVisible(true);
-//   setTimeout(() => setIsPopupVisible(false), duration);
-// };
-
-// const handleSearchExistingLead = async () => {
-//   if (!searchMobile && !searchEmail) {
-//     showPopup("Please enter either mobile number or email to search");
-//     return;
-//   }
-
-//   if (searchMobile) {
-//     const mobileRegex = /^[0-9]{6,15}$/;
-//     if (!mobileRegex.test(searchMobile.trim())) {
-//       showPopup("Mobile number must contain only 6 to 15 digits");
-//       return;
-//     }
-//   }
-
-//   if (searchEmail) {
-//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (!emailRegex.test(searchEmail.trim())) {
-//       showPopup("Please enter a valid email address");
-//       return;
-//     }
-//   }
-
-//   setLoading(true);
-//   setFoundLeads([]);
-
-//   try {
-//     const body = searchMobile
-//       ? { phonenumber: `${searchMobileCountryCode}${searchMobile.trim()}` }
-//       : { email: searchEmail.trim() };
-
-//     const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify(body),
-//     });
-
-//     const resData = await res.json();
-//     console.log("Existing lead search response:", resData);
-
-//     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
-//       setFoundLeads(resData.data);
-//     } 
-//     else {
-//       console.log("Popup message to show:", resData.Message);
-//       showPopup(resData.Message || "No existing lead found.");
-//     }
-//   } catch (error) {
-//     console.error("Search error:", error);
-//     showPopup("Failed to search for leads. Please try again.");
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
 
 const handleSearchExistingLead = async () => {
   // Check if both fields are empty
@@ -533,15 +385,7 @@ const handleSearchExistingLead = async () => {
       return;
     }
   }
-    // setPopupMessage("Please enter either mobile number or email to search");
-    // setIsPopupVisible(true);
-
-    // // Auto hide after 3 seconds
-    // setTimeout(() => {
-    //     setIsPopupVisible(false);
-    // }, 3000);
-
-    // return;
+    
 
   setLoading(true);
   setFoundLeads([]);
@@ -585,19 +429,6 @@ const handleSearchExistingLead = async () => {
     setLoading(false);
   }
 };
-
-// Function to parse phone number and return country code and national number
-// const parseNumber = (numberStr) => {
-//   const phoneNumber = parsePhoneNumberFromString(numberStr || '');
-//   if (!phoneNumber) return { code: '+91', number: numberStr || '' };
-
-//   return {
-//     code: `+${phoneNumber.countryCallingCode}`,
-//     number: phoneNumber.nationalNumber
-//   };
-// };
-
-
 
 const handleSelectLead = async (leadId) => {
   setLoading(true);
@@ -652,64 +483,6 @@ else {
     setLoading(false);
   }
 };
-
-
-
-
-// const handleSelectLead = async (leadId) => {
-//   setLoading(true);
-//   try {
-//     const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       }
-//     });
-
-//     if (!res.ok) {
-//       const text = await res.text();
-//       console.error(`Error fetching lead details [${res.status}]:`, text);
-//       throw new Error(`Server returned ${res.status}`);
-//     }
-
-//     const resData = await res.json();
-//     console.log("API Response Data:", resData);
-
-// if (resData && resData.ilead_id) {
-//   // Extract dynamic country code like +91, +1, +971, etc.
-//   const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
-//   const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
-
-//   const newFormData = {
-//     ...form,
-//     ...resData,
-//     iphone_no: resData.iphone_no?.replace(phoneCode, "").trim() || "",
-//     cwhatsapp: resData.whatsapp_number?.replace(whatsappCode, "").trim() || "",
-//     phone_country_code: phoneCode,
-//     whatsapp_country_code: whatsappCode,
-//   };
-//   console.log("New Form Data to be set:", newFormData);
-
-//   setForm(newFormData);
-//   setExistingClientData(resData);
-
-//   const validationErrors = validateForm(newFormData);
-//   setErrors(validationErrors);
-// }
-
-// else {
-//       setPopupMessage("Lead details not found for this ID");
-//       setIsPopupVisible(true);
-//     }
-//   } catch (error) {
-//     console.error("Fetch lead details error:", error);
-//     setPopupMessage("Failed to load lead details. Please try again.");
-//     setIsPopupVisible(true);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
 
 
   const fetchDropdownData = useCallback(
@@ -809,107 +582,6 @@ useEffect(() => {
     };
     fetchCountryCodes();
   }, []);
-
-  // comment out - could not edit the country code 
-//   useEffect(() => {
-//     if (countryCodes.length > 0) {
-//       const currentPhoneCode = form.phone_country_code;
-//       const currentWhatsappCode = form.whatsapp_country_code;
-
-//       if (searchMobileCountryCode !== currentPhoneCode) {
-//         setSearchMobileCountryCode(currentPhoneCode);
-//       }
-
-//       if (searchWhatsappCountryCode !== currentWhatsappCode) {
-//         setSearchWhatsappCountryCode(currentWhatsappCode);
-//       }
-//     }
-//   }, [form.phone_country_code, form.whatsapp_country_code, countryCodes, searchMobileCountryCode, searchWhatsappCountryCode]);
-
-// for country code search all condition is present but not working
-
-// useEffect(() => {
-//   if (!searchMobileCountryCode) {
-//     setFilteredMobileCountryCodes(countryCodes);
-//     return;
-//   }
-//   const searchLower = searchMobileCountryCode.toLowerCase().trim();
-
-//   // Exact matches with === comparison
-//   const exactMatches = countryCodes.filter(
-//     (cc) =>
-//       cc.code.toLowerCase() === searchLower ||
-//       cc.name.toLowerCase() === searchLower
-//   );
-
-//   if (exactMatches.length > 0) {
-//     setFilteredMobileCountryCodes(exactMatches);
-//     return;
-//   }
-
-//   // Prefix matches (if typed at least 3 chars)
-//   if (searchLower.length >= 3) {
-//     const prefixMatches = countryCodes.filter(
-//       (cc) =>
-//         cc.code.toLowerCase().startsWith(searchLower) ||
-//         cc.name.toLowerCase().startsWith(searchLower)
-//     );
-//     if (prefixMatches.length > 0) {
-//       setFilteredMobileCountryCodes(prefixMatches);
-//       return;
-//     }
-//   }
-
-//   // Substring matches fallback
-//   const substringMatches = countryCodes.filter(
-//     (cc) =>
-//       cc.code.toLowerCase().includes(searchLower) ||
-//       cc.name.toLowerCase().includes(searchLower)
-//   );
-//   setFilteredMobileCountryCodes(substringMatches);
-// }, [searchMobileCountryCode, countryCodes]);
-
-// useEffect(() => {
-//   if (!searchWhatsappCountryCode) {
-//     setFilteredWhatsappCountryCodes(countryCodes);
-//     return;
-//   }
-//   const searchLower = searchWhatsappCountryCode.toLowerCase().trim();
-
-//   // Exact matches with === comparison
-//   const exactMatches = countryCodes.filter(
-//     (cc) =>
-//       cc.code.toLowerCase() === searchLower ||
-//       cc.name.toLowerCase() === searchLower
-//   );
-
-//   if (exactMatches.length > 0) {
-//     setFilteredWhatsappCountryCodes(exactMatches);
-//     return;
-//   }
-
-//   // Prefix matches (if typed at least 3 chars)
-//   if (searchLower.length >= 3) {
-//     const prefixMatches = countryCodes.filter(
-//       (cc) =>
-//         cc.code.toLowerCase().startsWith(searchLower) ||
-//         cc.name.toLowerCase().startsWith(searchLower)
-//     );
-//     if (prefixMatches.length > 0) {
-//       setFilteredWhatsappCountryCodes(prefixMatches);
-//       return;
-//     }
-//   }
-
-//   // Substring matches fallback
-//   const substringMatches = countryCodes.filter(
-//     (cc) =>
-//       cc.code.toLowerCase().includes(searchLower) ||
-//       cc.name.toLowerCase().includes(searchLower)
-//   );
-//   setFilteredWhatsappCountryCodes(substringMatches);
-// }, [searchWhatsappCountryCode, countryCodes]);
-
 
 // -- country code filter based on the search input for mobile and whatsapp numbers
 
@@ -1359,109 +1031,6 @@ const dropdownOpenSetters = {
   searchSubService: setIsSubServiceDropdownOpen
 };
 
-// const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     let newErrors = {};
-
-//     // Handles validation for the existing client mobile field
-//     if (name === 'existingClientMobile') {
-//         setExistingClientMobile(value);
-//         const error = validateField(name, value);
-//         setErrors((prev) => ({ ...prev, [name]: error }));
-//         return;
-//     }
-
-//     // Handles updates for search inputs (like dropdown search)
-//     if (name.startsWith("search")) {
-//         if (searchSetters[name]) {
-//             searchSetters[name](value);
-//         }
-//         if (dropdownOpenSetters[name]) {
-//             dropdownOpenSetters[name](true);
-//         }
-
-//         // AND any dependent fields.
-//         if (!value) {
-//             if (name === "searchPotential") setForm(prev => ({ ...prev, iLeadpoten_id: "" }));
-//             if (name === "searchStatus") setForm(prev => ({ ...prev, ileadstatus_id: "" }));
-            
-//             if (name === "searchIndustry") {
-//                 setForm(prev => ({ ...prev, cindustry_id: "", csubindustry_id: "" }));
-//                 setSearchSubIndustry(""); 
-//             }
-
-//             if (name === "searchSource") setForm(prev => ({ ...prev, lead_source_id: "" }));
-            
-//             if (name === "searchService") {
-//                 setForm(prev => ({ ...prev, iservice_id: "", isubservice_id: "" }));
-//                 setSearchSubService("");
-//             }
-
-//             if (name === "searchCity") setForm(prev => ({ ...prev, icity: "" }));
-//         }
-
-//         // Handles country code search inputs
-//         // if (name === "searchMobileCountryCode") {
-//         //     setForm(prev => ({ ...prev, iphone_country_code: value }));
-//         // } else if (name === "searchWhatsappCountryCode") {
-//         //     setForm(prev => ({ ...prev, cwhatsapp_country_code: value }));
-//         // }
-
-//         // Handles country code search inputs
-// if (name === "searchMobileCountryCode") {
-//     setSearchMobileCountryCode(value);
-// } else if (name === "searchWhatsappCountryCode") {
-//     setSearchWhatsappCountryCode(value);
-// }
-//         return;
-//     }
-
-//     // Main form state update logic
-//     setForm((prev) => {
-//         let updated = { ...prev, [name]: value };
-
-//         // Handle phone number splitting
-//         if (name === 'iphone_no') {
-//             const { countryCode, nationalNumber } = splitPhoneNumber(value);
-//             if (countryCode) updated.iphone_country_code = countryCode;
-//             updated.iphone_no = nationalNumber;
-//         }
-
-//         // Handle WhatsApp number splitting
-//         if (name === 'cwhatsapp' && !sameAsPhone) {
-//             const { countryCode, nationalNumber } = splitPhoneNumber(value);
-//             if (countryCode) updated.cwhatsapp_country_code = countryCode;
-//             updated.cwhatsapp = nationalNumber;
-//         }
-
-//         // Sync WhatsApp with phone if checkbox is checked
-//         if (sameAsPhone) {
-//             if (name === "iphone_no") {
-//                 updated.cwhatsapp = updated.iphone_no;
-//             }
-//             if (name === "iphone_country_code") {
-//                 updated.cwhatsapp_country_code = updated.iphone_country_code;
-//             }
-//         }
-        
-//         // This is where you handle the dependent reset on the primary field change
-//         if (name === "cindustry_id" && prev.cindustry_id !== value) {
-//             updated.csubindustry_id = "";
-//             setSearchSubIndustry("");
-//         }
-
-//         if (name === "iservice_id" && prev.iservice_id !== value) {
-//             updated.isubservice_id = "";
-//             setSearchSubService("");
-//         }
-
-//         return updated;
-//     });
-
-//     // Validate the field after the main form state is updated
-//     const error = validateField(name, value);
-//     setErrors((prev) => ({ ...prev, [name]: error }));
-// };
 
 
 const handleChange = (e) => {
@@ -1597,74 +1166,7 @@ const handleChange = (e) => {
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    // if (name === "searchMobileCountryCode") {
-    //   // Always keep whatever user typed
-    //   setSearchMobileCountryCode(value);
-    //   setForm(prev => ({ ...prev, phone_country_code: value }));
-    //   setIsMobileCountryCodeDropdownOpen(false);
-    // } 
-    // else if (name === "searchWhatsappCountryCode") {
-    //   setSearchWhatsappCountryCode(value);
-    //   setForm(prev => ({ ...prev, whatsapp_country_code: value }));
-    //   setIsWhatsappCountryCodeDropdownOpen(false);
-    // }
-    // if (name === "searchMobileCountryCode") {
-    //     const selectedCode = countryCodes.find(
-    //         (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
-    //     );
-    //     if (selectedCode) {
-    //         setSearchMobileCountryCode(selectedCode.code);
-    //         setForm((prev) => ({ ...prev, phone_country_code: selectedCode.code }));
-    //     } else {
-    //         // Revert to the old value if the new value is not found
-    //         // setSearchMobileCountryCode(form.phone_country_code);
-    //         setSearchMobileCountryCode(value);
-    //     }
-    //     setIsMobileCountryCodeDropdownOpen(false);
-    // } else if (name === "searchWhatsappCountryCode") {
-    //     const selectedCode = countryCodes.find(
-    //         (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
-    //     );
-    //     if (selectedCode) {
-    //         setSearchWhatsappCountryCode(selectedCode.code);
-    //         setForm((prev) => ({ ...prev, whatsapp_country_code: selectedCode.code }));
-    //     } else {
-    //         // Revert to the old value
-    //         // setSearchWhatsappCountryCode(form.whatsapp_country_code);
-    //         setSearchWhatsappCountryCode(value);
-    //     }
-    //     setIsWhatsappCountryCodeDropdownOpen(false);
-    // }
-    // if (name === "searchMobileCountryCode") {
-    //     const selectedCode = countryCodes.find(
-    //         (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
-    //     );
-        
-    //     if (selectedCode) {
-    //         setSearchMobileCountryCode(selectedCode.code);
-    //         setForm((prev) => ({ ...prev, phone_country_code: selectedCode.code }));
-    //     } else {
-    //         // setSearchMobileCountryCode(value);
-    //         setSearchMobileCountryCode(form.phone_country_code);
-    //         // setForm((prev) => ({ ...prev, phone_country_code: value }));
-    //         setForm((prev) => ({ ...prev, phone_country_code: prev.phone_country_code }));
-    //     }
-    //     setIsMobileCountryCodeDropdownOpen(false);
-    // } else if (name === "searchWhatsappCountryCode") {
-    //     const selectedCode = countryCodes.find(
-    //         (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
-    //     );
-    //     if (selectedCode) {
-    //         setSearchWhatsappCountryCode(selectedCode.code);
-    //         setForm((prev) => ({ ...prev, whatsapp_country_code: selectedCode.code }));
-    //     } else {
-    //         // setSearchWhatsappCountryCode(value);
-    //         // setForm((prev) => ({ ...prev, whatsapp_country_code: value }));
-    //         setSearchWhatsappCountryCode(form.whatsapp_country_code);
-    //         setForm((prev) => ({ ...prev, whatsapp_country_code: prev.whatsapp_country_code }));
-    //     }
-    //     setIsWhatsappCountryCodeDropdownOpen(false);
-    // }
+    
     if (name === "searchMobileCountryCode") {
         const selectedCode = countryCodes.find(
             (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
@@ -1674,7 +1176,6 @@ const handleChange = (e) => {
             setSearchMobileCountryCode(selectedCode.code);
             setForm((prev) => ({ ...prev, phone_country_code: selectedCode.code }));
         } else {
-            // Correct logic to allow editing and searching
             // setSearchMobileCountryCode(value);
             // setForm((prev) => ({ ...prev, phone_country_code: value }));
              setSearchMobileCountryCode(form.phone_country_code);
@@ -1689,12 +1190,8 @@ const handleChange = (e) => {
             setSearchWhatsappCountryCode(selectedCode.code);
             setForm((prev) => ({ ...prev, whatsapp_country_code: selectedCode.code }));
         } else {
-            // Correct logic to allow editing and searching
-            // setSearchWhatsappCountryCode(value);
             // setForm((prev) => ({ ...prev, whatsapp_country_code: value }));
-            // Correct lines for the mobile phone country code
-
-            // Correct lines for the WhatsApp country code
+            
             setSearchWhatsappCountryCode(form.whatsapp_country_code);
             setForm((prev) => ({ ...prev, whatsapp_country_code: prev.whatsapp_country_code }));
         }
@@ -1842,38 +1339,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
     return;
   }
-
-  // New logic: Check for existing leads. This runs only if it's not a 'Save Anyway' attempt.
-  // if (!saveTriggerRef.current) {
-  //   try {
-  //     const checkRes = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       // Send both email and mobile number in the same request body
-  //       body: JSON.stringify({
-  //         phonenumber: `${form.phone_country_code}${form.iphone_no}`,
-  //         email: form.cemail,
-  //       }),
-  //     });
-
-  //     const checkData = await checkRes.json();
-      
-  //     if (Array.isArray(checkData.data) && checkData.data.length > 0) {
-  //       // Duplicates found, show the popup and prevent further submission
-  //       const leadNames = checkData.data.map(lead => lead.clead_name).join(", ");
-  //       setPopupMessage(`A lead with this email or mobile number already exists: ${leadNames}. Want to save anyway?`);
-  //       setIsPopupVisible(true);
-  //       setLoading(false); // This phone already exists in
-  //       return; 
-  //     }
-  //   } catch (error) {
-  //     console.error("Duplication check failed:", error);
-      
-  //   }
-  // }
 
   
   
@@ -2038,61 +1503,26 @@ const handleSubmit = async (e) => {
     );
   };
 
-  // const popupStyle = {
-  //   position: "fixed",
-  //   bottom: "20px",
-  //   // right: "20px",
-  //   left: "50%",
-  //   transform: "translateX(-50%)",
-  //   backgroundColor:
-  //     popupMessage.includes("Failed") || popupMessage.includes("Duplicate") ? "#dc3545" : "#176be9ff",
-  //   color: "white",
-  //   padding: "16px 24px",
-  //   borderRadius: "8px",
-  //   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-  //   zIndex: 50,
-  //   opacity: 1,
-  //   transition: "opacity 0.3s ease-in-out",
-  //   display: "flex",
-  //   alignItems: "center",
-  //   justifyContent: "space-between",
-  // };
-
      const popupStyle = {
-      position: "fixed",               // Make it global, not relative to form
+      position: "fixed",               
       top: "140%",   
-      // top: "50%",                  // Center vertically
-      left: "50%",                     // Center horizontally
+      // top: "50%",                  
+      left: "50%",                     
       transform: "translate(-50%, -50%)",
       backgroundColor: "#f9f9f9ff",
       padding: "16px 24px",
       borderRadius: "10px",
       boxShadow: "3px 4px 10px rgba(0, 81, 255, 0.86)",
-      zIndex: 10000,                   // Ensure it overlays form content
+      zIndex: 10000,                   
       minWidth: "300px",
       textAlign: "center",
     };
 
     const topPopupStyle = {
-  ...popupStyle, // Inherit all other styles from the base
-  top: "85%", // Override the top property to a higher value
+  ...popupStyle, 
+  top: "85%", 
 };
 
-
-
-    // const popupStyle = {
-    //   position: "absolute",
-    //   bottom: "-85%",
-    //   left: "50%",
-    //   transform: "translateX(-50%)",
-    //   backgroundColor: "#f9f9f9ff",
-    //   padding: "16px 24px",
-    //   borderRadius: "8px",
-    //   boxShadow: "3px 4px 10px rgba(0, 81, 255, 0.86)",
-    //   zIndex: 1000,
-    //   minWidth: "300px",
-    //   textAlign: "center",
-    // };
 
   const closeButtonStyle = {
     background: "none",
@@ -2767,46 +2197,7 @@ const handleSubmit = async (e) => {
         "Create Lead"
     )}
 </button>
-                {/* <button
-                    type="submit"
-                    // disabled={loading || Object.keys(errors).some((key) => errors[key])}
-                    // disabled={ loading || (isExistingClientForm ? !existingClientData || Object.keys(errors).some((key) => errors[key]): Object.keys(errors).some((key) => errors[key])
-                    //   )
-                    // }
-
-                    disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
-
-                    className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md hover:bg-blue-700 transition ${
-                        loading || Object.keys(errors).some((key) => errors[key])
-                            ? "opacity-70 cursor-not-allowed"
-                            : ""
-                    }`}
-                >
-                    {loading ? (
-                        <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                            />
-                        </svg>
-                    ) : (
-                        "Create Lead"
-                    )}
-                </button> */}
+                
             </div>
 
             {isAlertVisible && (
@@ -2817,55 +2208,10 @@ const handleSubmit = async (e) => {
 
             
         </form>
-        {/* {isPopupVisible && (
-            <div style={popupStyle}>
-                <span>{popupMessage}</span>
-                {popupMessage.includes("already exists") ? (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
-                        <button
-                            onClick={() => setIsPopupVisible(false)}
-                            style={{ ...buttonStyle, backgroundColor: "#8d8b8bff", borderRadius: "5px" }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={() => {
-                                saveTriggerRef.current = true;
-                                formRef.current?.requestSubmit();
-                                setIsPopupVisible(false);
-                            }}
-                            style={{ ...buttonStyle, backgroundColor: "#34b352ff", borderRadius: "10px" }}
-                        >
-                            Save Anyway
-                        </button>
-                    </div>
-                ) : (
-                  !popupMessage.includes("Please enter either mobile number or email") && (
-        <button
-          onClick={() => setIsPopupVisible(false)}
-          style={closeButtonStyle}
-          aria-label="Close popup"
-        >
-          &times;
-        </button>
-      )
-                    // <button
-                    //     onClick={() => setIsPopupVisible(false)}
-                    //     style={closeButtonStyle}
-                    //     aria-label="Close popup"
-                    // >
-                    //     &times;
-                    // </button>
-                )}
-            </div>
-        )} */}
         
-
-
-
+        
         {isPopupVisible && (
   <div
-  // Replace it with this updated conditional logic:
       style={
         popupMessage.includes("Please enter either mobile number or email") ||
         popupMessage.includes("There is no leads found for") ||
@@ -2876,14 +2222,7 @@ const handleSubmit = async (e) => {
           ? topPopupStyle
           : popupStyle
       }
-  //  style={
-  //     popupMessage.includes("already exists") ||
-  //     popupMessage.includes("Lead created successfully!") ||
-  //     popupMessage.includes("A lead with this email or mobile number already exists") // Add this line
-  //       ? popupStyle
-  //       : topPopupStyle
-  //   }
-    
+  
   >
     <span>{popupMessage}</span>
     {popupMessage.includes("already exists") ? (
@@ -2922,18 +2261,7 @@ const handleSubmit = async (e) => {
       </div>
     ) : (
       <></> 
-      // !popupMessage.includes(
-      //   "Please enter either mobile number or email"
-      // ) &&
-      //  (
-      //   <button
-      //     onClick={() => setIsPopupVisible(false)}
-      //     style={closeButtonStyle}
-      //     aria-label="Close popup"
-      //   >
-      //     &times;
-      //   </button>
-      // )
+      
     )}
   </div>
 )}

@@ -5,14 +5,64 @@ import { PlusCircle, Edit, Trash2, X } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { IntroModal } from "./IntroModal";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const formatMasterName = (name) => {
+const formatMasterName = (name, previousValue) => {
   if (!name) return '';
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  
+  // If user is deleting characters, don't modify
+  if (name.length < (previousValue?.length || 0)) {
+    return name;
+  }
+  
+  // Only auto-capitalize if:
+  // 1. Field was empty and user is typing the first character
+  // 2. User just typed a space and is typing the next word
+  if (!previousValue || previousValue === '' || 
+      (previousValue.length > 0 && name.length > previousValue.length && name.endsWith(' '))) {
+    // Capitalize first letter after space or at beginning
+    if (name.length === 1) {
+      return name.charAt(0).toUpperCase();
+    } else if (name.endsWith(' ') && name.length > 1) {
+      return name; // Don't capitalize space, wait for next character
+    } else if (name.length > 1 && name.charAt(name.length - 2) === ' ') {
+      // Capitalize first letter after space
+      return name.slice(0, -1) + name.slice(-1).toUpperCase();
+    }
+  }
+  
+  // Otherwise, preserve user's typing
+  return name;
 };
 
 const getNestedObject = (obj, path) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+};
+
+const sortItemsAlphabetically = (items, sortKey) => {
+    if (!items || !Array.isArray(items)) return [];
+    return [...items].sort((a, b) => {
+      const aValue = a[sortKey]?.toString().toLowerCase() || '';
+      const bValue = b[sortKey]?.toString().toLowerCase() || '';
+      return aValue.localeCompare(bValue);
+    });
+  };
+
+// Improved stripHtml function
+ const stripHtmlTags = (html) => {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+
+// Add this helper function for preview
+const truncateText = (text, maxLength = 100) => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
 };
 
 export default function MasterModal({
@@ -61,55 +111,86 @@ export default function MasterModal({
   const subIndustryConfig = masterConfigs?.SUB_INDUSTRIES;
   const leadSourceConfig = masterConfigs?.LEAD_SOURCE;
 
-  const groupSubItemsByParent = (items, config) => {
-    if (!config || !config.isHierarchical || !config.parentMasterConfig) {
-      return [];
+const groupSubItemsByParent = (items, config) => {
+  if (!config || !config.isHierarchical || !config.parentMasterConfig) {
+    return [];
+  }
+
+  const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
+  const parentNameKey = config.parentMasterConfig.nameKey || "name";
+  const childPayloadKey = config.payloadKey;
+
+  const grouped = items.reduce((acc, item) => {
+    const parentId = item[parentIdKey];
+    if (!acc[parentId]) {
+      acc[parentId] = {
+        parentId,
+        children: []
+      };
     }
+    acc[parentId].children.push(item);
+    return acc;
+  }, {});
 
-    const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
-    const parentNameKey = config.parentMasterConfig.nameKey || "name";
-    const childPayloadKey = config.payloadKey;
-
-    const grouped = items.reduce((acc, item) => {
-      const parentId = item[parentIdKey];
-      if (!acc[parentId]) {
-        acc[parentId] = {
-          parentId,
-          children: []
-        };
-      }
-      acc[parentId].children.push(item);
-      return acc;
-    }, {});
-
-    return Object.values(grouped).map(group => ({
-      ...group,
-      parentName: parentOptions.find(p => p[config.parentMasterConfig.idKey] === group.parentId)?.[parentNameKey] || "Unknown Parent"
-    }));
-  };
+  return Object.values(grouped).map(group => ({
+    ...group,
+    parentName: parentOptions.find(p => 
+      // Convert both to string for comparison to avoid type mismatch
+      String(p[config.parentMasterConfig.idKey]) === String(group.parentId)
+    )?.[parentNameKey] || "Unknown Parent"
+  }));
+};
 
   const groupedSubItems = useMemo(() => {
     if (!master?.isHierarchical) return [];
     
     const grouped = groupSubItemsByParent(existingItems, master);
     
-    if (!searchTerm) return grouped;
+    // Sort parent groups alphabetically
+    const sortedGroups = grouped.sort((a, b) => {
+      const aName = a.parentName?.toString().toLowerCase() || '';
+      const bName = b.parentName?.toString().toLowerCase() || '';
+      return aName.localeCompare(bName);
+    });
+
+
+
     
-    return grouped.map(group => ({
-      ...group,
-      children: group.children.filter(child => {
-        const mainField = child[master.payloadKey]?.toString().toLowerCase() || '';
-        return mainField.includes(searchTerm);
-      })
-    })).filter(group => group.children.length > 0);
+    
+    if (!searchTerm) {
+      // Sort children alphabetically within each group
+      return sortedGroups.map(group => ({
+        ...group,
+        children: sortItemsAlphabetically(group.children, master.payloadKey)
+      }));
+    }
+    
+    return sortedGroups
+      .map(group => ({
+        ...group,
+        children: group.children.filter(child => {
+          const mainField = child[master.payloadKey]?.toString().toLowerCase() || '';
+          return mainField.includes(searchTerm);
+        })
+      }))
+      .filter(group => group.children.length > 0)
+      .map(group => ({
+        ...group,
+        children: sortItemsAlphabetically(group.children, master.payloadKey)
+      }));
   }, [existingItems, master, parentOptions, searchTerm]);
 
   const filteredItems = useMemo(() => {
-    if (!searchTerm || master?.isHierarchical) return existingItems;
-    return existingItems.filter(item => {
+    if (!searchTerm || master?.isHierarchical) {
+      return sortItemsAlphabetically(existingItems, master.payloadKey);
+    }
+    
+    const filtered = existingItems.filter(item => {
       const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
       return mainField.includes(searchTerm);
     });
+    
+    return sortItemsAlphabetically(filtered, master.payloadKey);
   }, [existingItems, searchTerm, master]);
 
   const filteredGroupedItems = useMemo(() => {
@@ -347,101 +428,102 @@ export default function MasterModal({
     }
   }, [master]);
 
-  useEffect(() => {
-    if (!master) return;
+useEffect(() => {
+  if (!master) return;
 
-    let newFormData = {};
+  let newFormData = {};
 
-    if (selectedItemForEdit) {
-      if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
-        const parentIdKey =
-          subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
-          "industryParent";
-        const formParentKey =
-          subIndustryConfig.parentMasterConfig?.formFieldKey ||
-          "industryParent";
+  if (selectedItemForEdit) {
+    console.log('=== DEBUG: Editing item ===');
+    console.log('Selected item:', selectedItemForEdit);
+    
+    if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
+      const parentIdKey =
+        subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
+        "parentId";
+      const formParentKey =
+        subIndustryConfig.parentMasterConfig?.formFieldKey ||
+        "industryParent";
 
-        newFormData = {
-          [subIndustryConfig.payloadKey]:
-            selectedItemForEdit[subIndustryConfig.payloadKey] || "",
-          [formParentKey]:
-            selectedItemForEdit[parentIdKey] !== undefined
-              ? Number(selectedItemForEdit[parentIdKey])
-              : null,
-          [subIndustryConfig.idKey]:
-            selectedItemForEdit[subIndustryConfig.idKey],
-          ...(subIndustryConfig.activeStatusPayloadKey && {
-            [subIndustryConfig.activeStatusPayloadKey]:
-              selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] ||
-              false,
-          }),
-        };
-      } else {
-        newFormData = { ...selectedItemForEdit };
-      }
-    } else {
-      newFormData = { ...master.basePostPayload };
+      console.log('Parent ID key:', parentIdKey);
+      console.log('Form parent key:', formParentKey);
+      console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
+      console.log('Parent options:', parentOptions);
 
-      if (master.isHierarchical && master.parentMasterConfig) {
-        const formParentKey =
-          master.parentMasterConfig.formFieldKey || "parentId";
-        newFormData[formParentKey] = null;
-      }
-    }
-
-    setFormData(newFormData);
-  }, [
-    selectedItemForEdit,
-    master,
-    subIndustryConfig,
-    industryConfig,
-    leadSourceConfig,
-  ]);
-
-const stripHtml = (html) => {
-  if (!html) return '';
-  // Convert <p> tags to newlines for good formatting
-  let text = html.replace(/<\/?p[^>]*>/gi, '\n');
-  // Replace <br> with newline
-  text = text.replace(/<\/?br[^>]*>/gi, '\n');
-  // Remove any remaining HTML tags
-  text = text.replace(/<[^>]+>/g, '');
-  // Replace multiple newlines with single newline
-  text = text.replace(/\n\s*\n/g, '\n');
-  return text.trim();
-};
-
-
-
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => {
-      let newValue = value;
-      
-      if (name === master.payloadKey) {
-        newValue = formatMasterName(value);
-      }
-      
-      if (
-        master.isHierarchical &&
-        master.parentMasterConfig &&
-        name === (master.parentMasterConfig.formFieldKey || "parentId")
-      ) {
-        newValue = value === "" ? null : Number(value);
-      } else if (type === "checkbox") {
-        newValue = checked;
-      } else if (name === "orderId" && type === "number") {
-        newValue = value === "" ? null : Number(value);
-      } else if (name === "parentLeadSourceId") {
-        newValue = value === "" ? null : Number(value);
-      }
-      return {
-        ...prev,
-        [name]: newValue,
+      newFormData = {
+        [subIndustryConfig.payloadKey]:
+          selectedItemForEdit[subIndustryConfig.payloadKey] || "",
+        [formParentKey]:
+          selectedItemForEdit[parentIdKey] !== undefined && selectedItemForEdit[parentIdKey] !== null
+            ? String(selectedItemForEdit[parentIdKey]) // Convert to string for consistent comparison
+            : null,
+        [subIndustryConfig.idKey]:
+          selectedItemForEdit[subIndustryConfig.idKey],
+        ...(subIndustryConfig.activeStatusPayloadKey && {
+          [subIndustryConfig.activeStatusPayloadKey]:
+            selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false,
+        }),
       };
-    });
-  };
+
+      console.log('New form data:', newFormData);
+    } else {
+      newFormData = { ...selectedItemForEdit };
+    }
+  } else {
+    newFormData = { ...master.basePostPayload };
+
+    if (master.isHierarchical && master.parentMasterConfig) {
+      const formParentKey =
+        master.parentMasterConfig.formFieldKey || "parentId";
+      newFormData[formParentKey] = null;
+    }
+  }
+
+  setFormData(newFormData);
+}, [
+  selectedItemForEdit,
+  master,
+  subIndustryConfig,
+  industryConfig,
+  leadSourceConfig,
+  parentOptions, // Add parentOptions to dependencies
+]);
+
+  
+
+
+
+const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
+  setFormData((prev) => {
+    let newValue = value;
+    
+    if (name === master.payloadKey) {
+      newValue = formatMasterName(value);
+    }
+    
+    // Handle parent ID fields specifically
+    if (
+      master.isHierarchical &&
+      master.parentMasterConfig &&
+      name === (master.parentMasterConfig.formFieldKey || "parentId")
+    ) {
+      // Convert to number for API, but keep as string for UI comparison
+      newValue = value === "" ? null : Number(value);
+    } else if (type === "checkbox") {
+      newValue = checked;
+    } else if (name === "orderId" && type === "number") {
+      newValue = value === "" ? null : Number(value);
+    } else if (name === "parentLeadSourceId") {
+      newValue = value === "" ? null : Number(value);
+    }
+    
+    return {
+      ...prev,
+      [name]: newValue,
+    };
+  });
+};
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value.toLowerCase());
@@ -451,8 +533,8 @@ const stripHtml = (html) => {
     if (!name) return `${masterType} name is required`;
     if (name.length < 2)
       return `${masterType} name must be at least 2 characters`;
-    if (name.length > 50)
-      return `${masterType} name cannot exceed 50 characters`;
+    if (name.length > 100)
+      return `${masterType} name cannot exceed 100 characters`;
     return null;
   };
 
@@ -480,7 +562,7 @@ const stripHtml = (html) => {
     });
 
     if (isDuplicate) {
-      setApiError(`${master.title} with this name already exists`);
+      // setApiError(`${master.title} with this name already exists`);
       toast.error(`${master.title} with this name already exists`);
       return;
     }
@@ -645,8 +727,14 @@ const stripHtml = (html) => {
         throw new Error("Unsupported HTTP method for saving.");
       }
 
-      toast.success(`${currentSaveMasterConfig.title} saved successfully!`);
-
+  toast.success(`${currentSaveMasterConfig.title} saved successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       setSelectedItemForEdit(null);
       const newEntryFormData = { ...currentSaveMasterConfig.basePostPayload };
       if (
@@ -808,8 +896,15 @@ const stripHtml = (html) => {
         await axios.delete(url, { headers: headers });
       }
 
-      toast.success(`${master.title} deleted successfully!`);
-
+toast.success(`${master.title} deleted successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
       setSelectedItemForEdit(null);
       const newEntryFormData = { ...master.basePostPayload };
       if (
@@ -893,6 +988,14 @@ const stripHtml = (html) => {
             subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false,
         }),
       };
+       toast.success(`${subIndustryItem[subIndustryConfig.payloadKey]} deleted successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
 
       setFormData(newFormData);
     }
@@ -1068,6 +1171,18 @@ const stripHtml = (html) => {
   }
 
   return (
+    <>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+    />
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col">
         <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">
@@ -1092,39 +1207,39 @@ const stripHtml = (html) => {
         <div className="flex flex-1 mt-10 overflow-hidden">
           {/* Existing Items List (Left Side) */}
           <div className="w-1/2 pr-4 overflow-y-auto border-r border-gray-200">
-            <h3 className="text-xl font-semibold mb-3 text-blue-700">
-              Existing {master.title}
-            </h3>
-            
-            {/* Search Bar */}
-            <div className="mb-4 relative">
-              <input
-                type="text"
-                placeholder={`Search ${master.title}...`}
-                className="w-full p-2 pl-8 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-              <svg
-                className="absolute left-2.5 top-3 h-4 w-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
-            </div>
+  <h3 className="text-xl font-semibold mb-3 text-blue-700">
+    Existing {master.title}
+  </h3>
+  
+  {/* Search Bar */}
+  <div className="mb-4 relative">
+    <input
+      type="text"
+      placeholder={`Search ${master.title}...`}
+      className="w-full p-2 pl-8 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+      value={searchTerm}
+      onChange={handleSearchChange}
+    />
+    <svg
+      className="absolute left-2.5 top-3 h-4 w-4 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      ></path>
+    </svg>
+  </div>
 
-            {isLoadingItems ? (
-              <div className="flex justify-center items-center h-full">
-                <p>Loading items...</p>
-              </div>
+  {isLoadingItems ? (
+    <div className="flex justify-center items-center h-full">
+      <p>Loading items...</p>
+    </div>
             ) : (
               <>
                 {master.isHierarchical ? (
@@ -1221,6 +1336,7 @@ const stripHtml = (html) => {
                   <ul className="space-y-2">
                     {filteredItems.length > 0 ? (
                       filteredItems.map((item) => (
+
                         <li
                           key={item[master.idKey]}
                           className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
@@ -1239,6 +1355,24 @@ const stripHtml = (html) => {
                                 </span>
                               )}
                             </span>
+                            {master.title === "Email Template" ? (
+                            <>
+                              <span className="font-medium text-gray-800">
+                                {/* {item.subject || "No Subject"} */}
+                              </span>
+                              <span className="text-sm text-gray-500 mt-1">
+                                {stripHtmlTags(item.mailBody).substring(0, 100)}
+                                {stripHtmlTags(item.mailBody).length > 100 ? "..." : ""}
+                              </span>
+                            </>
+                             ) : (
+                            <>
+                              {/* <span className="font-medium text-gray-800">
+                                {item[master.payloadKey]}
+                                {master.title === "Status" && item.orderId !== undefined && (
+                                  <span className="ml-2 text-sm text-gray-500">(Order: {item.orderId})</span>
+                                )}
+                              </span> */}
                             {master.additionalFields &&
                               master.additionalFields.map((field) => {
                                 if (
@@ -1261,7 +1395,9 @@ const stripHtml = (html) => {
                                   )
                                 );
                               })}
-                          </div>
+                                    </>
+                             )}</div>
+                    
                           <div className="flex space-x-2">
                             <button
                               onClick={() => setSelectedItemForEdit(item)}
@@ -1303,7 +1439,6 @@ const stripHtml = (html) => {
             </h3>
             
             {/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
-{/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
 {selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
   <div className="mb-3">
     <h3 className="text-lg font-semibold text-blue-700">
@@ -1312,47 +1447,16 @@ const stripHtml = (html) => {
           master.parentMasterConfig.parentIdInChildResponseKey || "parentId"
         ];
         const matchedParent = parentOptions.find(
-          (parent) => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+          (parent) => 
+            // Convert both to string for consistent comparison
+            String(parent[master.parentMasterConfig.idKey]) === String(parentId)
         );
         return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
       })()}
     </h3>
   </div>
 )}
-{/* {selectedItemForEdit && (
-  (master.title === "Sub-Industries" || master.title === "Sub-Services") ? (
-    <div className="mb-3">
-      <h3 className="text-lg font-semibold text-blue-700">
-        Parent: {(() => {
-          const parentId = selectedItemForEdit[
-            master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
-          ];
-          const matchedParent = parentOptions.find(
-            parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
-          );
-          return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
-        })()}
-      </h3>
-    </div>
-  ) : (master.isHierarchical && master.parentMasterConfig) && (
-    <div className="mb-3">
-      <h3 className="text-lg font-semibold text-blue-700">
-        Parent: {(() => {
-          const parentId = selectedItemForEdit[
-            master.parentMasterConfig?.parentIdInChildResponseKey || "parentId"
-          ];
-          const matchedParent = parentOptions.find(
-            parent => String(parent[master.parentMasterConfig.idKey]) === String(parentId)
-          );
-          return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
-        })()}
-      </h3>
-    </div>
-  )
-)} */}
-
-
-            <form
+  <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSave();
@@ -1360,43 +1464,42 @@ const stripHtml = (html) => {
               className="space-y-4"
             >
               {master.isHierarchical &&
-                master.parentMasterConfig &&
-                formParentKey && (
-                  <div className="mb-4">
-                    <label
-                      htmlFor={formParentKey}
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      {parentLabel}:
-                    </label>
-                    <select
-                      id={formParentKey}
-                      name={formParentKey}
-                      value={
-                        formData[formParentKey] === null
-                          ? ""
-                          : String(formData[formParentKey])
-                      }
-                      onChange={handleChange}
-                      required={master.parentMasterConfig.required}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isSaving || (selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Services"))}
-                    >
-                      <option value="">Select a {parentLabel}</option>
-                      {parentOptions.map((parent) => (
-                        <option
-                          key={parent[master.parentMasterConfig.idKey]}
-                          value={String(
-                            parent[master.parentMasterConfig.idKey]
-                          )}
-                        >
-                          {parent[master.parentMasterConfig.nameKey]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
+  master.parentMasterConfig &&
+  formParentKey && (
+    <div className="mb-4">
+      <label
+        htmlFor={formParentKey}
+        className="block text-sm font-medium text-gray-700 mb-1"
+      >
+        {parentLabel}:
+      </label>
+     <select
+  id={formParentKey}
+  name={formParentKey}
+  value={
+    formData[formParentKey] === null || formData[formParentKey] === undefined
+      ? ""
+      : String(formData[formParentKey]) // Ensure string comparison
+  }
+  onChange={handleChange}
+  required={master.parentMasterConfig.required}
+  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+  disabled={isSaving || (selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Service"))}
+>
+  <option value="">Select a {parentLabel}</option>
+  {parentOptions.map((parent) => (
+    <option
+      key={parent[master.parentMasterConfig.idKey]}
+      value={String( // Convert to string for consistent comparison
+        parent[master.parentMasterConfig.idKey]
+      )}
+    >
+      {parent[master.parentMasterConfig.nameKey]}
+    </option>
+  ))}
+</select>
+    </div>
+  )}
 <div className="mb-4">
   <label
     htmlFor={master.payloadKey}
@@ -1430,35 +1533,29 @@ const stripHtml = (html) => {
       </div>
 
       {/* Email Body Editor */}
-      <div className="mb-2">
+      <div className="mb-2 h-[150px] overflow-y-scroll">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Content:
         </label>
-        <ReactQuill
-          theme="snow"
-          value={formData["mailBody"] || ""}
-          onChange={(value) =>
-            handleChange({
-              target: { name: "mailBody", value },
-            })
-          }
-          readOnly={isSaving}
-          className="mt-1 mb-2 bg-white rounded-md border border-gray-300"
-          modules={{
-            toolbar: [
-              ['bold', 'italic', 'underline', 'strike'],
-              ['link'],
-              ['clean']
-            ],
-            clipboard: {
-              matchVisual: false,
-            }
-          }}
-          formats={[
-            'bold', 'italic', 'underline', 'strike',
-            'link'
-          ]}
-        />
+       <ReactQuill
+  theme="snow"
+  value={formData["mailBody"] || ""}
+  onChange={(value) =>
+    handleChange({
+      target: { name: "mailBody", value },
+    })
+  }
+  readOnly={isSaving}
+  className="bg-white rounded-md border border-gray-300 h-[150px] overflow-y-auto"
+  modules={{
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['link'],
+      ['clean']
+    ],
+    clipboard: { matchVisual: false }
+  }}
+/>
       </div>
 
       {/* Plain Text Preview: Title and Body */}
@@ -1469,10 +1566,10 @@ const stripHtml = (html) => {
             <span className="ml-2">{formData.subject || ''}</span>
           </div>
           <div>
-            <span className="font-semibold text-gray-700">Body:</span>
-            <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
-              {stripHtml(formData["mailBody"])}
-            </div>
+            <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
+<div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+  {stripHtmlTags(formData["mailBody"])}
+</div>
           </div>
         </div>
       )}
@@ -1567,19 +1664,32 @@ const stripHtml = (html) => {
                           :
                         </label>
                         {field === "mailBody" ? (
-                          <ReactQuill
-                            theme="snow"
-                            value={formData["mailBody"] || ""}
-                            onChange={(value) =>
-                              handleChange({
-                                target: { name: "mailBody", value },
-                              })
-                            }
-                            readOnly={isSaving}
-                            className="mt-1 mb-4"
-                            modules={modules}
-                            formats={formats}
-                          />
+                          <div>
+  <ReactQuill
+    theme="snow"
+    value={formData["mailBody"] || ""}
+    onChange={(value) =>
+      handleChange({ target: { name: "mailBody", value } })
+    }
+    readOnly={isSaving}
+    className="mt-1 mb-4"
+    modules={modules}
+    formats={formats}
+    style={{ height: '100%' }} 
+  />
+  <style>{`
+    /* Fix editor height and enable scroll inside */
+    .ql-editor {
+      height: 330px !important;
+      max-height: 330px !important;
+      overflow-y: scroll !important;
+    }
+    .ql-container {
+      height: 100% !important;
+    }
+  `}</style>
+</div>
+
                         ) : (
                           <input
                             id={field}
@@ -1627,5 +1737,6 @@ const stripHtml = (html) => {
         </div>
       </div>
     </div>
+    </>
   );
 };

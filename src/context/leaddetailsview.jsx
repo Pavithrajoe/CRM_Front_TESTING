@@ -19,6 +19,13 @@ import {
   Chip,
   Collapse,
   IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
@@ -34,7 +41,7 @@ import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
-import { FaFilePdf, FaEye, FaEdit, FaDownload } from 'react-icons/fa';
+import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 
 const LeadDetailView = () => {
@@ -71,11 +78,14 @@ const LeadDetailView = () => {
   const [quotationsLoading, setQuotationsLoading] = useState(false);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [expandedQuotation, setExpandedQuotation] = useState(null);
+  const [showRemarkDialog, setShowRemarkDialog] = useState(false);
+  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
 
   // Derived state
   const isLeadActive =
     !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
+  const showCreateQuotationButton = (isWon || immediateWonStatus || leadData?.bisConverted) && !showQuotationForm;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
@@ -83,7 +93,6 @@ const LeadDetailView = () => {
   // Extract company info from localStorage
   const extractAllUserInfo = () => {
     try {
-      // 1. Prioritize JWT Token for extraction
       const token = localStorage.getItem("token");
       let userData = null;
 
@@ -92,31 +101,24 @@ const LeadDetailView = () => {
         const decodedPayload = atob(base64Payload);
         userData = JSON.parse(decodedPayload);
       } else {
-        // 2. Fallback to 'user' key if no token exists
         const storedUserData = localStorage.getItem("user");
         if (storedUserData) {
           userData = JSON.parse(storedUserData);
         } else {
-          // No user data found at all
           throw new Error("User data not found in localStorage.");
         }
       }
 
-      // Extract and set company data
       const companyData = {
         company_id: userData.company_id,
-        icurrency_id: userData.icurrency_id || 2, // Use a default value
+        icurrency_id: userData.icurrency_id || 2,
         iCreated_by: userData.user_id,
       };
       setCompanyInfo(userData);
 
-      // Extract and set user details for display
       setLoggedInUserName(userData.cFull_name || userData.fullName || "User");
       setLoggedInCompanyName(userData.company_name || userData.organization || "Your Company");
       
-      console.log("Extracted company info:", companyData);
-      console.log("Extracted user details:", userData);
-
     } catch (error) {
       console.error("Error extracting user info:", error);
       showPopup("Error", "Failed to load user and company information", "error");
@@ -128,50 +130,86 @@ const LeadDetailView = () => {
       fetchLeadData();
       fetchLostReasons();
       fetchQuotations();
-      extractAllUserInfo(); // Call the consolidated function
+      extractAllUserInfo();
     }
   }, [leadId]);
 
   // New handler for Won button
   const handleWonClick = () => {
-    setShowQuotationForm(true);
+    setShowRemarkDialog(true);
   };
+
+  const handleRemarkSubmit = async () => {
+     if (!remarkData.remark.trim()) {
+       showPopup("Error", "Remark is required", "error");
+       return;
+     }
+ 
+     try {
+       const token = localStorage.getItem("token");
+       const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
+       if (!userId) throw new Error("User not authenticated");
+ 
+       setImmediateWonStatus(true);
+       setShowConfetti(true);
+       setTimeout(() => setShowConfetti(false), 5000);
+ 
+       const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
+         method: "PUT",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
+         },
+       });
+ 
+       if (!convertResponse.ok) {
+         setImmediateWonStatus(false);
+         setShowConfetti(false);
+         throw new Error("Failed to convert lead to deal");
+       }
+ 
+       const remarkPayload = {
+         remark: remarkData.remark.trim(),
+         leadId: parseInt(leadId),
+         leadStatusId: leadData?.ileadstatus_id,
+         createBy: userId,
+         ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+       };
+ 
+       const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify(remarkPayload),
+       });
+ 
+       if (!remarkResponse.ok) {
+         throw new Error("Failed to submit remark");
+       }
+ 
+       showPopup("Success", "Lead marked as won and remark saved!", "success");
+       setIsDeal(true);
+       setIsWon(true);
+       setIsLost(false);
+       setShowRemarkDialog(false);
+       fetchLeadData();
+     } catch (error) {
+       console.error("Error marking lead as won:", error);
+       showPopup("Error", error.message || "Failed to mark lead as won", "error");
+     }
+   };
 
   const handleQuotationCreated = async (quotationData) => {
     try {
-      const token = localStorage.getItem("token");
-      const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
-      if (!userId) throw new Error("User not authenticated");
-
-      const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!convertResponse.ok) {
-        throw new Error("Failed to convert lead to deal");
-      }
-
-      setImmediateWonStatus(true);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-
-      showPopup("Success", "Lead marked as won and deal created!", "success");
-      setIsDeal(true);
-      setIsWon(true);
-      setIsLost(false);
+      showPopup("Success", "Quotation created successfully!", "success");
       setShowQuotationForm(false);
-      
-      // Add the new quotation to the list
       setQuotations(prev => [quotationData, ...prev]);
-      
-      fetchLeadData();
+      fetchQuotations();
     } catch (error) {
-      console.error("Error marking lead as won:", error);
-      showPopup("Error", error.message || "Failed to mark lead as won", "error");
+      console.error("Error creating quotation:", error);
+      showPopup("Error", error.message || "Failed to create quotation", "error");
     }
   };
 
@@ -179,13 +217,11 @@ const LeadDetailView = () => {
 
   const handleDownloadPdf = async (quotation) => {
     try {
-      // Check if we have all required data
       if (!companyInfo || !leadData) {
         showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
         return;
       }
       
-      // Generate PDF using the imported function
       generateQuotationPDF(quotation, companyInfo, leadData);
       
       showPopup('Success', `PDF generated successfully!`, 'success');
@@ -196,7 +232,6 @@ const LeadDetailView = () => {
   };
 
   const toggleQuotationExpand = (quotationId, e) => {
-    // Stop event propagation to prevent the parent click handler from triggering
     if (e) {
       e.stopPropagation();
     }
@@ -329,8 +364,6 @@ const LeadDetailView = () => {
         setIsDeal(true);
         setIsLost(false);
         setImmediateWonStatus(true);
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
       } else if (!data.bactive) {
         setIsWon(false);
         setIsLost(true);
@@ -349,7 +382,6 @@ const LeadDetailView = () => {
     }
   };
 
-  // New function to fetch quotations
   const fetchQuotations = async () => {
     setQuotationsLoading(true);
     try {
@@ -367,11 +399,9 @@ const LeadDetailView = () => {
       }
 
       const data = await response.json();
-      console.log("quotations data:", data);
       setQuotations(data.data || []);
     } catch (error) {
       console.error("Error fetching quotations:", error);
-      // showPopup("Error", error.message || "Failed to fetch quotations", "error");
     } finally {
       setQuotationsLoading(false);
     }
@@ -429,7 +459,7 @@ const LeadDetailView = () => {
       fetchLeadData();
       fetchLostReasons();
       getUserInfoFromLocalStorage();
-      fetchQuotations(); // Load quotations when component mounts
+      fetchQuotations();
     }
   }, [leadId]);
 
@@ -499,7 +529,7 @@ const LeadDetailView = () => {
         },
       });
 
-      if (!response.ok极市汇仪) throw new Error("Failed to fetch templates");
+      if (!response.ok) throw new Error("Failed to fetch templates");
 
       const data = await response.json();
       setTemplates(data.data || []);
@@ -520,6 +550,56 @@ const LeadDetailView = () => {
   const applyTemplate = (template) => {
     setMailSubject(template.mailTitle);
     setMailContent(template.mailBody);
+  };
+
+  // You'll need to fetch stages for the StatusBar component
+  const [stages, setStages] = useState([]);
+  
+  const fetchStages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch stages');
+      const data = await response.json();
+
+      const formattedStages = Array.isArray(data.response)
+        ? data.response
+            .map(item => ({
+              id: item.ilead_status_id,
+              name: item.clead_name,
+              order: item.orderId || 9999,
+              bactive: item.bactive,
+            }))
+            .sort((a, b) => a.order - b.order)
+        : [];
+
+      setStages(formattedStages);
+    } catch (err) {
+      console.error('Error fetching stages:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchStages();
+  }, []);
+
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "N/A";
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
   };
 
   return (
@@ -545,7 +625,7 @@ const LeadDetailView = () => {
       </div>
 
       {/* Right Column: Status Bar, Tabs, and Content */}
-      <div className="w-full lg:w-3极市汇仪/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
         <StatusBar
           leadId={leadId}
           leadData={leadData}
@@ -553,12 +633,10 @@ const LeadDetailView = () => {
           isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
 
-        {/* Compact Quotation Section - REMOVED the clickable box that opens popup */}
         {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
           <Box className="mb-4">
             <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
               <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
-                {/* <MdExpandMore className="mr-2" /> */}
                 Quotation Available!
               </Typography>
             </div>
@@ -567,7 +645,7 @@ const LeadDetailView = () => {
 
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p极市汇仪-1 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
             {["Activity", "Task", "Comments", "Reminders"].map((label, idx) => (
               <button
                 key={label}
@@ -584,13 +662,23 @@ const LeadDetailView = () => {
           </div>
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-            {/* Quotation Button (only visible when Won) - This is the only button that opens the popup */}
-            {(isWon || immediateWonStatus || leadData?.bisConverted) && (
+            {/* View Quotations Button (only visible when Won and has quotations) */}
+            {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
               <button
                 onClick={() => setShowQuotationsList(true)}
                 className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
               >
                 <FaEye className="mr-1" /> View Quotations
+              </button>
+            )}
+            
+            {/* Create Quotation Button (only visible when Won) */}
+            {showCreateQuotationButton && (
+              <button
+                className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                onClick={() => setShowQuotationForm(true)}
+              >
+                <FaPlus className="mr-1" /> Create Quotation
               </button>
             )}
             
@@ -611,7 +699,7 @@ const LeadDetailView = () => {
                     className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                     onClick={handleWonClick}
                   >
-                    <FaEdit className="mr-1" /> Create Quotation
+                    <FaPlus className="mr-1" /> Won
                   </button>
                 )}
 
@@ -651,20 +739,52 @@ const LeadDetailView = () => {
         onQuotationCreated={handleQuotationCreated}
       />
 
-      {/* Quotations List Dialog */}
+      {/* Remark Dialog */}
+      <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
+        <DialogTitle>Enter Remark for Won Status</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Remark *"
+            fullWidth
+            multiline
+            rows={3}
+            value={remarkData.remark}
+            onChange={e => setRemarkData({...remarkData, remark: e.target.value})}
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Project Value (optional)"
+            type="number"
+            fullWidth
+            value={remarkData.projectValue}
+            onChange={e => setRemarkData({...remarkData, projectValue: e.target.value})}
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+          <Button onClick={handleRemarkSubmit} variant="contained">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Quotations List Dialog with Detailed View */}
       <Dialog 
         open={showQuotationsList} 
         onClose={() => setShowQuotationsList(false)} 
-        maxWidth="md" 
+        maxWidth="lg" 
         fullWidth
+        scroll="paper"
       >
         <DialogTitle className="bg-blue-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center text-blue-700">
-              <FaEye className="mr-2" /> Your Quotations
+              Quotation Details
             </div>
             <IconButton onClick={() => setShowQuotationsList(false)} size="small">
-              {/* Close icon */}
               <MdExpandLess />
             </IconButton>
           </div>
@@ -677,46 +797,84 @@ const LeadDetailView = () => {
           ) : quotations.length > 0 ? (
             <List>
               {quotations.map((quotation) => (
-                <div key={quotation.iQuotation_id} className="bg-white rounded-lg shadow-sm border mb-3">
+                <Card key={quotation.iQuotation_id} className="mb-3">
                   <ListItem 
-                    className="border-b"
+                    className="bg-blue-50"
+                    secondaryAction={
+                      <div className="flex items-center">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadPdf(quotation);
+                          }}
+                          title="Download PDF"
+                        >
+                          <FaDownload />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
+                        >
+                          {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
+                        </IconButton>
+                      </div>
+                    }
                   >
                     <ListItemText
-                      primary={<span className="font-semibold text-blue-700">{quotation.cQuote_number}</span>}
-                      secondary={<div className="text-xs text-gray-600">Valid until: {new Date(quotation.dValid_until).toLocaleDateString()}</div>}
+                      primary={
+                        <Typography variant="h6" className="text-blue-800">
+                          {quotation.cQuote_number}
+                        </Typography>
+                      }
+                      secondary={
+                        <div className="text-sm text-gray-600">
+                          Valid until: {formatDate(quotation.dValid_until)}
+                          {quotation.fTotal_amount && ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+                        </div>
+                      }
                     />
-                    <div className="flex items-center">
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDownloadPdf(quotation);
-                        }}
-                        title="Download PDF"
-                      >
-                        <FaDownload />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
-                      >
-                        {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
-                      </IconButton>
-                    </div>
                   </ListItem>
                   <Collapse in={expandedQuotation === quotation.iQuotation_id} timeout="auto" unmountOnExit>
-                    {/* All quotation details go here */}
-                    <div className="p-4">
-                      <Typography variant="body2" className="mb-3 text-gray-700">
-                        {quotation.cTerms}
-                      </Typography>
-                      <Typography variant="body2" className="mb-3 text-gray-700">
-                        Amount: ${quotation.fTotal_amount.toFixed(2)}
-                      </Typography>
-                      {/* ...any other details needed... */}
-                    </div>
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" className="font-bold">Terms & Conditions</Typography>
+                          <Typography variant="body2" className="mt-2 text-gray-700">
+                            {quotation.cTerms || "No terms specified"}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" className="font-bold">Financial Details</Typography>
+                          <TableContainer component={Paper} className="mt-2">
+                            <Table size="small">
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell className="font-bold">Subtotal</TableCell>
+                                  <TableCell>{quotation.fSub_total?.toFixed(2) || "0.00"}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-bold">Tax Amount</TableCell>
+                                  <TableCell>{quotation.fTax_amount?.toFixed(2) || "0.00"}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-bold">Total Amount</TableCell>
+                                  <TableCell className="font-bold">{quotation.fTotal_amount?.toFixed(2) || "0.00"}</TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2" className="font-bold">Additional Information</Typography>
+                          <Typography variant="body2" className="mt-2 text-gray-700">
+                            {quotation.cNotes || "No additional notes"}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
                   </Collapse>
-                </div>
+                </Card>
               ))}
             </List>
           ) : (
@@ -735,15 +893,15 @@ const LeadDetailView = () => {
       {/* Lead Lost Reason Dialog */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:极市汇仪max-w-md md:max-w-lg lg:max-w-xl">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb极市汇仪-3 sm:mb-4">Why mark this lead as Lost?</h2>
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
                   Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="lostReason"
+                  id极市汇仪="lostReason"
                   name="lostReason"
                   value={selectedLostReasonId}
                   onChange={handleReasonChange}
@@ -772,7 +930,7 @@ const LeadDetailView = () => {
                   rows="3"
                   value={lostDescription}
                   onChange={(e) => setLostDescription(e.target.value)}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md极市汇仪 text-sm sm:text-base"
                   placeholder="Enter a brief description for marking as lost..."
                 ></textarea>
               </div>
@@ -786,7 +944,7 @@ const LeadDetailView = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:极市汇仪py-2 rounded-md hover:极市汇仪bg-blue-600 text-sm sm:text-base"
                 >
                   Submit
                 </button>
@@ -812,7 +970,7 @@ const LeadDetailView = () => {
                 onClick={() => setIsMailOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 极市汇仪24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -821,7 +979,7 @@ const LeadDetailView = () => {
             <div className="flex flex-col md:flex-row gap-4 flex-grow">
               {/* Templates Section */}
               <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-black-200">
-                <div className="极市汇仪flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
                 </div>
 
@@ -832,7 +990,7 @@ const LeadDetailView = () => {
                 ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-blue-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 极市汇仪L7.89 5.26a2 2 0 002.22 0L21 8M5 极市汇仪19h14a2 2 0 002-2极市汇仪V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <p>No templates available</p>
                   </div>
@@ -868,7 +1026,7 @@ const LeadDetailView = () => {
                     e.preventDefault();
                     sendEmail();
                   }}
-                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
+                  className="flex flex-col flex-grow space极市汇仪-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
                 >
                   <div className="grid grid-cols-1 gap-4">
                     {/* To Field */}
@@ -879,7 +1037,7 @@ const LeadDetailView = () => {
                           type="email"
                           className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                           placeholder="example@email.com"
-                          value极市汇仪={sentTo}
+                          value={sentTo}
                           onChange={(e) => setSentTo(e.target.value)}
                           required
                         />
@@ -892,7 +1050,7 @@ const LeadDetailView = () => {
                       <div className="relative">
                         <input
                           type="text"
-                          className="w-full bg-white/70 border border-gray极市汇仪-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                           placeholder="cc@example.com (separate multiple with commas)"
                           value={ccRecipients}
                           onChange={(e) => setCcRecipients(e.target.value)}
@@ -941,7 +1099,7 @@ const LeadDetailView = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex justify-end space极市汇仪-x-3 pt-2">
+                  <div className="flex justify-end space-x-3 pt-2">
                     <button
                       type="button"
                       onClick={() => setIsMailOpen(false)}
@@ -952,7 +1110,7 @@ const LeadDetailView = () => {
                     <button
                       type="submit"
                       className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                      disabled={isSendingMail}
+                      disabled极市汇仪={isSendingMail}
                     >
                       {isSendingMail ? (
                         <>

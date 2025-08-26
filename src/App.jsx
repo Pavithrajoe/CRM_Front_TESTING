@@ -99,7 +99,7 @@ function App() {
                   <Route path="/company-leads" element={<CompanyLeads />} />
                   <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
                   <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis />} />
-                  <Route path="leads" element={<LeadsDashboard />} />
+                  <Route path="/leads" element={<LeadsDashboard />} />
                   <Route path="leadlistview" element={<LeadListViewPage />} />
                   <Route path="leadcardview" element={<LeadCardViewPage />} />
                   <Route path="leadmanage" element={<LeadManagePage />} />

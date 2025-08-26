@@ -1,3 +1,5 @@
+// last update 26/08 workinh fine
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
@@ -135,15 +137,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
-    // console.log("existingClientData:", existingClientData);
-    // console.log("Potential list:", Potential);
-    // console.log("Status list:", status);
-    // console.log("Lead Industry list:", leadIndustry);
-    // console.log("Lead sub Industry list:", leadSubIndustry);
-    // console.log("Source list:", source);
-    // console.log("Service list:", service);
-    // console.log("Sub Service list:", subServiceList);
-    // console.log("City list:", cities);
+    
    
     // The guard condition is still essential.
     if (existingClientData &&
@@ -356,7 +350,6 @@ const checkExisting = async (fieldName, fieldValue) => {
 
 
 const handleSearchExistingLead = async () => {
-  // Check if both fields are empty
   if (!searchMobile && !searchEmail) {
     setPopupMessage("Please enter either mobile number or email to search");
     setIsPopupVisible(true);
@@ -364,9 +357,8 @@ const handleSearchExistingLead = async () => {
     return;
   }
 
-  // Validate mobile number if entered
   if (searchMobile) {
-    const mobileRegex = /^[0-9]{6,15}$/; // digits only, length 6-15
+    const mobileRegex = /^[0-9]{6,15}$/; 
     if (!mobileRegex.test(searchMobile)) {
       setPopupMessage("Mobile number must contain only 6 to 15 digits"); 
       setIsPopupVisible(true);
@@ -386,7 +378,6 @@ const handleSearchExistingLead = async () => {
     }
   }
     
-
   setLoading(true);
   setFoundLeads([]);
 
@@ -394,7 +385,6 @@ const handleSearchExistingLead = async () => {
     let body = {};
 
     if (searchMobile) {
-      // Always include country code if searching by phone
       body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
     } else if (searchEmail) {
       body = { email: searchEmail };
@@ -450,7 +440,6 @@ const handleSelectLead = async (leadId) => {
     const resData = await res.json();
 
 if (resData && resData.ilead_id) {
-  // Extract dynamic country code like +91, +1, +971, etc.
   const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
   const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
 
@@ -483,7 +472,6 @@ else {
     setLoading(false);
   }
 };
-
 
   const fetchDropdownData = useCallback(
     async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {
@@ -594,7 +582,6 @@ useEffect(() => {
         );
         setFilteredMobileCountryCodes(filtered);
     } else {
-        // If the search input is empty, show all country codes
         setFilteredMobileCountryCodes(countryCodes);
     }
 }, [searchMobileCountryCode, countryCodes]);
@@ -862,9 +849,7 @@ useEffect(() => {
         error = "Lead Name cannot exceed 254 characters";
       }
     }
-    // if (name === "cpincode" && value && !/^\d{10}$/.test(value)) {
-    //   error = "Upto 10-digit pincode allowed";
-    // }
+    
     if (name === "cpincode" && value && !/^\d{6,10}$/.test(value)) {
       error = "Pincode must be between 6 and 10 digits";
     }
@@ -979,7 +964,6 @@ const splitPhoneNumber = (fullPhoneNumber) => {
     };
   }
 
-  // Updated regex to handle an optional space after the country code
   const regexMatch = fullPhoneNumber.match(/^\+(\d{1,4})\s*(.*)/);
 
   if (regexMatch && regexMatch.length === 3) {
@@ -989,7 +973,6 @@ const splitPhoneNumber = (fullPhoneNumber) => {
     };
   }
 
-  // If no space is present, use the original regex as a fallback
   const fallbackMatch = fullPhoneNumber.match(/^\+(\d{1,4})(.*)/);
   if (fallbackMatch && fallbackMatch.length === 3) {
     return {
@@ -999,12 +982,11 @@ const splitPhoneNumber = (fullPhoneNumber) => {
   }
 
   return {
-    countryCode: '+91', // Default country code
+    countryCode: '+91',
     nationalNumber: fullPhoneNumber,
   };
 };
 
-// State setters lookup for the search inputs, to replace eval()
 const searchSetters = {
   searchMobileCountryCode: setSearchMobileCountryCode,
   searchWhatsappCountryCode: setSearchWhatsappCountryCode,
@@ -1032,11 +1014,9 @@ const dropdownOpenSetters = {
 };
 
 
-
 const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Handles validation for the existing client mobile field
     if (name === 'existingClientMobile') {
         setExistingClientMobile(value);
         const error = validateField(name, value);
@@ -1046,7 +1026,6 @@ const handleChange = (e) => {
 
     // --- Start of logic for all searchable dropdowns ---
     if (name.startsWith("search")) {
-        // Update the specific search state based on the input name
         if (name === "searchMobileCountryCode") {
             setSearchMobileCountryCode(value);
         } 
@@ -1059,12 +1038,10 @@ const handleChange = (e) => {
             searchSetters[name](value);
         }
 
-        // Open the dropdown for the corresponding search input
         if (dropdownOpenSetters[name]) {
             dropdownOpenSetters[name](true);
         }
 
-        // Reset dependent fields if the search input is cleared
         if (!value) {
             if (name === "searchPotential") setForm(prev => ({ ...prev, iLeadpoten_id: "" }));
             if (name === "searchStatus") setForm(prev => ({ ...prev, ileadstatus_id: "" }));
@@ -1166,7 +1143,6 @@ const handleChange = (e) => {
   const handleBlur = (e) => {
     const { name, value } = e.target;
     
-    
     if (name === "searchMobileCountryCode") {
         const selectedCode = countryCodes.find(
             (cc) => cc.code === value || cc.name.toLowerCase().includes(value.toLowerCase())
@@ -1176,8 +1152,6 @@ const handleChange = (e) => {
             setSearchMobileCountryCode(selectedCode.code);
             setForm((prev) => ({ ...prev, phone_country_code: selectedCode.code }));
         } else {
-            // setSearchMobileCountryCode(value);
-            // setForm((prev) => ({ ...prev, phone_country_code: value }));
              setSearchMobileCountryCode(form.phone_country_code);
             setForm((prev) => ({ ...prev, phone_country_code: prev.phone_country_code }));
         }
@@ -1190,8 +1164,7 @@ const handleChange = (e) => {
             setSearchWhatsappCountryCode(selectedCode.code);
             setForm((prev) => ({ ...prev, whatsapp_country_code: selectedCode.code }));
         } else {
-            // setForm((prev) => ({ ...prev, whatsapp_country_code: value }));
-            
+         
             setSearchWhatsappCountryCode(form.whatsapp_country_code);
             setForm((prev) => ({ ...prev, whatsapp_country_code: prev.whatsapp_country_code }));
         }
@@ -1259,9 +1232,6 @@ const handleChange = (e) => {
   }
   setIsSubServiceDropdownOpen(false);
 }
-    // if (name === "iphone_no" || name === "cwhatsapp" || name === "cemail") {
-    //   checkExisting(name, value);
-    // }
     setErrors((prev) => ({
       ...prev,
       [name]: validateField(name, value),
@@ -1323,9 +1293,7 @@ const handleSubmit = async (e) => {
   let validationErrors = {};
   let formValid = true;
   if (isExistingClientForm && !existingClientData) {
-    // if (!existingClientMobile || existingClientMobile.length !== 10) {
-    //   validationErrors.existingClientMobile = "Please enter a valid 10-digit mobile number.";
-    // }
+   
     if (!existingClientMobile || existingClientMobile.length < 6 || existingClientMobile.length > 15) {
       validationErrors.existingClientMobile = "Please enter a valid mobile number (6 to 15 digits).";
     }
@@ -1339,8 +1307,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
     return;
   }
-
-  
   
   if (!isExistingClientForm || existingClientData) {
     
@@ -1386,6 +1352,8 @@ const handleSubmit = async (e) => {
       isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
       lead_source_id: Number(form.lead_source_id),
       whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+      // cpincode: form.cpincode,
+      cpincode: form.cpincode ? Number(form.cpincode) : null,
     };
 
     if (saveTriggerRef.current) {
@@ -1504,23 +1472,23 @@ const handleSubmit = async (e) => {
   };
 
      const popupStyle = {
-      position: "fixed",               
+      position: "fixed",               // Make it global, not relative to form
       top: "140%",   
-      // top: "50%",                  
-      left: "50%",                     
+      // top: "50%",                  // Center vertically
+      left: "50%",                     // Center horizontally
       transform: "translate(-50%, -50%)",
       backgroundColor: "#f9f9f9ff",
       padding: "16px 24px",
       borderRadius: "10px",
       boxShadow: "3px 4px 10px rgba(0, 81, 255, 0.86)",
-      zIndex: 10000,                   
+      zIndex: 10000,                   // Ensure it overlays form content
       minWidth: "300px",
       textAlign: "center",
     };
 
     const topPopupStyle = {
-  ...popupStyle, 
-  top: "85%", 
+  ...popupStyle, // Inherit all other styles from the base
+  top: "85%", // Override the top property to a higher value
 };
 
 
@@ -2160,10 +2128,8 @@ const handleSubmit = async (e) => {
 
           <button
     type="submit"
-    // Use this single, unified condition for the 'disabled' attribute.
     disabled={ loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key])) }
 
-    // Use the exact same condition to control the visual state.
     className={`w-[150px] flex justify-center items-center bg-blue-600 text-white py-2 font-semibold rounded-md transition
         ${
             loading || (isExistingClientForm ? !existingClientData : Object.keys(errors).some((key) => errors[key]))
@@ -2197,6 +2163,7 @@ const handleSubmit = async (e) => {
         "Create Lead"
     )}
 </button>
+               
                 
             </div>
 
@@ -2208,7 +2175,6 @@ const handleSubmit = async (e) => {
 
             
         </form>
-        
         
         {isPopupVisible && (
   <div

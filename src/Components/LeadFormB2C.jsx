@@ -71,7 +71,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   });
 
   const [formLabels, setFormLabels] = useState({
-    leadFormTitle: "🚀 Let's Get Started - Create a New Lead",
+    leadFormTitle: "🚀 Let's Get Started - Create a New Customer",
     section1Label: "Lead Details",
     section2Label: "Contact Information",
     section3Label: "Address Details",
@@ -150,7 +150,7 @@ useEffect(() => {
         subServiceList.length > 0 &&
         cities.length > 0
     ) {
-        console.log("Guard condition passed. Populating form...");
+        // console.log("Guard condition passed. Populating form...");
 
         // Extract phone number parts
         const phoneNum = existingClientData.iphone_no || "";
@@ -778,7 +778,7 @@ useEffect(() => {
 
         if (data?.Message) {
           setFormLabels({
-            leadFormTitle: data.Message.leadFormTitle || "🚀 Let's Get Started - Create a New Lead for B2C",
+            leadFormTitle: data.Message.leadFormTitle || "🚀 Let's Get Started - Create a New Customer",
             section1Label: data.Message.section1Label || "Lead Details",
             section2Label: data.Message.section2Label || "Contact Information",
             section3Label: data.Message.section3Label || "Address Details",
@@ -888,15 +888,15 @@ useEffect(() => {
       }
     }
 
-    if (name === "corganization") {
-      if (!value) {
-        error = "Mandatory";
-      } else if (!/^[A-Za-z\s]+$/.test(value)) {
-        error = "Organization Name can only contain letters and spaces";
-      } else if (value.length > 100) {
-        error = "Organization Name cannot exceed 100 characters";
-      }
-    }
+    // if (name === "corganization") {
+    //   if (!value) {
+    //     error = "Mandatory";
+    //   } else if (!/^[A-Za-z\s]+$/.test(value)) {
+    //     error = "Organization Name can only contain letters and spaces";
+    //   } else if (value.length > 100) {
+    //     error = "Organization Name cannot exceed 100 characters";
+    //   }
+    // }
 
     if (name === "iphone_no" && !value) {
       error = "Mandatory";
@@ -916,22 +916,22 @@ useEffect(() => {
     if (name === "ileadstatus_id" && !value) {
       error = "Mandatory";
     }
-    if (name === "cindustry_id" && !value) {
-      error = "Mandatory";
-    }
+    // if (name === "cindustry_id" && !value) {
+    //   error = "Mandatory";
+    // }
     if (name === "lead_source_id" && !value) {
       error = "Mandatory";
     }
-    if (name === "ino_employee") {
-      const num = Number(value);
-      if (value !== "" && (isNaN(num) || !Number.isInteger(num))) {
-        error = "Must be a valid whole number";
-      } else if (value !== "" && num < 0) {
-        error = "Mandatory && Number must be greater than 0";
-      } else if (value !== "" && num > 999999) {
-        error = "Number must be less than 1 million";
-      }
-    }
+    // if (name === "ino_employee") {
+    //   const num = Number(value);
+    //   if (value !== "" && (isNaN(num) || !Number.isInteger(num))) {
+    //     error = "Must be a valid whole number";
+    //   } else if (value !== "" && num < 0) {
+    //     error = "Number must be greater than 0";
+    //   } else if (value !== "" && num > 999999) {
+    //     error = "Number must be less than 1 million";
+    //   }
+    // }
 
     if (name === "iproject_value") {
       const amount = parseFloat(value);
@@ -1527,7 +1527,7 @@ const handleSubmit = async (e) => {
 
   const basicLeadFields = [
     { label: "Lead Name", name: "clead_name", required: true },
-    { label: "Organization Name", name: "corganization", required: true },
+    // { label: "Organization Name", name: "corganization", required: true },
     { label: "Website", name: "cwebsite", required: false },
   ];
 
@@ -1564,7 +1564,7 @@ const handleSubmit = async (e) => {
         </button>
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-center">
+          <h2 className="text-2xl font-bold items-center text-center">
             {formLabels.leadFormTitle}
           </h2>
           <div className="flex items-center space-x-4">
@@ -1699,7 +1699,7 @@ const handleSubmit = async (e) => {
         {foundLeads.length > 0 && (
             <div className="flex flex-col relative w-full md:w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  B2C  Lead Name <span className="text-red-500">*</span>
+                  Lead Name <span className="text-red-500">*</span>
                 </label>
                 <select
                     name="ilead_id"
@@ -1778,39 +1778,40 @@ const handleSubmit = async (e) => {
             required: true,
             emptyType: "status"
           },
-          {
-            label: "Industry",
-            ref: industryDropdownRef,
-            inputName: "searchIndustry",
-            searchValue: searchIndustry,
-            setSearch: setSearchIndustry,
-            open: isIndustryDropdownOpen,
-            setOpen: setIsIndustryDropdownOpen,
-            list: filteredIndustry,
-            keyField: "iindustry_id",
-            displayField: "cindustry_name",
-            formField: "cindustry_id",
-            error: errors.cindustry_id,
-            required: true,
-            emptyType: "industry"
-          },
-          {
-            label: "Sub-Industry",
-            ref: subIndustryDropdownRef,
-            inputName: "searchSubIndustry",
-            searchValue: searchSubIndustry,
-            setSearch: setSearchSubIndustry,
-            open: isSubIndustryDropdownOpen,
-            setOpen: setIsSubIndustryDropdownOpen,
-            list: filteredSubIndustry,
-            keyField: "isubindustry",
-            displayField: "subindustry_name",
-            formField: "csubindustry_id",
-            error: errors.csubindustry_id,
-            disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
-            required: false,
-            emptyType: "subindustry"
-          },
+          // Industry and subindustry - no need to customer
+          // {
+          //   label: "Industry",
+          //   ref: industryDropdownRef,
+          //   inputName: "searchIndustry",
+          //   searchValue: searchIndustry,
+          //   setSearch: setSearchIndustry,
+          //   open: isIndustryDropdownOpen,
+          //   setOpen: setIsIndustryDropdownOpen,
+          //   list: filteredIndustry,
+          //   keyField: "iindustry_id",
+          //   displayField: "cindustry_name",
+          //   formField: "cindustry_id",
+          //   error: errors.cindustry_id,
+          //   required: true,
+          //   emptyType: "industry"
+          // },
+          // {
+          //   label: "Sub-Industry",
+          //   ref: subIndustryDropdownRef,
+          //   inputName: "searchSubIndustry",
+          //   searchValue: searchSubIndustry,
+          //   setSearch: setSearchSubIndustry,
+          //   open: isSubIndustryDropdownOpen,
+          //   setOpen: setIsSubIndustryDropdownOpen,
+          //   list: filteredSubIndustry,
+          //   keyField: "isubindustry",
+          //   displayField: "subindustry_name",
+          //   formField: "csubindustry_id",
+          //   error: errors.csubindustry_id,
+          //   disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
+          //   required: false,
+          //   emptyType: "subindustry"
+          // },
           {
             label: "Lead source",
             ref: sourceDropdownRef,
@@ -1909,9 +1910,9 @@ const handleSubmit = async (e) => {
             </div>
           )
         )}
-        <div>
+        {/* No. of employees - no need to customer */}
+        {/* <div>
           <label className="text-sm font-medium">No. of employees 
-          {/* <span className="text-red-600">*</span>  */}
           </label>
           <input
             type="number"
@@ -1926,7 +1927,7 @@ const handleSubmit = async (e) => {
           {errors.ino_employee && (
             <p className="text-red-600 text-sm">{errors.ino_employee}</p>
           )}
-        </div>
+        </div> */}
         <div>
           <label className="text-sm font-medium">Project Value</label>
           <input

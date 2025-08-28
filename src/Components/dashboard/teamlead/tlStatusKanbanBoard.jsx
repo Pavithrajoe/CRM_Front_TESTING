@@ -196,11 +196,12 @@ const StatusKanbanTab = () => {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-white shadow-lg min-h-[200px]"
+                    className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-blue-300 shadow-lg min-h-[200px]"
                   >
 
                     <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
-                      <span>{status.clead_name || "Untitled Status"}</span>
+                        <span className="flex-1 text-center">{status.clead_name || "Untitled Status"}</span>
+                      {/* <span>{status.clead_name || "Untitled Status"}</span> */}
                       <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                         {leadsForStatus.length}
                       </span>
@@ -225,23 +226,25 @@ const StatusKanbanTab = () => {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               onClick={() => goToDetail(lead.ilead_id)}
-                              className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-blue-100"
+                              // className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-blue-100"
+                              className="p-3 bg-green-300 hover:bg-yellow-200 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-black text-black-800"
+
                             >
-                              <span className="font-medium text-blue-800 text-base">
+                              <span className="font-medium text-black text-base">
                                 {lead.clead_name || "Unnamed Lead"}
                               </span>
                               {lead.corganization && (
-                                <p className="text-sm text-blue-600 mt-1">
+                                <p className="text-base text-black-900 mt-1">
                                   {lead.corganization}
                                 </p>
                               )}
                               {lead.cemail && (
-                                <p className="text-xs text-blue-500 mt-0.5 truncate">
+                                <p className="text-base text-black-900 mt-0.5 truncate">
                                   {lead.cemail}
                                 </p>
                               )}
                               {lead.iphone_no && (
-                                <p className="text-xs text-blue-500 mt-0.5 truncate">
+                                <p className="text-base text-black-900 mt-0.5 truncate">
                                   {lead.iphone_no}
                                 </p>
                               )}

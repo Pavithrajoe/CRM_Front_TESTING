@@ -63,6 +63,7 @@ export const ENDPOINTS = {
   CALL_LOGS: `${BASE_URL_DCRM}/getCallLogs`,
   EXCEL_IMPORT: `${BASE_URL}/import-excel-file`,
   CALLLOG_ACCESS: `${BASE_URL}/users/userAccess`,
+  BUSINESS_TYPE: `${BASE_URL}/business-type`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

@@ -47,12 +47,26 @@ const AccountSettings = () => {
     whatsapp: false,
   });
 
-  const [leadFormType, setLeadFormType] = useState("B2C");
-
+  const [leadFormType, setLeadFormType] = useState(null); 
+  const [businessTypes, setBusinessTypes] = useState([]);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
 
-  // Load profile data
+  // Fetch business types
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get(`${ENDPOINTS.BASE_URL_IS}/business-type`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const list = res.data?.data?.data || [];
+        setBusinessTypes(list.filter(bt => bt.bactive)); 
+      })
+      .catch((err) => console.error("Error fetching business types:", err));
+  }, [token]);
+
+  //  Fetch company profile
   useEffect(() => {
     if (!token || !companyId) return;
 
@@ -63,7 +77,6 @@ const AccountSettings = () => {
       })
       .then((res) => {
         const data = res.data.result;
-
         if (data && data.cCompany_name) {
           setIsProfileLoaded(true);
           setProfile({
@@ -82,43 +95,31 @@ const AccountSettings = () => {
             contacts: data.enableContacts || false,
             whatsapp: data.enableWhatsapp || false,
           });
-          setLeadFormType(data.cLead_form_type || "B2C");
+
+          
+          setLeadFormType(prev => prev ?? (Number(data.ibusiness_type) || (businessTypes[0]?.id || 1)));
+
         }
       })
       .catch((err) => console.error("Error fetching profile:", err))
       .finally(() => setLoading(false));
-  }, [token, companyId]);
+  }, [token, companyId, businessTypes]);
 
   const validateField = (name, value) => {
     const newErrors = { ...errors };
-
-    if (name === 'companyName' && value.length > 50) {
-      newErrors.companyName = 'Maximum 50 characters allowed';
-    }
+    if (name === 'companyName' && value.length > 50) newErrors.companyName = 'Maximum 50 characters allowed';
     else if (name === 'email') {
       if (value.length > 50) newErrors.email = 'Maximum 50 characters allowed';
-      else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        newErrors.email = 'Invalid email format';
-      }
+      else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) newErrors.email = 'Invalid email format';
     }
     else if (name === 'phone') {
       if (!/^\d{10}$/.test(value)) newErrors.phone = 'Must be 10 digits';
     }
-    else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value)) {
-      newErrors.gst = 'Must be exactly 15 alphanumeric characters';
-    }
-    else if (name === 'website' && value.length > 50) {
-      newErrors.website = 'Maximum 50 characters allowed';
-    }
-    else if (['address1', 'address2', 'address3'].includes(name) && value.length > 50) {
-      newErrors[name] = 'Maximum 50 characters allowed';
-    }
-    else if (name === 'cityId' && isNaN(value)) {
-      newErrors.cityId = 'Must be a number';
-    }
-    else {
-      delete newErrors[name];
-    }
+    else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value)) newErrors.gst = 'Must be exactly 15 alphanumeric characters';
+    else if (name === 'website' && value.length > 50) newErrors.website = 'Maximum 50 characters allowed';
+    else if (['address1','address2','address3'].includes(name) && value.length > 100) newErrors[name] = 'Maximum 100 characters allowed';
+    else if (name === 'cityId' && isNaN(value)) newErrors.cityId = 'Must be a number';
+    else delete newErrors[name];
 
     setErrors(newErrors);
     return !newErrors[name];
@@ -135,7 +136,7 @@ const AccountSettings = () => {
   };
 
   const handleLeadFormTypeChange = (event) => {
-    setLeadFormType(event.target.value);
+    setLeadFormType(Number(event.target.value));
   };
 
   const buildPayload = () => ({
@@ -152,7 +153,7 @@ const AccountSettings = () => {
     enableEmail: toggles.email,
     enableContacts: toggles.contacts,
     enableWhatsapp: toggles.whatsapp,
-    cLead_form_type: leadFormType,
+    ibusiness_type: leadFormType,
   });
 
   const handleSaveChanges = useCallback(async () => {
@@ -160,14 +161,17 @@ const AccountSettings = () => {
       alert("Please fix validation errors before saving");
       return;
     }
-
     setLoading(true);
     try {
-      await axios.put(
-        `${ENDPOINTS.BASE_URL_IS}/company/${companyId}`,
-        buildPayload(),
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, buildPayload(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    
+    // Automatically refresh lead forms when the Company Lead Form Type is updated in Account Settings (next 3 line) 
+      const updatedType = leadFormType; 
+      const event = new CustomEvent("leadFormTypeChanged", { detail: updatedType });
+      window.dispatchEvent(event);
+
       alert("Profile updated successfully!");
     } catch (err) {
       alert("Failed to update profile");
@@ -182,14 +186,11 @@ const AccountSettings = () => {
       alert("Please fix validation errors before creating");
       return;
     }
-
     setLoading(true);
     try {
-      await axios.post(
-        `${ENDPOINTS.BASE_URL_IS}/company`,
-        buildPayload(),
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post(`${ENDPOINTS.BASE_URL_IS}/company`, buildPayload(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert("Profile created successfully!");
       setIsProfileLoaded(true);
       setShowCreatePanel(false);
@@ -214,16 +215,14 @@ const AccountSettings = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {[
-          ["Company Name*", "companyName", "text", 50],
+        {[["Company Name*", "companyName", "text", 50],
           ["Email", "email", "email", 50],
           ["Phone*", "phone", "tel", 10],
           ["GST No", "gst", "text", 15],
           ["Website", "website", "url", 50],
           ["Address 1", "address1", "text", 50],
           ["Address 2", "address2", "text", 50],
-          ["Address 3", "address3", "text", 50],
-        ].map(([label, name, type, maxLength]) => (
+          ["Address 3", "address3", "text", 50]].map(([label, name, type, maxLength]) => (
           <div key={name} className="flex flex-col">
             <label className="text-xs text-gray-600 mb-1">{label}</label>
             <input
@@ -242,39 +241,38 @@ const AccountSettings = () => {
         ))}
       </div>
 
+      {/* Lead Form Type */}
       <div className="border-t pt-4 mb-6">
         <h2 className="text-[18px] font-medium text-gray-900 mb-4">Company Lead Form Type</h2>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center">
-            <input
-              id="b2b-radio"
-              type="radio"
-              value="B2B"
-              name="leadFormType"
-              checked={leadFormType === "B2B"}
-              onChange={handleLeadFormTypeChange}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-            />
-            <label htmlFor="b2b-radio" className="ml-2 text-sm font-medium text-gray-700">B2B (Business to Business)</label>
+        {businessTypes.length === 0 ? (
+          <p className="text-gray-500 text-sm">Loading business types...</p>
+        ) : (
+          <div className="flex flex-wrap gap-4 ">
+            {businessTypes.map(bt => (
+              <div key={bt.id} className="flex items-center">
+                <input
+                  id={`bt-${bt.id}`}
+                  type="radio"
+                  value={bt.id}
+                  name="leadFormType"
+                  checked={leadFormType === bt.id}
+                  onChange={handleLeadFormTypeChange}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                />
+                <label htmlFor={`bt-${bt.id}`} className="ml-2 text-sm font-medium text-gray-700">
+                  {bt.name} 
+                  {/* {bt.description && `(${bt.description})`} */}
+                </label>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center">
-            <input
-              id="b2c-radio"
-              type="radio"
-              value="B2C"
-              name="leadFormType"
-              checked={leadFormType === "B2C"}
-              onChange={handleLeadFormTypeChange}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-            />
-            <label htmlFor="b2c-radio" className="ml-2 text-sm font-medium text-gray-700">B2C (Business to Consumer)</label>
-          </div>
-        </div>
+        )}
       </div>
-      
+
+      {/* Notification Settings */}
       <div className="border-t pt-4 mb-6 space-y-3">
         <h2 className="text-[18px] font-medium text-gray-900 mb-2">Notification Settings</h2>
-        {["email", "contacts", "whatsapp"].map((key) => (
+        {["email","contacts","whatsapp"].map(key => (
           <div key={key} className="flex justify-between items-center">
             <div>
               <p className="text-gray-800 font-medium capitalize">{key} Notifications</p>
@@ -319,8 +317,7 @@ const AccountSettings = () => {
             <motion.div className="bg-white rounded-2xl p-6 w-96 shadow-xl border border-gray-200">
               <h2 className="text-lg font-semibold mb-4 text-gray-900">Create New Profile</h2>
               <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-auto mb-4">
-                {[
-                  ["Company Name*", "companyName", "text", 50],
+                {[["Company Name*", "companyName", "text", 50],
                   ["Email", "email", "email", 50],
                   ["Phone*", "phone", "tel", 10],
                   ["GST No", "gst", "text", 15],
@@ -328,8 +325,7 @@ const AccountSettings = () => {
                   ["Address 1", "address1", "text", 50],
                   ["Address 2", "address2", "text", 50],
                   ["Address 3", "address3", "text", 50],
-                  ["City ID", "cityId", "number"],
-                ].map(([label, name, type, maxLength]) => (
+                  ["City ID", "cityId", "number"]].map(([label, name, type, maxLength]) => (
                   <div key={name} className="flex flex-col">
                     <label className="text-xs text-gray-600 mb-1">{label}</label>
                     <input
@@ -365,6 +361,9 @@ const AccountSettings = () => {
 };
 
 export default AccountSettings;
+
+
+
 
 
 

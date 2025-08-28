@@ -3,7 +3,6 @@ import { Bell, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LeadForm from '../LeadForm';
 import LeadFormB2C from '../LeadFormB2C'; 
-import logo from './favicon.png';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
 
@@ -23,7 +22,7 @@ const ProfileHeader = () => {
   const [displayedNotifications, setDisplayedNotifications] = useState([]);
   const [bellNotificationCount, setBellNotificationCount] = useState(0);
   const [showLeadForm, setShowLeadForm] = useState(false);
-  const [leadFormType, setLeadFormType] = useState(null);
+  const [leadFormType, setLeadFormType] = useState(null); // 1, 2 or null
   const [showAppMenu, setShowAppMenu] = useState(false);
 
   const lastAcknowledgedUnreadCount = useRef(0);
@@ -33,55 +32,63 @@ const ProfileHeader = () => {
   const notificationRef = useRef(null);
   const appMenuRef = useRef(null);
 
+  // Fetch profile and company info
   useEffect(() => {
-    const persistedCount = parseInt(localStorage.getItem(LAST_UNREAD_COUNT_KEY) || '0', 10);
-    lastAcknowledgedUnreadCount.current = persistedCount;
-
     const userString = localStorage.getItem('user');
     const token = localStorage.getItem('token');
-    if (userString) {
-      try {
-        const userObject = JSON.parse(userString);
-        setProfile({
-          name: userObject.cFull_name || '',
-          email: userObject.cEmail || '',
-          role: userObject.cRole_name || userObject.irole_id || '-',
-          company_name: userObject.company_name || userObject.company?.cCompany_name || '-',
-          roleType: userObject.roleType || '-',
-        });
+    if (!userString || !token) return;
 
-        // The key change: We use the iCompany_id to trigger a re-fetch.
-        const companyId = userObject.iCompany_id;
+    try {
+      const userObject = JSON.parse(userString);
+      setProfile({
+        name: userObject.cFull_name || '',
+        email: userObject.cEmail || '',
+        role: userObject.cRole_name || userObject.irole_id || '-',
+        company_name: userObject.company_name || userObject.company?.cCompany_name || '-',
+        roleType: userObject.roleType || '-',
+      });
 
-        if (companyId && token) {
-          axios.get(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-            .then(res => {
-              if (res.data.result) {
-                setLeadFormType(res.data.result.cLead_form_type);
-              } else {
-                setLeadFormType(null);
-              }
-            })
-            .catch(err => {
-              console.error("Error fetching company type:", err);
-              setLeadFormType(null);
-            });
+      const companyId = userObject.iCompany_id;
+      if (!companyId) return;
+
+      axios.get(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(res => {
+        const data = res.data?.result;
+        if (data && data.ibusiness_type) {
+          setLeadFormType(Number(data.ibusiness_type)); // 1 or 2
         } else {
-          setLeadFormType(null);
+          setLeadFormType(null); // hide lead form if type is missing
         }
-
-      } catch (e) {
-        setProfile({ name: '', email: '', role: '', company_name: '' });
+      })
+      .catch(err => {
+        console.error("Error fetching company type:", err);
         setLeadFormType(null);
-      }
+      });
+
+    } catch (e) {
+      setProfile({ name: '', email: '', role: '', company_name: '' });
+      setLeadFormType(null);
     }
 
     if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
-  }, [navigate]); // Added 'navigate' to the dependency array, although it's not strictly necessary for this logic, it's a good practice. The core logic here is dependent on the `userString` from local storage.
+
+  }, [navigate]);
+
+
+   // Automatically refresh lead forms when the Company Lead Form Type is updated in Account Settings
+  useEffect(() => {
+    const handler = (e) => setLeadFormType(e.detail); 
+    window.addEventListener("leadFormTypeChanged", handler);
+
+    return () => {
+      window.removeEventListener("leadFormTypeChanged", handler);
+    };
+  }, []);
+
 
   const isToday = useCallback((dateString) => {
     if (!dateString) return false;
@@ -93,45 +100,34 @@ const ProfileHeader = () => {
       notificationDate.getFullYear() === today.getFullYear()
     );
   }, []);
-  
+
   const fetchUnreadTodayNotifications = useCallback(async () => {
-    const currentUserString = localStorage.getItem('user');
-    let currentUserId = null;
-
-    if (currentUserString) {
-      try {
-        const userObject = JSON.parse(currentUserString);
-        currentUserId = userObject.iUser_id;
-      } catch (e) {
-        console.error('Error parsing user object for notifications:', e);
-      }
-    }
-
-    const currentToken = localStorage.getItem('token');
-    if (!currentUserId || !currentToken) {
+    const userString = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    if (!userString || !token) {
       setDisplayedNotifications([]);
       setBellNotificationCount(0);
-      lastAcknowledgedUnreadCount.current = parseInt(localStorage.getItem(LAST_UNREAD_COUNT_KEY) || '0', 10);
       return;
     }
 
+    let currentUserId = null;
+    try {
+      const userObject = JSON.parse(userString);
+      currentUserId = userObject.iUser_id;
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!currentUserId) return;
+
     try {
       const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}/notifications`, {
-        headers: {
-          Authorization: `Bearer ${currentToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = res.data;
       const unreadTodayNotifications = data
-        .filter((n) => {
-          const notificationUserId = n.userId || n.user_id;
-          return (
-            String(notificationUserId) === String(currentUserId) &&
-            isToday(n.created_at) &&
-            !n.read
-          );
-        })
+        .filter(n => String(n.userId || n.user_id) === String(currentUserId) && isToday(n.created_at) && !n.read)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setDisplayedNotifications(unreadTodayNotifications);
@@ -142,23 +138,18 @@ const ProfileHeader = () => {
       if (!showNotifications && newNotifications > 0) {
         setBellNotificationCount(Math.max(0, newNotifications));
 
-        if (Notification.permission === 'granted' && !hasPushedNotification.current) {
+        if (Notification.permission === 'granted' && !hasPushedNotification.current && unreadTodayNotifications[0]) {
           const latest = unreadTodayNotifications[0];
           const notif = new Notification('🔔 New Notification', {
             body: latest.message || latest.title || 'You have a new update',
             icon: `${window.location.origin}/favicon.png`,
           });
-
-          notif.onclick = () => {
-            window.focus();
-          };
-
+          notif.onclick = () => window.focus();
           hasPushedNotification.current = true;
-          setTimeout(() => {
-            hasPushedNotification.current = false;
-          }, 10000);
+          setTimeout(() => { hasPushedNotification.current = false; }, 10000);
         }
       }
+
     } catch (err) {
       console.error('Error fetching notifications:', err);
       setDisplayedNotifications([]);
@@ -174,29 +165,26 @@ const ProfileHeader = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-      if (appMenuRef.current && !appMenuRef.current.contains(event.target)) {
-        setShowAppMenu(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setShowDropdown(false);
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) setShowNotifications(false);
+      if (appMenuRef.current && !appMenuRef.current.contains(event.target)) setShowAppMenu(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLeadFormOpen = () => setShowLeadForm(true);
+  const handleLeadFormOpen = () => {
+    if (leadFormType === 1 || leadFormType === 2) {
+      setShowLeadForm(true);
+    }
+  };
   const handleLeadFormClose = () => setShowLeadForm(false);
 
   const toggleNotificationsPanel = () => {
-    setShowNotifications((prev) => {
+    setShowNotifications(prev => {
       if (!prev) {
-        const currentUnread = displayedNotifications.length;
-        lastAcknowledgedUnreadCount.current = currentUnread;
-        localStorage.setItem(LAST_UNREAD_COUNT_KEY, String(currentUnread));
+        lastAcknowledgedUnreadCount.current = displayedNotifications.length;
+        localStorage.setItem(LAST_UNREAD_COUNT_KEY, String(displayedNotifications.length));
         setBellNotificationCount(0);
       } else {
         fetchUnreadTodayNotifications();
@@ -223,25 +211,26 @@ const ProfileHeader = () => {
       {showLeadForm && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center">
           <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
-            {leadFormType === 'B2C' ? (
-              <LeadFormB2C onClose={handleLeadFormClose} />
-            ) : (
-              <LeadForm onClose={handleLeadFormClose} />
-            )}
+            {leadFormType === 1 && <LeadForm onClose={handleLeadFormClose} />}
+            {leadFormType === 2 && <LeadFormB2C onClose={handleLeadFormClose} />}
           </div>
         </div>
       )}
+
       <button
         onClick={handleLeadFormOpen}
-        className="px-5 py-2 rounded-full text-white font-medium 
+        className={`px-5 py-2 rounded-full text-white font-medium 
           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
           border border-blue-300 shadow-lg 
           hover:from-blue-600 hover:to-blue-800 
-          animate-pulse transition duration-300"
+          animate-pulse transition duration-300
+          ${!(leadFormType === 1 || leadFormType === 2) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={!(leadFormType === 1 || leadFormType === 2)}
       >
         + Create Lead
       </button>
 
+      {/* Notification Bell */}
       <div className="relative" ref={notificationRef}>
         <Bell
           onClick={toggleNotificationsPanel}
@@ -252,7 +241,6 @@ const ProfileHeader = () => {
             {bellNotificationCount}
           </span>
         )}
-
         {showNotifications && (
           <div className="absolute right-0 mt-2 w-80 max-h-60 overflow-y-auto bg-white shadow-2xl rounded-2xl p-4 text-sm z-20 border border-gray-200 transition-all duration-300">
             <div className="flex justify-between items-center mb-2">
@@ -266,7 +254,7 @@ const ProfileHeader = () => {
               <div className="text-gray-400">No new notifications for today.</div>
             ) : (
               <ul className="space-y-3 mb-2">
-                {displayedNotifications.map((note) => (
+                {displayedNotifications.map(note => (
                   <li
                     key={note.id}
                     className="flex justify-between items-start bg-blue-50 p-3 rounded-2xl shadow-sm text-gray-700"
@@ -286,38 +274,24 @@ const ProfileHeader = () => {
         )}
       </div>
 
+      {/* Profile Dropdown */}
       <div className="relative" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
         >
-          <label htmlFor="profile-upload">
-            {profile.cProfile_pic ? (
-              <img
-                src={profile.cProfile_pic}
-                alt="avatar"
-                className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow"
-              />
-            ) : (
-              <img
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  profile.name
-                )}&background=random&color=fff&rounded=true`}
-                alt="Profile"
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            )}
-          </label>
 
-          <input
-            type="file"
-            accept="image/*"
-            id="profile-upload"
-            onChange={() => {}}
-            className="hidden"
-          />
-
-          <div className="text-xl text-gray-600">▾</div>
+          <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
+            {profile.name
+              ? profile.name
+                  .split(' ')
+                  .map(n => n[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase()
+              : 'UU'}
+          </div>
+          {/* <div className="text-xl text-gray-600">▾</div> */}
         </div>
 
         {showDropdown && (
@@ -351,6 +325,8 @@ const ProfileHeader = () => {
 };
 
 export default ProfileHeader;
+
+
 
 
 // import { useEffect, useRef, useState, useCallback } from 'react';

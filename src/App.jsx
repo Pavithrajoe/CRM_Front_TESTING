@@ -45,7 +45,7 @@ import LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 import CompanyMaster from "./pages/Masters/companyMaster.jsx";
 import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
 import StatusKanbanPage from "./pages/dashboard/statusKanbanBoard.jsx";
-// import WonList from './pages/customerModule/customer.jsx';
+import WonList from './pages/customerModule/customer.jsx';
 import CompanyList from "./Components/Company/CompanyList";
 import CompanyPage from "./pages/companypage";
 import UserAnalyticsPage from "./pages/user_analytics";
@@ -111,7 +111,7 @@ function App() {
                   <Route path="companymaster" element={<CompanyMaster />} />
                   <Route path="active-leads" element={<ActiveLeadTab />} />
                   <Route path="status-kanban" element={<StatusKanbanPage />} />
-                  {/* <Route path="customers" element={<WonList />} /> */}
+                  <Route path="customers" element={<WonList />} /> 
                   <Route path="companylist" element={<CompanyList />} />
                   <Route path="companypage" element={<CompanyPage />} />
                   <Route path="analytics" element={<UserAnalyticsPage />} />

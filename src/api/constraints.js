@@ -64,6 +64,8 @@ export const ENDPOINTS = {
   EXCEL_IMPORT: `${BASE_URL}/import-excel-file`,
   CALLLOG_ACCESS: `${BASE_URL}/users/userAccess`,
   BUSINESS_TYPE: `${BASE_URL}/business-type`,
+  TAX: `${BASE_URL}/tax`,
+  TERMS: `${BASE_URL}/terms`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

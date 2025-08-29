@@ -34,7 +34,7 @@ import RemainderPage from "../pages/RemainderPage";
 import StatusBar from "./StatusBar";
 import LeadTimeline from "../Components/LeadTimeline";
 import ActionCard from "../Components/common/ActrionCard";
-import QuotationList from "../Components/common/QuotationForm";
+import QuotationForm from "../Components/Quotation/QuotationForm";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
@@ -729,7 +729,7 @@ const LeadDetailView = () => {
       </div>
 
       {/* Quotation Form Dialog */}
-      <QuotationList
+      <QuotationForm
         open={showQuotationForm}
         onClose={() => setShowQuotationForm(false)}
         leadId={leadId}

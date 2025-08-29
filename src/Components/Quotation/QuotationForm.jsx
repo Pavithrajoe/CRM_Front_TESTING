@@ -13,12 +13,13 @@ import {
   Typography,
   Grid,
   Box,
-  Divider,
   CircularProgress,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,10 +28,10 @@ import {
 import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
 
-const QuotationForm = ({ 
-  leadId, 
-  open, 
-  onClose, 
+const QuotationForm = ({
+  leadId,
+  open,
+  onClose,
   onQuotationCreated,
   leadData
 }) => {
@@ -39,24 +40,30 @@ const QuotationForm = ({
   const [userInfo, setUserInfo] = useState(null);
   const [currencies, setCurrencies] = useState([]);
   const [servicesList, setServicesList] = useState([]);
+  const [taxList, setTaxList] = useState([]);
+  const [termsList, setTermsList] = useState([]);
   const { showPopup } = usePopup();
-  
+
   const [formData, setFormData] = useState({
     quote_number: '',
     dValid_until: '',
-    terms: '',
+    cCustom_terms: '', // Changed from `terms`
+    iTerm_id: null, // New field for dropdown selection
     icurrency_id: 1, // Default to INR
-    services: [{ 
+    fDiscount: 0,
+    iDiscount_id: null,
+    cGst: '',
+    services: [{
       iservice_id: '',
-      cService_name: '', 
-      cDescription: '', 
-      iHours: 1, 
-      fHourly_rate: 0,
-      fTotal_price: 0
+      cService_name: '',
+      cDescription: '',
+      iQuantity: 1,
+      fPrice: 0,
+      iTax_id: null,
+      fDiscount: 0
     }],
   });
 
-  // Extract user and company info from localStorage
   useEffect(() => {
     const extractUserInfo = () => {
       try {
@@ -76,7 +83,7 @@ const QuotationForm = ({
 
         if (userData) {
           setUserInfo(userData);
-          setCompanyInfo({
+          const companyData = {
             iCompany_id: userData.iCompany_id || userData.company_id,
             icurrency_id: userData.icurrency_id || 1,
             iCreated_by: userData.iUser_id || userData.user_id,
@@ -85,7 +92,8 @@ const QuotationForm = ({
             company_phone: userData.company_phone || "9876543210",
             company_gst_no: userData.company_gst_no || "123456789",
             website: userData.website || "www.example.com"
-          });
+          };
+          setCompanyInfo(companyData);
         }
       } catch (error) {
         console.error("Error extracting user info:", error);
@@ -95,23 +103,55 @@ const QuotationForm = ({
 
     if (open) {
       extractUserInfo();
-      
-      // Generate quote number
       const timestamp = new Date().getTime();
       const randomNum = Math.floor(Math.random() * 1000);
       setFormData(prev => ({
         ...prev,
         quote_number: `QTN-${leadId}-${timestamp}-${randomNum}`,
-        dValid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days from now
+        dValid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       }));
 
-      // Fetch currencies
+      const companyId = JSON.parse(localStorage.getItem("user"))?.iCompany_id || JSON.parse(localStorage.getItem("user"))?.company_id;
+
       fetchCurrencies();
-      
-      // Fetch services
       fetchServices();
+      if (companyId) {
+        fetchTaxes(companyId);
+        fetchTerms(companyId);
+      }
     }
   }, [open, leadId, showPopup]);
+
+  const fetchData = async (endpoint, setter, errorMessage) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        // Handle different API response structures
+        if (Array.isArray(data.data)) {
+          setter(data.data);
+        } else if (data.data && Array.isArray(data.data.data)) {
+          setter(data.data.data);
+        } else {
+          setter([]);
+        }
+      } else {
+        throw new Error(data.message || 'Failed to fetch data');
+      }
+    } catch (error) {
+      console.error(`Error fetching ${errorMessage}:`, error);
+      showPopup('Error', `Failed to load ${errorMessage}`, 'error');
+      setter([]); // Set to empty array on error
+    }
+  };
 
   const fetchCurrencies = async () => {
     try {
@@ -125,70 +165,48 @@ const QuotationForm = ({
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data) {
         setCurrencies(data.data.data || []);
+      } else {
+        console.error('Failed to fetch currencies:', data.message);
+        showPopup('Error', 'Failed to load currencies', 'error');
+        setCurrencies([]);
       }
     } catch (error) {
       console.error('Error fetching currencies:', error);
       showPopup('Error', 'Failed to load currencies', 'error');
+      setCurrencies([]);
     }
   };
-
-  const fetchServices = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(ENDPOINTS.MASTER_SERVICE_GET, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (data.Message) {
-        setServicesList(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching services:', error);
-      showPopup('Error', 'Failed to load services', 'error');
-    }
-  };
+  
+  const fetchServices = () => fetchData(ENDPOINTS.MASTER_SERVICE_GET, setServicesList, 'services');
+  const fetchTaxes = (companyId) => fetchData(`${ENDPOINTS.TAX_BY_COMPANY}/${companyId}`, setTaxList, 'taxes');
+  const fetchTerms = (companyId) => fetchData(`${ENDPOINTS.TERMS_BY_COMPANY}/${companyId}`, setTermsList, 'terms');
 
   const handleServiceChange = (index, field, value) => {
     const newServices = [...formData.services];
-    
     if (field === 'iservice_id') {
       const selectedService = servicesList.find(service => service.iservice_id === parseInt(value));
       if (selectedService) {
         newServices[index].cService_name = selectedService.cservice_name;
         newServices[index].cDescription = selectedService.cservice_name;
       }
-      newServices[index][field] = value;
-    } else {
-      newServices[index][field] = value;
-      
-      // Calculate total price if hours or rate changes
-      if (field === 'iHours' || field === 'fHourly_rate') {
-        const hours = parseFloat(newServices[index].iHours) || 0;
-        const rate = parseFloat(newServices[index].fHourly_rate) || 0;
-        newServices[index].fTotal_price = hours * rate;
-      }
     }
-    
+    newServices[index][field] = value;
     setFormData({ ...formData, services: newServices });
   };
 
   const addServiceField = () => {
     setFormData({
       ...formData,
-      services: [...formData.services, { 
+      services: [...formData.services, {
         iservice_id: '',
-        cService_name: '', 
-        cDescription: '', 
-        iHours: 1, 
-        fHourly_rate: 0,
-        fTotal_price: 0
+        cService_name: '',
+        cDescription: '',
+        iQuantity: 1,
+        fPrice: 0,
+        iTax_id: null,
+        fDiscount: 0
       }],
     });
   };
@@ -198,23 +216,16 @@ const QuotationForm = ({
     setFormData({ ...formData, services: newServices });
   };
 
-  const calculateTotal = () => {
-    return formData.services.reduce((sum, service) => {
-      return sum + (service.fTotal_price || 0);
-    }, 0);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate services
+
     for (const service of formData.services) {
-      if (!service.cService_name || !service.cDescription || !service.iHours || !service.fHourly_rate) {
+      if (!service.cService_name || !service.cDescription || !service.iQuantity || !service.fPrice) {
         showPopup('Error', 'Please fill in all service fields.', 'error');
         return;
       }
     }
-    
+
     if (!companyInfo || !companyInfo.iCompany_id || !companyInfo.iCreated_by) {
       showPopup('Error', 'Company information is missing. Please try again.', 'error');
       return;
@@ -227,18 +238,20 @@ const QuotationForm = ({
       iLead_id: parseInt(leadId),
       icomapany_id: companyInfo.iCompany_id,
       services: formData.services.map(service => ({
-        // iservice_id: service.iservice_id ? parseInt(service.iservice_id) : null,
         cService_name: service.cService_name,
         cDescription: service.cDescription,
-        iHours: parseFloat(service.iHours),
-        fHourly_rate: parseFloat(service.fHourly_rate)
+        iQuantity: parseFloat(service.iQuantity),
+        fPrice: parseFloat(service.fPrice),
+        iTax_id: service.iTax_id ? parseInt(service.iTax_id) : null,
+        fDiscount: parseFloat(service.fDiscount)
       })),
-      cTerms: formData.terms,
+      iTerm_id: formData.iTerm_id, // Send single selected term ID
+      cTerms: formData.cCustom_terms, // Send custom terms
       icurrency_id: formData.icurrency_id,
       iCreated_by: companyInfo.iCreated_by,
+      fDiscount: parseFloat(formData.fDiscount),
+      cGst: formData.cGst,
     };
-
-    console.log('Sending payload:', payload);
 
     try {
       const response = await fetch(ENDPOINTS.QUOTATION, {
@@ -251,7 +264,6 @@ const QuotationForm = ({
       });
 
       const responseData = await response.json();
-      console.log('API Response:', responseData);
 
       if (!response.ok) {
         throw new Error(responseData.message || 'Failed to create quotation');
@@ -260,20 +272,24 @@ const QuotationForm = ({
       showPopup('Success', 'Quotation created successfully!', 'success');
       if (onQuotationCreated) onQuotationCreated(responseData.data);
       if (onClose) onClose();
-      
-      // Reset form
+
       setFormData({
         quote_number: '',
-        dValid_until: '', 
-        terms: '',
+        dValid_until: '',
+        cCustom_terms: '',
+        iTerm_id: null,
         icurrency_id: 1,
-        services: [{ 
+        fDiscount: 0,
+        iDiscount_id: null,
+        cGst: '',
+        services: [{
           iservice_id: '',
-          cService_name: '', 
-          cDescription: '', 
-          iHours: 1, 
-          fHourly_rate: 0,
-          fTotal_price: 0
+          cService_name: '',
+          cDescription: '',
+          iQuantity: 1,
+          fPrice: 0,
+          iTax_id: null,
+          fDiscount: 0
         }],
       });
     } catch (error) {
@@ -283,9 +299,6 @@ const QuotationForm = ({
       setIsSubmitting(false);
     }
   };
-
-  const totalAmount = calculateTotal();
-  const selectedCurrency = currencies.find(c => c.icurrency_id === formData.icurrency_id) || {symbol: '$'};
 
   if (!companyInfo || !userInfo) {
     return (
@@ -312,125 +325,6 @@ const QuotationForm = ({
       <DialogContent>
         <form onSubmit={handleSubmit} id="quotation-form">
           <div className="space-y-4 py-2">
-            {/* Company Details Section */}
-
-            <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel>Currency</InputLabel>
-                    <Select
-                      value={formData.icurrency_id}
-                      label="Currency"
-                      onChange={(e) => setFormData({ ...formData, icurrency_id: e.target.value })}
-                      required
-                    >
-                      {currencies.map((currency) => (
-                        <MenuItem key={currency.icurrency_id} value={currency.icurrency_id}>
-                          {currency.currency_code} ({currency.symbol})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-            {/* <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
-              <Typography variant="h6" gutterBottom>
-                Company Details
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Company Name"
-                    fullWidth
-                    value={companyInfo.company_name}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="GST No"
-                    fullWidth
-                    value={companyInfo.company_gst_no}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Address"
-                    fullWidth
-                    value={companyInfo.company_address}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phone"
-                    fullWidth
-                    value={companyInfo.company_phone}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Website"
-                    fullWidth
-                    value={companyInfo.website}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid>
-                
-              </Grid>
-            </Box> */}
-
-            {/* Lead Details Section */}
-            {/* <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300"> */}
-              {/* <Typography variant="h6" gutterBottom>
-                Client Details
-              </Typography> */}
-              {/* <Grid container spacing={2}> */}
-                {/* <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Client Name"
-                    fullWidth
-                    value={`${leadData?.cFirstName || ''} ${leadData?.cLastName || ''}`}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid> */}
-                {/* <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Company"
-                    fullWidth
-                    value={leadData?.lead_organization || ''}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid> */}
-                {/* <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Email"
-                    fullWidth
-                    value={leadData?.cEmail || ''}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid> */}
-                {/* <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phone"
-                    fullWidth
-                    value={leadData?.cPhone || ''}
-                    margin="dense"
-                    disabled
-                  />
-                </Grid> */}
-              {/* </Grid> */}
-            {/* </Box> */}
-
-            {/* Quotation Details */}
             <Grid container spacing={2} mb={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -454,19 +348,52 @@ const QuotationForm = ({
                   required
                 />
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Currency</InputLabel>
+                  <Select
+                    value={formData.icurrency_id}
+                    label="Currency"
+                    onChange={(e) => setFormData({ ...formData, icurrency_id: e.target.value })}
+                    required
+                  >
+                    {currencies.map((currency) => (
+                      <MenuItem key={currency.icurrency_id} value={currency.icurrency_id}>
+                        {currency.currency_code} ({currency.symbol})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="GST"
+                  fullWidth
+                  value={formData.cGst}
+                  onChange={(e) => setFormData({ ...formData, cGst: e.target.value })}
+                  margin="dense"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Overall Discount (%)"
+                  type="number"
+                  fullWidth
+                  value={formData.fDiscount}
+                  onChange={(e) => setFormData({ ...formData, fDiscount: e.target.value })}
+                  inputProps={{ min: 0, step: 0.01 }}
+                  margin="dense"
+                />
+              </Grid>
             </Grid>
-            
-            {/* Services Section */}
+
             <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h6">
                   Services
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Total Amount: {selectedCurrency.symbol}{totalAmount.toFixed(2)}
-                </Typography>
               </Box>
-              
+
               <List>
                 {formData.services.map((service, index) => (
                   <ListItem key={index} className="px-0 pt-0 pb-2">
@@ -488,36 +415,63 @@ const QuotationForm = ({
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={12} sm={3}>
+                      <Grid item xs={12} sm={2}>
                         <TextField
-                          label="Hours"
+                          label="Quantity"
                           type="number"
-                          value={service.iHours}
-                          onChange={(e) => handleServiceChange(index, 'iHours', e.target.value)}
+                          value={service.iQuantity}
+                          onChange={(e) => handleServiceChange(index, 'iQuantity', e.target.value)}
                           fullWidth
-                          inputProps={{ min: 0.5, step: 0.5 }}
+                          inputProps={{ min: 1, step: 1 }}
                           required
                         />
                       </Grid>
-                      <Grid item xs={12} sm={3}>
+                      <Grid item xs={12} sm={2}>
                         <TextField
-                          label={`Hourly Rate (${selectedCurrency.symbol})`}
+                          label="Price"
                           type="number"
-                          value={service.fHourly_rate}
-                          onChange={(e) => handleServiceChange(index, 'fHourly_rate', e.target.value)}
+                          value={service.fPrice}
+                          onChange={(e) => handleServiceChange(index, 'fPrice', e.target.value)}
                           fullWidth
                           inputProps={{ min: 0, step: 0.01 }}
                           required
                         />
                       </Grid>
-                      <Grid item xs={12} sm={2} className="flex items-center">
-                        <Typography variant="body2" fontWeight="bold">
-                          {selectedCurrency.symbol}{service.fTotal_price.toFixed(2)}
-                        </Typography>
+                      <Grid item xs={12} sm={2}>
+                        <FormControl fullWidth>
+                          <InputLabel>Tax</InputLabel>
+                          <Select
+                            value={service.iTax_id || ''}
+                            label="Tax"
+                            onChange={(e) => handleServiceChange(index, 'iTax_id', e.target.value)}
+                            required={false}
+                          >
+                            <MenuItem value="">
+                              <em>None</em>
+                            </MenuItem>
+                            {taxList.map((tax) => (
+                              <MenuItem key={tax.iTax_id} value={tax.iTax_id}>
+                                {tax.cTax_name} ({tax.fTax_rate}%)
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={1}>
+                        <TextField
+                          label="Discount (%)"
+                          type="number"
+                          value={service.fDiscount}
+                          onChange={(e) => handleServiceChange(index, 'fDiscount', e.target.value)}
+                          fullWidth
+                          inputProps={{ min: 0, step: 0.01 }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={1} className="flex items-center">
                         {formData.services.length > 1 && (
                           <Tooltip title="Remove Service">
-                            <IconButton 
-                              onClick={() => removeServiceField(index)} 
+                            <IconButton
+                              onClick={() => removeServiceField(index)}
                               className="ml-2"
                               type="button"
                             >
@@ -541,7 +495,7 @@ const QuotationForm = ({
                     </Grid>
                   </ListItem>
                 ))}
-                
+
                 <Button
                   startIcon={<AddIcon />}
                   onClick={addServiceField}
@@ -553,18 +507,40 @@ const QuotationForm = ({
                 </Button>
               </List>
             </Box>
-            
-            <TextField
-              label="Terms & Conditions"
-              multiline
-              rows={3}
-              fullWidth
-              value={formData.terms}
-              onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
-              margin="dense"
-              required
-              placeholder="Payment terms, delivery conditions, etc."
-            />
+
+            <Box mb={3} p={2} border={1} borderRadius={2} borderColor="grey.300">
+              <Typography variant="h6" gutterBottom>
+                Terms & Conditions
+              </Typography>
+              
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Standard Terms</InputLabel>
+                <Select
+                  value={formData.iTerm_id || ''}
+                  label="Standard Terms"
+                  onChange={(e) => setFormData({ ...formData, iTerm_id: e.target.value })}
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {termsList.map((term) => (
+                    <MenuItem key={term.iTerm_id} value={term.iTerm_id}>
+                      {term.cTerm_text}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Custom Terms"
+                multiline
+                rows={3}
+                fullWidth
+                value={formData.cCustom_terms}
+                onChange={(e) => setFormData({ ...formData, cCustom_terms: e.target.value })}
+                margin="dense"
+                placeholder="Add additional terms or a custom message."
+              />
+            </Box>
+
           </div>
         </form>
       </DialogContent>
@@ -572,10 +548,10 @@ const QuotationForm = ({
         <Button onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           form="quotation-form"
-          variant="contained" 
+          variant="contained"
           disabled={isSubmitting}
         >
           {isSubmitting ? <CircularProgress size={24} /> : 'Create Quotation'}

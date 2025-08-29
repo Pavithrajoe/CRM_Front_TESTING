@@ -45,8 +45,10 @@ import LogUserCallLogs from "./pages/userPage/logUserCallLogs.jsx";
 import CompanyMaster from "./pages/Masters/companyMaster.jsx";
 import ActiveLeadTab from "./pages/dashboard/activeLeadTab.jsx";
 import StatusKanbanPage from "./pages/dashboard/statusKanbanBoard.jsx";
-// import WonList from './pages/customerModule/customer.jsx';
+import WonList from './pages/customerModule/customer.jsx';
 import CompanyList from "./Components/Company/CompanyList";
+import TermsAndConditions from "./Components/Quotation/termsAndCondition.jsx";
+import Tax from "./Components/Quotation/tax.jsx";
 import CompanyPage from "./pages/companypage";
 import UserAnalyticsPage from "./pages/user_analytics";
 import TeamviewDashboard from "./pages/dashboard/teamviewdashboard";
@@ -111,7 +113,7 @@ function App() {
                   <Route path="companymaster" element={<CompanyMaster />} />
                   <Route path="active-leads" element={<ActiveLeadTab />} />
                   <Route path="status-kanban" element={<StatusKanbanPage />} />
-                  {/* <Route path="customers" element={<WonList />} /> */}
+                  <Route path="customers" element={<WonList />} />
                   <Route path="companylist" element={<CompanyList />} />
                   <Route path="companypage" element={<CompanyPage />} />
                   <Route path="analytics" element={<UserAnalyticsPage />} />
@@ -123,6 +125,8 @@ function App() {
                   <Route path="settingspage" element={<SettingsPage />}>
                     <Route path="account" element={<AccountSettings />} />
                     <Route path="lable" element={<LableMaster />} />
+                    <Route path="terms" element={<TermsAndConditions />} />
+                    <Route path="tax" element={<Tax />} />
                     <Route path="notification" element={<NotificationSettings />} />
                     <Route path="billing" element={<BillingSettings />} />
                     <Route path="members" element={<MembersSettings />} />

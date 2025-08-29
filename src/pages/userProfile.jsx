@@ -10,7 +10,8 @@ import UserCallLogs from './userPage/userCallLogs';
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
-  FaUserCircle, FaCheckCircle, FaTimesCircle
+  FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, FaMobile,
+  FaGlobe, FaWhatsapp, FaEnvelopeOpen
 } from 'react-icons/fa';
 
 // Reusable ToggleSwitch component
@@ -90,7 +91,14 @@ const UserProfile = () => {
     cUser_name: '',
     cEmail: '',
     cjob_title: '',
-    reports_to: ''
+    // reports_to: '',
+    i_bPhone_no: '', 
+    iphone_no: '',
+    bactive: true,
+    mail_access: false,
+    phone_access: false,
+    website_access: false,
+    whatsapp_access: false
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -102,19 +110,20 @@ const UserProfile = () => {
   const [confirmModalMessage, setConfirmModalMessage] = useState('');
   const [confirmModalAction, setConfirmModalAction] = useState(null);
 
-  const showAppMessage = (message, type = 'success') => {
-    if (type === 'success') {
-      setSuccessMessage(message);
-      setErrorMessage('');
-    } else {
-      setErrorMessage(message);
-      setSuccessMessage('');
-    }
-    setTimeout(() => {
-      setSuccessMessage('');
-      setErrorMessage('');
-    }, 5000);
-  };
+const showAppMessage = (message, type = 'success') => {
+  if (type === 'success') {
+    setSuccessMessage(message);
+    setErrorMessage('');
+  } else {
+    setErrorMessage(message);
+    setSuccessMessage('');
+  }
+  setTimeout(() => {
+    setSuccessMessage('');
+    setErrorMessage('');
+  }, 5000);
+};
+
 
   // Fetch user data
   useEffect(() => {
@@ -131,10 +140,9 @@ const UserProfile = () => {
         setEmail(data.cEmail);
 
         if (!response.ok) throw new Error(data.message);
-        
+       
         // Ensure that the user state is updated with the fetched data
-        // This is crucial for the DCRM toggle to reflect the correct state on refresh
-        setUser(data); 
+        setUser(data);
 
         setEditFormData({
           cFull_name: data.cFull_name || '',
@@ -142,6 +150,12 @@ const UserProfile = () => {
           cEmail: data.cEmail || '',
           cjob_title: data.cjob_title || '',
           reports_to: data.reports_to || '',
+          i_bPhone_no: data.i_bPhone_no || '', 
+          iphone_no: data.iphone_no || '',
+          mail_access: data.mail_access || false,
+          phone_access: data.phone_access || false,
+          website_access: data.website_access || false,
+          whatsapp_access: data.whatsapp_access || false
         });
       } catch (err) {
         showAppMessage(err.message, 'error');
@@ -210,79 +224,94 @@ const UserProfile = () => {
     setShowConfirmModal(true);
   }, [user, userId]);
 
- const handleToggleDCRM = useCallback(() => {
-  if (!user) return;
-  if (user.DCRM_enabled) {
-    setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
-    setConfirmModalAction(() => async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const handleToggleDCRM = useCallback(() => {
+    if (!user) return;
+    if (user.DCRM_enabled) {
+      setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+      setConfirmModalAction(() => async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-        if (!response.ok) throw new Error('Failed to disable DCRM');
-        setUser(prev => ({ ...prev, DCRM_enabled: false }));
-        showAppMessage('DCRM disabled successfully!', 'success');
-      } catch (err) {
-        console.error(err);
-        showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
-      } finally {
-        setShowConfirmModal(false);
-      }
-    });
-    setShowConfirmModal(true);
-  } else {
-    setShowDCRMForm(true);
-  }
-}, [user, userId]);
+          if (!response.ok) throw new Error('Failed to disable DCRM');
+          setUser(prev => ({ ...prev, DCRM_enabled: false }));
+          showAppMessage('DCRM disabled successfully!', 'success');
+        } catch (err) {
+          console.error(err);
+          showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+        } finally {
+          setShowConfirmModal(false);
+        }
+      });
+      setShowConfirmModal(true);
+    } else {
+      setShowDCRMForm(true);
+    }
+  }, [user, userId]);
 
   const handleDCRMSuccess = useCallback(() => {
-    // This function is called from the DCRMSettingsForm on successful creation
-    // FIX: Changed 'dcrm_enabled' to 'DCRM_enabled' to match API response casing
-    setUser(prev => ({ ...prev, DCRM_enabled: true })); 
+    setUser(prev => ({ ...prev, DCRM_enabled: true }));
     setShowDCRMForm(false);
     showAppMessage('DCRM user created and settings configured successfully!', 'success');
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: name === 'reports_to' ? (value === '' ? '' : parseInt(value)) : value,
-    }));
-  };
+ const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
+  
+  setEditFormData((prev) => ({
+    ...prev,
+    [name]: 
+      type === "checkbox"
+        ? checked
+        : name === "reports_to"
+          ? value === "" ? null : parseInt(value)
+          : value,
+  }));
+};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const token = localStorage.getItem('token');
 
-    try {
-      const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(editFormData),
-      });
-      const updated = await res.json();
-      if (!res.ok) throw new Error(updated.message);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-      setUser(updated);
-      setShowForm(false);
-      showAppMessage('Profile updated successfully!', 'success');
-    } catch (err) {
-      console.error(err);
-      showAppMessage(`Failed to update profile: ${err.message}`, 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  try {
+    const token = localStorage.getItem("token");
+
+    // Prepare payload ensuring reports_to is null instead of ""
+    const payload = {
+      ...editFormData,
+      reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
+    };
+
+    const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const updated = await res.json();
+
+    if (!res.ok) throw new Error(updated.message || "Failed to update profile");
+
+    setUser(updated);
+    setShowForm(false);
+showAppMessage("Profile updated successfully!", "success");
+  } catch (err) {
+    console.error(err);
+    showAppMessage(`Failed to update profile: ${err.message}`, "error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleFormClose = () => {
     setEditFormData({
@@ -291,6 +320,12 @@ const UserProfile = () => {
       cEmail: user.cEmail || '',
       cjob_title: user.cjob_title || '',
       reports_to: user.reports_to || '',
+      i_bPhone_no: user.c_bPhone_no || '', // Changed from i_bPhone_no to c_bPhone_no
+      iphone_no: user.iphone_no || '',
+      mail_access: user.mail_access || false,
+      phone_access: user.phone_access || false,
+      website_access: user.website_access || false,
+      whatsapp_access: user.whatsapp_access || false
     });
     setShowForm(false);
   };
@@ -324,12 +359,11 @@ const UserProfile = () => {
                   {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
                 </span>
               )}
-              {/* Correctly display DCRM status from the user state */}
               {user.DCRM_enabled && (
-  <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
-    DCRM Enabled
-  </span>
-)}
+                <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
+                  DCRM Enabled
+                </span>
+              )}
             </div>
             <div className="ml-auto flex flex-col sm:flex-row gap-2">
               <button
@@ -401,7 +435,7 @@ const UserProfile = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
-          <div className="bg-white rounded-xl p-6 w-1/2 mt-10 max-w-1/2 shadow-2xl relative mb-10">
+          <div className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10">
             <button
               onClick={handleFormClose}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"
@@ -413,63 +447,91 @@ const UserProfile = () => {
             </button>
             <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Edit Profile</h3>
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className='grid grid-cols-2 sm:grid-cols-2 gap-4'>
-
-              <div className="relative">
-                <FaUser className="absolute top-3 left-3 text-gray-500" />
-                <input
-                  type="text"
-                  name="cFull_name"
-                  placeholder="Full Name"
-                  value={editFormData.cFull_name}
-                  onChange={handleChange}
-                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  required
-                  maxLength={40}
-                />
-              </div>
-              <div className="relative">
-                <FaIdBadge className="absolute top-3 left-3 text-gray-500" />
-                <input
-                  type="text"
-                  name="cUser_name"
-                  placeholder="Username"
-                  value={editFormData.cUser_name}
-                  onChange={handleChange}
-                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  required
-                  maxLength={40}
-                />
-              </div>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className="relative">
+                  <FaUser className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="cFull_name"
+                    placeholder="Full Name"
+                    value={editFormData.cFull_name}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    required
+                    maxLength={40}
+                  />
+                </div>
+                <div className="relative">
+                  <FaIdBadge className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="cUser_name"
+                    placeholder="Username"
+                    value={editFormData.cUser_name}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    required
+                    maxLength={40}
+                  />
+                </div>
               </div>
               
-              <div className='grid grid-cols-2 sm:grid-cols-3 gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className="relative">
-                <FaEnvelope className="absolute top-3 left-3 text-gray-500" />
-                <input
-                  type="email"
-                  name="cEmail"
-                  placeholder="Email"
-                  value={editFormData.cEmail}
-                  onChange={handleChange}
-                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  required
-                  maxLength={40}
-                />
+                  <FaEnvelope className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="email"
+                    name="cEmail"
+                    placeholder="Email"
+                    value={editFormData.cEmail}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    required
+                    maxLength={40}
+                  />
+                </div>
+
+                <div className="relative">
+                  <FaBriefcase className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="cjob_title"
+                    placeholder="Job Title"
+                    value={editFormData.cjob_title}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    maxLength={40}
+                  />
+                </div>
               </div>
 
-              <div className="relative">
-                <FaBriefcase className="absolute top-3 left-3 text-gray-500" />
-                <input
-                  type="text"
-                  name="cjob_title"
-                  placeholder="Job Title"
-                  value={editFormData.cjob_title}
-                  onChange={handleChange}
-                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  maxLength={40}
-                />
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div className="relative">
+                  <FaMobile className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="i_bPhone_no" // Changed from i_bPhone_no to c_bPhone_no
+                    placeholder="Business Phone"
+                    value={editFormData.i_bPhone_no}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    maxLength={15}
+                  />
+                </div>
+                <div className="relative">
+                  <FaPhone className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="iphone_no"
+                    placeholder="Personal Phone"
+                    value={editFormData.iphone_no}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    maxLength={15}
+                  />
+                </div>
               </div>
+
               <div className="relative">
                 <FaUserTie className="absolute top-3 left-3 text-gray-500" />
                 <select
@@ -489,8 +551,65 @@ const UserProfile = () => {
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>
                 </div>
               </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-3">Access Permissions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="mail_access"
+                      name="mail_access"
+                      checked={editFormData.mail_access}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="mail_access" className="ml-2 block text-sm text-gray-700 flex items-center">
+                      <FaEnvelopeOpen className="mr-1" /> Mail Access
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="phone_access"
+                      name="phone_access"
+                      checked={editFormData.phone_access}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="phone_access" className="ml-2 block text-sm text-gray-700 flex items-center">
+                      <FaPhone className="mr-1" /> Phone Access
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="website_access"
+                      name="website_access"
+                      checked={editFormData.website_access}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="website_access" className="ml-2 block text-sm text-gray-700 flex items-center">
+                      <FaGlobe className="mr-1" /> Website Access
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="whatsapp_access"
+                      name="whatsapp_access"
+                      checked={editFormData.whatsapp_access}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="whatsapp_access" className="ml-2 block text-sm text-gray-700 flex items-center">
+                      <FaWhatsapp className="mr-1" /> WhatsApp Access
+                    </label>
+                  </div>
+                </div>
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
                   label="User Status"
@@ -509,22 +628,24 @@ const UserProfile = () => {
                 <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
               </div>
 
-              <button
-                type="submit"
-                className={`w-[150px] p-3 text-white justify-center ms-60 justify-items-center rounded-xl font-medium transition-colors transform hover:scale-105 active:scale-95 shadow-md ${
-                  isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-blue-700'
-                }`}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </button>
+              <div className="flex justify-center mt-6">
+                <button
+                  type="submit"
+                  className={`w-[150px] p-3 text-white justify-center rounded-xl font-medium transition-colors transform hover:scale-105 active:scale-95 shadow-md ${
+                    isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-blue-700'
+                  }`}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
       {showDCRMForm && (
-        <DCRMSettingsForm 
+        <DCRMSettingsForm
           userId={userId}
           userProfile={user}
           onClose={() => setShowDCRMForm(false)}

@@ -889,14 +889,15 @@ useEffect(() => {
     }
 
     if (name === "corganization") {
-      if (!value) {
-        error = "Mandatory";
-      } else if (!/^[A-Za-z\s]+$/.test(value)) {
-        error = "Organization Name can only contain letters and spaces";
-      } else if (value.length > 100) {
-        error = "Organization Name cannot exceed 100 characters";
-      }
-    }
+  if (!value) {
+    error = "Mandatory";
+  } else if (!/^[A-Za-z0-9\s\W]+$/.test(value)) {
+    error = "Organization Name can contain letters, numbers, spaces, and special characters";
+  } else if (value.length > 100) {
+    error = "Organization Name cannot exceed 100 characters";
+  }
+}
+
 
     if (name === "iphone_no" && !value) {
       error = "Mandatory";
@@ -923,28 +924,36 @@ useEffect(() => {
       error = "Mandatory";
     }
     if (name === "ino_employee") {
-      const num = Number(value);
-      if (value !== "" && (isNaN(num) || !Number.isInteger(num))) {
-        error = "Must be a valid whole number";
-      } else if (value !== "" && num < 0) {
-        error = "Mandatory && Number must be greater than 0";
-      } else if (value !== "" && num > 999999) {
-        error = "Number must be less than 1 million";
-      }
-    }
+  if (value !== "") {
+    const num = Number(value);
 
-    if (name === "iproject_value") {
-      const amount = parseFloat(value);
-      if (value !== "" && isNaN(amount)) {
-        error = "Must be a valid number";
-      } else if (value !== "" && amount < 0) {
-        error = "Value cannot be negative";
-      } else if (value !== "" && !/^\d+(\.\d{1,2})?$/.test(value)) {
-        error = "Only up to 2 decimal places allowed";
-      } else if (value !== "" && amount > 1000000000) {
-        error = "Value must be less than 1 billion";
-      }
+    if (isNaN(num) || !Number.isInteger(num)) {
+      error = "Must be a valid whole number";
+    } else if (num <= 0) {
+      error = "Number must be greater than 0";
+    } else if (num > 999999) {
+      error = "Number must be less than 1 million";
     }
+  }
+}
+
+
+   if (name === "iproject_value") {
+  if (value !== "") {
+    const amount = parseFloat(value);
+
+    if (isNaN(amount)) {
+      error = "Must be a valid number";
+    } else if (amount < 0) {
+      error = "Value cannot be negative";
+    } else if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+      error = "Only up to 2 decimal places allowed";
+    } else if (amount > 1000000000) {
+      error = "Value must be less than 1 billion";
+    }
+  }
+}
+
 
     return error;
   };

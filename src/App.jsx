@@ -113,7 +113,7 @@ function App() {
                   <Route path="companymaster" element={<CompanyMaster />} />
                   <Route path="active-leads" element={<ActiveLeadTab />} />
                   <Route path="status-kanban" element={<StatusKanbanPage />} />
-                  <Route path="customers" element={<WonList />} />
+                  <Route path="customers" element={<WonList />} /> 
                   <Route path="companylist" element={<CompanyList />} />
                   <Route path="companypage" element={<CompanyPage />} />
                   <Route path="analytics" element={<UserAnalyticsPage />} />

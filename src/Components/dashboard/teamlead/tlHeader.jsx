@@ -84,16 +84,16 @@ export default function TeamleadHeader() {
           Team Dashboard
         </button>
         
-        <div className="w-px h-5 bg-gray-300"></div>
+        {/* <div className="w-px h-5 bg-gray-300"></div> */}
 
-        <button
+        {/* <button
           onClick={() => handleTabClick('status-kanban')}
           className={`px-4 py-2 rounded-md text-sm font-medium ${
             isKanban ? 'bg-black text-white' : 'text-black'
           }`}
         >
           Kanban Board
-        </button>
+        </button> */}
 
         {phoneActive && (
           <>

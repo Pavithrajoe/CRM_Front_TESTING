@@ -26,6 +26,12 @@ import FilePreviewer from "./FilePreviewer";
 import DemoSessionDetails from "./demo_session_details";
 import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
+// import 'react-phone-input-2/lib/style.css';
+// import 'react-phone-number-input/style.css';
+// import PhoneInput from 'react-phone-number-input';
+import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
+// import ReactCountryFlag from "react-country-flag";
+import countries from 'i18n-iso-countries';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
@@ -68,9 +74,9 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     cwebsite: profile?.cwebsite || "",
     icity: profile?.icity || "",
     iphone_no: profile?.iphone_no ? profile.iphone_no.replace(profile?.phone_country_code || "+91", "") : "",
-    phone_country_code: profile?.phone_country_code || "+91",
+     phone_country_code: profile?.phone_country_code || "+91",
     cwhatsapp: profile?.whatsapp_number ? profile.whatsapp_number.replace(profile?.whatsapp_country_code || "+91", "") : "",
-    whatsapp_country_code: profile?.whatsapp_country_code || "+91",
+     whatsapp_country_code: profile?.whatsapp_country_code || "+91",
     cgender: profile?.cgender || 1,
     clogo: profile?.clogo || "logo.png",
     clead_address1: profile?.clead_address1 || "",
@@ -125,6 +131,41 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   const [isWhatsappCountryCodeOpen, setIsWhatsappCountryCodeOpen] = useState(false);
   const subServiceDropdownRef = useRef(null);
 const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false);
+
+const allCountries = getCountries().map(countryCode => ({
+  countryCode,
+  callingCode: '+' + getCountryCallingCode(countryCode),
+  countryName: countries.getName(countryCode, "en") // Use the package to get the name
+}));
+
+// const parsePhoneNumber = (fullNumber) => {
+//   if (!fullNumber) return { countryCode: "", number: "" };
+  
+//   // Matches +<country code> and rest of number
+//   const match = fullNumber.match(/^(\+\d{1,4})(\d+)$/);
+//   if (match) {
+//     return { countryCode: match[1], number: match[2] };
+//   }
+//   return { countryCode: "", number: fullNumber };
+// };
+
+// useEffect(() => {
+//   if (profile) {
+//     const phone = parsePhoneNumber(profile.iphone_no);
+//     const whatsapp = parsePhoneNumber(profile.whatsapp_number);
+
+//     setForm({
+//       ...form,
+//       phone: phone.number,
+//       phoneCountryCode: phone.countryCode,
+//       whatsapp: whatsapp.number,
+//       whatsappCountryCode: whatsapp.countryCode,
+//     });
+
+//     setSelectedPhoneCountry(phone.countryCode);
+//     setSelectedWhatsappCountry(whatsapp.countryCode);
+//   }
+// }, [profile]);
 
   const fetchDropdownData = async (endpoint, setData, dataName, transformFn) => {
     try {
@@ -456,70 +497,6 @@ const filteredSubServices = subService.filter(
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // const validateForm = () => {
-  //   if (isReadOnly) return false;
-  //   let newErrors = {};
-  //   const isNumeric = (value) => /^\d+$/.test(value);
-
-  //   if (!form.clead_name.trim()) {
-  //     newErrors.clead_name = "Name is required.";
-  //   } else if (form.clead_name.trim().length > 40) {
-  //     newErrors.clead_name = "Name cannot exceed 40 characters.";
-  //   }
-
-  //   if (!form.iphone_no.trim()) {
-  //     newErrors.iphone_no = "Mobile numbe is required.";
-  //   } else if (!isNumeric(form.iphone_no)) {
-  //     newErrors.iphone_no = "Mobile numbe must contain only digits.";
-  //   } else if (!/^[0-9]{6,15}$/.test(form.iphone_no)) {
-  //     newErrors.iphone_no = "Mobile number must contain only 6 to 15 digits";
-  //   }
-
-  //   if (form.cwhatsapp.trim()) {
-  //     if (!isNumeric(form.cwhatsapp)) {
-  //       newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
-  //     } else if (!/^\d{10}$/.test(form.cwhatsapp)) {
-  //       newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
-  //     }
-  //   }
-
-  //   if (form.cemail.trim()) {
-  //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
-  //       newErrors.cemail = "Invalid email format.";
-  //     } else if (form.cemail.trim().length > 30) {
-  //       newErrors.cemail = "Email cannot exceed 30 characters.";
-  //     }
-  //   }
-
-  //   if (form.cwebsite.trim()) {
-  //     if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
-  //       newErrors.cwebsite = "Invalid website format.";
-  //     }
-  //   }
-
-  //   if (!form.iLeadpoten_id) {
-  //     newErrors.iLeadpoten_id = "Potential is required.";
-  //   }
-  //   // if (!form.cindustry_id) {
-  //   //   newErrors.cindustry_id = "Industry is required.";
-  //   // }
-  //   if (!form.corganization.trim()) {
-  //     newErrors.corganization = "Organization is required.";
-  //   }
-  //   if (!form.lead_source_id) {
-  //     newErrors.lead_source_id = "Lead source is required.";
-  //   }
-  //   // if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
-  //   //   newErrors.csubindustry_id = "Sub-Industry is required.";
-  //   // }
-    
-  //   // if (form.iservice_id && !form.isubservice_id && filteredSubServices.length > 0) {
-  //   //   newErrors.isubservice_id = "Sub-Service is required.";
-  //   // }
-
-  //   setErrors(newErrors);
-  //   return Object.keys(newErrors).length === 0;
-  // };
 
 const validateForm = () => {
   if (isReadOnly) return false;
@@ -592,8 +569,50 @@ const validateForm = () => {
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
+
+
+const cleanObject = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, value]) => value !== null && value !== undefined && value !== "")
+  );
+};
+
+
+
+const updateLeadProfile = async ( ) => {
+  try {
+    console.log(form);
+        const cleanedForm = cleanObject(form);
+
+    console.log(cleanedForm.ilead_status_id);    
+    const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${profile.ilead_id}`, {
+      method: "PUT", // or POST
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(cleanedForm),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to update lead");
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Lead updated successfully:", data);
+  } catch (e) {
+    console.error("Error updating lead:", e);
+  }
+};
+
+
+
 const handleSubmit = async (e) => {
     e.preventDefault();
+          updateLeadProfile();
+
     if (isReadOnly) {
       onClose();
       return;
@@ -824,7 +843,7 @@ const handleSubmit = async (e) => {
                 value={searchIndustry}
                 onChange={(e) => {
                   if (isReadOnly) return;
-                  setSearchIndustry(e.target.value);
+                  setSearchIndustry(e.target.value == "" ? 0 : e.target.value);
                   setIsIndustryDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, cindustry_id: "" }));
                 }}
@@ -1064,108 +1083,119 @@ const handleSubmit = async (e) => {
             </div>
 
             {/* Phone Field */}
-            <div>
-              <label htmlFor="iphone_no" className={labelClasses}>
-                Mobile Number  <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <div className="relative" ref={phoneCountryCodeRef}>
-                  <button
-                    type="button"
-                    onClick={() => !isReadOnly && setIsPhoneCountryCodeOpen(!isPhoneCountryCodeOpen)}
-                    className={getDropdownButtonClasses()}
-                    disabled={isReadOnly}
-                  >
-                    {form.phone_country_code}
-                    {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
-                  </button>
-                  {isPhoneCountryCodeOpen && countryCodes.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                      {countryCodes.map((code) => (
-                        <div
-                          key={code}
-                          className={dropdownItemClasses}
-                          onClick={() => {
-                            handlePhoneCountryCodeSelect(code);
-                            setErrors(prev => ({ ...prev, iphone_no: "" }));
-                          }}
-                        >
-                          {code}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  id="iphone_no"
-                  name="iphone_no"
-                  value={form.iphone_no}
-                  onChange={(e) => {
-                    if (isReadOnly) return;
-                    const value = e.target.value.replace(/\D/g, '');
-                    setForm(prev => ({ ...prev, iphone_no: value }));
-                    setErrors(prev => ({ ...prev, iphone_no: "" }));
-                  }}
-                  className={`flex-1 ${getInputClasses(errors.iphone_no)}`}
-                  readOnly={isReadOnly}
-                  disabled={isReadOnly}
-                />
-              </div>
-              {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
-            </div>
+{/* Phone Field */}
+<div>
+  <label htmlFor="iphone_no" className={labelClasses}>
+    Mobile Number <span className="text-red-500">*</span>
+  </label>
+ <div className="flex gap-2">
+  {/* Country Code Dropdown - commented out for future use */}
+  {/*
+  <div className="relative" ref={phoneCountryCodeRef}>
+    <button
+      type="button"
+      onClick={() => !isReadOnly && setIsPhoneCountryCodeOpen(!isPhoneCountryCodeOpen)}
+      className={getDropdownButtonClasses()}
+      disabled={isReadOnly}
+    >
+      {form.phone_country_code}
+      {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
+    </button>
+    {isPhoneCountryCodeOpen && (
+      <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+        {allCountries.map((country) => (
+          <div
+            key={country.countryCode}
+            className={dropdownItemClasses}
+            onClick={() => {
+              setForm(prev => ({ ...prev, phone_country_code: country.callingCode }));
+              setIsPhoneCountryCodeOpen(false);
+              setErrors(prev => ({ ...prev, iphone_no: "" }));
+            }}
+          >
+            {country.callingCode}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+  */}
 
-            {/* WhatsApp Field */}
-            <div>
-              <label htmlFor="cwhatsapp" className={labelClasses}>
-                WhatsApp Number
-              </label>
-              <div className="flex gap-2">
-                <div className="relative" ref={whatsappCountryCodeRef}>
-                  <button
-                    type="button"
-                    onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
-                    className={getDropdownButtonClasses()}
-                    disabled={isReadOnly}
-                  >
-                    {form.whatsapp_country_code}
-                    {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
-                  </button>
-                  {isWhatsappCountryCodeOpen && countryCodes.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                      {countryCodes.map((code) => (
-                        <div
-                          key={code}
-                          className={dropdownItemClasses}
-                          onClick={() => {
-                            handleWhatsappCountryCodeSelect(code);
-                            setErrors(prev => ({ ...prev, cwhatsapp: "" }));
-                          }}
-                        >
-                          {code}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  id="cwhatsapp"
-                  name="cwhatsapp"
-                  value={form.cwhatsapp}
-                  onChange={(e) => {
-                    if (isReadOnly) return;
-                    const value = e.target.value.replace(/\D/g, '');
-                    setForm(prev => ({ ...prev, cwhatsapp: value }));
-                    setErrors(prev => ({ ...prev, cwhatsapp: "" }));
-                  }}
-                  className={`flex-1 ${getInputClasses(errors.cwhatsapp)}`}
-                  readOnly={isReadOnly}
-                  disabled={isReadOnly}
-                />
-              </div>
-              {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
+  <input
+    type="text"
+    id="iphone_no"
+    name="iphone_no"
+    value={form.iphone_no}
+    onChange={(e) => {
+      if (isReadOnly) return;
+      const value = e.target.value.replace(/\D/g, '');
+      setForm(prev => ({ ...prev, iphone_no: value }));
+      setErrors(prev => ({ ...prev, iphone_no: "" }));
+    }}
+    className={`flex-1 ${getInputClasses(errors.iphone_no)}`}
+    readOnly={isReadOnly}
+    disabled={isReadOnly}
+  />
+</div>
+
+  {errors.iphone_no && <p className={errorTextClasses}>{errors.iphone_no}</p>}
+</div>
+
+
+{/* WhatsApp Field */}
+<div>
+  <label htmlFor="cwhatsapp" className={labelClasses}>
+    WhatsApp Number
+  </label>
+  <div className="flex gap-2">
+    <div className="relative" ref={whatsappCountryCodeRef}>
+      <button
+        type="button"
+        onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
+        className={getDropdownButtonClasses()}
+        disabled={isReadOnly}
+      >
+        {form.whatsapp_country_code}
+        {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
+      </button>
+      {isWhatsappCountryCodeOpen && (
+        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+          {/* Use the dynamically generated allCountries array */}
+          {allCountries.map((country) => (
+            <div
+              key={country.countryCode}
+              className={dropdownItemClasses}
+              onClick={() => {
+                setForm(prev => ({ ...prev, whatsapp_country_code: country.callingCode }));
+                setIsWhatsappCountryCodeOpen(false);
+                setErrors(prev => ({ ...prev, cwhatsapp: "" }));
+              }}
+            >
+              {country.callingCode}
             </div>
+          ))}
+        </div>
+      )}
+    </div>
+    <input
+      type="text"
+      id="cwhatsapp"
+      name="cwhatsapp"
+      value={form.cwhatsapp}
+      onChange={(e) => {
+        if (isReadOnly) return;
+        const value = e.target.value.replace(/\D/g, '');
+        setForm(prev => ({ ...prev, cwhatsapp: value }));
+        setErrors(prev => ({ ...prev, cwhatsapp: "" }));
+      }}
+      className={`flex-1 ${getInputClasses(errors.cwhatsapp)}`}
+      readOnly={isReadOnly}
+      disabled={isReadOnly}
+    />
+  </div>
+  {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
+</div>
+            
 
             {/* Address 1 Field */}
             <div>

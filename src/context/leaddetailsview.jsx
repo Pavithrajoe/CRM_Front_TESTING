@@ -197,7 +197,7 @@ const LeadDetailView = () => {
     }
 
     await remarkResponse.json();
-    await fetchStatusRemarks();
+    // await fetchStatusRemarks();
 
 
     // Fetch updated remarks here after remark submission
@@ -821,7 +821,7 @@ useEffect(() => {
   <Box sx={{ mt: 2 }}>
     {statusRemarks.map((remark) => (
       <Typography key={remark.ilead_status_remarks_id} variant="body2" color="textSecondary">
-        Project Value: {remark.currency_details?.symbol || ''} {remark.project_value || 0}
+        {/* Project Value: {remark.currency_details?.symbol || ''} {remark.project_value || 0} */}
       </Typography>
     ))}
   </Box>
@@ -1102,32 +1102,7 @@ useEffect(() => {
         </div>
       )}
       {/* Status Remarks Section */}
-{(isWon || immediateWonStatus || leadData?.bisConverted) && statusRemarks.length > 0 && (
-  <div className="mb-4 p-4 bg-white rounded-lg shadow-sm border h-[180px] border-gray-200">
-    <h6 className="text-green-600 mb-3 text-lg font-semibold">
-      Won Status Remarks
-    </h6>
-    <ul>
-      {statusRemarks.map((remark) => (
-        <li key={remark.ilead_status_remarks_id} className="border-b border-gray-100 py-3 first:pt-0 last:pb-0">
-          <div className="flex flex-col">
-            <p className="font-medium text-gray-800">
-              {remark.remark}
-            </p>
-            {remark.project_value && (
-              <button className="self-start mt-2 px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                {remark.currency_details?.symbol || '$'} {remark.project_value}
-              </button>
-            )}
-            {/* <p className="text-gray-400 text-xs mt-1">
-              Added on: {formatDate(remark.dCreatedDate)}
-            </p> */}
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div

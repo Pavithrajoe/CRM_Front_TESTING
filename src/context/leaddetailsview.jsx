@@ -6,7 +6,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  // AttachMoneyIcon ,
   Button,
+  Autocomplete ,
   TextField,
   CircularProgress,
   List,
@@ -70,6 +72,8 @@ const LeadDetailView = () => {
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [isSendingMail, setIsSendingMail] = useState(false);
+  const [statusRemarks, setStatusRemarks] = useState([]);
+
 
   // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
@@ -78,8 +82,10 @@ const LeadDetailView = () => {
   const [quotationsLoading, setQuotationsLoading] = useState(false);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [expandedQuotation, setExpandedQuotation] = useState(null);
+  const [currencies, setCurrencies] = useState([]);
+
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
+  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '',currencyId: null  });
 
   // Derived state
   const isLeadActive =
@@ -140,66 +146,74 @@ const LeadDetailView = () => {
   };
 
   const handleRemarkSubmit = async () => {
-     if (!remarkData.remark.trim()) {
-       showPopup("Error", "Remark is required", "error");
-       return;
-     }
- 
-     try {
-       const token = localStorage.getItem("token");
-       const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
-       if (!userId) throw new Error("User not authenticated");
- 
-       setImmediateWonStatus(true);
-       setShowConfetti(true);
-       setTimeout(() => setShowConfetti(false), 5000);
- 
-       const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
-         method: "PUT",
-         headers: {
-           "Content-Type": "application/json",
-           Authorization: `Bearer ${token}`,
-         },
-       });
- 
-       if (!convertResponse.ok) {
-         setImmediateWonStatus(false);
-         setShowConfetti(false);
-         throw new Error("Failed to convert lead to deal");
-       }
- 
-       const remarkPayload = {
-         remark: remarkData.remark.trim(),
-         leadId: parseInt(leadId),
-         leadStatusId: leadData?.ileadstatus_id,
-         createBy: userId,
-         ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
-       };
- 
-       const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-           Authorization: `Bearer ${token}`,
-         },
-         body: JSON.stringify(remarkPayload),
-       });
- 
-       if (!remarkResponse.ok) {
-         throw new Error("Failed to submit remark");
-       }
- 
-       showPopup("Success", "Lead marked as won and remark saved!", "success");
-       setIsDeal(true);
-       setIsWon(true);
-       setIsLost(false);
-       setShowRemarkDialog(false);
-       fetchLeadData();
-     } catch (error) {
-       console.error("Error marking lead as won:", error);
-       showPopup("Error", error.message || "Failed to mark lead as won", "error");
-     }
-   };
+  if (!remarkData.remark.trim()) {
+    showPopup("Error", "Remark is required", "error");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
+    if (!userId) throw new Error("User not authenticated");
+
+    setImmediateWonStatus(true);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 5000);
+
+    const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!convertResponse.ok) {
+      setImmediateWonStatus(false);
+      setShowConfetti(false);
+      throw new Error("Failed to convert lead to deal");
+    }
+
+    const remarkPayload = {
+      remark: remarkData.remark.trim(),
+      leadId: parseInt(leadId),
+      leadStatusId: leadData?.ileadstatus_id,
+      createBy: userId,
+      ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+      currencyId: remarkData.currencyId,
+    };
+
+    const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(remarkPayload),
+    });
+
+    if (!remarkResponse.ok) {
+      throw new Error("Failed to submit remark");
+    }
+
+    await remarkResponse.json();
+    await fetchStatusRemarks();
+
+
+    // Fetch updated remarks here after remark submission
+
+    showPopup("Success", "Lead marked as won and remark saved!", "success");
+    setIsDeal(true);
+    setIsWon(true);
+    setIsLost(false);
+    setShowRemarkDialog(false);
+    fetchLeadData();
+  } catch (error) {
+    console.error("Error marking lead as won:", error);
+    showPopup("Error", error.message || "Failed to mark lead as won", "error");
+  }
+};
+
 
   const handleQuotationCreated = async (quotationData) => {
     try {
@@ -242,6 +256,34 @@ const LeadDetailView = () => {
       setExpandedQuotation(quotationId);
     }
   };
+
+
+
+
+
+
+
+const fetchCurrencies = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(ENDPOINTS.CURRENCY, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      setCurrencies(data.data.data.filter(c => c.bactive));
+    }
+  } catch (error) {
+    console.error("Failed to fetch currencies", error);
+  }
+};
+
+useEffect(() => {
+  fetchCurrencies();
+}, []);
 
   const lostLead = async () => {
     try {
@@ -299,6 +341,79 @@ const LeadDetailView = () => {
     await lostLead();
   };
 
+
+useEffect(() => {
+  // Define the function inside useEffect to avoid dependency issues
+  const fetchStatusRemarks = async () => {
+    console.log("fetchStatusRemarks function called for leadId:", leadId);
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token available:", !!token);
+      
+      // Try different endpoint formats
+      const endpointsToTry = [
+        `${ENDPOINTS.STATUS_REMARKS}/${leadId}`,
+        `${ENDPOINTS.STATUS_REMARKS}?leadId=${leadId}`,
+        `${ENDPOINTS.STATUS_REMARKS}?iLead_id=${leadId}`,
+        `${ENDPOINTS.STATUS_REMARKS}/${leadId}/remarks`
+      ];
+
+      let response = null;
+      let successfulEndpoint = null;
+      let lastError = null;
+
+      // Try each endpoint until one works
+      for (const endpoint of endpointsToTry) {
+        try {
+          console.log("Trying endpoint:", endpoint);
+          response = await fetch(endpoint, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          console.log("Response status:", response.status);
+          
+          if (response.ok) {
+            successfulEndpoint = endpoint;
+            break;
+          } else {
+            console.warn("Endpoint failed with status:", response.status);
+          }
+        } catch (error) {
+          lastError = error;
+          console.warn("Failed with endpoint:", endpoint, error);
+          continue;
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw lastError || new Error("All endpoint formats failed");
+      }
+
+      const data = await response.json();
+      console.log("Success with endpoint:", successfulEndpoint, data);
+      
+      // Handle different response structures
+      const remarks = data.Response || data.data || data || [];
+      setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
+      
+      console.log("Processed status remarks:", remarks);
+    } catch (error) {
+      console.error("Error fetching status remarks:", error);
+      if (showPopup) {
+        showPopup("Error", error.message || "Failed to fetch status remarks", "error");
+      }
+    }
+  };
+
+  // Call the function if leadId is available
+  if (leadId) {
+    console.log("Fetching status remarks for leadId:", leadId);
+    fetchStatusRemarks();
+  }
+}, [leadId, showPopup]); // Add dependencies
   const sendEmail = async () => {
     setIsSendingMail(true);
     try {
@@ -663,24 +778,24 @@ const LeadDetailView = () => {
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
             {/* View Quotations Button (only visible when Won and has quotations) */}
-            {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
+            {/* {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
               <button
                 onClick={() => setShowQuotationsList(true)}
                 className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
               >
                 <FaEye className="mr-1" /> View Quotations
               </button>
-            )}
+            )} */}
             
             {/* Create Quotation Button (only visible when Won) */}
-            {showCreateQuotationButton && (
+            {/* {showCreateQuotationButton && (
               <button
                 className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                 onClick={() => setShowQuotationForm(true)}
               >
                 <FaPlus className="mr-1" /> Create Quotation
               </button>
-            )}
+            )} */}
             
             {showActionButtons && (
               <>
@@ -702,6 +817,16 @@ const LeadDetailView = () => {
                     <FaPlus className="mr-1" /> Won
                   </button>
                 )}
+                {statusRemarks.length > 0 && (
+  <Box sx={{ mt: 2 }}>
+    {statusRemarks.map((remark) => (
+      <Typography key={remark.ilead_status_remarks_id} variant="body2" color="textSecondary">
+        Project Value: {remark.currency_details?.symbol || ''} {remark.project_value || 0}
+      </Typography>
+    ))}
+  </Box>
+)}
+
 
                 <button
                   className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
@@ -753,6 +878,25 @@ const LeadDetailView = () => {
             sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
           />
+          <Autocomplete
+    options={currencies}
+    getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
+    value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
+    onChange={(e, newValue) =>
+      setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
+    }
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        label="Currency *"
+        sx={{ mt: 2 }}
+        error={!remarkData.currencyId}
+        helperText={!remarkData.currencyId ? 'Currency is required' : ''}
+        InputLabelProps={{ shrink: true }}
+      />
+    )}
+  />
+          
           <TextField
             label="Project Value (optional)"
             type="number"
@@ -762,6 +906,9 @@ const LeadDetailView = () => {
             sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
           />
+
+  
+
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
@@ -770,6 +917,7 @@ const LeadDetailView = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
 
       {/* Quotations List Dialog with Detailed View */}
       <Dialog 
@@ -953,7 +1101,33 @@ const LeadDetailView = () => {
           </div>
         </div>
       )}
-
+      {/* Status Remarks Section */}
+{(isWon || immediateWonStatus || leadData?.bisConverted) && statusRemarks.length > 0 && (
+  <div className="mb-4 p-4 bg-white rounded-lg shadow-sm border h-[180px] border-gray-200">
+    <h6 className="text-green-600 mb-3 text-lg font-semibold">
+      Won Status Remarks
+    </h6>
+    <ul>
+      {statusRemarks.map((remark) => (
+        <li key={remark.ilead_status_remarks_id} className="border-b border-gray-100 py-3 first:pt-0 last:pb-0">
+          <div className="flex flex-col">
+            <p className="font-medium text-gray-800">
+              {remark.remark}
+            </p>
+            {remark.project_value && (
+              <button className="self-start mt-2 px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                {remark.currency_details?.symbol || '$'} {remark.project_value}
+              </button>
+            )}
+            {/* <p className="text-gray-400 text-xs mt-1">
+              Added on: {formatDate(remark.dCreatedDate)}
+            </p> */}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div

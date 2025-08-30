@@ -16,7 +16,7 @@ const mic = SpeechRecognition ? new SpeechRecognition() : null;
 
 if (mic) {
   mic.continuous = true;
-  mic.interimResults = false; // Set to false for cleaner final transcripts
+  mic.interimResults = false;
   mic.lang = "en-US";
 }
 
@@ -29,21 +29,23 @@ const Tasks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [companyUsers, setCompanyUsers] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState("");
   const [companyId, setCompanyId] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false); 
   const [saving, setSaving] = useState(false);
+  const [assignToMe, setAssignToMe] = useState(true);
 
   const formRef = useRef(null);
-  const searchInputRef = useRef(null); // Ref for search input
+  const searchInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     ctitle: "",
     ctask_content: "",
-    iassigned_to: "",
-    inotify_to: "",
+    iassigned_to: null,
+    inotify_to: null,
     task_date: new Date(),
   });
 
@@ -67,8 +69,20 @@ const Tasks = () => {
   useEffect(() => {
     if (token) {
       const tokenPayload = decodeToken(token);
-      setUserId(tokenPayload?.user_id || tokenPayload?.iUser_id || null);
+      const userId = tokenPayload?.user_id || tokenPayload?.iUser_id || null;
+      const userName = tokenPayload?.cFull_name || "Current User";
+      
+      setUserId(userId);
+      setUserName(userName);
       setCompanyId(tokenPayload?.company_id || tokenPayload?.iCompany_id || null);
+      
+      // Set the current user as the default assignee
+      if (userId) {
+        setFormData(prev => ({
+          ...prev,
+          iassigned_to: userId,
+        }));
+      }
     }
   }, [token]);
 
@@ -153,7 +167,6 @@ const Tasks = () => {
     }
 
     mic.onresult = (event) => {
-      // Loop through only NEW results
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           const transcript = event.results[i][0].transcript.trim();
@@ -182,22 +195,25 @@ const Tasks = () => {
     };
   }, [isListening]);
 
-
   // Form handlers
   const handleNewTaskClick = () => {
     setFormData({
       ctitle: "",
       ctask_content: "",
-      iassigned_to: userId || "",
-      inotify_to: null, // Set to null for new tasks
+      iassigned_to: userId,
+      inotify_to: null,
       task_date: new Date(),
     });
+    setAssignToMe(true);
     setEditingTask(null);
     setShowForm(true);
   };
 
   const handleEditClick = (task) => {
     setEditingTask(task);
+    const isAssignedToMe = task.iassigned_to === userId;
+    setAssignToMe(isAssignedToMe);
+    
     setFormData({
       ctitle: task.ctitle,
       ctask_content: task.ctask_content,
@@ -214,7 +230,13 @@ const Tasks = () => {
     let updatedValue = value;
 
     if (name === "iassigned_to" || name === "inotify_to") {
-      updatedValue = value === "" ? null : +value;
+      // Convert to number or null
+      updatedValue = value === "" ? null : Number(value);
+      
+      // If user manually changes the assignee, uncheck "Assign to me"
+      if (name === "iassigned_to" && Number(value) !== userId) {
+        setAssignToMe(false);
+      }
     } else if (name === "ctitle") {
       if (value.length > 30) {
         showPopup("Warning", "Title cannot exceed 30 characters.", "warning");
@@ -229,6 +251,22 @@ const Tasks = () => {
     }
 
     setFormData(prev => ({ ...prev, [name]: updatedValue }));
+  };
+
+  const handleAssignToMeChange = (e) => {
+    const checked = e.target.checked;
+    setAssignToMe(checked);
+    if (checked && userId) {
+      setFormData(prev => ({
+        ...prev,
+        iassigned_to: userId, // Set as number, not string
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        iassigned_to: null,
+      }));
+    }
   };
 
   const handleDateChange = (date) => {
@@ -253,7 +291,7 @@ const Tasks = () => {
       ...formData,
       ilead_id: Number(leadId),
       task_date: formData.task_date.toISOString(),
-      inotify_to: formData.inotify_to === "" ? null : formData.inotify_to,
+      inotify_to: formData.inotify_to,
     };
 
     setSaving(true);
@@ -289,13 +327,14 @@ const Tasks = () => {
       }
 
       if (response.data.success || response.data.message === "Task Added Successfully") {
-        // Explicitly stop the microphone here.
         if (mic && isListening) {
           mic.stop();
         }
         setIsListening(false);
 
-        // showPopup("Success", "🎉 Task saved successfully!", "success");
+        // Show success message
+        showPopup("Success", "🎉 Task saved successfully!", "success");
+        
         setShowForm(false);
         await fetchTasks();
       } else {
@@ -308,10 +347,9 @@ const Tasks = () => {
         "error"
       );
       console.error("Task submission error:", error);
+    } finally {
+      setSaving(false);
     }
-    finally {
-    setSaving(false);  // End loading
-  }
   };
 
   const handleDeleteTask = async (taskId) => {
@@ -348,27 +386,16 @@ const Tasks = () => {
   const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
-
   const formatDateTime = (dateStr) => {
-  if (!dateStr) return "N/A";
-  const date = new Date(dateStr);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
-
-  // const formatDateTime = (dateStr) =>
-  //   dateStr
-  //     ? new Date(dateStr)
-  //       .toLocaleString("en-IN", {
-  //         dateStyle: "short",
-  //         timeStyle: "short",
-  //       })
-  //       .toUpperCase()
-  //     : "N/A";
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
 
   const canEditOrDeleteTask = (task) => {
     return userId === task.icreated_by;
@@ -456,7 +483,7 @@ const Tasks = () => {
                         title="Delete task"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
@@ -564,6 +591,28 @@ const Tasks = () => {
                   )}
                 </div>
 
+                {/* Add Assign to me checkbox like in ReminderForm */}
+                <div className="flex items-center justify-between mb-4">
+                  {/* <label className="text-sm sm:text-base font-semibold text-gray-700">
+                    Assign To <span className="text-red-600">*</span>
+                  </label> */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="assignToMe"
+                      checked={assignToMe}
+                      onChange={handleAssignToMeChange}
+                      className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="assignToMe"
+                      className="text-sm sm:text-base text-gray-700 cursor-pointer select-none"
+                    >
+                      Assign to me ({userName})
+                    </label>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -571,11 +620,11 @@ const Tasks = () => {
                     </label>
                     <select
                       name="iassigned_to"
-                      value={formData.iassigned_to}
+                      value={formData.iassigned_to || ""}
                       onChange={handleChange}
                       className="mt-1 block w-full pl-3 p-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-xl"
                       required
-                      disabled={loadingUsers}
+                      disabled={loadingUsers || assignToMe}
                     >
                       <option value="">{loadingUsers ? "Loading users..." : "Select User"}</option>
                       {companyUsers.map((user) => (
@@ -592,12 +641,12 @@ const Tasks = () => {
                     </label>
                     <select
                       name="inotify_to"
-                      value={formData.inotify_to}
+                      value={formData.inotify_to || ""}
                       onChange={handleChange}
                       className="mt-1 block w-full pl-3 p-3 pr-10 py-2 rounded-xl text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       disabled={loadingUsers}
                     >
-                      <option value={null}>Optional</option>
+                      <option value="">Optional</option>
                       {companyUsers.map((user) => (
                         <option key={user.iUser_id} value={user.iUser_id}>
                           {user.cFull_name || user.cUser_name || `User ${user.iUser_id}`}
@@ -661,14 +710,6 @@ const Tasks = () => {
                   ) : null}
                   {saving ? (editingTask ? "Updating..." : "Saving...") : (editingTask ? "Update Task" : "Add Task")}
                 </button>
-
-                {/* <button
-                  type="submit"
-                  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"
-                  disabled={loadingUsers}
-                >
-                  {editingTask ? "Update Task" : "Add Task"}
-                </button> */}
               </form>
             </div>
           </>

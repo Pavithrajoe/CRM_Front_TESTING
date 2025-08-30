@@ -9,6 +9,8 @@ import {
   Button,
   Autocomplete,
   IconButton,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import { useToast } from '../context/ToastContext';
 import Confetti from 'react-confetti';
@@ -24,7 +26,6 @@ const MAX_REMARK_LENGTH = 500;
 const MAX_NOTES_LENGTH = 200;
 const MAX_PLACE_LENGTH = 200;
 const MAX_PROPOSAL_NOTES_LENGTH = 500;
-
 
 const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [stages, setStages] = useState([]);
@@ -58,23 +59,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const { showToast } = useToast();
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
 
-const [proposalSendModes, setProposalSendModes] = useState([]);
-const [openProposalDialog, setOpenProposalDialog] = useState(false);
-const [proposalDialogValue, setProposalDialogValue] = useState({
-  proposalSendModeId: null,
-  preparedBy: null,
-  verifiedBy: null,
-  sendBy: null,
-  notes: '',
-});
-const [proposalDialogErrors, setProposalDialogErrors] = useState({
-  proposalSendModeId: '',
-  preparedBy: '',
-  verifiedBy: '',
-  sendBy: '',
-  notes: '',
-});
-  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '' });
+  const [proposalSendModes, setProposalSendModes] = useState([]);
+  const [openProposalDialog, setOpenProposalDialog] = useState(false);
+  const [proposalDialogValue, setProposalDialogValue] = useState({
+    proposalSendModeId: null,
+    preparedBy: null,
+    verifiedBy: null,
+    sendBy: null,
+    notes: '',
+  });
+  const [proposalDialogErrors, setProposalDialogErrors] = useState({
+    proposalSendModeId: '',
+    preparedBy: '',
+    verifiedBy: '',
+    sendBy: '',
+    notes: '',
+  });
+  
+  const [remarkData, setRemarkData] = useState({ 
+    remark: '', 
+    projectValue: '',
+    assignedTo: '',
+    assignToMe: false
+  });
   const [remarkErrors, setRemarkErrors] = useState({
     remark: '',
     projectValue: '',
@@ -82,6 +89,24 @@ const [proposalDialogErrors, setProposalDialogErrors] = useState({
   const [remarkStageId, setRemarkStageId] = useState(null);
   const [selectedRemark, setSelectedRemark] = useState(null);
   const [demoSessions, setDemoSessions] = useState([]);
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
+  const [loggedInUserName, setLoggedInUserName] = useState("");
+
+  // Set logged in user info
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const userObject = JSON.parse(userString);
+        if (userObject && userObject.iUser_id && userObject.cFull_name) {
+          setLoggedInUserId(userObject.iUser_id);
+          setLoggedInUserName(userObject.cFull_name);
+        }
+      } catch (error) {
+        console.error("Failed to parse user data from localStorage", error);
+      }
+    }
+  }, []);
 
   const validateDemoSession = () => {
     let isValid = true;
@@ -198,74 +223,71 @@ const [proposalDialogErrors, setProposalDialogErrors] = useState({
     return isValid;
   };
 
-
-const fetchProposalSendModes = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    if (!response.ok) throw new Error('Failed to fetch proposal send modes');
-    const data = await response.json();
-    
-    // Access the nested array correctly
-    const modes = data?.data?.data || [];
-    setProposalSendModes(modes);
-  } catch (err) {
-    console.error('Error fetching proposal send modes:', err.message);
-    setProposalSendModes([]);
-  }
-};
-
-// Add to useEffect
-useEffect(() => {
-  fetchStages();
-  fetchUsers();
-  fetchDemoSessions();
-  fetchProposalSendModes(); 
-}, []);
-
-const validateProposal = () => {
-  let isValid = true;
-  const newErrors = {
-    proposalSendModeId: '',
-    preparedBy: '',
-    verifiedBy: '',
-    sendBy: '',
-    notes: '',
+  const fetchProposalSendModes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch proposal send modes');
+      const data = await response.json();
+      
+      const modes = data?.data?.data || [];
+      setProposalSendModes(modes);
+    } catch (err) {
+      console.error('Error fetching proposal send modes:', err.message);
+      setProposalSendModes([]);
+    }
   };
 
-  if (!proposalDialogValue.proposalSendModeId) {
-    newErrors.proposalSendModeId = 'Send mode is required';
-    isValid = false;
-  }
+  useEffect(() => {
+    fetchStages();
+    fetchUsers();
+    fetchDemoSessions();
+    fetchProposalSendModes(); 
+  }, []);
 
-  if (!proposalDialogValue.preparedBy) {
-    newErrors.preparedBy = 'Prepared by is required';
-    isValid = false;
-  }
+  const validateProposal = () => {
+    let isValid = true;
+    const newErrors = {
+      proposalSendModeId: '',
+      preparedBy: '',
+      verifiedBy: '',
+      sendBy: '',
+      notes: '',
+    };
 
-  if (!proposalDialogValue.verifiedBy) {
-    newErrors.verifiedBy = 'Verified by is required';
-    isValid = false;
-  }
+    if (!proposalDialogValue.proposalSendModeId) {
+      newErrors.proposalSendModeId = 'Send mode is required';
+      isValid = false;
+    }
 
-  if (!proposalDialogValue.sendBy) {
-    newErrors.sendBy = 'Send by is required';
-    isValid = false;
-  }
+    if (!proposalDialogValue.preparedBy) {
+      newErrors.preparedBy = 'Prepared by is required';
+      isValid = false;
+    }
 
-  if (proposalDialogValue.notes.length > MAX_PROPOSAL_NOTES_LENGTH) {
-    newErrors.notes = `Notes cannot exceed ${MAX_PROPOSAL_NOTES_LENGTH} characters`;
-    isValid = false;
-  }
+    if (!proposalDialogValue.verifiedBy) {
+      newErrors.verifiedBy = 'Verified by is required';
+      isValid = false;
+    }
 
-  setProposalDialogErrors(newErrors);
-  return isValid;
-};
+    if (!proposalDialogValue.sendBy) {
+      newErrors.sendBy = 'Send by is required';
+      isValid = false;
+    }
+
+    if (proposalDialogValue.notes.length > MAX_PROPOSAL_NOTES_LENGTH) {
+      newErrors.notes = `Notes cannot exceed ${MAX_PROPOSAL_NOTES_LENGTH} characters`;
+      isValid = false;
+    }
+
+    setProposalDialogErrors(newErrors);
+    return isValid;
+  };
 
   const fetchStages = async () => {
     try {
@@ -355,123 +377,125 @@ const validateProposal = () => {
     return `${day}/${month}/${year}`;
   };
 
-const handleStageClick = (clickedIndex, statusId) => {
-  if (stageStatuses[statusId] === false) {
-    showToast('error', 'This status is currently inactive and cannot be selected');
-    return;
-  }
+  const handleStageClick = (clickedIndex, statusId) => {
+    if (stageStatuses[statusId] === false) {
+      showToast('error', 'This status is currently inactive and cannot be selected');
+      return;
+    }
 
-  if (isLost || isWon) {
-    showToast('info', 'Cannot change status for a lost or won lead.');
-    return;
-  }
+    if (isLost || isWon) {
+      showToast('info', 'Cannot change status for a lost or won lead.');
+      return;
+    }
 
-  if (clickedIndex <= currentStageIndex) {
-    showToast('info', 'Cannot go back or re-select current stage.');
-    return;
-  }
+    if (clickedIndex <= currentStageIndex) {
+      showToast('info', 'Cannot go back or re-select current stage.');
+      return;
+    }
 
-  const stageName = stages[clickedIndex]?.name;
-  setDialogStageIndex(clickedIndex);
+    const stageName = stages[clickedIndex]?.name;
+    setDialogStageIndex(clickedIndex);
 
-  if (stageName?.toLowerCase().includes('demo')) {
-    setDialogValue({
-      demoSessionType: '',
-      demoSessionStartTime: new Date(),
-      demoSessionEndTime: null,
-      notes: '',
-      place: '',
-      demoSessionAttendees: [],
-      presentedByUsers: [],
-    });
-    setDialogErrors({
-      demoSessionType: '',
-      demoSessionStartTime: '',
-      demoSessionEndTime: '',
-      notes: '',
-      place: '',
-      demoSessionAttendees: '',
-      presentedByUsers: '',
-    });
-    setOpenDialog(true);
-    return;
-  }
+    if (stageName?.toLowerCase().includes('demo')) {
+      setDialogValue({
+        demoSessionType: '',
+        demoSessionStartTime: new Date(),
+        demoSessionEndTime: null,
+        notes: '',
+        place: '',
+        demoSessionAttendees: [],
+        presentedByUsers: [],
+      });
+      setDialogErrors({
+        demoSessionType: '',
+        demoSessionStartTime: '',
+        demoSessionEndTime: '',
+        notes: '',
+        place: '',
+        demoSessionAttendees: '',
+        presentedByUsers: '',
+      });
+      setOpenDialog(true);
+      return;
+    }
 
-  if (stageName?.toLowerCase() === 'proposal') {
-    setProposalDialogValue({
-      proposalSendModeId: null,
-      preparedBy: null,
-      verifiedBy: null,
-      sendBy: null,
-      notes: '',
-    });
-    setProposalDialogErrors({
-      proposalSendModeId: '',
-      preparedBy: '',
-      verifiedBy: '',
-      sendBy: '',
-      notes: '',
-    });
-    setOpenProposalDialog(true);
-    return;
-  }
+    if (stageName?.toLowerCase() === 'proposal') {
+      setProposalDialogValue({
+        proposalSendModeId: null,
+        preparedBy: null,
+        verifiedBy: null,
+        sendBy: null,
+        notes: '',
+      });
+      setProposalDialogErrors({
+        proposalSendModeId: '',
+        preparedBy: '',
+        verifiedBy: '',
+        sendBy: '',
+        notes: '',
+      });
+      setOpenProposalDialog(true);
+      return;
+    }
 
-  if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
-    setDialogValue('');
-    setDialogErrors({ ...dialogErrors, amount: '' });
-    setOpenDialog(true);
-    return;
-  }
+    if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
+      setDialogValue('');
+      setDialogErrors({ ...dialogErrors, amount: '' });
+      setOpenDialog(true);
+      return;
+    }
 
-  setRemarkStageId(statusId);
-  setRemarkData({ remark: '', projectValue: '' });
-  setRemarkErrors({ remark: '', projectValue: '' });
-  setShowRemarkDialog(true);
-};
-
-const handleProposalSubmit = async () => {
-  if (!validateProposal()) return;
-
-  const token = localStorage.getItem('token');
-  const statusId = stages[dialogStageIndex]?.id;
-
-  try {
- 
-
-    const payload = {
-      leadId: parseInt(leadId),
-      proposalSendModeId: proposalDialogValue.proposalSendModeId?.proposal_send_mode_id, // Use the correct property name
-      preparedBy: proposalDialogValue.preparedBy?.iUser_id,
-      verifiedBy: proposalDialogValue.verifiedBy?.iUser_id,
-      sendBy: proposalDialogValue.sendBy?.iUser_id,
-      notes: proposalDialogValue.notes,
-    };
-
-
-    const response = await axios.post(ENDPOINTS.PROPOSAL, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-
-    showToast('success', 'Proposal details saved!');
     setRemarkStageId(statusId);
-    setRemarkData({ remark: '', projectValue: '' });
+    setRemarkData({ 
+      remark: '', 
+      projectValue: '',
+      assignedTo: '',
+      assignToMe: false
+    });
     setRemarkErrors({ remark: '', projectValue: '' });
     setShowRemarkDialog(true);
-    setOpenProposalDialog(false);
-  } catch (e) {
-    console.error('Error submitting proposal:', e);
-    console.error('Error response:', e.response?.data);
-    showToast('error', e?.response?.data?.message || e.message || 'Failed to save proposal details');
-  }
-};
-// const PROPOSAL_SEND_MODES = [
-//   { id: 1, name: 'Online' },
-//   { id: 2, name: 'Offline' }
-// ];
+  };
+
+  const handleProposalSubmit = async () => {
+    if (!validateProposal()) return;
+
+    const token = localStorage.getItem('token');
+    const statusId = stages[dialogStageIndex]?.id;
+
+    try {
+      const payload = {
+        leadId: parseInt(leadId),
+        proposalSendModeId: proposalDialogValue.proposalSendModeId?.proposal_send_mode_id,
+        preparedBy: proposalDialogValue.preparedBy?.iUser_id,
+        verifiedBy: proposalDialogValue.verifiedBy?.iUser_id,
+        sendBy: proposalDialogValue.sendBy?.iUser_id,
+        notes: proposalDialogValue.notes,
+      };
+
+      const response = await axios.post(ENDPOINTS.PROPOSAL, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast('success', 'Proposal details saved!');
+      setRemarkStageId(statusId);
+      setRemarkData({ 
+        remark: '', 
+        projectValue: '',
+        assignedTo: '',
+        assignToMe: false
+      });
+      setRemarkErrors({ remark: '', projectValue: '' });
+      setShowRemarkDialog(true);
+      setOpenProposalDialog(false);
+    } catch (e) {
+      console.error('Error submitting proposal:', e);
+      console.error('Error response:', e.response?.data);
+      showToast('error', e?.response?.data?.message || e.message || 'Failed to save proposal details');
+    }
+  };
 
   const updateStage = async (newIndex, statusId) => {
     try {
@@ -558,12 +582,70 @@ const handleProposalSubmit = async () => {
       }
 
       setRemarkStageId(statusId);
-      setRemarkData({ remark: '', projectValue: '' });
+      setRemarkData({ 
+        remark: '', 
+        projectValue: '',
+        assignedTo: '',
+        assignToMe: false
+      });
       setRemarkErrors({ remark: '', projectValue: '' });
       setShowRemarkDialog(true);
       setOpenDialog(false);
     } catch (e) {
       showToast('error', e?.response?.data?.message || e.message || 'Something went wrong');
+    }
+  };
+
+  const handleAssignToMeChange = (e) => {
+    const checked = e.target.checked;
+    setRemarkData(prev => ({
+      ...prev,
+      assignToMe: checked,
+      assignedTo: checked ? loggedInUserId : ''
+    }));
+  };
+
+  const handleAssignedToChange = (e) => {
+    const value = e.target.value;
+    setRemarkData(prev => ({
+      ...prev,
+      assignedTo: value,
+      assignToMe: value === loggedInUserId
+    }));
+  };
+
+  // Function to send assignment notification email
+  const sendAssignmentNotification = async (assignedUserId, assignedUserName) => {
+    try {
+      const token = localStorage.getItem('token');
+      const assignedUser = users.find(user => user.iUser_id === parseInt(assignedUserId));
+      
+      if (!assignedUser || !assignedUser.cEmail) {
+        console.error('Assigned user not found or no email available');
+        return;
+      }
+
+      const mailPayload = {
+        userName: assignedUser.cUser_name,
+        time: new Date().toISOString(),
+        leadName: leadData.clead_name,
+        leadURL: window.location.href,
+        mailId: assignedUser.cEmail,
+        assignedTo: assignedUser.cUser_name,
+        notifyTo: assignedUser.cEmail,
+      };
+
+      await axios.post(`${ENDPOINTS.ASSIGNED_TO_MAIL}`, mailPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast('success', `Assignment notification sent to ${assignedUser.cUser_name}`);
+    } catch (mailErr) {
+      console.error('Failed to send notification email:', mailErr);
+      showToast('error', 'Assignment saved but notification failed to send');
     }
   };
 
@@ -581,6 +663,7 @@ const handleProposalSubmit = async () => {
     };
 
     try {
+      // Submit the remark first
       await axios.post(ENDPOINTS.STATUS_REMARKS, payload, {
         headers: {
           'Content-Type': 'application/json',
@@ -588,7 +671,39 @@ const handleProposalSubmit = async () => {
         },
       });
 
-      showToast('success', 'Remark submitted!');
+      // Handle assignment separately if assigned to someone
+      if (remarkData.assignedTo) {
+        try {
+          await axios.post(
+            `${ENDPOINTS.ASSIGNED_TO}`,
+            {
+              iassigned_by: userId.iUser_id,
+              iassigned_to: Number(remarkData.assignedTo),
+              ilead_id: Number(leadId),
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          // Send notification email to the assigned user
+          const assignedUser = users.find(user => user.iUser_id === parseInt(remarkData.assignedTo));
+          if (assignedUser) {
+            await sendAssignmentNotification(remarkData.assignedTo, assignedUser.cUser_name);
+          }
+
+          showToast('success', 'Remark submitted and lead assigned!');
+        } catch (assignErr) {
+          console.error('Failed to assign lead:', assignErr);
+          showToast('success', 'Remark submitted but assignment failed.');
+        }
+      } else {
+        showToast('success', 'Remark submitted!');
+      }
+
       const newIndex = stages.findIndex(s => s.id === remarkStageId);
       await updateStage(newIndex, remarkStageId);
       setShowRemarkDialog(false);
@@ -870,7 +985,12 @@ const handleProposalSubmit = async () => {
           </DialogActions>
         </Dialog>
 
-        <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
+        <Dialog 
+          open={showRemarkDialog} 
+          onClose={() => setShowRemarkDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
           <DialogTitle>Enter Remark</DialogTitle>
           <DialogContent>
             <TextField
@@ -903,6 +1023,44 @@ const handleProposalSubmit = async () => {
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />
+            
+            {/* Assigned To Section */}
+            <div className="mt-4 mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  Assign To
+                </label>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={remarkData.assignToMe}
+                      onChange={handleAssignToMeChange}
+                      color="primary"
+                    />
+                  }
+                  label="Assign to me"
+                />
+              </div>
+              
+              <select
+                className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm"
+                value={remarkData.assignedTo}
+                onChange={handleAssignedToChange}
+                disabled={remarkData.assignToMe}
+              >
+                <option value="">Select User</option>
+                {users
+                  .filter(user => user.bactive === true)
+                  .map((user) => (
+                    <option key={user.iUser_id} value={user.iUser_id}>
+                      {user.cFull_name}
+                    </option>
+                  ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Optionally assign this lead to someone when submitting the remark
+              </p>
+            </div>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
@@ -912,123 +1070,122 @@ const handleProposalSubmit = async () => {
           </DialogActions>
         </Dialog>
 
-<Dialog 
-  open={openProposalDialog} 
-  onClose={() => setOpenProposalDialog(false)}
-  maxWidth="sm" // Can be 'xs', 'sm', 'md', 'lg', 'xl'
-  fullWidth // Makes the dialog take the full width of its maxWidth
->  
-
-<DialogTitle>Enter Proposal Details</DialogTitle>
-  <DialogContent>
-   <Autocomplete
-  fullWidth
-  options={proposalSendModes}
-  getOptionLabel={(option) => option?.name || ''}
-  isOptionEqualToValue={(option, value) => 
-    option?.proposal_send_mode_id === value?.proposal_send_mode_id
-  }
-  value={proposalDialogValue.proposalSendModeId || null}
-  onChange={(e, newValue) =>
-    setProposalDialogValue(prev => ({ 
-      ...prev, 
-      proposalSendModeId: newValue 
-    }))
-  }
-  renderInput={(params) => (
-    <TextField
-      {...params}
-      label="Send Mode *"
-      sx={{ mt: 2 }}
-      error={!!proposalDialogErrors.proposalSendModeId}
-      helperText={proposalDialogErrors.proposalSendModeId}
-    />
-  )}
-/>
-    <Autocomplete
-      fullWidth
-      options={users}
-      getOptionLabel={option => option?.cFull_name || ''}
-      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
-      value={proposalDialogValue.preparedBy || null}
-      onChange={(e, newValue) =>
-        setProposalDialogValue(prev => ({ ...prev, preparedBy: newValue }))
-      }
-      renderInput={params => (
-        <TextField
-          {...params}
-          label="Prepared By *"
-          sx={{ mt: 2 }}
-          error={!!proposalDialogErrors.preparedBy}
-          helperText={proposalDialogErrors.preparedBy}
-        />
-      )}
-    />
-    <Autocomplete
-      fullWidth
-      options={users}
-      getOptionLabel={option => option?.cFull_name || ''}
-      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
-      value={proposalDialogValue.verifiedBy || null}
-      onChange={(e, newValue) =>
-        setProposalDialogValue(prev => ({ ...prev, verifiedBy: newValue }))
-      }
-      renderInput={params => (
-        <TextField
-          {...params}
-          label="Verified By *"
-          sx={{ mt: 2 }}
-          error={!!proposalDialogErrors.verifiedBy}
-          helperText={proposalDialogErrors.verifiedBy}
-        />
-      )}
-    />
-    <Autocomplete
-      fullWidth
-      options={users}
-      getOptionLabel={option => option?.cFull_name || ''}
-      isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
-      value={proposalDialogValue.sendBy || null}
-      onChange={(e, newValue) =>
-        setProposalDialogValue(prev => ({ ...prev, sendBy: newValue }))
-      }
-      renderInput={params => (
-        <TextField
-          {...params}
-          label="Send By *"
-          sx={{ mt: 2 }}
-          error={!!proposalDialogErrors.sendBy}
-          helperText={proposalDialogErrors.sendBy}
-        />
-      )}
-    />
-    <TextField
-      label="Notes (optional)"
-      fullWidth
-      multiline
-      rows={3}
-      value={proposalDialogValue.notes}
-      onChange={e => {
-        if (e.target.value.length <= MAX_PROPOSAL_NOTES_LENGTH) {
-          setProposalDialogValue(prev => ({ ...prev, notes: e.target.value }));
-        }
-      }}
-      error={!!proposalDialogErrors.notes}
-      helperText={
-        proposalDialogErrors.notes || 
-        `${proposalDialogValue.notes.length}/${MAX_PROPOSAL_NOTES_LENGTH} characters`
-      }
-      sx={{ mt: 2 }}
-      InputLabelProps={{ shrink: true }}
-    />
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setOpenProposalDialog(false)}>Cancel</Button>
-    <Button onClick={handleProposalSubmit} variant="contained">
-      Save
-    </Button>
-  </DialogActions>
-</Dialog>
+        <Dialog 
+          open={openProposalDialog} 
+          onClose={() => setOpenProposalDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >  
+          <DialogTitle>Enter Proposal Details</DialogTitle>
+          <DialogContent>
+            <Autocomplete
+              fullWidth
+              options={proposalSendModes}
+              getOptionLabel={(option) => option?.name || ''}
+              isOptionEqualToValue={(option, value) => 
+                option?.proposal_send_mode_id === value?.proposal_send_mode_id
+              }
+              value={proposalDialogValue.proposalSendModeId || null}
+              onChange={(e, newValue) =>
+                setProposalDialogValue(prev => ({ 
+                  ...prev, 
+                  proposalSendModeId: newValue 
+                }))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Send Mode *"
+                  sx={{ mt: 2 }}
+                  error={!!proposalDialogErrors.proposalSendModeId}
+                  helperText={proposalDialogErrors.proposalSendModeId}
+                />
+              )}
+            />
+            <Autocomplete
+              fullWidth
+              options={users}
+              getOptionLabel={option => option?.cFull_name || ''}
+              isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+              value={proposalDialogValue.preparedBy || null}
+              onChange={(e, newValue) =>
+                setProposalDialogValue(prev => ({ ...prev, preparedBy: newValue }))
+              }
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Prepared By *"
+                  sx={{ mt: 2 }}
+                  error={!!proposalDialogErrors.preparedBy}
+                  helperText={proposalDialogErrors.preparedBy}
+                />
+              )}
+            />
+            <Autocomplete
+              fullWidth
+              options={users}
+              getOptionLabel={option => option?.cFull_name || ''}
+              isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+              value={proposalDialogValue.verifiedBy || null}
+              onChange={(e, newValue) =>
+                setProposalDialogValue(prev => ({ ...prev, verifiedBy: newValue }))
+              }
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Verified By *"
+                  sx={{ mt: 2 }}
+                  error={!!proposalDialogErrors.verifiedBy}
+                  helperText={proposalDialogErrors.verifiedBy}
+                />
+              )}
+            />
+            <Autocomplete
+              fullWidth
+              options={users}
+              getOptionLabel={option => option?.cFull_name || ''}
+              isOptionEqualToValue={(option, value) => option.iUser_id === value.iUser_id}
+              value={proposalDialogValue.sendBy || null}
+              onChange={(e, newValue) =>
+                setProposalDialogValue(prev => ({ ...prev, sendBy: newValue }))
+              }
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Send By *"
+                  sx={{ mt: 2 }}
+                  error={!!proposalDialogErrors.sendBy}
+                  helperText={proposalDialogErrors.sendBy}
+                />
+              )}
+            />
+            <TextField
+              label="Notes (optional)"
+              fullWidth
+              multiline
+              rows={3}
+              value={proposalDialogValue.notes}
+              onChange={e => {
+                if (e.target.value.length <= MAX_PROPOSAL_NOTES_LENGTH) {
+                  setProposalDialogValue(prev => ({ ...prev, notes: e.target.value }));
+                }
+              }}
+              error={!!proposalDialogErrors.notes}
+              helperText={
+                proposalDialogErrors.notes || 
+                `${proposalDialogValue.notes.length}/${MAX_PROPOSAL_NOTES_LENGTH} characters`
+              }
+              sx={{ mt: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenProposalDialog(false)}>Cancel</Button>
+            <Button onClick={handleProposalSubmit} variant="contained">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {statusRemarks.length > 0 && (
           <div className="mt-6">
@@ -1074,43 +1231,43 @@ const handleProposalSubmit = async () => {
             },
           }}
         >
-         <DialogTitle
-  sx={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '20px 24px 16px',
-    position: 'relative',
-    color: '#1a1a1a',
-    fontSize: '1.5rem',
-    fontWeight: 600,
-    borderBottom: '1px solid #e0e0e0',
-    backgroundColor: '#fafafa',
-  }}
->
-  Timeline Detail
-  <IconButton
-    aria-label="close"
-    onClick={() => setSelectedRemark(null)}
-    sx={{
-      position: 'absolute',
-      right: 12,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      color: (theme) => theme.palette.grey[600],
-      backgroundColor: 'transparent',
-      borderRadius: '50%',
-      padding: '6px',
-      transition: 'all 0.2s ease-in-out',
-      '&:hover': {
-        backgroundColor: 'rgba(0,0,0,0.05)',
-        transform: 'translateY(-50%) rotate(90deg)',
-      },
-    }}
-  >
-    <X size={18} />
-  </IconButton>
-</DialogTitle>
+          <DialogTitle
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '20px 24px 16px',
+              position: 'relative',
+              color: '#1a1a1a',
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              borderBottom: '1px solid #e0e0e0',
+              backgroundColor: '#fafafa',
+            }}
+          >
+            Timeline Detail
+            <IconButton
+              aria-label="close"
+              onClick={() => setSelectedRemark(null)}
+              sx={{
+                position: 'absolute',
+                right: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: (theme) => theme.palette.grey[600],
+                backgroundColor: 'transparent',
+                borderRadius: '50%',
+                padding: '6px',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  transform: 'translateY(-50%) rotate(90deg)',
+                },
+              }}
+            >
+              <X size={18} />
+            </IconButton>
+          </DialogTitle>
 
           <DialogContent
             sx={{
@@ -1136,10 +1293,6 @@ const handleProposalSubmit = async () => {
                     {selectedRemark.status_name || '-'}
                   </span>
                 </div>
-
-                {/* <p className="text-xl font-bold text-gray-900 mb-4">
-                  {selectedRemark.status_name || '-'}
-                </p> */}
 
                 <p className="text-sm text-gray-700 break-words w-3/4 p-6 leading-relaxed mb-6 font-bold ">
                   {selectedRemark.lead_status_remarks}

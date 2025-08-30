@@ -1223,7 +1223,7 @@ const handleSubmit = async (e) => {
             {/* City Dropdown */}
             <div className="relative" ref={cityDropdownRef}>
               <label htmlFor="icity" className={labelClasses}>
-                City: <span className="text-red-500">*</span>
+                City <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"

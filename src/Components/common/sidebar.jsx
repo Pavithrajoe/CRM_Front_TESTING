@@ -31,9 +31,9 @@ const Sidebar = () => {
         const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g,'+').replace(/_/g,'/')));
         const roleId = payload.role_id;
         setUserRoleId(roleId);
-        if (roleId === 4) {
+        if (roleId === 1) {
           setMenuItems(fullMenuItems);
-        } else if (roleId === 5) {
+        } else if (roleId === 2) {
           setMenuItems(fullMenuItems.filter(item =>
             ['Home', 'Organisation', 'Reports', 'Chat', 'Settings', 'Support'].includes(item.label)
           ));

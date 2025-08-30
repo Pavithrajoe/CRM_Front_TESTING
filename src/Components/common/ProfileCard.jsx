@@ -538,7 +538,7 @@ const validateForm = () => {
   } else if (!isNumeric(form.iphone_no)) {
     newErrors.iphone_no = "Mobile numbe must contain only digits.";
   } else if (!/^[0-9]{6,15}$/.test(form.iphone_no)) {
-    newErrors.iphone_no = "Mobile number must contain only 6 to 15 digits";
+    newErrors.iphone_no = "Mobile number must be contain only 6 to 15 digits";
   }
 
   // Organization is working, so we'll keep it as it is
@@ -567,8 +567,8 @@ const validateForm = () => {
   if (form.cwhatsapp.trim()) {
       if (!isNumeric(form.cwhatsapp)) {
         newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
-      } else if (!/^\d{10}$/.test(form.cwhatsapp)) {
-        newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
+      } else if (!/^[0-9]{6,15}$/.test(form.cwhatsapp)) {
+        newErrors.cwhatsapp = "WhatsApp number must be contain only 6 to 15 digits.";
       }
     }
   if (form.cemail.trim()) {
@@ -585,8 +585,8 @@ const validateForm = () => {
     }
   }
   
-  if (form.cpincode && !/^[0-9]{6,15}$/.test(form.cpincode)) {  
-    newErrors.cpincode = "Pincode must be 6 to 15 digits.";
+  if (form.cpincode && !/^[0-9]{6,10}$/.test(form.cpincode)) {  
+    newErrors.cpincode = "Pincode must be 6 to 10 digits.";
   }
 
   setErrors(newErrors);
@@ -608,9 +608,9 @@ const handleSubmit = async (e) => {
 
       try {
         await onSave(formDataToSave);
-        showPopup("Success", "Profile updated successfully!", "success"); // Show popup
+        showPopup("Success", "Profile updated successfully!", "success"); 
       } catch (error) {
-        showPopup("Error", "Failed to update profile.", "error"); // Show error popup
+        showPopup("Error", "Failed to update profile.", "error"); 
         console.error("Error saving profile:", error);
       }
     }
@@ -624,8 +624,6 @@ const handleSubmit = async (e) => {
   }
 }, [successMessage]);
 
-
-  // Helper function to get input classes with read-only state
   const getInputClasses = (hasError) => {
     let classes = `mt-1 block w-full border rounded-lg shadow-sm py-2 px-3 text-gray-800 focus:outline-none transition-all duration-200 text-sm ${
       hasError ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "focus:ring-blue-600 "
@@ -1028,8 +1026,6 @@ const handleSubmit = async (e) => {
             </div>
           {/* </div> */}
 
-       
-
 
       {/* Project Value Field */}
             <div>
@@ -1267,7 +1263,7 @@ const handleSubmit = async (e) => {
     value={form.cpincode || ''}
     onChange={handleFieldChange}
     className={getInputClasses(errors.cpincode)}
-    readOnly={isReadOnly} // Or you can make it always readOnly if it's auto-filled
+    readOnly={isReadOnly} 
     disabled={isReadOnly}
   />
   {errors.cpincode && <p className={errorTextClasses}>{errors.cpincode}</p>}

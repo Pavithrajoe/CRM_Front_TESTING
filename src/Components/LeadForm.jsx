@@ -1,4 +1,4 @@
-// last update 26/08 workinh fine
+// last update 30/08 workinh fine
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search } from "lucide-react";
@@ -865,9 +865,11 @@ useEffect(() => {
       }
     }
     if (name === "clead_address1") {
-      if (!value) {
-        error = "Mandatory";
-      } else if (value.length > 200) {
+      // if (!value) {
+      //   error = "Mandatory";
+      // } 
+      
+      if (value.length > 200) {
         error = "Lead Address cannot exceed 200 characters";
       }
     }
@@ -903,9 +905,9 @@ useEffect(() => {
     if (name === "iphone_no" && !value) {
       error = "Mandatory";
     }
-    if (name === "clead_address1" && !value) {
-      error = "Mandatory";
-    }
+    // if (name === "clead_address1" && !value) {
+    //   error = "Mandatory";
+    // }
     if (name === "icity" && !value) {
       error = "Mandatory";
     }
@@ -918,9 +920,9 @@ useEffect(() => {
     if (name === "ileadstatus_id" && !value) {
       error = "Mandatory";
     }
-    if (name === "cindustry_id" && !value) {
-      error = "Mandatory";
-    }
+    // if (name === "cindustry_id" && !value) {
+    //   error = "Mandatory";
+    // }
     if (name === "lead_source_id" && !value) {
       error = "Mandatory";
     }
@@ -1540,7 +1542,7 @@ const handleSubmit = async (e) => {
   ];
 
   const addressDetailsFields = [
-    { label: "Address Line 1", name: "clead_address1", required: true },
+    { label: "Address Line 1", name: "clead_address1", required: false },
     { label: "Address Line 2", name: "clead_address2", required: false },
     { label: "Address Line 3", name: "clead_address3", required: false },
     { label: "City", name: "icity", type: "searchable-select-city", required: true },
@@ -1793,7 +1795,7 @@ const handleSubmit = async (e) => {
             displayField: "cindustry_name",
             formField: "cindustry_id",
             error: errors.cindustry_id,
-            required: true,
+            required: false,
             emptyType: "industry"
           },
           {

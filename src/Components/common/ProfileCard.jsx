@@ -31,7 +31,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
-    const { showPopup } = usePopup(); // Get the showPopup function from context
+    const { showPopup } = usePopup(); 
 
   const token = localStorage.getItem("token");
 
@@ -56,9 +56,9 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     iLeadpoten_id: profile?.iLeadpoten_id || "",
     iservice_id: profile?.iservice_id || "",
     isubservice_id: profile?.isubservice_id || "",
-    ileadstatus_id: profile?.ileadstatus_id || 0,
+    ilead_status_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
-    csubindustry_id: profile?.csubindustry_id || "",
+    csubindustry_id: profile?.isubindustry || "",
     lead_source_id: profile?.lead_source_id || "",
     ino_employee: profile?.ino_employee || 0,
     iproject_value: profile?.iproject_value || 0,
@@ -69,7 +69,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     icity: profile?.icity || "",
     iphone_no: profile?.iphone_no ? profile.iphone_no.replace(profile?.phone_country_code || "+91", "") : "",
     phone_country_code: profile?.phone_country_code || "+91",
-    cwhatsapp: profile?.cwhatsapp ? profile.cwhatsapp.replace(profile?.whatsapp_country_code || "+91", "") : "",
+    cwhatsapp: profile?.whatsapp_number ? profile.whatsapp_number.replace(profile?.whatsapp_country_code || "+91", "") : "",
     whatsapp_country_code: profile?.whatsapp_country_code || "+91",
     cgender: profile?.cgender || 1,
     clogo: profile?.clogo || "logo.png",
@@ -79,6 +79,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     cresponded_by: userId,
     icompany_id: company_id,
     modified_by: userId,
+    cpincode: profile?.cpincode?.toString() || "",
   });
 
   const [errors, setErrors] = useState({});
@@ -195,6 +196,25 @@ const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false);
       console.error("Error in fetching country codes:", e);
     }
   };
+ 
+
+  // for status
+  useEffect(() => {
+    const fetchLeadStatus = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${apiEndPoint}/lead-status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStatus(res.data);
+      } catch (err) {
+        console.error("Failed to fetch lead status", err);
+      }
+    };
+    fetchLeadStatus();
+  }, []);
+
+
 
   const fetchService = async () => {
     try {
@@ -283,9 +303,9 @@ const [isSubServiceDropdownOpen, setIsSubServiceDropdownOpen] = useState(false);
 
       setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
       setInitialDropdownValue(service, 'iservice_id', 'cservice_name', 'iservice_id', setSearchService);
-      setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ilead_status_id', setSearchStatus);
+      setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ileadstatus_id', setSearchStatus);
       setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
-      setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'csubindustry_id', setSearchSubIndustry);
+      setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'isubindustry', setSearchSubIndustry);
       setInitialDropdownValue(source, 'source_id', 'source_name', 'lead_source_id', setSearchSource);
       setInitialDropdownValue(cities, 'icity_id', 'cCity_name', 'icity', setSearchCity);
       setInitialDropdownValue(subService, 'isubservice_id', 'subservice_name', 'isubservice_id', setSearchSubService);
@@ -436,70 +456,142 @@ const filteredSubServices = subService.filter(
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const validateForm = () => {
-    if (isReadOnly) return false;
-    let newErrors = {};
-    const isNumeric = (value) => /^\d+$/.test(value);
+  // const validateForm = () => {
+  //   if (isReadOnly) return false;
+  //   let newErrors = {};
+  //   const isNumeric = (value) => /^\d+$/.test(value);
 
-    if (!form.clead_name.trim()) {
-      newErrors.clead_name = "Name is required.";
-    } else if (form.clead_name.trim().length > 40) {
-      newErrors.clead_name = "Name cannot exceed 40 characters.";
-    }
+  //   if (!form.clead_name.trim()) {
+  //     newErrors.clead_name = "Name is required.";
+  //   } else if (form.clead_name.trim().length > 40) {
+  //     newErrors.clead_name = "Name cannot exceed 40 characters.";
+  //   }
 
-    if (!form.iphone_no.trim()) {
-      newErrors.iphone_no = "Phone number is required.";
-    } else if (!isNumeric(form.iphone_no)) {
-      newErrors.iphone_no = "Phone number must contain only digits.";
-    } else if (!/^\d{10}$/.test(form.iphone_no)) {
-      newErrors.iphone_no = "Phone number must be 10 digits.";
-    }
+  //   if (!form.iphone_no.trim()) {
+  //     newErrors.iphone_no = "Mobile numbe is required.";
+  //   } else if (!isNumeric(form.iphone_no)) {
+  //     newErrors.iphone_no = "Mobile numbe must contain only digits.";
+  //   } else if (!/^[0-9]{6,15}$/.test(form.iphone_no)) {
+  //     newErrors.iphone_no = "Mobile number must contain only 6 to 15 digits";
+  //   }
 
-    if (form.cwhatsapp.trim()) {
+  //   if (form.cwhatsapp.trim()) {
+  //     if (!isNumeric(form.cwhatsapp)) {
+  //       newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
+  //     } else if (!/^\d{10}$/.test(form.cwhatsapp)) {
+  //       newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
+  //     }
+  //   }
+
+  //   if (form.cemail.trim()) {
+  //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
+  //       newErrors.cemail = "Invalid email format.";
+  //     } else if (form.cemail.trim().length > 30) {
+  //       newErrors.cemail = "Email cannot exceed 30 characters.";
+  //     }
+  //   }
+
+  //   if (form.cwebsite.trim()) {
+  //     if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
+  //       newErrors.cwebsite = "Invalid website format.";
+  //     }
+  //   }
+
+  //   if (!form.iLeadpoten_id) {
+  //     newErrors.iLeadpoten_id = "Potential is required.";
+  //   }
+  //   // if (!form.cindustry_id) {
+  //   //   newErrors.cindustry_id = "Industry is required.";
+  //   // }
+  //   if (!form.corganization.trim()) {
+  //     newErrors.corganization = "Organization is required.";
+  //   }
+  //   if (!form.lead_source_id) {
+  //     newErrors.lead_source_id = "Lead source is required.";
+  //   }
+  //   // if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
+  //   //   newErrors.csubindustry_id = "Sub-Industry is required.";
+  //   // }
+    
+  //   // if (form.iservice_id && !form.isubservice_id && filteredSubServices.length > 0) {
+  //   //   newErrors.isubservice_id = "Sub-Service is required.";
+  //   // }
+
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+
+const validateForm = () => {
+  if (isReadOnly) return false;
+  let newErrors = {};
+  const isNumeric = (value) => /^\d+$/.test(value);
+
+  // Name and Mobile Number are working, so we'll keep them as they are
+  if (!form.clead_name.trim()) {
+    newErrors.clead_name = "Name is required.";
+  } else if (form.clead_name.trim().length > 40) {
+    newErrors.clead_name = "Name cannot exceed 40 characters.";
+  }
+
+  if (!form.iphone_no.trim()) {
+    newErrors.iphone_no = "Mobile numbe is required.";
+  } else if (!isNumeric(form.iphone_no)) {
+    newErrors.iphone_no = "Mobile numbe must contain only digits.";
+  } else if (!/^[0-9]{6,15}$/.test(form.iphone_no)) {
+    newErrors.iphone_no = "Mobile number must contain only 6 to 15 digits";
+  }
+
+  // Organization is working, so we'll keep it as it is
+  if (!form.corganization.trim()) {
+    newErrors.corganization = "Organization is required.";
+  }
+
+  // Use explicit checks for dropdowns
+  if (!form.iLeadpoten_id) {
+    newErrors.iLeadpoten_id = "Potential is required.";
+  }
+  if (!form.ilead_status_id) {
+    newErrors.ilead_status_id = "Lead Status is required.";
+  }
+  if (!form.iservice_id) {
+    newErrors.iservice_id = "Lead service is required.";
+  }
+  if (!form.lead_source_id) {
+    newErrors.lead_source_id = "Lead source is required.";
+  }
+  if (!form.icity) {
+    newErrors.icity = "City is required.";
+  }
+  
+  // Other validations
+  if (form.cwhatsapp.trim()) {
       if (!isNumeric(form.cwhatsapp)) {
         newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
       } else if (!/^\d{10}$/.test(form.cwhatsapp)) {
         newErrors.cwhatsapp = "WhatsApp number must be 10 digits.";
       }
     }
+  if (form.cemail.trim()) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
+      newErrors.cemail = "Invalid email format.";
+    } else if (form.cemail.trim().length > 30) {
+      newErrors.cemail = "Email cannot exceed 30 characters.";
+    }
+  }
 
-    if (form.cemail.trim()) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
-        newErrors.cemail = "Invalid email format.";
-      } else if (form.cemail.trim().length > 30) {
-        newErrors.cemail = "Email cannot exceed 30 characters.";
-      }
+  if (form.cwebsite.trim()) {
+    if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
+      newErrors.cwebsite = "Invalid website format.";
     }
+  }
+  
+  if (form.cpincode && !/^[0-9]{6,15}$/.test(form.cpincode)) {  
+    newErrors.cpincode = "Pincode must be 6 to 15 digits.";
+  }
 
-    if (form.cwebsite.trim()) {
-      if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
-        newErrors.cwebsite = "Invalid website format.";
-      }
-    }
-
-    if (!form.iLeadpoten_id) {
-      newErrors.iLeadpoten_id = "Potential is required.";
-    }
-    if (!form.cindustry_id) {
-      newErrors.cindustry_id = "Industry is required.";
-    }
-    if (!form.corganization.trim()) {
-      newErrors.corganization = "Organization is required.";
-    }
-    if (!form.lead_source_id) {
-      newErrors.lead_source_id = "Lead source is required.";
-    }
-    if (form.cindustry_id && !form.csubindustry_id && filteredSubIndustries.length > 0) {
-      newErrors.csubindustry_id = "Sub-Industry is required.";
-    }
-    
-    if (form.iservice_id && !form.isubservice_id && filteredSubServices.length > 0) {
-      newErrors.isubservice_id = "Sub-Service is required.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReadOnly) {
@@ -594,7 +686,7 @@ const handleSubmit = async (e) => {
             {/* Name Field */}
             <div>
               <label htmlFor="clead_name" className={labelClasses}>
-                Name: <span className="text-red-500">*</span>
+                Lead Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -612,7 +704,7 @@ const handleSubmit = async (e) => {
             {/* Organization Field */}
             <div>
               <label htmlFor="corganization" className={labelClasses}>
-                Organization: <span className="text-red-500">*</span>
+                Organization Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -627,10 +719,358 @@ const handleSubmit = async (e) => {
               {errors.corganization && <p className={errorTextClasses}>{errors.corganization}</p>}
             </div>
 
+            {/* Website Field */}
+            <div>
+              <label htmlFor="cwebsite" className={labelClasses}>
+                Website
+              </label>
+              <input
+                type="text"
+                id="cwebsite"
+                name="cwebsite"
+                value={form.cwebsite}
+                onChange={handleFieldChange}
+                className={getInputClasses(errors.cwebsite)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
+              />
+              {errors.cwebsite && <p className={errorTextClasses}>{errors.cwebsite}</p>}
+            </div>
+
+
+            {/* Lead Potential Dropdown */}
+            <div className="relative" ref={potentialDropdownRef}>
+              <label htmlFor="iLeadpoten_id" className={labelClasses}>
+                Lead potential <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchPotential}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchPotential(e.target.value);
+                  setIsPotentialDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsPotentialDropdownOpen(true)}
+                className={getInputClasses(errors.iLeadpoten_id)}
+                placeholder="Select potential"
+                readOnly={isReadOnly || Potential.length === 0}
+                disabled={isReadOnly || Potential.length === 0}
+              />
+              {isPotentialDropdownOpen && Potential.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {Potential.filter(potential =>
+                    potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
+                  ).map((potential) => (
+                    <div
+                      key={potential.ileadpoten_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handlePotentialSelect(potential.ileadpoten_id, potential.clead_name)}
+                    >
+                      {potential.clead_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.iLeadpoten_id && <p className={errorTextClasses}>{errors.iLeadpoten_id}</p>}
+            </div>
+
+            {/* Lead Status Dropdown */}
+            <div className="relative" ref={statusDropdownRef}>
+              <label htmlFor="ilead_status_id" className={labelClasses}>
+                Lead Status <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="ileadstatus_id"
+                value={searchStatus}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchStatus(e.target.value);
+                  setIsStatusDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, ilead_status_id: "" })); 
+                }}
+                onClick={() => !isReadOnly && setIsStatusDropdownOpen(true)}
+                className={getInputClasses(errors.ilead_status_id)}
+                placeholder="Select status"
+                readOnly={isReadOnly || status.length === 0}
+                disabled={isReadOnly || status.length === 0}
+              />
+              {isStatusDropdownOpen && status.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {status.filter(statusItem =>
+                    statusItem.clead_name && statusItem.clead_name.toLowerCase().includes(searchStatus.toLowerCase())
+                  ).map((statusItem) => (
+                    <div
+                      key={statusItem.ilead_status_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleStatusSelect(statusItem.ilead_status_id, statusItem.clead_name)}
+                    >
+                      {statusItem.clead_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.ilead_status_id && <p className={errorTextClasses}>{errors.ilead_status_id}</p>}
+            </div>
+
+
+            {/* Industry Dropdown */}
+            <div className="relative" ref={industryDropdownRef}>
+              <label htmlFor="cindustry_id" className={labelClasses}>
+                Industry
+              </label>
+              <input
+                type="text"
+                value={searchIndustry}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchIndustry(e.target.value);
+                  setIsIndustryDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, cindustry_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsIndustryDropdownOpen(true)}
+                className={getInputClasses(errors.cindustry_id)}
+                placeholder="Select industry"
+                readOnly={isReadOnly || leadIndustry.length === 0}
+                disabled={isReadOnly || leadIndustry.length === 0}
+              />
+              {isIndustryDropdownOpen && leadIndustry.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {leadIndustry.filter(industry =>
+                    industry.cindustry_name.toLowerCase().includes(searchIndustry.toLowerCase())
+                  ).map((industry) => (
+                    <div
+                      key={industry.iindustry_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleIndustrySelect(industry.iindustry_id, industry.cindustry_name)}
+                    >
+                      {industry.cindustry_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.cindustry_id && <p className={errorTextClasses}>{errors.cindustry_id}</p>}
+            </div>
+
+            {/* Sub-Industry Dropdown */}
+            <div className="relative" ref={subIndustryDropdownRef}>
+              <label htmlFor="csubindustry_id" className={labelClasses}>
+                Sub-Industry {form.cindustry_id && filteredSubIndustries.length > 0 }
+              </label>
+              <input
+                type="text"
+                value={searchSubIndustry}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchSubIndustry(e.target.value);
+                  setIsSubIndustryDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsSubIndustryDropdownOpen(true)}
+                className={getInputClasses(errors.csubindustry_id)}
+                placeholder="Select sub-industry"
+                readOnly={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
+                disabled={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
+              />
+              {isSubIndustryDropdownOpen && form.cindustry_id && filteredSubIndustries.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredSubIndustries.filter(subIndustry =>
+                    subIndustry.subindustry_name.toLowerCase().includes(searchSubIndustry.toLowerCase())
+                  ).map((subIndustry) => (
+                    <div
+                      key={subIndustry.isubindustry}
+                      className={dropdownItemClasses}
+                      onClick={() => handleSubIndustrySelect(subIndustry.isubindustry, subIndustry.subindustry_name)}
+                    >
+                      {subIndustry.subindustry_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.csubindustry_id && <p className={errorTextClasses}>{errors.csubindustry_id}</p>}
+            </div>
+
+            {/* Lead Source Dropdown */}
+            <div className="relative" ref={sourceDropdownRef}>
+              <label htmlFor="lead_source_id" className={labelClasses}>
+                Lead source <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchSource}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchSource(e.target.value);
+                  setIsSourceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, lead_source_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsSourceDropdownOpen(true)}
+                className={getInputClasses(errors.lead_source_id)}
+                placeholder="Select source"
+                readOnly={isReadOnly || source.length === 0}
+                disabled={isReadOnly || source.length === 0}
+              />
+              {isSourceDropdownOpen && source.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {source.filter(sourceItem =>
+                    sourceItem.source_name.toLowerCase().includes(searchSource.toLowerCase())
+                  ).map((sourceItem) => (
+                    <div
+                      key={sourceItem.source_id}
+                      className={dropdownItemClasses}
+                      onClick={() => handleSourceSelect(sourceItem.source_id, sourceItem.source_name)}
+                    >
+                      {sourceItem.source_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.lead_source_id && <p className={errorTextClasses}>{errors.lead_source_id}</p>}
+            </div>
+
+            {/* Services Dropdown */}
+      <div className="relative" ref={serviceDropdownRef}>
+        <label htmlFor="iservice_id" className={labelClasses}>
+          Lead service <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={searchService}
+          onChange={(e) => {
+            if (isReadOnly) return;
+            setSearchService(e.target.value);
+            setIsServiceDropdownOpen(true);
+            setErrors((prev) => ({ ...prev, iservice_id: "" }));
+          }}
+          onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
+          className={getInputClasses(errors.iservice_id)}
+          placeholder="Select Services"
+          readOnly={isReadOnly || service.length === 0}
+          disabled={isReadOnly || service.length === 0}
+        />
+        {isServiceDropdownOpen && service.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+            {service.filter(serviceItem =>
+              serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
+            ).map((serviceItem) => (
+              <div
+                key={serviceItem.iservice_id}
+                className={dropdownItemClasses}
+                onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
+              >
+                {serviceItem.cservice_name}
+              </div>
+            ))}
+          </div>
+        )}
+        {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
+      </div>
+
+      {/* Sub-Services Dropdown */}
+      <div className="relative" ref={subServiceDropdownRef}>
+        <label htmlFor="isubservice_id" className={labelClasses}>
+          Sub Service {form.iservice_id && filteredSubServices.length > 0 }
+        </label>
+        <input
+          type="text"
+          value={searchSubService}
+          onChange={(e) => {
+            if (isReadOnly) return;
+            setSearchSubService(e.target.value);
+            setIsSubServiceDropdownOpen(true);
+            setErrors((prev) => ({ ...prev, isubservice_id: "" }));
+          }}
+          onClick={() => !isReadOnly && setIsSubServiceDropdownOpen(true)}
+          className={getInputClasses(errors.isubservice_id)}
+          placeholder="Select Sub-Services"
+          readOnly={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+          disabled={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+        />
+        {isSubServiceDropdownOpen && form.iservice_id && filteredSubServices.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+            {filteredSubServices
+              .filter(subServiceItem =>
+                subServiceItem.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+              )
+              .map((subServiceItem) => (
+                <div
+                  key={subServiceItem.isubservice_id}
+                  className={dropdownItemClasses}
+                  onClick={() => handleSubServiceSelect(subServiceItem.isubservice_id, subServiceItem.subservice_name)}
+                >
+                  {subServiceItem.subservice_name}
+                </div>
+              ))}
+          </div>
+        )}
+        {errors.isubservice_id && <p className={errorTextClasses}>{errors.isubservice_id}</p>}
+      </div>
+
+
+      {/* Number of Employees Field */}
+            <div>
+              <label htmlFor="ino_employee" className={labelClasses}>
+                Number of Employees
+              </label>
+              <input
+                type="number"
+                id="ino_employee"
+                name="ino_employee"
+                value={form.ino_employee}
+                onChange={handleFieldChange}
+                className={getInputClasses(errors.ino_employee)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
+              />
+              {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
+            </div>
+          {/* </div> */}
+
+       
+
+
+      {/* Project Value Field */}
+            <div>
+              <label htmlFor="iproject_value" className={labelClasses}>
+                Project Value
+              </label>
+              <input
+                type="number"
+                id="iproject_value"
+                name="iproject_value"
+                value={form.iproject_value}
+                onChange={handleFieldChange}
+                className={getInputClasses(errors.iproject_value)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
+              />
+              {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label htmlFor="cemail" className={labelClasses}>
+                E-mail ID
+              </label>
+              <input
+                type="email"
+                id="cemail"
+                name="cemail"
+                value={form.cemail}
+                onChange={handleFieldChange}
+                className={getInputClasses(errors.cemail)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
+              />
+              {errors.cemail && <p className={errorTextClasses}>{errors.cemail}</p>}
+            </div>
+
             {/* Phone Field */}
             <div>
               <label htmlFor="iphone_no" className={labelClasses}>
-                Phone: <span className="text-red-500">*</span>
+                Mobile Number  <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2">
                 <div className="relative" ref={phoneCountryCodeRef}>
@@ -682,7 +1122,7 @@ const handleSubmit = async (e) => {
             {/* WhatsApp Field */}
             <div>
               <label htmlFor="cwhatsapp" className={labelClasses}>
-                WhatsApp:
+                WhatsApp Number
               </label>
               <div className="flex gap-2">
                 <div className="relative" ref={whatsappCountryCodeRef}>
@@ -731,309 +1171,58 @@ const handleSubmit = async (e) => {
               {errors.cwhatsapp && <p className={errorTextClasses}>{errors.cwhatsapp}</p>}
             </div>
 
-            {/* Email Field */}
+            {/* Address 1 Field */}
             <div>
-              <label htmlFor="cemail" className={labelClasses}>
-                Email:
+              <label htmlFor="clead_address1" className={labelClasses}>
+                Address Line 1
               </label>
               <input
-                type="email"
-                id="cemail"
-                name="cemail"
-                value={form.cemail}
+                type="text"
+                id="clead_address1"
+                name="clead_address1"
+                value={form.clead_address1}
                 onChange={handleFieldChange}
-                className={getInputClasses(errors.cemail)}
+                className={getInputClasses(errors.clead_address1)}
                 readOnly={isReadOnly}
                 disabled={isReadOnly}
               />
-              {errors.cemail && <p className={errorTextClasses}>{errors.cemail}</p>}
+              {errors.clead_address1 && <p className={errorTextClasses}>{errors.clead_address1}</p>}
             </div>
 
-            {/* Website Field */}
+            {/* Address 2 Field */}
             <div>
-              <label htmlFor="cwebsite" className={labelClasses}>
-                Website:
+              <label htmlFor="clead_address2" className={labelClasses}>
+                Address Line 2
               </label>
               <input
                 type="text"
-                id="cwebsite"
-                name="cwebsite"
-                value={form.cwebsite}
+                id="clead_address2"
+                name="clead_address2"
+                value={form.clead_address2}
                 onChange={handleFieldChange}
-                className={getInputClasses(errors.cwebsite)}
+                className={getInputClasses(false)}
                 readOnly={isReadOnly}
                 disabled={isReadOnly}
               />
-              {errors.cwebsite && <p className={errorTextClasses}>{errors.cwebsite}</p>}
             </div>
 
-            {/* Lead Potential Dropdown */}
-            <div className="relative" ref={potentialDropdownRef}>
-              <label htmlFor="iLeadpoten_id" className={labelClasses}>
-                Potential: <span className="text-red-500">*</span>
+            {/* Address 3 Field */}
+            <div>
+              <label htmlFor="clead_address3" className={labelClasses}>
+                Address Line 3
               </label>
               <input
                 type="text"
-                value={searchPotential}
-                onChange={(e) => {
-                  if (isReadOnly) return;
-                  setSearchPotential(e.target.value);
-                  setIsPotentialDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
-                }}
-                onClick={() => !isReadOnly && setIsPotentialDropdownOpen(true)}
-                className={getInputClasses(errors.iLeadpoten_id)}
-                placeholder="Select potential"
-                readOnly={isReadOnly || Potential.length === 0}
-                disabled={isReadOnly || Potential.length === 0}
+                id="clead_address3"
+                name="clead_address3"
+                value={form.clead_address3}
+                onChange={handleFieldChange}
+                className={getInputClasses(errors.clead_address3)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
               />
-              {isPotentialDropdownOpen && Potential.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {Potential.filter(potential =>
-                    potential.clead_name.toLowerCase().includes(searchPotential.toLowerCase())
-                  ).map((potential) => (
-                    <div
-                      key={potential.ileadpoten_id}
-                      className={dropdownItemClasses}
-                      onClick={() => handlePotentialSelect(potential.ileadpoten_id, potential.clead_name)}
-                    >
-                      {potential.clead_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.iLeadpoten_id && <p className={errorTextClasses}>{errors.iLeadpoten_id}</p>}
+              {errors.clead_address3 && <p className={errorTextClasses}>{errors.clead_address3}</p>}
             </div>
-
-            {/* Lead Source Dropdown */}
-            <div className="relative" ref={sourceDropdownRef}>
-              <label htmlFor="lead_source_id" className={labelClasses}>
-                Lead Source: <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={searchSource}
-                onChange={(e) => {
-                  if (isReadOnly) return;
-                  setSearchSource(e.target.value);
-                  setIsSourceDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, lead_source_id: "" }));
-                }}
-                onClick={() => !isReadOnly && setIsSourceDropdownOpen(true)}
-                className={getInputClasses(errors.lead_source_id)}
-                placeholder="Select source"
-                readOnly={isReadOnly || source.length === 0}
-                disabled={isReadOnly || source.length === 0}
-              />
-              {isSourceDropdownOpen && source.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {source.filter(sourceItem =>
-                    sourceItem.source_name.toLowerCase().includes(searchSource.toLowerCase())
-                  ).map((sourceItem) => (
-                    <div
-                      key={sourceItem.source_id}
-                      className={dropdownItemClasses}
-                      onClick={() => handleSourceSelect(sourceItem.source_id, sourceItem.source_name)}
-                    >
-                      {sourceItem.source_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.lead_source_id && <p className={errorTextClasses}>{errors.lead_source_id}</p>}
-            </div>
-
-            {/* Industry Dropdown */}
-            <div className="relative" ref={industryDropdownRef}>
-              <label htmlFor="cindustry_id" className={labelClasses}>
-                Industry: <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={searchIndustry}
-                onChange={(e) => {
-                  if (isReadOnly) return;
-                  setSearchIndustry(e.target.value);
-                  setIsIndustryDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, cindustry_id: "" }));
-                }}
-                onClick={() => !isReadOnly && setIsIndustryDropdownOpen(true)}
-                className={getInputClasses(errors.cindustry_id)}
-                placeholder="Select industry"
-                readOnly={isReadOnly || leadIndustry.length === 0}
-                disabled={isReadOnly || leadIndustry.length === 0}
-              />
-              {isIndustryDropdownOpen && leadIndustry.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {leadIndustry.filter(industry =>
-                    industry.cindustry_name.toLowerCase().includes(searchIndustry.toLowerCase())
-                  ).map((industry) => (
-                    <div
-                      key={industry.iindustry_id}
-                      className={dropdownItemClasses}
-                      onClick={() => handleIndustrySelect(industry.iindustry_id, industry.cindustry_name)}
-                    >
-                      {industry.cindustry_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.cindustry_id && <p className={errorTextClasses}>{errors.cindustry_id}</p>}
-            </div>
-
-            {/* Sub-Industry Dropdown */}
-            <div className="relative" ref={subIndustryDropdownRef}>
-              <label htmlFor="csubindustry_id" className={labelClasses}>
-                Sub-Industry: {form.cindustry_id && filteredSubIndustries.length > 0 && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                value={searchSubIndustry}
-                onChange={(e) => {
-                  if (isReadOnly) return;
-                  setSearchSubIndustry(e.target.value);
-                  setIsSubIndustryDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
-                }}
-                onClick={() => !isReadOnly && setIsSubIndustryDropdownOpen(true)}
-                className={getInputClasses(errors.csubindustry_id)}
-                placeholder="Select sub-industry"
-                readOnly={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
-                disabled={isReadOnly || !form.cindustry_id || filteredSubIndustries.length === 0}
-              />
-              {isSubIndustryDropdownOpen && form.cindustry_id && filteredSubIndustries.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {filteredSubIndustries.filter(subIndustry =>
-                    subIndustry.subindustry_name.toLowerCase().includes(searchSubIndustry.toLowerCase())
-                  ).map((subIndustry) => (
-                    <div
-                      key={subIndustry.isubindustry}
-                      className={dropdownItemClasses}
-                      onClick={() => handleSubIndustrySelect(subIndustry.isubindustry, subIndustry.subindustry_name)}
-                    >
-                      {subIndustry.subindustry_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.csubindustry_id && <p className={errorTextClasses}>{errors.csubindustry_id}</p>}
-            </div>
-
-            {/* Services Dropdown */}
-            {/* <div className="relative" ref={serviceDropdownRef}>
-              <label htmlFor="iservice_id" className={labelClasses}>
-                Services:
-              </label>
-              <input
-                type="text"
-                value={searchService}
-                onChange={(e) => {
-                  if (isReadOnly) return;
-                  setSearchService(e.target.value);
-                  setIsServiceDropdownOpen(true);
-                  setErrors((prev) => ({ ...prev, iservice_id: "" }));
-                }}
-                onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
-                className={getInputClasses(errors.iservice_id)}
-                placeholder="Select Services"
-                readOnly={isReadOnly || service.length === 0}
-                disabled={isReadOnly || service.length === 0}
-              />
-              {isServiceDropdownOpen && service.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-                  {service.filter(serviceItem =>
-                    serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
-                  ).map((serviceItem) => (
-                    <div
-                      key={serviceItem.iservice_id}
-                      className={dropdownItemClasses}
-                      onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
-                    >
-                      {serviceItem.cservice_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
-            </div> */}
-            {/* Sub-Services Dropdown */}
-{/* Services Dropdown */}
-      <div className="relative" ref={serviceDropdownRef}>
-        <label htmlFor="iservice_id" className={labelClasses}>
-          Services:
-        </label>
-        <input
-          type="text"
-          value={searchService}
-          onChange={(e) => {
-            if (isReadOnly) return;
-            setSearchService(e.target.value);
-            setIsServiceDropdownOpen(true);
-            setErrors((prev) => ({ ...prev, iservice_id: "" }));
-          }}
-          onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
-          className={getInputClasses(errors.iservice_id)}
-          placeholder="Select Services"
-          readOnly={isReadOnly || service.length === 0}
-          disabled={isReadOnly || service.length === 0}
-        />
-        {isServiceDropdownOpen && service.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-            {service.filter(serviceItem =>
-              serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
-            ).map((serviceItem) => (
-              <div
-                key={serviceItem.iservice_id}
-                className={dropdownItemClasses}
-                onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
-              >
-                {serviceItem.cservice_name}
-              </div>
-            ))}
-          </div>
-        )}
-        {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
-      </div>
-
-      {/* Sub-Services Dropdown */}
-      <div className="relative" ref={subServiceDropdownRef}>
-        <label htmlFor="isubservice_id" className={labelClasses}>
-          Sub-Services: {form.iservice_id && filteredSubServices.length > 0 && <span className="text-red-500">*</span>}
-        </label>
-        <input
-          type="text"
-          value={searchSubService}
-          onChange={(e) => {
-            if (isReadOnly) return;
-            setSearchSubService(e.target.value);
-            setIsSubServiceDropdownOpen(true);
-            setErrors((prev) => ({ ...prev, isubservice_id: "" }));
-          }}
-          onClick={() => !isReadOnly && setIsSubServiceDropdownOpen(true)}
-          className={getInputClasses(errors.isubservice_id)}
-          placeholder="Select Sub-Services"
-          readOnly={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
-          disabled={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
-        />
-        {isSubServiceDropdownOpen && form.iservice_id && filteredSubServices.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-            {filteredSubServices
-              .filter(subServiceItem =>
-                subServiceItem.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
-              )
-              .map((subServiceItem) => (
-                <div
-                  key={subServiceItem.isubservice_id}
-                  className={dropdownItemClasses}
-                  onClick={() => handleSubServiceSelect(subServiceItem.isubservice_id, subServiceItem.subservice_name)}
-                >
-                  {subServiceItem.subservice_name}
-                </div>
-              ))}
-          </div>
-        )}
-        {errors.isubservice_id && <p className={errorTextClasses}>{errors.isubservice_id}</p>}
-      </div>
 
             {/* City Dropdown */}
             <div className="relative" ref={cityDropdownRef}>
@@ -1066,95 +1255,26 @@ const handleSubmit = async (e) => {
               {errors.icity && <p className={errorTextClasses}>{errors.icity}</p>}
             </div>
 
-            {/* Address 1 Field */}
-            <div>
-              <label htmlFor="clead_address1" className={labelClasses}>
-                Address 1: <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="clead_address1"
-                name="clead_address1"
-                value={form.clead_address1}
-                onChange={handleFieldChange}
-                className={getInputClasses(errors.clead_address1)}
-                readOnly={isReadOnly}
-                disabled={isReadOnly}
-              />
-              {errors.clead_address1 && <p className={errorTextClasses}>{errors.clead_address1}</p>}
-            </div>
+            {/* Pincode Field - NEW CODE */}
+<div>
+  <label htmlFor="cpincode" className={labelClasses}>
+    Pincode
+  </label>
+  <input
+    type="text"
+    id="cpincode"
+    name="cpincode"
+    value={form.cpincode || ''}
+    onChange={handleFieldChange}
+    className={getInputClasses(errors.cpincode)}
+    readOnly={isReadOnly} // Or you can make it always readOnly if it's auto-filled
+    disabled={isReadOnly}
+  />
+  {errors.cpincode && <p className={errorTextClasses}>{errors.cpincode}</p>}
+</div>
 
-            {/* Address 2 Field */}
-            <div>
-              <label htmlFor="clead_address2" className={labelClasses}>
-                Address 2:
-              </label>
-              <input
-                type="text"
-                id="clead_address2"
-                name="clead_address2"
-                value={form.clead_address2}
-                onChange={handleFieldChange}
-                className={getInputClasses(false)}
-                readOnly={isReadOnly}
-                disabled={isReadOnly}
-              />
-            </div>
+             </div>
 
-            {/* Address 3 Field */}
-            <div>
-              <label htmlFor="clead_address3" className={labelClasses}>
-                Address 3:
-              </label>
-              <input
-                type="text"
-                id="clead_address3"
-                name="clead_address3"
-                value={form.clead_address3}
-                onChange={handleFieldChange}
-                className={getInputClasses(errors.clead_address3)}
-                readOnly={isReadOnly}
-                disabled={isReadOnly}
-              />
-              {errors.clead_address3 && <p className={errorTextClasses}>{errors.clead_address3}</p>}
-            </div>
-
-            {/* Project Value Field */}
-            <div>
-              <label htmlFor="iproject_value" className={labelClasses}>
-                Project Value:
-              </label>
-              <input
-                type="number"
-                id="iproject_value"
-                name="iproject_value"
-                value={form.iproject_value}
-                onChange={handleFieldChange}
-                className={getInputClasses(errors.iproject_value)}
-                readOnly={isReadOnly}
-                disabled={isReadOnly}
-              />
-              {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
-            </div>
-
-            {/* Number of Employees Field */}
-            <div>
-              <label htmlFor="ino_employee" className={labelClasses}>
-                Number of Employees:
-              </label>
-              <input
-                type="number"
-                id="ino_employee"
-                name="ino_employee"
-                value={form.ino_employee}
-                onChange={handleFieldChange}
-                className={getInputClasses(errors.ino_employee)}
-                readOnly={isReadOnly}
-                disabled={isReadOnly}
-              />
-              {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
-            </div>
-          </div>
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-3 pt-4 border-t mt-6">

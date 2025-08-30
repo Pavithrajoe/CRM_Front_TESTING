@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import StatusKanbanTab from "@/Components/dashboard/teamlead/tlstatusKanbanBoard";
-import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
-import ProfileHeader from "@/Components/common/ProfileHeader";
+import StatusKanbanTab from "../../Components/dashboard/teamlead/tlStatusKanbanBoard";
+// import StatusKanbanTab from "/Components/dashboard/teamlead/tlstatusKanbanBoard";
+import TeamleadHeader from "../../Components/dashboard/teamlead/tlHeader";
+// import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
+// import ProfileHeader from "@/Components/common/ProfileHeader";
+import ProfileHeader from "../../Components/common/ProfileHeader";
 
 const StatusKanbanPage = () => {
   const [activeTab, setActiveTab] = useState('status-kanban');

@@ -806,15 +806,24 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </div>
 
         {isWon && (
-          <div className="flex justify-center mt-4">
-            <div className="flex items-center gap-2 text-green-600 text-lg font-semibold bg-green-50 px-4 py-2 rounded-full shadow">
-              <span role="img" aria-label="deal">
-                🎉
-              </span>{' '}
-              WON
-            </div>
-          </div>
-        )}
+  <div className="flex justify-center mt-4">
+    <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="h-5 w-5" 
+        viewBox="0 0 20 20" 
+        fill="currentColor"
+      >
+        <path 
+          fillRule="evenodd" 
+          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+          clipRule="evenodd" 
+        />
+      </svg>
+      <span className="font-bold tracking-wide uppercase text-sm">Lead Won</span>
+    </div>
+  </div>
+)}
 
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Enter Details</DialogTitle>

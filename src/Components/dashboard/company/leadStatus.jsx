@@ -9,15 +9,6 @@ const LeadStatusChart = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTimeRange, setSelectedTimeRange] = useState('today'); // Still present, but not used for data filtering in this example
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const timeRangeOptions = {
-    'today': 'Today',
-    'this_week': 'This Week',
-    'this_month': 'This Month',
-    'this_year': 'This Year',
-  };
 
   // Function to decode the token and get companyId
   const getCompanyIdAndToken = () => {
@@ -61,19 +52,19 @@ const LeadStatusChart = () => {
       const stageCounts = result?.data?.stageCounts || {};
 
       // Transform the fetched stage counts into an array suitable for Recharts.
-      // Sort by orderId if available, otherwise by name.
+      // Sort by orderId.
       const transformedData = Object.entries(stageCounts)
         .map(([stage, details]) => ({
-          name: stage.trim(), // Use .trim() to remove leading/trailing whitespace
+          name: stage.trim(),
           "Lead Status": details.count,
-          orderId: details.orderId // Keep orderId for sorting
+          orderId: details.orderId
         }))
-        // Sort the data by orderId. If orderId is the same, sort by name.
+        // Sort the data exclusively by orderId.
         .sort((a, b) => {
-          if (a.orderId && b.orderId) {
-            return a.orderId - b.orderId;
-          }
-          return a.name.localeCompare(b.name); // Fallback to alphabetical if no orderId
+          // Handle cases where orderId might be 'Unknown' or not a number
+          const orderA = typeof a.orderId === 'number' ? a.orderId : Infinity;
+          const orderB = typeof b.orderId === 'number' ? b.orderId : Infinity;
+          return orderA - orderB;
         });
 
       setChartData(transformedData);
@@ -82,17 +73,11 @@ const LeadStatusChart = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // selectedTimeRange is not in dependency array as it doesn't filter data from this API call
+  }, []);
 
   useEffect(() => {
     fetchLeadStatusData();
   }, [fetchLeadStatusData]);
-
-  // Handlers for time range selection (currently not modifying data fetching but included for UI)
-  const handleTimeRangeChange = (range) => {
-    setSelectedTimeRange(range);
-    setDropdownOpen(false);
-  };
 
   // Custom tooltip component for the chart
   const CustomTooltip = ({ active, payload, label }) => {
@@ -108,7 +93,7 @@ const LeadStatusChart = () => {
 
   // Custom tick formatter for Y-axis to ensure integer values
   const formatYAxisTick = (tick) => {
-    return Math.floor(tick); // Ensure the tick is an integer
+    return Math.floor(tick);
   };
 
   // Loading and Error handling UI
@@ -132,78 +117,55 @@ const LeadStatusChart = () => {
     <div className="bg-white p-4 h-[80vh] rounded-lg shadow flex flex-col">
       <div className="flex justify-between items-center ">
         <h2 className="text-lg font-semibold">Sales Pipeline Stages</h2>
-        {/* Time Range Dropdown - Logic remains the same, not connected to data fetching here */}
-        <div className="relative">
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {timeRangeOptions[selectedTimeRange]}
-            <span className="ml-2">&#9662;</span> {/* Dropdown arrow */}
-          </button>
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10">
-              {Object.entries(timeRangeOptions).map(([key, value]) => (
-                <button
-                  key={key}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={() => handleTimeRangeChange(key)}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
-      <div className="flex-grow"> {/* Use flex-grow to take available space */}
+      <div className="flex-grow">
         {chartData.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             No lead status data available.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" > {/* Ensure chart fills its parent */}
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
               margin={{
-                top: 20,    // Increased top margin
-                right: 40,  // Increased right margin
-                left: 30,   // Increased left margin
-                bottom: 100, // Significantly increased bottom margin for rotated labels
+                top: 20,
+                right: 40,
+                left: 30,
+                bottom: 100,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="name"
                 type="category"
-                angle={-45} // Rotate labels by -45 degrees
-                textAnchor="end" // Anchor text to the end of the tick for better alignment
-                height={120} // Give more height to the X-axis to prevent label overlap
-                interval={0} // Ensure all labels are shown
-                tick={{ fontSize: 12 }} // Adjust font size of X-axis labels
+                angle={-45}
+                textAnchor="end"
+                height={120}
+                interval={0}
+                tick={{ fontSize: 12 }}
               />
               <YAxis
                 label={{
                   value: 'Number of Leads',
                   angle: -90,
                   position: 'insideLeft',
-                  dy: 50, // Adjust vertical position of Y-axis label
-                  style: { textAnchor: 'middle', fontSize: '14px' } // Style Y-axis label
+                  dy: 50,
+                  style: { textAnchor: 'middle', fontSize: '14px' }
                 }}
                 tickFormatter={formatYAxisTick}
                 allowDecimals={false}
-                domain={[0, (dataMax) => Math.max(dataMax, 1)]} // Ensure Y-axis starts from 0 and handles single-item data
-                tick={{ fontSize: 12 }} // Adjust font size of Y-axis labels
+                domain={[0, (dataMax) => Math.max(dataMax, 1)]}
+                tick={{ fontSize: 12 }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="top" height={36} /> {/* Adjust legend position for more chart space */}
+              <Legend verticalAlign="top" height={36} />
               <Line
                 type="linear"
                 dataKey="Lead Status"
                 stroke="#164CA1"
-                strokeWidth={2} // Slightly thicker line
-                dot={{ r: 4 }} // Smaller dots
-                activeDot={{ r: 6, stroke: '#164CA3', strokeWidth: 2 }} // Active dot size
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6, stroke: '#164CA3', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

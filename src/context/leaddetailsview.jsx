@@ -6,9 +6,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  // AttachMoneyIcon ,
   Button,
-  Autocomplete ,
+  Autocomplete,
   TextField,
   CircularProgress,
   List,
@@ -28,6 +27,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
 import Comments from "../Components/commandshistory";
@@ -43,12 +44,19 @@ import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
-import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus } from 'react-icons/fa';
+import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
   const { showPopup } = usePopup();
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.only('xs'));
+  const isSm = useMediaQuery(theme.breakpoints.only('sm'));
+  const isMd = useMediaQuery(theme.breakpoints.only('md'));
+  const isLg = useMediaQuery(theme.breakpoints.only('lg'));
+  const isXl = useMediaQuery(theme.breakpoints.up('xl'));
+  
   // State declarations
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -74,7 +82,6 @@ const LeadDetailView = () => {
   const [isSendingMail, setIsSendingMail] = useState(false);
   const [statusRemarks, setStatusRemarks] = useState([]);
 
-
   // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
   const [quotations, setQuotations] = useState([]);
@@ -92,6 +99,15 @@ const LeadDetailView = () => {
     !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
   const showCreateQuotationButton = (isWon || immediateWonStatus || leadData?.bisConverted) && !showQuotationForm;
+
+  // Get the latest project value from status remarks
+  const latestProjectValue = statusRemarks.length > 0 
+    ? statusRemarks[statusRemarks.length - 1] 
+    : null;
+  
+  const projectValueDisplay = latestProjectValue 
+    ? `${latestProjectValue.currency_details?.symbol || '$'} ${latestProjectValue.project_value || 0}` 
+    : null;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
@@ -197,10 +213,7 @@ const LeadDetailView = () => {
     }
 
     await remarkResponse.json();
-    // await fetchStatusRemarks();
-
-
-    // Fetch updated remarks here after remark submission
+    await fetchStatusRemarks();
 
     showPopup("Success", "Lead marked as won and remark saved!", "success");
     setIsDeal(true);
@@ -213,7 +226,6 @@ const LeadDetailView = () => {
     showPopup("Error", error.message || "Failed to mark lead as won", "error");
   }
 };
-
 
   const handleQuotationCreated = async (quotationData) => {
     try {
@@ -257,33 +269,27 @@ const LeadDetailView = () => {
     }
   };
 
-
-
-
-
-
-
-const fetchCurrencies = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(ENDPOINTS.CURRENCY, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setCurrencies(data.data.data.filter(c => c.bactive));
+  const fetchCurrencies = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(ENDPOINTS.CURRENCY, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCurrencies(data.data.data.filter(c => c.bactive));
+      }
+    } catch (error) {
+      console.error("Failed to fetch currencies", error);
     }
-  } catch (error) {
-    console.error("Failed to fetch currencies", error);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchCurrencies();
-}, []);
+  useEffect(() => {
+    fetchCurrencies();
+  }, []);
 
   const lostLead = async () => {
     try {
@@ -341,9 +347,6 @@ useEffect(() => {
     await lostLead();
   };
 
-
-useEffect(() => {
-  // Define the function inside useEffect to avoid dependency issues
   const fetchStatusRemarks = async () => {
     console.log("fetchStatusRemarks function called for leadId:", leadId);
     try {
@@ -409,11 +412,13 @@ useEffect(() => {
   };
 
   // Call the function if leadId is available
-  if (leadId) {
-    console.log("Fetching status remarks for leadId:", leadId);
-    fetchStatusRemarks();
-  }
-}, [leadId, showPopup]); // Add dependencies
+  useEffect(() => {
+    if (leadId) {
+      console.log("Fetching status remarks for leadId:", leadId);
+      fetchStatusRemarks();
+    }
+  }, [leadId, showPopup]);
+
   const sendEmail = async () => {
     setIsSendingMail(true);
     try {
@@ -777,25 +782,35 @@ useEffect(() => {
           </div>
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+            {/* Project Value Display - Only shown when there's a project value */}
+            {projectValueDisplay && (
+              <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+                <FaCheck className="mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm md:text-base font-semibold">
+                  Project Value: {projectValueDisplay}
+                </span>
+              </div>
+            )}
+            
             {/* View Quotations Button (only visible when Won and has quotations) */}
-            {/* {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
+            {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
               <button
                 onClick={() => setShowQuotationsList(true)}
                 className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
               >
                 <FaEye className="mr-1" /> View Quotations
               </button>
-            )} */}
+            )}
             
             {/* Create Quotation Button (only visible when Won) */}
-            {/* {showCreateQuotationButton && (
+            {showCreateQuotationButton && (
               <button
                 className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                 onClick={() => setShowQuotationForm(true)}
               >
                 <FaPlus className="mr-1" /> Create Quotation
               </button>
-            )} */}
+            )}
             
             {showActionButtons && (
               <>
@@ -817,16 +832,6 @@ useEffect(() => {
                     <FaPlus className="mr-1" /> Won
                   </button>
                 )}
-                {statusRemarks.length > 0 && (
-  <Box sx={{ mt: 2 }}>
-    {statusRemarks.map((remark) => (
-      <Typography key={remark.ilead_status_remarks_id} variant="body2" color="textSecondary">
-        {/* Project Value: {remark.currency_details?.symbol || ''} {remark.project_value || 0} */}
-      </Typography>
-    ))}
-  </Box>
-)}
-
 
                 <button
                   className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
@@ -865,7 +870,12 @@ useEffect(() => {
       />
 
       {/* Remark Dialog */}
-      <Dialog open={showRemarkDialog} onClose={() => setShowRemarkDialog(false)}>
+      <Dialog 
+        open={showRemarkDialog} 
+        onClose={() => setShowRemarkDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Enter Remark for Won Status</DialogTitle>
         <DialogContent>
           <TextField
@@ -879,23 +889,23 @@ useEffect(() => {
             InputLabelProps={{ shrink: true }}
           />
           <Autocomplete
-    options={currencies}
-    getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
-    value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
-    onChange={(e, newValue) =>
-      setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
-    }
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        label="Currency *"
-        sx={{ mt: 2 }}
-        error={!remarkData.currencyId}
-        helperText={!remarkData.currencyId ? 'Currency is required' : ''}
-        InputLabelProps={{ shrink: true }}
-      />
-    )}
-  />
+            options={currencies}
+            getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
+            value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
+            onChange={(e, newValue) =>
+              setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Currency *"
+                sx={{ mt: 2 }}
+                error={!remarkData.currencyId}
+                helperText={!remarkData.currencyId ? 'Currency is required' : ''}
+                InputLabelProps={{ shrink: true }}
+              />
+            )}
+          />
           
           <TextField
             label="Project Value (optional)"
@@ -906,9 +916,6 @@ useEffect(() => {
             sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
           />
-
-  
-
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
@@ -917,7 +924,6 @@ useEffect(() => {
           </Button>
         </DialogActions>
       </Dialog>
-
 
       {/* Quotations List Dialog with Detailed View */}
       <Dialog 
@@ -1041,15 +1047,15 @@ useEffect(() => {
       {/* Lead Lost Reason Dialog */}
       {leadLostDescriptionTrue && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:极市汇仪max-w-md md:max-w-lg lg:max-w-xl">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb极市汇仪-3 sm:mb-4">Why mark this lead as Lost?</h2>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
                   Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
                 </label>
                 <select
-                  id极市汇仪="lostReason"
+                  id="lostReason"
                   name="lostReason"
                   value={selectedLostReasonId}
                   onChange={handleReasonChange}
@@ -1078,7 +1084,7 @@ useEffect(() => {
                   rows="3"
                   value={lostDescription}
                   onChange={(e) => setLostDescription(e.target.value)}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md极市汇仪 text-sm sm:text-base"
+                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
                   placeholder="Enter a brief description for marking as lost..."
                 ></textarea>
               </div>
@@ -1086,13 +1092,13 @@ useEffect(() => {
                 <button
                   type="button"
                   onClick={() => setLeadLostDescriptionTrue(false)}
-                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:极市汇仪bg-gray-400 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:极市汇仪py-2 rounded-md hover:极市汇仪bg-blue-600 text-sm sm:text-base"
+                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
                 >
                   Submit
                 </button>
@@ -1101,12 +1107,43 @@ useEffect(() => {
           </div>
         </div>
       )}
+      
       {/* Status Remarks Section */}
+      {/* {(isWon || immediateWonStatus || leadData?.bisConverted) && statusRemarks.length > 0 && (
+        <Box className="mb-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+          <Typography variant="h6" className="text-green-600 mb-3">
+            Won Status Remarks
+          </Typography>
+          <List>
+            {statusRemarks.map((remark) => (
+              <ListItem key={remark.ilead_status_remarks_id} className="border-b border-gray-100">
+                <ListItemText
+                  primary={
+                    <div>
+                      <Typography variant="body1" className="font-medium">
+                        {remark.remark}
+                      </Typography>
+                      {remark.project_value && (
+                        <Typography variant="body2" className="text-gray-600 mt-1">
+                          Project Value: {remark.currency_details?.symbol || '$'} {remark.project_value}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" className="text-gray-400">
+                        Added on: {formatDate(remark.dCreatedDate)}
+                      </Typography>
+                    </div>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      )} */}
 
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          className="fixed inset极市汇仪-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
           style={{ backdropFilter: "blur(8px)" }}
         >
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
@@ -1138,8 +1175,8 @@ useEffect(() => {
                   </div>
                 ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <svg xmlns极市汇仪="http://www.w3.org/2000/svg" className="h-12 w极市汇仪-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 极市汇仪0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <p>No templates available</p>
                   </div>
@@ -1175,7 +1212,7 @@ useEffect(() => {
                     e.preventDefault();
                     sendEmail();
                   }}
-                  className="flex flex-col flex-grow space极市汇仪-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
+                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
                 >
                   <div className="grid grid-cols-1 gap-4">
                     {/* To Field */}
@@ -1214,7 +1251,7 @@ useEffect(() => {
                         type="text"
                         className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                         value={mailSubject}
-                        onChange={(e) => setMailSubject(e.target.value)}
+                        onChange={(极市汇仪e) => setMailSubject(e.target.value)}
                         placeholder="Write subject..."
                         required
                       />
@@ -1259,7 +1296,7 @@ useEffect(() => {
                     <button
                       type="submit"
                       className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                      disabled极市汇仪={isSendingMail}
+                      disabled={isSendingMail}
                     >
                       {isSendingMail ? (
                         <>

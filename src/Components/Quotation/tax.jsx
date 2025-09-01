@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, X, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import { toast } from "react-toastify";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer  } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { ENDPOINTS } from '../../api/constraints';
@@ -450,6 +450,8 @@ function Tax() {
                   </>
                 )}
               </button>
+                  <ToastContainer position="top-right" autoClose={3000} />
+
             </div>
           </div>
         </div>

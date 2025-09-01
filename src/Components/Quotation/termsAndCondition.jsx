@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast ,ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Assuming ENDPOINTS are defined correctly elsewhere
@@ -306,6 +306,8 @@ function TermsAndConditions() {
               >
                 {isSaving ? 'Saving...' : selectedTerm ? 'Update' : 'Save'}
               </button>
+                  <ToastContainer position="top-right" autoClose={3000} />
+
             </div>
           </div>
         </div>

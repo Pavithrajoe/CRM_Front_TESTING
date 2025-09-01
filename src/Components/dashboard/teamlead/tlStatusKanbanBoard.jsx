@@ -1,9 +1,8 @@
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ENDPOINTS } from "../../../api/constraints"; 
+import { ENDPOINTS } from "../../../api/constraints";
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-
 
 const decodeJwt = (token) => {
   try {
@@ -57,18 +56,18 @@ const StatusKanbanTab = () => {
   }, []);
 
   const goToDetail = (id) => {
-        navigate(`/leaddetailview/${id}`);
-    };
+    navigate(`/leaddetailview/${id}`);
+  };
 
   useEffect(() => {
     if (!token || !companyId || !userId) return;
 
     const fetchStatusesAndLeads = async () => {
       try {
-        const statusRes = await fetch(ENDPOINTS.STATUS, { // for fetching lead status
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        // Fetch statuses
+        const statusRes = await fetch(ENDPOINTS.STATUS, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const statusJson = await statusRes.json();
         const statusData = statusJson.response || statusJson;
         const filteredStatuses = Array.isArray(statusData)
@@ -78,11 +77,23 @@ const StatusKanbanTab = () => {
                 status.bactive === true
             )
           : [];
+        filteredStatuses.sort((a, b) => a.orderId - b.orderId);
 
-        setStatuses(filteredStatuses);
+        // Add a "Null Status" object to the statuses array
+        const nullStatus = {
+          ilead_status_id: "null", // Use a string key for droppableId
+          clead_name: "No Status",
+          orderId: -1, // Ensure it's at the beginning
+          icompany_id: companyId,
+          bactive: true,
+        };
 
-        // // for fetching leads
-        const leadRes = await fetch(`${ENDPOINTS.CONVERT_TO_LOST}?limit=10000&page=1`,{ // convert to lost is constraints name it is fetching the lead details
+        setStatuses([nullStatus, ...filteredStatuses]);
+
+        // Fetch leads
+        const leadRes = await fetch(
+          `${ENDPOINTS.CONVERT_TO_LOST}?limit=10000&page=1`,
+          {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
@@ -92,16 +103,19 @@ const StatusKanbanTab = () => {
           ? leadData.filter(
               (lead) =>
                 String(lead.icompany_id) === String(companyId) &&
-                lead.bactive === true
+                lead.bactive === true &&
+                lead.bisConverted === false
             )
           : [];
 
         const groupedLeads = filteredLeads.reduce((acc, lead) => {
-          const statusId = String(lead.ileadstatus_id);
-          if (statusId) {
-            if (!acc[statusId]) acc[statusId] = [];
-            acc[statusId].push(lead);
-          }
+          // Check for null or undefined status ID
+          const statusId = lead.ileadstatus_id === null || lead.ileadstatus_id === undefined
+            ? "null" // Assign to "null" key if status is null
+            : String(lead.ileadstatus_id);
+
+          if (!acc[statusId]) acc[statusId] = [];
+          acc[statusId].push(lead);
           return acc;
         }, {});
 
@@ -119,15 +133,14 @@ const StatusKanbanTab = () => {
 
   // Handle drag end
   const onDragEnd = async (result) => {
-    // console.log("DRAG RESULT:", result);
-    const { source, destination, draggableId } = result;
+    const { source, destination } = result;
     if (!destination) return;
 
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
     ) {
-      return; 
+      return;
     }
 
     const sourceStatusId = source.droppableId;
@@ -135,7 +148,9 @@ const StatusKanbanTab = () => {
 
     // Clone current leads state
     const updatedLeads = { ...leads };
-    const movedLead = updatedLeads[sourceStatusId][source.index];
+    const movedLead = updatedLeads[sourceStatusId]?.[source.index];
+
+    if (!movedLead) return;
 
     // Remove from old column
     updatedLeads[sourceStatusId].splice(source.index, 1);
@@ -144,14 +159,17 @@ const StatusKanbanTab = () => {
     if (!updatedLeads[destStatusId]) updatedLeads[destStatusId] = [];
     updatedLeads[destStatusId].splice(destination.index, 0, {
       ...movedLead,
-      ileadstatus_id: parseInt(destStatusId),
+      // Update the status ID in the client-side state
+      ileadstatus_id: destStatusId === "null" ? null : parseInt(destStatusId),
     });
 
     setLeads(updatedLeads);
 
-    //  update lead status
+    // Update lead status on the server
     try {
-      const response = await fetch(`${ENDPOINTS.CONVERT_TO_LOST}/${movedLead.ilead_id}`,
+      const newStatusId = destStatusId === "null" ? null : parseInt(destStatusId);
+      const response = await fetch(
+        `${ENDPOINTS.CONVERT_TO_LOST}/${movedLead.ilead_id}`,
         {
           method: "PUT",
           headers: {
@@ -160,18 +178,20 @@ const StatusKanbanTab = () => {
           },
           body: JSON.stringify({
             ...movedLead,
-            ileadstatus_id: parseInt(destStatusId),
+            ilead_status_id: newStatusId,
           }),
         }
       );
 
       if (!response.ok) {
+        // Revert the state if API call fails
+        setLeads(leads);
         throw new Error("Failed to update lead status");
       }
-
-      // console.log(`Lead ${movedLead.ilead_id} moved to ${destStatusId}`);
     } catch (err) {
       console.error("Error updating lead status:", err);
+      // Revert the state if API call fails
+      setLeads(leads);
     }
   };
 
@@ -196,12 +216,12 @@ const StatusKanbanTab = () => {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-blue-300 shadow-lg min-h-[200px]"
+                    className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-slate-300 to-slate-400 shadow-lg min-h-[200px]"
                   >
-
                     <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
-                        <span className="flex-1 text-center">{status.clead_name || "Untitled Status"}</span>
-                      {/* <span>{status.clead_name || "Untitled Status"}</span> */}
+                      <span className="flex-1 text-center">
+                        {status.clead_name || "Untitled Status"}
+                      </span>
                       <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                         {leadsForStatus.length}
                       </span>
@@ -226,9 +246,7 @@ const StatusKanbanTab = () => {
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               onClick={() => goToDetail(lead.ilead_id)}
-                              // className="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-blue-100"
-                              className="p-3 bg-green-300 hover:bg-yellow-200 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-black text-black-800"
-
+                              className="p-3 bg-indigo-400 hover:bg-white rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-black-800"
                             >
                               <span className="font-medium text-black text-base">
                                 {lead.clead_name || "Unnamed Lead"}

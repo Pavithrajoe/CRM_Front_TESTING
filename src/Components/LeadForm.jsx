@@ -845,8 +845,8 @@ useEffect(() => {
       if (value && !emailRegex.test(value)) {
         error = "Invalid email format";
       }
-      else if (value.length > 254) {
-        error = "Lead Name cannot exceed 254 characters";
+      else if (value.length > 70) {
+        error = "Lead Name cannot exceed 70 characters";
       }
     }
     
@@ -1217,14 +1217,7 @@ const handleChange = (e) => {
       }
       setIsSourceDropdownOpen(false);
     }
-    else if (name === "searchService") {
-      const selectedService = Array.isArray(service) ? service.find(service => service.iservice_id === form.iservice_id) : null;
-      if (!selectedService || selectedService.source_name !== value) {
-        setSearchService(selectedService ? selectedService.cservice_name : "");
-        setForm((prev) => ({ ...prev, iservice_id: selectedService ? selectedService.iservice_id : "" }));
-      }
-      setIsServiceDropdownOpen(false);
-    } 
+  
     else if (name === "searchSubService") {
   const selectedSubService = subServiceList.find(sub => sub.isubservice_id === form.isubservice_id);
   if (!selectedSubService || selectedSubService.subservice_name !== value) {

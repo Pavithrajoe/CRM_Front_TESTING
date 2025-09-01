@@ -521,6 +521,8 @@ const validateForm = () => {
   // Organization is working, so we'll keep it as it is
   if (!form.corganization.trim()) {
     newErrors.corganization = "Organization is required.";
+  } else if (form.corganization.trim().length > 50) {
+    newErrors.corganization = "Organization cannot exceed 50 characters.";
   }
 
   // Use explicit checks for dropdowns
@@ -551,8 +553,8 @@ const validateForm = () => {
   if (form.cemail.trim()) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.cemail)) {
       newErrors.cemail = "Invalid email format.";
-    } else if (form.cemail.trim().length > 30) {
-      newErrors.cemail = "Email cannot exceed 30 characters.";
+    } else if (form.cemail.trim().length > 70) {
+      newErrors.cemail = "Email cannot exceed 70 characters.";
     }
   }
 
@@ -564,6 +566,16 @@ const validateForm = () => {
   
   if (form.cpincode && !/^[0-9]{6,10}$/.test(form.cpincode)) {  
     newErrors.cpincode = "Pincode must be 6 to 10 digits.";
+  }
+  // Address Lines (75 chars max each)
+  if (form.clead_address1.trim().length > 75) {
+    newErrors.clead_address1 = "Address Line 1 cannot exceed 75 characters.";
+  }
+  if (form.clead_address2.trim().length > 75) {
+    newErrors.clead_address2 = "Address Line 2 cannot exceed 75 characters.";
+  }
+  if (form.clead_address3.trim().length > 75) {
+    newErrors.clead_address3 = "Address Line 3 cannot exceed 75 characters.";
   }
 
   setErrors(newErrors);
@@ -1148,7 +1160,7 @@ const handleSubmit = async (e) => {
     WhatsApp Number
   </label>
   <div className="flex gap-2">
-    <div className="relative" ref={whatsappCountryCodeRef}>
+    {/* <div className="relative" ref={whatsappCountryCodeRef}>
       <button
         type="button"
         onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
@@ -1159,9 +1171,9 @@ const handleSubmit = async (e) => {
         {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
       </button>
       {isWhatsappCountryCodeOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> */}
           {/* Use the dynamically generated allCountries array */}
-          {allCountries.map((country) => (
+          {/* {allCountries.map((country) => (
             <div
               key={country.countryCode}
               className={dropdownItemClasses}
@@ -1176,7 +1188,7 @@ const handleSubmit = async (e) => {
           ))}
         </div>
       )}
-    </div>
+    </div> */}
     <input
       type="text"
       id="cwhatsapp"
@@ -1230,6 +1242,8 @@ const handleSubmit = async (e) => {
                 readOnly={isReadOnly}
                 disabled={isReadOnly}
               />
+                {errors.clead_address2 && <p className={errorTextClasses}>{errors.clead_address2}</p>}
+
             </div>
 
             {/* Address 3 Field */}

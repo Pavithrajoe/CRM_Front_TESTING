@@ -858,16 +858,20 @@ useEffect(() => {
       if (!value) {
         // error = "Lead Name is mandatory";
         error = "Mandatory";
-      } else if (!/^[A-Za-z\s]+$/.test(value)) {
-        error = "Lead Name can only contain letters and spaces";
-      } else if (value.length > 100) {
+      } 
+      // else if (!/^[A-Za-z\s]+$/.test(value)) {
+      //   error = "Lead Name can only contain letters and spaces";
+      // } 
+      else if (value.length > 100) {
         error = "Lead Name cannot exceed 100 characters";
       }
     }
     if (name === "clead_address1") {
-      if (!value) {
-        error = "Mandatory";
-      } else if (value.length > 200) {
+      // if (!value) {
+      //   error = "Mandatory";
+      // } 
+      // else 
+      if (value.length > 200) {
         error = "Lead Address cannot exceed 200 characters";
       }
     }
@@ -901,9 +905,9 @@ useEffect(() => {
     if (name === "iphone_no" && !value) {
       error = "Mandatory";
     }
-    if (name === "clead_address1" && !value) {
-      error = "Mandatory";
-    }
+    // if (name === "clead_address1" && !value) {
+    //   error = "Mandatory";
+    // }
     if (name === "icity" && !value) {
       error = "Mandatory";
     }
@@ -1538,7 +1542,7 @@ const handleSubmit = async (e) => {
   ];
 
   const addressDetailsFields = [
-    { label: "Address Line 1", name: "clead_address1", required: true },
+    { label: "Address Line 1", name: "clead_address1", required: false },
     { label: "Address Line 2", name: "clead_address2", required: false },
     { label: "Address Line 3", name: "clead_address3", required: false },
     { label: "City", name: "icity", type: "searchable-select-city", required: true },

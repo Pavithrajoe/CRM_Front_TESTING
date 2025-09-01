@@ -84,7 +84,7 @@ export default function TeamleadHeader() {
           Team Dashboard
         </button>
         
-        {/* <div className="w-px h-5 bg-gray-300"></div> */}
+        <div className="w-px h-5 bg-gray-300"></div>
 
         <button
           onClick={() => handleTabClick('status-kanban')}

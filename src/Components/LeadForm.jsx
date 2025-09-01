@@ -845,8 +845,8 @@ useEffect(() => {
       if (value && !emailRegex.test(value)) {
         error = "Invalid email format";
       }
-      else if (value.length > 254) {
-        error = "Lead Name cannot exceed 254 characters";
+      else if (value.length > 70) {
+        error = "Lead Name cannot exceed 70 characters";
       }
     }
     

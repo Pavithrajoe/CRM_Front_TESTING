@@ -1,6 +1,7 @@
 // last update 30/08 workinh fine
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import axios from 'axios';
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
@@ -134,6 +135,54 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const whatsappCountryCodeRef = useRef(null);
   const [searchMobile, setSearchMobile] = useState("");
   const [searchEmail, setSearchEmail] = useState("");
+
+  // for currency
+   const [currencies, setCurrencies] = useState([]);
+  const [selectedCurrency, setSelectedCurrency] = useState({ currency_code: "INR", symbol: "₹" });
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
+  const currencyDropdownRef = useRef(null);
+
+useEffect(() => {
+  const fetchCurrencies = async () => {
+    if (!token) {
+      console.error("Authentication token not found. Cannot fetch currencies.");
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${apiEndPoint}/currency`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.data?.data?.data) {
+        setCurrencies(res.data.data.data);
+        console.log("Fetched currencies successfully:", res.data.data.data);
+      } else {
+        console.log("API response has no currency data:", res.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch currencies", error);
+    }
+  };
+
+  fetchCurrencies();
+}, [token, apiEndPoint]); 
+
+useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
+        setIsCurrencyDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
@@ -1924,7 +1973,66 @@ const handleSubmit = async (e) => {
             <p className="text-red-600 text-sm">{errors.ino_employee}</p>
           )}
         </div>
+
+         {/* for currency coode + project value */}
         <div>
+  <label className="text-sm font-medium">Project Value</label>
+  <div className="flex mt-1">
+    {/* Currency Dropdown */}
+    <div className="relative" ref={currencyDropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
+        className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
+      >
+        {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+        <svg
+          className="w-3 h-3 ml-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isCurrencyDropdownOpen && (
+        <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
+          {currencies.map((cur) => (
+            <div
+              key={cur.icurrency_id}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              onClick={() => {
+                setSelectedCurrency(cur);
+                setIsCurrencyDropdownOpen(false);
+              }}
+            >
+              {cur.currency_code} ({cur.symbol})
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Project Value Input */}
+    <input
+      type="number"
+      name="iproject_value"
+      value={form.iproject_value === 0 ? "" : form.iproject_value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder="Enter project value"
+      className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+      min="0"
+    />
+  </div>
+  {errors.iproject_value && (
+    <p className="text-red-600 text-sm">{errors.iproject_value}</p>
+  )}
+</div>
+
+
+        {/* <div>
           <label className="text-sm font-medium">Project Value</label>
           <input
             type="number"
@@ -1939,7 +2047,7 @@ const handleSubmit = async (e) => {
           {errors.iproject_value && (
             <p className="text-red-600 text-sm">{errors.iproject_value}</p>
           )}
-        </div>
+        </div> */}
       </div>
       <hr className="my-6 " />
       <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>

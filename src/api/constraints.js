@@ -66,6 +66,7 @@ export const ENDPOINTS = {
   BUSINESS_TYPE: `${BASE_URL}/business-type`,
   TAX: `${BASE_URL}/tax`,
   TERMS: `${BASE_URL}/terms`,
+  CURRENCY: `${BASE_URL}/currency`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

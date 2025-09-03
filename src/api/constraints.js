@@ -116,6 +116,12 @@ export const ENDPOINTS = {
   QUOTATION: `${BASE_URL}/quotation`,
   QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
 
+
+  MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,
+  MASTER_SUB_SOURCE_PUT: `${BASE_URL}/subSrc/editSubSrc`,
+  MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
+  MASTER_SUB_SOURCE_CHANGE: `${BASE_URL}/subSrc/changeSubSrcSts`,
+
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
 
   SUB_SERVICE: `${BASE_URL}/sub-service`,
@@ -123,6 +129,7 @@ export const ENDPOINTS = {
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,
   PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
+  DAILY_TASK : `${BASE_URL}/task/upcoming-task`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
   //DCRM Integration API

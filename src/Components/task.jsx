@@ -7,6 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 
+
 import "react-datepicker/dist/react-datepicker.css";
 import { ENDPOINTS } from "../api/constraints";
 import { Search, X } from "lucide-react";
@@ -671,6 +672,9 @@ const Tasks = () => {
                       seconds: renderTimeViewClock,
                     }}
                     slotProps={{
+                       popper: {
+                         sx: { zIndex: 9999 } 
+                        },
                       textField: {
                         className:
                           "pr-10 py-2 p-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",

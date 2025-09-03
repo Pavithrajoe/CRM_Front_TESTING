@@ -26,11 +26,13 @@ const decodeJwt = (token) => {
 const StatusKanbanTab = () => {
   const [statuses, setStatuses] = useState([]);
   const [leads, setLeads] = useState({});
+  const [allLeads, setAllLeads] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
   const [companyId, setCompanyId] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,9 +83,9 @@ const StatusKanbanTab = () => {
 
         // Add a "Null Status" object to the statuses array
         const nullStatus = {
-          ilead_status_id: "null", // Use a string key for droppableId
+          ilead_status_id: "null", 
           clead_name: "No Status",
-          orderId: -1, // Ensure it's at the beginning
+          orderId: -1, 
           icompany_id: companyId,
           bactive: true,
         };
@@ -108,18 +110,8 @@ const StatusKanbanTab = () => {
             )
           : [];
 
-        const groupedLeads = filteredLeads.reduce((acc, lead) => {
-          // Check for null or undefined status ID
-          const statusId = lead.ileadstatus_id === null || lead.ileadstatus_id === undefined
-            ? "null" // Assign to "null" key if status is null
-            : String(lead.ileadstatus_id);
-
-          if (!acc[statusId]) acc[statusId] = [];
-          acc[statusId].push(lead);
-          return acc;
-        }, {});
-
-        setLeads(groupedLeads);
+        setAllLeads(filteredLeads); // Store all leads
+        groupLeads(filteredLeads);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching statuses or leads:", err);
@@ -130,6 +122,36 @@ const StatusKanbanTab = () => {
 
     fetchStatusesAndLeads();
   }, [token, companyId, userId]);
+
+  const groupLeads = (leadsToGroup) => {
+    const groupedLeads = leadsToGroup.reduce((acc, lead) => {
+      const statusId =
+        lead.ileadstatus_id === null || lead.ileadstatus_id === undefined
+          ? "null"
+          : String(lead.ileadstatus_id);
+
+      if (!acc[statusId]) acc[statusId] = [];
+      acc[statusId].push(lead);
+      return acc;
+    }, {});
+    setLeads(groupedLeads);
+  };
+
+  useEffect(() => {
+    // Filter leads based on search
+    const filteredLeads = allLeads.filter((lead) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        (lead.clead_name && lead.clead_name.toLowerCase().includes(query)) ||
+        (lead.corganization &&
+          lead.corganization.toLowerCase().includes(query)) ||
+        (lead.cemail && lead.cemail.toLowerCase().includes(query)) ||
+        (lead.iphone_no && lead.iphone_no.includes(query))
+      );
+    });
+
+    groupLeads(filteredLeads);
+  }, [searchQuery, allLeads]);
 
   // Handle drag end
   const onDragEnd = async (result) => {
@@ -145,29 +167,23 @@ const StatusKanbanTab = () => {
 
     const sourceStatusId = source.droppableId;
     const destStatusId = destination.droppableId;
-
-    // Clone current leads state
     const updatedLeads = { ...leads };
     const movedLead = updatedLeads[sourceStatusId]?.[source.index];
 
     if (!movedLead) return;
-
-    // Remove from old column
     updatedLeads[sourceStatusId].splice(source.index, 1);
 
-    // Add to new column
     if (!updatedLeads[destStatusId]) updatedLeads[destStatusId] = [];
     updatedLeads[destStatusId].splice(destination.index, 0, {
       ...movedLead,
-      // Update the status ID in the client-side state
       ileadstatus_id: destStatusId === "null" ? null : parseInt(destStatusId),
     });
 
     setLeads(updatedLeads);
 
-    // Update lead status on the server
     try {
-      const newStatusId = destStatusId === "null" ? null : parseInt(destStatusId);
+      const newStatusId =
+        destStatusId === "null" ? null : parseInt(destStatusId);
       const response = await fetch(
         `${ENDPOINTS.CONVERT_TO_LOST}/${movedLead.ilead_id}`,
         {
@@ -184,13 +200,11 @@ const StatusKanbanTab = () => {
       );
 
       if (!response.ok) {
-        // Revert the state if API call fails
         setLeads(leads);
         throw new Error("Failed to update lead status");
       }
     } catch (err) {
       console.error("Error updating lead status:", err);
-      // Revert the state if API call fails
       setLeads(leads);
     }
   };
@@ -201,87 +215,103 @@ const StatusKanbanTab = () => {
     return <p className="text-red-500 font-bold text-lg p-4">Error: {error}</p>;
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="overflow-x-auto w-full h-[80vh] p-4 bg-gray-50 font-inter">
-        <div className="flex gap-6 min-w-max pb-4">
-          {statuses.map((status) => {
-            const leadsForStatus = leads[String(status.ilead_status_id)] || [];
-
-            return (
-              <Droppable
-                key={status.ilead_status_id}
-                droppableId={String(status.ilead_status_id)}
-              >
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-slate-300 to-slate-400 shadow-lg min-h-[200px]"
-                  >
-                    <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
-                      <span className="flex-1 text-center">
-                        {status.clead_name || "Untitled Status"}
-                      </span>
-                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                        {leadsForStatus.length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3 max-h-[calc(70vh-80px)] overflow-y-auto pr-1">
-                      {leadsForStatus.length === 0 && (
-                        <p className="text-gray-400 italic text-sm p-2 text-center">
-                          No active leads in this status
-                        </p>
-                      )}
-
-                      {leadsForStatus.map((lead, index) => (
-                        <Draggable
-                          key={lead.ilead_id}
-                          draggableId={String(lead.ilead_id)}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              onClick={() => goToDetail(lead.ilead_id)}
-                              className="p-3 bg-indigo-400 hover:bg-white rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-black-800"
-                            >
-                              <span className="font-medium text-black text-base">
-                                {lead.clead_name || "Unnamed Lead"}
-                              </span>
-                              {lead.corganization && (
-                                <p className="text-base text-black-900 mt-1">
-                                  {lead.corganization}
-                                </p>
-                              )}
-                              {lead.cemail && (
-                                <p className="text-base text-black-900 mt-0.5 truncate">
-                                  {lead.cemail}
-                                </p>
-                              )}
-                              {lead.iphone_no && (
-                                <p className="text-base text-black-900 mt-0.5 truncate">
-                                  {lead.iphone_no}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </div>
-                )}
-              </Droppable>
-            );
-          })}
-        </div>
+    <>
+      <div className="p-4 bg-white border-b border-gray-200">
+        <input
+          type="text"
+          placeholder="Search leads by name, organization, email, or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          style={{
+            backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>')`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "8px 50%",
+            backgroundSize: "18px",
+          }}
+        />
       </div>
-    </DragDropContext>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="overflow-x-auto w-full h-[80vh] p-4 bg-gray-50 font-inter">
+          <div className="flex gap-6 min-w-max pb-4">
+            {statuses.map((status) => {
+              const leadsForStatus = leads[String(status.ilead_status_id)] || [];
+
+              return (
+                <Droppable
+                  key={status.ilead_status_id}
+                  droppableId={String(status.ilead_status_id)}
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-slate-300 to-slate-400 shadow-lg min-h-[200px]"
+                    >
+                      <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
+                        <span className="flex-1 text-center">
+                          {status.clead_name || "Untitled Status"}
+                        </span>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          {leadsForStatus.length}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3 max-h-[calc(70vh-80px)] overflow-y-auto pr-1">
+                        {leadsForStatus.length === 0 && (
+                          <p className="text-gray-400 italic text-sm p-2 text-center">
+                            No active leads in this status
+                          </p>
+                        )}
+
+                        {leadsForStatus.map((lead, index) => (
+                          <Draggable
+                            key={lead.ilead_id}
+                            draggableId={String(lead.ilead_id)}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                onClick={() => goToDetail(lead.ilead_id)}
+                                className="p-3 bg-indigo-400 hover:bg-white rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-black-800"
+                              >
+                                <span className="font-medium text-black text-base">
+                                  {lead.clead_name || "Unnamed Lead"}
+                                </span>
+                                {lead.corganization && (
+                                  <p className="text-base text-black-900 mt-1">
+                                    {lead.corganization}
+                                  </p>
+                                )}
+                                {lead.cemail && (
+                                  <p className="text-base text-black-900 mt-0.5 truncate">
+                                    {lead.cemail}
+                                  </p>
+                                )}
+                                {lead.iphone_no && (
+                                  <p className="text-base text-black-900 mt-0.5 truncate">
+                                    {lead.iphone_no}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              );
+            })}
+          </div>
+        </div>
+      </DragDropContext>
+    </>
   );
 };
 
 export default StatusKanbanTab;
-

@@ -7,6 +7,7 @@ import HistoryDashboard from './userPage/historyPage';
 import TargetDashboard from './userPage/TargetPage';
 import AcheivementDashboard from './userPage/acheivementPage';
 import UserCallLogs from './userPage/userCallLogs';
+import UserLead from '../pages/userPage/userLead'
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
@@ -78,10 +79,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   </div>
 );
 
-const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs'];
+const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs', 'User Leads'];
 
 const UserProfile = () => {
   const { userId } = useParams();
+    const token = localStorage.getItem('token'); 
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('Target');
@@ -320,7 +322,7 @@ showAppMessage("Profile updated successfully!", "success");
       cEmail: user.cEmail || '',
       cjob_title: user.cjob_title || '',
       reports_to: user.reports_to || '',
-      i_bPhone_no: user.c_bPhone_no || '', // Changed from i_bPhone_no to c_bPhone_no
+      i_bPhone_no: user.c_bPhone_no || '', 
       iphone_no: user.iphone_no || '',
       mail_access: user.mail_access || false,
       phone_access: user.phone_access || false,
@@ -431,6 +433,12 @@ showAppMessage("Profile updated successfully!", "success");
             <UserCallLogs userId={email} />
           </div>
         )}
+
+       {activeTab === 'User Leads' && (
+  <div className="p-4 bg-white rounded-xl shadow-md">
+    <UserLead userId={userId} token={token} />
+  </div>
+)}
       </div>
 
       {showForm && (
@@ -510,8 +518,7 @@ showAppMessage("Profile updated successfully!", "success");
                   <FaMobile className="absolute top-3 left-3 text-gray-500" />
                   <input
                     type="text"
-                    name="i_bPhone_no" // Changed from i_bPhone_no to c_bPhone_no
-                    placeholder="Business Phone"
+                    name="i_bPhone_no" 
                     value={editFormData.i_bPhone_no}
                     onChange={handleChange}
                     className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { ENDPOINTS } from "../../../api/constraints"; 
+import { ENDPOINTS } from "../../../api/constraints";
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -9,11 +11,12 @@ export default function DealsTable() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [dealsData, setDealsData] = useState([]); 
+  const [dealsData, setDealsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null); 
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null); // for  sort order
 
   useEffect(() => {
     let extractedUserId = null;
@@ -24,7 +27,7 @@ export default function DealsTable() {
 
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
-        extractedUserId = decodedToken.user_id; 
+        extractedUserId = decodedToken.user_id;
 
         if (!extractedUserId) {
           throw new Error("User ID (user_id) not found in decoded token payload.");
@@ -32,7 +35,7 @@ export default function DealsTable() {
       } else {
         throw new Error("Authentication token not found in local storage. Please log in.");
       }
-    } 
+    }
     catch (e) {
       console.error("Error retrieving or decoding token in DealsTable:", e);
       setError(`Authentication error: ${e.message}`);
@@ -51,7 +54,7 @@ export default function DealsTable() {
 
   const fetchDeals = useCallback(async () => {
     if (!currentUserId || !currentToken) {
-      setLoading(false);  
+      setLoading(false);
       return;
     }
 
@@ -74,16 +77,16 @@ export default function DealsTable() {
 
       setDealsData(result || []);
 
-    } 
+    }
     catch (err) {
       console.error("Error fetching deals:", err);
       setError(`Failed to fetch deals: ${err.message}. Please try again later.`);
-      setDealsData([]); 
-    } 
+      setDealsData([]);
+    }
     finally {
       setLoading(false);
     }
-  }, [currentUserId, currentToken]); 
+  }, [currentUserId, currentToken]);
 
   useEffect(() => {
     if (currentUserId && currentToken) {
@@ -98,21 +101,21 @@ export default function DealsTable() {
     }
     return (
       dealsData
-        .filter(item => 
-          item.bactive === true && 
+        .filter(item =>
+          item.bactive === true &&
           item.bisConverted === true &&
-          (item.modified_by === currentUserId || item.clead_owner_id === currentUserId) // Add this line
-        ) 
+          (item.modified_by === currentUserId || item.clead_owner_id === currentUserId)
+        )
         .map((item) => ({
           id: item.ilead_id,
           name: item.clead_name || "No Name",
           status: item.lead_status?.clead_name || "Unknown",
-          assignedTo: item.clead_owner_name || "Unassigned", 
+          assignedTo: item.clead_owner_name || "Unassigned",
           modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || String(item.modified_by) || "Unknown",
           time: (() => {
             const dateObj = new Date(item.dmodified_dt);
             const datePart = dateObj
-              .toLocaleDateString("en-GB") // DD/MM/YYYY
+              .toLocaleDateString("en-GB")
               .replace(/\//g, "/");
             const timePart = dateObj
               .toLocaleTimeString("en-US", {
@@ -120,27 +123,33 @@ export default function DealsTable() {
                 minute: "2-digit",
                 hour12: true,
               })
-              .replace(/am|pm/, (match) => match.toUpperCase()); // AM/PM in caps
+              .replace(/am|pm/, (match) => match.toUpperCase());
             return `${datePart}\n${timePart}`;
           })(),
-
           modifiedDate: new Date(item.dmodified_dt),
           avatar: "./images/dashboard/grl.png",
         }))
-        .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || [] 
-
+        .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || []
     );
-  }, [dealsData, currentUserId]); 
+  }, [dealsData, currentUserId]);
 
   const filteredDeals = useMemo(() => {
     const term = search.toLowerCase();
-    return deals.filter(
+    let filtered = deals.filter(
       (deal) =>
         deal.name.toLowerCase().includes(term) ||
         deal.assignedTo.toLowerCase().includes(term) ||
         deal.status.toLowerCase().includes(term)
     );
-  }, [search, deals]);
+
+    // sorting logic
+    if (sortOrder === "asc") {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === "desc") {
+      filtered.sort((a, b) => b.name.localeCompare(a.name));
+    }
+    return filtered;
+  }, [search, deals, sortOrder]);
 
   const totalPages = Math.ceil(filteredDeals.length / ITEMS_PER_PAGE);
 
@@ -148,7 +157,7 @@ export default function DealsTable() {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
-    
+
     if (totalPages === 0 && currentPage !== 1) {
       setCurrentPage(1);
     }
@@ -159,7 +168,16 @@ export default function DealsTable() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  
+  const handleSortToggle = () => { // sort toggle
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortOrder(null);
+    } else {
+      setSortOrder("asc");
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-700">Loading deals...</div>;
   }
@@ -178,7 +196,7 @@ export default function DealsTable() {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setCurrentPage(1); 
+            setCurrentPage(1);
           }}
           className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
           aria-label="Search deals"
@@ -194,8 +212,20 @@ export default function DealsTable() {
         >
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[33.33%]">
-                Name
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[33.33%] cursor-pointer select-none"
+                onClick={handleSortToggle} 
+              >
+                <div className="flex items-center gap-2">
+                  Name
+                  {sortOrder === "asc" ? ( //  sorting icons
+                    <FaSortUp className="text-blue-500" />
+                  ) : sortOrder === "desc" ? (
+                    <FaSortDown className="text-blue-500" />
+                  ) : (
+                    <FaSort className="text-gray-400" />
+                  )}
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[33.33%]">
                 Status
@@ -247,11 +277,11 @@ export default function DealsTable() {
               <tr>
                 <td
                   colSpan={3}
-                  className="py-8 text-center text-gray-500"  
+                  className="py-8 text-center text-gray-500"
                 >
                   {dealsData.length === 0
                     ? "  No active and converted deals found for you."
-                    :  " No active and converted deals found for you."}
+                    : " No active and converted deals found for you."}
                 </td>
               </tr>
             )}

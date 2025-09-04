@@ -1567,7 +1567,7 @@ const ProfileCard = () => {
       if (assignedUser && profile) {
         const mailPayload = {
           userName: assignedUser.cUser_name,
-          time: new Date().toISOString(),
+          time: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
           leadName: profile.clead_name,
           leadURL: window.location.href,
           mailId: assignedUser.cEmail,

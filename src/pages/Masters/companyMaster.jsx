@@ -145,7 +145,7 @@ export default function CompanyMaster() {
             },
             skipCompanyIdInjection: false, // Assuming companyId is relevant for Industry
         },
-   {
+{
     title: 'Sub-Industries',
     value: 'Sub-Industry Masters',
     modalKey: 'Sub Industry',
@@ -230,6 +230,9 @@ export default function CompanyMaster() {
 },
 
 
+
+
+
         { 
             title: 'Lead Source',
             value: 'Lead Source Masters',
@@ -289,94 +292,80 @@ export default function CompanyMaster() {
             
             skipCompanyIdInjection: false, 
         },
-// {
-//   title: 'Sub Source',
-//   value: 'Sub Source Masters',
-//   modalKey: 'Sub Source',
+{
+  title: 'Sub Source',
+  value: 'Sub Source Masters',
+  modalKey: 'Sub Source',
   
-//   // ID key from backend response
-//   idKey: 'isub_src_id',
+  // ID key from backend response
+  idKey: 'isub_src_id',
   
-//   // Display name from backend response
-//   payloadKey: 'ssub_src_name',
+  // Display name from backend response - this should match GET response
+  payloadKey: 'ssub_src_name', // ✅ Correct for GET response display
   
-//   responseKey: 'data',
+  responseKey: 'data',
+  parentIdInChildResponseKey: 'isrc_id',
   
-//   parentIdInChildResponseKey: 'isrc_id',
+  // API endpoints
+  get: ENDPOINTS.MASTER_SUB_SOURCE_GET,
+  post: ENDPOINTS.MASTER_SUB_SOURCE_POST,
+  put: ENDPOINTS.MASTER_SUB_SOURCE_PUT,
+  delete: ENDPOINTS.MASTER_SUB_SOURCE_CHANGE,
   
-//   // API endpoints for various operations
-//   get: ENDPOINTS.MASTER_SUB_SOURCE_GET,
-//   post: ENDPOINTS.MASTER_SUB_SOURCE_POST,
-//   put: ENDPOINTS.MASTER_SUB_SOURCE_PUT,
-//   delete: ENDPOINTS.MASTER_SUB_SOURCE_CHANGE,
+  // ✅ CORRECTED Payload mapping
+  payloadMapping: {
+    isub_src_id: 'subSrcId',
+    ssub_src_name: 'subSrcName', // Map frontend field to backend field
+    isrc_id: 'srcId'
+  },
   
-//   // FIXED: Payload mapping - API expects srcId, not isrc_id
-//   payloadMapping: {
-//     isub_src_id: 'subSrcId',
-//     ssub_src_name: 'subSrcName',
-//     isrc_id: 'srcId' // This should map to srcId in API request
-//   },
+  // ✅ CORRECTED Base payloads
+  basePostPayload: {
+    ssub_src_name: "", // Frontend form field name
+    srcId: null
+  },
   
-//   skipCompanyIdInjection: true,
+  basePutPayload: { 
+    ssub_src_name: '', // Frontend form field name
+    srcId: null
+  },
   
-//   modifierIdPayloadKey: {
-//     post: null,
-//     put: null,
-//     delete: null
-//   },
+  // ✅ CORRECTED Payload fields (use frontend field names)
+  postPayloadFields: [
+    "ssub_src_name", // Frontend form field name
+    "srcId"
+  ],
   
-//   updatedDtPayloadKey: {
-//     post: null,
-//     put: null,
-//     delete: null
-//   },
+  putPayloadFields: [
+    "isub_src_id",
+    "ssub_src_name", // Frontend form field name
+    "srcId"
+  ],
   
-//   activeStatusPayloadKey: 'status',
+  // Rest of the configuration remains the same...
+  skipCompanyIdInjection: true,
+  modifierIdPayloadKey: { post: null, put: null, delete: null },
+  updatedDtPayloadKey: { post: null, put: null, delete: null },
+  activeStatusPayloadKey: 'status',
+  isHierarchical: true,
   
-//   // Default payloads
-//   basePostPayload: {
-//     subSrcName: '',
-//     srcId: null // This should match API expectation
-//   },
+  parentMasterConfig: {
+    masterName: "LEAD_SOURCE",
+    getEndpoint: ENDPOINTS.MASTER_SOURCE_GET,
+    responseKey: 'data',
+    idKey: 'source_id',
+    nameKey: 'source_name',
+    parentIdInChildResponseKey: 'isrc_id',
+    formFieldKey: 'srcId',
+    modalLabel: 'Parent Source',
+    required: true
+  },
   
-//   basePutPayload: { 
-//     subSrcId: null,
-//     subSrcName: '',
-//     srcId: null, // This should match API expectation
-//     status: null
-//   },
-  
-//   isHierarchical: true,
-  
-//   parentMasterConfig: {
-//     masterName: "LEAD_SOURCE",
-//     getEndpoint: ENDPOINTS.MASTER_SOURCE_GET,
-//     responseKey: 'data',
-//     idKey: 'source_id',
-//     nameKey: 'source_name',
-//     parentIdInChildResponseKey: 'isrc_id',
-//     formFieldKey: 'srcId', // This should match the field name in formData
-//     modalLabel: 'Parent Source',
-//     required: true
-//   },
-  
-//   // Fields sent in POST request body
-//   postPayloadFields: [
-//     "subSrcName",
-//     "srcId" // This should match the field name in formData
-//   ],
-  
-//   putPayloadFields: [
-//     "subSrcId",
-//     "subSrcName",
-//     "srcId" // This should match the field name in formData
-//   ],
-  
-//   deletePayload: {
-//     subSrcId: null,
-//     status: false
-//   }
-// },
+  deletePayload: {
+    subSrcId: null,
+    status: false
+  }
+},
 
         
     {

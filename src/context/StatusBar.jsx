@@ -756,7 +756,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 <div className="flex flex-col items-center flex-1">
                   <div
                     onClick={() => (isClickable ? handleStageClick(index, stage.id) : null)}
-                    className={`relative flex items-center justify-center w-10 h-10 rounded-full
+                    className={`relative flex items-center justify-center w-8 h-8 rounded-full
                       ${
                         isCompleted
                           ? 'bg-green-600 text-white'

@@ -1,3 +1,4 @@
+
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../../api/constraints";
@@ -43,6 +44,7 @@ const StatusKanbanTab = () => {
       }
 
       const decoded = decodeJwt(tokenFromStorage);
+
       if (!decoded || !decoded.company_id) {
         throw new Error("Company ID not found in token or token invalid.");
       }
@@ -56,6 +58,19 @@ const StatusKanbanTab = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      console.log("JWT Token:", token);
+      const decoded = decodeJwt(token);
+      if (decoded) {
+        setCompanyId(decoded.company_id);
+        setUserId(decoded.user_id);
+      }
+      console.log("Company ID:", companyId);
+      console.log("User ID:", userId);  
+    }
+  }, [token]);
 
   const goToDetail = (id) => {
     navigate(`/leaddetailview/${id}`);
@@ -105,6 +120,7 @@ const StatusKanbanTab = () => {
           ? leadData.filter(
               (lead) =>
                 String(lead.icompany_id) === String(companyId) &&
+                String(lead.clead_owner) === String(userId) && // Filter by current user
                 lead.bactive === true &&
                 lead.bisConverted === false
             )

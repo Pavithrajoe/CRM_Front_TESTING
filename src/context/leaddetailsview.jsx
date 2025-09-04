@@ -1055,23 +1055,28 @@ const LeadDetailView = () => {
                   Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="lostReason"
-                  name="lostReason"
-                  value={selectedLostReasonId}
-                  onChange={handleReasonChange}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  {lostReasons.map((reason) => (
-                    <option
-                      key={reason.ilead_lost_reason_id}
-                      value={reason.ilead_lost_reason_id}
-                    >
-                      {reason.cLeadLostReason}
-                    </option>
-                  ))}
-                </select>
+  id="lostReason"
+  name="lostReason"
+  value={selectedLostReasonId}
+  onChange={handleReasonChange}
+  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+  required
+>
+  <option value="">Select a reason</option>
+  {Array.isArray(lostReasons) && lostReasons.length > 0 ? (
+    lostReasons.map((reason) => (
+      <option
+        key={reason.ilead_lost_reason_id}
+        value={reason.ilead_lost_reason_id}
+      >
+        {reason.cLeadLostReason}
+      </option>
+    ))
+  ) : (
+    <option disabled>No Lost Reasons Found , Add lost reasons in master</option>
+  )}
+</select>
+
               </div>
 
               <div>
@@ -1092,7 +1097,7 @@ const LeadDetailView = () => {
                 <button
                   type="button"
                   onClick={() => setLeadLostDescriptionTrue(false)}
-                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:极市汇仪bg-gray-400 text-sm sm:text-base"
+                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
@@ -1143,7 +1148,7 @@ const LeadDetailView = () => {
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div
-          className="fixed inset极市汇仪-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
           style={{ backdropFilter: "blur(8px)" }}
         >
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
@@ -1175,8 +1180,8 @@ const LeadDetailView = () => {
                   </div>
                 ) : templates.length === 0 ? (
                   <div className="text-center py-8 text-blue-600">
-                    <svg xmlns极市汇仪="http://www.w3.org/2000/svg" className="h-12 w极市汇仪-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 极市汇仪0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <p>No templates available</p>
                   </div>
@@ -1251,7 +1256,7 @@ const LeadDetailView = () => {
                         type="text"
                         className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                         value={mailSubject}
-                        onChange={(极市汇仪e) => setMailSubject(e.target.value)}
+                        onChange={(e) => setMailSubject(e.target.value)}
                         placeholder="Write subject..."
                         required
                       />

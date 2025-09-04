@@ -85,14 +85,14 @@ export default function CreateUserForm({ onClose }) {
   const validate = () => {
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^[0-15]{15}$/;
     const newErrors = {};
 
     if (!formData.employeeName.trim()) {
       newErrors.employeeName = 'Name is required';
     } else if (!nameRegex.test(formData.employeeName.trim())) {
       newErrors.employeeName = 'Only alphabets and spaces allowed';
-    } else if (formData.employeeName.trim().length > 20) {
+    } else if (formData.employeeName.trim().length > 30) {
       newErrors.employeeName = 'Maximum 20 characters allowed';
     }
 
@@ -114,11 +114,11 @@ export default function CreateUserForm({ onClose }) {
     if (!formData.role) newErrors.role = 'Role is required';
 
     if (formData.businessPhone && !phoneRegex.test(formData.businessPhone)) {
-      newErrors.businessPhone = 'Please enter a valid 10-digit phone number';
+      newErrors.businessPhone = 'Please enter a valid phone number';
     }
 
     if (formData.personalPhone && !phoneRegex.test(formData.personalPhone)) {
-      newErrors.personalPhone = 'Please enter a valid 10-digit phone number';
+      newErrors.personalPhone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);

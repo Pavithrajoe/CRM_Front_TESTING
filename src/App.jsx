@@ -63,7 +63,7 @@ import MembersSettings from "./pages/settings/membersSettings";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
-
+import UserLead from "./pages/userPage/userLead.jsx";
 function App() {
   return (
     <PopupProvider>
@@ -101,6 +101,7 @@ function App() {
                   <Route path="/company-leads" element={<CompanyLeads />} />
                   <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
                   <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis />} />
+                  <Route path='userleads' element={<UserLead />} />
                   <Route path="/leads" element={<LeadsDashboard />} />
                   <Route path="leadlistview" element={<LeadListViewPage />} />
                   <Route path="leadcardview" element={<LeadCardViewPage />} />

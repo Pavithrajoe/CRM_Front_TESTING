@@ -115,6 +115,7 @@ export const ENDPOINTS = {
   FIRST_RESPONSE_FOR_LEAD: `${BASE_URL}/reports/first-response-time`,
   QUOTATION: `${BASE_URL}/quotation`,
   QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
+  USERLEADS: `${BASE_URL}/lead/user`,
 
 
   MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,

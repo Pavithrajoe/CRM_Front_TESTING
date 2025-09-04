@@ -82,7 +82,8 @@ useEffect(() => {
 
 
     useEffect(() => {
-        const handleRefreshEvent = () => {
+        const handleRefreshEvent = () =>
+             {
             setRefreshTrigger(prev => prev + 1);
         };
         window.addEventListener('leadDataUpdated', handleRefreshEvent);

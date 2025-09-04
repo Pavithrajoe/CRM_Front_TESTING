@@ -1,17 +1,19 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 export default function LeadsTable({ data }) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortOrder, setSortOrder] = useState(null); // FOR SORTING
   const leadsPerPage = 8;
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const activeUnconvertedLeads = useMemo(() => {
     return (data || [])
       .filter(item => item.bactive === true && item.bisConverted === false)
-      .sort((a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt)) 
+      .sort((a, b) => new Date(b.dmodified_dt) - new Date(a.dmodified_dt))
       .map((item) => ({
         id: item.ilead_id,
         name: item.clead_name || "No Name",
@@ -20,44 +22,44 @@ export default function LeadsTable({ data }) {
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
         time: (() => {
           const dateObj = new Date(item.dmodified_dt);
-          const datePart = dateObj
-            .toLocaleDateString("en-GB"); // DD/MM/YYYY
-            // .replace(/\//g, "/");
+          const datePart = dateObj.toLocaleDateString("en-GB");
           const timePart = dateObj
             .toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
             })
-            .replace(/am|pm/, (match) => match.toUpperCase()); // AM/PM in caps
+            .replace(/am|pm/, (match) => match.toUpperCase());
           return `${datePart}\n${timePart}`;
         })(),
-
-        // time: new Date(item.dmodified_dt).toLocaleString("en-IN", {
-        //   hour: "2-digit",
-        //   minute: "2-digit",
-        //   hour12: true,
-        //   day: "2-digit",
-        //   month: "short",
-        // }),
         avatar: "/images/dashboard/grl.png",
       }));
   }, [data]);
 
   const filteredLeads = useMemo(() => {
     const term = search.toLowerCase();
-    return activeUnconvertedLeads
+    let leads = activeUnconvertedLeads
       .filter(
         (lead) =>
           lead.name.toLowerCase().includes(term) ||
           lead.assignedTo.toLowerCase().includes(term)
-      )
-      .sort((a, b) => {
+      );
+
+    // for sort
+    if (sortOrder === "asc") {
+      leads.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === "desc") {
+      leads.sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+      leads.sort((a, b) => {
         const aIndex = a.name.toLowerCase().indexOf(term);
         const bIndex = b.name.toLowerCase().indexOf(term);
         return aIndex - bIndex;
       });
-  }, [search, activeUnconvertedLeads]);
+    }
+
+    return leads;
+  }, [search, activeUnconvertedLeads, sortOrder]);
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const currentLeads = filteredLeads.slice(
@@ -75,10 +77,21 @@ export default function LeadsTable({ data }) {
     navigate(`/leaddetailview/${leadId}`);
   };
 
+  // Function to handle the sort toggle
+  const handleSortToggle = () => {
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortOrder(null);
+    } else {
+      setSortOrder("asc");
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl p-6 w-full">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Active Leads</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Active Leads </h2>
         <div className="flex gap-3 w-full sm:w-auto">
           <input
             type="text"
@@ -91,13 +104,6 @@ export default function LeadsTable({ data }) {
             className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 placeholder-gray-400
              focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
           />
-          {/* <a
-            href="/leadcardview"
-            className="text-blue-600 font-semibold hover:text-blue-700 flex items-center rounded-full px-4 py-2
-             ring-1 ring-blue-300 hover:ring-blue-400 transition"
-          >
-            View All
-          </a> */}
         </div>
       </div>
 
@@ -105,15 +111,24 @@ export default function LeadsTable({ data }) {
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                onClick={handleSortToggle}
+              >
+                <div className="flex items-center gap-2">
+                  Name
+                  {sortOrder === "asc" ? (
+                    <FaSortUp className="text-blue-500" />
+                  ) : sortOrder === "desc" ? (
+                    <FaSortDown className="text-blue-500" />
+                  ) : (
+                    <FaSort className="text-gray-400" />
+                  )}
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assigned To
-              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Modified By
               </th>
@@ -135,16 +150,6 @@ export default function LeadsTable({ data }) {
                       {lead.status}
                     </span>
                   </td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={lead.avatar}
-                        alt={`${lead.assignedTo} avatar`}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <span className="truncate max-w-[100px]">{lead.assignedTo}</span>
-                    </div>
-                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
                       <img

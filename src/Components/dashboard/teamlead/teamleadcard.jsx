@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ENDPOINTS } from "../../../api/constraints";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from 'react-router-dom';
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 export default function LeadsTable() {
   const [search, setSearch] = useState("");
@@ -12,6 +14,8 @@ export default function LeadsTable() {
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("active"); 
   const leadsPerPage = 8;
 
   const navigate = useNavigate();
@@ -22,11 +26,9 @@ export default function LeadsTable() {
 
     try {
       tokenFromStorage = localStorage.getItem('token');
-
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
         extractedUserId = decodedToken.user_id;
-
         if (!extractedUserId) {
           throw new Error("User ID (user_id) not found in decoded token payload.");
         }
@@ -100,64 +102,63 @@ export default function LeadsTable() {
     }
     return map;
   }, [subordinatesData]);
-const formatDateTime = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "Invalid Date";
-  
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${day}-${month}-${year} ${hours}:${minutes}`; // DD-MM-YYYY HH:MM
-};
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date";
 
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${hours}:${minutes}`; // DD-MM-YYYY HH:MM
+  };
 
   const leads = useMemo(() => {
+    // Filter first by selected tab
     return leadsData
       .filter(item => {
-        const isLeadActive = item.bactive === true;
         const isOwnerActive = activeSubordinatesMap.has(item.clead_owner);
 
-        return isLeadActive && isOwnerActive;
+        if (selectedTab === "active") {
+          // active leads
+          return item.bactive === true && isOwnerActive;
+        } else { // lost leads
+          return item.bactive === false && item.bisConverted === false && isOwnerActive;
+        }
       })
       .map((item) => ({
         id: item.ilead_id,
         name: item.clead_name || "No Name",
         status: item.lead_status?.clead_name || "Unknown",
-        assignedTo: item.user?.cFull_name || "Unassigned", 
+        assignedTo: item.user?.cFull_name || "Unassigned",
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
-        time: formatDateTime(item.dmodified_dt).toLocaleString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-          day: "2-digit",
-          month: "short",
-        }),
-        avatar: "/images/dashboard/grl.png", 
+        time: formatDateTime(item.dmodified_dt),
+        avatar: "/images/dashboard/grl.png",
       }));
-  }, [leadsData, activeSubordinatesMap]); 
+  }, [leadsData, activeSubordinatesMap, selectedTab]);
 
   const filteredLeads = useMemo(() => {
     const term = search.toLowerCase();
-    return leads 
-      .filter(
-        (lead) =>
-          lead.name.toLowerCase().includes(term) ||
-          lead.assignedTo.toLowerCase().includes(term) ||
-          lead.status.toLowerCase().includes(term)
-      )
-      .sort((a, b) => {
-        const aMatches = a.name.toLowerCase().includes(term) || a.assignedTo.toLowerCase().includes(term) || a.status.toLowerCase().includes(term);
-        const bMatches = b.name.toLowerCase().includes(term) || b.assignedTo.toLowerCase().includes(term) || b.status.toLowerCase().includes(term);
-        if (aMatches && !bMatches) return -1;
-        if (!aMatches && bMatches) return 1;
-        return 0; 
-      });
-  }, [search, leads]); 
+    let filtered = leads.filter(
+      (lead) =>
+        lead.name.toLowerCase().includes(term) ||
+        lead.assignedTo.toLowerCase().includes(term) ||
+        lead.status.toLowerCase().includes(term)
+    );
+
+    // sort order by name
+    if (sortOrder === "asc") {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === "desc") {
+      filtered.sort((a, b) => b.name.localeCompare(a.name));
+    }
+
+    return filtered;
+  }, [search, leads, sortOrder]);
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const currentLeads = filteredLeads.slice(
@@ -171,6 +172,16 @@ const formatDateTime = (dateString) => {
     }
   };
 
+  const handleSortToggle = () => {
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortOrder(null);
+    } else {
+      setSortOrder("asc");
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-700">Loading leads...</div>;
   }
@@ -181,8 +192,39 @@ const formatDateTime = (dateString) => {
 
   return (
     <div className="bg-white rounded-3xl p-6 w-full">
+      {/* Tabs */}
+      <div className="flex gap-4 mb-4">
+        <button
+          className={`px-4 py-2 rounded-full font-medium ${
+            selectedTab === "active"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+          onClick={() => {
+            setSelectedTab("active");
+            setCurrentPage(1);
+          }}
+        >
+          Active Leads
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full font-medium ${
+            selectedTab === "lost"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+          onClick={() => {
+            setSelectedTab("lost");
+            setCurrentPage(1);
+          }}
+        >
+          Lost Leads
+        </button>
+      </div>
+
+      {/* Search */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Leads</h2>
+        {/* <h2 className="text-2xl font-semibold text-gray-900">Leads</h2> */}
         <div className="flex gap-3 w-full sm:w-auto">
           <input
             type="text"
@@ -190,7 +232,7 @@ const formatDateTime = (dateString) => {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setCurrentPage(1); 
+              setCurrentPage(1);
             }}
             className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 placeholder-gray-400
               focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
@@ -198,12 +240,25 @@ const formatDateTime = (dateString) => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                onClick={handleSortToggle}
+              >
+                <div className="flex items-center gap-2">
+                  Name
+                  {sortOrder === "asc" ? (
+                    <FaSortUp className="text-blue-500" />
+                  ) : sortOrder === "desc" ? (
+                    <FaSortDown className="text-blue-500" />
+                  ) : (
+                    <FaSort className="text-gray-400" />
+                  )}
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -219,16 +274,11 @@ const formatDateTime = (dateString) => {
           <tbody className="bg-white divide-y divide-gray-100">
             {currentLeads.length > 0 ? (
               currentLeads.map((lead) => (
-                // <tr
-                //   key={lead.id}
-                //   className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-                // >
                 <tr
-                    key={lead.id}
-                    className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-                    onClick={() => navigate(`/leaddetailview/${lead.id}`)}
-                  >
-
+                  key={lead.id}
+                  className="hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+                  onClick={() => navigate(`/leaddetailview/${lead.id}`)}
+                >
                   <td className="px-6 py-2 whitespace-nowrap text-gray-900 font-medium">
                     {lead.name}
                   </td>
@@ -268,8 +318,8 @@ const formatDateTime = (dateString) => {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-500"> 
-                  No active leads found for active users.
+                <td colSpan={4} className="py-8 text-center text-gray-500">
+                  No {selectedTab === "active" ? "active" : "lost"} leads found for active users.
                 </td>
               </tr>
             )}

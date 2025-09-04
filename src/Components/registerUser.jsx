@@ -85,7 +85,9 @@ export default function CreateUserForm({ onClose }) {
   const validate = () => {
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-15]{15}$/;
+    // const phoneRegex = /^[0-15]{15}$/;
+    const phoneRegex = /^[0-9]{6,15}$/;
+
     const newErrors = {};
 
     if (!formData.employeeName.trim()) {

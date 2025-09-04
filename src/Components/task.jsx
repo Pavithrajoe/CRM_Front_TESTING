@@ -245,7 +245,7 @@ const Tasks = () => {
       }
       updatedValue = value.charAt(0).toUpperCase() + value.slice(1);
     } else if (name === "ctask_content") {
-      if (value.length > 70) {
+      if (value.length > 500) {
         showPopup("Warning", "Description cannot exceed 70 characters.", "warning");
         return;
       }

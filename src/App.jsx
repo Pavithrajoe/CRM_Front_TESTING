@@ -81,7 +81,7 @@ function App() {
               <Route path="/UpdatePassword" element={<UpdatePassword />} />
 
               {/* Protected Routes */}
-              <Route element={<PrivateRoute />}>
+              {/* <Route element={<PrivateRoute />}> */}
                 <Route element={<AppLayout />}>
                   <Route path="/notifications" element={<NotificationPage />} />
                   <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
@@ -135,7 +135,7 @@ function App() {
                     <Route path="smtpsettings" element={<SmtpSettings />} />
                   </Route>
                 </Route>
-              </Route>
+              {/* </Route> */}
             </Routes>
           </UserProvider>
         </TabProvider>

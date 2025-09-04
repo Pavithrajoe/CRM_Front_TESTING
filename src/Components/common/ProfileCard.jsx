@@ -501,7 +501,7 @@ const filteredSubServices = subService.filter(
 const validateForm = () => {
   if (isReadOnly) return false;
   let newErrors = {};
-  const isNumeric = (value) => /^\d+$/.test(value);
+  const isNumeric = (value) => /^[+]?\d+$/.test(value);
 
   // Name and Mobile Number are working, so we'll keep them as they are
   if (!form.clead_name.trim()) {
@@ -511,10 +511,10 @@ const validateForm = () => {
   }
 
   if (!form.iphone_no.trim()) {
-    newErrors.iphone_no = "Mobile numbe is required.";
+    newErrors.iphone_no = "Mobile number is required.";
   } else if (!isNumeric(form.iphone_no)) {
-    newErrors.iphone_no = "Mobile numbe must contain only digits.";
-  } else if (!/^[0-9]{6,15}$/.test(form.iphone_no)) {
+    newErrors.iphone_no = "Mobile number must contain only digits.";
+  } else if (!/^\+?[0-9]{6,15}$/.test(form.iphone_no)) {
     newErrors.iphone_no = "Mobile number must be contain only 6 to 15 digits";
   }
 
@@ -546,7 +546,7 @@ const validateForm = () => {
   if (form.cwhatsapp.trim()) {
       if (!isNumeric(form.cwhatsapp)) {
         newErrors.cwhatsapp = "WhatsApp number must contain only digits.";
-      } else if (!/^[0-9]{6,15}$/.test(form.cwhatsapp)) {
+      } else if (!/^\+?[0-9]{6,15}$/.test(form.cwhatsapp)) {
         newErrors.cwhatsapp = "WhatsApp number must be contain only 6 to 15 digits.";
       }
     }
@@ -1567,7 +1567,7 @@ const ProfileCard = () => {
       if (assignedUser && profile) {
         const mailPayload = {
           userName: assignedUser.cUser_name,
-          time: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+          time: new Date().toISOString(),
           leadName: profile.clead_name,
           leadURL: window.location.href,
           mailId: assignedUser.cEmail,

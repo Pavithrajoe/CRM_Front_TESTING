@@ -1055,28 +1055,23 @@ const LeadDetailView = () => {
                   Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
                 </label>
                 <select
-  id="lostReason"
-  name="lostReason"
-  value={selectedLostReasonId}
-  onChange={handleReasonChange}
-  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-  required
->
-  <option value="">Select a reason</option>
-  {Array.isArray(lostReasons) && lostReasons.length > 0 ? (
-    lostReasons.map((reason) => (
-      <option
-        key={reason.ilead_lost_reason_id}
-        value={reason.ilead_lost_reason_id}
-      >
-        {reason.cLeadLostReason}
-      </option>
-    ))
-  ) : (
-    <option disabled>No Lost Reasons Found , Add lost reasons in master</option>
-  )}
-</select>
-
+                  id="lostReason"
+                  name="lostReason"
+                  value={selectedLostReasonId}
+                  onChange={handleReasonChange}
+                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                  required
+                >
+                  <option value="">Select a reason</option>
+                  {lostReasons.map((reason) => (
+                    <option
+                      key={reason.ilead_lost_reason_id}
+                      value={reason.ilead_lost_reason_id}
+                    >
+                      {reason.cLeadLostReason}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -1148,7 +1143,7 @@ const LeadDetailView = () => {
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          className="fixed  -0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
           style={{ backdropFilter: "blur(8px)" }}
         >
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">

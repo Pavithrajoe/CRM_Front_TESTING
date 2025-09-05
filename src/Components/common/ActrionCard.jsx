@@ -53,7 +53,7 @@ const ActionCard = ({ leadId, onActionClick = () => {} }) => {
         </Typography>
       )}
 
-      {actions.length === 0 ? (
+      {/* {actions.length === 0 ? (
         <Paper
           elevation={0}
           sx={{
@@ -67,7 +67,8 @@ const ActionCard = ({ leadId, onActionClick = () => {} }) => {
         >
           No actions available for this lead.
         </Paper>
-      ) : (
+      )  */}
+      
         <Box
           sx={{
             borderRadius: 3,
@@ -133,7 +134,7 @@ const ActionCard = ({ leadId, onActionClick = () => {} }) => {
             ))}
           </List>
         </Box>
-      )}
+      
     </Box>
   );
 };

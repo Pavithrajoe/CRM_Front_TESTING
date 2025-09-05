@@ -1,4 +1,5 @@
-// last update 30/08 workinh fine
+
+// last update 5/09 workinh fine
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
@@ -141,6 +142,43 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const [selectedCurrency, setSelectedCurrency] = useState({ currency_code: "INR", symbol: "₹" });
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const currencyDropdownRef = useRef(null);
+  // for sub source
+  const [subSources, setSubSources] = useState([]);
+const [searchSubSource, setSearchSubSource] = useState("");
+const [isSubSourceDropdownOpen, setIsSubSourceDropdownOpen] = useState(false);
+const subSourceDropdownRef = useRef(null);
+
+useEffect(() => {
+    const fetchSubSources = async () => {
+    if (!form.lead_source_id) {
+        setSubSources([]);
+        return;
+    }
+
+    try {
+        const res = await fetch(`${apiEndPoint}/subSrc/getAllActiveSubSrc`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const resData = await res.json();
+                if (res.ok && resData.data && Array.isArray(resData.data)) {
+            const filtered = resData.data.filter(
+                (subSrc) => subSrc.isrc_id === Number(form.lead_source_id)
+            );
+            setSubSources(filtered);
+        } else {
+            setSubSources([]);
+            console.error("Failed to fetch sub-sources or data is not an array");
+        }
+    } catch (error) {
+        setSubSources([]);
+        console.error("Error fetching sub-sources:", error);
+    }
+};
+    fetchSubSources();
+}, [form.lead_source_id, token]);
 
 useEffect(() => {
   const fetchCurrencies = async () => {
@@ -158,9 +196,9 @@ useEffect(() => {
 
       if (res.data?.data?.data) {
         setCurrencies(res.data.data.data);
-        console.log("Fetched currencies successfully:", res.data.data.data);
+        // console.log("Fetched currencies successfully:", res.data.data.data);
       } else {
-        console.log("API response has no currency data:", res.data);
+        // console.log("API response has no currency data:", res.data);
       }
     } catch (error) {
       console.error("Failed to fetch currencies", error);
@@ -170,25 +208,9 @@ useEffect(() => {
   fetchCurrencies();
 }, [token, apiEndPoint]); 
 
-useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
-        setIsCurrencyDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-
-
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
     
-   
-    // The guard condition is still essential.
     if (existingClientData &&
         Potential.length > 0 &&
         status.length > 0 &&
@@ -199,7 +221,7 @@ useEffect(() => {
         subServiceList.length > 0 &&
         cities.length > 0
     ) {
-        console.log("Guard condition passed. Populating form...");
+        // console.log("condition passed. Populating form...");
 
         // Extract phone number parts
         const phoneNum = existingClientData.iphone_no || "";
@@ -263,6 +285,9 @@ useEffect(() => {
         if (selectedSource) setSearchSource(selectedSource.source_name);
         // console.log("Selected Source:", selectedSource);
 
+        const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
+        if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
+
         const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
         if (selectedService) setSearchService(selectedService.cservice_name);
         // console.log("Selected Service:", selectedService);
@@ -288,7 +313,7 @@ useEffect(() => {
         // console.log("City list is populated:", cities.length > 0);
       
     }
-}, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, service, subServiceList, cities]);
+}, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
 
   // --- END OF NEW LOGIC ---
 
@@ -500,7 +525,7 @@ if (resData && resData.ilead_id) {
     phone_country_code: phoneCode,
     whatsapp_country_code: whatsappCode,
   };
-  console.log("New Form Data to be set:", newFormData); 
+  // console.log("New Form Data to be set:", newFormData); 
 
   setForm(newFormData);
   setExistingClientData(resData);
@@ -542,7 +567,7 @@ else {
         const processedData = transform(rawData);
         setter(Array.isArray(processedData) ? processedData : []);
       } catch (e) {
-        console.log(`Error in fetching ${errorMessage}:`, e);
+        // console.log(`Error in fetching ${errorMessage}:`, e);
         setter([]);
       }
     },
@@ -845,40 +870,49 @@ useEffect(() => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
-        setIsCityDropdownOpen(false);
-      }
-      if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
-        setIsPotentialDropdownOpen(false);
-      }
-      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
-        setIsStatusDropdownOpen(false);
-      }
-      if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
-        setIsIndustryDropdownOpen(false);
-      }
-      if (subIndustryDropdownRef.current && !subIndustryDropdownRef.current.contains(event.target)) {
-        setIsSubIndustryDropdownOpen(false);
-      }
-      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
-        setIsSourceDropdownOpen(false);
-      }
-      if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target)) {
-        setIsServiceDropdownOpen(false);
-      }
-      if (mobileCountryCodeRef.current && !mobileCountryCodeRef.current.contains(event.target)) {
-        setIsMobileCountryCodeDropdownOpen(false);
-      }
-      if (whatsappCountryCodeRef.current && !whatsappCountryCodeRef.current.contains(event.target)) {
-        setIsWhatsappCountryCodeDropdownOpen(false);
-      }
+        if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
+            setIsCurrencyDropdownOpen(false);
+        }
+        if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            setIsCityDropdownOpen(false);
+        }
+        if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
+            setIsPotentialDropdownOpen(false);
+        }
+        if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+            setIsStatusDropdownOpen(false);
+        }
+        if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
+            setIsIndustryDropdownOpen(false);
+        }
+        if (subIndustryDropdownRef.current && !subIndustryDropdownRef.current.contains(event.target)) {
+            setIsSubIndustryDropdownOpen(false);
+        }
+        if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
+            setIsSourceDropdownOpen(false);
+        }
+        if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target)) {
+            setIsServiceDropdownOpen(false);
+        }
+        if (subServiceDropdownRef.current && !subServiceDropdownRef.current.contains(event.target)) {
+            setIsSubServiceDropdownOpen(false);
+        }
+        if (mobileCountryCodeRef.current && !mobileCountryCodeRef.current.contains(event.target)) {
+            setIsMobileCountryCodeDropdownOpen(false);
+        }
+        if (whatsappCountryCodeRef.current && !whatsappCountryCodeRef.current.contains(event.target)) {
+            setIsWhatsappCountryCodeDropdownOpen(false);
+        }
+        if (subSourceDropdownRef.current && !subSourceDropdownRef.current.contains(event.target)) {
+            setIsSubSourceDropdownOpen(false);
+        }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+}, []);
 
   const validateField = (name, value) => {
     let error = "";
@@ -907,9 +941,11 @@ useEffect(() => {
       if (!value) {
         // error = "Lead Name is mandatory";
         error = "Mandatory";
-      } else if (!/^[A-Za-z\s]+$/.test(value)) {
-        error = "Lead Name can only contain letters and spaces";
-      } else if (value.length > 100) {
+      }
+      //  else if (!/^[A-Za-z\s]+$/.test(value)) {
+      //   error = "Lead Name can only contain letters and spaces";
+      // } 
+      else if (value.length > 100) {
         error = "Lead Name cannot exceed 100 characters";
       }
     }
@@ -1152,6 +1188,12 @@ const handleChange = (e) => {
             setSearchSubService("");
         }
 
+        // Add this new condition for sub-source
+        if (name === "lead_source_id" && prev.lead_source_id !== value) {
+            updated.subSrcId = "";
+            setSearchSubSource("");
+        }
+
         return updated;
     });
 
@@ -1266,18 +1308,36 @@ const handleChange = (e) => {
       }
       setIsSourceDropdownOpen(false);
     }
-  
+   
+
+        else if (name === "searchSubSource") {
+        const selectedSubSource = subSources.find(
+            (subSrc) => subSrc.isub_src_id === form.subSrcId
+        );
+        if (!selectedSubSource || selectedSubSource.ssub_src_name !== value) {
+            setSearchSubSource(selectedSubSource ? selectedSubSource.ssub_src_name : "");
+            setForm((prev) => ({
+                ...prev,
+                subSrcId: selectedSubSource ? selectedSubSource.isub_src_id : "",
+            }));
+        }
+        setIsSubSourceDropdownOpen(false);
+    }
+
     else if (name === "searchSubService") {
-  const selectedSubService = subServiceList.find(sub => sub.isubservice_id === form.isubservice_id);
-  if (!selectedSubService || selectedSubService.subservice_name !== value) {
-    setSearchSubService(selectedSubService ? selectedSubService.subservice_name : "");
-    setForm((prev) => ({
-      ...prev,
-      isubservice_id: selectedSubService ? selectedSubService.isubservice_id : ""
-    }));
-  }
-  setIsSubServiceDropdownOpen(false);
-}
+        const selectedSubService = subServiceList.find(
+            (sub) => sub.isubservice_id === form.isubservice_id
+        );
+        if (!selectedSubService || selectedSubService.subservice_name !== value) {
+            setSearchSubService(selectedSubService ? selectedSubService.subservice_name : "");
+            setForm((prev) => ({
+                ...prev,
+                isubservice_id: selectedSubService ? selectedSubService.isubservice_id : "",
+            }));
+        }
+        setIsSubServiceDropdownOpen(false);
+    }
+
     setErrors((prev) => ({
       ...prev,
       [name]: validateField(name, value),
@@ -1361,7 +1421,7 @@ const handleSubmit = async (e) => {
     formValid = Object.keys(validationErrors).length === 0;
 
     if (!formValid) {
-      console.log("Validation failed with errors:", validationErrors);
+      // console.log("Validation failed with errors:", validationErrors);
       setLoading(false);
       return;
     }
@@ -1400,6 +1460,8 @@ const handleSubmit = async (e) => {
       whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
       // cpincode: form.cpincode,
       cpincode: form.cpincode ? Number(form.cpincode) : null,
+      icurrency_id: selectedCurrency.icurrency_id,
+      subSrcId: form.subSrcId ? Number(form.subSrcId) : null,
     };
 
     if (saveTriggerRef.current) {
@@ -1504,10 +1566,14 @@ const handleSubmit = async (e) => {
         : "Please select an industry first",
       source: "No lead sources found. Please create sources in the master section.",
       city: "No cities found. Please create cities in the master section.",
-      default: "Data not available. Please check your connection or contact support.",
       subservice: form.iservice_id
         ? "No sub-services found for this service. Please create sub-services in the master section."
         : "Please select a service first",
+      // subsource: form.lead_source_id
+      //   ? "No sub-sources found for this source. Please create sub-sources in the master section."
+      //   : "Please select a source first",
+      default: "Data not available. Please check your connection or contact support.",
+
     };
 
     return (
@@ -1874,6 +1940,28 @@ const handleSubmit = async (e) => {
             emptyType: "source"
           },
           {
+      label: "Sub-source",
+      ref: subSourceDropdownRef,
+      inputName: "searchSubSource",
+      searchValue: searchSubSource,
+      setSearch: setSearchSubSource,
+      open: isSubSourceDropdownOpen,
+      setOpen: setIsSubSourceDropdownOpen,
+      list: subSources.filter(
+        (item) =>
+          item.ssub_src_name
+            ?.toLowerCase()
+            .includes(searchSubSource.toLowerCase())
+      ),
+      keyField: "isub_src_id",
+      displayField: "ssub_src_name",
+      formField: "subSrcId",
+      error: errors.subSrcId,
+      disabled: !form.lead_source_id || subSources.length === 0,
+      required: false,
+      emptyType: "subsource",
+    },
+          {
             label: "Lead service",
             ref: serviceDropdownRef,
             inputName: "searchService",
@@ -2030,24 +2118,6 @@ const handleSubmit = async (e) => {
     <p className="text-red-600 text-sm">{errors.iproject_value}</p>
   )}
 </div>
-
-
-        {/* <div>
-          <label className="text-sm font-medium">Project Value</label>
-          <input
-            type="number"
-            name="iproject_value"
-            value={form.iproject_value === 0 ? "" : form.iproject_value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Enter project value"
-            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            min="0"
-          />
-          {errors.iproject_value && (
-            <p className="text-red-600 text-sm">{errors.iproject_value}</p>
-          )}
-        </div> */}
       </div>
       <hr className="my-6 " />
       <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../api/constraints";
 
 const UserLead = ({ userId, token }) => {
@@ -16,7 +17,8 @@ const UserLead = ({ userId, token }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Fetch Leads + Lost Leads using async/await
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!userId || !token) return;
 
@@ -24,30 +26,23 @@ const UserLead = ({ userId, token }) => {
       setLoading(true);
       setError(null);
       try {
-        // Fetch user leads with pagination parameters
         const resLeads = await fetch(`${ENDPOINTS.LEAD}${userId}?page=1&limit=5000`, {
-          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
         const dataLeads = await resLeads.json();
-        console.log("lead testing", dataLeads);
         setLeads(dataLeads?.details || []);
 
-        // Fetch lost leads
         const resLost = await fetch(`${ENDPOINTS.LOST_DETAILS}/${userId}`, {
-          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
         const dataLost = await resLost.json();
-        console.log("lost leads testing", dataLost);
         setLostLeads(dataLost?.data || []);
-
       } catch (err) {
         setError(err.message);
       } finally {
@@ -58,7 +53,6 @@ const UserLead = ({ userId, token }) => {
     fetchLeads();
   }, [userId, token]);
 
-  // Shared filter
   const applyFilters = (list) => {
     return list.filter((item) => {
       const matchesSearchTerm =
@@ -69,14 +63,10 @@ const UserLead = ({ userId, token }) => {
       const from = fromDate ? new Date(fromDate) : null;
       const to = toDate ? new Date(toDate) : null;
 
-      const matchesDateRange =
-        (!from || itemDate >= from) && (!to || itemDate <= to);
-
-      return matchesSearchTerm && matchesDateRange;
+      return (!from || itemDate >= from) && (!to || itemDate <= to) && matchesSearchTerm;
     });
   };
 
-  // Paginated table renderer
   const renderTable = (dataList) => {
     const filteredData = applyFilters(dataList);
 
@@ -85,19 +75,15 @@ const UserLead = ({ userId, token }) => {
     if (filteredData.length === 0)
       return <p className="text-gray-500 text-center py-8">No records found.</p>;
 
-    // Pagination logic
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentData = filteredData.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
+    const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     const isLostTab = activeTab === "lost";
 
     return (
       <>
-        {/* Pagination controls at the top */}
+        {/* Pagination */}
         <div className="flex justify-end mb-4 space-x-2">
           <button
             onClick={() => setCurrentPage(currentPage - 1)}
@@ -106,7 +92,9 @@ const UserLead = ({ userId, token }) => {
           >
             Prev
           </button>
-          <span className="px-3 py-1">Page {currentPage} of {totalPages}</span>
+          <span className="px-3 py-1">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
@@ -115,53 +103,31 @@ const UserLead = ({ userId, token }) => {
             Next
           </button>
         </div>
-        
+
+        {/* Table */}
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-blue-600 text-white">
               <tr>
-                {/* Added Serial No. column header */}
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  S.No.
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Lead Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Organization
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Website
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Phone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  WhatsApp
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Status
-                </th>
-                {!isLostTab && (
-                  <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                    Owner
-                  </th>
-                )}
-                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                  Created Date
-                </th>
+                <th className="px-6 py-3">S.No.</th>
+                <th className="px-6 py-3">Lead Name</th>
+                <th className="px-6 py-3">Organization</th>
+                <th className="px-6 py-3">Website</th>
+                <th className="px-6 py-3">Phone</th>
+                <th className="px-6 py-3">WhatsApp</th>
+                <th className="px-6 py-3">Email</th>
+                <th className="px-6 py-3">Status</th>
+                {!isLostTab && <th className="px-6 py-3">Owner</th>}
+                <th className="px-6 py-3">Created Date</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {currentData.map((item, index) => (
                 <tr
                   key={item.ilead_id}
-                  className="hover:bg-blue-50 transition-colors"
+                  className="hover:bg-blue-50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/leaddetailview/${item.ilead_id}`)} 
                 >
-                  {/* Added Serial No. cell */}
                   <td className="px-6 py-4">{startIndex + index + 1}</td>
                   <td className="px-6 py-4">{item.clead_name}</td>
                   <td className="px-6 py-4">{item.corganization}</td>
@@ -174,13 +140,9 @@ const UserLead = ({ userId, token }) => {
                       {item.lead_status?.clead_name || "-"}
                     </span>
                   </td>
-                  {!isLostTab && (
-                    <td className="px-6 py-4">{item.user?.cFull_name || "-"}</td>
-                  )}
+                  {!isLostTab && <td className="px-6 py-4">{item.user?.cFull_name || "-"}</td>}
                   <td className="px-6 py-4">
-                    {item.dcreated_dt
-                      ? new Date(item.dcreated_dt).toLocaleDateString()
-                      : "-"}
+                    {item.dcreated_dt ? new Date(item.dcreated_dt).toLocaleDateString() : "-"}
                   </td>
                 </tr>
               ))}

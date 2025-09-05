@@ -41,11 +41,75 @@ import QuotationForm from "../Components/Quotation/QuotationForm";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
+import { Close, Download, Visibility } from "@mui/icons-material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Confetti from "react-confetti";
 import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
+
+// PDF Viewer Component
+const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="lg" 
+      fullWidth
+      PaperProps={{
+        style: {
+          height: '90vh',
+          maxHeight: '90vh',
+        },
+      }}
+    >
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        p: 2,
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
+        <Typography variant="h6">
+          Quotation: {quotationNumber}
+        </Typography>
+        <Box>
+          <IconButton onClick={onDownload} color="primary" title="Download PDF">
+            {/* <Download /> */}
+          </IconButton>
+          <IconButton onClick={onClose} title="Close">
+            <Close />
+          </IconButton>
+
+
+
+        </Box>
+      </Box>
+      <DialogContent sx={{ p: 0, height: '100%' }}>
+        {pdfUrl ? (
+          <iframe 
+            src={pdfUrl} 
+            width="100%" 
+            height="100%" 
+            frameBorder="0"
+            title={`Quotation-${quotationNumber}`}
+          />
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100%' 
+          }}>
+            <CircularProgress />
+            <Typography sx={{ ml: 2 }}>Generating PDF...</Typography>
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
@@ -91,6 +155,11 @@ const LeadDetailView = () => {
   const [expandedQuotation, setExpandedQuotation] = useState(null);
   const [currencies, setCurrencies] = useState([]);
 
+  // PDF Viewer states
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
+  const [currentQuotation, setCurrentQuotation] = useState(null);
+
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '',currencyId: null  });
 
@@ -106,7 +175,7 @@ const LeadDetailView = () => {
     : null;
   
   const projectValueDisplay = latestProjectValue 
-    ? `${latestProjectValue.currency_details?.symbol || '$'} ${latestProjectValue.project_value || 0}` 
+    ? `${latestProjectValue.currency_details?.symbol || '₹'} ${latestProjectValue.project_value || 0}` 
     : null;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
@@ -155,6 +224,57 @@ const LeadDetailView = () => {
       extractAllUserInfo();
     }
   }, [leadId]);
+
+  // PDF View Handler
+const handleViewPdf = async (quotation) => {
+  try {
+    if (!companyInfo || !leadData) {
+      showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+      return;
+    }
+    
+    // Show loading state immediately
+    setCurrentPdfUrl(null);
+    setCurrentQuotation(quotation);
+    setPdfViewerOpen(true);
+    
+    // Generate the PDF and get the data URL
+    const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
+    
+    // Set the PDF URL to display in viewer
+    setCurrentPdfUrl(pdfDataUrl);
+    
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+    setPdfViewerOpen(false);
+  }
+};
+  // PDF Download Handler
+const handleDownloadPdf = async (quotation) => {
+  try {
+    if (!companyInfo || !leadData) {
+      showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+      return;
+    }
+    const handleDownload = async () => {
+  await generateQuotationPDF(quotation, companyInfo, leadData);
+};
+   
+    showPopup('Success', `PDF downloaded successfully!`, 'success');
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+  }
+};
+
+
+  // Download from PDF Viewer
+  const handleDownloadFromViewer = async () => {
+    if (currentQuotation) {
+      await handleDownloadPdf(currentQuotation);
+    }
+  };
 
   // New handler for Won button
   const handleWonClick = () => {
@@ -240,22 +360,6 @@ const LeadDetailView = () => {
   };
 
   const handleLostClick = () => setLeadLostDescriptionTrue(true);
-
-  const handleDownloadPdf = async (quotation) => {
-    try {
-      if (!companyInfo || !leadData) {
-        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-        return;
-      }
-      
-      generateQuotationPDF(quotation, companyInfo, leadData);
-      
-      showPopup('Success', `PDF generated successfully!`, 'success');
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-    }
-  };
 
   const toggleQuotationExpand = (quotationId, e) => {
     if (e) {
@@ -385,724 +489,744 @@ const LeadDetailView = () => {
             console.warn("Endpoint failed with status:", response.status);
           }
         } catch (error) {
-          lastError = error;
-          console.warn("Failed with endpoint:", endpoint, error);
-          continue;
-        }
-      }
-
-      if (!response || !response.ok) {
-        throw lastError || new Error("All endpoint formats failed");
-      }
-
-      const data = await response.json();
-      console.log("Success with endpoint:", successfulEndpoint, data);
-      
-      // Handle different response structures
-      const remarks = data.Response || data.data || data || [];
-      setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
-      
-      console.log("Processed status remarks:", remarks);
-    } catch (error) {
-      console.error("Error fetching status remarks:", error);
-      if (showPopup) {
-        showPopup("Error", error.message || "Failed to fetch status remarks", "error");
-      }
+      lastError = error;
+      console.warn("Failed with endpoint:", endpoint, error);
+      continue;
     }
-  };
+  }
 
-  // Call the function if leadId is available
-  useEffect(() => {
-    if (leadId) {
-      console.log("Fetching status remarks for leadId:", leadId);
-      fetchStatusRemarks();
-    }
-  }, [leadId, showPopup]);
+  if (!response || !response.ok) {
+    throw lastError || new Error("All endpoint formats failed");
+  }
 
-  const sendEmail = async () => {
-    setIsSendingMail(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          sent_to: sentTo,
-          cc: ccRecipients,
-          mailSubject,
-          mailContent,
-        }),
-      });
-
-      const resData = await response.json();
-
-      if (!response.ok) {
-        console.error("Failed to send mail. Backend says:", resData);
-        showPopup("Error", resData.message || "Failed to send mail", "error");
-        return;
-      }
-
-      showPopup("Success", "Email sent successfully!", "success");
-      setIsMailOpen(false);
-      setSentTo("");
-      setCcRecipients("");
-      setMailSubject("");
-      setMailContent("");
-    } catch (error) {
-      console.error("Error sending mail:", error);
-      showPopup("Error", "Something went wrong while sending email", "error");
-    } finally {
-      setIsSendingMail(false);
-    }
-  };
-
-  const fetchLeadData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch lead data");
-      }
-
-      const data = await response.json();
-      setLeadData(data);
-      setIsDeal(data.bisConverted);
-      setIsLost(!data.bactive);
-
-      if (data.bisConverted === "true" || data.bisConverted === true || data.clead_status_name?.toLowerCase() === 'won') {
-        setIsWon(true);
-        setIsDeal(true);
-        setIsLost(false);
-        setImmediateWonStatus(true);
-      } else if (!data.bactive) {
-        setIsWon(false);
-        setIsLost(true);
-        setImmediateWonStatus(false);
-      } else {
-        setIsWon(false);
-        setIsLost(false);
-        setImmediateWonStatus(false);
-      }
-
-      setSentTo(data.cemail || "");
-    } catch (error) {
-      console.error("Error fetching lead data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchQuotations = async () => {
-    setQuotationsLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch quotations");
-      }
-
-      const data = await response.json();
-      setQuotations(data.data || []);
-    } catch (error) {
-      console.error("Error fetching quotations:", error);
-    } finally {
-      setQuotationsLoading(false);
-    }
-  };
-
-  const fetchLostReasons = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch lost reasons");
-      const data = await response.json();
-      setLostReasons(data.data);
-    } catch (error) {
-      console.error("Error fetching lost reasons:", error);
-    }
-  };
-
-  const getUserInfoFromLocalStorage = () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        const base64Payload = token.split(".")[1];
-        const decodedPayload = atob(base64Payload);
-        const payloadObject = JSON.parse(decodedPayload);
-
-        setLoggedInUserName(
-          payloadObject.cFull_name ||
-          payloadObject.fullName ||
-          payloadObject.name ||
-          payloadObject.cUser_name ||
-          "User"
-        );
-      } else {
-        const userInfoString = localStorage.getItem("userInfo");
-        if (userInfoString) {
-          const userInfo = JSON.parse(userInfoString);
-          setLoggedInUserName(userInfo.cFull_name || userInfo.iUser_id || userInfo.name || userInfo.cUser_name || "User");
-          setLoggedInCompanyName(userInfo.company_id || userInfo.company_name || userInfo.organization || userInfo.orgName || "Your Company");
-        }
-      }
-    } catch (error) {
-      console.error("Error extracting user info from token/localStorage:", error);
-      setLoggedInUserName("Your Name");
-      setLoggedInCompanyName("Your Company");
-    }
-  };
-
-  useEffect(() => {
-    if (leadId) {
-      fetchLeadData();
-      fetchLostReasons();
-      getUserInfoFromLocalStorage();
-      fetchQuotations();
-    }
-  }, [leadId]);
-
-  useEffect(() => {
-    if (isMailOpen && leadData) {
-      if (leadData.cemail && sentTo !== leadData.cemail) {
-        setSentTo(leadData.cemail);
-      }
-
-      const leadFirstName = leadData.cFirstName || '';
-      const leadLastName = leadData.cLastName || '';
-      const leadProjectName = leadData.cProjectName || 'our services/products';
-
-      const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
-
-      const defaultContent = `
-        <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
-        <p>Hope this email finds you well.</p>
-        <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
-        <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
-        <p>Best regards,</p>
-        <p>${loggedInUserName}</p>
-        <p>${loggedInCompanyName}</p>
-      `;
-      setMailSubject(defaultSubject);
-      setMailContent(defaultContent);
-    }
-  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]);
-
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      [{ font: [] }],
-      [{ size: ["small", false, "large", "huge"] }],
-      ["bold", "italic", "underline", "strike", "blockquote"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["link"],
-      [{ color: [] }, { background: [] }],
-      ["clean"],
-    ],
-  };
-
-  const formats = [
-    "header",
-    "font",
-    "size",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "list",
-    "bullet",
-    "link",
-    "color",
-    "background",
-  ];
-
-  const fetchTemplates = async () => {
-    try {
-      setTemplatesLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch templates");
-
-      const data = await response.json();
-      setTemplates(data.data || []);
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-      showPopup("Error", "Failed to load email templates", "error");
-    } finally {
-      setTemplatesLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isMailOpen) {
-      fetchTemplates();
-    }
-  },[isMailOpen]);
-
-  const applyTemplate = (template) => {
-    setMailSubject(template.mailTitle);
-    setMailContent(template.mailBody);
-  };
-
-  // You'll need to fetch stages for the StatusBar component
-  const [stages, setStages] = useState([]);
+  const data = await response.json();
+  console.log("Success with endpoint:", successfulEndpoint, data);
   
-  const fetchStages = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch stages');
-      const data = await response.json();
+  // Handle different response structures
+  const remarks = data.Response || data.data || data || [];
+  setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
+  
+  console.log("Processed status remarks:", remarks);
+} catch (error) {
+  console.error("Error fetching status remarks:", error);
+  if (showPopup) {
+    showPopup("Error", error.message || "Failed to fetch status remarks", "error");
+  }
+}
+};
 
-      const formattedStages = Array.isArray(data.response)
-        ? data.response
-            .map(item => ({
-              id: item.ilead_status_id,
-              name: item.clead_name,
-              order: item.orderId || 9999,
-              bactive: item.bactive,
-            }))
-            .sort((a, b) => a.order - b.order)
-        : [];
+// Call the function if leadId is available
+useEffect(() => {
+  if (leadId) {
+    console.log("Fetching status remarks for leadId:", leadId);
+    fetchStatusRemarks();
+  }
+}, [leadId, showPopup]);
 
-      setStages(formattedStages);
-    } catch (err) {
-      console.error('Error fetching stages:', err.message);
+const sendEmail = async () => {
+  setIsSendingMail(true);
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        sent_to: sentTo,
+        cc: ccRecipients,
+        mailSubject,
+        mailContent,
+      }),
+    });
+
+    const resData = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to send mail. Backend says:", resData);
+      showPopup("Error", resData.message || "Failed to send mail", "error");
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchStages();
-  }, []);
+    showPopup("Success", "Email sent successfully!", "success");
+    setIsMailOpen(false);
+    setSentTo("");
+    setCcRecipients("");
+    setMailSubject("");
+    setMailContent("");
+  } catch (error) {
+    console.error("Error sending mail:", error);
+    showPopup("Error", "Something went wrong while sending email", "error");
+  } finally {
+    setIsSendingMail(false);
+  }
+};
 
-  const formatDate = (dateInput) => {
-    if (!dateInput) return "N/A";
-    const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return "Invalid Date";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
-  };
+const fetchLeadData = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  return (
-    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
-      {showConfetti && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={false}
-          numberOfPieces={500}
+    if (!response.ok) {
+      throw new Error("Failed to fetch lead data");
+    }
+
+    const data = await response.json();
+    setLeadData(data);
+    setIsDeal(data.bisConverted);
+    setIsLost(!data.bactive);
+
+    if (data.bisConverted === "true" || data.bisConverted === true || data.clead_status_name?.toLowerCase() === 'won') {
+      setIsWon(true);
+      setIsDeal(true);
+      setIsLost(false);
+      setImmediateWonStatus(true);
+    } else if (!data.bactive) {
+      setIsWon(false);
+      setIsLost(true);
+      setImmediateWonStatus(false);
+    } else {
+      setIsWon(false);
+      setIsLost(false);
+      setImmediateWonStatus(false);
+    }
+
+    setSentTo(data.cemail || "");
+  } catch (error) {
+    console.error("Error fetching lead data:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const fetchQuotations = async () => {
+  setQuotationsLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch quotations");
+    }
+
+    const data = await response.json();
+    setQuotations(data.data || []);
+  } catch (error) {
+    console.error("Error fetching quotations:", error);
+  } finally {
+    setQuotationsLoading(false);
+  }
+};
+
+const fetchLostReasons = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error("Failed to fetch lost reasons");
+    const data = await response.json();
+    setLostReasons(data.data);
+  } catch (error) {
+    console.error("Error fetching lost reasons:", error);
+  }
+};
+
+const getUserInfoFromLocalStorage = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const base64Payload = token.split(".")[1];
+      const decodedPayload = atob(base64Payload);
+      const payloadObject = JSON.parse(decodedPayload);
+
+      setLoggedInUserName(
+        payloadObject.cFull_name ||
+        payloadObject.fullName ||
+        payloadObject.name ||
+        payloadObject.cUser_name ||
+        "User"
+      );
+    } else {
+      const userInfoString = localStorage.getItem("userInfo");
+      if (userInfoString) {
+        const userInfo = JSON.parse(userInfoString);
+        setLoggedInUserName(userInfo.cFull_name || userInfo.iUser_id || userInfo.name || userInfo.cUser_name || "User");
+        setLoggedInCompanyName(userInfo.company_id || userInfo.company_name || userInfo.organization || userInfo.orgName || "Your Company");
+      }
+    }
+  } catch (error) {
+    console.error("Error extracting user info from token/localStorage:", error);
+    setLoggedInUserName("Your Name");
+    setLoggedInCompanyName("Your Company");
+  }
+};
+
+useEffect(() => {
+  if (leadId) {
+    fetchLeadData();
+    fetchLostReasons();
+    getUserInfoFromLocalStorage();
+    fetchQuotations();
+  }
+}, [leadId]);
+
+useEffect(() => {
+  if (isMailOpen && leadData) {
+    if (leadData.cemail && sentTo !== leadData.cemail) {
+      setSentTo(leadData.cemail);
+    }
+
+    const leadFirstName = leadData.cFirstName || '';
+    const leadLastName = leadData.cLastName || '';
+    const leadProjectName = leadData.cProjectName || 'our services/products';
+
+    const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
+
+    const defaultContent = `
+      <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
+      <p>Hope this email finds you well.</p>
+      <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
+      <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
+      <p>Best regards,</p>
+      <p>${loggedInUserName}</p>
+      <p>${loggedInCompanyName}</p>
+    `;
+    setMailSubject(defaultSubject);
+    setMailContent(defaultContent);
+  }
+}, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]);
+
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, false] }],
+    [{ font: [] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    ["bold", "italic", "underline", "strike", "blockquote"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link"],
+    [{ color: [] }, { background: [] }],
+    ["clean"],
+  ],
+};
+
+const formats = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "blockquote",
+  "list",
+  "bullet",
+  "link",
+  "color",
+  "background",
+];
+
+const fetchTemplates = async () => {
+  try {
+    setTemplatesLoading(true);
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch templates");
+
+    const data = await response.json();
+    setTemplates(data.data || []);
+  } catch (error) {
+    console.error("Error fetching templates:", error);
+    showPopup("Error", "Failed to load email templates", "error");
+  } finally {
+    setTemplatesLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (isMailOpen) {
+    fetchTemplates();
+  }
+},[isMailOpen]);
+
+const applyTemplate = (template) => {
+  setMailSubject(template.mailTitle);
+  setMailContent(template.mailBody);
+};
+
+// You'll need to fetch stages for the StatusBar component
+const [stages, setStages] = useState([]);
+
+const fetchStages = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch stages');
+    const data = await response.json();
+
+    const formattedStages = Array.isArray(data.response)
+      ? data.response
+          .map(item => ({
+            id: item.ilead_status_id,
+            name: item.clead_name,
+            order: item.orderId || 9999,
+            bactive: item.bactive,
+          }))
+          .sort((a, b) => a.order - b.order)
+      : [];
+
+    setStages(formattedStages);
+  } catch (err) {
+    console.error('Error fetching stages:', err.message);
+  }
+};
+
+useEffect(() => {
+  fetchStages();
+}, []);
+
+const formatDate = (dateInput) => {
+  if (!dateInput) return "N/A";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "Invalid Date";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+};
+
+return (
+  <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
+    {showConfetti && (
+      <Confetti
+        width={window.innerWidth}
+        height={window.innerHeight}
+        recycle={false}
+        numberOfPieces={500}
+      />
+    )}
+
+    {/* Left Column: Profile Card & Action Card */}
+    <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
+      <div className="sticky top-4 z-10 space-y-4">
+        <ProfileCard
+          leadId={leadId}
+          isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
+        {isLeadActive && <ActionCard leadId={leadId} />}
+      </div>
+    </div>
+
+    {/* Right Column: Status Bar, Tabs, and Content */}
+    <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+      <StatusBar
+        leadId={leadId}
+        leadData={leadData}
+        isLost={isLost}
+        isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
+      />
+
+      {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
+        <Box className="mb-4">
+          <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
+            <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
+              Quotation Available!
+            </Typography>
+          </div>
+        </Box>
       )}
 
-      {/* Left Column: Profile Card & Action Card */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
-        <div className="sticky top-4 z-10 space-y-4">
-          <ProfileCard
+      {/* Tab Navigation and Action Buttons */}
+      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+        <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+          {["Activity", "Follow -Up", "Comments", "Reminders"].map((label, idx) => (
+            <button
+              key={label}
+              onClick={() => handleTabChange(null, idx)}
+              className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+                tabIndex === idx
+                  ? "bg-blue-100 shadow text-blue-900"
+                  : "text-gray-500 hover:bg-white hover:text-blue-900"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+          {/* Project Value Display - Only shown when there's a project value */}
+          {projectValueDisplay && (
+            <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+              <FaCheck className="mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm md:text-base font-semibold">
+                Project Value: {projectValueDisplay}
+              </span>
+            </div>
+          )}
+          
+          {/* View Quotations Button (only visible when Won and has quotations) */}
+          {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
+            <button
+              onClick={() => setShowQuotationsList(true)}
+              className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+            >
+              <FaEye className="mr-1" /> View Quotations
+            </button>
+          )}
+          
+          
+          {/* Create Quotation Button (only visible when Won) */}
+          {showCreateQuotationButton && (
+            <button
+              className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+              onClick={() => setShowQuotationForm(true)}
+            >
+              <FaPlus className="mr-1" /> Create Quotation
+            </button>
+          )}
+          
+          {showActionButtons && (
+            <>
+              <button
+                onClick={() => setIsMailOpen(true)}
+                className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                title="Email"
+              >
+                <div className="w-px h-5 bg-gray-600"></div>
+                <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
+                <div className="w-px h-5 bg-gray-600"></div>
+              </button>
+
+              {!(leadData?.bisConverted === true) && (
+                <button
+                  className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                  onClick={handleWonClick}
+                >
+                  <FaPlus className="mr-1" /> Won
+                </button>
+              )}
+
+              <button
+                className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
+                onClick={handleLostClick}
+              >
+                Lost
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <Box className="mt-4 relative z-0 w-full">
+        {tabIndex === 0 && (
+          <LeadTimeline
             leadId={leadId}
             isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
           />
-          {isLeadActive && <ActionCard leadId={leadId} />}
-        </div>
-      </div>
-
-      {/* Right Column: Status Bar, Tabs, and Content */}
-      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
-        <StatusBar
-          leadId={leadId}
-          leadData={leadData}
-          isLost={isLost}
-          isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
-        />
-
-        {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
-          <Box className="mb-4">
-            <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
-              <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
-                Quotation Available!
-              </Typography>
-            </div>
-          </Box>
         )}
+        {tabIndex === 1 && <Tasks leadId={leadId} />}
+        {tabIndex === 2 && <Comments leadId={leadId} />}
+        {tabIndex === 3 && <RemainderPage leadId={leadId} />}
+      </Box>
+    </div>
 
-        {/* Tab Navigation and Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-            {["Activity", "Follow -Up", "Comments", "Reminders"].map((label, idx) => (
-              <button
-                key={label}
-                onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx
-                    ? "bg-blue-100 shadow text-blue-900"
-                    : "text-gray-500 hover:bg-white hover:text-blue-900"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+    {/* Quotation Form Dialog */}
+    <QuotationForm
+      open={showQuotationForm}
+      onClose={() => setShowQuotationForm(false)}
+      leadId={leadId}
+      leadData={leadData}
+      companyInfo={companyInfo}
+      quotations={quotations}
+      onQuotationCreated={handleQuotationCreated}
+    />
 
-          <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-            {/* Project Value Display - Only shown when there's a project value */}
-            {projectValueDisplay && (
-              <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
-                <FaCheck className="mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm md:text-base font-semibold">
-                  Project Value: {projectValueDisplay}
-                </span>
-              </div>
-            )}
-            
-            {/* View Quotations Button (only visible when Won and has quotations) */}
-            {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
-              <button
-                onClick={() => setShowQuotationsList(true)}
-                className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-              >
-                <FaEye className="mr-1" /> View Quotations
-              </button>
-            )}
-            
-            {/* Create Quotation Button (only visible when Won) */}
-            {showCreateQuotationButton && (
-              <button
-                className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                onClick={() => setShowQuotationForm(true)}
-              >
-                <FaPlus className="mr-1" /> Create Quotation
-              </button>
-            )}
-            
-            {showActionButtons && (
-              <>
-                <button
-                  onClick={() => setIsMailOpen(true)}
-                  className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
-                  title="Email"
-                >
-                  <div className="w-px h-5 bg-gray-600"></div>
-                  <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
-                  <div className="w-px h-5 bg-gray-600"></div>
-                </button>
-
-                {!(leadData?.bisConverted === true) && (
-                  <button
-                    className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                    onClick={handleWonClick}
-                  >
-                    <FaPlus className="mr-1" /> Won
-                  </button>
-                )}
-
-                <button
-                  className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
-                  onClick={handleLostClick}
-                >
-                  Lost
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <Box className="mt-4 relative z-0 w-full">
-          {tabIndex === 0 && (
-            <LeadTimeline
-              leadId={leadId}
-              isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+    {/* Remark Dialog */}
+    <Dialog 
+      open={showRemarkDialog} 
+      onClose={() => setShowRemarkDialog(false)}
+      fullWidth
+      maxWidth="sm"
+    >
+      <DialogTitle>Enter Remark for Won Status</DialogTitle>
+      <DialogContent>
+        <TextField
+          label="Remark *"
+          fullWidth
+          multiline
+          rows={3}
+          value={remarkData.remark}
+          onChange={e => setRemarkData({...remarkData, remark: e.target.value})}
+          sx={{ mt: 2 }}
+          InputLabelProps={{ shrink: true }}
+        />
+        <Autocomplete
+          options={currencies}
+          getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
+          value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
+          onChange={(e, newValue) =>
+            setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Currency *"
+              sx={{ mt: 2 }}
+              error={!remarkData.currencyId}
+              helperText={!remarkData.currencyId ? 'Currency is required' : ''}
+              InputLabelProps={{ shrink: true }}
             />
           )}
-          {tabIndex === 1 && <Tasks leadId={leadId} />}
-          {tabIndex === 2 && <Comments leadId={leadId} />}
-          {tabIndex === 3 && <RemainderPage leadId={leadId} />}
-        </Box>
-      </div>
+        />
+        
+        <TextField
+          label="Project Value (optional)"
+          type="number"
+          fullWidth
+          value={remarkData.projectValue}
+          onChange={e => setRemarkData({...remarkData, projectValue: e.target.value})}
+          sx={{ mt: 2 }}
+          InputLabelProps={{ shrink: true }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+        <Button onClick={handleRemarkSubmit} variant="contained">
+          Submit
+        </Button>
+      </DialogActions>
+    </Dialog>
 
-      {/* Quotation Form Dialog */}
-      <QuotationForm
-        open={showQuotationForm}
-        onClose={() => setShowQuotationForm(false)}
-        leadId={leadId}
-        leadData={leadData}
-        companyInfo={companyInfo}
-        quotations={quotations}
-        onQuotationCreated={handleQuotationCreated}
-      />
-
-      {/* Remark Dialog */}
-      <Dialog 
-        open={showRemarkDialog} 
-        onClose={() => setShowRemarkDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Enter Remark for Won Status</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Remark *"
-            fullWidth
-            multiline
-            rows={3}
-            value={remarkData.remark}
-            onChange={e => setRemarkData({...remarkData, remark: e.target.value})}
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <Autocomplete
-            options={currencies}
-            getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
-            value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
-            onChange={(e, newValue) =>
-              setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Currency *"
-                sx={{ mt: 2 }}
-                error={!remarkData.currencyId}
-                helperText={!remarkData.currencyId ? 'Currency is required' : ''}
-                InputLabelProps={{ shrink: true }}
-              />
-            )}
-          />
-          
-          <TextField
-            label="Project Value (optional)"
-            type="number"
-            fullWidth
-            value={remarkData.projectValue}
-            onChange={e => setRemarkData({...remarkData, projectValue: e.target.value})}
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-          <Button onClick={handleRemarkSubmit} variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Quotations List Dialog with Detailed View */}
-      <Dialog 
-        open={showQuotationsList} 
-        onClose={() => setShowQuotationsList(false)} 
-        maxWidth="lg" 
-        fullWidth
-        scroll="paper"
-      >
-        <DialogTitle className="bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-blue-700">
-              Quotation Details
-            </div>
-            <IconButton onClick={() => setShowQuotationsList(false)} size="small">
-              <MdExpandLess />
-            </IconButton>
+    {/* Quotations List Dialog with Detailed View */}
+    <Dialog 
+      open={showQuotationsList} 
+      onClose={() => setShowQuotationsList(false)} 
+      maxWidth="lg" 
+      fullWidth
+      scroll="paper"
+    >
+      <DialogTitle className="bg-blue-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-blue-700">
+            Quotation Details
           </div>
-        </DialogTitle>
-        <DialogContent dividers className="bg-gray-50">
-          {quotationsLoading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" height={200}>
-              <CircularProgress />
-            </Box>
-          ) : quotations.length > 0 ? (
-            <List>
-              {quotations.map((quotation) => (
-                <Card key={quotation.iQuotation_id} className="mb-3">
-                  <ListItem 
-                    className="bg-blue-50"
-                    secondaryAction={
-                      <div className="flex items-center">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadPdf(quotation);
-                          }}
-                          title="Download PDF"
-                        >
-                          <FaDownload />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
-                        >
-                          {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
-                        </IconButton>
+          <IconButton onClick={() => setShowQuotationsList(false)} size="small">
+            <MdExpandLess />
+          </IconButton>
+        </div>
+      </DialogTitle>
+      <DialogContent dividers className="bg-gray-50">
+        {quotationsLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height={200}>
+            <CircularProgress />
+          </Box>
+        ) : quotations.length > 0 ? (
+          <List>
+            {quotations.map((quotation) => (
+              <Card key={quotation.iQuotation_id} className="mb-3">
+                <ListItem 
+                  className="bg-blue-50"
+                  secondaryAction={
+                    <div className="flex items-center">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewPdf(quotation);
+                        }}
+                        title="View PDF"
+                      >
+                        <Visibility />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadPdf(quotation);
+                        }}
+                        title="Download PDF"
+                      >
+                        {/* <FaDownload /> */}
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
+                      >
+                        {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
+                      </IconButton>
+                    </div>
+                  }
+                >
+                  <ListItemText
+                    primary={
+                      <Typography variant="h6" className="text-blue-800">
+                        {quotation.cQuote_number}
+                      </Typography>
+                    }
+                    secondary={
+                      <div className="text-sm text-gray-600">
+                        Valid until: {formatDate(quotation.dValid_until)}
+                        {quotation.fTotal_amount && ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
                       </div>
                     }
-                  >
-                    <ListItemText
-                      primary={
-                        <Typography variant="h6" className="text-blue-800">
-                          {quotation.cQuote_number}
+                  />
+                </ListItem>
+                <Collapse in={expandedQuotation === quotation.iQuotation_id} timeout="auto" unmountOnExit>
+                  <CardContent>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="subtitle2" className="font-bold">Terms & Conditions</Typography>
+                        <Typography variant="body2" className="mt-2 text-gray-700">
+                          {quotation.cTerms || "No terms specified"}
                         </Typography>
-                      }
-                      secondary={
-                        <div className="text-sm text-gray-600">
-                          Valid until: {formatDate(quotation.dValid_until)}
-                          {quotation.fTotal_amount && ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
-                        </div>
-                      }
-                    />
-                  </ListItem>
-                  <Collapse in={expandedQuotation === quotation.iQuotation_id} timeout="auto" unmountOnExit>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="subtitle2" className="font-bold">Terms & Conditions</Typography>
-                          <Typography variant="body2" className="mt-2 text-gray-700">
-                            {quotation.cTerms || "No terms specified"}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="subtitle2" className="font-bold">Financial Details</Typography>
-                          <TableContainer component={Paper} className="mt-2">
-                            <Table size="small">
-                              <TableBody>
-                                <TableRow>
-                                  <TableCell className="font-bold">Subtotal</TableCell>
-                                  <TableCell>{quotation.fSub_total?.toFixed(2) || "0.00"}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell className="font-bold">Tax Amount</TableCell>
-                                  <TableCell>{quotation.fTax_amount?.toFixed(2) || "0.00"}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell className="font-bold">Total Amount</TableCell>
-                                  <TableCell className="font-bold">{quotation.fTotal_amount?.toFixed(2) || "0.00"}</TableCell>
-                                </TableRow>
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Typography variant="subtitle2" className="font-bold">Additional Information</Typography>
-                          <Typography variant="body2" className="mt-2 text-gray-700">
-                            {quotation.cNotes || "No additional notes"}
-                          </Typography>
-                        </Grid>
                       </Grid>
-                    </CardContent>
-                  </Collapse>
-                </Card>
-              ))}
-            </List>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No quotations found for this lead.
-            </div>
-          )}
-        </DialogContent>
-        <DialogActions className="bg-gray-100">
-          <Button onClick={() => setShowQuotationsList(false)} variant="outlined">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Lead Lost Reason Dialog */}
-      {leadLostDescriptionTrue && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <div>
-                <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
-                  Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="lostReason"
-                  name="lostReason"
-                  value={selectedLostReasonId}
-                  onChange={handleReasonChange}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  {lostReasons.map((reason) => (
-                    <option
-                      key={reason.ilead_lost_reason_id}
-                      value={reason.ilead_lost_reason_id}
-                    >
-                      {reason.cLeadLostReason}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="subtitle2" className="font-bold">Financial Details</Typography>
+                        <TableContainer component={Paper} className="mt-2">
+                          <Table size="small">
+                            <TableBody>
+                              <TableRow>
+                                <TableCell className="font-bold">Subtotal</TableCell>
+                                <TableCell>{quotation.fSub_total?.toFixed(2) || "0.00"}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-bold">Tax Amount</TableCell>
+                                <TableCell>{quotation.fTax_amount?.toFixed(2) || "0.00"}</TableCell>
+                              </TableRow>
+                              <TableRow>
+                                <TableCell className="font-bold">Total Amount</TableCell>
+                                <TableCell className="font-bold">{quotation.fTotal_amount?.toFixed(2) || "0.00"}</TableCell>
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" className="font-bold">Additional Information</Typography>
+                        <Typography variant="body2" className="mt-2 text-gray-700">
+                          {quotation.cNotes || "No additional notes"}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Collapse>
+              </Card>
+            ))}
+          </List>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            No quotations found for this lead.
+          </div>
+        )}
+      </DialogContent>
+      <DialogActions className="bg-gray-100">
+        <Button onClick={() => setShowQuotationsList(false)} variant="outlined">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
 
-              <div>
-                <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
-                  Remarks
-                </label>
-                <textarea
-                  id="lostDescription"
-                  name="lostDescription"
-                  rows="3"
-                  value={lostDescription}
-                  onChange={(e) => setLostDescription(e.target.value)}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                  placeholder="Enter a brief description for marking as lost..."
-                ></textarea>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setLeadLostDescriptionTrue(false)}
-                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
-                >
-                  Submit
-                </button>
-              </div>
+    {/* PDF Viewer Dialog */}
+    <PDFViewer
+      open={pdfViewerOpen}
+      onClose={() => setPdfViewerOpen(false)}
+      pdfUrl={currentPdfUrl}
+      quotationNumber={currentQuotation?.cQuote_number || ''}
+      onDownload={handleDownloadFromViewer}
+    />
+    
+    {/* Lead Lost Reason Dialog */}
+    {leadLostDescriptionTrue && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div>
+              <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
+                Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
+              </label>
+              <select
+                id="lostReason"
+                name="lostReason"
+                value={selectedLostReasonId}
+                onChange={handleReasonChange}
+                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                required
+              >
+                <option value="">Select a reason</option>
+                {lostReasons.map((reason) => (
+                  <option
+                    key={reason.ilead_lost_reason_id}
+                    value={reason.ilead_lost_reason_id}
+                  >
+                    {reason.cLeadLostReason}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
+                Remarks
+              </label>
+              <textarea
+                id="lostDescription"
+                name="lostDescription"
+                rows="3"
+                value={lostDescription}
+                onChange={(e) => setLostDescription(e.target.value)}
+                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                placeholder="Enter a brief description for marking as lost..."
+              ></textarea>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setLeadLostDescriptionTrue(false)}
+                className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+              >
+                Submit
+              </button>
+            </div>
             </form>
           </div>
         </div>
@@ -1127,7 +1251,8 @@ const LeadDetailView = () => {
                         <Typography variant="body2" className="text-gray-600 mt-1">
                           Project Value: {remark.currency_details?.symbol || '$'} {remark.project_value}
                         </Typography>
-                      )}
+                      )
+                      }
                       <Typography variant="caption" className="text-gray-400">
                         Added on: {formatDate(remark.dCreatedDate)}
                       </Typography>

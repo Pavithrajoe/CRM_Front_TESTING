@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
@@ -42,7 +43,8 @@ export default function LeadsTable({ data }) {
       .filter(
         (lead) =>
           lead.name.toLowerCase().includes(term) ||
-          lead.assignedTo.toLowerCase().includes(term)
+          lead.assignedTo.toLowerCase().includes(term) ||
+          lead.status.toLowerCase().includes(term)
       );
 
     // for sort
@@ -95,7 +97,7 @@ export default function LeadsTable({ data }) {
         <div className="flex gap-3 w-full sm:w-auto">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search here"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);

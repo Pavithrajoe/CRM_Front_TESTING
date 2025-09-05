@@ -165,7 +165,7 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base">{message}</p>
+                      <p className="text-gray-700 text-base truncate">{message}</p>
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
   <img
     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
@@ -234,7 +234,7 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base">{message}</p>
+                      <p className="text-gray-700 text-base truncate">{message}</p>
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}

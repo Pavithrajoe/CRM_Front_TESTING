@@ -625,23 +625,25 @@ const QuotationForm = ({
                 <div>
                   <label htmlFor="termIds" className="block text-sm font-medium text-gray-700 mb-1">Standard Terms</label>
                   <select
-                    id="termIds"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32"
-                    value={formData.termIds}
-                    multiple
-                    onChange={e => {
-                      const selected = [...e.target.selectedOptions].map(opt => parseInt(opt.value));
-                      setFormData({ ...formData, termIds: selected });
-                    }}
-                  >
-                    <option value="">None</option>
-                    {termsList.map(term => (
-                      <option key={term.iTerm_id} value={term.iTerm_id}>
-                        {term.cTerm_text}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple terms</p>
+  id="termIds"
+  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32"
+  value={formData.termIds || []}
+  multiple
+  onChange={e => {
+    const selected = Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value, 10));
+    setFormData({ ...formData, termIds: selected });
+  }}
+>
+  {termsList
+    .filter(term => term.bActive) // only active terms
+    .map(term => (
+      <option key={term.iTerm_id} value={term.iTerm_id}>
+        {term.cTerm_text}
+      </option>
+    ))}
+</select>
+
+                  {/* <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple terms</p> */}
                 </div>
                 <div>
                   {/* <label htmlFor="cTerms" className="block text-sm font-medium text-gray-700 mb-1">Custom Terms</label>

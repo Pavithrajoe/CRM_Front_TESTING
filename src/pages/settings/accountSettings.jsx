@@ -3,30 +3,15 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ENDPOINTS } from '../../api/constraints';
 
-const ToggleSwitch = ({ label, description, enabled, onToggle }) => (
-  <div className="flex items-center justify-between border-b py-4">
-    <div className="flex items-center">
-      <label className="relative inline-flex items-center cursor-pointer">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={onToggle}
-          className="sr-only peer"
-        />
-        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-black transition-all duration-300"></div>
-        <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full border peer-checked:translate-x-full peer-checked:border-black transition-transform duration-300"></div>
-      </label>
-      <span className="ml-3 text-sm font-medium text-gray-700">{label}</span>
-    </div>
-    {description && <p className="text-sm text-gray-500 ml-4">{description}</p>}
-  </div>
-);
-
 const AccountSettings = () => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
   const companyId = user?.iCompany_id;
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Profile related state
   const [profile, setProfile] = useState({
     companyName: "",
     email: "",
@@ -39,99 +24,135 @@ const AccountSettings = () => {
     cityId: "",
   });
 
-  const [errors, setErrors] = useState({});
-  const [toggles, setToggles] = useState({
-    email: false,
-    contacts: false,
-    whatsapp: false,
+  // General settings (checkboxes + prefix)
+  const [generalSettings, setGeneralSettings] = useState({
+    whatsapp_active: false,
+    mail_active: false,
+    website_active: false,
+    phone_active: false,
+    ip_address: '',
+    quotation_prefix: '',
+    sub_src_active: false,
+    bactive: false,
   });
 
+  const [errors, setErrors] = useState({});
   const [leadFormType, setLeadFormType] = useState(null);
   const [businessTypes, setBusinessTypes] = useState([]);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
+  const [hasGeneralSettings, setHasGeneralSettings] = useState(false); // Track if settings exist
 
+  // Fetch business types
   useEffect(() => {
     if (!token) return;
-    axios
-      .get(`${ENDPOINTS.BASE_URL_IS}/business-type`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const list = res.data?.data?.data || [];
-        setBusinessTypes(list.filter(bt => bt.bactive));
-      })
-      .catch((err) => console.error("Error fetching business types:", err));
+    axios.get(`${ENDPOINTS.BASE_URL_IS}/business-type`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => {
+      const list = res.data?.data?.data || [];
+      setBusinessTypes(list.filter(bt => bt.bactive));
+    }).catch(console.error);
   }, [token]);
 
+  // Fetch company profile
   useEffect(() => {
     if (!token || !companyId) return;
     setLoading(true);
-    axios
-      .get(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const data = res.data.result;
-        if (data && data.cCompany_name) {
-          setIsProfileLoaded(true);
-          setProfile({
-            companyName: data.cCompany_name || "",
-            email: data.cemail_address || "",
-            phone: data.iPhone_no ? String(data.iPhone_no) : "",
-            gst: data.cGst_no || "",
-            website: data.cWebsite || "",
-            address1: data.caddress1 || "",
-            address2: data.caddress2 || "",
-            address3: data.caddress3 || "",
-            cityId: data.city?.cCity_name || "",
-          });
-          setToggles({
-            email: data.enableEmail || false,
-            contacts: data.enableContacts || false,
-            whatsapp: data.enableWhatsapp || false,
-          });
-          setLeadFormType(prev => prev ?? (Number(data.ibusiness_type) || (businessTypes[0]?.id || 1)));
-        }
-      })
-      .catch((err) => console.error("Error fetching profile:", err))
+    axios.get(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+      const data = res.data.result;
+      if (data && data.cCompany_name) {
+        setIsProfileLoaded(true);
+        setProfile({
+          companyName: data.cCompany_name || "",
+          email: data.cemail_address || "",
+          phone: data.iPhone_no ? String(data.iPhone_no) : "",
+          gst: data.cGst_no || "",
+          website: data.cWebsite || "",
+          address1: data.caddress1 || "",
+          address2: data.caddress2 || "",
+          address3: data.caddress3 || "",
+          cityId: data.city?.cCity_name || "",
+        });
+        setLeadFormType(prev => prev ?? (Number(data.ibusiness_type) || (businessTypes[0]?.id || 1)));
+      }
+    }).catch(console.error)
       .finally(() => setLoading(false));
   }, [token, companyId, businessTypes]);
 
+  // Fetch general settings (checkboxes + prefix)
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    axios.get(`${ENDPOINTS.GET_SETTINGS}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => {
+      const data = res.data.result;
+      // Check if settings already exist
+      const hasExistingSettings = !!data && Object.keys(data).length > 0;
+      setHasGeneralSettings(hasExistingSettings);
+      
+      if (hasExistingSettings) {
+        setGeneralSettings({
+          whatsapp_active: !!data.whatsapp_active,
+          mail_active: !!data.mail_active,
+          website_active: !!data.website_active,
+          phone_active: !!data.phone_active,
+          ip_address: data.ip_address || '',
+          quotation_prefix: data.quotation_prefix || '',
+          sub_src_active: !!data.sub_src_active,
+          bactive: !!data.bactive,
+        });
+      }
+      setError(null);
+    }).catch(() => setError("Failed to load general settings"))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  // Validation for profile fields
   const validateField = (name, value) => {
     const newErrors = { ...errors };
-    if (name === 'companyName' && value.length > 50) newErrors.companyName = 'Maximum 50 characters allowed';
+    if (name === 'companyName' && value.length > 50)
+      newErrors.companyName = 'Maximum 50 characters allowed';
     else if (name === 'email') {
       if (value.length > 50) newErrors.email = 'Maximum 50 characters allowed';
-      else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) newErrors.email = 'Invalid email format';
-    }
-    else if (name === 'phone') {
+      else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+        newErrors.email = 'Invalid email format';
+    } else if (name === 'phone') {
       if (!/^\d{10}$/.test(value)) newErrors.phone = 'Must be 10 digits';
-    }
-    else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value)) newErrors.gst = 'Must be exactly 15 alphanumeric characters';
-    else if (name === 'website' && value.length > 50) newErrors.website = 'Maximum 50 characters allowed';
-    else if (['address1', 'address2', 'address3'].includes(name) && value.length > 100) newErrors[name] = 'Maximum 100 characters allowed';
+    } else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value))
+      newErrors.gst = 'Must be exactly 15 alphanumeric characters';
+    else if (name === 'website' && value.length > 50)
+      newErrors.website = 'Maximum 50 characters allowed';
+    else if (['address1', 'address2', 'address3'].includes(name) && value.length > 100)
+      newErrors[name] = 'Maximum 100 characters allowed';
     else if (name === 'cityId' && isNaN(value)) newErrors.cityId = 'Must be a number';
     else delete newErrors[name];
+
     setErrors(newErrors);
     return !newErrors[name];
   };
 
-  const handleInputChange = (e) => {
+  // Profile input change
+  const handleInputChange = e => {
     const { name, value } = e.target;
     validateField(name, value);
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleToggleChange = (key) => {
-    setToggles(prev => ({ ...prev, [key]: !prev[key] }));
+  // Toggle checkbox change for general settings
+  const handleToggleChange = key => {
+    setGeneralSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleLeadFormTypeChange = (event) => {
-    setLeadFormType(Number(event.target.value));
+  // Lead form type change
+  const handleLeadFormTypeChange = e => {
+    setLeadFormType(Number(e.target.value));
   };
 
-  const buildPayload = () => ({
+  // Build payload for company profile (PUT/POST)
+  const buildProfilePayload = () => ({
     cCompany_name: profile.companyName.trim(),
     cLogo_link: "https://xcodefix.com/logo.png",
     iUser_no: Number(user?.iUser_no) || 2,
@@ -142,25 +163,20 @@ const AccountSettings = () => {
     caddress3: profile.address3.trim(),
     cGst_no: profile.gst ? profile.gst.trim() : null,
     cemail_address: profile.email.trim() || null,
-    enableEmail: toggles.email,
-    enableContacts: toggles.contacts,
-    enableWhatsapp: toggles.whatsapp,
     ibusiness_type: leadFormType,
   });
 
-  const handleSaveChanges = useCallback(async () => {
+  // Save company profile (PUT)
+  const handleSaveProfileChanges = useCallback(async () => {
     if (Object.keys(errors).length > 0) {
       alert("Please fix validation errors before saving");
       return;
     }
     setLoading(true);
     try {
-      await axios.put(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, buildPayload(), {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.put(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, buildProfilePayload(), {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const updatedType = leadFormType;
-      const event = new CustomEvent("leadFormTypeChanged", { detail: updatedType });
-      window.dispatchEvent(event);
       alert("Profile updated successfully!");
     } catch (err) {
       alert("Failed to update profile");
@@ -168,71 +184,81 @@ const AccountSettings = () => {
     } finally {
       setLoading(false);
     }
-  }, [profile, toggles, leadFormType, token, companyId, errors]);
+  }, [profile, leadFormType, token, companyId, errors]);
 
-  const handleCreateProfile = useCallback(async () => {
-    if (Object.keys(errors).length > 0) {
-      alert("Please fix validation errors before creating");
-      return;
-    }
+  // Save general settings (POST or PUT)
+  const handleSaveGeneralSettings = useCallback(async () => {
     setLoading(true);
     try {
-      await axios.post(`${ENDPOINTS.BASE_URL_IS}/company`, buildPayload(), {
-        headers: { Authorization: `Bearer ${token}` },
+      // Use POST if no settings exist, PUT if they do
+      const method = hasGeneralSettings ? 'put' : 'post';
+      
+      await axios[method](`${ENDPOINTS.GENERAL_SETTING}`, generalSettings, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Profile created successfully!");
-      setIsProfileLoaded(true);
-      setShowCreatePanel(false);
+      
+      // Update the flag after successful save
+      if (!hasGeneralSettings) {
+        setHasGeneralSettings(true);
+      }
+      
+      alert("General settings saved successfully!");
     } catch (err) {
-      alert("Failed to create profile");
+      alert("Failed to save general settings");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [profile, toggles, leadFormType, token, errors]);
+  }, [generalSettings, token, hasGeneralSettings]);
 
   return (
     <div className="relative w-full bg-[#f9f9f9] rounded-3xl shadow-md p-6 mt-4 border border-gray-200">
       {loading && (
         <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-50 rounded-3xl">
-          <div className="w-8 h-8 border-4 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
+
+      {/* Profile Section */}
       <div className="mb-6 flex items-center gap-4">
         <h1 className="text-[22px] font-semibold text-gray-900">Profile Settings</h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {[["Company Name*", "companyName", "text", 50],
+        {[
+          ["Company Name*", "companyName", "text", 50],
           ["Email", "email", "email", 50],
           ["Phone*", "phone", "tel", 10],
           ["GST No", "gst", "text", 15],
           ["Website", "website", "url", 50],
           ["Address 1", "address1", "text", 50],
           ["Address 2", "address2", "text", 50],
-          ["Address 3", "address3", "text", 50]].map(([label, name, type, maxLength]) => (
-            <div key={name} className="flex flex-col">
-              <label className="text-xs text-gray-600 mb-1">{label}</label>
-              <input
-                type={type}
-                name={name}
-                value={profile[name]}
-                onChange={handleInputChange}
-                maxLength={maxLength}
-                className={`px-3 py-2 rounded-xl border ${
-                  errors[name] ? 'border-red-500' : 'border-gray-300'
-                } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
-                disabled={loading}
-              />
-              {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-            </div>
-          ))}
+          ["Address 3", "address3", "text", 50],
+        ].map(([label, name, type, maxLength]) => (
+          <div key={name} className="flex flex-col">
+            <label className="text-xs text-gray-600 mb-1">{label}</label>
+            <input
+              type={type}
+              name={name}
+              value={profile[name]}
+              onChange={handleInputChange}
+              maxLength={maxLength}
+              className={`px-3 py-2 rounded-xl border ${
+                errors[name] ? "border-red-500" : "border-gray-300"
+              } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
+              disabled={loading}
+            />
+            {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+          </div>
+        ))}
       </div>
+
+      {/* Lead Form Type */}
       <div className="border-t pt-4 mb-6">
         <h2 className="text-[18px] font-medium text-gray-900 mb-4">Company Lead Form Type</h2>
         {businessTypes.length === 0 ? (
           <p className="text-gray-500 text-sm">Loading business types...</p>
         ) : (
-          <div className="flex flex-wrap gap-4 ">
+          <div className="flex flex-wrap gap-4">
             {businessTypes.map(bt => (
               <div key={bt.id} className="flex items-center">
                 <input
@@ -243,6 +269,7 @@ const AccountSettings = () => {
                   checked={leadFormType === bt.id}
                   onChange={handleLeadFormTypeChange}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                  disabled={loading}
                 />
                 <label htmlFor={`bt-${bt.id}`} className="ml-2 text-sm font-medium text-gray-700">
                   {bt.name}
@@ -252,40 +279,67 @@ const AccountSettings = () => {
           </div>
         )}
       </div>
+
+      {/* General Settings Section */}
       <div className="border-t pt-4 mb-6 space-y-3">
-        <h2 className="text-[18px] font-medium text-gray-900 mb-2">Notification Settings</h2>
-        {["email", "contacts", "whatsapp"].map(key => (
-          <div key={key} className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-800 font-medium capitalize">{key} Notifications</p>
-              <p className="text-xs text-gray-500">Enable {key} notifications</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={toggles[key]}
-                onChange={() => handleToggleChange(key)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-400 rounded-full peer peer-checked:bg-blue-500 transition-all duration-300"></div>
-              <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white border border-gray-300 rounded-full peer-checked:translate-x-full peer-checked:border-blue-600 transition-transform duration-300"></div>
-            </label>
+        <h2 className="text-[18px] font-medium text-gray-900 mb-2">Company Additional Settings</h2>
+        {[
+          { id: "whatsapp_active", label: "WhatsApp Notifications" },
+          { id: "mail_active", label: "Email Notifications" },
+          { id: "website_active", label: "Website Active" },
+          { id: "phone_active", label: "Phone Active" },
+          { id: "sub_src_active", label: "Sub Service Active" },
+        ].map(({ id, label }) => (
+          <div key={id} className="flex items-center">
+            <input
+              type="checkbox"
+              id={id}
+              checked={generalSettings[id]}
+              onChange={() => handleToggleChange(id)}
+              className="mr-2"
+              disabled={loading}
+            />
+            <label htmlFor={id} className="font-medium text-gray-700">{label}</label>
           </div>
         ))}
+        <div className="flex items-center mt-3">
+          <label htmlFor="quotation_prefix" className="font-medium text-gray-700 mr-3">
+            Set your company prefix
+          </label>
+          <input
+            type="text"
+            id="quotation_prefix"
+            name="quotation_prefix"
+            value={generalSettings.quotation_prefix}
+            onChange={e => setGeneralSettings(prev => ({ ...prev, quotation_prefix: e.target.value }))}
+            className="border rounded-lg p-2"
+            disabled={loading}
+          />
+        </div>
+        <button
+          className="mt-3 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
+          onClick={handleSaveGeneralSettings}
+          disabled={loading}
+        >
+          Save General Settings
+        </button>
       </div>
+
+      {/* Profile Save Button */}
       <div className="flex justify-end gap-3">
         {isProfileLoaded ? (
           <button
-            onClick={handleSaveChanges}
+            onClick={handleSaveProfileChanges}
             disabled={loading || Object.keys(errors).length > 0}
-            className="px-5 py-2 bg-blue-600 text-white text-sm rounded-full hover:bg-blue-700 transition disabled:opacity-50"
+            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
           >
-            Save Changes
+            Save Profile Changes
           </button>
         ) : (
           <p className="text-gray-600">Ask your admin to update</p>
         )}
       </div>
+
       <AnimatePresence>
         {showCreatePanel && (
           <motion.div
@@ -297,7 +351,8 @@ const AccountSettings = () => {
             <motion.div className="bg-white rounded-2xl p-6 w-96 shadow-xl border border-gray-200">
               <h2 className="text-lg font-semibold mb-4 text-gray-900">Create New Profile</h2>
               <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-auto mb-4">
-                {[["Company Name*", "companyName", "text", 50],
+                {[
+                  ["Company Name*", "companyName", "text", 50],
                   ["Email", "email", "email", 50],
                   ["Phone*", "phone", "tel", 10],
                   ["GST No", "gst", "text", 15],
@@ -305,23 +360,24 @@ const AccountSettings = () => {
                   ["Address 1", "address1", "text", 50],
                   ["Address 2", "address2", "text", 50],
                   ["Address 3", "address3", "text", 50],
-                  ["City ID", "cityId", "number"]].map(([label, name, type, maxLength]) => (
-                    <div key={name} className="flex flex-col">
-                      <label className="text-xs text-gray-600 mb-1">{label}</label>
-                      <input
-                        type={type}
-                        name={name}
-                        value={profile[name] || ""}
-                        onChange={handleInputChange}
-                        maxLength={maxLength}
-                        className={`px-3 py-2 rounded-xl border ${
-                          errors[name] ? 'border-red-500' : 'border-gray-300'
-                        } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
-                        disabled={loading}
-                      />
-                      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-                    </div>
-                  ))}
+                  ["City ID", "cityId", "number"]
+                ].map(([label, name, type, maxLength]) => (
+                  <div key={name} className="flex flex-col">
+                    <label className="text-xs text-gray-600 mb-1">{label}</label>
+                    <input
+                      type={type}
+                      name={name}
+                      value={profile[name] || ""}
+                      onChange={handleInputChange}
+                      maxLength={maxLength}
+                      className={`px-3 py-2 rounded-xl border ${
+                        errors[name] ? 'border-red-500' : 'border-gray-300'
+                      } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
+                      disabled={loading}
+                    />
+                    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+                  </div>
+                ))}
               </div>
               <div className="flex justify-end gap-2 mt-2">
                 <button
@@ -335,6 +391,7 @@ const AccountSettings = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

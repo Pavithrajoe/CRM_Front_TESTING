@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaGlobe, FaCrown } from 'react-icons/fa';
-import { LayoutGrid, List, Filter, RotateCw } from 'lucide-react';
+import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser } from 'react-icons/fa';
+import { LayoutGrid, List, Filter, RotateCw, Users } from 'lucide-react';
 import ProfileHeader from '../../Components/common/ProfileHeader';
 import Loader from '../../Components/common/Loader';
 import { ENDPOINTS } from '../../api/constraints';
@@ -41,49 +41,56 @@ const LeadCardViewPage = () => {
     const [leads, setLeads] = useState([]);               
     const [displayedData, setDisplayedData] = useState([]);    
 
+    // New states for bulk assignment
+    const [selectedLeads, setSelectedLeads] = useState([]);
+    const [showBulkActions, setShowBulkActions] = useState(false);
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [usersList, setUsersList] = useState([]);
+    const [selectedUser, setSelectedUser] = useState('');
+    const [assignLoading, setAssignLoading] = useState(false);
+    const [assignError, setAssignError] = useState(null);
+    const [assignSuccess, setAssignSuccess] = useState(false);
+
     const [selectedPotential, setSelectedPotential] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
     const token = localStorage.getItem("token"); 
 
+    useEffect(() => {
+        // Fetch potentials
+        fetch(ENDPOINTS.MASTER_POTENTIAL_GET, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data?.data) {
+                const activePotentials = data.data.filter(p => p.bactive);
+                setPotentials(activePotentials);
+            }
+        })
+        .catch(err => console.error(err));
+
+        // Fetch statuses
+        fetch(ENDPOINTS.MASTER_STATUS_GET, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data?.response) {
+                const activeStatuses = data.response
+                .filter(s => s.bactive)
+                .sort((a, b) => (a.orderId || 0) - (b.orderId || 0));
+                setStatuses(activeStatuses);
+            }
+        })
+        .catch(err => console.error(err));
+    }, [token]);
 
     useEffect(() => {
-  // Fetch potentials
-  fetch(ENDPOINTS.MASTER_POTENTIAL_GET, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data?.data) {
-        const activePotentials = data.data.filter(p => p.bactive);
-        setPotentials(activePotentials);
-      }
-    })
-    .catch(err => console.error(err));
-
-  // Fetch statuses
-  fetch(ENDPOINTS.MASTER_STATUS_GET, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data?.response) {
-        const activeStatuses = data.response
-          .filter(s => s.bactive)
-          .sort((a, b) => (a.orderId || 0) - (b.orderId || 0));
-        setStatuses(activeStatuses);
-      }
-    })
-    .catch(err => console.error(err));
-}, [token]);
-
-useEffect(() => {
-//   console.log("Leads state updated:", leads);
-}, [leads]);
-
+        // console.log("Leads state updated:", leads);
+    }, [leads]);
 
     useEffect(() => {
-        const handleRefreshEvent = () =>
-             {
+        const handleRefreshEvent = () => {
             setRefreshTrigger(prev => prev + 1);
         };
         window.addEventListener('leadDataUpdated', handleRefreshEvent);
@@ -151,13 +158,61 @@ useEffect(() => {
         }
     }, []);
 
+// Fetch users for assignment
+useEffect(() => {
+    if (!currentToken) return;
+    
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch(ENDPOINTS.GET_USERS, {
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                },
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Users data:", data);
+                
+                // Handle different response structures
+                let usersArray = [];
+                
+                if (Array.isArray(data)) {
+                    usersArray = data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    usersArray = data.data;
+                } else if (data.response && Array.isArray(data.response)) {
+                    usersArray = data.response;
+                } else {
+                    console.error("Unexpected response structure:", data);
+                }
+                
+                // Filter out any invalid users and ensure iuser_id exists
+                const validUsers = usersArray.filter(user => 
+                    user && user.iUser_id !== undefined && user.iUser_id !== null
+                );
+                
+                setUsersList(validUsers);
+            } else {
+                console.error("Failed to fetch users for assignment");
+                setUsersList([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch users:", error);
+            setUsersList([]);
+        }
+    };
+    
+    fetchUsers();
+}, [currentToken]);
+
     const formatDate = (dateStr) =>
         dateStr
             ? new Date(dateStr).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'numeric',
-                  year: 'numeric',
-              })
+                day: '2-digit',
+                month: 'numeric',
+                year: 'numeric',
+            })
             : '-';
 
     const getStatusColor = (status) => {
@@ -187,7 +242,6 @@ useEffect(() => {
                 return 'bg-gray-300 text-gray-700';
         }
     };
-
 
     const isWithinDateRange = (date) => {
         if (!date) return true;
@@ -266,7 +320,6 @@ useEffect(() => {
                 throw new Error(errorDetails);
             }
             const data = await res.json();
-            // console.log("Fetched leads data:", data);
             const sorted = (Array.isArray(data.details) ? data.details : []).sort(
                 (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
             );
@@ -300,7 +353,6 @@ useEffect(() => {
                 throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
             }
             const data = await res.json();
-            // console.log("Fetched lost leads data:", data);
             const sortedLost = (Array.isArray(data.data) ? data.data : [])
                 .sort((a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0));
             setLostLeads(sortedLost);
@@ -321,13 +373,17 @@ useEffect(() => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-            });
+            const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${currentToken}`,
+  },
+  body: JSON.stringify({
+    leadIds: selectedLeads,
+    assignedTo: parseInt(selectedUser) 
+  }),
+});
             if (!res.ok) {
                 const errorData = await res.text();
                 throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
@@ -507,89 +563,80 @@ useEffect(() => {
     }, [dataToDisplay, sortConfig]);
 
     const totalPages = Math.ceil(sortedData.length / leadsPerPage);
-//     const displayedData = sortedData.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage);
-useEffect(() => {
-    const paginatedData = sortedData.slice(
-        (currentPage - 1) * leadsPerPage,
-        currentPage * leadsPerPage
-    );
-    setDisplayedData(paginatedData);
-}, [sortedData, currentPage, leadsPerPage]);
 
+    useEffect(() => {
+        const paginatedData = sortedData.slice(
+            (currentPage - 1) * leadsPerPage,
+            currentPage * leadsPerPage
+        );
+        setDisplayedData(paginatedData);
+    }, [sortedData, currentPage, leadsPerPage]);
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1);
     };
 
+    const handleFilterApply = () => {
+        let filtered = [...allLeads];
 
-const handleFilterApply = () => {
-    let filtered = [...allLeads];
-    // console.log("Applying filters on leads:", filtered);
-
-    // Filter by Potential
-    if (selectedPotential) {
-        filtered = filtered.filter(
-            lead => lead.lead_potential?.clead_name === selectedPotential
-        );
-    }
-
-    // Filter by Status
-    if (selectedStatus) {
-        filtered = filtered.filter(
-            lead => lead.lead_status?.clead_name === selectedStatus
-        );
-    }
-
-    // Filter Lost Leads/Deals
-    if (selectedFilter === 'lost') {
-        if (!showLostLeads) {
+        // Filter by Potential
+        if (selectedPotential) {
             filtered = filtered.filter(
-                lead => lead.bisConverted === true || lead.bactive === true
+                lead => lead.lead_potential?.clead_name === selectedPotential
             );
         }
-        if (!showLostDeals) {
+
+        // Filter by Status
+        if (selectedStatus) {
             filtered = filtered.filter(
-                lead => lead.bisConverted !== true
+                lead => lead.lead_status?.clead_name === selectedStatus
             );
         }
-    }
-    // Filter by date
-    if (fromDate) {
-        const fromDateObj = new Date(fromDate);
-        fromDateObj.setHours(0, 0, 0, 0); // for midnight start
 
-        filtered = filtered.filter(
-            lead => new Date(lead.dcreated_dt) >= fromDateObj
-        );
-    }
+        // Filter Lost Leads/Deals
+        if (selectedFilter === 'lost') {
+            if (!showLostLeads) {
+                filtered = filtered.filter(
+                    lead => lead.bisConverted === true || lead.bactive === true
+                );
+            }
+            if (!showLostDeals) {
+                filtered = filtered.filter(
+                    lead => lead.bisConverted !== true
+                );
+            }
+        }
+        // Filter by date
+        if (fromDate) {
+            const fromDateObj = new Date(fromDate);
+            fromDateObj.setHours(0, 0, 0, 0);
 
-    if (toDate) {
-        const toDateObj = new Date(toDate);
-        toDateObj.setHours(23, 59, 59, 999);     //  end of the day (23:59:59.999)
-        
-        filtered = filtered.filter(
-            lead => new Date(lead.dcreated_dt) <= toDateObj
-        );
-    }
+            filtered = filtered.filter(
+                lead => new Date(lead.dcreated_dt) >= fromDateObj
+            );
+        }
 
-    setDisplayedData(filtered);
-    setShowFilterModal(false); 
+        if (toDate) {
+            const toDateObj = new Date(toDate);
+            toDateObj.setHours(23, 59, 59, 999);
+            
+            filtered = filtered.filter(
+                lead => new Date(lead.dcreated_dt) <= toDateObj
+            );
+        }
 
-};
+        setDisplayedData(filtered);
+        setShowFilterModal(false); 
+    };
 
-
-
-const handleResetFilters = () => {
-  setFromDate('');
-  setToDate('');
-  setSelectedPotential('');
-  setSelectedStatus('');
-  setDisplayedData(leads);
-//   setShowFilterModal(false);
-};
-
-
+    const handleResetFilters = () => {
+        setFromDate('');
+        setToDate('');
+        setSelectedPotential('');
+        setSelectedStatus('');
+        setDisplayedData(leads);
+    };
 
     const goToDetail = (id) => {
         navigate(`/leaddetailview/${id}`);
@@ -670,6 +717,83 @@ const handleResetFilters = () => {
         }
     };
 
+    // Bulk assignment functions
+    const toggleLeadSelection = (leadId) => {
+        setSelectedLeads(prev => {
+            if (prev.includes(leadId)) {
+                return prev.filter(id => id !== leadId);
+            } else {
+                return [...prev, leadId];
+            }
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedLeads.length === displayedData.length) {
+            setSelectedLeads([]);
+        } else {
+            setSelectedLeads(displayedData.map(lead => lead.ilead_id));
+        }
+    };
+
+const handleBulkAssign = async () => {
+    // Convert selectedUser to number and validate
+    const assignedToUserId = parseInt(selectedUser);
+    
+    if (!assignedToUserId || isNaN(assignedToUserId) || selectedLeads.length === 0) {
+        setAssignError("Please select a valid user to assign leads to");
+        return;
+    }
+    
+    setAssignLoading(true);
+    setAssignError(null);
+    
+    try {
+        const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify({
+                leadIds: selectedLeads,
+                assignedTo: assignedToUserId
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            setAssignSuccess(true);
+            setTimeout(() => {
+                setShowAssignModal(false);
+                setSelectedLeads([]);
+                setSelectedUser(''); // Reset selected user
+                setShowBulkActions(false);
+                // Refresh the leads data
+                if (selectedFilter === 'assignedToMe') fetchAssignedLeads();
+                else if (selectedFilter === 'lost') fetchLostLeads();
+                else fetchLeads();
+            }, 1500);
+        } else {
+            setAssignError(data.Message || "Failed to assign leads");
+        }
+    } catch (error) {
+        console.error("Assignment error:", error);
+        setAssignError("An error occurred during assignment");
+    } finally {
+        setAssignLoading(false);
+    }
+};
+    useEffect(() => {
+        setSelectedLeads([]);
+        setShowBulkActions(false);
+    }, [selectedFilter, currentPage]);
+
+    useEffect(() => {
+        setShowBulkActions(selectedLeads.length > 0);
+    }, [selectedLeads]);
+
     if (loading) {
         return <Loader />;
     }
@@ -681,6 +805,31 @@ const handleResetFilters = () => {
     return (
         <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
             <ProfileHeader />
+            
+            {/* Bulk Actions Bar */}
+            {showBulkActions && (
+                <div className="bg-blue-50 p-3 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center">
+                        <span className="font-medium text-blue-800 mr-4">
+                            {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} selected
+                        </span>
+                        <button
+                            onClick={() => setShowAssignModal(true)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 flex items-center"
+                        >
+                            <Users size={16} className="mr-2" />
+                            Assign Selected
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => setSelectedLeads([])}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                        Clear Selection
+                    </button>
+                </div>
+            )}
+
             <div className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-3">
                 <input
                     type="text"
@@ -772,7 +921,7 @@ const handleResetFilters = () => {
             </div>
 
             {selectedFilter === 'lost' && (
-                <div className="flex flex-wrap gap-4 mt-4 items-center">
+                <div className="flex flex-wrap gap-4 mt-5 mb-5 items-center">
                     <label className="flex items-center space-x-2 text-gray-700">
                         <input
                             type="checkbox"
@@ -818,37 +967,36 @@ const handleResetFilters = () => {
                         </label>
 
                         <label className="block text-sm text-gray-700">
-                                Potential
-                                <select
+                            Potential
+                            <select
                                 value={selectedPotential}
                                 onChange={(e) => setSelectedPotential(e.target.value)}
                                 className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                                >
+                            >
                                 <option value="">All Potentials</option>
                                 {potentials.map(p => (
                                     <option key={p.ileadpoten_id} value={p.clead_name}>
-                                    {p.clead_name}
+                                        {p.clead_name}
                                     </option>
                                 ))}
-                                </select>
-                            </label>
-
-                            <label className="block text-sm text-gray-700">
-                        Status
-                        <select
-                            value={selectedStatus}
-                            onChange={(e) => setSelectedStatus(e.target.value)}
-                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                        >
-                            <option value="">All Statuses</option>
-                            {statuses.map(s => (
-                            <option key={s.ilead_status_id} value={s.clead_name}>
-                                {s.clead_name}
-                            </option>
-                            ))}
-                        </select>
+                            </select>
                         </label>
 
+                        <label className="block text-sm text-gray-700">
+                            Status
+                            <select
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
+                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                            >
+                                <option value="">All Statuses</option>
+                                {statuses.map(s => (
+                                    <option key={s.ilead_status_id} value={s.clead_name}>
+                                        {s.clead_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
 
                         <div className="flex justify-end gap-2">
                             <button
@@ -870,6 +1018,81 @@ const handleResetFilters = () => {
                     </div>
                 </div>
             )}
+
+            {showAssignModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-medium text-gray-800">Assign Selected Leads</h2>
+            
+            <p className="text-sm text-gray-600">
+                Assign {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} to:
+            </p>
+            
+            {assignError && (
+                <div className="text-red-600 text-sm p-3 bg-red-50 rounded-md border border-red-200">
+                    {assignError}
+                </div>
+            )}
+            
+            {assignSuccess && (
+                <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
+                    Leads assigned successfully!
+                </div>
+            )}
+            
+            <label className="block text-sm text-gray-700">
+                Select User
+                <select
+                    value={selectedUser}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                    disabled={assignLoading || assignSuccess}
+                >
+                    <option value="">Select a user</option>
+                    {usersList.length > 0 ? (
+                        usersList.map(user => (
+                            <option key={user.iUser_id} value={user.iUser_id}>
+                                {user.cFull_name || `User ${user.iUser_id}`}
+                            </option>
+                        ))
+                    ) : (
+                        <option value="" disabled>No users available</option>
+                    )}
+                </select>
+            </label>
+            
+            <div className="flex justify-end gap-2 pt-4">
+                <button
+                    onClick={() => {
+                        setShowAssignModal(false);
+                        setSelectedUser('');
+                        setAssignError(null);
+                        setAssignSuccess(false);
+                    }}
+                    className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={assignLoading}
+                >
+                    Cancel
+                </button>
+                <button 
+                    onClick={handleBulkAssign}
+                    disabled={!selectedUser || assignLoading || assignSuccess}
+                    className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {assignLoading ? (
+                        <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Assigning...
+                        </span>
+                    ) : "Assign"}
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
             {showImportModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
@@ -973,7 +1196,17 @@ const handleResetFilters = () => {
                 <>
                     {viewMode === 'list' && (
                         <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200">
-                            <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}>
+                            <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}>
+                                {/* Select All checkbox */}
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
+                                        onChange={toggleSelectAll}
+                                        className="h-4 w-4 text-blue-600 rounded"
+                                    />
+                                </div>
+                                
                                 <div className="cursor-pointer flex items-center" onClick={() => handleSort('clead_name')}>
                                     Name {getSortIndicator('clead_name')}
                                 </div>
@@ -1052,12 +1285,22 @@ const handleResetFilters = () => {
                                 return (
                                     <div
                                         key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
-                                        onClick={() => goToDetail(item.ilead_id)}
-                                        className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-9' : 'grid-cols-6'}`}
+                                        className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}
                                     >
-                                        <div>{item.clead_name || '-'}</div>
-                                        <div>{item.corganization || item.c_organization || '-'}</div>
-                                        <div className="relative group overflow-visible">
+                                        {/* Checkbox for selection */}
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedLeads.includes(item.ilead_id)}
+                                                onChange={() => toggleLeadSelection(item.ilead_id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="h-4 w-4 text-blue-600 rounded"
+                                            />
+                                        </div>
+                                        
+                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.clead_name || '-'}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.corganization || item.c_organization || '-'}</div>
+                                        <div className="relative group overflow-visible" onClick={() => goToDetail(item.ilead_id)}>
                                             <span className="block truncate">
                                                 {item.cemail || item.c_email || '-'}
                                             </span>
@@ -1067,16 +1310,16 @@ const handleResetFilters = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <div>{item.iphone_no || item.c_phone || '-'}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.iphone_no || item.c_phone || '-'}</div>
                                         {selectedFilter === 'assignedToMe' && (
                                             <>
-                                                <div>{item.iassigned_by_name || '-'}</div>
-                                                <div>{formatDate(item.dcreate_dt)}</div>
-                                                <div>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div>
+                                                <div onClick={() => goToDetail(item.ilead_id)}>{item.iassigned_by_name || '-'}</div>
+                                                <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dcreate_dt)}</div>
+                                                <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div>
                                             </>
                                         )}
-                                        <div>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
-                                        <div>
+                                        <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id)}>
                                             <span className={`px-3 py-1 rounded-full text-xs ${statusBgColor}`}>
                                                 {statusText}
                                             </span>
@@ -1089,6 +1332,19 @@ const handleResetFilters = () => {
 
                     {viewMode === 'grid' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                            {/* Select All checkbox for grid view */}
+                            {/* <div className="bg-gray-100 p-4 rounded-xl flex items-center justify-center">
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
+                                        onChange={toggleSelectAll}
+                                        className="h-3 w-3  text-blue-600 rounded justify-left item-left"
+                                    />
+                                    <span className="text-sm font-medium">Select All</span>
+                                </label>
+                            </div> */}
+                            
                             {displayedData.map((item) => {
                                 const isItemCurrentlyLost = !(item.bactive === true || item.bactive === 'true');
                                 const isConverted = item.bisConverted === true || item.bisConverted === 'true';
@@ -1131,15 +1387,26 @@ const handleResetFilters = () => {
                                 return (
                                     <div
                                         key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
-                                        onClick={() => goToDetail(item.ilead_id)}
-                                        className="relative bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
+                                        className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
                                     >
+                                        {/* Checkbox for selection */}
+<div className="absolute top-3 right-3">
+  <input
+    type="checkbox"
+    checked={selectedLeads.includes(item.ilead_id)}
+    onChange={() => toggleLeadSelection(item.ilead_id)}
+    onClick={(e) => e.stopPropagation()}
+    className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
+  />
+</div>
+
+                                        
                                         {(item.website_lead === true || item.website_lead === 'true') && (
                                             <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
                                                 <FaGlobe size={18} />
                                             </div>
                                         )}
-                                        <div>
+                                        <div onClick={() => goToDetail(item.ilead_id)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
                                                 <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                                     {item.clead_name || '-'}

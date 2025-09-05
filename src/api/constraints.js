@@ -49,6 +49,7 @@ export const ENDPOINTS = {
   LOST_REASON: `${BASE_URL}/lead-lostreason`,
   LEAD_DETAILS: `${BASE_URL}/lead/`,
   GET_SETTINGS: `${BASE_URL}/general-setting/info`,
+  GENERAL_SETTING:`${BASE_URL}/general-setting`,
   GET_PARAMS_TARGET: `${BASE_URL}/user-target/get-user-target`,
   GET_ASSIGN: `${BASE_URL}/assigned-to`,
   GET_METRICS_TARGET: `${BASE_URL}/user-target`,
@@ -67,6 +68,7 @@ export const ENDPOINTS = {
   TAX: `${BASE_URL}/tax`,
   TERMS: `${BASE_URL}/terms`,
   CURRENCY: `${BASE_URL}/currency`,
+  BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -122,7 +124,6 @@ export const ENDPOINTS = {
   MASTER_SUB_SOURCE_PUT: `${BASE_URL}/subSrc/editSubSrc`,
   MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
   MASTER_SUB_SOURCE_CHANGE: `${BASE_URL}/subSrc/changeSubSrcSts`,
-
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
 
   SUB_SERVICE: `${BASE_URL}/sub-service`,

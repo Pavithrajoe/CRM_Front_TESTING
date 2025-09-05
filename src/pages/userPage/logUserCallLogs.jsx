@@ -406,7 +406,7 @@ function LogUserCallLogs() {
 
                     <div className="rounded-3xl">
                         <h2 className="text-3xl font-semibold text-blue-900 mb-10 text-center tracking-tight">
-                            📞 User Call Logs
+                             User Call Logs
                         </h2>
 
                         {/* Stats Cards */}

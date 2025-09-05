@@ -365,84 +365,135 @@ useEffect(() => {
         }
     }, [currentUserId, currentToken]);
 
-    const fetchAssignedLeads = useCallback(async () => {
-        if (!currentUserId || !currentToken) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${currentToken}`,
-  },
-  body: JSON.stringify({
-    leadIds: selectedLeads,
-    assignedTo: parseInt(selectedUser) 
-  }),
-});
-            if (!res.ok) {
-                const errorData = await res.text();
-                throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
-            }
-            const data = await res.json();
-            const leadsAssigned = Array.isArray(data.data?.leadsAssigned) ? data.data.leadsAssigned : [];
-            const assignedEntries = Array.isArray(data.data?.assignedEntries) ? data.data.assignedEntries : [];
-            const leadsAssignedMap = new Map(leadsAssigned.map(lead => [lead.ilead_id, lead]));
-            const mergedLeads = assignedEntries.map(assigned => {
-                const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
-                let statusDisplay = '-';
-                let statusColor = 'bg-gray-300 text-gray-700';
-                const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
-                const isActiveAssigned = (correspondingLead?.bactive === true || correspondingLead?.bactive === 'true') || (assigned.bactive === true || assigned.bactive === 'true');
-                const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
+//     const fetchAssignedLeads = useCallback(async () => {
+//         if (!currentUserId || !currentToken) {
+//             setLoading(false);
+//             return;
+//         }
+//         setLoading(true);
+//         setError(null);
+//         try {
+//             const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
+//   method: 'POST',
+//   headers: {
+//     'Content-Type': 'application/json',
+//     'Authorization': `Bearer ${currentToken}`,
+//   },
+//   body: JSON.stringify({
+//     leadIds: selectedLeads,
+//     assignedTo: parseInt(selectedUser) 
+//   }),
+// });
+//             if (!res.ok) {
+//                 const errorData = await res.text();
+//                 throw new Error(`HTTP error! status: ${res.status}, Message: ${errorData || res.statusText}`);
+//             }
+//             const data = await res.json();
+//             const leadsAssigned = Array.isArray(data.data?.leadsAssigned) ? data.data.leadsAssigned : [];
+//             const assignedEntries = Array.isArray(data.data?.assignedEntries) ? data.data.assignedEntries : [];
+//             const leadsAssignedMap = new Map(leadsAssigned.map(lead => [lead.ilead_id, lead]));
+//             const mergedLeads = assignedEntries.map(assigned => {
+//                 const correspondingLead = leadsAssignedMap.get(assigned.ilead_id);
+//                 let statusDisplay = '-';
+//                 let statusColor = 'bg-gray-300 text-gray-700';
+//                 const isConvertedAssigned = (correspondingLead?.bisConverted === true || correspondingLead?.bisConverted === 'true') || (assigned.bisConverted === true || assigned.bisConverted === 'true');
+//                 const isActiveAssigned = (correspondingLead?.bactive === true || correspondingLead?.bactive === 'true') || (assigned.bactive === true || assigned.bactive === 'true');
+//                 const isWebsiteAssigned = (correspondingLead?.website_lead === true || correspondingLead?.website_lead === 'true') || (assigned.website_lead === true || assigned.website_lead === 'true');
 
-                if (!isActiveAssigned && !isConvertedAssigned) {
-                    statusDisplay = 'Lost';
-                    statusColor = 'bg-red-100 text-red-700';
-                } else if (isWebsiteAssigned) {
-                    statusDisplay = 'Website Lead';
-                    statusColor = 'bg-blue-100 text-blue-700';
-                } else {
-                    statusDisplay = 'Lead';
-                    statusColor = 'bg-indigo-100 text-indigo-700';
-                }
+//                 if (!isActiveAssigned && !isConvertedAssigned) {
+//                     statusDisplay = 'Lost';
+//                     statusColor = 'bg-red-100 text-red-700';
+//                 } else if (isWebsiteAssigned) {
+//                     statusDisplay = 'Website Lead';
+//                     statusColor = 'bg-blue-100 text-blue-700';
+//                 } else {
+//                     statusDisplay = 'Lead';
+//                     statusColor = 'bg-indigo-100 text-indigo-700';
+//                 }
 
-                return {
-                    ...assigned,
-                    ...(correspondingLead || {}),
-                    dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
-                    dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
-                    dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt,
-                    clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
-                    corganization: correspondingLead?.corganization || assigned.corganization || '-',
-                    cemail: correspondingLead?.cemail || assigned.cemail || '-',
-                    iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
-                    statusDisplay: statusDisplay,
-                    statusColor: statusColor,
-                    lead_status: correspondingLead?.lead_status || assigned.lead_status,
-                    lead_potential: correspondingLead?.lead_potential || assigned.lead_potential || { clead_name: '-' },
-                    bactive: isActiveAssigned,
-                    bisConverted: isConvertedAssigned,
-                    website_lead: isWebsiteAssigned,
-                    iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
-                };
-            }).filter(lead => lead.bactive === true || lead.bactive === 'true');
-            const sortedAssigned = mergedLeads.sort(
-                (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt || 0) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt || 0)
-            );
-            setAssignedLeads(sortedAssigned);
-        } catch (err) {
-            console.error("Failed to fetch assigned leads:", err);
-            setError(`Failed to fetch assigned leads: ${err.message}`);
-            setAssignedLeads([]);
-        } finally {
-            setLoading(false);
+//                 return {
+//                     ...assigned,
+//                     ...(correspondingLead || {}),
+//                     dmodified_dt: correspondingLead?.dmodified_dt || assigned.dupdate_dt || assigned.dcreate_dt,
+//                     dcreate_dt: correspondingLead?.dcreate_dt || assigned.dcreate_dt,
+//                     dupdate_dt: assigned.dupdate_dt || correspondingLead?.dmodified_dt,
+//                     clead_name: correspondingLead?.clead_name || assigned.clead_name || '-',
+//                     corganization: correspondingLead?.corganization || assigned.corganization || '-',
+//                     cemail: correspondingLead?.cemail || assigned.cemail || '-',
+//                     iphone_no: correspondingLead?.iphone_no || assigned.iphone_no || '-',
+//                     statusDisplay: statusDisplay,
+//                     statusColor: statusColor,
+//                     lead_status: correspondingLead?.lead_status || assigned.lead_status,
+//                     lead_potential: correspondingLead?.lead_potential || assigned.lead_potential || { clead_name: '-' },
+//                     bactive: isActiveAssigned,
+//                     bisConverted: isConvertedAssigned,
+//                     website_lead: isWebsiteAssigned,
+//                     iassigned_by_name: assigned.user_assigned_to_iassigned_byTouser?.cFull_name || '-'
+//                 };
+//             }).filter(lead => lead.bactive === true || lead.bactive === 'true');
+//             const sortedAssigned = mergedLeads.sort(
+//                 (a, b) => new Date(b.dmodified_dt || b.dupdate_dt || b.dcreate_dt || 0) - new Date(a.dmodified_dt || a.dupdate_dt || a.dcreate_dt || 0)
+//             );
+//             setAssignedLeads(sortedAssigned);
+//         } catch (err) {
+//             console.error("Failed to fetch assigned leads:", err);
+//             setError(`Failed to fetch assigned leads: ${err.message}`);
+//             setAssignedLeads([]);
+//         } finally {
+//             setLoading(false);
+//         }
+//     }, [currentUserId, currentToken]);
+
+
+const fetchAssignedLeads = useCallback(async () => {
+    if (!currentUserId || !currentToken) {
+        setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+        const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${currentToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
         }
-    }, [currentUserId, currentToken]);
+
+        const resJson = await response.json();
+
+        const assignedEntries = resJson?.data?.assignedEntries || [];
+        const leadsAssigned = resJson?.data?.leadsAssigned || [];
+
+        // Flatten assignedEntries with lead details for frontend
+        const mergedLeads = assignedEntries.map(entry => {
+            const leadDetails = leadsAssigned.find(lead => lead.ilead_id === entry.ilead_id) || {};
+            return {
+                ...entry,
+                ...leadDetails, // merge lead details to top level
+                statusDisplay: leadDetails?.lead_status?.clead_name || 'Unknown',
+                potentialDisplay: leadDetails?.lead_potential?.clead_name || 'Unknown',
+            };
+        });
+
+        setAssignedLeads(mergedLeads);
+
+    } catch (err) {
+        console.error("Failed to fetch assigned leads:", err);
+        setError(`Failed to fetch assigned leads: ${err.message}`);
+        setAssignedLeads([]);
+    } finally {
+        setLoading(false);
+    }
+}, [currentUserId, currentToken]);
+
 
     useEffect(() => {
         if (!currentUserId || !currentToken) return;
@@ -1198,14 +1249,14 @@ const handleBulkAssign = async () => {
                         <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200">
                             <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}>
                                 {/* Select All checkbox */}
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
-                                        onChange={toggleSelectAll}
-                                        className="h-4 w-4 text-blue-600 rounded"
-                                    />
-                                </div>
+                               <div className="inline-flex items-center">
+    <input
+        type="checkbox"
+        checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
+        onChange={toggleSelectAll}
+        className="h-4 w-4 text-blue-600 rounded"
+    />
+</div>
                                 
                                 <div className="cursor-pointer flex items-center" onClick={() => handleSort('clead_name')}>
                                     Name {getSortIndicator('clead_name')}

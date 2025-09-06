@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { ENDPOINTS } from "../../api/constraints";
-import {
-  Chart as ChartJS,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
+import { ENDPOINTS } from "../../../api/constraints";
+import {Chart as ChartJS,BarElement,CategoryScale,LinearScale,Tooltip,Legend,ArcElement,} from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
 import { TrendingUp, PieChart, Users, ChevronDown } from "lucide-react";
 import { Listbox } from "@headlessui/react";
 import { FaRupeeSign, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { HiDownload } from "react-icons/hi";
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import CityLeadsAnalytics from "./CityLeadsAnalytics";
+import CountryLeadsAnalytics from "./CountryLeadsAnalytics";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement);
 
@@ -41,6 +35,7 @@ const TerritoryLeadsAnalytics = () => {
           throw new Error(`Failed to fetch territory leads data: ${response.statusText}`);
         }
         const responseData = await response.json();
+        console.log("Fetched territory leads data:", responseData);
         setData(responseData.data);
       } catch (err) {
         console.error("Error fetching territory leads data:", err);
@@ -62,7 +57,14 @@ const TerritoryLeadsAnalytics = () => {
       const merged = {};
       for (const obj of Object.values(objects)) {
         for (const [key, val] of Object.entries(obj)) {
-          merged[key] = (merged[key] || 0) + val;
+          if (typeof val === 'object' && val !== null && 'count' in val) {
+            if (!merged[key]) {
+              merged[key] = { count: 0, orderId: val.orderId, isActive: val.isActive };
+            }
+            merged[key].count += val.count;
+          } else {
+            merged[key] = (merged[key] || 0) + val;
+          }
         }
       }
       return merged;
@@ -98,7 +100,12 @@ const TerritoryLeadsAnalytics = () => {
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
 
-  const statusData = territory === "All Territories" ? merged.status : data.statusPerTerritory[territory];
+  const getStatusData = () => {
+    return territory === "All Territories" ? merged.status : data.statusPerTerritory[territory];
+  };
+
+  const statusData = getStatusData();
+
   const sourceData =
     territory === "All Territories" ? merged.sources : data.sourceBreakdownPerTerritory[territory];
   const conversionData =
@@ -106,13 +113,43 @@ const TerritoryLeadsAnalytics = () => {
   const revenue = territory === "All Territories" ? merged.totalRevenue : data.revenuePerTerritory[territory];
   const totalLeads = territory === "All Territories" ? merged.totalLeads : data.leadsPerTerritory[territory];
 
+  const getSortedBarChartData = () => {
+    if (!statusData) return { labels: [], data: [], colors: [] };
+
+    const statusesArray = Object.keys(statusData).map(statusName => ({
+      name: statusName,
+      ...statusData[statusName]
+    }));
+    
+    statusesArray.sort((a, b) => {
+      const orderIdComparison = a.orderId - b.orderId;
+      if (orderIdComparison !== 0) {
+        return orderIdComparison;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    const labels = statusesArray.map(item => item.name);
+    const chartData = statusesArray.map(item => item.count);
+    const colors = statusesArray.map(item => {
+      if (item.name.toLowerCase() === 'unknown') {
+        return '#FF9500'; // Yellow for "Unknown"
+      }
+      return item.isActive ? '#34C759' : '#FF2D55'; // Green for active, Red for inactive status
+    });
+
+    return { labels, data: chartData, colors };
+  };
+
+  const sortedBarData = getSortedBarChartData();
+
   const barChartData = {
-    labels: Object.keys(statusData || {}),
+    labels: sortedBarData.labels,
     datasets: [
       {
         label: "Leads",
-        data: Object.values(statusData || {}),
-        backgroundColor: "#007AFF",
+        data: sortedBarData.data,
+        backgroundColor: sortedBarData.colors,
         borderRadius: 5,
       },
     ],
@@ -125,7 +162,7 @@ const TerritoryLeadsAnalytics = () => {
         label: "Sources",
         data: Object.values(sourceData || {}),
         backgroundColor: [
-          "#34C759", "#FF9500", "#FF2D55", "#AF52DE", "#5AC8FA", "#C69C6D", "#8E8E93",
+          "#FF9500", "#34C759", "#FF2D55", "#AF52DE", "#5AC8FA", "#C69C6D", "#8E8E93",
         ],
         hoverOffset: 4,
       },
@@ -157,17 +194,27 @@ const TerritoryLeadsAnalytics = () => {
     },
   };
 
-  function getStatusColor(status) {
-    switch (status?.toLowerCase()) {
-      case "new": return "bg-blue-100 text-blue-700";
-      case "contacted": return "bg-yellow-100 text-yellow-700";
-      case "qualified": return "bg-green-100 text-green-700";
-      case "lost": return "bg-red-100 text-red-700";
-      case "converted": return "bg-purple-100 text-purple-700";
-      case "won": return "bg-teal-100 text-teal-700";
-      default: return "bg-gray-100 text-gray-600";
+  function getStatusColor(statusName) {
+    const statusInfo = statusData?.[statusName];
+    if (statusName?.toLowerCase() === 'unknown') {
+      return "bg-yellow-100 text-yellow-700";
     }
+    if (statusInfo) {
+      return statusInfo.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+    }
+    return "bg-gray-100 text-gray-600";
   }
+
+  const getStatusColorDot = (statusName) => {
+    const statusInfo = statusData?.[statusName];
+    if (statusName?.toLowerCase() === 'unknown') {
+      return 'bg-yellow-500';
+    }
+    if (statusInfo) {
+      return statusInfo.isActive ? 'bg-green-500' : 'bg-red-500';
+    }
+    return 'bg-gray-400';
+  };
 
   const exportToExcel = () => {
     if (filteredLeads.length === 0) {
@@ -241,14 +288,27 @@ const TerritoryLeadsAnalytics = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card icon={<Users size={18} />} title="Total Leads" value={totalLeads} />
-        <Card icon={<FaRupeeSign size={18} />} title="Revenue" value={`₹${revenue.toLocaleString()}`} />
-        <Card icon={<TrendingUp size={18} />} title="Won" value={conversionData.converted} />
-        <Card icon={<PieChart size={18} />} title="Won Rate" value={conversionData.conversionRate} />
+        <Card icon={<FaRupeeSign size={18} />} title="Revenue" value={`₹${revenue?.toLocaleString() || 0}`} />
+        <Card icon={<TrendingUp size={18} />} title="Won" value={conversionData?.converted || 0} />
+        <Card icon={<PieChart size={18} />} title="Won Rate" value={conversionData?.conversionRate || "0.00%"} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl shadow-md p-4 h-[280px] flex flex-col">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Leads by Status</h3>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-semibold text-gray-700">Leads by Status</h3>
+            <div className="flex gap-2 text-xs text-gray-600">
+              <span className="flex items-center">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500 mr-1"></span> Active
+              </span>
+              <span className="flex items-center">
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1"></span> Unknown
+              </span>
+              <span className="flex items-center">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1"></span> Inactive
+              </span>
+            </div>
+          </div>
           <div className="flex-grow w-full h-[200px]">
             <Bar data={barChartData} options={chartOptions} />
           </div>
@@ -260,6 +320,12 @@ const TerritoryLeadsAnalytics = () => {
             <Pie data={pieChartData} options={{ ...chartOptions, scales: {} }} />
           </div>
         </div>
+        
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CityLeadsAnalytics />
+        <CountryLeadsAnalytics />  
       </div>
 
       <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 shadow-xl">
@@ -314,7 +380,6 @@ const TerritoryLeadsAnalytics = () => {
           </table>
         </div>
 
-        {/* Pagination Controls - Using Option 1: Current Page with Neighboring Pages and Ellipses */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center space-x-3 mt-8">
             <button

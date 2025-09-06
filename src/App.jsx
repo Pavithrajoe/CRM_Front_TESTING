@@ -16,7 +16,7 @@ import { TabProvider } from "./context/TabContext";
 
 // All your other imports...
 import NotificationPage from "./pages/notification";
-import TerritoryLeadsAnalytics from "./Components/reports/TerritoryLeads";
+import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
 import UserProfile from "./pages/userProfile";
 import CalendarPage from "./pages/calenderpage";
 import CardsPage from './Components/reports/reports';

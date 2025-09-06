@@ -101,33 +101,36 @@ const ProfileHeader = () => {
     );
   }, []);
 
-  const fetchUnreadTodayNotifications = useCallback(async () => {
-    const userString = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (!userString || !token) {
-      setDisplayedNotifications([]);
-      setBellNotificationCount(0);
-      return;
-    }
+const fetchUnreadTodayNotifications = useCallback(async () => {
+  const userString = localStorage.getItem('user');
+  const token = localStorage.getItem('token');
+  if (!userString || !token) {
+    setDisplayedNotifications([]);
+    setBellNotificationCount(0);
+    return;
+  }
 
-    let currentUserId = null;
-    try {
-      const userObject = JSON.parse(userString);
-      currentUserId = userObject.iUser_id;
-    } catch (e) {
-      console.error(e);
-    }
+  let currentUserId = null;
+  try {
+    const userObject = JSON.parse(userString);
+    currentUserId = userObject.iUser_id;
+  } catch (e) {
+    console.error(e);
+  }
 
-    if (!currentUserId) return;
+  if (!currentUserId) return;
 
-    try {
-      const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  try {
+    const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}/notifications/user/${currentUserId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      const data = res.data;
-      const unreadTodayNotifications = data
-        .filter(n => String(n.userId || n.user_id) === String(currentUserId) && isToday(n.created_at) && !n.read)
+    // Check if response has the expected structure
+    if (res.data && res.data.success && Array.isArray(res.data.data)) {
+      const notifications = res.data.data;
+      
+      const unreadTodayNotifications = notifications
+        .filter(n => String(n.user_id) === String(currentUserId) && isToday(n.created_at) && !n.read)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setDisplayedNotifications(unreadTodayNotifications);
@@ -149,13 +152,18 @@ const ProfileHeader = () => {
           setTimeout(() => { hasPushedNotification.current = false; }, 10000);
         }
       }
-
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
+    } else {
+      console.error('Unexpected API response structure:', res.data);
       setDisplayedNotifications([]);
       setBellNotificationCount(0);
     }
-  }, [isToday, showNotifications]);
+
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    setDisplayedNotifications([]);
+    setBellNotificationCount(0);
+  }
+}, [isToday, showNotifications]);
 
   useEffect(() => {
     fetchUnreadTodayNotifications();

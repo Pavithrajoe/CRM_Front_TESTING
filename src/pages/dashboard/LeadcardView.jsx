@@ -854,7 +854,7 @@ const handleBulkAssign = async () => {
     }
 
     return (
-        <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
+        <div className="max-w-full mx-auto p-4 rounded-2xl shadow-md space-y-6 min-h-screen">
             <ProfileHeader />
             
             {/* Bulk Actions Bar */}
@@ -945,7 +945,7 @@ const handleBulkAssign = async () => {
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 selectedFilter === filterKey
                                     ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-300'
                             }`}
                         >
                             {filterKey === 'all'
@@ -1246,7 +1246,7 @@ const handleBulkAssign = async () => {
             ) : (
                 <>
                     {viewMode === 'list' && (
-                        <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200">
+                        <div className="overflow-x-auto rounded-2xl shadow-md border bg-white border-gray-200">
                             <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}>
                                 {/* Select All checkbox */}
                                <div className="inline-flex items-center">

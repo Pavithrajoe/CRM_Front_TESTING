@@ -130,7 +130,7 @@ export default function LeadManagementCard() {
   if (error) return <div className="flex justify-center items-center h-full text-red-600 font-medium">{error}</div>;
 
   return (
-    <div className="relative w-full h-80 max-w-full mx-auto [perspective:1000px]">
+    <div className="relative w-full h-90 max-w-full mx-auto [perspective:1000px]">
       <div className={`relative w-full h-full duration-700 transform-style-preserve-3d transition-transform ${showTeam ? '[transform:rotateY(180deg)]' : ''}`}>
 
         {/* Front View */}

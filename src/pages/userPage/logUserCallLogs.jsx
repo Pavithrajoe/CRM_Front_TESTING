@@ -129,53 +129,57 @@ function LogUserCallLogs() {
     }, []);
 
     // Fetch call logs
-    const fetchCallLogs = useCallback(async () => {
-        if (!loggedInUserEmail) return;
+   const fetchCallLogs = useCallback(async () => {
+  if (!loggedInUserEmail) return;
 
-        setLoading(true);
-        setError(null);
+  setLoading(true);
+  setError(null);
 
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Authentication token not found');
-            }
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
 
-            const queryParams = new URLSearchParams({
-                user_email: loggedInUserEmail
-            });
+    const queryParams = new URLSearchParams({
+      user_email: loggedInUserEmail
+    });
 
-            const url = `${ENDPOINTS.CALL_LOGS}?${queryParams}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+    const url = `${ENDPOINTS.CALL_LOGS}?${queryParams}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-            if (!response.ok) {
-                const errorMessage = response.status === 401 ? 'Unauthorized access' : 
-                                   response.status === 404 ? 'Call logs not found' : 
-                                   `HTTP ${response.status}: ${response.statusText}`;
-                throw new Error(errorMessage);
-            }
+    if (!response.ok) {
+      const errorMessage = response.status === 401 ? 'Unauthorized access' :
+        response.status === 404 ? 'Call logs not found' :
+        `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
 
-            const data = await response.json();
-            const logsArray = Array.isArray(data) ? data : (data.logs || []);
-            setCallLogs(logsArray);
-            
-            if (logsArray.length === 0) {
-                toast.info('No call logs found for this user');
-            }
-        } catch (err) {
-            console.error('Fetch call logs error:', err);
-            setError(err.message);
-            toast.error(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [loggedInUserEmail]);
+    const data = await response.json();
+    const logsArray = Array.isArray(data) ? data : (data.logs || []);
+    setCallLogs(logsArray);
+    
+    // Check if logsArray is empty and a 'no logs found' toast hasn't been shown
+    if (logsArray.length === 0) {
+      toast.info('No call logs found for this user');
+    }
+  } catch (err) {
+    console.error('Fetch call logs error:', err);
+    // Check if an error has already been set to avoid duplicate toasts
+    if (!error) {
+      setError(err.message);
+      toast.error(err.message);
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [loggedInUserEmail]);
 
     // Trigger initial fetch when loggedInUserEmail is available
     useEffect(() => {
@@ -385,7 +389,7 @@ function LogUserCallLogs() {
 
     return (
         <div className="flex mt-[-80px] font-sans">
-            <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
+            <main className="w-full flex-1 p-6 mt-[80px] min-h-screen">
                 <div className="flex justify-between items-center mb-6">
                     <TeamleadHeader />
                     <ProfileHeader />
@@ -414,12 +418,12 @@ function LogUserCallLogs() {
                             <StatsCard label="Total Calls" value={callStats.totalCalls} color="blue" />
                             <StatsCard label="Incoming" value={callStats.incomingCalls} color="green" />
                             <StatsCard label="Outgoing" value={callStats.outgoingCalls} color="purple" />
-                            <StatsCard label="Missed" value={callStats.missedCalls} color="orange" />
+                            <StatsCard label="Missed" value={callStats.missedCalls} color="yellow" />
                             <StatsCard label="Rejected" value={callStats.rejectedCalls} color="red" />
                         </div>
 
                         {/* Filter Controls */}
-                        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 p-4 bg-white/70 backdrop-blur-md border border-blue-100 rounded-2xl mb-8 shadow-inner">
+                        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 p-4  backdrop-blur-md mb-8">
                             <div className="flex items-center gap-2">
                                 <label htmlFor="startDate" className="text-sm text-blue-700 font-medium">From:</label>
                                 <input
@@ -499,7 +503,7 @@ function LogUserCallLogs() {
                                         </tr>
                                     ) : error ? (
                                         <tr>
-                                            <td colSpan="8" className="px-4 py-8 text-center text-red-600">
+                                            <td colSpan="8" className="px-4 py-8 h-[50vh] text-center text-red-600">
                                                 <div className="flex flex-col items-center">
                                                     <span className="font-medium">Error: {error}</span>
                                                     <button 
@@ -514,7 +518,7 @@ function LogUserCallLogs() {
                                     ) : currentLogs.length === 0 ? (
                                         <tr>
                                             <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
-                                                <div className="flex flex-col items-center">
+                                                <div className="flex flex-col items-center h-[50vh]">
                                                     <span>No call logs found</span>
                                                     {(!isDefaultFilter && (startDate || endDate)) && (
                                                         <button 
@@ -536,20 +540,20 @@ function LogUserCallLogs() {
                                                 <tr key={`${log.id || index}-${log.call_time}`} className="hover:bg-blue-50 transition-all duration-150">
                                                     <td className="px-4 py-3 font-medium">{indexOfFirstLog + index + 1}</td>
                                                     <td className="px-4 py-3">{userName}</td>
-                                                    <td className="px-4 py-3 font-mono">{log.call_log_number || 'N/A'}</td>
+                                                    <td className="px-4 py-3 font-Montserrat">{log.call_log_number || 'N/A'}</td>
                                                     <td className="px-4 py-3">
                                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                                             log.call_type_id === 1 ? 'bg-green-100 text-green-800' :
                                                             log.call_type_id === 2 ? 'bg-blue-100 text-blue-800' :
-                                                            log.call_type_id === 3 ? 'bg-orange-100 text-orange-800' : 
-                                                            'bg-red-100 text-red-800'
+                                                            log.call_type_id === 3 ? 'bg-orange-200 text-orange-800' : 
+                                                            'bg-orage-200 text-red-800'
                                                         }`}>
                                                             {getCallTypeString(log.call_type_id)}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3">{formatDisplayDate(log.call_time)}</td>
                                                     <td className="px-4 py-3">{formatTime(log.call_time)}</td>
-                                                    <td className="px-4 py-3 font-mono">{formatDuration(log.duration)}</td>
+                                                    <td className="px-4 py-3 font-Montserrat">{formatDuration(log.duration)}</td>
                                                     <td className="px-4 py-3">
                                                         <button
                                                             onClick={() => handleAddLeadClick(log)}

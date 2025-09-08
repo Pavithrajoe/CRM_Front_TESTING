@@ -164,7 +164,7 @@ const UserPage = () => {
   const isAuthorized = ["admin", "administrator", "super_admin", "super_administrator", "Administrator"].includes(userRole);
 
   return (
-    <div className="p-6 bg-gradient-to-b from-slate-100 to-white min-h-screen shadow-inner font-sans text-gray-800">
+    <div className="p-6 min-h-screen shadow-inner font-sans text-gray-800">
       <ProfileHeader />
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -343,7 +343,7 @@ const UserPage = () => {
             {displayedUsers.map((user) => (
               <div
                 key={user.iUser_id}
-                className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 text-center text-sm items-center border-t hover:bg-gray-50 cursor-pointer"
+                className="grid grid-cols-6 gap-2 sm:gap-4 px-4 py-3 bg-white text-center text-sm items-center border-t hover:bg-gray-50 cursor-pointer"
                 onClick={() => goToLeadsPage(user.iUser_id)}
               >
                 <div className="flex justify-center">

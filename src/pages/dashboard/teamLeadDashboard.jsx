@@ -87,7 +87,7 @@ const LeadsDashboard = () => {
 
   return (
     <div className="flex mt-[-80px]">
-      <main className="w-full flex-1 p-6 bg-white mt-[80px] min-h-screen">
+      <main className="w-full flex-1 p-6 mt-[80px] min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <TeamleadHeader />
           <ProfileHeader />
@@ -115,18 +115,18 @@ const LeadsDashboard = () => {
               width: "100%",
               minHeight: "400px",
               bgcolor: "background.paper",
-              borderRadius: 2,
+              borderRadius: 4,
               boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
               display: "flex",
               flexDirection: "column",
             }}
           >
             {/* Tabs Header */}
-            <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "#f8f9fb" }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "#f8f9fb" ,borderRadius:2 }}>
               <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="fullWidth">
                 <Tab
                   label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 ,borderRadius:2}}>
                       Reminders
                       {reminders.length > 0 && (
                         <Box sx={{

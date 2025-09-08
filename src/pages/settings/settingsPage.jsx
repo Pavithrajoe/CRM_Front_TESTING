@@ -51,7 +51,7 @@ const SettingsPage = () => {
         </aside>
 
         {/* Light Main Content Area */}
-        <main className="flex-1 p-6 bg-gray-50 overflow-y-scroll rounded-xl shadow-inner">
+        <main className="flex-1 p-6 overflow-y-scroll">
           <Outlet />
         </main>
       </div>

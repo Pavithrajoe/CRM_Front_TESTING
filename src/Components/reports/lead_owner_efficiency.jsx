@@ -505,7 +505,7 @@ export default function LeadOwnerEfficiency() {
               <tr className="bg-gray-100 text-left text-lg h-16">
                 <th className="px-4 py-2 font-semibold whitespace-nowrap">S.No</th>
                 <th className="px-4 py-2 text-center font-semibold whitespace-nowrap">Lead Owner</th>
-                <th className="px-4 py-2 text-center  font-semibold whitespace-nowrap">Created at</th>
+                <th className="px-4 py-2 text-center  semibold whitespace-nowrap">Created at</th>
                 <th className="px-4 py-2 text-center  font-semibold whitespace-nowrap">First Responded at</th>
                 <th className="px-4 py-2 text-center  font-semibold whitespace-nowrap">Hours to First response</th>
                 {/* <th className="px-4 py-2 font-semibold whitespace-nowrap">Converted at</th> */}

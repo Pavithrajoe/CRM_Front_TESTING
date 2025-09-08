@@ -21,7 +21,7 @@ const StatusKanbanPage = () => {
 
   return (
     <div className="flex mt-[-80px]">
-      <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
+      <main className="w-full flex-1 p-6  mt-[80px] min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <TeamleadHeader />
           <ProfileHeader />

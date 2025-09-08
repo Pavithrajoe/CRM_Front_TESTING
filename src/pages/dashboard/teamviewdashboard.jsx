@@ -22,7 +22,7 @@ const TeamviewDashboard = ({
   const reminderMessage = reminders?.message || []; 
   if (loading) {
     return (
-      <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen flex items-center justify-center">
+      <main className="w-full flex-1 p-6  mt-[0px] min-h-screen flex items-center justify-center">
         <p className="text-lg text-gray-700">Loading dashboard data...</p>
       </main>
     );
@@ -30,14 +30,14 @@ const TeamviewDashboard = ({
 
   if (error) {
     return (
-      <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen flex items-center justify-center">
+      <main className="w-full flex-1 p-6 mt-[0px] min-h-screen flex items-center justify-center">
         <p className="text-lg text-red-600">Error: {error}</p>
         <p className="text-sm text-gray-500 mt-2">Please try logging in again or contact support if the issue persists.</p>
       </main>
     );
   }
   return (
-    <main className="w-full flex-1 p-6 bg-gray-50 mt-[0px] min-h-screen">
+    <main className="w-full flex-1 p-6 mt-[0px] min-h-screen">
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <TeamleadHeader />

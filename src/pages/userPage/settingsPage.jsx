@@ -439,7 +439,7 @@ const handleToggle = async (type) => {
   const isLoading = loadingProfile || loadingSettings;
 
   return (
-    <div className="  font-sans">
+    <div className="  font-Montserrat">
       <div className="bg-white p-6 space-y-8 rounded-xl w-full mx-auto">
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Personal Information</h2>

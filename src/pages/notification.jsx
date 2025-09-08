@@ -4,154 +4,43 @@ import { ENDPOINTS } from "../api/constraints";
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
-  const [readIds, setReadIds] = useState(new Set());
   const [selectedNotification, setSelectedNotification] = useState(null);
 
   const token = localStorage.getItem("token");
-  const userString = localStorage.getItem("user");
-  let userId = null;
 
-  if (userString) {
-    try {
-      const userObject = JSON.parse(userString);
-      userId = userObject.iUser_id;
-    } catch (e) {
-      console.error("Error parsing user object from localStorage", e);
+const fetchNotifications = async () => {
+  if (!token) return;
+
+  try {
+    const res = await axios.get(`${ENDPOINTS.NOTIFICATIONS}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    let list = [];
+    if (Array.isArray(res.data)) {
+      list = res.data;
+    } else if (res.data.notifications) {
+      list = res.data.notifications;
+    } else if (res.data.data) {
+      list = res.data.data;
     }
+
+    setNotifications(list);
+    console.log("Notifications:", list);
+  } catch (err) {
+    console.error("Error fetching notifications", err);
   }
+};
 
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-
-    const savedReads = JSON.parse(localStorage.getItem("readNotifications") || "[]");
-    setReadIds(new Set(savedReads));
-  }, []);
-
-  const showPushNotification = (title, message) => {
-    if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
-      new Notification(title, {
-        body: message,
-        icon: "/icon.png", // Optional: replace with your app icon
-      });
-    }
-  };
-
-  const fetchNotifications = async () => {
-    if (!userId || !token) return;
-
-    try {
-      const res = await axios.get(`${ENDPOINTS.NOTIFICATIONS}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const sorted = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-      const existingIds = new Set(notifications.map((n) => n.id));
-      const newOnes = sorted.filter((n) => !existingIds.has(n.id));
-
-      newOnes.forEach((n) => showPushNotification(n.title, n.message));
-      setNotifications(sorted);
-    } catch (err) {
-      console.error("Error fetching notifications", err);
-    }
-  };
 
   useEffect(() => {
     fetchNotifications(); // initial load
-
-    const interval = setInterval(() => {
-      fetchNotifications();
-    }, 10000); // every 10s
-
+    const interval = setInterval(fetchNotifications, 10000); // refresh every 10s
     return () => clearInterval(interval);
-  }, [userId, token, notifications]);
-
-  const markAsRead = (id) => {
-    const updated = new Set(readIds);
-    updated.add(id);
-    setReadIds(updated);
-    localStorage.setItem("readNotifications", JSON.stringify([...updated]));
-  };
-
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const groupNotificationsByDate = (data) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    const isSameDay = (d1, d2) =>
-      d1.getFullYear() === d2.getFullYear() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getDate() === d2.getDate();
-
-    const groups = { Today: [], Yesterday: [], Earlier: [] };
-
-    data.forEach((item) => {
-      const date = new Date(item.created_at);
-      if (isSameDay(date, today)) groups.Today.push(item);
-      else if (isSameDay(date, yesterday)) groups.Yesterday.push(item);
-      else groups.Earlier.push(item);
-    });
-
-    return groups;
-  };
-
-  const grouped = groupNotificationsByDate(notifications);
-
-  const renderGroup = (label, items) => {
-    if (items.length === 0) return null;
-
-    return (
-      <div className="mb-6 border-t pt-4">
-        <h3 className="text-sm font-semibold text-gray-500 mb-2 pl-2 uppercase tracking-wide">
-          {label}
-        </h3>
-        <div className="space-y-3">
-          {items.map((item) => {
-            const isUnread = !readIds.has(item.id);
-
-            return (
-              <div
-                key={item.id}
-                onClick={() => {
-                  setSelectedNotification(item);
-                  markAsRead(item.id);
-                }}
-                className={`cursor-pointer transition hover:shadow-md hover:scale-[1.01] duration-200 px-4 py-3 rounded-xl border ${
-                  isUnread ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[12px] text-gray-400 capitalize">{item.type}</span>
-                  <span className="text-[12px] text-gray-400">{formatTime(item.created_at)}</span>
-                </div>
-                <h4 className="text-[15px] font-medium text-gray-800 leading-tight">
-                  {item.title}
-                </h4>
-                <p className="text-[13.5px] text-gray-600 mt-0.5 truncate">{item.message}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
+  }, [token]);
 
   return (
-    <div
-      className="p-6 bg-[#f7f8fa] min-h-screen font-sans"
-      style={{
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-        borderRadius: "10px",
-      }}
-    >
+    <div className="p-6 bg-[#f7f8fa] min-h-screen font-Montserrat">
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => window.history.back()}
@@ -163,7 +52,6 @@ const NotificationPage = () => {
             stroke="currentColor"
             strokeWidth={2}
             viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -178,10 +66,25 @@ const NotificationPage = () => {
           No notifications found.
         </p>
       ) : (
-        <div>
-          {renderGroup("Today", grouped.Today)}
-          {renderGroup("Yesterday", grouped.Yesterday)}
-          {renderGroup("Earlier", grouped.Earlier)}
+        <div className="space-y-3 mt-4">
+          {notifications.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => setSelectedNotification(item)}
+              className="cursor-pointer transition hover:shadow-md hover:scale-[1.01] duration-200 px-4 py-3 rounded-xl border bg-white border-gray-200"
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[12px] text-gray-400 capitalize">{item.type}</span>
+                <span className="text-[12px] text-gray-400">
+                  {new Date(item.created_at).toLocaleString()}
+                </span>
+              </div>
+              <h4 className="text-[15px] font-medium text-gray-800 leading-tight">
+                {item.title}
+              </h4>
+              <p className="text-[13.5px] text-gray-600 mt-0.5 truncate">{item.message}</p>
+            </div>
+          ))}
         </div>
       )}
 
@@ -207,7 +110,7 @@ const NotificationPage = () => {
             </div>
             <p className="text-sm text-gray-600 mb-4">{selectedNotification.message}</p>
             <div className="text-xs text-gray-400 text-right">
-              {formatTime(selectedNotification.created_at)}
+              {new Date(selectedNotification.created_at).toLocaleString()}
             </div>
           </div>
         </div>

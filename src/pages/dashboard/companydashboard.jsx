@@ -10,10 +10,10 @@ export default function CompanyDashboard() {
 
   return (
     <div className="flex mt-[-80px]">
-      <main className="w-full flex-1 p-6 bg-gray-50 mt-[80px] min-h-screen">
+      <main className="w-full flex-1 p-6 mt-[80px] min-h-screen">
         <ProfileHeader />
 
-        <div className="space-y-4 p-4 bg-gray-100 min-h-screen">
+        <div className="space-y-4 p-4 min-h-screen">
           {/* Top Grid: Cards and Potential Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="grid grid-cols-2 gap-4">

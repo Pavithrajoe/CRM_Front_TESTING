@@ -252,10 +252,10 @@ function Tax() {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex items-center justify-center">
+    <div className="p-6 min-h-screen flex items-center justify-center">
       <div className="w-full max-w-6xl flex flex-col md:flex-row gap-8">
         {/* Left Panel: Tax List */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 w-full md:w-1/2">
+        <div className="bg-white border border-gray-200 rounded-xl mt-[-200px] shadow-lg p-6 w-full md:w-1/2">
           <div className="flex justify-between items-center mb-6">
             <h2 className="font-bold text-2xl text-blue-800">Tax Rates</h2>
             <div className="relative">
@@ -356,7 +356,7 @@ function Tax() {
         </div>
 
         {/* Right Panel: Add/Edit Form */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-6 w-full md:w-1/2">
+        <div className="bg-white border border-gray-200 rounded-xl mt-[-200px] shadow-lg p-6 w-full md:w-1/2">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
               {selectedTax ? `Edit ${selectedTax.cTax_name}` : 'Add New Tax Rate'}

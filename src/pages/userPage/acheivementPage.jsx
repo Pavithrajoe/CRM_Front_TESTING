@@ -228,7 +228,7 @@ function AcheivementDashboard({ userId }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen p-5 font-sans text-gray-800 flex justify-center items-center">
+            <div className="min-h-screen p-5 font-Montserrat text-gray-800 flex justify-center items-center">
                 <p className="text-xl font-semibold">Achievement Dashboard {currentUserName}...</p>
                 <ToastContainer />
             </div>
@@ -237,7 +237,7 @@ function AcheivementDashboard({ userId }) {
 
     if (error) {
         return (
-            <div className="min-h-screen p-5 font-sans text-gray-800 flex flex-col justify-center items-center">
+            <div className="min-h-screen p-5 sans text-gray-800 flex flex-col justify-center items-center">
                 <p className="text-xl font-semibold text-red-600 mb-4">Error: {error}</p>
                 <button
                     onClick={() => navigate('/dashboard')} // Example: navigate to a safe page

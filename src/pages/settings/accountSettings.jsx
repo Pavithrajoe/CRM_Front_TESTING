@@ -92,7 +92,7 @@ const AccountSettings = () => {
       // Check if settings already exist
       const hasExistingSettings = !!data && Object.keys(data).length > 0;
       setHasGeneralSettings(hasExistingSettings);
-      
+
       if (hasExistingSettings) {
         setGeneralSettings({
           whatsapp_active: !!data.whatsapp_active,
@@ -119,8 +119,10 @@ const AccountSettings = () => {
       if (value.length > 50) newErrors.email = 'Maximum 50 characters allowed';
       else if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
         newErrors.email = 'Invalid email format';
+      else delete newErrors.email;
     } else if (name === 'phone') {
       if (!/^\d{10}$/.test(value)) newErrors.phone = 'Must be 10 digits';
+      else delete newErrors.phone;
     } else if (name === 'gst' && value && !/^[A-Za-z0-9]{15}$/.test(value))
       newErrors.gst = 'Must be exactly 15 alphanumeric characters';
     else if (name === 'website' && value.length > 50)
@@ -141,9 +143,13 @@ const AccountSettings = () => {
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  // Toggle checkbox change for general settings
-  const handleToggleChange = key => {
-    setGeneralSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  // Toggle checkbox change for general settings — use functional setState and log for debug
+  const handleToggleChange = (key) => {
+    setGeneralSettings(prev => {
+      const newState = { ...prev, [key]: !prev[key] };
+      console.log('Checkbox toggled, new state:', newState);
+      return newState;
+    });
   };
 
   // Lead form type change
@@ -178,6 +184,19 @@ const AccountSettings = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Profile updated successfully!");
+
+      // Update localStorage.user with new business type
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      const userObj = JSON.parse(userString);
+      userObj.ibusiness_type = leadFormType;
+      localStorage.setItem("user", JSON.stringify(userObj));
+
+      window.dispatchEvent(new CustomEvent("leadFormTypeChanged", {
+        detail: leadFormType
+      }));
+    }
+    
     } catch (err) {
       alert("Failed to update profile");
       console.error(err);
@@ -187,29 +206,43 @@ const AccountSettings = () => {
   }, [profile, leadFormType, token, companyId, errors]);
 
   // Save general settings (POST or PUT)
-  const handleSaveGeneralSettings = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Use POST if no settings exist, PUT if they do
-      const method = hasGeneralSettings ? 'put' : 'post';
-      
-      await axios[method](`${ENDPOINTS.GENERAL_SETTING}`, generalSettings, {
-        headers: { Authorization: `Bearer ${token}` }
+const handleSaveGeneralSettings = useCallback(async () => {
+  setLoading(true);
+  try {
+    console.log('Saving payload:', generalSettings);
+    const method = hasGeneralSettings ? 'put' : 'post';
+    await axios[method](ENDPOINTS.GENERAL_SETTING, generalSettings, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Refetch after save to sync frontend state
+    const res = await axios.get(ENDPOINTS.GET_SETTINGS, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const updated = res.data?.result;
+    if (updated) {
+      setGeneralSettings({
+        whatsapp_active: !!updated.whatsapp_active,
+        mail_active: !!updated.mail_active,
+        website_active: !!updated.website_active,
+        phone_active: !!updated.phone_active,
+        ip_address: updated.ip_address || '',
+        quotation_prefix: updated.quotation_prefix || '',
+        sub_src_active: !!updated.sub_src_active,
+        bactive: !!updated.bactive,
       });
-      
-      // Update the flag after successful save
-      if (!hasGeneralSettings) {
-        setHasGeneralSettings(true);
-      }
-      
-      alert("General settings saved successfully!");
-    } catch (err) {
-      alert("Failed to save general settings");
-      console.error(err);
-    } finally {
-      setLoading(false);
+      setHasGeneralSettings(true);
     }
-  }, [generalSettings, token, hasGeneralSettings]);
+
+    alert("General settings saved successfully!");
+  } catch (err) {
+    alert("Failed to save general settings");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, [generalSettings, token, hasGeneralSettings]);
+
 
   return (
     <div className="relative w-full bg-[#f9f9f9] rounded-3xl shadow-md p-6 mt-4 border border-gray-200">
@@ -288,7 +321,7 @@ const AccountSettings = () => {
           { id: "mail_active", label: "Email Notifications" },
           { id: "website_active", label: "Website Active" },
           { id: "phone_active", label: "Phone Active" },
-          { id: "sub_src_active", label: "Sub Service Active" },
+          { id: "sub_src_active", label: "Sub Source Active" },
         ].map(({ id, label }) => (
           <div key={id} className="flex items-center">
             <input
@@ -391,7 +424,6 @@ const AccountSettings = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 };

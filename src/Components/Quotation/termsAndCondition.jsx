@@ -180,7 +180,7 @@ function TermsAndConditions() {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen flex items-start justify-center">
+    <div className="p-6 min-h-screen flex items-start justify-center">
       <div className="w-full max-w-5xl flex flex-col md:flex-row gap-8">
         {/* Left Panel: Terms List */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-6 w-full md:w-1/2 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">

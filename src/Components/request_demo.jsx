@@ -307,7 +307,7 @@ const RequestDemo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f2f7] flex flex-col items-center justify-center px-4 py-12 font-[system-ui]">
+    <div className="min-h-screen bg-[#f2f2f7] flex flex-col items-center justify-center px-4 py-12">
       <div className="bg-white/70 backdrop-blur-md rounded-[28px] shadow-xl flex flex-col md:flex-row w-full max-w-6xl overflow-hidden border border-gray-100">
         {/* Left Panel - unchanged */}
         <div className="w-full md:w-3/4 p-10 flex flex-col justify-between">
@@ -816,7 +816,7 @@ export default RequestDemo;
 //   }
 
 //   return (
-//     <div className="min-h-screen bg-[#f2f2f7] flex flex-col items-center justify-center px-4 py-12 font-[system-ui]">
+//     <div className="min-h-screen bg-[#f2f2f7] flex flex-col items-center justify-center px-4 py-12 [system-ui]">
 //       <div className="bg-white/70 backdrop-blur-md rounded-[28px] shadow-xl flex flex-col md:flex-row w-full max-w-6xl overflow-hidden border border-gray-100">
 //         {/* Left Panel - unchanged from your previous version */}
 //         <div className="w-full md:w-3/4 p-10 flex flex-col justify-between">

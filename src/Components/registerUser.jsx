@@ -186,7 +186,7 @@ export default function CreateUserForm({ onClose }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center font-inter">
+      <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
         <form onSubmit={handleSubmit} className="bg-white w-full max-w-2xl rounded-3xl p-6 relative shadow-2xl overflow-y-auto max-h-[90vh]">
           <button
             type="button"

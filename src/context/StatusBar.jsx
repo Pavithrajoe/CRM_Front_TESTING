@@ -1206,7 +1206,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
                   )}
                   <div
-                    className="font-sans bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-gray-200  min-w-[200px] max-w-[250px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-55 overflow-hidden z-10 cursor-pointer transition p-5"
+                    className=" bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-gray-200  min-w-[200px] max-w-[250px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-55 overflow-hidden z-10 cursor-pointer transition p-5"
                     onClick={() => setSelectedRemark(remark)}
                   >
                     <div className="space-y-2 text-sm">

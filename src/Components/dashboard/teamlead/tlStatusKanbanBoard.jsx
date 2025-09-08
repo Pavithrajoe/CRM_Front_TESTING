@@ -248,7 +248,7 @@ const StatusKanbanTab = () => {
         />
       </div>
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="overflow-x-auto w-full h-[80vh] p-4 bg-gray-50 font-inter">
+        <div className="overflow-x-auto w-full h-[80vh] p-4 bg-gray-50">
           <div className="flex gap-6 min-w-max pb-4">
             {statuses.map((status) => {
               const leadsForStatus = leads[String(status.ilead_status_id)] || [];

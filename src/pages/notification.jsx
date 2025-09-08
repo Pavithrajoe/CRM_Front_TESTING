@@ -40,7 +40,7 @@ const fetchNotifications = async () => {
   }, [token]);
 
   return (
-    <div className="p-6 bg-[#f7f8fa] min-h-screen font-Montserrat">
+    <div className="p-6 bg-[#f7f8fa] min-h-screen">
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => window.history.back()}

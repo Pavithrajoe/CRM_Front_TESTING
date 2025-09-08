@@ -207,7 +207,7 @@ const UserDeals = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100 font-inter">
+        <div className="flex flex-col h-screen bg-gray-100">
             <div className="p-6">
                 <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
                     <div className="relative flex items-center space-x-2 flex-wrap gap-2">

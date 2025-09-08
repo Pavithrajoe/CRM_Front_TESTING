@@ -388,7 +388,7 @@ function LogUserCallLogs() {
     );
 
     return (
-        <div className="flex mt-[-80px] font-sans">
+        <div className="flex mt-[-80px]">
             <main className="w-full flex-1 p-6 mt-[80px] min-h-screen">
                 <div className="flex justify-between items-center mb-6">
                     <TeamleadHeader />
@@ -540,7 +540,7 @@ function LogUserCallLogs() {
                                                 <tr key={`${log.id || index}-${log.call_time}`} className="hover:bg-blue-50 transition-all duration-150">
                                                     <td className="px-4 py-3 font-medium">{indexOfFirstLog + index + 1}</td>
                                                     <td className="px-4 py-3">{userName}</td>
-                                                    <td className="px-4 py-3 font-Montserrat">{log.call_log_number || 'N/A'}</td>
+                                                    <td className="px-4 py-3">{log.call_log_number || 'N/A'}</td>
                                                     <td className="px-4 py-3">
                                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                                             log.call_type_id === 1 ? 'bg-green-100 text-green-800' :
@@ -553,7 +553,7 @@ function LogUserCallLogs() {
                                                     </td>
                                                     <td className="px-4 py-3">{formatDisplayDate(log.call_time)}</td>
                                                     <td className="px-4 py-3">{formatTime(log.call_time)}</td>
-                                                    <td className="px-4 py-3 font-Montserrat">{formatDuration(log.duration)}</td>
+                                                    <td className="px-4 py-3">{formatDuration(log.duration)}</td>
                                                     <td className="px-4 py-3">
                                                         <button
                                                             onClick={() => handleAddLeadClick(log)}

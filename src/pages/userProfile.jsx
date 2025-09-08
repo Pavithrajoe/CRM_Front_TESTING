@@ -57,7 +57,7 @@ const MessageDisplay = ({ message, type, onClose }) => {
 
 // Reusable ConfirmationModal component
 const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Action" }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
+  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl relative">
       <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
       <p className="text-gray-700 mb-6">{message}</p>
@@ -442,7 +442,7 @@ showAppMessage("Profile updated successfully!", "success");
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10">
             <button
               onClick={handleFormClose}

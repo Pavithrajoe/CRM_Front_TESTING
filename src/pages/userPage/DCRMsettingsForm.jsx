@@ -189,7 +189,7 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4 font-inter">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
       <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-2xl relative">
         <button
           onClick={onClose}

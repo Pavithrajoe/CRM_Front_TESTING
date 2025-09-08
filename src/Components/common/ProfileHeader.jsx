@@ -194,7 +194,7 @@ const ProfileHeader = () => {
   };
 
   return (
-      <div className="flex justify-end items-center gap-4 mb-6 relative font-Montserrat">
+      <div className="flex justify-end items-center gap-4 mb-6 relative f">
       {showLeadForm && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
           <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">

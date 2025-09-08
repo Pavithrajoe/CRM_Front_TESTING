@@ -224,7 +224,7 @@ export default function SalesByStageReport() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-800 font-Montserrat">
+    <div className="flex min-h-screen bg-gray-50 text-gray-800">
       <div className="flex-1 p-8">
         {/* Header */}
         <div className="flex items-center mb-6">

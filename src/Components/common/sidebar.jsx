@@ -39,7 +39,7 @@ const Sidebar = () => {
           ));
         } else {
           setMenuItems(fullMenuItems.filter(item =>
-            ['Home', 'Lead', 'Calendar', '', 'Chat'].includes(item.label)
+            ['Home', 'Lead', 'Customer', 'Calendar', 'Chat'].includes(item.label)
           ));
         }
       } catch {

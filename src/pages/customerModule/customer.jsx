@@ -241,7 +241,7 @@ const WonList = () => {
           type="text"
           value={searchTerm}
           onChange={handleSearchChange}
-          placeholder="Search deals..."
+          placeholder="Search customers..."
           className="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 bg-gray-50 rounded-full shadow-inner placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <div className="flex gap-2 flex-wrap">

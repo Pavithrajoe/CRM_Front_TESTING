@@ -164,7 +164,7 @@ const UserPage = () => {
   const isAuthorized = ["admin", "administrator", "super_admin", "super_administrator", "Administrator"].includes(userRole);
 
   return (
-    <div className="p-6 min-h-screen shadow-inner  text-gray-800">
+    <div className="p-6 min-h-screen text-gray-800">
       <ProfileHeader />
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">

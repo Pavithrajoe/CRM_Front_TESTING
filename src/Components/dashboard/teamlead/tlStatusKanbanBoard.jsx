@@ -232,13 +232,13 @@ const StatusKanbanTab = () => {
 
   return (
     <>
-      <div className="p-4 bg-white border-b border-gray-200">
+      <div className="p-4">
         <input
           type="text"
           placeholder="Search leads by name, organization, email, or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           style={{
             backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>')`,
             backgroundRepeat: "no-repeat",
@@ -262,7 +262,7 @@ const StatusKanbanTab = () => {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-slate-300 to-slate-400 shadow-lg min-h-[200px]"
+                      className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-blue-50 to-blue-100 shadow-lg min-h-[200px]"
                     >
                       <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
                         <span className="flex-1 text-center">
@@ -292,7 +292,7 @@ const StatusKanbanTab = () => {
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 onClick={() => goToDetail(lead.ilead_id)}
-                                className="p-3 bg-indigo-400 hover:bg-white rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-black-800"
+  className="p-3 bg-sky-100 hover:bg-sky-200 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-gray-800"
                               >
                                 <span className="font-medium text-black text-base">
                                   {lead.clead_name || "Unnamed Lead"}

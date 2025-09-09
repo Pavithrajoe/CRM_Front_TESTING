@@ -18,7 +18,7 @@ const SettingsPage = () => {
 
       <div className="flex h-[90vh]">
         {/* Dark Sidebar */}
-<aside className="w-72 m-4 p-6 bg-[#164CA1] border border-blue-900 rounded-2xl shadow-xl text-white space-y-6">
+<aside className="w-72 m-4 p-6 bg-[#164CA1] border border-blue-900 rounded-2xl text-white space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-3">GENERAL SETTINGS</h2>
             <ul className="space-y-2">

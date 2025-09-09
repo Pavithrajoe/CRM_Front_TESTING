@@ -233,7 +233,7 @@ const WonList = () => {
 
   // UI
   return (
-    <div className="max-w-full mx-auto p-4 bg-white rounded-2xl shadow-md space-y-6 min-h-screen">
+    <div className="max-w-full mx-auto p-4 space-y-6 min-h-screen">
       <ProfileHeader />
 
       <div className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-3">
@@ -352,7 +352,7 @@ const WonList = () => {
                 <div
                   key={item.id}
                   onClick={() => goToDetail(item.id)}
-                  className="min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 grid-cols-6"
+                  className="min-w-[600px] grid gap-4 px-4 py-3 border-t bg-white hover:bg-gray-100 cursor-pointer text-sm text-gray-700 grid-cols-6"
                 >
                   <div>{item.name || '-'}</div>
                   <div>{item.organization || '-'}</div>
@@ -432,7 +432,7 @@ const WonList = () => {
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -442,7 +442,7 @@ const WonList = () => {
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

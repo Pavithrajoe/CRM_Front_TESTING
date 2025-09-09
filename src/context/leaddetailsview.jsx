@@ -1266,182 +1266,210 @@ return (
       )} */}
 
       {/* Email Compose Dialog */}
-      {isMailOpen && (
-        <div
-          className="fixed  -0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
-          style={{ backdropFilter: "blur(8px)" }}
+     {isMailOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4"
+  >
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <img
+            src="../../public/images/detailview/email.svg"
+            className="w-6 h-6"
+            alt="Email icon"
+          />
+          Compose Email
+        </h2>
+        <button
+          onClick={() => setIsMailOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
         >
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[90vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-black-800 flex items-center gap-2">
-                <img src="../../public/images/detailview/email.svg" className="text-black-600" size={24} alt="Email icon" />
-                Compose Email
-              </h2>
-              <button
-                onClick={() => setIsMailOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
+        {/* Templates Section */}
+        <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-gray-200 overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-lg text-gray-800">Email Templates</h3>
+          </div>
+
+          {templatesLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="text-center py-8 text-blue-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mx-auto mb-2 text-blue-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <p>No templates available</p>
+            </div>
+          ) : (
+            <div className="space-y-3 h-[calc(100%-50px)] overflow-y-auto pr-2">
+              {templates.map((template) => (
+                <div
+                  key={template.mailTemplateId}
+                  className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+                  onClick={() => applyTemplate(template)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg">
+                      <MdEmail className="text-blue-600" size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{template.mailTitle}</h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Email Form Section */}
+        <div className="w-full md:w-1/2 lg:w-3/5 h-[550px] overflow-y-scroll flex flex-col">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendEmail();
+            }}
+            className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
+          >
+            <div className="grid grid-cols-1 gap-4">
+              {/* To Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">To</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                    placeholder="example@email.com"
+                    value={sentTo}
+                    onChange={(e) => setSentTo(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* CC Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                    placeholder="cc@example.com (separate multiple with commas)"
+                    value={ccRecipients}
+                    onChange={(e) => setCcRecipients(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Subject Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
+                <input
+                  type="text"
+                  className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
+                  value={mailSubject}
+                  onChange={(e) => setMailSubject(e.target.value)}
+                  placeholder="Write subject..."
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Message Editor */}
+            <div className="flex-grow flex flex-col">
+              <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
+              <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
+                <ReactQuill
+                  theme="snow"
+                  value={mailContent}
+                  onChange={setMailContent}
+                  modules={{
+                    ...modules,
+                    toolbar: [
+                      [{ header: [1, 2, false] }],
+                      ["bold", "italic", "underline", "strike"],
+                      [{ color: [] }, { background: [] }],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["link"],
+                      ["clean"],
+                    ],
+                  }}
+                  formats={formats}
+                  className="h-full min-h-[100px] sm:min-h-[150px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[300px]"
+                  style={{ border: "none" }}
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsMailOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                disabled={isSendingMail}
+              >
+                {isSendingMail ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <MdEmail size={16} />
+                    <span>Send Email</span>
+                  </>
+                )}
               </button>
             </div>
-
-            <div className="flex flex-col md:flex-row gap-4 flex-grow">
-              {/* Templates Section */}
-              <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-black-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-lg text-black-800">Email Templates</h3>
-                </div>
-
-                {templatesLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 "></div>
-                  </div>
-                ) : templates.length === 0 ? (
-                  <div className="text-center py-8 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <p>No templates available</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-auto pr-2">
-                    {templates.map((template) => (
-                      <div
-                        key={template.mailTemplateId}
-                        className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-                        onClick={() => applyTemplate(template)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg">
-                            <MdEmail className="text-blue-600" size={18} />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold ">{template.mailTitle}</h4>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Email Form Section */}
-              <div className="w-full md:w-1/2 lg:w-3/5 h-[550px] overflow-y-scroll flex flex-col">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    sendEmail();
-                  }}
-                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-md border border-white/30 p-4 rounded-2xl shadow-inner"
-                >
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* To Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">To</label>
-                      <div className="relative">
-                        <input
-                          type="email"
-                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-                          placeholder="example@email.com"
-                          value={sentTo}
-                          onChange={(e) => setSentTo(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                  
-                    {/* CC Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">CC</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-                          placeholder="cc@example.com (separate multiple with commas)"
-                          value={ccRecipients}
-                          onChange={(e) => setCcRecipients(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Subject Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 mb-1">Subject</label>
-                      <input
-                        type="text"
-                        className="w-full bg-white/70 border border-gray-300 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
-                        value={mailSubject}
-                        onChange={(e) => setMailSubject(e.target.value)}
-                        placeholder="Write subject..."
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Message Editor */}
-                  <div className="flex-grow flex flex-col">
-                    <label className="block text-sm font-medium text-gray-800 mb-1">Message</label>
-                    <div className="border border-gray-300 rounded-xl overflow-hidden bg-white/70 flex-grow shadow-inner">
-                      <ReactQuill
-                        theme="snow"
-                        value={mailContent}
-                        onChange={setMailContent}
-                        modules={{
-                          ...modules,
-                          toolbar: [
-                            [{ header: [1, 2, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ color: [] }, { background: [] }],
-                            [{ list: 'ordered' }, { list: 'bullet' }],
-                            ['link'],
-                            ['clean'],
-                          ],
-                        }}
-                        formats={formats}
-                        className="h-full min-h-[100px] sm:min-h-[150px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[300px]"
-                        style={{ border: 'none' }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-end space-x-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsMailOpen(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white/80 hover:bg-gray-100 transition"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                      disabled={isSendingMail}
-                    >
-                      {isSendingMail ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <MdEmail size={16} />
-                          <span>Send Email</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+          </form>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

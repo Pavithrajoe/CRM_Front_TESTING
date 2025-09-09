@@ -7,7 +7,7 @@ import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
 
 const LAST_SEEN_TS_KEY = 'notifications_today_last_seen_at';
-const POLLING_INTERVAL_MS = 30000;
+const POLLING_INTERVAL_MS = 60000;
 
 const ProfileHeader = () => {
   // Profile state
@@ -37,7 +37,6 @@ const ProfileHeader = () => {
     const userString = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (!userString || !token) return;
-
     try {
       const userObject = JSON.parse(userString);
       setProfile({
@@ -65,25 +64,23 @@ const ProfileHeader = () => {
   }, [navigate]);
 
   useEffect(() => {
-  const handler = (e) => {
-    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
-    setLeadFormType(userObj.ibusiness_type);      
-    setProfile(prev => ({ ...prev, company_name: userObj.company_name })); 
-  };
-
-  window.addEventListener("leadFormTypeChanged", handler);
-  return () => window.removeEventListener("leadFormTypeChanged", handler);
-}, []);
+    const handler = (e) => {
+      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+      setLeadFormType(userObj.ibusiness_type);    
+      setProfile(prev => ({ ...prev, company_name: userObj.company_name }));
+    };
+    window.addEventListener("leadFormTypeChanged", handler);
+    return () => window.removeEventListener("leadFormTypeChanged", handler);
+  }, []);
 
   // Local "isToday" function for ISO date (UTC-safe)
   const isToday = useCallback((dateString) => {
     if (!dateString) return false;
     const todayLocal = new Date();
-    // Cut the time part, only compare the date
     return dateString.slice(0, 10) === todayLocal.toISOString().slice(0, 10);
   }, []);
 
-  // Notifications polling logic
+  // Fetch unread today notifications
   const fetchUnreadTodayNotifications = useCallback(async () => {
     const userString = localStorage.getItem('user');
     const token = localStorage.getItem('token');
@@ -92,41 +89,29 @@ const ProfileHeader = () => {
       setBellNotificationCount(0);
       return;
     }
-
     let currentUserId = null;
     try {
       const userObject = JSON.parse(userString);
       currentUserId = userObject.iUser_id;
     } catch {}
-
     if (!currentUserId) return;
-
     try {
-      // Proper API response: { success, data: [ { fields } ] }
       const res = await axios.get(`${ENDPOINTS.BASE_URL_IS}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = Array.isArray(res.data.data) ? res.data.data : [];
-      // Robust: match user_id, is unread, created today
       const todaysNotifications = data.filter(n =>
         String(n.user_id) === String(currentUserId) &&
         isToday(n.created_at) &&
-        n.read === false // strictly use 'read' from API, not !n.read for safety
+        n.read === false
       );
       setDisplayedNotifications(todaysNotifications);
-
-      // Bell count since last seen
       const lastSeen = localStorage.getItem(LAST_SEEN_TS_KEY);
       const newBellCount = lastSeen
-        ? todaysNotifications.filter(n =>
-            new Date(n.created_at) > new Date(lastSeen)
-          ).length
+        ? todaysNotifications.filter(n => new Date(n.created_at) > new Date(lastSeen)).length
         : todaysNotifications.length;
-
       if (!showNotifications) setBellNotificationCount(newBellCount);
       else setBellNotificationCount(0);
-
-      // Desktop push notification for latest
       if (!showNotifications && newBellCount > 0 && Notification.permission === 'granted' && !hasPushedNotification.current && todaysNotifications[0]) {
         const latest = todaysNotifications[0];
         const notif = new Notification('🔔 New Notification', {
@@ -143,14 +128,14 @@ const ProfileHeader = () => {
     }
   }, [isToday, showNotifications]);
 
-  // Poll every interval for new notifications
+  // Poll every interval
   useEffect(() => {
     fetchUnreadTodayNotifications();
     const intervalId = setInterval(fetchUnreadTodayNotifications, POLLING_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [fetchUnreadTodayNotifications]);
 
-  // Clicks outside dropdowns/panels
+  // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setShowDropdown(false);
@@ -166,18 +151,40 @@ const ProfileHeader = () => {
   };
   const handleLeadFormClose = () => setShowLeadForm(false);
 
-  const toggleNotificationsPanel = () => {
-    setShowNotifications(prev => {
-      const willOpen = !prev;
-      if (willOpen) {
+  // New function: Mark all notifications as read frontend call
+  const markAllNotificationsRead = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await axios.post(`${ENDPOINTS.BASE_URL_IS}/notifications/mark-all-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setBellNotificationCount(0);
+        setDisplayedNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+    }
+  };
+
+const toggleNotificationsPanel = () => {
+  setShowNotifications(prev => {
+    const willOpen = !prev;
+    if (willOpen) {
+      // fetch notifications, show latest to user FIRST
+      fetchUnreadTodayNotifications().then(() => {
+        markAllNotificationsRead(); // mark as read in backend
         localStorage.setItem(LAST_SEEN_TS_KEY, new Date().toISOString());
         setBellNotificationCount(0);
-      } else {
-        fetchUnreadTodayNotifications();
-      }
-      return willOpen;
-    });
-  };
+      });
+    } else {
+      fetchUnreadTodayNotifications(); // refresh when closing
+    }
+    return willOpen;
+  });
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -194,7 +201,7 @@ const ProfileHeader = () => {
   };
 
   return (
-      <div className="flex justify-end items-center gap-4 mb-6 relative f">
+    <div className="flex justify-end items-center gap-4 mb-6 relative f">
       {showLeadForm && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
           <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
@@ -205,17 +212,17 @@ const ProfileHeader = () => {
       )}
 
       <button
-  onClick={handleLeadFormOpen}
-  className={`px-5 py-2 rounded-full text-white font-medium 
-    bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
-    border border-blue-300 shadow-lg 
-    hover:from-blue-600 hover:to-blue-800 
-    transition duration-300
-    ${!(leadFormType === 1 || leadFormType === 2) ? 'opacity-50 cursor-not-allowed' : 'animate-pulse'}`}
-  disabled={!(leadFormType === 1 || leadFormType === 2)}
->
-  + Create Lead
-</button>
+        onClick={handleLeadFormOpen}
+        className={`px-5 py-2 rounded-full text-white font-medium 
+          bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
+          border border-blue-300 shadow-lg 
+          hover:from-blue-600 hover:to-blue-800 
+          transition duration-300
+          ${!(leadFormType === 1 || leadFormType === 2) ? 'opacity-50 cursor-not-allowed' : 'animate-pulse'}`}
+        disabled={!(leadFormType === 1 || leadFormType === 2)}
+      >
+        + Create Lead
+      </button>
 
       {/* Notification Bell */}
       <div className="relative" ref={notificationRef}>
@@ -228,7 +235,6 @@ const ProfileHeader = () => {
             {bellNotificationCount}
           </span>
         )}
-
         {showNotifications && (
           <div className="absolute right-0 mt-2 w-80 max-h-60 overflow-y-auto bg-white border border-blue-200 rounded-xl shadow-lg p-3 z-50">
             <div className="flex justify-between items-center mb-2">
@@ -249,11 +255,8 @@ const ProfileHeader = () => {
                       <br />
                       {note.title || "New Notification"}
                     </span>
-                     <p className="font-bold">Message:</p>
-                   
+                    <p className="font-bold">Message:</p>
                     <span className="text-sm font">
-                      
-                     
                       {note.message || "New Notification"}
                     </span>
                   </li>
@@ -276,7 +279,6 @@ const ProfileHeader = () => {
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setShowDropdown(!showDropdown)}
         >
-
           <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
             {profile.name
               ? profile.name
@@ -287,9 +289,7 @@ const ProfileHeader = () => {
                   .toUpperCase()
               : 'UU'}
           </div>
-          {/* <div className="text-xl text-gray-600">▾</div> */}
         </div>
-
         {showDropdown && (
           <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
             <div className="flex justify-between items-start mb-2">

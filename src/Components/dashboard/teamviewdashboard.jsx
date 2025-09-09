@@ -22,7 +22,7 @@ const TeamviewDashboard = ({
   const dealCount = leads.filter(item => item.bisConverted === true).length;
   const hotCount = leads.filter(lead => lead.lead_potential?.clead_name === "HOT").length;
   const coldCount = leads.filter(lead => lead.lead_potential?.clead_name === "COLD").length;
-  const reminderMessage = reminders?.message || []; 
+  const reminderMessage = reminders || []; 
   if (loading) {
     return (
       <main className="w-full flex-1 p-6 mt-[0px] min-h-screen flex items-center justify-center">

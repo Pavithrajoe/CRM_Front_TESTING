@@ -907,8 +907,15 @@ const ProfileCard = () => {
               <FiX size={24} />
             </button>
             <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
-            {profile.clead_name || "Lead"}'s Profile Details
-          </h3>
+  {(profile?.clead_name
+    ? profile.clead_name
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    : "Lead")}'s Profile Details
+</h3>
+
+
             <div className="space-y-4 text-sm sm:text-base text-gray-700">
               <div className="flex items-center gap-3">
                 <FiPhone className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />

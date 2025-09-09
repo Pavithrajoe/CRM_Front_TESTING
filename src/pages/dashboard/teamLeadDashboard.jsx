@@ -85,6 +85,41 @@ const LeadsDashboard = () => {
 
   const reminders = dashboardData?.details?.reminders || [];
 
+  // IST date helpers
+  const toISTDateStart = (date) => {
+    const utcDate = new Date(date);
+    const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
+    istDate.setHours(0, 0, 0, 0);
+    return istDate;
+  };
+
+  const toISTDateEnd = (date) => {
+    const utcDate = new Date(date);
+    const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
+    istDate.setHours(23, 59, 59, 999);
+    return istDate;
+  };
+
+  const now = new Date();
+  const todayStart = toISTDateStart(now.toISOString());
+  const todayEnd = toISTDateEnd(now.toISOString());
+
+  // Filter same-day reminders count
+  const todayRemindersCount = reminders.filter((reminder) => {
+    if (!reminder.dremainder_dt) return false;
+    const reminderDate = new Date(reminder.dremainder_dt);
+    const istReminderDate = new Date(reminderDate.getTime() + 5.5 * 60 * 60 * 1000);
+    return istReminderDate >= todayStart && istReminderDate <= todayEnd;
+  }).length;
+
+  // Filter same-day tasks count
+  const todayTasksCount = tasks.filter((task) => {
+    if (!task.task_date) return false;
+    const taskDate = new Date(task.task_date);
+    const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
+    return istTaskDate >= todayStart && istTaskDate <= todayEnd;
+  }).length;
+
   return (
     <div className="flex mt-[-80px]">
       <main className="w-full flex-1 p-6 mt-[80px] min-h-screen">
@@ -122,19 +157,32 @@ const LeadsDashboard = () => {
             }}
           >
             {/* Tabs Header */}
-            <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "#f8f9fb" ,borderRadius:2 }}>
-              <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="fullWidth">
+            <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "#f8f9fb", borderRadius: 2 }}>
+              <Tabs
+                value={activeTab}
+                onChange={(e, v) => setActiveTab(v)}
+                variant="fullWidth"
+              >
                 <Tab
                   label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 ,borderRadius:2}}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, borderRadius: 2 }}>
                       Reminders
-                      {reminders.length > 0 && (
-                        <Box sx={{
-                          bgcolor: "#1976d2", color: "white", fontSize: "0.75rem", fontWeight: 600,
-                          minWidth: "20px", height: "20px", display: "flex",
-                          alignItems: "center", justifyContent: "center", borderRadius: "50%"
-                        }}>
-                          {reminders.length}
+                      {todayRemindersCount > 0 && (
+                        <Box
+                          sx={{
+                            bgcolor: "#1976d2",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            minWidth: "20px",
+                            height: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "50%",
+                          }}
+                        >
+                          {todayRemindersCount}
                         </Box>
                       )}
                     </Box>
@@ -144,13 +192,22 @@ const LeadsDashboard = () => {
                   label={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       Tasks
-                      {tasks.length > 0 && (
-                        <Box sx={{
-                          bgcolor: "#d32f2f", color: "white", fontSize: "0.75rem", fontWeight: 600,
-                          minWidth: "20px", height: "20px", display: "flex",
-                          alignItems: "center", justifyContent: "center", borderRadius: "50%"
-                        }}>
-                          {tasks.length}
+                      {todayTasksCount > 0 && (
+                        <Box
+                          sx={{
+                            bgcolor: "#d32f2f",
+                            color: "white",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            minWidth: "20px",
+                            height: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "50%",
+                          }}
+                        >
+                          {todayTasksCount}
                         </Box>
                       )}
                     </Box>
@@ -162,19 +219,23 @@ const LeadsDashboard = () => {
             {/* Tab Content */}
             <Box sx={{ overflowY: "auto", flexGrow: 1, px: 2, py: 1 }}>
               {activeTab === 0 && (
-                reminders.length > 0
-                  ? <RemindersCard reminder_data={reminders} />
-                  : <Typography textAlign="center" mt={4} color="text.secondary" fontStyle="italic">
-                      No reminders for today 🎉
-                    </Typography>
+                todayRemindersCount > 0 ? (
+                  <RemindersCard reminder_data={reminders} />
+                ) : (
+                  <Typography textAlign="center" mt={4} color="text.secondary" fontStyle="italic">
+                    No reminders for today 🎉
+                  </Typography>
+                )
               )}
 
               {activeTab === 1 && (
-                loadingTasks
-                  ? <Typography textAlign="center" mt={4}>Loading tasks...</Typography>
-                  : taskError
-                    ? <Typography textAlign="center" color="error">{taskError}</Typography>
-                    : <TaskSameDay tasks={tasks} />
+                loadingTasks ? (
+                  <Typography textAlign="center" mt={4}>Loading tasks...</Typography>
+                ) : taskError ? (
+                  <Typography textAlign="center" color="error">{taskError}</Typography>
+                ) : (
+                  <TaskSameDay tasks={tasks} />
+                )
               )}
             </Box>
           </Box>
@@ -182,7 +243,7 @@ const LeadsDashboard = () => {
       </main>
 
       {/* Popup unchanged */}
-      <Dialog open={showPopup} onClose={() => setShowPopup(false)}> {/* ... */}</Dialog>
+      <Dialog open={showPopup} onClose={() => setShowPopup(false)}> {/* ... */} </Dialog>
     </div>
   );
 };

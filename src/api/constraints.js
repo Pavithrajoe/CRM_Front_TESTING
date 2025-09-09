@@ -69,6 +69,7 @@ export const ENDPOINTS = {
   TERMS: `${BASE_URL}/terms`,
   CURRENCY: `${BASE_URL}/currency`,
   BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
+  ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -132,6 +133,7 @@ export const ENDPOINTS = {
   TASK_LEAD: `${BASE_URL}/task/lead`,
   PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
   DAILY_TASK : `${BASE_URL}/task/upcoming-task`,
+  GET_FILTER_TASK: `${BASE_URL}/task/user`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
   //DCRM Integration API

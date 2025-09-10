@@ -9,6 +9,7 @@ import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
 import DemoSessionDetails from "./demo_session_details";
+import LeadProfileView from "./ProfileCardComponents/ViewProfile/LeadProfileView";
 import EditProfileForm from "./ProfileCardComponents/EditForms/B2B_edit_form";
 import EditProfileForm_Customer from "./ProfileCardComponents/EditForms/B2C_edit_form";
 import { ENDPOINTS } from "../../api/constraints";
@@ -113,6 +114,7 @@ const ProfileCard = () => {
           },
         });
         setProfile(response.data);
+        console.log("Fetched lead profile:", response.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
         setError("Failed to load lead details.");
@@ -865,157 +867,12 @@ const ProfileCard = () => {
       )}
 
       {/* Full Details Modal */}
-      {showDetails && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-          <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-lg sm:max-w-xl md:max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg relative">
-            <button
-              onClick={() => setShowDetails(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <FiX size={24} />
-            </button>
-            <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
-  {(profile?.clead_name
-    ? profile.clead_name
-        .split(" ")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    : "Lead")}'s Profile Details
-</h3>
 
-
-            <div className="space-y-4 text-sm sm:text-base text-gray-700">
-              <div className="flex items-center gap-3">
-                <FiPhone className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-                <span>
-                  <span className="font-medium">Phone:</span>{" "}
-                  {profile.iphone_no || "-"}
-                </span>
-              </div>
-              <div className="flex items-center break-words gap-3">
-                <FiMail className="text-gray-500 break-words w-4 h-4 sm:w-5 sm:h-5" />
-                <span>
-                  <span className="font-medium">Email:</span>{" "}
-                  {profile.cemail || "-"}
-                </span>
-              </div>
-              
-
-              <div className="flex items-start gap-3">
-                <FiMapPin className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span className="w-[180px] break-words text-grey-900">
-                    <span className="font-medium">Address:</span>{" "}
-                    {(() => {
-                        const addressParts = [];
-                        if (profile.clead_address1) {
-                            addressParts.push(profile.clead_address1);
-                        }
-                        if (profile.clead_address2) {
-                            addressParts.push(profile.clead_address2);
-                        }
-                        if (profile.city?.cCity_name) {
-                            addressParts.push(profile.city.cCity_name);
-                        }
-                        if (profile.city?.district?.cDistrict_name) {
-                            addressParts.push(profile.city.district.cDistrict_name);
-                        }
-                        if (profile.city?.district?.state?.cState_name) {
-                            addressParts.push(profile.city.district.state.cState_name);
-                        }
-                        if (profile.city?.district?.state?.country?.cCountry_name) {
-                            addressParts.push(profile.city.district.state.country.cCountry_name);
-                         }
-                        return addressParts.length > 0 ? addressParts.join(", ") : "-";
-                    })()}
-                </span>
-            </div>
-              <div className="flex items-start gap-3">
-                <TbWorld className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Website:</span>{" "}
-                  {profile.cwebsite || "-"}
-                </span>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <FiCodesandbox className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Organisation:</span>{" "}
-                  {profile.corganization || "-"}
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <FiDollarSign className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Project Value:</span>{" "}
-                  {profile.iproject_value || "-"}
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <FiUser className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
-                <span>
-                  <span className="font-medium">Employee:</span>{" "}
-                  {profile.ino_employee || "-"}
-                </span>
-              </div>
-            </div>
-
-            {profile.website_lead === true && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm text-sm mt-10 text-yellow-800 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.344a1.5 1.5 0 012.986 0l2.376 6.07a1.5 1.5 0 01-.734 1.944l-4.136 1.84a1.5 1.5 0 01-1.944-.734l-6.07-2.376a1.5 1.5 0 01-.734-1.944l1.84-4.136a1.5 1.5 0 011.944-.734l2.376 6.07a.5.5 0 00.986-.388l-2.136-5.462a.5.5 0 00-.986.388l2.136 5.462a.5.5 0 00.388.986l5.462 2.136a.5.5 0 00.388-.986l-5.462-2.136a.5.5 0 00-.986-.388l5.462-2.136z" clipRule="evenodd" />
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-7.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5zM10 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-                </svg>
-                <p className="font-semibold">This lead originated from the website.</p>
-              </div>
-            )}
-          </div>
-          <div className="space-y-4">
-            {history.length === 0 ? (
-              <div className="text-gray-500 italic">
-              </div>
-            ) : (
-              history.map((entry, index) => (
-                <div
-                  key={index}
-                  className="p-3 sm:p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-100"
-                >
-                  <p className="font-semibold text-sm sm:text-base text-gray-700 mb-2">
-                    Updated on: {entry.date}
-                  </p>
-                  <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-                    {entry.updatedProfile?.clead_name && (
-                      <div>
-                        <span className="font-medium">Name:</span>{" "}
-                        {entry.updatedProfile.clead_name}
-                      </div>
-                    )}
-                    {entry.updatedProfile?.cemail && (
-                      <div>
-                        <span className="font-medium">Email:</span>{" "}
-                        {entry.updatedProfile.cemail}
-                      </div>
-                    )}
-                    {entry.updatedProfile?.iphone_no && (
-                      <div>
-                        <span className="font-medium">Phone:</span>{" "}
-                        {entry.updatedProfile.iphone_no}
-                      </div>
-                    )}
-                    {entry.updatedProfile?.caddress && (
-                      <div>
-                        <span className="font-medium">Address:</span>{" "}
-                        {entry.updatedProfile.icity}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      <LeadProfileView
+        profile={profile}
+        showDetails={showDetails}
+        onClose={() => setShowDetails(false)}
+      />
 
       <DemoSessionDetails leadId={leadId} />
 

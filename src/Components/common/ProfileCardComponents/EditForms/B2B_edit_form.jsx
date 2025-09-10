@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiSave, FiX, FiChevronDown, FiCamera,} from "react-icons/fi";
 import axios from "axios";
-import { ENDPOINTS } from "../../../api/constraints";
-import { usePopup } from "../../../context/PopupContext";
+// import { ENDPOINTS } from "../../../../api/constraints";
+// import { ENDPOINTS } from "../../../../api/constraints";
+import { ENDPOINTS } from "./../../../../api/constraints";
+import { usePopup } from "../../../../context/PopupContext";
 import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
 import countries from 'i18n-iso-countries';
 

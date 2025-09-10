@@ -9,8 +9,8 @@ import { Dialog } from "@headlessui/react";
 import { useDropzone } from "react-dropzone";
 import FilePreviewer from "./FilePreviewer";
 import DemoSessionDetails from "./demo_session_details";
-import EditProfileForm from "../common/EditForms/B2B_edit_form";
-import EditProfileForm_Customer from "../common/EditForms/B2C_edit_form";
+import EditProfileForm from "./ProfileCardComponents/EditForms/B2B_edit_form";
+import EditProfileForm_Customer from "./ProfileCardComponents/EditForms/B2C_edit_form";
 import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
 

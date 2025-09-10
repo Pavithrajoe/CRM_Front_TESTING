@@ -1,4 +1,3 @@
-// src/Components/common/ProfileCardComponents/ViewProfile/LeadProfileView.jsx
 
 import React from 'react';
 import { Dialog } from '@headlessui/react';
@@ -84,7 +83,7 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
           </Dialog.Title>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm sm:text-base">
-            {/* Left Column: Basic Contact & Organization Details */}
+            {/* Left Column - Basic Contact & Organization Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2">
                 Basic Information
@@ -99,12 +98,11 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
               <DetailField label="Email" value={profile.cemail} />
               <DetailField label="Mobile Number" value={profile.iphone_no} />
               <DetailField label="WhatsApp Number" value={profile.whatsapp_number} />
-
-              {/* custom formatted address */}
+              {/* address */}
               {getFormattedAddress(profile)}
             </div>
 
-            {/* Right Column: Lead & Industry Details */}
+            {/* Right Column - Lead & Industry Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2">
                 Lead & Industry Details

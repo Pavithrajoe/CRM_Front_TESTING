@@ -1,15 +1,9 @@
 
 import React, { useEffect, useState } from "react";
-import {
-  Chart as ChartJS,
-  ArcElement, // Import ArcElement for Pie charts
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Pie } from "react-chartjs-2"; // Import the Pie component
+import { Chart as ChartJS, ArcElement, Tooltip, Legend,} from "chart.js";
+import { Pie } from "react-chartjs-2"; 
 import { ENDPOINTS } from "../../../api/constraints";
 
-// Register the required chart elements
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const CityLeadsAnalytics = () => {
@@ -30,7 +24,6 @@ const CityLeadsAnalytics = () => {
         }
         const responseData = await response.json();
 
-        // Extracting total leads from conversionPerTerritory for each city/territory
         const leadsByCity = {};
         const conversionData = responseData.data.conversionPerTerritory;
         if (conversionData) {

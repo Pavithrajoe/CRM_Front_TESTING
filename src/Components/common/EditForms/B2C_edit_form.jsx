@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiSave, FiX, FiChevronDown, FiCamera,} from "react-icons/fi";
 import axios from "axios";
@@ -571,11 +570,11 @@ const validateForm = () => {
     newErrors.iphone_no = "Mobile number must be contain only 6 to 15 digits";
   }
 
-  if (!form.corganization.trim()) {
-    newErrors.corganization = "Organization is required.";
-  } else if (form.corganization.trim().length > 50) {
-    newErrors.corganization = "Organization cannot exceed 50 characters.";
-  }
+  // if (!form.corganization.trim()) {
+  //   newErrors.corganization = "Organization is required.";
+  // } else if (form.corganization.trim().length > 50) {
+  //   newErrors.corganization = "Organization cannot exceed 50 characters.";
+  // }
 
   if (!form.iLeadpoten_id) {
     newErrors.iLeadpoten_id = "Potential is required.";
@@ -641,6 +640,7 @@ const cleanObject = (obj) => {
   );
 };
 
+
 const updateLeadProfile = async () => {
   try {
     const payload = {};
@@ -666,15 +666,25 @@ const updateLeadProfile = async () => {
     if (form.isubservice_id) {
         payload.subservice = { connect: { isubservice_id: parseInt(form.isubservice_id, 10) } };
     }
-    if (form.ilead_status_id) {
-        payload.lead_status = { connect: { ilead_status_id: parseInt(form.ilead_status_id, 10) } };
-    }
+    // if (form.ilead_status_id) {
+    //     payload.lead_status = { connect: { ilead_status_id: parseInt(form.ilead_status_id, 10) } };
+    // }
+    // if (form.cindustry_id) {
+    //     payload.industry = { connect: { iindustry_id: parseInt(form.cindustry_id, 10) } };
+    // }
     if (form.cindustry_id) {
-        payload.industry = { connect: { iindustry_id: parseInt(form.cindustry_id, 10) } };
+      payload.cindustry_id = parseInt(form.cindustry_id, 10); 
     }
+    if (form.ilead_status_id) {
+      payload.ileadstatus_id = parseInt(form.ilead_status_id, 10); 
+    }
+
     if (form.csubindustry_id) {
-        payload.subindustry = { connect: { isubindustry: parseInt(form.csubindustry_id, 10) } };
+      payload.isubindustry = parseInt(form.csubindustry_id, 10);  
     }
+    // if (form.csubindustry_id) {
+    //     payload.subindustry = { connect: { isubindustry: parseInt(form.csubindustry_id, 10) } };
+    // }
     if (form.lead_source_id) {
         payload.lead_sources = { connect: { source_id: parseInt(form.lead_source_id, 10) } };
     }
@@ -722,23 +732,22 @@ const updateLeadProfile = async () => {
   }
 };
 
+
 const handleSubmit = async (e) => {
   e.preventDefault();
-
-  if (isReadOnly) {
-    onClose();
-    return;
-  }
-
+  // console.log("Form data on submit:", form);  
   if (validateForm()) {
     try {
-      await updateLeadProfile(); 
+      await updateLeadProfile(form); 
       await onSave(form); 
       showPopup("Success", "Profile updated successfully!", "success");
+      setSuccessMessage("Profile updated successfully!");
     } catch (error) {
       showPopup("Error", "Failed to update profile.", "error");
       console.error("Error saving profile:", error);
     }
+  } else {
+    // console.log("Validation failed:", errors);
   }
 };
 
@@ -927,8 +936,8 @@ const handleSubmit = async (e) => {
             </div>
 
 
-            {/* Industry Dropdown
-            <div className="relative" ref={industryDropdownRef}>
+            {/* Industry Dropdown */}
+            {/* <div className="relative" ref={industryDropdownRef}>
               <label htmlFor="cindustry_id" className={labelClasses}>
                 Industry
               </label>
@@ -1234,7 +1243,7 @@ const handleSubmit = async (e) => {
 
            {/* Project Value Input */}
 
-            <input
+            {/* <input
               type="number"
               id="iproject_value"
               name="iproject_value"
@@ -1248,7 +1257,7 @@ const handleSubmit = async (e) => {
               className={getInputClasses(errors.iproject_value)}
               readOnly={isReadOnly}
               disabled={isReadOnly}
-            />
+            /> */}
 
                 <input
                   type="number"

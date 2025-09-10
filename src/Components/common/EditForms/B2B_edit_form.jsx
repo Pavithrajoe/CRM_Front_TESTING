@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiSave, FiX, FiChevronDown, FiCamera,} from "react-icons/fi";
 import axios from "axios";
@@ -428,6 +427,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     if (isReadOnly) return;
     setForm((prev) => ({ ...prev, ilead_status_id: statusId }));
     setSearchStatus(statusName);
+    // setSearchStatus(name);
     setIsStatusDropdownOpen(false);
     setErrors((prev) => ({ ...prev, ilead_status_id: "" }));
   };
@@ -446,6 +446,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     if (isReadOnly) return;
     setForm((prev) => ({ ...prev, csubindustry_id: subIndustryId }));
     setSearchSubIndustry(subIndustryName);
+    // setSearchSubIndustry(name);
     setIsSubIndustryDropdownOpen(false);
     setErrors((prev) => ({ ...prev, csubindustry_id: "" }));
   };
@@ -664,15 +665,25 @@ const updateLeadProfile = async () => {
     if (form.isubservice_id) {
         payload.subservice = { connect: { isubservice_id: parseInt(form.isubservice_id, 10) } };
     }
-    if (form.ilead_status_id) {
-        payload.lead_status = { connect: { ilead_status_id: parseInt(form.ilead_status_id, 10) } };
-    }
+    // if (form.ilead_status_id) {
+    //     payload.lead_status = { connect: { ilead_status_id: parseInt(form.ilead_status_id, 10) } };
+    // }
+    // if (form.cindustry_id) {
+    //     payload.industry = { connect: { iindustry_id: parseInt(form.cindustry_id, 10) } };
+    // }
     if (form.cindustry_id) {
-        payload.industry = { connect: { iindustry_id: parseInt(form.cindustry_id, 10) } };
+      payload.cindustry_id = parseInt(form.cindustry_id, 10); 
     }
+    if (form.ilead_status_id) {
+      payload.ileadstatus_id = parseInt(form.ilead_status_id, 10); 
+    }
+
     if (form.csubindustry_id) {
-        payload.subindustry = { connect: { isubindustry: parseInt(form.csubindustry_id, 10) } };
+      payload.isubindustry = parseInt(form.csubindustry_id, 10);  
     }
+    // if (form.csubindustry_id) {
+    //     payload.subindustry = { connect: { isubindustry: parseInt(form.csubindustry_id, 10) } };
+    // }
     if (form.lead_source_id) {
         payload.lead_sources = { connect: { source_id: parseInt(form.lead_source_id, 10) } };
     }
@@ -693,7 +704,7 @@ const updateLeadProfile = async () => {
       payload.modified_by = form.modified_by;
     }
 
-    // console.log("Final payload to be sent:", payload);
+    console.log("Final payload to be sent:", payload);
     // console.log("Frontend cpincode type:", typeof payload.cpincode);
     // console.log("Frontend payload:", payload);
 
@@ -935,7 +946,8 @@ const handleSubmit = async (e) => {
                 value={searchIndustry}
                 onChange={(e) => {
                   if (isReadOnly) return;
-                  setSearchIndustry(e.target.value == "" ? 0 : e.target.value);
+                  // setSearchIndustry(e.target.value == "" ? 0 : e.target.value);
+                  setSearchIndustry(e.target.value);
                   setIsIndustryDropdownOpen(true);
                   setErrors((prev) => ({ ...prev, cindustry_id: "" }));
                 }}
@@ -1230,7 +1242,7 @@ const handleSubmit = async (e) => {
                 )}
               </div>
 
-           {/* Project Value Input */}
+           {/* Project Value Input
 
             <input
               type="number"
@@ -1246,7 +1258,7 @@ const handleSubmit = async (e) => {
               className={getInputClasses(errors.iproject_value)}
               readOnly={isReadOnly}
               disabled={isReadOnly}
-            />
+            /> */}
 
                 <input
                   type="number"

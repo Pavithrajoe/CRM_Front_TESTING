@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiEye,FiCheckCircle ,FiX,FiMove,FiCodesandbox,FiCamera,FiDollarSign,FiUser
 } from "react-icons/fi";
@@ -184,37 +183,6 @@ const ProfileCard = () => {
     fetchAttachments();
     fetchAssignedToList();
   }, [leadId]);
-
-//   const handleEditProfile = (lead) => {
-//   setEditingLead(lead);
-//   console.log("Editing lead:", lead);
-//   const businessTypeId = lead.ibusiness_type; 
-  
-//   if (businessTypeId === 1) { // B2B
-//     setEditFormType(1); 
-//   } else if (businessTypeId === 2) { // B2C
-//     setEditFormType(2);
-//   } else {
-//     setEditFormType(null); 
-//   }
-
-//   setShowEditForm(true);
-// };
-
-//   const handleEditProfile = (lead) => {
-//   setEditingLead(lead); // store lead data to pass to form
-
-//   if (lead.business_type_id === 1) setEditFormType(1); // B2B
-//   else if (lead.business_type_id === 2) setEditFormType(2); // B2C
-//   else setEditFormType(null); // optional for others
-
-//   setShowEditForm(true); // open the edit form modal
-// };
-
-
-  // const handleEditProfile = () => {
-  //   setIsEditModalOpen(true);
-  // };
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiEye,FiCheckCircle ,FiX,FiMove,FiCodesandbox,FiCamera,FiDollarSign,FiUser
+import {FiEdit,FiPhone,FiMail,FiMapPin,FiUpload,FiEye,FiCheckCircle ,FiX,FiMove,FiCodesandbox,FiCamera,FiDollarSign,FiUser, FiTag
 } from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
@@ -377,8 +377,8 @@ const ProfileCard = () => {
     
 
   </div>
-  <div class="border-t border-gray-900 my-2 w-full "></div>
-   <div className="flex items-center space-x-2 justify-end ">
+  <div className = "border-t border-gray-900 my-2 w-full "></div>
+   <div className = "flex items-center space-x-2 justify-end ">
     <button
       onClick={() => setShowDetails(true)}
       className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 hover:text-gray-800 transition-all duration-300 transform hover:scale-110 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
@@ -432,6 +432,13 @@ const ProfileCard = () => {
             <FiMail className="text-gray-900 break-words w-4 h-4 sm:w-5 sm:h-5" />
             <span className="w-[180px] break-words text-grey-900 font-bold">{profile.cemail || "-"}</span>
           </div>
+
+
+          <div className="flex items-center gap-3">
+            <FiTag className="text-gray-900 break-words w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="w-[180px] break-words text-grey-900 font-bold">{profile.lead_status.clead_name || "-"}</span>
+          </div>
+
           <div className="flex items-start gap-3">
             <FiMapPin className="text-gray-900 w-4 h-4 sm:w-5 sm:h-5 mt-1" />
             <span className="bw-[180px] break-words text-grey-900 ">{profile.clead_address1 || "-"}</span>

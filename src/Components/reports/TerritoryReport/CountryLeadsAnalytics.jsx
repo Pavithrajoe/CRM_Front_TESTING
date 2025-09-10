@@ -1,32 +1,62 @@
-
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import { ENDPOINTS } from '../../../api/constraints';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const mockCountryData = {
-  "United States": 5000,
-  "India": 8500,
-  "United Kingdom": 2100,
-  "Canada": 1800,
-  "Australia": 1500,
-};
-
 const CountryLeadsAnalytics = () => {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setData(mockCountryData);
-    }, 1000);
+    const fetchCountryLeads = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(ENDPOINTS.TERRITORY_LEADS, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        const leadsByCountry = response.data?.data?.leadsPerCountry || {};
+
+        setData(leadsByCountry);
+      } catch (err) {
+        console.error("Failed to fetch country leads:", err);
+        setError("Failed to load data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCountryLeads();
   }, []);
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center h-[280px]">
-        <div className="text-sm text-gray-500">Loading country data...</div>
+        <div className="w-8 h-8 border-4 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-sm text-gray-500 mt-2">Loading country data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center h-[280px]">
+        <div className="text-sm text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!data || Object.keys(data).length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center h-[280px]">
+        <div className="text-sm text-gray-500">No country leads data available.</div>
       </div>
     );
   }
@@ -37,7 +67,7 @@ const CountryLeadsAnalytics = () => {
       {
         label: "Leads",
         data: Object.values(data),
-        backgroundColor: "#6366F1", // A consistent color for this chart
+        backgroundColor: "#b3f23dff",
         borderRadius: 5,
       },
     ],
@@ -79,4 +109,3 @@ const CountryLeadsAnalytics = () => {
 };
 
 export default CountryLeadsAnalytics;
-

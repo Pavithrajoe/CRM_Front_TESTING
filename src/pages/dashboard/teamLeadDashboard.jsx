@@ -225,8 +225,7 @@ const todayTasksCount = todayTasks.length;
             </Box>
 
             {/* Tab Content */}
-            {/* Tab Content */}
-<Box sx={{ overflowY: "auto", flexGrow: 1, px: 2, py: 1 }}>
+<Box sx={{ overflowY: "auto", flexGrow: 1, px: 2, py: 1, height:"60vh", overflow: scroll }}>
 
   {/* Reminders Tab */}
   {activeTab === 0 && (

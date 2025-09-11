@@ -95,6 +95,7 @@ function App() {
                   <Route path="commandpage" element={<Commandpage />} />
                   <Route path="task" element={<Tasks />} />
                   <Route path="/users" element={<CreateUserForm />} />
+                  <Route path="/leaddashboard" element={<LeadsDashboard/>} />
                   <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
                   <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
                   <Route path="/lead-conversion" element={<LeadConversionPage />} />

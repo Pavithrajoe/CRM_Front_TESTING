@@ -168,6 +168,8 @@ const LeadDetailView = () => {
     !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
   const showCreateQuotationButton = (isWon || immediateWonStatus || leadData?.bisConverted) && !showQuotationForm;
+    const showProjectValue = (isWon || immediateWonStatus || leadData?.bisConverted);
+
 
   // Get the latest project value from status remarks
   const latestProjectValue = statusRemarks.length > 0 
@@ -887,14 +889,15 @@ return (
 
         <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
           {/* Project Value Display - Only shown when there's a project value */}
-          {projectValueDisplay && (
-            <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
-              <FaCheck className="mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-base font-semibold">
-                Project Value: {projectValueDisplay}
-              </span>
-            </div>
-          )}
+         {showProjectValue && projectValueDisplay && (
+  <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+    <FaCheck className="mr-1 sm:mr-2" />
+    <span className="text-xs sm:text-sm md:text-base font-semibold">
+      Project Value: {projectValueDisplay}
+    </span>
+  </div>
+)}
+
           
           {/* View Quotations Button (only visible when Won and has quotations) */}
           {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (

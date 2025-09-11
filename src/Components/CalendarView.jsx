@@ -10,6 +10,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
 import Slide from '@mui/material/Slide';
+import { useNavigate } from "react-router-dom";
 
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
@@ -709,6 +710,8 @@ const fetchAllTasks = async (date) => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const paginatedCurrentItems = currentTabItems.slice(indexOfFirstItem, indexOfLastItem);
+      const navigate = useNavigate();
+    
     const totalPages = Math.ceil(currentTabItems.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
@@ -946,35 +949,41 @@ setUserCalendarEvents(data || [])
 
         {/* Cards container */}
         <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
-          {activeTab === "reminders" && (
-            reminders.length > 0 ? (
-              reminders.map(reminder => (
-                <div key={reminder.iremainder_id} className="pb-4 last:pb-0 border-b border-gray-200">
-                  <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
-                    <button onClick={() => toggleReminder(reminder.iremainder_id)}>
-                      {reminder.bactive ? <FaCheckSquare className="text-black text-lg" /> : <FaRegSquare className="text-lg" />}
-                    </button>
-                    <div className="flex-1 space-y-2">
-                      <h3 className="font-semibold text-gray-800">{reminder.cremainder_title}</h3>
-                     <div className="flex items-center text-sm text-gray-600">
-  <FaUserAlt className="mr-2 text-xs" />
-  Assigned To: <span className="font-semibold ml-1">{reminder.assigned_to}</span>
-</div>
-
-                      <p className="text-sm font-bold text-gray-600 italic">Message: {reminder.cremainder_content}</p>
-                      <p className="text-xs font-bold text-green-700 bg-green-100 w-[130px] py-1 rounded-full text-center items-center">Priority: {reminder.priority}</p>
-                    </div>
-                    <div className="text-xs text-yellow-700 bg-yellow-200 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
-                      <FaClock className="mr-1" />
-                      {formatDateTime(reminder.dremainder_dt)}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No reminders found for this date.</p>
-            )
-          )}
+         {activeTab === "reminders" && (
+  reminders.length > 0 ? (
+    reminders.map(reminder => (
+      <div 
+        key={reminder.iremainder_id}
+        className="pb-4 last:pb-0 border-b border-gray-200 cursor-pointer" 
+        onClick={() => navigate(`/leaddetailview/${reminder.ilead_id}`)}
+      >
+        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
+          <button onClick={(e) => {
+            e.stopPropagation();
+            toggleReminder(reminder.iremainder_id);
+          }}>
+            {reminder.bactive ? <FaCheckSquare className="text-black text-lg" /> : <FaRegSquare className="text-lg" />}
+          </button>
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-gray-800">{reminder.cremainder_title}</h3>
+            <div className="flex items-center text-sm text-gray-600">
+              <FaUserAlt className="mr-2 text-xs" />
+              Assigned To: <span className="font-semibold ml-1">{reminder.assigned_to}</span>
+            </div>
+            <p className="text-sm font-bold text-gray-600 italic">Message: {reminder.cremainder_content}</p>
+            <p className="text-xs font-bold text-green-700 bg-green-100 w-[130px] py-1 rounded-full text-center items-center">Priority: {reminder.priority}</p>
+          </div>
+          <div className="text-xs text-yellow-700 bg-yellow-200 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
+            <FaClock className="mr-1" />
+            {formatDateTime(reminder.dremainder_dt)}
+          </div>
+        </div>
+      </div>
+    ))
+  ) : (
+    <p className="text-gray-500 text-center">No reminders found for this date.</p>
+  )
+)}
 
           {activeTab === "calendarEvents" && (
             calendarEvents.length > 0 ? (
@@ -1004,7 +1013,7 @@ setUserCalendarEvents(data || [])
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">No calendar events for this date.</p>
+              <p className="text-gray-500 text-center">No calendar events for this date.</p>
             )
           )}
 
@@ -1162,7 +1171,7 @@ setUserCalendarEvents(data || [])
             <tr>
               <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
               <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
-              <th className="px-4 py-3 border-b text-left w-[30%]">Description</th>
+              <th className="px-4 py-3 border-b text-left w-[30%] ">Description</th>
               <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
               <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
               <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>

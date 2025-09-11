@@ -134,6 +134,7 @@ export const ENDPOINTS = {
   PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
   DAILY_TASK : `${BASE_URL}/task/upcoming-task`,
   GET_FILTER_TASK: `${BASE_URL}/task/user`,
+  USERCALENDEREVENT:`${BASE_URL}/calender-event/user`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
   //DCRM Integration API

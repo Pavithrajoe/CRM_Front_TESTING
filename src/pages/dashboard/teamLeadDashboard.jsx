@@ -112,13 +112,21 @@ const LeadsDashboard = () => {
     return istReminderDate >= todayStart && istReminderDate <= todayEnd;
   }).length;
 
-  // Filter same-day tasks count
-  const todayTasksCount = tasks.filter((task) => {
-    if (!task.task_date) return false;
-    const taskDate = new Date(task.task_date);
-    const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
-    return istTaskDate >= todayStart && istTaskDate <= todayEnd;
-  }).length;
+  // // Filter same-day tasks count
+  // const todayTasksCount = tasks.filter((task) => {
+  // //   if (!task.task_date) return false;
+  // //   const taskDate = new Date(task.task_date);
+  // //   const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
+  // //   return istTaskDate >= todayStart && istTaskDate <= todayEnd;
+  // // }).length;
+  const todayTasks = tasks.filter((task) => {
+  if (!task.task_date) return false;
+  const taskDate = new Date(task.task_date);
+  const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 1000 * 60); // shift to IST
+  return istTaskDate >= todayStart && istTaskDate <= todayEnd;
+});
+
+const todayTasksCount = todayTasks.length;
 
   return (
     <div className="flex mt-[-80px]">
@@ -217,27 +225,51 @@ const LeadsDashboard = () => {
             </Box>
 
             {/* Tab Content */}
-            <Box sx={{ overflowY: "auto", flexGrow: 1, px: 2, py: 1 }}>
-              {activeTab === 0 && (
-                todayRemindersCount > 0 ? (
-                  <RemindersCard reminder_data={reminders} />
-                ) : (
-                  <Typography textAlign="center" mt={4} color="text.secondary" fontStyle="italic">
-                    No reminders for today 🎉
-                  </Typography>
-                )
-              )}
+            {/* Tab Content */}
+<Box sx={{ overflowY: "auto", flexGrow: 1, px: 2, py: 1 }}>
 
-              {activeTab === 1 && (
-                loadingTasks ? (
-                  <Typography textAlign="center" mt={4}>Loading tasks...</Typography>
-                ) : taskError ? (
-                  <Typography textAlign="center" color="error">{taskError}</Typography>
-                ) : (
-                  <TaskSameDay tasks={tasks} />
-                )
-              )}
-            </Box>
+  {/* Reminders Tab */}
+  {activeTab === 0 && (
+    <>
+      <p className="text-gray-300 text-center w-full mt-10">
+        Reminders are displayed based on a 24-hour validation period from the time they were created.
+      </p>
+
+      {todayRemindersCount > 0 ? (
+        <RemindersCard reminder_data={reminders} />
+      ) : (
+        <Typography textAlign="center" mt={4} color="text.secondary" fontStyle="italic">
+          No reminders for today 🎉
+        </Typography>
+      )}
+    </>
+  )}
+
+  {/* Tasks Tab */}
+  {activeTab === 1 && (
+    <>
+      <p className="text-gray-300 text-center w-full mt-10">
+        Tasks are shown for 24 hours from their creation time.
+      </p>
+
+      {loadingTasks ? (
+        <Typography textAlign="center" mt={4}>Loading tasks...</Typography>
+      ) : taskError ? (
+        <Typography textAlign="center" color="error">{taskError}</Typography>
+      ) : (
+        <TaskSameDay tasks={tasks.filter((task) => {
+  if (!task.task_date) return false;
+  const taskDate = new Date(task.task_date);
+  const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
+  return istTaskDate >= todayStart && istTaskDate <= todayEnd;
+})} />
+
+      )}
+    </>
+  )}
+
+</Box>
+
           </Box>
         </div>
       </main>

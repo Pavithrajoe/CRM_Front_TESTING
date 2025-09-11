@@ -23,17 +23,19 @@ const TaskSameDay = ({ onTasksFetched }) => {
   setError(null);
   try {
     const token = localStorage.getItem("token");
-    const userJson = localStorage.getItem("user"); // or your key holding user object
+    const userJson = localStorage.getItem("user"); 
     let userId = null;
     if (userJson) {
       const userObj = JSON.parse(userJson);
-      userId = userObj.iUser_id; // important: match your key here exactly
+      userId = userObj.iUser_id; 
     }
 
     if (!userId) {
       throw new Error("User ID not found in local storage");
     }
     if (!token) throw new Error("No authentication token found");
+
+    
 
     const response = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userId}`, {
       method: "GET",
@@ -104,7 +106,7 @@ const TaskSameDay = ({ onTasksFetched }) => {
     const sevenDaysLaterEnd = toISTDateEnd(sevenDaysLater.toISOString());
 
     const filtered = tasks.filter((task) => {
-      if (!task.task_date) return false; // skip tasks without task_date
+      if (!task.task_date) return false; 
       const taskDate = new Date(task.task_date);
       const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
 
@@ -186,9 +188,18 @@ const TaskSameDay = ({ onTasksFetched }) => {
                 onClick={() => navigate(`/leaddetailview/${task.ilead_id}`)}
                 className="bg-white rounded-lg border p-3 cursor-pointer hover:shadow-md transition"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-lg font-bold text-gray-800">{task.ctitle}</h2>
-                </div>
+                <div className="flex justify-between items-center mb-2">
+  {/* Left: Task Title */}
+  <h2 className="text-lg font-bold text-gray-800">
+    {task.ctitle}
+  </h2>
+
+  {/* Right: Lead Name */}
+  <h2 className="text-sm text-blue-900 italic">
+    Lead Name: {task.crm_lead?.clead_name}
+  </h2>
+</div>
+
                 <p className="text-sm text-gray-500 mb-2">
                   <span className="font-semibold">Created by: </span>
                   {task.user_task_icreated_byTouser?.cFull_name || "Unknown"}

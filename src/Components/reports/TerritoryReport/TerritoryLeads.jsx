@@ -35,7 +35,7 @@ const TerritoryLeadsAnalytics = () => {
           throw new Error(`Failed to fetch territory leads data: ${response.statusText}`);
         }
         const responseData = await response.json();
-        console.log("Fetched territory leads data:", responseData);
+        // console.log("Fetched territory leads data:", responseData);
         setData(responseData.data);
       } catch (err) {
         console.error("Error fetching territory leads data:", err);

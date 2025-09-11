@@ -89,7 +89,6 @@ const AccountSettings = () => {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const data = res.data.result;
-      // Check if settings already exist
       const hasExistingSettings = !!data && Object.keys(data).length > 0;
       setHasGeneralSettings(hasExistingSettings);
 
@@ -173,19 +172,21 @@ const AccountSettings = () => {
   });
 
   // Save company profile (PUT)
-  const handleSaveProfileChanges = useCallback(async () => {
-    if (Object.keys(errors).length > 0) {
-      alert("Please fix validation errors before saving");
-      return;
-    }
-    setLoading(true);
-    try {
-      await axios.put(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, buildProfilePayload(), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert("Profile updated successfully!");
 
-      // Update localStorage.user with new business type
+  const handleSaveProfileChanges = useCallback(async () => {
+  if (Object.keys(errors).length > 0) {
+    alert("Please fix validation errors before saving");
+    return;
+  }
+  setLoading(true);
+  try {
+    await axios.put(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, buildProfilePayload(), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    alert("Profile updated successfully!");
+
+    // Update localStorage.user with new business type
     const userString = localStorage.getItem("user");
     if (userString) {
       const userObj = JSON.parse(userString);
@@ -196,16 +197,15 @@ const AccountSettings = () => {
         detail: leadFormType
       }));
     }
-    
-    } catch (err) {
-      alert("Failed to update profile");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile, leadFormType, token, companyId, errors]);
+  } catch (err) {
+    alert("Failed to update profile");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, [profile, leadFormType, token, companyId, errors]);
 
-  // Save general settings (POST or PUT)
+
 const handleSaveGeneralSettings = useCallback(async () => {
   setLoading(true);
   try {
@@ -309,8 +309,25 @@ const handleSaveGeneralSettings = useCallback(async () => {
                 </label>
               </div>
             ))}
+
+              {/* Profile Save Button */}
+              <div className="flex justify-end w-full">
+                  {isProfileLoaded ? (
+                    <button
+                      onClick={handleSaveProfileChanges}
+                      disabled={loading || Object.keys(errors).length > 0}
+                      className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      Save Profile Changes
+                    </button>
+                  ) : (
+                    <p className="text-gray-600">Ask your admin to update</p>
+                  )}
+            </div>
+              
           </div>
         )}
+
       </div>
 
       {/* General Settings Section */}
@@ -358,20 +375,6 @@ const handleSaveGeneralSettings = useCallback(async () => {
         </button>
       </div>
 
-      {/* Profile Save Button */}
-      <div className="flex justify-end gap-3">
-        {isProfileLoaded ? (
-          <button
-            onClick={handleSaveProfileChanges}
-            disabled={loading || Object.keys(errors).length > 0}
-            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
-          >
-            Save Profile Changes
-          </button>
-        ) : (
-          <p className="text-gray-600">Ask your admin to update</p>
-        )}
-      </div>
 
       <AnimatePresence>
         {showCreatePanel && (

@@ -214,7 +214,7 @@ const ReminderForm = () => {
       }
       
       // FIX: Uncommented this line to show the success popup
-      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+      // showPopup("Success", "🎉 Reminder submitted successfully!", "success");
 
       setForm({
         title: "",

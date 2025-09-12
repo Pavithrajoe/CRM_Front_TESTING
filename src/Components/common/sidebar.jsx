@@ -13,7 +13,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const fullMenuItems = [
-    { iconPath: '/images/nav/home.png', label: 'Home', route: '/active-leads' },
+    { iconPath: '/images/nav/home.png', label: 'Home', route: '/leaddashboard' },
     { iconPath: '/images/nav/group.png', label: 'Lead', route: '/leadcardview' },
     { iconPath: '/images/nav/customers.png', label: 'Customer', route: '/customers' },
     { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
@@ -31,7 +31,7 @@ const Sidebar = () => {
         const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g,'+').replace(/_/g,'/')));
         const roleId = payload.role_id;
         setUserRoleId(roleId);
-        if (roleId === 4) {
+        if (roleId === 1) {
           setMenuItems(fullMenuItems);
         } else if (roleId === 5) {
           setMenuItems(fullMenuItems.filter(item =>

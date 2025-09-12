@@ -93,7 +93,7 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
               <DetailField label="Organization Name" value={profile.corganization} />
               <DetailField label="Website" value={profile.cwebsite} />
               <DetailField label="No. of Employees" value={profile.ino_employee} />
-              <DetailField label="Project Value" value={profile.iproject_value ? `${profile.iproject_value} ${profile.currency?.symbol || ''}`
+              <DetailField label="Project Value" value={profile.iproject_value ? `${profile.currency?.symbol || '' } ${profile.iproject_value} `
                     : null}/>
               <DetailField label="Email" value={profile.cemail} />
               <DetailField label="Mobile Number" value={profile.iphone_no} />

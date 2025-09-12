@@ -134,7 +134,7 @@ export default function LeadManagementCard() {
       <div className={`relative w-full h-full duration-700 transform-style-preserve-3d transition-transform ${showTeam ? '[transform:rotateY(180deg)]' : ''}`}>
 
         {/* Front View */}
-        <div className="absolute w-full h-full bg-white rounded-md p-4 backface-hidden flex flex-col">
+        <div className="absolute w-full h-full bg-white rounded-xl p-4 backface-hidden flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-700">Active Lead Distribution</h2>
             <button className="text-sm border px-3 py-1 rounded-md border-gray-300 text-gray-600 hover:bg-gray-100" onClick={() => setShowTeam(true)}>My Team</button>
@@ -151,7 +151,7 @@ export default function LeadManagementCard() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="text-center text-gray-500 py-10">No active lead data available for chart.</div>
+            <div className="text-center text-gray-500 py-10 mt-[70px]">No active lead data available for chart.</div>
           )}
         </div>
 
@@ -196,7 +196,7 @@ export default function LeadManagementCard() {
                 );
               })
             ) : (
-              <div className="text-center text-gray-500 py-10">
+              <div className="text-center text-gray-500 py-10 mt-[70px]">
                 No {showActiveMembers ? 'active' : showInactiveMembers ? 'inactive' : ''} team members found.
               </div>
             )}

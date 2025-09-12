@@ -35,49 +35,48 @@ export default function RemindersCard({ reminder_data }) {
           const result = await response.json();
           const allReminders = result.data;
 
-          // Helpers to get IST Date at start and end of day
-          const toISTDateStart = (date) => {
-            const utcDate = new Date(date);
-            const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-            istDate.setHours(0, 0, 0, 0);
-            return istDate;
-          };
-
-          const toISTDateEnd = (date) => {
-            const utcDate = new Date(date);
-            const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-            istDate.setHours(23, 59, 59, 999);
-            return istDate;
-          };
-
+          // Get current date without time for proper comparison
           const now = new Date();
-
-          // Tomorrow and ranges
+          now.setHours(0, 0, 0, 0);
+          
+          // Today's range
+          const todayStart = new Date(now);
+          const todayEnd = new Date(now);
+          todayEnd.setHours(23, 59, 59, 999);
+          
+          // Tomorrow's range
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
-          const tomorrowStart = toISTDateStart(tomorrow.toISOString());
-          const tomorrowEnd = toISTDateEnd(tomorrow.toISOString());
-
-          // Day after tomorrow and next week ranges
-          const dayAfterTomorrow = new Date(now);
-          dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-          const sevenDaysLater = new Date(now);
-          sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-          const dayAfterTomorrowStart = toISTDateStart(dayAfterTomorrow.toISOString());
-          const sevenDaysLaterEnd = toISTDateEnd(sevenDaysLater.toISOString());
+          const tomorrowStart = new Date(tomorrow);
+          const tomorrowEnd = new Date(tomorrow);
+          tomorrowEnd.setHours(23, 59, 59, 999);
+          
+          // Next Week range (Monday to Sunday of next week)
+          const nextMonday = new Date(now);
+          // Get next Monday (if today is Monday, get next Monday)
+          const dayOfWeek = nextMonday.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+          nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
+          nextMonday.setHours(0, 0, 0, 0);
+          
+          const nextSunday = new Date(nextMonday);
+          nextSunday.setDate(nextMonday.getDate() + 6);
+          nextSunday.setHours(23, 59, 59, 999);
 
           // Filter reminders for Tomorrow (within tomorrow start and end)
           const tomorrowFiltered = allReminders.filter((reminder) => {
+            if (!reminder.dremainder_dt) return false;
             const reminderDate = new Date(reminder.dremainder_dt);
-            const istReminderDate = new Date(reminderDate.getTime() + 5.5 * 60 * 60 * 1000);
-            return istReminderDate >= tomorrowStart && istReminderDate <= tomorrowEnd;
+            reminderDate.setHours(0, 0, 0, 0); // Normalize for comparison
+            return reminderDate.getTime() === tomorrow.getTime();
           });
 
-          // Filter reminders for Next Week (between day after tomorrow and seven days later)
+          // Filter reminders for Next Week (between next Monday and next Sunday)
           const nextWeekFiltered = allReminders.filter((reminder) => {
+            if (!reminder.dremainder_dt) return false;
             const reminderDate = new Date(reminder.dremainder_dt);
-            const istReminderDate = new Date(reminderDate.getTime() + 5.5 * 60 * 60 * 1000);
-            return istReminderDate >= dayAfterTomorrowStart && istReminderDate <= sevenDaysLaterEnd;
+            reminderDate.setHours(0, 0, 0, 0); // Normalize for comparison
+            return reminderDate >= nextMonday && reminderDate <= nextSunday;
           });
 
           setRemindersTomorrow(tomorrowFiltered);

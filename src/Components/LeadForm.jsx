@@ -1724,7 +1724,7 @@ const handleSubmit = async (e) => {
     <div className="flex items-center">
       {/* Country code input and dropdown */}
       <div className="relative" ref={mobileCountryCodeRef}>
-        <input
+        {/* <input
           type="text"
           name="searchMobileCountryCode" 
           value={searchMobileCountryCode}  
@@ -1733,7 +1733,7 @@ const handleSubmit = async (e) => {
           onBlur={handleBlur}
           placeholder="+XXX"
           className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
-        />
+        /> */}
         {isMobileCountryCodeDropdownOpen && (
           <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
             {Array.isArray(filteredMobileCountryCodes) &&
@@ -2138,7 +2138,7 @@ const handleSubmit = async (e) => {
                 </label>
                 <div className="flex mt-1">
                   <div className="relative" ref={dropdownRef}>
-                    <input
+                    {/* <input
                       type="text"
                       name={searchInputName}
                       value={searchCountryCodeState}
@@ -2148,7 +2148,7 @@ const handleSubmit = async (e) => {
                       placeholder="+XXX"
                       className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
                       disabled={name === "cwhatsapp" && sameAsPhone}
-                    />
+                    /> */}
                     {isDropdownOpen && (
                       <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
                         {Array.isArray(filteredCodes) && filteredCodes.length > 0 ? (

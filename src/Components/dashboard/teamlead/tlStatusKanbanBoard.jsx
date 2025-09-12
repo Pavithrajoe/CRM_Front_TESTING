@@ -206,105 +206,105 @@ const StatusKanbanTab = () => {
   if (error)
     return <p className="text-red-500 font-bold text-lg p-4">Error: {error}</p>;
 
-  return (
-    <>
-      <div className="p-4 bg-white border-b border-gray-200">
-        <input
-          type="text"
-          placeholder="Search leads by name, organization, email, or phone..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          style={{
-            backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>')`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "8px 50%",
-            backgroundSize: "18px",
-          }}
-        />
-      </div>
+return (
+  <>
+    <div className="p-4 bg-white border-b border-gray-200">
+      <input
+        type="text"
+        placeholder="Search leads by name, organization, email, or phone..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+        style={{
+          backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>')`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "8px 50%",
+          backgroundSize: "18px",
+        }}
+      />
+    </div>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="overflow-x-auto w-full h-[80vh] p-4 bg-gray-50 font-inter">
-          <div className="flex gap-6 min-w-max pb-4">
-            {statuses.map((status) => {
-              const leadsForStatus = leads[String(status.ilead_status_id)] || [];
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="overflow-x-auto w-full h-[80vh] p-6 bg-gray-100 font-inter">
+        <div className="flex gap-6 min-w-max pb-4">
+          {statuses.map((status) => {
+            const leadsForStatus = leads[String(status.ilead_status_id)] || [];
 
-              return (
-                <Droppable
-                  key={status.ilead_status_id}
-                  droppableId={String(status.ilead_status_id)}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="w-72 flex-shrink-0 border border-gray-200 rounded-xl p-3 bg-slate-300 shadow-lg min-h-[200px]"
-                    >
-                      <div className="border-b border-gray-200 pb-2 mb-3 font-semibold text-lg text-gray-800 flex justify-between items-center">
-                        <span className="flex-1 text-center">
-                          {status.clead_name || "Untitled Status"}
-                        </span>
-                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {leadsForStatus.length}
-                        </span>
-                      </div>
-
-                      <div className="space-y-3 max-h-[calc(70vh-80px)] overflow-y-auto pr-1">
-                        {leadsForStatus.length === 0 && (
-                          <p className="text-gray-400 italic text-sm p-2 text-center">
-                            No active leads in this status
-                          </p>
-                        )}
-
-                        {leadsForStatus.map((lead, index) => (
-                          <Draggable
-                            key={lead.ilead_id}
-                            draggableId={String(lead.ilead_id)}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                onClick={() => goToDetail(lead.ilead_id)}
-                                className="p-3 bg-indigo-400 hover:bg-white rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300 text-black-800"
-                              >
-                                <span className="font-medium text-black text-base">
-                                  {lead.clead_name || "Unnamed Lead"}
-                                </span>
-                                {lead.corganization && (
-                                  <p className="text-base text-black-900 mt-1">
-                                    {lead.corganization}
-                                  </p>
-                                )}
-                                {lead.cemail && (
-                                  <p className="text-base text-black-900 mt-0.5 truncate">
-                                    {lead.cemail}
-                                  </p>
-                                )}
-                                {lead.iphone_no && (
-                                  <p className="text-base text-black-900 mt-0.5 truncate">
-                                    {lead.iphone_no}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
+            return (
+              <Droppable
+                key={status.ilead_status_id}
+                droppableId={String(status.ilead_status_id)}
+              >
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="w-80 flex-shrink-0 border border-gray-200 rounded-xl p-4 bg-gray-200 shadow-md min-h-[200px]"
+                  >
+                    <div className="border-b-2 border-indigo-600 pb-3 mb-4 font-semibold text-lg text-gray-800 flex justify-between items-center">
+                      <span className="flex-1 text-center">
+                        {status.clead_name || "Untitled Status"}
+                      </span>
+                      <span className="text-sm text-white bg-indigo-600 px-3 py-1 rounded-full">
+                        {leadsForStatus.length}
+                      </span>
                     </div>
-                  )}
-                </Droppable>
-              );
-            })}
-          </div>
+
+                    <div className="space-y-4 max-h-[calc(70vh-80px)] overflow-y-auto pr-2">
+                      {leadsForStatus.length === 0 && (
+                        <p className="text-gray-500 italic text-sm p-4 text-center">
+                          No active leads in this status
+                        </p>
+                      )}
+
+                      {leadsForStatus.map((lead, index) => (
+                        <Draggable
+                          key={lead.ilead_id}
+                          draggableId={String(lead.ilead_id)}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={() => goToDetail(lead.ilead_id)}
+                              className="p-4 bg-white hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300"
+                            >
+                              <h3 className="font-semibold text-gray-900 text-base">
+                                {lead.clead_name || "Unnamed Lead"}
+                              </h3>
+                              {lead.corganization && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {lead.corganization}
+                                </p>
+                              )}
+                              {lead.cemail && (
+                                <p className="text-sm text-gray-600 mt-0.5 truncate">
+                                  {lead.cemail}
+                                </p>
+                              )}
+                              {lead.iphone_no && (
+                                <p className="text-sm text-gray-600 mt-0.5 truncate">
+                                  {lead.iphone_no}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  </div>
+                )}
+              </Droppable>
+            );
+          })}
         </div>
-      </DragDropContext>
-    </>
-  );
+      </div>
+    </DragDropContext>
+  </>
+);
 };
 
 export default StatusKanbanTab;

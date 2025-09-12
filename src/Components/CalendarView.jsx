@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone } from 'react-icons/fa';
+import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone,FaSearch  } from 'react-icons/fa';
 import { Drawer, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
-import Slide from '@mui/material/Slide';
+import Slide from '@mui/material/Slide';  
 import { useNavigate } from "react-router-dom";
 
 function SlideTransition(props) {
@@ -373,6 +373,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 
 
 
+
   const CalendarView = () => {
     // 1. STATE INITIALIZATION: selectedDate is set to the current date by default.
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -391,7 +392,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     const [activeTab, setActiveTab] = useState('reminders');
     const [tableActiveTab, setTableActiveTab] = useState('reminders')
     const [loggedInUserName, setLoggedInUserName] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(''); // Search term for TABLE only
     const [userCalendarEvents, setUserCalendarEvents] = useState([]);
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
@@ -439,7 +440,6 @@ const formattedDate = [
         }
       );
 
-      // Check if the response itself is okay (e.g., status 200-299)
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
@@ -447,14 +447,10 @@ const formattedDate = [
 
       const data = await response.json();
 
-      // Check the `success` key from the API response
       if (data.success) {
-        // If success is true, tasks were found. Set them.
         setTasks(data.data || []);
-        setTaskError(null); // Clear any previous error
+        setTaskError(null);
       } else {
-        // If success is false, no tasks were found.
-        // This is the key change: set tasks to an empty array and display the message.
         setUserTask([]);
         setTaskError(data.message || "No tasks available for this day.");
       }
@@ -466,6 +462,7 @@ const formattedDate = [
       setLoadingTasks(false);
     }
   };
+
 const fetchAllTasks = async (date) => {
     setLoadingTasks(true);
     setUserTaskError(null);
@@ -483,9 +480,6 @@ const fetchAllTasks = async (date) => {
       const userObj = JSON.parse(userJson);
       const userId = userObj.iUser_id;
 
-
-
-
       const response = await fetch(
         `${ENDPOINTS.GET_FILTER_TASK}/${userId}`,
         {
@@ -497,7 +491,6 @@ const fetchAllTasks = async (date) => {
         }
       );
 
-      // Check if the response itself is okay (e.g., status 200-299)
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
@@ -505,14 +498,10 @@ const fetchAllTasks = async (date) => {
 
       const data = await response.json();
 
-      // Check the `success` key from the API response
       if (data.success) {
-        // If success is true, tasks were found. Set them.
         setUserTask(data.data || []);
-        setUserTaskError(null); // Clear any previous error
+        setUserTaskError(null);
       } else {
-        // If success is false, no tasks were found.
-        // This is the key change: set tasks to an empty array and display the message.
         setUserTask([]);
         setUserTaskError(data.message || "No tasks available for this day.");
       }
@@ -619,7 +608,6 @@ const fetchAllTasks = async (date) => {
         }
 
         const data = await response.json();
-        console.log("reminder", data)
         setReminderList(data.data || []);
       } catch (e) {
         setMsg("Can't fetch user reminders");
@@ -689,21 +677,10 @@ const fetchAllTasks = async (date) => {
       });
     };
 
-//    const filteredTasksForDate = tasks.filter((task) => {
-//   const taskDate = new Date(task.task_date || task.dcreate_dt);
-//   return (
-//     taskDate.getFullYear() === selectedDate.getFullYear() &&
-//     taskDate.getMonth() === selectedDate.getMonth() &&
-//     taskDate.getDate() === selectedDate.getDate()
-//   );
-// });
-
-
     const currentTabItems =
-      activeTab === 'reminders' ? filterAndSortItems(reminderList, 'dremainder_dt', 'cremainder_content', null, showEnded, true) :
-      activeTab === 'calendarEvents' ? filterAndSortItems(userCalendarEvents, 'devent_startdt', 'ctitle', 'devent_end', false, true) :
-      activeTab === 'tasks' ? filterAndSortItems(tasks, 'task_date', 'ctask_content', null, false, true)
-      : [];
+      activeTab === 'reminders' ? reminders :
+      activeTab === 'calendarEvents' ? calendarEvents :
+      activeTab === 'tasks' ? tasks : [];
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -720,83 +697,42 @@ const fetchAllTasks = async (date) => {
       }
     };
 
-    // const fetchUserCalendarEvents = async () => {
-    //   const token = localStorage.getItem("token");
-    //   const user_data = localStorage.getItem("user");
-
-    //   if (!user_data) return;
-
-    //   setLoading(true);
-    //   try {
-    //     const user_data_parsed = JSON.parse(user_data);
-    //     const userId = user_data_parsed.iUser_id;
-
-    //     const response = await fetch(`${ENDPOINTS.USERCALENDEREVENT}/${userId}`, {
-    //       method: 'GET',
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //         Authorization: `Bearer ${token}`
-    //       }
-    //     });
-
-    //     if (!response.ok) {
-    //       throw new Error('Failed to fetch calendar events');
-    //     }
-
-    //     const data = await response.json();
-    //     console.log("calenderEvent",data)
-    //     setUserCalendarEvents(data || []);
-    //   } catch (error) {
-    //     setSnackbar({
-    //       open: true,
-    //       message: 'Failed to load calendar events',
-    //       severity: 'error'
-    //     });
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
     const fetchUserCalendarEvents = async () => {
-  const token = localStorage.getItem("token");
-  const user_data = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+      const user_data = localStorage.getItem("user");
 
-  if (!user_data) return;
+      if (!user_data) return;
 
-  setLoading(true);
-  try {
-    const user_data_parsed = JSON.parse(user_data);
-    const userId = user_data_parsed.iUser_id;
+      setLoading(true);
+      try {
+        const user_data_parsed = JSON.parse(user_data);
+        const userId = user_data_parsed.iUser_id;
 
-    const response = await fetch(`${ENDPOINTS.USERCALENDEREVENT}/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+        const response = await fetch(`${ENDPOINTS.USERCALENDEREVENT}/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch calendar events');
-    }
+        if (!response.ok) {
+          throw new Error('Failed to fetch calendar events');
+        }
 
-    const data = await response.json();
-    // console.log("calenderEvent", data);
-
-    // ✅ match JSX state name
-setCalendarEvents(data.data || []);
-setUserCalendarEvents(data || [])
-    console.log("calender",data)
-  } catch (error) {
-    setSnackbar({
-      open: true,
-      message: 'Failed to load calendar events',
-      severity: 'error',
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+        const data = await response.json();
+        setCalendarEvents(data.data || []);
+        setUserCalendarEvents(data || [])
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: 'Failed to load calendar events',
+          severity: 'error',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
     
     const handleItemCreated = () => {
@@ -805,7 +741,6 @@ setUserCalendarEvents(data || [])
       if (activeTab === 'calendarEvents') {
         fetchUserCalendarEvents();
       }
-      // Also fetch tasks if the task tab is active
       if (activeTab === 'tasks') {
         fetchTasks(selectedDate);
       }
@@ -821,7 +756,6 @@ setUserCalendarEvents(data || [])
       setToDate(endOfDay);
 
       if (activeTab === 'tasks') {
-        // Pass the selectedDate to fetchTasks when the tab is active
         fetchTasks(selectedDate);
       }
 
@@ -862,199 +796,242 @@ setUserCalendarEvents(data || [])
       return `${day}/${month}/${year} ${hours}:${minutes}`;
     };
 
+    // Filter function for TABLE data only
+    const filterTableData = (items, type) => {
+      if (!searchTerm) return items;
+      
+      const searchTermLower = searchTerm.toLowerCase();
+      
+      return items.filter(item => {
+        switch (type) {
+          case 'reminders':
+            return (
+              (item.cremainder_content?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.created_by?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.assigned_to?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.lead_name?.toLowerCase() || '').includes(searchTermLower)
+            );
+          
+          case 'calendarEvents':
+            return (
+              (item.ctitle?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.cdescription?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.recurring_task?.toLowerCase() || '').includes(searchTermLower)
+            );
+          
+          case 'tasks':
+            return (
+              (item.ctitle?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.ctask_content?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.user_task_iassigned_toTouser?.cFull_name?.toLowerCase() || '').includes(searchTermLower) ||
+              (item.crm_lead?.clead_name?.toLowerCase() || '').includes(searchTermLower)
+            );
+          
+          default:
+            return true;
+        }
+      });
+    };
+
+    // Get filtered table data
+    const getFilteredTableData = () => {
+      switch (tableActiveTab) {
+        case 'reminders':
+          return filterTableData(reminderList, 'reminders');
+        case 'calendarEvents':
+          return filterTableData(userCalendarEvents, 'calendarEvents');
+        case 'tasks':
+          return filterTableData(userTask, 'tasks');
+        default:
+          return [];
+      }
+    };
+
+    const filteredTableData = getFilteredTableData();
+
     return (
       <div>
         <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
-<div className="flex w-full h-[500px] p-4 gap-4">
-      {/* LEFT HALF: Calendar */}
-      <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px]">
-        <Calendar
-          className="w-full border border-white [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center"
-          onChange={(newDate) => {
-            setSelectedDate(newDate);
-            fetchTasks(newDate);
-          }}
-          value={selectedDate}
-          prevLabel={null}
-          nextLabel={null}
-          navigationLabel={({ date }) => (
-            <div className="flex items-center justify-between px-6 mb-2">
-              <FaChevronLeft
-                className="cursor-pointer text-gray-600 hover:text-black"
-                onClick={() =>
-                  setSelectedDate((d) => {
-                    const newDate = new Date(d);
-                    newDate.setMonth(newDate.getMonth() - 1);
-                    fetchTasks(newDate);
-                    return newDate;
-                  })
-                }
-              />
-              <span className="text-xl font-semibold text-gray-800">
-                {date.toLocaleString("default", { month: "long" })}{" "}
-                {date.getFullYear()}
-              </span>
-              <FaChevronRight
-                className="cursor-pointer text-gray-600 hover:text-black"
-                onClick={() =>
-                  setSelectedDate((d) => {
-                    const newDate = new Date(d);
-                    newDate.setMonth(newDate.getMonth() + 1);
-                    fetchTasks(newDate);
-                    return newDate;
-                  })
-                }
-              />
-            </div>
-          )}
-        />
-        {/* New buttons section */}
-        <div className="flex gap-4 mt-6 justify-center">
-          <button
-            onClick={() => setOpenDrawer(true)}
-            className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
-          >
-            <FaPlus className="mr-2" />
-            Calendar Event
-          </button>
-          <button
-            onClick={() => window.open("https://meet.google.com/landing", "_blank")}
-            className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
-          >
-            <b className="text-white font-bold mr-1">G</b>
-            <span>Create Meet</span>
-          </button>
-        </div>
-      </div>
-
-      {/* RIGHT HALF: Tab view with cards */}
-      <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px] flex flex-col">
-        {/* Tabs */}
-        <div className="flex border-b border-gray-300 mb-4 select-none">
-          {["reminders", "calendarEvents", "tasks"].map(tab => (
-            <button
-              key={tab}
-              className={`flex-1 py-2 font-semibold text-center transition-colors ${
-                activeTab === tab ? "border-b-4 border-blue-600 text-blue-600" : "text-gray-600 hover:text-blue-600"
-              }`}
-              onClick={() => setActiveTab(tab)}
-              type="button"
-            >
-              {tab === "reminders" && "Reminder"}
-              {tab === "calendarEvents" && "Calendar Event"}
-              {tab === "tasks" && "Task"}
-            </button>
-          ))}
-        </div>
-
-        {/* Cards container */}
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
-         {activeTab === "reminders" && (
-  reminders.length > 0 ? (
-    reminders.map(reminder => (
-      <div 
-        key={reminder.iremainder_id}
-        className="pb-4 last:pb-0 border-b border-gray-200 cursor-pointer" 
-        onClick={() => navigate(`/leaddetailview/${reminder.ilead_id}`)}
-      >
-        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
-          <button onClick={(e) => {
-            e.stopPropagation();
-            toggleReminder(reminder.iremainder_id);
-          }}>
-            {reminder.bactive ? <FaCheckSquare className="text-black text-lg" /> : <FaRegSquare className="text-lg" />}
-          </button>
-          <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-gray-800">{reminder.cremainder_title}</h3>
-            <div className="flex items-center text-sm text-gray-600">
-              <FaUserAlt className="mr-2 text-xs" />
-              Assigned To: <span className="font-semibold ml-1">{reminder.assigned_to}</span>
-            </div>
-            <p className="text-sm font-bold text-gray-600 italic">Message: {reminder.cremainder_content}</p>
-            <p className="text-xs font-bold text-green-700 bg-green-100 w-[130px] py-1 rounded-full text-center items-center">Priority: {reminder.priority}</p>
-          </div>
-          <div className="text-xs text-yellow-700 bg-yellow-200 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
-            <FaClock className="mr-1" />
-            {formatDateTime(reminder.dremainder_dt)}
-          </div>
-        </div>
-      </div>
-    ))
-  ) : (
-    <p className="text-gray-500 text-center">No reminders found for this date.</p>
-  )
-)}
-
-          {activeTab === "calendarEvents" && (
-            calendarEvents.length > 0 ? (
-              calendarEvents.map(event => (
-                <div key={event.icalender_event} className="pb-4 last:pb-0 border-b border-gray-200">
-                 <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
-  {/* Left Section */}
-  <div className="flex-1 space-y-3">
-    <h3 className="font-semibold text-gray-800 text-lg">{event.ctitle}</h3>
-    <p className="text-gray-600 text-sm">Message:<span className="italic font-semibold"> {event.cdescription}</span> </p>
-
-   
-  </div>
-
-  {/* Right Section */}
-  <div className="flex-shrink-0 text-xs text-white bg-blue-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap shadow">
-    <FaClock className="mr-1" />
-    {formatDateTime(event.devent_startdt)}
-  </div>
-   {event.recurring_task && (
-      <p className="text-xs text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full flex items-center whitespace-nowrap shadow">
-        Recurring Task: {event.recurring_task || "No Reccuring Applied"} 
-      </p>
-    )}
-</div>
-
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center">No calendar events for this date.</p>
-            )
-          )}
-
-          {activeTab === "tasks" && (
-            loadingTasks ? (
-              <p className="text-gray-400 text-center">Loading tasks...</p>
-            ) : taskError ? (
-              <p className="text-gray-400 text-center"> {taskError}</p>
-            ) : tasks.length > 0 ? (
-              tasks.map(task => (
-                <div key={task.itask_id} className="pb-4 last:pb-0 border-b border-gray-200">
-                  <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
-                    <div className="flex-1 space-y-1">
-                      <h3 className="font-semibold text-gray-800">{task.ctitle || "No Title"}</h3>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <FaUserAlt className="mr-2 text-xs" />
-                        Assigned To: <span className="font-semibold ml-1 ">{task.user_task_iassigned_toTouser?.cFull_name || "N/A"}</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Message: <span className='ml-1 italic font-semibold'>{task.ctask_content}</span></p>
-                      
-                    </div>
-                    <div className="text-xs text-white bg-green-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
-                      <FaClock className="mr-1" />
-                      {formatDateTime(task.task_date)}
-                    </div>
-                    <div className="text-xs text-gray-600 bg-yellow-300 px-3 py-1 rounded-full flex items-center whitespace-nowrap ">
-                        <span className="font-bold text-gray-600 ">Lead Name:</span>{" "}
-                       <span className='italic text-gray-600 ml-1'>{task.crm_lead?.clead_name || "No Lead Name"}</span> 
-                      </div>
+          <div className="flex w-full h-[500px] p-4 gap-4">
+            {/* LEFT HALF: Calendar */}
+            <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px]">
+              <Calendar
+                className="w-full border border-white [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center"
+                onChange={(newDate) => {
+                  setSelectedDate(newDate);
+                  fetchTasks(newDate);
+                }}
+                value={selectedDate}
+                prevLabel={null}
+                nextLabel={null}
+                navigationLabel={({ date }) => (
+                  <div className="flex items-center justify-between px-6 mb-2">
+                    <FaChevronLeft
+                      className="cursor-pointer text-gray-600 hover:text-black"
+                      onClick={() =>
+                        setSelectedDate((d) => {
+                          const newDate = new Date(d);
+                          newDate.setMonth(newDate.getMonth() - 1);
+                          fetchTasks(newDate);
+                          return newDate;
+                        })
+                      }
+                    />
+                    <span className="text-xl font-semibold text-gray-800">
+                      {date.toLocaleString("default", { month: "long" })}{" "}
+                      {date.getFullYear()}
+                    </span>
+                    <FaChevronRight
+                      className="cursor-pointer text-gray-600 hover:text-black"
+                      onClick={() =>
+                        setSelectedDate((d) => {
+                          const newDate = new Date(d);
+                          newDate.setMonth(newDate.getMonth() + 1);
+                          fetchTasks(newDate);
+                          return newDate;
+                        })
+                      }
+                    />
                   </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No tasks found for this date.</p>
-            )
-          )}
-        </div>
-      </div>
- 
+                )}
+              />
+              {/* New buttons section */}
+              <div className="flex gap-4 mt-6 justify-center">
+                <button
+                  onClick={() => setOpenDrawer(true)}
+                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
+                >
+                  <FaPlus className="mr-2" />
+                  Calendar Event
+                </button>
+                <button
+                  onClick={() => window.open("https://meet.google.com/landing", "_blank")}
+                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
+                >
+                  <b className="text-white font-bold mr-1">G</b>
+                  <span>Create Meet</span>
+                </button>
+              </div>
+            </div>
 
+            {/* RIGHT HALF: Tab view with cards */}
+            <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px] flex flex-col">
+              {/* Tabs */}
+              <div className="flex border-b border-gray-300 mb-4 select-none">
+                {["reminders", "calendarEvents", "tasks"].map(tab => (
+                  <button
+                    key={tab}
+                    className={`flex-1 py-2 font-semibold text-center transition-colors ${
+                      activeTab === tab ? "border-b-4 border-blue-600 text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    }`}
+                    onClick={() => setActiveTab(tab)}
+                    type="button"
+                  >
+                    {tab === "reminders" && "Reminder"}
+                    {tab === "calendarEvents" && "Calendar Event"}
+                    {tab === "tasks" && "Task"}
+                  </button>
+                ))}
+              </div>
 
+              {/* Cards container */}
+              <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
+                {activeTab === "reminders" && (
+                  reminders.length > 0 ? (
+                    reminders.map(reminder => (
+                      <div 
+                        key={reminder.iremainder_id}
+                        className="pb-4 last:pb-0 border-b border-gray-200 cursor-pointer" 
+                        onClick={() => navigate(`/leaddetailview/${reminder.ilead_id}`)}
+                      >
+                        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
+                          <button onClick={(e) => {
+                            e.stopPropagation();
+                            toggleReminder(reminder.iremainder_id);
+                          }}>
+                            {reminder.bactive ? <FaCheckSquare className="text-black text-lg" /> : <FaRegSquare className="text-lg" />}
+                          </button>
+                          <div className="flex-1 space-y-2">
+                            <h3 className="font-semibold text-gray-800">{reminder.cremainder_title}</h3>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <FaUserAlt className="mr-2 text-xs" />
+                              Assigned To: <span className="font-semibold ml-1">{reminder.assigned_to}</span>
+                            </div>
+                            <p className="text-sm font-bold text-gray-600 italic">Message: {reminder.cremainder_content}</p>
+                            <p className="text-xs font-bold text-green-700 bg-green-100 w-[130px] py-1 rounded-full text-center items-center">Priority: {reminder.priority}</p>
+                          </div>
+                          <div className="text-xs text-yellow-700 bg-yellow-200 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
+                            <FaClock className="mr-1" />
+                            {formatDateTime(reminder.dremainder_dt)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center">No reminders found for this date.</p>
+                  )
+                )}
+
+                {activeTab === "calendarEvents" && (
+                  calendarEvents.length > 0 ? (
+                    calendarEvents.map(event => (
+                      <div key={event.icalender_event} className="pb-4 last:pb-0 border-b border-gray-200">
+                        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
+                          <div className="flex-1 space-y-3">
+                            <h3 className="font-semibold text-gray-800 text-lg">{event.ctitle}</h3>
+                            <p className="text-gray-600 text-sm">Message:<span className="italic font-semibold"> {event.cdescription}</span> </p>
+                          </div>
+                          <div className="flex-shrink-0 text-xs text-white bg-blue-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap shadow">
+                            <FaClock className="mr-1" />
+                            {formatDateTime(event.devent_startdt)}
+                          </div>
+                          {event.recurring_task && (
+                            <p className="text-xs text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full flex items-center whitespace-nowrap shadow">
+                              Recurring Task: {event.recurring_task || "No Reccuring Applied"} 
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center">No calendar events for this date.</p>
+                  )
+                )}
+
+                {activeTab === "tasks" && (
+                  loadingTasks ? (
+                    <p className="text-gray-400 text-center">Loading tasks...</p>
+                  ) : taskError ? (
+                    <p className="text-gray-400 text-center"> {taskError}</p>
+                  ) : tasks.length > 0 ? (
+                    tasks.map(task => (
+                      <div key={task.itask_id} className="pb-4 last:pb-0 border-b border-gray-200">
+                        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
+                          <div className="flex-1 space-y-1">
+                            <h3 className="font-semibold text-gray-800">{task.ctitle || "No Title"}</h3>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <FaUserAlt className="mr-2 text-xs" />
+                              Assigned To: <span className="font-semibold ml-1 ">{task.user_task_iassigned_toTouser?.cFull_name || "N/A"}</span>
+                            </div>
+                            <p className="text-sm text-gray-600">Message: <span className='ml-1 italic font-semibold'>{task.ctask_content}</span></p>
+                          </div>
+                          <div className="text-xs text-white bg-green-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
+                            <FaClock className="mr-1" />
+                            {formatDateTime(task.task_date)}
+                          </div>
+                          <div className="text-xs text-gray-600 bg-yellow-300 px-3 py-1 rounded-full flex items-center whitespace-nowrap ">
+                            <span className="font-bold text-gray-600 ">Lead Name:</span>{" "}
+                            <span className='italic text-gray-600 ml-1'>{task.crm_lead?.clead_name || "No Lead Name"}</span> 
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No tasks found for this date.</p>
+                  )
+                )}
+              </div>
+            </div>
           </div>
 
           <MeetFormDrawer
@@ -1066,174 +1043,187 @@ setUserCalendarEvents(data || [])
           />
         </div>
 
-<div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
-  {/* ---------- TABS ---------- */}
-  <div className="flex border-b border-gray-200 mb-6">
-    <button
-      className={`py-3 px-6 text-lg font-semibold ${
-        activeTab === "reminders"
-          ? "text-blue-600 border-b-2 border-blue-600"
-          : "text-gray-600 hover:text-gray-800"
-      } transition-colors duration-200`}
-      onClick={() => {
-        setTableActiveTab("reminders");
-        fetchAllUserReminders();
-      }}
-    >
-      📅 All Reminders
-    </button>
-    <button
-      className={`py-3 px-6 text-lg font-semibold ${
-        activeTab === "calendarEvents"
-          ? "text-blue-600 border-b-2 border-blue-600"
-          : "text-gray-600 hover:text-gray-800"
-      } transition-colors duration-200`}
-      onClick={() => {
-        setTableActiveTab("calendarEvents");
-        fetchUserCalendarEvents();
-      }}
-    >
-      🗓️ All Calendar Events
-    </button>
-    <button
-      className={`py-3 px-6 text-lg font-semibold ${
-        activeTab === "tasks"
-          ? "text-blue-600 border-b-2 border-blue-600"
-          : "text-gray-600 hover:text-gray-800"
-      } transition-colors duration-200`}
-      onClick={() => {
-        setTableActiveTab("tasks");
-        fetchAllTasks();
-      }}
-    >
-      ✅ All Tasks
-    </button>
-  </div>
+        {/* TABLE SECTION WITH SEARCH */}
+        <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
+          {/* Search Bar for TABLE */}
+          <div className="mb-6 flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                />
+                <FaSearch className="absolute left-3 top-3 text-gray-400" />
+              </div>
+            </div>
 
-  {/* ---------- TASKS TABLE ---------- */}
-  {tableActiveTab === "tasks" && (
-    <>
-      {userTaskError && (
-        <div className="min-h-[180px] flex items-center justify-center text-red-500 text-base font-medium">
-          <p>{userTaskError}</p>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                className={`py-3 px-6 text-lg font-semibold ${
+                  tableActiveTab === "reminders"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-gray-800"
+                } transition-colors duration-200`}
+                onClick={() => {
+                  setTableActiveTab("reminders");
+                  fetchAllUserReminders();
+                }}
+              >
+                📅 All Reminders
+              </button>
+              <button
+                className={`py-3 px-6 text-lg font-semibold ${
+                  tableActiveTab === "calendarEvents"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-gray-800"
+                } transition-colors duration-200`}
+                onClick={() => {
+                  setTableActiveTab("calendarEvents");
+                  fetchUserCalendarEvents();
+                }}
+              >
+                🗓️ All Calendar Events
+              </button>
+              <button
+                className={`py-3 px-6 text-lg font-semibold ${
+                  tableActiveTab === "tasks"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-gray-800"
+                } transition-colors duration-200`}
+                onClick={() => {
+                  setTableActiveTab("tasks");
+                  fetchAllTasks();
+                }}
+              >
+                ✅ All Tasks
+              </button>
+            </div>
+          </div>
+
+          {/* Tables */}
+          {tableActiveTab === "tasks" && (
+            <>
+              {userTaskError && (
+                <div className="min-h-[180px] flex items-center justify-center text-red-500 text-base font-medium">
+                  <p>{userTaskError}</p>
+                </div>
+              )}
+
+              {!userTaskError && filteredTableData.length === 0 && (
+                <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
+                  <p>{searchTerm ? 'No tasks match your search' : 'No tasks found.'}</p>
+                </div>
+              )}
+
+              {!userTaskError && filteredTableData.length > 0 && (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs max-h-[400px] overflow-y-auto">
+                  <table className="min-w-full text-sm text-gray-800 table-auto">
+                    <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
+                      <tr>
+                        <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
+                        <th className="px-4 py-3 border-b text-left w-[25%]">Task Title</th>
+                        <th className="px-4 py-3 border-b text-left w-[35%]">Content</th>
+                        <th className="px-4 py-3 border-b text-left w-[20%]">Assigned To</th>
+                        <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Task Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTableData.map((item, index) => (
+                        <tr key={item.itask_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
+                          <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.ctitle || "No Title"}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.ctask_content}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">
+                            {item.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.task_date)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+
+          {tableActiveTab === "calendarEvents" && (
+            <>
+              {filteredTableData.length === 0 ? (
+                <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
+                  <p>{searchTerm ? 'No calendar events match your search' : 'No calendar events found.'}</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs h-[400px] max-h-[400px] overflow-y-auto">     
+                  <table className="min-w-full text-sm text-gray-800 table-auto">
+                    <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
+                      <tr>
+                        <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
+                        <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
+                        <th className="px-4 py-3 border-b text-left w-[30%] ">Description</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTableData.map((item, index) => (
+                        <tr key={item.icalender_event} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
+                          <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.ctitle}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.cdescription || "N/A"}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.recurring_task || "None"}</td>
+                          <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_startdt)}</td>
+                          <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_end)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+
+          {tableActiveTab === "reminders" && (
+            <>
+              {filteredTableData.length === 0 ? (
+                <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
+                  <p>{searchTerm ? 'No reminders match your search' : 'No reminders found.'}</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs max-h-[400px] overflow-y-auto">     
+                  <table className="min-w-full text-sm text-gray-800 table-auto">
+                    <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
+                      <tr>
+                        <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
+                        <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
+                        <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
+                        <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTableData.map((item, index) => (
+                        <tr key={item.iremainder_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
+                          <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.cremainder_content}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.created_by}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.assigned_to}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.lead_name}</td>
+                          <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.dremainder_dt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
-
-      {!userTaskError && userTask.length === 0 && (
-        <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
-          <p>No tasks found.</p>
-        </div>
-      )}
-
-      {!userTaskError && userTask.length > 0 && (
-<div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs max-h-[400px] overflow-y-auto">
-          <table className="min-w-full text-sm text-gray-800 table-auto">
-            <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
-              <tr>
-                <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
-                <th className="px-4 py-3 border-b text-left w-[25%]">Task Title</th>
-                <th className="px-4 py-3 border-b text-left w-[35%]">Content</th>
-                <th className="px-4 py-3 border-b text-left w-[20%]">Assigned To</th>
-                <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Task Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {userTask.map((item, index) => (
-                <tr key={item.itask_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
-                  <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.ctitle || "No Title"}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.ctask_content}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">
-                    {item.user_task_iassigned_toTouser?.cFull_name || "N/A"}
-                  </td>
-                  <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.task_date)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
-  )}
-
-  {/* ---------- CALENDAR EVENTS TABLE ---------- */}
-{tableActiveTab === "calendarEvents" && (
-  <>
-    {userCalendarEvents.length === 0 ? (
-      <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
-        <p>No calendar events found.</p>
-      </div>
-    ) : (
-
-<div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs h-[400px] max-h-[400px] overflow-y-auto">     
-    <table className="min-w-full text-sm text-gray-800 table-auto">
-          <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
-            <tr>
-              <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
-              <th className="px-4 py-3 border-b text-left w-[20%]">Event Title</th>
-              <th className="px-4 py-3 border-b text-left w-[30%] ">Description</th>
-              <th className="px-4 py-3 border-b text-left w-[15%]">Recurring Task</th>
-              <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">Start Date</th>
-              <th className="px-4 py-3 border-b text-left w-[15%] whitespace-nowrap">End Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {userCalendarEvents.map((item, index) => (
-              <tr key={item.icalender_event} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
-                <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
-                <td className="px-4 py-3 border-b align-top break-words">{item.ctitle}</td>
-                <td className="px-4 py-3 border-b align-top break-words">{item.cdescription || "N/A"}</td>
-                <td className="px-4 py-3 border-b align-top break-words">{item.recurring_task || "None"}</td>
-                <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_startdt)}</td>
-                <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_end)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </>
-)}
-
-  {/* ---------- REMINDERS TABLE ---------- */}
-  {tableActiveTab === "reminders" && (
-    <>
-      {reminderList.length === 0 ? (
-        <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
-          <p>No reminders found.</p>
-        </div>
-      ) : (
-
-<div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs max-h-[400px] overflow-y-auto">     
-       <table className="min-w-full text-sm text-gray-800 table-auto">
-            <thead className="bg-gray-50 uppercase text-xs font-semibold tracking-wide">
-              <tr>
-                <th className="px-4 py-3 border-b text-center w-[60px]">S.no</th>
-                <th className="px-4 py-3 border-b text-left w-[25%]">Reminder</th>
-                <th className="px-4 py-3 border-b text-left w-[15%]">Created by</th>
-                <th className="px-4 py-3 border-b text-left w-[15%]">Assigned to</th>
-                <th className="px-4 py-3 border-b text-left w-[15%]">Lead</th>
-                <th className="px-4 py-3 border-b text-left w-[20%] whitespace-nowrap">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reminderList.map((item, index) => (
-                <tr key={item.iremainder_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
-                  <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.cremainder_content}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.created_by}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.assigned_to}</td>
-                  <td className="px-4 py-3 border-b align-top break-words">{item.lead_name}</td>
-                  <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.dremainder_dt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </>
-  )}
-</div>
 
 
 
@@ -1261,5 +1251,4 @@ setUserCalendarEvents(data || [])
       </div>
     );
   };
-
 export default CalendarView;

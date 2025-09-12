@@ -12,59 +12,50 @@ const TaskSameDay = ({ onTasksFetched }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // if (!) {
-    //   setError("User ID is required");
-    //   setLoading(false);
-    //   return;
-    // }`
+    const fetchTasks = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        const userJson = localStorage.getItem("user"); 
+        let userId = null;
+        if (userJson) {
+          const userObj = JSON.parse(userJson);
+          userId = userObj.iUser_id; 
+        }
 
- const fetchTasks = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const token = localStorage.getItem("token");
-    const userJson = localStorage.getItem("user"); 
-    let userId = null;
-    if (userJson) {
-      const userObj = JSON.parse(userJson);
-      userId = userObj.iUser_id; 
-    }
+        if (!userId) {
+          throw new Error("User ID not found in local storage");
+        }
+        if (!token) throw new Error("No authentication token found");
 
-    if (!userId) {
-      throw new Error("User ID not found in local storage");
-    }
-    if (!token) throw new Error("No authentication token found");
+        const response = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-    
+        if (response.status === 401)
+          throw new Error("Authentication failed. Token may be invalid.");
 
-    const response = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
 
-    if (response.status === 401)
-      throw new Error("Authentication failed. Token may be invalid.");
+        const data = await response.json();
+        const tasksData = data.data || (Array.isArray(data) ? data : []);
 
-    if (!response.ok)
-      throw new Error(`HTTP error! Status: ${response.status}`);
+        setTasks(tasksData);
 
-    const data = await response.json();
-    const tasksData = data.data || (Array.isArray(data) ? data : []);
-
-    setTasks(tasksData);
-
-    if (onTasksFetched) onTasksFetched(tasksData);
-  } catch (e) {
-    console.error("Failed to fetch tasks:", e);
-    setError(e.message || "Failed to load tasks. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+        if (onTasksFetched) onTasksFetched(tasksData);
+      } catch (e) {
+        console.error("Failed to fetch tasks:", e);
+        setError(e.message || "Failed to load tasks. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchTasks();
   }, [userId, onTasksFetched]);
@@ -75,48 +66,47 @@ const TaskSameDay = ({ onTasksFetched }) => {
       return;
     }
 
-    const toISTDateStart = (date) => {
-      const utcDate = new Date(date);
-      const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-      istDate.setHours(0, 0, 0, 0);
-      return istDate;
-    };
-
-    const toISTDateEnd = (date) => {
-      const utcDate = new Date(date);
-      const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-      istDate.setHours(23, 59, 59, 999);
-      return istDate;
-    };
-
+    // Get current date without time
     const now = new Date();
-    const todayStart = toISTDateStart(now.toISOString());
-    const todayEnd = toISTDateEnd(now.toISOString());
-
+    now.setHours(0, 0, 0, 0);
+    
+    // Today's range
+    const todayStart = new Date(now);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+    
+    // Tomorrow's range
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStart = toISTDateStart(tomorrow.toISOString());
-    const tomorrowEnd = toISTDateEnd(tomorrow.toISOString());
-
-    const dayAfterTomorrow = new Date(now);
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-    const sevenDaysLater = new Date(now);
-    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-    const dayAfterTomorrowStart = toISTDateStart(dayAfterTomorrow.toISOString());
-    const sevenDaysLaterEnd = toISTDateEnd(sevenDaysLater.toISOString());
+    const tomorrowStart = new Date(tomorrow);
+    const tomorrowEnd = new Date(tomorrow);
+    tomorrowEnd.setHours(23, 59, 59, 999);
+    
+    // Next Week range (Monday to Sunday of next week)
+    const nextMonday = new Date(now);
+    // Get next Monday (if today is Monday, get next Monday)
+    const dayOfWeek = nextMonday.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
+    nextMonday.setHours(0, 0, 0, 0);
+    
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+    nextSunday.setHours(23, 59, 59, 999);
 
     const filtered = tasks.filter((task) => {
-      if (!task.task_date) return false; 
+      if (!task.task_date) return false;
+      
       const taskDate = new Date(task.task_date);
-      const istTaskDate = new Date(taskDate.getTime() + 5.5 * 60 * 60 * 1000);
-
+      taskDate.setHours(0, 0, 0, 0); // Normalize task date for comparison
+      
       switch (filter) {
         case "Today":
-          return istTaskDate >= todayStart && istTaskDate <= todayEnd;
+          return taskDate.getTime() === now.getTime();
         case "Tomorrow":
-          return istTaskDate >= tomorrowStart && istTaskDate <= tomorrowEnd;
+          return taskDate.getTime() === tomorrow.getTime();
         case "Next Week":
-          return istTaskDate >= dayAfterTomorrowStart && istTaskDate <= sevenDaysLaterEnd;
+          return taskDate >= nextMonday && taskDate <= nextSunday;
         default:
           return true;
       }
@@ -128,27 +118,52 @@ const TaskSameDay = ({ onTasksFetched }) => {
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-
-    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+    
+    return date.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
+
+  // Helper function to display date ranges for debugging
+  const getDateRangeInfo = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const nextMonday = new Date(now);
+    const dayOfWeek = nextMonday.getDay();
+    const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
+    
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+    
+    return {
+      today: now.toLocaleDateString('en-IN'),
+      tomorrow: tomorrow.toLocaleDateString('en-IN'),
+      nextWeekStart: nextMonday.toLocaleDateString('en-IN'),
+      nextWeekEnd: nextSunday.toLocaleDateString('en-IN')
+    };
+  };
+
+  const dateRanges = getDateRangeInfo();
 
   return (
     <div className="p-2">
@@ -163,6 +178,13 @@ const TaskSameDay = ({ onTasksFetched }) => {
           <option value="Tomorrow">Tomorrow</option>
           <option value="Next Week">Next Week</option>
         </select>
+      </div>
+
+      {/* Debug information - you can remove this in production */}
+      <div className="text-xs text-gray-500 mb-2">
+        {filter === "Today" && `Showing tasks for: ${dateRanges.today}`}
+        {filter === "Tomorrow" && `Showing tasks for: ${dateRanges.tomorrow}`}
+        {filter === "Next Week" && `Showing tasks from: ${dateRanges.nextWeekStart} to ${dateRanges.nextWeekEnd}`}
       </div>
 
       {loading && <p className="text-center text-gray-600">Loading tasks...</p>}
@@ -185,20 +207,17 @@ const TaskSameDay = ({ onTasksFetched }) => {
             filteredTasks.map((task) => (
               <div
                 key={task.itask_id}
-                onClick={() => navigate(`/leaddetailview/${task.ilead_id}`)}
+                onClick={() => task.ilead_id && navigate(`/leaddetailview/${task.ilead_id}`)}
                 className="bg-white rounded-lg border p-3 cursor-pointer hover:shadow-md transition"
               >
                 <div className="flex justify-between items-center mb-2">
-  {/* Left: Task Title */}
-  <h2 className="text-lg font-bold text-gray-800">
-    {task.ctitle}
-  </h2>
-
-  {/* Right: Lead Name */}
-  <h2 className="text-sm text-blue-900 italic">
-    Lead Name: {task.crm_lead?.clead_name}
-  </h2>
-</div>
+                  <h2 className="text-lg font-bold text-gray-800">
+                    {task.ctitle}
+                  </h2>
+                  <h2 className="text-sm text-blue-900 italic">
+                    Lead Name: {task.crm_lead?.clead_name || "N/A"}
+                  </h2>
+                </div>
 
                 <p className="text-sm text-gray-500 mb-2">
                   <span className="font-semibold">Created by: </span>

@@ -169,7 +169,7 @@ export default function TeamKPIStats() {
   }
 
   if (noData) {
-    return <div className="text-center p-4 text-gray-500">No data available.</div>;
+    return <div className="text-center p-4 text-gray-500 bg-white p-5 rounded-xl">No data available.</div>;
   }
 
   return (

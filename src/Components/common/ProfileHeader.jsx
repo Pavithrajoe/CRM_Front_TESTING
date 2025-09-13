@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Bell, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -195,6 +196,10 @@ const toggleNotificationsPanel = () => {
     navigate('/');
   };
 
+  const handleGeneratePoster = () => {
+    navigate('/generate-poster');
+  };
+
   const viewAllNotifications = () => {
     setShowNotifications(false);
     navigate('/notifications');
@@ -307,9 +312,17 @@ const toggleNotificationsPanel = () => {
                 onClick={() => setShowDropdown(false)}
               />
             </div>
+
+            <button
+              onClick={handleGeneratePoster}
+              className="w-full text-center mb-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-semibold py-2 rounded-xl transition duration-300 animate-pulse"
+            >
+              Generate Your Poster
+            </button>
+
             <button
               onClick={handleLogout}
-              className="w-full text-center mt-5 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"
+              className="w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"
             >
               Logout
             </button>

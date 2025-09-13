@@ -60,6 +60,7 @@ import AccountSettings from "./pages/settings/accountSettings";
 import NotificationSettings from "./pages/settings/notificationSettings";
 import BillingSettings from "./pages/settings/billingSettings";
 import MembersSettings from "./pages/settings/membersSettings";
+import GeneratePoster from "./Components/common/Poster/GeneratePoster.jsx";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
@@ -124,6 +125,7 @@ function App() {
                   <Route path="userdeals/:userId" element={<UserDeals />} />
                   <Route path="/reports/:userId" element={<UserReportPage />} />
                   <Route path="/first-response" element={<FirstResponseTimeReport />} />
+                 <Route path="/generate-poster" element={<GeneratePoster />} />
                   <Route path="settingspage" element={<SettingsPage />}>
                     <Route path="account" element={<AccountSettings />} />
                     <Route path="lable" element={<LableMaster />} />
@@ -134,6 +136,7 @@ function App() {
                     <Route path="members" element={<MembersSettings />} />
                     <Route path="support" element={<SupportSettings />} />
                     <Route path="smtpsettings" element={<SmtpSettings />} />
+
                   </Route>
                 </Route>
               {/* </Route> */}

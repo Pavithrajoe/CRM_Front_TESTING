@@ -1249,7 +1249,7 @@ const fetchAllTasks = async (date) => {
             <>
               {filteredTableData.length === 0 ? (
                 <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
-                  <p>{searchTerm ? 'No reminders match your search' : 'No reminders found.'}</p>
+                  <p>{searchTerm ? 'No reminders match your search' : 'No reminders found for this user.'}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-xs max-h-[400px] overflow-y-auto">     

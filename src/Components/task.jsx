@@ -239,8 +239,8 @@ const Tasks = () => {
         setAssignToMe(false);
       }
     } else if (name === "ctitle") {
-      if (value.length > 30) {
-        showPopup("Warning", "Title cannot exceed 30 characters.", "warning");
+      if (value.length > 100) {
+        showPopup("Warning", "Title cannot exceed 100 characters.", "warning");
         return;
       }
       updatedValue = value.charAt(0).toUpperCase() + value.slice(1);

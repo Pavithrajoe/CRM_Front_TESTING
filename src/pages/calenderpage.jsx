@@ -7,18 +7,10 @@ const CalendarPage = () => {
   return (
     <>
       <ProfileHeader />
-
-   
-
-      
         <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[100%] mx-auto mt-[40px]">
           <CalendarView />
         </div>
-
-       
           <GoogleMeet />
-        
-   
     </>
   );
 };

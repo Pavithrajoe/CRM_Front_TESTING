@@ -111,12 +111,18 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       setIsListening(false);
     };
 
-    recognitionRef.current.onerror = (event) => {
+      recognitionRef.current.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
+
+      let userMessage = 'Speech recognition error. Please try again.';
+      if (event.error === 'not-allowed') {
+        userMessage = 'Microphone access was denied. Please allow microphone access in your browser settings to use this feature.';
+      }
+
       setSnackbar({
         open: true,
-        message: `Speech recognition error: ${event.error}`,
+        message: userMessage,
         severity: 'error'
       });
     };
@@ -242,8 +248,6 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
   };
 
-
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Drawer anchor="right" open={open} onClose={onClose}>
@@ -315,14 +319,32 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
                       fullWidth: true,
                       className: 'w-full',
                     },
+                    popper: {
+                      disablePortal: false,
+                      modifiers: [
+                        { name: 'flip', enabled: false },
+                        { name: 'preventOverflow', enabled: false }
+                      ],
+                      sx: {
+                        position: 'fixed !important',
+                        left: '50% !important',
+                        top: '50% !important',
+                        transform: 'translate(-50%, -50%) !important',
+                        zIndex: 1400,          
+                        width: 'min(760px, 95vw)', 
+                      }
+                    }
                   }}
                 />
+
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">End Date<span className="text-red-500">*</span></label>
                 <DateTimePicker
                   value={formData.devent_end}
-                  onChange={(newValue) => setFormData({ ...formData, devent_end: newValue })}
+                  onChange={(newValue) =>
+                    setFormData({ ...formData, devent_end: newValue })
+                  }
                   minDateTime={formData.devent_startdt}
                   viewRenderers={{
                     hours: renderTimeViewClock,
@@ -334,10 +356,26 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      className: 'w-full',
+                      className: "w-full",
+                    },
+                    popper: {
+                      disablePortal: false,
+                      modifiers: [
+                        { name: "flip", enabled: false },
+                        { name: "preventOverflow", enabled: false },
+                      ],
+                      sx: {
+                        position: "fixed !important",
+                        left: "50% !important",
+                        top: "50% !important",
+                        transform: "translate(-50%, -50%) !important",
+                        zIndex: 1400,
+                        width: "min(760px, 95vw)",
+                      },
                     },
                   }}
                 />
+             
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Recurring Task</label>
@@ -369,10 +407,6 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     </LocalizationProvider>
   );
 };
-
-
-
-
 
   const CalendarView = () => {
     // 1. STATE INITIALIZATION: selectedDate is set to the current date by default.
@@ -1006,22 +1040,46 @@ const fetchAllTasks = async (date) => {
                   ) : tasks.length > 0 ? (
                     tasks.map(task => (
                       <div key={task.itask_id} className="pb-4 last:pb-0 border-b border-gray-200">
-                        <div className="flex flex-col md:flex-row justify-between items-start bg-white p-5 space-y-4 md:space-y-0 md:space-x-6">
-                          <div className="flex-1 space-y-1">
+                        <div className="bg-white p-5 space-y-4">
+
+                          {/*  header row for Title + Date + Lead */}
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            {/* Task Title */}
                             <h3 className="font-semibold text-gray-800">{task.ctitle || "No Title"}</h3>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <FaUserAlt className="mr-2 text-xs" />
-                              Assigned To: <span className="font-semibold ml-1 ">{task.user_task_iassigned_toTouser?.cFull_name || "N/A"}</span>
+
+                            <div className="flex items-center gap-3">
+                              {/* Date */}
+                              <div className="text-xs text-white bg-green-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
+                                <FaClock className="mr-1" />
+                                {formatDateTime(task.task_date)}
+                              </div>
+
+                              {/* Lead Name */}
+                              <div className="text-xs text-gray-600 bg-yellow-300 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
+                                <span className="font-bold text-gray-600">Lead Name:</span>
+                                <span className="italic text-gray-600 ml-1">
+                                  {task.crm_lead?.clead_name || "No Lead Name"}
+                                </span>
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-600">Message: <span className='ml-1 italic font-semibold'>{task.ctask_content}</span></p>
                           </div>
-                          <div className="text-xs text-white bg-green-600 px-3 py-1 rounded-full flex items-center whitespace-nowrap">
-                            <FaClock className="mr-1" />
-                            {formatDateTime(task.task_date)}
-                          </div>
-                          <div className="text-xs text-gray-600 bg-yellow-300 px-3 py-1 rounded-full flex items-center whitespace-nowrap ">
-                            <span className="font-bold text-gray-600 ">Lead Name:</span>{" "}
-                            <span className='italic text-gray-600 ml-1'>{task.crm_lead?.clead_name || "No Lead Name"}</span> 
+
+                          {/* Assigned To + Message */}
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div className="flex items-center">
+                              <FaUserAlt className="mr-2 text-xs" />
+                              <span className="font-medium">Assigned To:</span>
+                              <span className="ml-1 font-semibold">
+                                {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="font-medium">Message:</span>
+                              <span className="ml-1 italic font-semibold break-words">
+                                {task.ctask_content}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1174,7 +1232,7 @@ const fetchAllTasks = async (date) => {
                         <tr key={item.icalender_event} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
                           <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
                           <td className="px-4 py-3 border-b align-top break-words">{item.ctitle}</td>
-                          <td className="px-4 py-3 border-b align-top break-words">{item.cdescription || "N/A"}</td>
+                          <td className="px-4 py-3 border-b align-top break-words">{item.cdescription || "-"}</td>
                           <td className="px-4 py-3 border-b align-top break-words">{item.recurring_task || "None"}</td>
                           <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_startdt)}</td>
                           <td className="px-4 py-3 border-b align-top whitespace-nowrap">{formatDateTime(item.devent_end)}</td>
@@ -1224,9 +1282,6 @@ const fetchAllTasks = async (date) => {
             </>
           )}
         </div>
-
-
-
         <Snackbar
           open={snackbar.open}
           autoHideDuration={4000}

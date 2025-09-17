@@ -82,8 +82,6 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
             <Close />
           </IconButton>
 
-
-
         </Box>
       </Box>
       <DialogContent sx={{ p: 0, height: '100%' }}>

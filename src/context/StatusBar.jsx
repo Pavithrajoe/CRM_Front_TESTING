@@ -20,6 +20,9 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+
 
 const mandatoryInputStages = ['Proposal', 'Won'];
 const MAX_REMARK_LENGTH = 500;
@@ -80,7 +83,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     remark: '', 
     projectValue: '',
     assignedTo: '',
-    assignToMe: false
+    assignToMe: false,
+    dueDate: '',
   });
   const [remarkErrors, setRemarkErrors] = useState({
     remark: '',
@@ -660,6 +664,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       leadStatusId: remarkStageId,
       createBy: userId.iUser_id,
       ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+      dueDate: remarkData.dueDate ? new Date(remarkData.dueDate).toISOString() : null
+
     };
 
     try {
@@ -675,7 +681,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       if (remarkData.assignedTo) {
         try {
           await axios.post(
-            `${ENDPOINTS.ASSIGNED_TO}`,
+            `${ENDPOINTS.GET_ASSIGN}`,
             {
               iassigned_by: userId.iUser_id,
               iassigned_to: Number(remarkData.assignedTo),
@@ -1070,6 +1076,40 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 Optionally assign this lead to someone when submitting the remark
               </p>
             </div>
+
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+  <DateTimePicker
+    label="Due Date & Time"
+    value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
+    onChange={newValue => {
+      setRemarkData(prev => ({
+        ...prev,
+        dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''
+      }));
+    }}
+    renderInput={(params) => (
+      <TextField
+        {...params}
+        fullWidth
+        sx={{ mt: 2 }}
+      />
+    )}
+    minDateTime={dayjs()} // Ensure future datetime
+  />
+</LocalizationProvider>
+
+            {/* <TextField
+              label="Due Date"
+              type="date"
+              fullWidth
+              sx={{ mt: 2 }}
+              value={remarkData.dueDate || ''}
+              onChange={e => 
+                setRemarkData(prev => ({ ...prev, dueDate: e.target.value }))
+              }
+              InputLabelProps={{ shrink: true }}
+            /> */}
+
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
@@ -1221,6 +1261,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                       </p>
                       <p className="text-sm">
                         <strong>Status:</strong> {remark.status_name}
+                      </p>
+                      <p className="text-sm">
+                        <strong>Due Date:</strong> {remark.dueDate}
                       </p>
                     </div>
                   </div>

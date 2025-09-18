@@ -198,10 +198,8 @@ const ProfileCard = () => {
       setAttachments([]);
       setAssignedToList([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId]);
 
-  // Handle editing lead: choose form type based on company business type
   const handleEditLead = async (lead) => {
     try {
       const token = localStorage.getItem("token");
@@ -210,7 +208,6 @@ const ProfileCard = () => {
 
       if (!token || !companyId) {
         console.error("Token or company ID is missing.");
-        // show user-friendly popup if available
         if (popup?.show) popup.show("Missing authentication or company info.", { type: "error" });
         return;
       }
@@ -322,7 +319,6 @@ const ProfileCard = () => {
 
       // refresh assigned list
       fetchAssignedToList();
-
       const assignedUser = Array.isArray(users) ? users.find((user) => String(user.iUser_id) === String(userIdToAssign)) : null;
       const notifiedPerson = Array.isArray(users) ? users.find((user) => String(user.iUser_id) === String(notifyUserId)) : null;
 
@@ -405,18 +401,15 @@ const ProfileCard = () => {
     }
   };
 
-  // Loading / error / empty profile guards
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">{error}</div>;
   if (!profile)
     return <div className="p-4 text-gray-700">No profile found.</div>;
 
-  // computed locals (defensive)
   const latestAssignments = Array.isArray(assignedToList) ? assignedToList.slice(0, 2) : [];
   const activeUsers = Array.isArray(users) ? users.filter((user) => user?.bactive === true) : [];
   const usersForNotify = activeUsers.filter((user) => String(user?.iUser_id) !== String(selectedAssignToUser));
 
-  // A safe helper to render website link (guard type)
   const renderWebsite = (url) => {
     if (!url) return <span>-</span>;
     try {
@@ -462,6 +455,15 @@ const ProfileCard = () => {
               title="Edit Profile"
             >
               <FiEdit size={18} />
+            </button>
+
+            <button
+              onClick={() => handleEditLead(profile)}
+              className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+              aria-label="Mail History"
+              title="Mail History"
+            >
+              <FiMail size={18} />
             </button>
           </div>
 
@@ -797,13 +799,6 @@ const ProfileCard = () => {
           </div>
         </Dialog>
 
-        {/* Success Message */}
-        {/* {editSuccess && (
-          // <div className="text-blue-600 bg-green-50 border border-blue-200 rounded-lg p-3 text-center text-sm mt-5">
-          //   Profile updated successfully!
-          // </div>
-        )} */}
-
         {/* Full Details Modal */}
         <LeadProfileView profile={profile} showDetails={showDetails} onClose={() => setShowDetails(false)} />
 
@@ -830,5 +825,4 @@ const ProfileCard = () => {
     </ErrorBoundary>
   );
 };
-
 export default ProfileCard;

@@ -527,6 +527,17 @@ const sendEmail = async () => {
   setIsSendingMail(true);
   try {
     const token = localStorage.getItem("token");
+    
+    // Ensure leadId is a number
+    const leadIdAsNumber = parseInt(leadId, 10);
+    
+    // Check if the conversion was successful
+    if (isNaN(leadIdAsNumber)) {
+        showPopup("Error", "Invalid lead ID. Please refresh the page.", "error");
+        setIsSendingMail(false);
+        return;
+    }
+
     const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
       method: "POST",
       headers: {
@@ -538,6 +549,7 @@ const sendEmail = async () => {
         cc: ccRecipients,
         mailSubject,
         mailContent,
+        leadId: leadIdAsNumber, // Use the converted number here
       }),
     });
 
@@ -562,6 +574,7 @@ const sendEmail = async () => {
     setIsSendingMail(false);
   }
 };
+
 
 const fetchLeadData = async () => {
   try {

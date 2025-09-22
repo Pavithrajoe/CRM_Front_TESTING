@@ -38,6 +38,7 @@ const LeadCardViewPage = () => {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [potentials, setPotentials] = useState([]);
     const [statuses, setStatuses] = useState([]);
+    const [sources, setSources] = useState([]);
     const [leads, setLeads] = useState([]);               
     const [displayedData, setDisplayedData] = useState([]);    
 
@@ -53,6 +54,7 @@ const LeadCardViewPage = () => {
 
     const [selectedPotential, setSelectedPotential] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedSource, setSelectedSource] = useState('');
     const token = localStorage.getItem("token"); 
 
     useEffect(() => {
@@ -68,6 +70,23 @@ const LeadCardViewPage = () => {
             }
         })
         .catch(err => console.error(err));
+
+        // fetch sources
+    
+        fetch(ENDPOINTS.MASTER_SOURCE_GET, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data?.data) {
+                const activeSources = data.data
+                .filter(s => s.is_active)
+                setSources(activeSources);
+                // console.log("Sources data:", activeSources);
+            }
+        })
+        .catch(err => console.error(err));
+    
 
         // Fetch statuses
         fetch(ENDPOINTS.MASTER_STATUS_GET, {
@@ -85,8 +104,9 @@ const LeadCardViewPage = () => {
         .catch(err => console.error(err));
     }, [token]);
 
+    
+
     useEffect(() => {
-        // console.log("Leads state updated:", leads);
     }, [leads]);
 
     useEffect(() => {
@@ -172,7 +192,7 @@ useEffect(() => {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log("Users data:", data);
+                // console.log("Users data:", data);
                 
                 // Handle different response structures
                 let usersArray = [];
@@ -300,7 +320,7 @@ useEffect(() => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=5000`, {
+            const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -629,6 +649,7 @@ const fetchAssignedLeads = useCallback(async () => {
     };
 
     const handleFilterApply = () => {
+            // console.log("First lead object:", allLeads[0]); 
         let filtered = [...allLeads];
 
         // Filter by Potential
@@ -636,6 +657,7 @@ const fetchAssignedLeads = useCallback(async () => {
             filtered = filtered.filter(
                 lead => lead.lead_potential?.clead_name === selectedPotential
             );
+            // console.log("Filtered by potential:", filtered);
         }
 
         // Filter by Status
@@ -643,6 +665,14 @@ const fetchAssignedLeads = useCallback(async () => {
             filtered = filtered.filter(
                 lead => lead.lead_status?.clead_name === selectedStatus
             );
+            // console.log("Filtered by status:", filtered);
+        }
+        // Filter by Source
+        if (selectedSource) {
+            filtered = filtered.filter(
+                lead => lead.lead_source_id === Number(selectedSource)
+            );
+            // console.log("Filtered by source:", filtered);
         }
 
         // Filter Lost Leads/Deals
@@ -686,6 +716,7 @@ const fetchAssignedLeads = useCallback(async () => {
         setToDate('');
         setSelectedPotential('');
         setSelectedStatus('');
+        setSelectedSource('');
         setDisplayedData(leads);
     };
 
@@ -997,7 +1028,7 @@ const handleBulkAssign = async () => {
             {showFilterModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
-                        <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
+                        <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
                         <label className="block text-sm text-gray-700">
                             From
                             <input
@@ -1044,6 +1075,22 @@ const handleBulkAssign = async () => {
                                 {statuses.map(s => (
                                     <option key={s.ilead_status_id} value={s.clead_name}>
                                         {s.clead_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        {/*  source */}
+                        <label className="block text-sm text-gray-700">
+                            Source
+                            <select
+                                value={selectedSource}
+                                onChange={(e) => setSelectedSource(e.target.value)}
+                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                            >
+                                <option value="">All Sources</option>
+                                {sources.map(s => (
+                                    <option key={s.source_id} value={s.source_id}> 
+                                        {s.source_name}
                                     </option>
                                 ))}
                             </select>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -7,7 +8,6 @@ import "react-quill/dist/quill.snow.css";
 import { IntroModal } from "./IntroModal";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ENDPOINTS } from "../../api/constraints";
 
 const formatMasterName = (name, previousValue) => {
   if (!name) return '';
@@ -435,7 +435,8 @@ useEffect(() => {
   let newFormData = {};
 
   if (selectedItemForEdit) {
-   
+    console.log('=== DEBUG: Editing item ===');
+    console.log('Selected item:', selectedItemForEdit);
     
     if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
       const parentIdKey =
@@ -445,10 +446,10 @@ useEffect(() => {
         subIndustryConfig.parentMasterConfig?.formFieldKey ||
         "industryParent";
 
-      // console.log('Parent ID key:', parentIdKey);
-      // console.log('Form parent key:', formParentKey);
-      // console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
-      // console.log('Parent options:', parentOptions);
+      console.log('Parent ID key:', parentIdKey);
+      console.log('Form parent key:', formParentKey);
+      console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
+      console.log('Parent options:', parentOptions);
 
       newFormData = {
         [subIndustryConfig.payloadKey]:
@@ -465,7 +466,7 @@ useEffect(() => {
         }),
       };
 
-      // console.log('New form data:', newFormData);
+      console.log('New form data:', newFormData);
     } else {
       newFormData = { ...selectedItemForEdit };
     }
@@ -798,121 +799,172 @@ const handleChange = (e) => {
       setIsSaving(false);
     }
   };
-const handleDelete = async (itemId) => {
-  if (!master) {
-    toast.error("Master configuration is missing. Cannot delete.");
-    return;
-  }
 
-  setIsDeleting(true);
-  setApiError(null);
+  const handleDelete = async (itemId) => {
+    if (!master) {
+      toast.error("Master configuration is missing. Cannot delete.");
+      return;
+    }
 
-  const itemToDelete = existingItems.find(
-    (item) => item[master.idKey] === itemId
-  );
+    setIsDeleting(true);
+    setApiError(null);
 
-  if (!master.delete) {
-    toast.error(`Delete endpoint not configured for ${master.title}.`);
-    setIsDeleting(false);
-    return;
-  }
+    const itemToDelete = existingItems.find(
+      (item) => item[master.idKey] === itemId
+    );
 
-  const confirmDelete = window.confirm(
-    `Are you sure you want to delete "${
-      itemToDelete?.[master.payloadKey] || "this item"
-    }"?`
-  );
-  if (!confirmDelete) {
-    setIsDeleting(false);
-    return;
-  }
+    if (!master.delete) {
+      toast.error(`Delete endpoint not configured for ${master.title}.`);
+      setIsDeleting(false);
+      return;
+    }
 
-  try {
-    const token = localStorage.getItem("token");
-    const headers = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${
+        itemToDelete?.[master.payloadKey] || "this item"
+      }"?`
+    );
+    if (!confirmDelete) {
+      setIsDeleting(false);
+      return;
+    }
 
-    // ✅ Sub Source deletion -> PUT with query params
-    if (master.title === "Sub Source") {
-      await axios.put(
-        ENDPOINTS.MASTER_SUB_SOURCE_CHANGE,
-        {}, // no body
-        {
-          headers,
-          params: {
-            subSrcId: itemId,
-            status: false,
-          },
+    const url =
+      typeof master.delete === "function"
+        ? master.delete(itemId, itemToDelete)
+        : master.delete;
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      let deletePayload = {};
+      const mappedIdKey = master.payloadMapping?.[master.idKey] || master.idKey;
+
+      if (itemId !== undefined && itemId !== null) {
+        deletePayload[mappedIdKey] = itemId;
+      }
+
+      if (master.baseDeletePayload) {
+        deletePayload = { ...master.baseDeletePayload, ...deletePayload };
+      }
+
+      if (
+        master.activeStatusPayloadKey &&
+        !Object.hasOwn(deletePayload, master.activeStatusPayloadKey)
+      ) {
+        const mappedActiveKey =
+          master.payloadMapping?.[master.activeStatusPayloadKey] ||
+          master.activeStatusPayloadKey;
+        deletePayload[mappedActiveKey] = false;
+      }
+
+      const deleteModifierKey =
+        typeof master.modifierIdPayloadKey === "object"
+          ? master.modifierIdPayloadKey.delete
+          : master.modifierIdPayloadKey;
+      if (deleteModifierKey && userId !== null && userId !== undefined) {
+        const mappedDeleteModifierKey =
+          master.payloadMapping?.[deleteModifierKey] || deleteModifierKey;
+        if (mappedDeleteModifierKey) {
+          deletePayload[mappedDeleteModifierKey] = userId;
         }
-      );
+      }
 
-      toast.success("Sub Source deleted (status updated to false)!", {
+      const deleteUpdatedDtKey =
+        typeof master.updatedDtPayloadKey === "object"
+          ? master.updatedDtPayloadKey.delete
+          : master.updatedDtPayloadKey;
+      if (deleteUpdatedDtKey) {
+        const mappedDeleteUpdatedDtKey =
+          master.payloadMapping?.[deleteUpdatedDtKey] || deleteUpdatedDtKey;
+        if (mappedDeleteUpdatedDtKey) {
+          deletePayload[mappedDeleteUpdatedDtKey] = new Date().toISOString();
+        }
+      }
+
+      const sendPayloadInBody = master.idLocation === "body";
+
+      if (sendPayloadInBody) {
+        if (Object.keys(deletePayload).length === 0) {
+          console.warn(
+            `Attempting to send DELETE with empty body. Ensure master.idKey and baseDeletePayload are configured correctly.`
+          );
+        }
+        await axios.delete(url, { data: deletePayload, headers: headers });
+      } else {
+        await axios.delete(url, { headers: headers });
+      }
+
+toast.success(`${master.title} deleted successfully!`, {
         position: "top-right",
         autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
-    } else {
-      // ✅ Normal delete for other masters
-      const url =
-        typeof master.delete === "function"
-          ? master.delete(itemId, itemToDelete)
-          : master.delete;
+      
+      setSelectedItemForEdit(null);
+      const newEntryFormData = { ...master.basePostPayload };
+      if (
+        master.activeStatusPayloadKey &&
+        newEntryFormData[master.activeStatusPayloadKey] === undefined
+      ) {
+        newEntryFormData[master.activeStatusPayloadKey] = true;
+      }
+      if (master.isHierarchical && master.parentMasterConfig) {
+        const formParentKey =
+          master.parentMasterConfig.formFieldKey || "parentId";
+        newEntryFormData[formParentKey] = null;
+      }
+      if (
+        (master.title === "Lead Status" || master.title === "Potential") &&
+        newEntryFormData.orderId !== undefined
+      ) {
+        newEntryFormData.orderId = "";
+      }
+      if (master.title === leadSourceConfig?.title) {
+        newEntryFormData.parentLeadSourceId = null;
+      }
+      setFormData(newEntryFormData);
 
-      await axios.delete(url, { headers });
-
-      toast.success(`${master.title} deleted successfully!`, {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      await fetchItems();
+      if (master.title === leadSourceConfig?.title) {
+        fetchAllLeadSourceItems();
+      }
+    } catch (error) {
+      let errorMessage = `Failed to delete ${master.title}.`;
+      if (axios.isAxiosError(error) && error.response) {
+        if (
+          error.response.data &&
+          Array.isArray(error.response.data.issues) &&
+          error.response.data.issues.length > 0
+        ) {
+          errorMessage = `Validation Error: ${error.response.data.issues
+            .map(
+              (issue) => issue.message || issue.field || JSON.stringify(issue)
+            )
+            .join("; ")}`;
+        } else {
+          errorMessage =
+            error.response.data.message ||
+            error.response.data.error ||
+            `Server Error: ${error.response.status}`;
+        }
+      } else if (axios.isAxiosError(error) && error.request) {
+        errorMessage =
+          "No response from server during delete. Please check your network.";
+      } else {
+        errorMessage = error.message;
+      }
+      setApiError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
     }
-
-    // ✅ Reset form after delete
-    setSelectedItemForEdit(null);
-    const newEntryFormData = { ...master.basePostPayload };
-    if (
-      master.activeStatusPayloadKey &&
-      newEntryFormData[master.activeStatusPayloadKey] === undefined
-    ) {
-      newEntryFormData[master.activeStatusPayloadKey] = true;
-    }
-    if (master.isHierarchical && master.parentMasterConfig) {
-      const formParentKey =
-        master.parentMasterConfig.formFieldKey || "parentId";
-      newEntryFormData[formParentKey] = null;
-    }
-    if (
-      (master.title === "Lead Status" || master.title === "Potential") &&
-      newEntryFormData.orderId !== undefined
-    ) {
-      newEntryFormData.orderId = "";
-    }
-    if (master.title === leadSourceConfig?.title) {
-      newEntryFormData.parentLeadSourceId = null;
-    }
-    setFormData(newEntryFormData);
-
-    await fetchItems();
-    if (master.title === leadSourceConfig?.title) {
-      fetchAllLeadSourceItems();
-    }
-  } catch (error) {
-    let errorMessage = `Failed to delete ${master.title}.`;
-    if (axios.isAxiosError(error) && error.response) {
-      errorMessage =
-        error.response.data.message ||
-        error.response.data.error ||
-        `Server Error: ${error.response.status}`;
-    } else if (axios.isAxiosError(error) && error.request) {
-      errorMessage =
-        "No response from server during delete. Please check your network.";
-    } else {
-      errorMessage = error.message;
-    }
-    setApiError(errorMessage);
-    toast.error(errorMessage);
-  } finally {
-    setIsDeleting(false);
-  }
-};
+  };
 
   const handleEditSubIndustryClick = (subIndustryItem) => {
     setSelectedItemForEdit({ ...subIndustryItem, isSubIndustry: true });

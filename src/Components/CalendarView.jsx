@@ -1166,13 +1166,13 @@ const fetchAllTasks = async (date) => {
           {tableActiveTab === "tasks" && (
             <>
               {userTaskError && (
-                <div className="min-h-[180px] flex items-center justify-center text-red-500 text-base font-medium">
+                <div className="min-h-[180px]  flex items-center justify-center text-gray-400 text-base font-medium">
                   <p>{userTaskError}</p>
                 </div>
               )}
 
               {!userTaskError && filteredTableData.length === 0 && (
-                <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">
+                <div className="min-h-[180px] flex items-center justify-center text-gray-200 text-base font-medium">
                   <p>{searchTerm ? 'No tasks match your search' : 'No tasks found.'}</p>
                 </div>
               )}

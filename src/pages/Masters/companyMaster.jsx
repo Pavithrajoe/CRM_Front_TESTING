@@ -8,6 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 export default function CompanyMaster() {
     const [selectedMaster, setSelectedMaster] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [settings, setSettings] = useState({})
 
     // State to store decoded user and company IDs
     const [userId, setUserId] = useState(null);
@@ -39,6 +40,33 @@ export default function CompanyMaster() {
             setIsLoading(false); // Stop loading
         }
     }, []); 
+useEffect(() => {
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(ENDPOINTS.GET_SETTINGS, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await res.json();
+      console.log("Settings response:", data);
+      setSettings(data.result); // set the nested object, not the whole response
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
+
+  if (!isLoading && !authError) {
+    fetchSettings();
+  }
+}, [isLoading, authError]);
+
     
 
     const MASTER_CONFIG = useMemo(() => ([
@@ -806,28 +834,30 @@ export default function CompanyMaster() {
             <h1 className="text-3xl font-extrabold mb-10 text-center">Company Master Settings</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {MASTER_CONFIG.map((master, index) => (
-                    <div
-                        key={index}
-                        onClick={() => handleTileClick(master)}
-                        className="relative min-h-[220px] cursor-pointer bg-white border border-blue-100 shadow-xl rounded-2xl p-6 hover:shadow-blue-200 transition-transform duration-300 hover:scale-[1.03] group"
-                    >
-                        <div className="absolute top-3 right-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Sparkles className="w-5 h-5" />
-                        </div>
-                        <div className="flex flex-col justify-between h-full">
-                            <div>
-                                <h3 className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">
-                                    {master.title}
-                                </h3>
-                                <p className="text-xl font-extrabold text-gray-900 leading-snug">
-                                    {master.value}
-                                </p>
-                            </div>
-                            <div className="mt-6 h-2 w-10 bg-blue-500 rounded-full mx-auto group-hover:w-full transition-all duration-300" />
-                        </div>
-                    </div>
-                ))}
+    {MASTER_CONFIG.filter(master =>
+  master.title === "Sub-Service" ? settings?.sub_src_active === true : true
+).map((master, index) => (
+    <div
+      key={index}
+      onClick={() => handleTileClick(master)}
+      className="relative min-h-[220px] cursor-pointer bg-white border border-blue-100 shadow-xl rounded-2xl p-6 hover:shadow-blue-200 transition-transform duration-300 hover:scale-[1.03] group"
+    >
+      <div className="absolute top-3 right-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <Sparkles className="w-5 h-5" />
+      </div>
+      <div className="flex flex-col justify-between h-full">
+        <div>
+          <h3 className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">
+            {master.title}
+          </h3>
+          <p className="text-xl font-extrabold text-gray-900 leading-snug">
+            {master.value}
+          </p>
+        </div>
+        <div className="mt-6 h-2 w-10 bg-blue-500 rounded-full mx-auto group-hover:w-full transition-all duration-300" />
+      </div>
+    </div>
+  ))}
             </div>
 
             {selectedMaster && isModalOpen && (

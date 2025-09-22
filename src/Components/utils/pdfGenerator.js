@@ -14,7 +14,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
   try {
     // Fetch quotation data from API
     const response = await fetch(
-      `http://192.168.29.134:3000/api/quotation/lead/${leadId}`,
+      `http://192.168.29.236:3000/api/quotation/lead/${leadId}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },

@@ -457,9 +457,7 @@ const handleDownloadPdf = async (quotation) => {
     try {
       const token = localStorage.getItem("token");
       // console.log("Token available:", !!token);
-      
-      // Try different endpoint formats
-      const endpointsToTry = [
+            const endpointsToTry = [
         `${ENDPOINTS.STATUS_REMARKS}/${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?leadId=${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?iLead_id=${leadId}`,
@@ -1472,7 +1470,6 @@ return (
     </div>
   </div>
 )}
-
     </div>
   );
 };

@@ -1494,15 +1494,15 @@ const handleBulkAssign = async () => {
                                         className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
                                     >
                                         {/* Checkbox for selection */}
-<div className="absolute top-3 right-3">
-  <input
-    type="checkbox"
-    checked={selectedLeads.includes(item.ilead_id)}
-    onChange={() => toggleLeadSelection(item.ilead_id)}
-    onClick={(e) => e.stopPropagation()}
-    className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
-  />
-</div>
+                                        <div className="absolute top-3 right-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedLeads.includes(item.ilead_id)}
+                                            onChange={() => toggleLeadSelection(item.ilead_id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
+                                        />
+                                        </div>
 
                                         
                                         {(item.website_lead === true || item.website_lead === 'true') && (
@@ -1580,5 +1580,6 @@ const handleBulkAssign = async () => {
         </div>
     );
 };
+
 
 export default LeadCardViewPage;

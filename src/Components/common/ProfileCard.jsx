@@ -77,19 +77,14 @@ const ProfileCard = () => {
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
   const [showAssignConfirmation, setShowAssignConfirmation] = useState(false);
   const [isMailHistoryModalOpen, setIsMailHistoryModalOpen] = useState(false);
-  const [mailHistory, setMailHistory] = useState([]);
-  const [selectedMail, setSelectedMail] = useState(null);
-
+  // const [mailHistory, setMailHistory] = useState([]);
+  // const [selectedMail, setSelectedMail] = useState(null);
 
   // EDIT FORM STATES
   const [editingLead, setEditingLead] = useState(null);
   const [editFormType, setEditFormType] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
-
-  // popup (if used in your app)
   const popup = usePopup?.();
-
-  // Helper: decode user id from JWT token (defensive)
   const getUserIdFromToken = () => {
     const token = localStorage.getItem("token");
     if (!token) return null;

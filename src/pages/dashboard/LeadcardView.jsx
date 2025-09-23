@@ -1026,15 +1026,9 @@ const handleBulkAssign = async () => {
             )}
 
             {showFilterModal && (
-<<<<<<< HEAD
-                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" >
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4" >
-                        <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
-=======
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
                         <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
->>>>>>> a769a43a3f7a6dac5e04a1ee7b914622963100ae
                         <label className="block text-sm text-gray-700">
                             From
                             <input

@@ -15,7 +15,11 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
   try {
     // Fetch quotation data from API
     const response = await fetch(
+<<<<<<< HEAD
       `${ENDPOINTS.QUOTATION_LEAD}/${leadId}`,
+=======
+      `http://192.168.29.236:3000/api/quotation/lead/${leadId}`,
+>>>>>>> a769a43a3f7a6dac5e04a1ee7b914622963100ae
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },

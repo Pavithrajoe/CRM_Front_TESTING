@@ -190,6 +190,7 @@ const LeadDetailView = () => {
       if (token) {
         const base64Payload = token.split(".")[1];
         const decodedPayload = atob(base64Payload);
+        // console.log("Decoded token payload:", decodedPayload);
         userData = JSON.parse(decodedPayload);
       } else {
         const storedUserData = localStorage.getItem("user");
@@ -452,13 +453,11 @@ const handleDownloadPdf = async (quotation) => {
   };
 
   const fetchStatusRemarks = async () => {
-    console.log("fetchStatusRemarks function called for leadId:", leadId);
+    // console.log("fetchStatusRemarks function called for leadId:", leadId);
     try {
       const token = localStorage.getItem("token");
-      console.log("Token available:", !!token);
-      
-      // Try different endpoint formats
-      const endpointsToTry = [
+      // console.log("Token available:", !!token);
+            const endpointsToTry = [
         `${ENDPOINTS.STATUS_REMARKS}/${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?leadId=${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?iLead_id=${leadId}`,
@@ -472,7 +471,7 @@ const handleDownloadPdf = async (quotation) => {
       // Try each endpoint until one works
       for (const endpoint of endpointsToTry) {
         try {
-          console.log("Trying endpoint:", endpoint);
+          // console.log("Trying endpoint:", endpoint);
           response = await fetch(endpoint, {
             headers: {
               "Content-Type": "application/json",
@@ -480,7 +479,7 @@ const handleDownloadPdf = async (quotation) => {
             },
           });
 
-          console.log("Response status:", response.status);
+          // console.log("Response status:", response.status);
           
           if (response.ok) {
             successfulEndpoint = endpoint;
@@ -500,14 +499,15 @@ const handleDownloadPdf = async (quotation) => {
   }
 
   const data = await response.json();
-  console.log("Success with endpoint:", successfulEndpoint, data);
+  // console.log("Success with endpoint:", successfulEndpoint, data);
   
   // Handle different response structures
   const remarks = data.Response || data.data || data || [];
   setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
   
-  console.log("Processed status remarks:", remarks);
-} catch (error) {
+  // console.log("Processed status remarks:", remarks);
+}
+ catch (error) {
   console.error("Error fetching status remarks:", error);
   if (showPopup) {
     showPopup("Error", error.message || "Failed to fetch status remarks", "error");
@@ -518,7 +518,7 @@ const handleDownloadPdf = async (quotation) => {
 // Call the function if leadId is available
 useEffect(() => {
   if (leadId) {
-    console.log("Fetching status remarks for leadId:", leadId);
+    // console.log("Fetching status remarks for leadId:", leadId);
     fetchStatusRemarks();
   }
 }, [leadId, showPopup]);
@@ -527,6 +527,17 @@ const sendEmail = async () => {
   setIsSendingMail(true);
   try {
     const token = localStorage.getItem("token");
+    
+    // Ensure leadId is a number
+    const leadIdAsNumber = parseInt(leadId, 10);
+    
+    // Check if the conversion was successful
+    if (isNaN(leadIdAsNumber)) {
+        showPopup("Error", "Invalid lead ID. Please refresh the page.", "error");
+        setIsSendingMail(false);
+        return;
+    }
+
     const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
       method: "POST",
       headers: {
@@ -538,6 +549,7 @@ const sendEmail = async () => {
         cc: ccRecipients,
         mailSubject,
         mailContent,
+        leadId: leadIdAsNumber, // Use the converted number here
       }),
     });
 
@@ -562,6 +574,7 @@ const sendEmail = async () => {
     setIsSendingMail(false);
   }
 };
+
 
 const fetchLeadData = async () => {
   try {
@@ -1470,7 +1483,6 @@ return (
     </div>
   </div>
 )}
-
     </div>
   );
 };

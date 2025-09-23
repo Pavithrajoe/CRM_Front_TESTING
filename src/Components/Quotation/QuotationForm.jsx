@@ -37,7 +37,7 @@ const QuotationForm = ({
       fDiscount: 0
     }],
   });
-  console.log("checking",leadData);
+  // console.log("checking",leadData);
 
   // Generate a default valid-until date (30 days from today)
   const getDefaultValidUntil = () => {

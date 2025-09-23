@@ -29,15 +29,11 @@ import EditProfileForm from "./ProfileCardComponents/EditForms/B2B_edit_form";
 import EditProfileForm_Customer from "./ProfileCardComponents/EditForms/B2C_edit_form";
 import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
+import LeadMailStorage from "./ProfileCardComponents/MailStorage/LeadMailStorage.jsx";
 
-// NOTE: keep these env variables names same as your project
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
-/**
- * Small ErrorBoundary to prevent the whole app crashing when an unexpected error occurs inside ProfileCard.
- * Optional: you can remove this and wrap ProfileCard externally if you prefer.
- */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -80,6 +76,10 @@ const ProfileCard = () => {
   const [assignedToList, setAssignedToList] = useState([]);
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
   const [showAssignConfirmation, setShowAssignConfirmation] = useState(false);
+  const [isMailHistoryModalOpen, setIsMailHistoryModalOpen] = useState(false);
+  const [mailHistory, setMailHistory] = useState([]);
+  const [selectedMail, setSelectedMail] = useState(null);
+
 
   // EDIT FORM STATES
   const [editingLead, setEditingLead] = useState(null);
@@ -96,10 +96,9 @@ const ProfileCard = () => {
     try {
       const base64Payload = token.split(".")[1];
       if (!base64Payload) return null;
-      // polyfill: atob may throw if invalid
       const decodedPayload = atob(base64Payload.replace(/-/g, "+").replace(/_/g, "/"));
+      // console.log("Decoded token payload:", decodedPayload);
       const payloadObject = JSON.parse(decodedPayload);
-      // some tokens use user_id, some use iUser_id etc — try a couple of known keys
       return (
         payloadObject.user_id ??
         payloadObject.userId ??
@@ -146,9 +145,8 @@ const ProfileCard = () => {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        // defensive: accept object, if response.data missing fallback to null
         setProfile(response?.data ?? null);
-        console.log("Fetched lead profile:", response?.data);
+        // console.log("Fetched lead profile:", response?.data);
       } catch (err) {
         console.error("Failed to load lead details", err);
         setError("Failed to load lead details.");
@@ -478,7 +476,10 @@ const ProfileCard = () => {
             </button>
 
             <button
-              onClick={() => handleEditLead(profile)}
+              onClick={() => {
+                // console.log("Mail button clicked!");
+                setIsMailHistoryModalOpen(true);
+              }}
               className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
               aria-label="Mail History"
               title="Mail History"
@@ -818,6 +819,13 @@ const ProfileCard = () => {
             </Dialog.Panel>
           </div>
         </Dialog>
+
+        {/* Mail History Modal */}
+        <LeadMailStorage
+        leadId={leadId}
+        isOpen={isMailHistoryModalOpen}
+        onClose={() => setIsMailHistoryModalOpen(false)}
+      />
 
         {/* Full Details Modal */}
         <LeadProfileView profile={profile} showDetails={showDetails} onClose={() => setShowDetails(false)} />

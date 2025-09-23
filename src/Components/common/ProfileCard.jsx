@@ -1,5 +1,5 @@
 // src/Components/common/ProfileCard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useRef } from "react";
 import {
   FiEdit,
   FiPhone,
@@ -112,6 +112,26 @@ const ProfileCard = () => {
       return null;
     }
   };
+
+    const editFormRef = useRef(null);
+
+
+      useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close edit form if clicked outside
+      if (showEditForm && editFormRef.current && !editFormRef.current.contains(event.target)) {
+        setShowEditForm(false);
+      }
+    };
+
+    // Add event listener when component mounts
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    // Clean up event listener when component unmounts
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEditForm]);
 
   // Fetch lead details and users when leadId changes
   useEffect(() => {
@@ -807,7 +827,9 @@ const ProfileCard = () => {
         {/* Edit Profile Modal */}
         {showEditForm && (
           <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto">
+            <div 
+                          ref={editFormRef} 
+className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-hidden">
               {editFormType === 1 && <EditProfileForm profile={editingLead} onClose={() => setShowEditForm(false)} onSave={handleSaveProfile} />}
               {editFormType === 2 && <EditProfileForm_Customer profile={editingLead} onClose={() => setShowEditForm(false)} onSave={handleSaveProfile} />}
               {editFormType === null && (

@@ -8,6 +8,9 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 
 // const LeadForm = ({ onClose, onSuccess }) => {
   const LeadForm = ({ onClose, onSuccess, clientType }) => {
+
+        const modalRef = useRef(null);
+    
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = "";
@@ -207,6 +210,25 @@ useEffect(() => {
 
   fetchCurrencies();
 }, [token, apiEndPoint]); 
+
+
+
+//outside onclose function 
+useEffect(() => {
+  function handleClickOutside(event) {
+    // Check if click is outside the modal form
+    if (modalRef.current && !modalRef.current.contains(event.target)) {
+      onClose();
+    }
+  }
+
+  document.addEventListener('mousedown', handleClickOutside);
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [onClose]);
+
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
@@ -1661,12 +1683,14 @@ const handleSubmit = async (e) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-start pt-10 z-50 overflow-y-auto hide-scrollbar px-8">
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="relative bg-white w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-6 space-y-6"
-      >
+    
+ <div className="fixed inset-0 bg-transparent backdrop-blur-md flex justify-center items-start pt-10 z-50 overflow-y-auto hide-scrollbar px-8">
+    <form
+      ref={modalRef}
+      onSubmit={handleSubmit}
+      className="relative bg-white w-[95%] max-w-[1060px] rounded-2xl shadow-3xl p-6 space-y-6"
+    >
+
         <button
           type="button"
           onClick={onClose}

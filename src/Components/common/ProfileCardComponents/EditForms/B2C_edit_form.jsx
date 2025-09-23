@@ -12,6 +12,9 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => {
+
+      const modalRef = useRef(null);
+  
     const { showPopup } = usePopup(); 
   const token = localStorage.getItem("token");
   let userId = "";
@@ -181,6 +184,25 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
       console.error(`Error in fetching ${dataName}:`, e);
     }
   };
+
+
+
+  //outside onclose function 
+    
+    
+   useEffect(() => {
+      function handleClickOutside(event) {
+        if (modalRef.current && !modalRef.current.contains(event.target)) {
+          onClose();
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside);
+  
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [onClose]);
+
 // sub source
   useEffect(() => {
   if (!form.lead_source_id) {
@@ -792,9 +814,11 @@ const handleSubmit = async (e) => {
   const dropdownItemClasses = "cursor-pointer hover:bg-blue-100 px-4 py-2 ";
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-<div className=" block bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl md:rounded-2xl w-[70vw] min-w-[300px] max-w-[1200px] shadow-md sm:shadow-lg
-  overflow-y-auto h-[80vh] sm:h-[85vh] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mx-4  ">        
+     <div className="fixed inset-0 bg-gray-800 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
+      <div
+        ref={modalRef}
+        className="block bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl md:rounded-2xl w-[70vw] min-w-[300px] max-w-[1200px] shadow-md sm:shadow-lg overflow-y-auto h-[80vh] sm:h-[85vh] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mx-4"
+      >        
   <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 transition-colors">
           <FiX size={24} />
   </button>

@@ -378,8 +378,11 @@ const QuotationForm = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto">
+<div
+  className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center p-4"
+  onClick={onClose} 
+>
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-t-lg flex justify-between items-center z-10 shadow-md">
           <div>
@@ -400,7 +403,7 @@ const QuotationForm = ({
         
         {/* Modal Body */}
         <div className="p-6 space-y-6">
-          <form onSubmit={handleSubmit} id="quotation-form">
+          <form onSubmit={handleSubmit} id="quotation-form" onClick={(e) => e.stopPropagation()} >
             {/* Quotation Details */}
             <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm">
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">

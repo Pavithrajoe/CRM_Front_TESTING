@@ -191,8 +191,12 @@ export default function SalesForm({userId,
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <div className="fixed inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50 z-50">
-        <form onSubmit={handleSubmit} className="relative bg-white p-6 rounded-xl max-w-2xl w-full">
+      <div className="fixed inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50 z-50" onClick={onClose}>
+        <form 
+      onSubmit={handleSubmit} 
+      className="relative bg-white p-6 rounded-xl max-w-2xl w-full"
+      onClick={(e) => e.stopPropagation()}  
+    >
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-500"><X /></button>
           <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">Set Sales Target</h2>
 

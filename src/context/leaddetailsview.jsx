@@ -1306,7 +1306,7 @@ return (
       {/* Content */}
       <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
         {/* Templates Section */}
-        <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-gray-200 overflow-y-auto">
+        <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-gray-200 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-lg text-gray-800">Email Templates</h3>
           </div>
@@ -1359,7 +1359,7 @@ return (
         </div>
 
         {/* Email Form Section */}
-        <div className="w-full md:w-1/2 lg:w-3/5 h-[550px] overflow-y-scroll flex flex-col">
+        <div className="w-full md:w-1/2 lg:w-3/5 h-[550px] flex flex-col">
           <form
             onSubmit={(e) => {
               e.preventDefault();

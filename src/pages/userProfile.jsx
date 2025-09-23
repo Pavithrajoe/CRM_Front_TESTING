@@ -323,6 +323,7 @@ showAppMessage("Profile updated successfully!", "success");
       cjob_title: user.cjob_title || '',
       reports_to: user.reports_to || '',
       i_bPhone_no: user.c_bPhone_no || '', 
+      irole_id: user.irole_id || '',
       iphone_no: user.iphone_no || '',
       mail_access: user.mail_access || false,
       phone_access: user.phone_access || false,
@@ -442,17 +443,23 @@ showAppMessage("Profile updated successfully!", "success");
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10">
-            <button
-              onClick={handleFormClose}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"
-              aria-label="Close"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+    onClick={handleFormClose} 
+  >
+    <div 
+      className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10"
+      onClick={(e) => e.stopPropagation()} 
+    >
+      <button
+        onClick={handleFormClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"
+        aria-label="Close"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
             <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Edit Profile</h3>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -539,7 +546,20 @@ showAppMessage("Profile updated successfully!", "success");
                 </div>
               </div>
 
-              <div className="relative">
+             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+
+                <div className="relative">
+                  <FaPhone className="absolute top-3 left-3 text-gray-500" />
+                  <input
+                    type="text"
+                    name="Role"
+                    placeholder="Personal Phone"
+                    value={editFormData.irole_id}
+                    onChange={handleChange}
+                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    maxLength={15}
+                  />
+                </div>
                 <FaUserTie className="absolute top-3 left-3 text-gray-500" />
                 <select
                   name="reports_to"

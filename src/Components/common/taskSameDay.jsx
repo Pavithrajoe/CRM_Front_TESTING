@@ -189,17 +189,15 @@ const TaskSameDay = ({ onTasksFetched }) => {
 
       {loading && <p className="text-center text-gray-600">Loading tasks...</p>}
 
-      {error && (
-        <div className="text-center text-red-500 p-4 bg-red-50 rounded-md">
-          {error}
+        <div className="text-center text-red-500 p-4">
+         
           <button
             onClick={() => window.location.reload()}
-            className="ml-2 text-blue-500 underline"
+            className="ml-2 text-gray-400"
           >
-            Try again
-          </button>
+No task for the day!!!!!          </button>
         </div>
-      )}
+      
 
       {!loading && !error && (
         <div className="grid gap-4">

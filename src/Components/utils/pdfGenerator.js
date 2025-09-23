@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ENDPOINTS } from "../../api/constraints";
 
 // Helper to return only non-empty values
 const safeField = (value) => {
@@ -14,7 +15,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
   try {
     // Fetch quotation data from API
     const response = await fetch(
-      `http://192.168.29.134:3000/api/quotation/lead/${leadId}`,
+      `${ENDPOINTS.QUOTATION_LEAD}/${leadId}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },

@@ -18,11 +18,11 @@ const LeadFilterModal = ({
     potentials,
     statuses,
     sources,
-    // New props for industry and service
+    // Add these new props here
     industries,
+    services,
     selectedIndustry,
     setSelectedIndustry,
-    services,
     selectedService,
     setSelectedService
 }) => {
@@ -32,7 +32,7 @@ const LeadFilterModal = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 max-h-full overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
                 <label className="block text-sm text-gray-700">
                     From
@@ -97,8 +97,6 @@ const LeadFilterModal = ({
                         ))}
                     </select>
                 </label>
-
-                {/* New filter for Industry */}
                 <label className="block text-sm text-gray-700">
                     Industry
                     <select
@@ -114,8 +112,6 @@ const LeadFilterModal = ({
                         ))}
                     </select>
                 </label>
-
-                {/* New filter for Service */}
                 <label className="block text-sm text-gray-700">
                     Service
                     <select
@@ -131,7 +127,6 @@ const LeadFilterModal = ({
                         ))}
                     </select>
                 </label>
-
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={onReset}

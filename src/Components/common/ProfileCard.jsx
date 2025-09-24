@@ -188,70 +188,69 @@ const ProfileCard = () => {
   };
 
   // Fetch assigned to list (defensive)
-  const fetchAssignedToList = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${apiEndPoint}/assigned-to/${leadId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      const list = Array.isArray(res?.data) ? res.data : [];
-      const sortedList = list.slice().sort((a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt));
-      setAssignedToList(sortedList);
-    } catch (err) {
-      console.error("Failed to fetch assigned to list", err);
-      setAssignedToList([]);
-    }
-  };
-
-  useEffect(() => {
-    if (leadId) {
-      fetchAttachments();
-      fetchAssignedToList();
-    } else {
-      setAttachments([]);
-      setAssignedToList([]);
-    }
-  }, [leadId]);
-
-  const handleEditLead = async (lead) => {
-    try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const companyId = user?.iCompany_id ?? user?.iCompanyId ?? null;
-
-      if (!token || !companyId) {
-        console.error("Token or company ID is missing.");
-        if (popup?.show) popup.show("Missing authentication or company info.", { type: "error" });
-        return;
-      }
-
-      const res = await axios.get(`${apiEndPoint}/company`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const companies = Array.isArray(res?.data) ? res.data : [];
-      const companyData = companies.find((c) => Number(c?.iCompany_id) === Number(companyId));
-
-      if (companyData) {
-        const businessTypeId = Number(companyData?.ibusiness_type);
-        if (businessTypeId === 1) {
-          setEditFormType(1);
-        } else if (businessTypeId === 2) {
-          setEditFormType(2);
-        } else {
-          setEditFormType(null);
+      const fetchAssignedToList = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(`${apiEndPoint}/assigned-to/${leadId}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          const list = Array.isArray(res?.data) ? res.data : [];
+          const sortedList = list.slice().sort((a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt));
+          setAssignedToList(sortedList);
+        } catch (err) {
+          console.error("Failed to fetch assigned to list", err);
+          setAssignedToList([]);
         }
-        setEditingLead(lead);
-        setShowEditForm(true);
-      } else {
-        console.error("Could not find company data.");
-        if (popup?.show) popup.show("Could not find company data.", { type: "error" });
-      }
-    } catch (err) {
-      console.error("Error fetching company data:", err);
-      if (popup?.show) popup.show("Failed to fetch company data.", { type: "error" });
-    }
-  };
+      };
+
+      useEffect(() => {
+        if (leadId) {
+          fetchAttachments();
+          fetchAssignedToList();
+        } else {
+          setAttachments([]);
+          setAssignedToList([]);
+        }
+      }, [leadId]);
+
+      const handleEditLead = async (lead) => {
+      try {
+        const token = localStorage.getItem("token");
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const companyId = user?.iCompany_id ?? user?.iCompanyId ?? null;
+
+        if (!token || !companyId) {
+          console.error("Token or company ID is missing.");
+          if (popup?.show) popup.show("Missing authentication or company info.", { type: "error" });
+          return;
+        }
+
+        const res = await axios.get(`${apiEndPoint}/company/${companyId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+       
+        const companyData = res?.data?.result ?? null;
+
+        if (companyData) {
+          const businessTypeId = Number(companyData?.ibusiness_type);
+          if (businessTypeId === 1) {
+            setEditFormType(1);
+          } else if (businessTypeId === 2) {
+            setEditFormType(2);
+          } else {
+            setEditFormType(null);
+          }
+          setEditingLead(lead);
+          setShowEditForm(true);
+        } else {
+          console.error("Could not find company data.");
+          if (popup?.show) popup.show("Could not find company data.", { type: "error" });
+        }
+      } catch (err) {
+        console.error("Error fetching company data:", err);
+        if (popup?.show) popup.show("Failed to fetch company data.", { type: "error" });
+      }
+    };
 
   // Save profile after edit
   const handleSaveProfile = async (updatedFormData) => {
@@ -265,7 +264,6 @@ const ProfileCard = () => {
       });
       setEditSuccess(true);
       setIsEditModalOpen(false);
-      // update profile locally (merge safely)
       setProfile((prev) => ({ ...(prev ?? {}), ...(updatedFormData ?? {}) }));
       setHistory((prev) => [
         {
@@ -462,7 +460,13 @@ const ProfileCard = () => {
               <FiEye size={18} />
             </button>
             <button
-              onClick={() => handleEditLead(profile)}
+              onClick={(e) => {
+                // Stop the event from bubbling up to the document listener
+                e.stopPropagation(); 
+                handleEditLead(profile);
+              }}
+              // onClick={() =>
+              // handleEditLead(profile)}
               className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
               aria-label="Edit Profile"
               title="Edit Profile"
@@ -831,8 +835,8 @@ const ProfileCard = () => {
         {showEditForm && (
           <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
             <div 
-                          ref={editFormRef} 
-className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-hidden">
+              ref={editFormRef} 
+              className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-hidden">
               {editFormType === 1 && <EditProfileForm profile={editingLead} onClose={() => setShowEditForm(false)} onSave={handleSaveProfile} />}
               {editFormType === 2 && <EditProfileForm_Customer profile={editingLead} onClose={() => setShowEditForm(false)} onSave={handleSaveProfile} />}
               {editFormType === null && (

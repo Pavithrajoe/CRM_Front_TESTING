@@ -1389,13 +1389,13 @@ const handleBulkAssign = async () => {
                             <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}>
                                 {/* Select All checkbox */}
                                <div className="inline-flex items-center">
-    <input
-        type="checkbox"
-        checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
-        onChange={toggleSelectAll}
-        className="h-4 w-4 text-blue-600 rounded"
-    />
-</div>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedLeads.length === displayedData.length && displayedData.length > 0}
+                                    onChange={toggleSelectAll}
+                                    className="h-4 w-4 text-blue-600 rounded"
+                                />
+                        </div>
                                 
                                 <div className="cursor-pointer flex items-center" onClick={() => handleSort('clead_name')}>
                                     Name {getSortIndicator('clead_name')}

@@ -4,6 +4,7 @@ import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser } from 'react-icons/fa';
 import { LayoutGrid, List, Filter, RotateCw, Users } from 'lucide-react';
 import ProfileHeader from '../../Components/common/ProfileHeader';
 import Loader from '../../Components/common/Loader';
+import LeadFilterModal from './LeadViewComponents/LeadFilterModal'; 
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
 
@@ -51,60 +52,113 @@ const LeadCardViewPage = () => {
     const [assignLoading, setAssignLoading] = useState(false);
     const [assignError, setAssignError] = useState(null);
     const [assignSuccess, setAssignSuccess] = useState(false);
-
+    const [industries, setIndustries] = useState([]);
+    const [services, setServices] = useState([]);
+    const [selectedIndustry, setSelectedIndustry] = useState('');
+    const [selectedService, setSelectedService] = useState('');
     const [selectedPotential, setSelectedPotential] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedSource, setSelectedSource] = useState('');
+    
     const token = localStorage.getItem("token"); 
 
     useEffect(() => {
-        // Fetch potentials
-        fetch(ENDPOINTS.MASTER_POTENTIAL_GET, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data?.data) {
-                const activePotentials = data.data.filter(p => p.bactive);
-                setPotentials(activePotentials);
-            }
-        })
-        .catch(err => console.error(err));
+        // Change this function to async
+        const fetchMasterData = async () => {
+            const headers = { Authorization: `Bearer ${token}` };
+            try {
+                // Fetch potentials
+                const potentialsRes = await fetch(ENDPOINTS.MASTER_POTENTIAL_GET, { headers });
+                const potentialsData = await potentialsRes.json();
+                if (potentialsData?.data) {
+                    setPotentials(potentialsData.data.filter(p => p.bactive));
+                }
 
-        // fetch sources
-    
-        fetch(ENDPOINTS.MASTER_SOURCE_GET, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data?.data) {
-                const activeSources = data.data
-                .filter(s => s.is_active)
-                setSources(activeSources);
-                // console.log("Sources data:", activeSources);
-            }
-        })
-        .catch(err => console.error(err));
-    
+                // Fetch sources
+                const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, { headers });
+                const sourcesData = await sourcesRes.json();
+                if (sourcesData?.data) {
+                    setSources(sourcesData.data.filter(s => s.is_active));
+                }
 
-        // Fetch statuses
-        fetch(ENDPOINTS.MASTER_STATUS_GET, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data?.response) {
-                const activeStatuses = data.response
-                .filter(s => s.bactive)
-                .sort((a, b) => (a.orderId || 0) - (b.orderId || 0));
-                setStatuses(activeStatuses);
+                // Fetch statuses
+                const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, { headers });
+                const statusesData = await statusesRes.json();
+                if (statusesData?.response) {
+                    setStatuses(statusesData.response.filter(s => s.bactive).sort((a, b) => (a.orderId || 0) - (b.orderId || 0)));
+                }
+
+                // Fetch industries
+                const industriesRes = await fetch(ENDPOINTS.MASTER_INDUSTRY_GET, { headers });
+                const industriesData = await industriesRes.json();
+                if (industriesData?.response?.industry) {
+                    setIndustries(industriesData.response.industry.filter(i => i.bactive));
+                }
+
+                // Fetch services
+                const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, { headers });
+                const servicesData = await servicesRes.json();
+                if (servicesData?.data) {
+                    setServices(servicesData.data.filter(s => s.bactive));
+                }
+
+            } catch (err) {
+                console.error("Failed to fetch master data:", err);
             }
-        })
-        .catch(err => console.error(err));
+        };
+
+        if (token) {
+            fetchMasterData();
+        }
     }, [token]);
 
+    // useEffect(() => {
+    //     // Fetch potentials
+    //     fetch(ENDPOINTS.MASTER_POTENTIAL_GET, {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         if (data?.data) {
+    //             const activePotentials = data.data.filter(p => p.bactive);
+    //             setPotentials(activePotentials);
+    //         }
+    //     })
+    //     .catch(err => console.error(err));
+        
+
+    //     // fetch sources
     
+    //     fetch(ENDPOINTS.MASTER_SOURCE_GET, {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         if (data?.data) {
+    //             const activeSources = data.data
+    //             .filter(s => s.is_active)
+    //             setSources(activeSources);
+    //             // console.log("Sources data:", activeSources);
+    //         }
+    //     })
+    //     .catch(err => console.error(err));
+    
+
+    //     // Fetch statuses
+    //     fetch(ENDPOINTS.MASTER_STATUS_GET, {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         if (data?.response) {
+    //             const activeStatuses = data.response
+    //             .filter(s => s.bactive)
+    //             .sort((a, b) => (a.orderId || 0) - (b.orderId || 0));
+    //             setStatuses(activeStatuses);
+    //         }
+    //     })
+    //     .catch(err => console.error(err));
+    // }, [token]);
 
     useEffect(() => {
     }, [leads]);
@@ -654,25 +708,28 @@ const fetchAssignedLeads = useCallback(async () => {
 
         // Filter by Potential
         if (selectedPotential) {
-            filtered = filtered.filter(
-                lead => lead.lead_potential?.clead_name === selectedPotential
-            );
+            filtered = filtered.filter(lead => lead.lead_potential?.clead_name === selectedPotential);
             // console.log("Filtered by potential:", filtered);
         }
 
         // Filter by Status
         if (selectedStatus) {
-            filtered = filtered.filter(
-                lead => lead.lead_status?.clead_name === selectedStatus
-            );
+            filtered = filtered.filter(lead => lead.lead_status?.clead_name === selectedStatus);
             // console.log("Filtered by status:", filtered);
         }
         // Filter by Source
         if (selectedSource) {
-            filtered = filtered.filter(
-                lead => lead.lead_source_id === Number(selectedSource)
-            );
+            filtered = filtered.filter(lead => lead.lead_source_id === Number(selectedSource));
             // console.log("Filtered by source:", filtered);
+        }
+
+        // Filter by Industry
+        if (selectedIndustry) {
+            filtered = filtered.filter(lead => lead.cindustry_id === Number(selectedIndustry));
+        }
+        // Filter by Service
+        if (selectedService) {
+            filtered = filtered.filter(lead => lead.iservice_id === Number(selectedService));
         }
 
         // Filter Lost Leads/Deals
@@ -717,6 +774,8 @@ const fetchAssignedLeads = useCallback(async () => {
         setSelectedPotential('');
         setSelectedStatus('');
         setSelectedSource('');
+        setSelectedIndustry('');
+        setSelectedService('');
         setDisplayedData(leads);
     };
 
@@ -972,6 +1031,11 @@ const handleBulkAssign = async () => {
                                 setFromDate('');
                                 setToDate('');
                                 setCurrentPage(1);
+                                setSelectedPotential('');
+                                setSelectedStatus('');
+                                setSelectedSource('');
+                                setSelectedIndustry(''); 
+                                setSelectedService('');
                             }}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 selectedFilter === filterKey
@@ -1025,7 +1089,35 @@ const handleBulkAssign = async () => {
                 </div>
             )}
 
-            {showFilterModal && (
+            <LeadFilterModal
+                showModal={showFilterModal}
+                onClose={() => setShowFilterModal(false)}
+                onApply={handleFilterApply}
+                onReset={handleResetFilters}
+                fromDate={fromDate}
+                setFromDate={setFromDate}
+                toDate={toDate}
+                setToDate={setToDate}
+                selectedPotential={selectedPotential}
+                setSelectedPotential={setSelectedPotential}
+                selectedStatus={selectedStatus}
+                setSelectedStatus={setSelectedStatus}
+                selectedSource={selectedSource}
+                setSelectedSource={setSelectedSource}
+                potentials={potentials}
+                statuses={statuses}
+                sources={sources}
+                industries={industries}
+                setIndustries={setIndustries}
+                selectedIndustry={selectedIndustry}
+                setSelectedIndustry={setSelectedIndustry}
+                services={services}
+                setServices={setServices}
+                selectedService={selectedService}
+                setSelectedService={setSelectedService}
+            />
+
+            {/* {showFilterModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
                         <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
@@ -1080,7 +1172,7 @@ const handleBulkAssign = async () => {
                             </select>
                         </label>
                         {/*  source */}
-                        <label className="block text-sm text-gray-700">
+                        {/* <label className="block text-sm text-gray-700">
                             Source
                             <select
                                 value={selectedSource}
@@ -1115,7 +1207,7 @@ const handleBulkAssign = async () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */} 
 
             {showAssignModal && (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">

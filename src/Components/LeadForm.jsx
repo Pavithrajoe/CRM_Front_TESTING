@@ -1,5 +1,5 @@
 
-// last update 5/09 workinh fine
+// last update 24/09 workinh fine
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
@@ -8,9 +8,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 
 // const LeadForm = ({ onClose, onSuccess }) => {
   const LeadForm = ({ onClose, onSuccess, clientType }) => {
-
-        const modalRef = useRef(null);
-    
+  const modalRef = useRef(null);
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = "";
@@ -147,9 +145,9 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const currencyDropdownRef = useRef(null);
   // for sub source
   const [subSources, setSubSources] = useState([]);
-const [searchSubSource, setSearchSubSource] = useState("");
-const [isSubSourceDropdownOpen, setIsSubSourceDropdownOpen] = useState(false);
-const subSourceDropdownRef = useRef(null);
+  const [searchSubSource, setSearchSubSource] = useState("");
+  const [isSubSourceDropdownOpen, setIsSubSourceDropdownOpen] = useState(false);
+  const subSourceDropdownRef = useRef(null);
 
 useEffect(() => {
     const fetchSubSources = async () => {
@@ -211,8 +209,6 @@ useEffect(() => {
   fetchCurrencies();
 }, [token, apiEndPoint]); 
 
-
-
 //outside onclose function 
 useEffect(() => {
   function handleClickOutside(event) {
@@ -228,7 +224,6 @@ useEffect(() => {
     document.removeEventListener('mousedown', handleClickOutside);
   };
 }, [onClose]);
-
 
   // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
 useEffect(() => {
@@ -693,8 +688,6 @@ useEffect(() => {
 }, [searchWhatsappCountryCode, countryCodes]);
 
 //-----------
-
-
   useEffect(() => {
     fetchDropdownData(
       "lead-potential/company-potential",
@@ -1472,18 +1465,22 @@ const handleSubmit = async (e) => {
       ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
       icity: Number(form.icity),
       icompany_id: company_id,
-      iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+      // iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+      iphone_no: form.iphone_no,
       iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
       modified_by: userId,
       iuser_tags: userId,
       iservice_id: form.iservice_id,
       isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
       lead_source_id: Number(form.lead_source_id),
-      whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+      // whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+      whatsapp_number: form.cwhatsapp,
       // cpincode: form.cpincode,
       cpincode: form.cpincode ? Number(form.cpincode) : null,
       icurrency_id: selectedCurrency.icurrency_id,
       subSrcId: form.subSrcId ? Number(form.subSrcId) : null,
+      phone_country_code: form.phone_country_code,
+      whatsapp_country_code: form.whatsapp_country_code,
     };
 
     if (saveTriggerRef.current) {
@@ -2162,7 +2159,7 @@ const handleSubmit = async (e) => {
                 </label>
                 <div className="flex mt-1">
                   <div className="relative" ref={dropdownRef}>
-                    {/* <input
+                    <input
                       type="text"
                       name={searchInputName}
                       value={searchCountryCodeState}
@@ -2172,7 +2169,7 @@ const handleSubmit = async (e) => {
                       placeholder="+XXX"
                       className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
                       disabled={name === "cwhatsapp" && sameAsPhone}
-                    /> */}
+                    />
                     {isDropdownOpen && (
                       <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
                         {Array.isArray(filteredCodes) && filteredCodes.length > 0 ? (
@@ -2362,8 +2359,6 @@ const handleSubmit = async (e) => {
         "Create Lead"
     )}
 </button>
-               
-                
             </div>
 
             {isAlertVisible && (
@@ -2371,8 +2366,6 @@ const handleSubmit = async (e) => {
                     <span>{alertMessage}</span>
                 </div>
             )}
-
-            
         </form>
         
         {isPopupVisible && (

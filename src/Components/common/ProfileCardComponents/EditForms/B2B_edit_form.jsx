@@ -125,8 +125,6 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
   };
 
 //outside onclose function 
-  
-  
  useEffect(() => {
     function handleClickOutside(event) {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -667,8 +665,10 @@ const updateLeadProfile = async () => {
     payload.cemail = form.cemail;
     payload.corganization = form.corganization;
     payload.cwebsite = form.cwebsite;
-    payload.iphone_no = form.phone_country_code + form.iphone_no;
-    payload.whatsapp_number = form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "";
+    // payload.iphone_no = form.phone_country_code + form.iphone_no;
+    payload.iphone_no =  form.iphone_no;
+    // payload.whatsapp_number = form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "";
+    payload.whatsapp_number = form.cwhatsapp;
     payload.cgender = form.cgender;
     payload.clead_address1 = form.clead_address1;
     payload.clead_address2 = form.clead_address2;
@@ -1321,7 +1321,7 @@ const handleSubmit = async (e) => {
               </label>
             <div className="flex gap-2">
               {/* Country Code Dropdown */}
-              {/*
+              
               <div className="relative" ref={phoneCountryCodeRef}>
                 <button
                   type="button"
@@ -1350,7 +1350,7 @@ const handleSubmit = async (e) => {
                   </div>
                 )}
               </div>
-              */}
+              
 
               <input
                 type="text"
@@ -1376,7 +1376,7 @@ const handleSubmit = async (e) => {
                 WhatsApp Number
               </label>
               <div className="flex gap-2">
-              {/* <div className="relative" ref={whatsappCountryCodeRef}>
+              <div className="relative" ref={whatsappCountryCodeRef}>
                 <button
                   type="button"
                   onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
@@ -1387,9 +1387,9 @@ const handleSubmit = async (e) => {
                   {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                 </button>
                 {isWhatsappCountryCodeOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> */}
+                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> 
                     {/* Use the dynamically generated allCountries array */}
-                    {/* {allCountries.map((country) => (
+                     {allCountries.map((country) => (
                       <div
                         key={country.countryCode}
                         className={dropdownItemClasses}
@@ -1404,7 +1404,7 @@ const handleSubmit = async (e) => {
                     ))}
                   </div>
                 )}
-              </div> */}
+              </div> 
               <input
                 type="text"
                 id="cwhatsapp"

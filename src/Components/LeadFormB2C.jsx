@@ -1396,16 +1396,20 @@ const handleSubmit = async (e) => {
       ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
       icity: Number(form.icity),
       icompany_id: company_id,
-      iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+      // iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+      iphone_no: form.iphone_no,
       iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
       modified_by: userId,
       iuser_tags: userId,
       iservice_id: form.iservice_id,
       isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
       lead_source_id: Number(form.lead_source_id),
-      whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+      // whatsapp_number: `${form.whatsapp_country_code}${form.cwhatsapp}`,
+      whatsapp_number: form.cwhatsapp,
       // cpincode: form.cpincode,
       cpincode: form.cpincode ? Number(form.cpincode) : null,
+      phone_country_code: form.phone_country_code,
+      whatsapp_country_code: form.whatsapp_country_code,
     };
 
     if (saveTriggerRef.current) {

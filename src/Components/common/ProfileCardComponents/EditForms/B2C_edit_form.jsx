@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiSave, FiX, FiChevronDown, FiCamera,} from "react-icons/fi";
 import axios from "axios";
-// import { ENDPOINTS } from "../../../../api/constraints";
-// import { usePopup } from "../../../../context/PopupContext";
 import { ENDPOINTS } from "./../../../../api/constraints";
 import { usePopup } from "../../../../context/PopupContext";
 import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
@@ -12,26 +10,24 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => {
-
       const modalRef = useRef(null);
-  
-    const { showPopup } = usePopup(); 
-  const token = localStorage.getItem("token");
-  let userId = "";
-  let company_id = "";
-  if (token) {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const payload = JSON.parse(atob(base64));
-      userId = payload.user_id;
-      company_id = payload.company_id;
-    } catch (error) {
-      console.error("Token decode error:", error);
-    }
-  } else {
-    console.error("Invalid or missing JWT token");
-  }
+      const { showPopup } = usePopup(); 
+      const token = localStorage.getItem("token");
+      let userId = "";
+      let company_id = "";
+      if (token) {
+        try {
+          const base64Url = token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const payload = JSON.parse(atob(base64));
+          userId = payload.user_id;
+          company_id = payload.company_id;
+        } catch (error) {
+          console.error("Token decode error:", error);
+        }
+      } else {
+        console.error("Invalid or missing JWT token");
+      }
 
   const [form, setForm] = useState({
     iLeadpoten_id: profile?.iLeadpoten_id || "",
@@ -50,9 +46,9 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
     cwebsite: profile?.cwebsite || "",
     icity: profile?.icity || "",
     iphone_no: profile?.iphone_no ? profile.iphone_no.replace(profile?.phone_country_code || "+91", "") : "",
-     phone_country_code: profile?.phone_country_code || "+91",
+    phone_country_code: profile?.phone_country_code || "+91",
     cwhatsapp: profile?.whatsapp_number ? profile.whatsapp_number.replace(profile?.whatsapp_country_code || "+91", "") : "",
-     whatsapp_country_code: profile?.whatsapp_country_code || "+91",
+    whatsapp_country_code: profile?.whatsapp_country_code || "+91",
     cgender: profile?.cgender || 1,
     clogo: profile?.clogo || "logo.png",
     clead_address1: profile?.clead_address1 || "",
@@ -672,8 +668,10 @@ const updateLeadProfile = async () => {
     payload.cemail = form.cemail;
     payload.corganization = form.corganization;
     payload.cwebsite = form.cwebsite;
-    payload.iphone_no = form.phone_country_code + form.iphone_no;
-    payload.whatsapp_number = form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "";
+    payload.iphone_no = form.iphone_no;
+    payload.whatsapp_number = form.cwhatsapp;
+    // payload.iphone_no = form.phone_country_code + form.iphone_no;
+    // payload.whatsapp_number = form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "";
     payload.cgender = form.cgender;
     payload.clead_address1 = form.clead_address1;
     payload.clead_address2 = form.clead_address2;

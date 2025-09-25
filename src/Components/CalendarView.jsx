@@ -983,25 +983,6 @@ const fetchAllTasks = async (date) => {
                   </button>
                 ))}
               </div>
-
-              {/* <div className="flex border-b border-gray-300 mb-4 select-none">
-                {["calendarEvents", "tasks", ...(company_id !== 15 ? ["reminders"] : [])].map(tab => (
-                {/* {["reminders", "calendarEvents", "tasks"].map(tab => ( */}
-                  {/* <button
-                    key={tab}
-                    className={`flex-1 py-2 font-semibold text-center transition-colors ${
-                      activeTab === tab ? "border-b-4 border-blue-600 text-blue-600" : "text-gray-600 hover:text-blue-600"
-                    }`}
-                    onClick={() => setActiveTab(tab)}
-                    type="button"
-                  >
-                    {tab === "reminders" && "Reminder"}
-                    {tab === "calendarEvents" && "Calendar Event"}
-                    {tab === "tasks" && "Task"}
-                  </button>
-                ))}
-              </div>  */}
-
               {/* Cards container */}
               <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
                 {activeTab === "reminders" &&  company_id !== 15 &&(

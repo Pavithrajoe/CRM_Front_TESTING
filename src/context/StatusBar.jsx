@@ -1078,25 +1078,25 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             </div>
 
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-  <DateTimePicker
-    label="Due Date & Time"
-    value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
-    onChange={newValue => {
-      setRemarkData(prev => ({
-        ...prev,
-        dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''
-      }));
-    }}
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        fullWidth
-        sx={{ mt: 2 }}
-      />
-    )}
-    minDateTime={dayjs()} // Ensure future datetime
-  />
-</LocalizationProvider>
+              <DateTimePicker
+                label="Due Date & Time"
+                value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
+                onChange={newValue => {
+                  setRemarkData(prev => ({
+                    ...prev,
+                    dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''
+                  }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  />
+                )}
+                minDateTime={dayjs()} 
+              />
+            </LocalizationProvider>
 
             {/* <TextField
               label="Due Date"
@@ -1263,8 +1263,20 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                         <strong>Status:</strong> {remark.status_name}
                       </p>
                       <p className="text-sm">
-                        <strong>Due Date:</strong> {remark.dueDate}
+                        <strong>Due Date:</strong>{" "}
+                        {new Date(remark.due_date)
+                          .toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                          .replace(/(am|pm)/, (match) => match.toUpperCase())}
                       </p>
+
+
                     </div>
                   </div>
                 </div>

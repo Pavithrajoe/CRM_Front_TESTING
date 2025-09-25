@@ -883,7 +883,9 @@ return (
       {/* Tab Navigation and Action Buttons */}
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
         <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-          {["Activity", "Follow -Up", "Comments", "Reminders"].map((label, idx) => (
+          {["Activity", "Follow -Up", "Comments", "Reminders"]
+          .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15))
+          .map((label, idx) => (
             <button
               key={label}
               onClick={() => handleTabChange(null, idx)}
@@ -896,20 +898,19 @@ return (
               {label}
             </button>
           ))}
-        </div>
+      </div>
 
         <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
           {/* Project Value Display - Only shown when there's a project value */}
-         {showProjectValue && projectValueDisplay && (
-  <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
-    <FaCheck className="mr-1 sm:mr-2" />
-    <span className="text-xs sm:text-sm md:text-base font-semibold">
-      Project Value: {projectValueDisplay}
-    </span>
-  </div>
-)}
+          {showProjectValue && projectValueDisplay && (
+            <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+              <FaCheck className="mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm md:text-base font-semibold">
+                Project Value: {projectValueDisplay}
+              </span>
+            </div>
+          )}
 
-          
           {/* View Quotations Button (only visible when Won and has quotations) */}
           {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
             <button
@@ -919,7 +920,6 @@ return (
               <FaEye className="mr-1" /> View Quotations
             </button>
           )}
-          
           
           {/* Create Quotation Button (only visible when Won) */}
           {showCreateQuotationButton && (

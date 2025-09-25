@@ -25,7 +25,6 @@ const LeadCardViewPage = () => {
     const [error, setError] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [currentToken, setCurrentToken] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState({ key: 'dmodified_dt', direction: 'descending' });
     const leadsPerPage = 12;
     const [showLostLeads, setShowLostLeads] = useState(true);
@@ -62,6 +61,9 @@ const LeadCardViewPage = () => {
     const [selectedSource, setSelectedSource] = useState('');
     const [leadsToShow, setLeadsToShow] = useState(null);
     const [showPagination, setShowPagination] = useState(true);
+    const params = new URLSearchParams(location.search);
+    const pageFromUrl = Number(params.get("page")) || 1;
+    const [currentPage, setCurrentPage] = useState(pageFromUrl);
 
     const filteredData = useMemo(() => {
     let result = allLeads;
@@ -138,10 +140,8 @@ const LeadCardViewPage = () => {
     useEffect(() => {
     let newData;
     if (leadsToShow !== null) {
-        // If a count is selected, slice the filtered data
         newData = filteredData.slice(0, leadsToShow);
     } else {
-        // Use your existing pagination logic
         const startIndex = (currentPage - 1) * leadsPerPage;
         const endIndex = startIndex + leadsPerPage;
         newData = filteredData.slice(startIndex, endIndex);
@@ -491,10 +491,15 @@ const LeadCardViewPage = () => {
         fetchLeads();
     }
   }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchAssignedLeads, fetchLostLeads, refreshTrigger]);
+    
 
     useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedFilter]);
+        navigate(`?page=${currentPage}`, { replace: true });
+    }, [currentPage, navigate]); 
+
+    useEffect(() => {
+        setCurrentPage(pageFromUrl);
+    }, [pageFromUrl]);
 
     const handleSort = useCallback((key) => {
         setSortConfig(prevSortConfig => {
@@ -620,7 +625,7 @@ const LeadCardViewPage = () => {
     };
 
     const handleFilterApply = () => {
-            // console.log("First lead object:", allLeads[0]); 
+            // console.log("1st lead object:", allLeads[0]); 
         let filtered = [...allLeads];
 
         // Filter by Potential
@@ -643,10 +648,12 @@ const LeadCardViewPage = () => {
         // Filter by Industry
         if (selectedIndustry) {
             filtered = filtered.filter(lead => lead.cindustry_id === Number(selectedIndustry));
+            // console.log("Filtered by industry:", filtered);
         }
         // Filter by Service
         if (selectedService) {
             filtered = filtered.filter(lead => lead.iservice_id === Number(selectedService));
+            // console.log("Filtered by service:", filtered);
         }
 
         // Filter Lost Leads/Deals
@@ -697,8 +704,12 @@ const LeadCardViewPage = () => {
     };
 
     const goToDetail = (id) => {
-        navigate(`/leaddetailview/${id}`);
+        navigate(`/leaddetailview/${id}?page=${currentPage}`);
     };
+
+    // const goToDetail = (id) => {
+    //     navigate(`/leaddetailview/${id}`);
+    // };
 
     const getSortIndicator = (key) => {
         if (sortConfig.key === key) {
@@ -1471,24 +1482,29 @@ const handleBulkAssign = async () => {
             {totalPages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-6">
                     <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Previous
+                    Previous
                     </button>
                     <span className="text-gray-700">
-                        Page {currentPage} of {totalPages}
+                    Page {currentPage} of {totalPages}
                     </span>
                     <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Next
+                    Next
                     </button>
                 </div>
-            )}
+                )}
+
         </div>
     );
 };

@@ -164,7 +164,6 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     }
   };
 
-  // Add the missing handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -409,7 +408,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 };
 
   const CalendarView = () => {
-    // 1. STATE INITIALIZATION: selectedDate is set to the current date by default.
+    //  STATE INITIALIZATION: selectedDate is set to the current date by default.
     const [selectedDate, setSelectedDate] = useState(new Date());
 
     const [msg, setMsg] = useState('');
@@ -423,8 +422,8 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       message: '',
       severity: 'success'
     });
-    const [activeTab, setActiveTab] = useState('reminders');
-    const [tableActiveTab, setTableActiveTab] = useState('reminders')
+    const [activeTab, setActiveTab] = useState('calendarEvents');
+    const [tableActiveTab, setTableActiveTab] = useState('calendarEvents')
     const [loggedInUserName, setLoggedInUserName] = useState('');
     const [searchTerm, setSearchTerm] = useState(''); // Search term for TABLE only
     const [userCalendarEvents, setUserCalendarEvents] = useState([]);
@@ -436,9 +435,24 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     const [taskError, setTaskError] = useState(null);
     const [userTaskError, setUserTaskError] = useState(null);
     const [userTask, setUserTask] =useState([]);
+
+
+     const token = localStorage.getItem("token");
+      let company_id = null;
+
+      if (token) {
+        try {
+          // decode JWT payload
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          company_id = payload.company_id; 
+        } catch (e) {
+          console.error("Could not decode token", e);
+        }
+      }
+
     
 
-    // 2. FETCH FUNCTION: It explicitly accepts the date to be passed in the request.
+    //  FETCH FUNCTION: It explicitly accepts the date to be passed in the request.
   const fetchTasks = async (date) => {
     setLoadingTasks(true);
     setTaskError(null);
@@ -456,11 +470,11 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
       const userObj = JSON.parse(userJson);
       const userId = userObj.iUser_id;
 
-const formattedDate = [
-  date.getFullYear(),
-  String(date.getMonth() + 1).padStart(2, "0"),
-  String(date.getDate()).padStart(2, "0"),
-].join("-");
+      const formattedDate = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0"),
+      ].join("-");
 
 
       const response = await fetch(
@@ -634,16 +648,14 @@ const fetchAllTasks = async (date) => {
             Authorization: `Bearer ${token}`
           }
         });
-        
-
         if (!response.ok) {
           setMsg("Error in fetching user reminders");
           return;
         }
-
         const data = await response.json();
         setReminderList(data.data || []);
-      } catch (e) {
+      } 
+      catch (e) {
         setMsg("Can't fetch user reminders");
         setSnackbar({
           open: true,
@@ -768,7 +780,6 @@ const fetchAllTasks = async (date) => {
       }
     };
 
-    
     const handleItemCreated = () => {
       fetchRemindersAndEventsForSelectedDate();
       fetchAllUserReminders();
@@ -802,15 +813,21 @@ const fetchAllTasks = async (date) => {
         try {
           const user_data_parsed = JSON.parse(user_data);
           setLoggedInUserName(user_data_parsed.cUser_Name);
-        } catch (error) {
+        } 
+        catch (error) {
           console.error("Failed to parse user data from localStorage:", error);
         }
       }
     }, []);
 
+    // useEffect(() => {
+    //   fetchAllUserReminders();
+    // }, []);
+
     useEffect(() => {
-      fetchAllUserReminders();
+      fetchUserCalendarEvents();
     }, []);
+
 
     useEffect(() => {
       setCurrentPage(1);
@@ -819,11 +836,9 @@ const fetchAllTasks = async (date) => {
     const formatDateTime = (dateStr) => {
       if (!dateStr) return "N/A";
       const date = new Date(dateStr);
-
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
-
       const hours = String(date.getHours()).padStart(2, "0");
       const minutes = String(date.getMinutes()).padStart(2, "0");
 
@@ -833,9 +848,7 @@ const fetchAllTasks = async (date) => {
     // Filter function for TABLE data only
     const filterTableData = (items, type) => {
       if (!searchTerm) return items;
-      
       const searchTermLower = searchTerm.toLowerCase();
-      
       return items.filter(item => {
         switch (type) {
           case 'reminders':
@@ -948,12 +961,33 @@ const fetchAllTasks = async (date) => {
               </div>
             </div>
 
-            {/* RIGHT HALF: Tab view with cards */}
+            {/* Tab view with cards */}
             <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px] flex flex-col">
               {/* Tabs */}
+
               <div className="flex border-b border-gray-300 mb-4 select-none">
-                {["reminders", "calendarEvents", "tasks"].map(tab => (
+                {["calendarEvents", "tasks", ...(company_id !== 15 ? ["reminders"] : [])].map(tab => (
                   <button
+                    key={tab}
+                    className={`flex-1 py-2 font-semibold text-center transition-colors ${
+                      activeTab === tab
+                        ? "border-b-4 border-blue-600 text-blue-600"
+                        : "text-gray-600 hover:text-blue-600"
+                    }`}
+                    onClick={() => setActiveTab(tab)}
+                    type="button"
+                  >
+                    {tab === "reminders" && "Reminder"}
+                    {tab === "calendarEvents" && "Calendar Event"}
+                    {tab === "tasks" && "Task"}
+                  </button>
+                ))}
+              </div>
+
+              {/* <div className="flex border-b border-gray-300 mb-4 select-none">
+                {["calendarEvents", "tasks", ...(company_id !== 15 ? ["reminders"] : [])].map(tab => (
+                {/* {["reminders", "calendarEvents", "tasks"].map(tab => ( */}
+                  {/* <button
                     key={tab}
                     className={`flex-1 py-2 font-semibold text-center transition-colors ${
                       activeTab === tab ? "border-b-4 border-blue-600 text-blue-600" : "text-gray-600 hover:text-blue-600"
@@ -966,11 +1000,11 @@ const fetchAllTasks = async (date) => {
                     {tab === "tasks" && "Task"}
                   </button>
                 ))}
-              </div>
+              </div>  */}
 
               {/* Cards container */}
               <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
-                {activeTab === "reminders" && (
+                {activeTab === "reminders" &&  company_id !== 15 &&(
                   reminders.length > 0 ? (
                     reminders.map(reminder => (
                       <div 
@@ -1120,7 +1154,23 @@ const fetchAllTasks = async (date) => {
 
             {/* Tabs */}
             <div className="flex border-b border-gray-200">
-              <button
+              {/* {company_id !== 15 && (
+                <button
+                  className={`py-3 px-6 text-lg font-semibold ${
+                    tableActiveTab === "reminders"
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-600 hover:text-gray-800"
+                  } transition-colors duration-200`}
+                  onClick={() => {
+                    setTableActiveTab("reminders");
+                    fetchAllUserReminders();
+                  }}
+                >
+                  📅 All Reminders
+                </button>
+              )} */}
+
+              {/* <button
                 className={`py-3 px-6 text-lg font-semibold ${
                   tableActiveTab === "reminders"
                     ? "text-blue-600 border-b-2 border-blue-600"
@@ -1132,7 +1182,7 @@ const fetchAllTasks = async (date) => {
                 }}
               >
                 📅 All Reminders
-              </button>
+              </button> */}
               <button
                 className={`py-3 px-6 text-lg font-semibold ${
                   tableActiveTab === "calendarEvents"
@@ -1159,6 +1209,23 @@ const fetchAllTasks = async (date) => {
               >
                 ✅ All Tasks
               </button>
+
+              {company_id !== 15 && (
+                <button
+                  className={`py-3 px-6 text-lg font-semibold ${
+                    tableActiveTab === "reminders"
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-600 hover:text-gray-800"
+                  } transition-colors duration-200`}
+                  onClick={() => {
+                    setTableActiveTab("reminders");
+                    fetchAllUserReminders();
+                  }}
+                >
+                  📅 All Reminders
+                </button>
+              )}
+
             </div>
           </div>
 

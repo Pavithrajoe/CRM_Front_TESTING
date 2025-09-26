@@ -83,8 +83,8 @@ const UserDeals = () => {
                 setDeals(data);
                 setFilteredDeals(data); // Initially, filteredDeals is the same as deals
             } catch (err) {
-                console.error('Error fetching deals:', err);
-                setError('Failed to load deals. Please try again.');
+                console.error('Error fetching customers:', err);
+                setError('Failed to load customers. Please try again.');
                 setDeals([]);
                 setFilteredDeals([]);
             } finally {
@@ -104,7 +104,7 @@ const UserDeals = () => {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === true && deal.bisConverted === false);
         } else if (filterType === 'lost') {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === false);
-        } else if (filterType === 'deal') { // 'deal' typically means 'Won'
+        } else if (filterType === 'Customers') { // 'deal' typically means 'Won'
             updatedDeals = updatedDeals.filter((deal) => deal.bisConverted === true);
         }
 
@@ -239,7 +239,7 @@ const UserDeals = () => {
                         </button>
                         <button
                             className={`px-4 py-2 rounded-full ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-800'}`}
-                            onClick={() => setFilterType('deal')}
+                            onClick={() => setFilterType('Customers')}
                         >
                             Won
                         </button>
@@ -277,17 +277,17 @@ const UserDeals = () => {
                     </div>
                 )}
                 {loading ? (
-                    <div className="mb-4 p-3 text-center text-blue-600 text-lg">Loading deals...</div>
+                    <div className="mb-4 p-3 text-center text-blue-600 text-lg">Loading Customers...</div>
                 ) : (
                     <>
                         {dateFilterFrom && dateFilterTo && (
                             <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
-                                Filtering deals from <strong>{new Date(dateFilterFrom).toLocaleDateString('en-GB')}</strong> to <strong>{new Date(dateFilterTo).toLocaleDateString('en-GB')}</strong>.
+                                Filtering Customers from <strong>{new Date(dateFilterFrom).toLocaleDateString('en-GB')}</strong> to <strong>{new Date(dateFilterTo).toLocaleDateString('en-GB')}</strong>.
                             </div>
                         )}
                         {!dateFilterFrom && !dateFilterTo && (
                             <div className="mb-4 p-3 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
-                                Showing all deals.
+                                Showing all Customers.
                             </div>
                         )}
 
@@ -296,13 +296,13 @@ const UserDeals = () => {
                                 <thead className="bg-gray-50 sticky top-0">
                                     <tr>
                                         <th className="px-4 py-3 text-sm text-center font-bold text-black">S.No</th>
-                                        <th className="px-4 py-3 text-sm font-bold text-black">Deal Name</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Customers Name</th>
                                         <th className="px-4 py-3 text-sm font-bold text-black">Company Name</th>
                                         <th className="px-4 py-3 text-sm font-bold text-black">Source</th>
                                         <th className="px-4 py-3 text-sm font-bold text-black">E-Mail ID</th>
                                         <th className="px-4 py-3 text-sm font-bold text-black">Phone No</th>
                                         <th className="px-4 py-3 text-sm font-bold text-black">Created Date</th>
-                                        <th className="px-4 py-3 text-sm font-bold text-black">Deal Owner</th>
+                                        <th className="px-4 py-3 text-sm font-bold text-black">Customer Owner</th>
                                         <th className="px-4 py-3 text-sm font-bold text-center text-black">Status</th>
                                     </tr>
                                 </thead>
@@ -340,7 +340,7 @@ const UserDeals = () => {
                                     ) : (
                                         <tr>
                                             <td colSpan={9} className="text-center py-6 text-gray-500">
-                                                No deals found for the selected filters.
+                                                No Customers found for the selected filters.
                                             </td>
                                         </tr>
                                     )}

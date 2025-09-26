@@ -1018,7 +1018,7 @@ const handleBulkAssign = async () => {
                             onChange={(e) => setShowLostDeals(e.target.checked)}
                             className="form-checkbox h-4 w-4 text-red-600 transition duration-150 ease-in-out"
                         />
-                        <span>Show Lost Deals</span>
+                        <span>Show Lost Customers</span>
                     </label>
                 </div>
             )}
@@ -1222,7 +1222,7 @@ const handleBulkAssign = async () => {
 
             {displayedData.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm sm:text-base py-8">
-                    No {selectedFilter === 'assignedToMe' ? 'assigned leads' : selectedFilter === 'lost' ? 'lost leads or deals' : 'leads'} found.
+                    No {selectedFilter === 'assignedToMe' ? 'assigned leads' : selectedFilter === 'lost' ? 'lost Customers' : 'leads'} found.
                 </div>
             ) : (
                 <>

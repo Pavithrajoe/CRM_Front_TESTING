@@ -1167,12 +1167,30 @@ toast.success(`${master.title} deleted successfully!`, {
     );
   }
 
-  if (showIntro) {
-    return <IntroModal masterTitle={master.title} onClose={() => setShowIntro(false)} />;
-  }
-
+if (showIntro) {
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      <IntroModal 
+        masterTitle={master.title} 
+        onClose={() => setShowIntro(false)} 
+      />
+    </>
+  );
+}
+
+  return (
+  <>
     <ToastContainer
       position="top-right"
       autoClose={3000}
@@ -1184,8 +1202,14 @@ toast.success(`${master.title} deleted successfully!`, {
       draggable
       pauseOnHover
     />
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose} 
+    >
+      <div 
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()} 
+      >
         <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">
           {master.title} Master
         </h2>

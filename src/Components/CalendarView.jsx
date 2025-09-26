@@ -250,7 +250,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Drawer anchor="right" open={open} onClose={onClose}>
-        <div className={`fixed top-0 right-0 h-full w-[50%] sm:w-[400px] md:w-[360px] bg-white rounded-l-2xl shadow-2xl z-50 transition-all duration-500 ease-in-out transform ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed top-0 right-0 h-full w-[50%] sm:w-[400px] md:w-[360px] bg-white rounded-l-2xl shadow-xl z-50 transition-all duration-500 ease-in-out transform ${open ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="relative p-6 h-full overflow-y-auto">
             <button
               onClick={onClose}
@@ -898,7 +898,7 @@ const fetchAllTasks = async (date) => {
 
     return (
       <div>
-        <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-xl shadow-black/10 hover:scale-[1.01] transition-transform duration-300">
+        <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-sm hover:scale-[1.01] transition-transform duration-300">
           <div className="flex w-full h-[500px] p-4 gap-4">
             {/* LEFT HALF: Calendar */}
             <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px]">
@@ -946,14 +946,14 @@ const fetchAllTasks = async (date) => {
               <div className="flex gap-4 mt-6 justify-center">
                 <button
                   onClick={() => setOpenDrawer(true)}
-                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
+                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md "
                 >
                   <FaPlus className="mr-2" />
                   Calendar Event
                 </button>
                 <button
                   onClick={() => window.open("https://meet.google.com/landing", "_blank")}
-                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md transition"
+                  className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md "
                 >
                   <b className="text-white font-bold mr-1">G</b>
                   <span>Create Meet</span>

@@ -359,8 +359,19 @@ const handleDownloadPdf = async (quotation) => {
       showPopup("Error", error.message || "Failed to create quotation", "error");
     }
   };
+const handleLostClick = () => {
+  if (!lostReasons || lostReasons.length === 0) {
+    showPopup(
+      "Info",
+      "No Lost Reasons available. Please set your reasons in masters or contact your admin.",
+      "info"
+    );
+    return;
+  }
 
-  const handleLostClick = () => setLeadLostDescriptionTrue(true);
+  setLeadLostDescriptionTrue(true);
+};
+
 
   const toggleQuotationExpand = (quotationId, e) => {
     if (e) {
@@ -1284,7 +1295,7 @@ return (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4"
   >
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[65vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -1319,7 +1330,7 @@ return (
       {/* Content */}
       <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
         {/* Templates Section */}
-        <div className="w-full md:w-1/2 lg:w-2/5 h-[550px] p-4 rounded-xl border border-gray-200 ">
+        <div className="w-full md:w-1/2 lg:w-2/5 h-[580px] p-4 rounded-xl border border-gray-200 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-lg text-gray-800">Email Templates</h3>
           </div>
@@ -1444,7 +1455,7 @@ return (
                     ],
                   }}
                   formats={formats}
-                  className="h-full min-h-[100px] sm:min-h-[150px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[300px]"
+                  className="h-[100px] min-h-[100px] sm:min-h-[150px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[300px]  "
                   style={{ border: "none" }}
                 />
               </div>

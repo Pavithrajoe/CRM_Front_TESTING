@@ -266,7 +266,7 @@ function AcheivementDashboard({ userId }) {
                         className="achievement-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102 cursor-pointer" 
                         onClick={handleTotalDealsClosedClick} 
                     >
-                        <div className="achievement-card-title text-base text-blue-800 font-medium mb-2">Total Deals Closed</div>
+                        <div className="achievement-card-title text-base text-blue-800 font-medium mb-2">Total Lead Closed</div>
                         <div className="achievement-card-metric text-2xl font-bold text-blue-900 mb-2">{achievements.totalLeadClosed}</div>
                         <div className="achievement-card-trend flex items-center text-sm text-green-600 font-semibold">
                             <span className="arrow mr-1 text-lg">&#x25B2;</span>

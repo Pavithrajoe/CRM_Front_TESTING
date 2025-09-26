@@ -94,7 +94,7 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
       case 'password_hash':
         return value.length >= 8 ? '' : 'Minimum 8 characters required';
       case 'phone_number':
-        return value ? /^\d{10}$/.test(value) ? '' : 'Must be exactly 10 digits' : '';
+        return value ? /^\d{15}$/.test(value) ? '' : 'Maximum 15 digits Allowed' : '';
       case 'company_name': // Correct field name for validation
         return value.trim().length >= 2 ? '' : 'Minimum 2 characters required';
       default:

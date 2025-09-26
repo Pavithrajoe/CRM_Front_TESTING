@@ -334,11 +334,11 @@ const handleSaveGeneralSettings = useCallback(async () => {
       <div className="border-t pt-4 mb-6 space-y-3">
         <h2 className="text-[18px] font-medium text-gray-900 mb-2">Company Additional Settings</h2>
         {[
-          { id: "whatsapp_active", label: "WhatsApp Notifications" },
-          { id: "mail_active", label: "Email Notifications" },
-          { id: "website_active", label: "Website Active" },
-          { id: "phone_active", label: "Phone Active" },
-          { id: "sub_src_active", label: "Sub Source Active" },
+          { id: "whatsapp_active", label: "WhatsApp Access" },
+          { id: "mail_active", label: "Email Accesss" },
+          { id: "website_active", label: "Website Access" },
+          { id: "phone_active", label: "Phone Access" },
+          { id: "sub_src_active", label: "Sub Source Access" },
         ].map(({ id, label }) => (
           <div key={id} className="flex items-center">
             <input

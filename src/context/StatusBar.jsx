@@ -95,6 +95,49 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [demoSessions, setDemoSessions] = useState([]);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
+    const [dueDate, setDueDate] = useState(null);
+
+
+
+
+   const PopperProps = {
+    placement: 'top-start',
+    modifiers: [
+      {
+        name: 'flip',
+        options: {
+          fallbackPlacements: ['top-start','bottom-start'],
+        },
+      },
+    ],
+  };
+
+  // Custom slot props for DateTimePicker to control positioning
+  const timeSlotProps = {
+    popper: {
+      placement: 'top-start', // This makes it appear above the field
+      modifiers: [
+        {
+          name: 'preventOverflow',
+          options: {
+            mainAxis: false,
+          },
+        },
+      ],
+      sx: { 
+        zIndex: 9999, // High z-index to appear above everything
+        '& .MuiPickersPopper-paper': {
+          marginBottom: '60px', // Add some space below the popper
+        }
+      }
+    },
+    desktopPaper: {
+      sx: { 
+        zIndex: 9999,
+        position: 'relative' // Prevent scrolling issues
+      }
+    }
+  };
 
   // Set logged in user info
   useEffect(() => {
@@ -847,7 +890,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                     <TextField
                       {...params}
                       label="Session Type *"
-                      sx={{ mt: 2 }}
+                      sx={{ mt: 5 }}
                       error={!!dialogErrors.demoSessionType}
                       helperText={dialogErrors.demoSessionType}
                       InputLabelProps={{ shrink: true }}
@@ -856,11 +899,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 />
                 <DateTimePicker
                   label="Start Time *"
-                   viewRenderers={{
-            hours: renderTimeViewClock,
-            minutes: renderTimeViewClock,
-            seconds: renderTimeViewClock,
-          }}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
                   value={dialogValue.demoSessionStartTime}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
@@ -869,21 +912,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      sx: { mt: 2 },
+                        sx: { mt: 2 },
+                       textField: {
+                        className:
+                          "pr-10 py-5 p-5 mt-[10px] text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
+                      },
                       error: !!dialogErrors.demoSessionStartTime,
                       helperText: dialogErrors.demoSessionStartTime,
                       InputLabelProps: { shrink: true },
                     },
+                    popper: timeSlotProps.popper,
+                    desktopPaper: timeSlotProps.desktopPaper,
                   }}
+                  desktopModeMediaQuery="@media (min-width: 0px)"
                 />
+                
                 <DateTimePicker
                   label="End Time *"
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
                   value={dialogValue.demoSessionEndTime}
-                   viewRenderers={{
-            hours: renderTimeViewClock,
-            minutes: renderTimeViewClock,
-            seconds: renderTimeViewClock,
-          }}
                   onChange={newValue =>
                     setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
                   }
@@ -896,7 +947,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                       helperText: dialogErrors.demoSessionEndTime,
                       InputLabelProps: { shrink: true },
                     },
+                    popper: timeSlotProps.popper,
+                    desktopPaper: timeSlotProps.desktopPaper,
                   }}
+                  desktopModeMediaQuery="@media (min-width: 0px)"
                 />
                 <TextField
                   label="Notes *"
@@ -1077,27 +1131,61 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               </p>
             </div>
 
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Due Date & Time"
-                value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
-                onChange={newValue => {
-                  setRemarkData(prev => ({
-                    ...prev,
-                    dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''
-                  }));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  />
-                )}
-                minDateTime={dayjs()} 
-              />
-            </LocalizationProvider>
+   <LocalizationProvider dateAdapter={AdapterDayjs}>
+  <DateTimePicker
+    label="Due Date & Time"
+    value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
+     inputFormat="DD/MM/YYYY hh:mm a"
+    onChange={newValue => {
+       
+      setRemarkData(prev => ({
+        ...prev,
+dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      }));
+    }}
+      
 
+    
+    viewRenderers={{
+      hours: renderTimeViewClock,
+      minutes: renderTimeViewClock,
+      seconds: renderTimeViewClock,
+    }}
+    slotProps={{
+      textField: {
+        
+        fullWidth: true,
+        
+        sx: { mt: 2 },
+        InputLabelProps: { shrink: true },
+      },
+      popper: {
+      placement: 'top-start', // This makes it appear above the field
+      modifiers: [
+        {
+          name: 'preventOverflow',
+          options: {
+            mainAxis: false,
+          },
+        },
+      ],
+      sx: { 
+        zIndex: 9999, // High z-index to appear above everything
+        '& .MuiPickersPopper-paper': {
+          marginBottom: '60px', // Add some space below the popper
+        }
+      }
+    },
+      desktopPaper: {
+      sx: { 
+        zIndex: 9999,
+        position: 'relative' // Prevent scrolling issues
+      }
+    }
+    }}
+    desktopModeMediaQuery="@media (min-width: 0px)"
+    minDateTime={dayjs()} 
+  />
+</LocalizationProvider>
             {/* <TextField
               label="Due Date"
               type="date"
@@ -1237,53 +1325,56 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </Dialog>
 
         {statusRemarks.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-            <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-              {statusRemarks.map((remark, index) => (
-                <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
-                  {index !== statusRemarks.length - 1 && (
-                    <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
-                  )}
-                  <div
-                    className=" bg-white w-[calc((90vw*0.9)/5)] shadow-md shadow-gray-200  min-w-[200px] max-w-[250px] shadow-xxl rounded-3xl p-4 space-y-2 flex flex-col justify-between min-h-40 max-h-55 overflow-hidden z-10 cursor-pointer transition p-5"
-                    onClick={() => setSelectedRemark(remark)}
-                  >
-                    <div className="space-y-2 text-sm">
-                      <p className="text-sm break-words line-clamp-3">
-                        <strong>Remark:</strong> {remark.lead_status_remarks}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Created By:</strong> {remark.createdBy || '-'}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Status:</strong> {remark.status_name}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Due Date:</strong>{" "}
-                        {new Date(remark.due_date)
-                          .toLocaleString("en-GB", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                          .replace(/(am|pm)/, (match) => match.toUpperCase())}
-                      </p>
-
-
-                    </div>
-                  </div>
-                </div>
-              ))}
+  <div className="mt-6">
+    <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+    <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
+      {statusRemarks.map((remark, index) => (
+        <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
+          {index !== statusRemarks.length - 1 && (
+            <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
+          )}
+          <div
+            className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
+            style={{ minWidth: "250px", maxWidth: "250px" }} 
+            onClick={() => setSelectedRemark(remark)}
+          >
+            <div className="space-y-2 text-sm">
+              <p
+                className="text-sm break-words line-clamp-3"
+                title={remark.lead_status_remarks} // tooltip with full text on hover
+              >
+                <strong>Remark:</strong> {remark.lead_status_remarks}
+              </p>
+              <p className="text-sm">
+                <strong>Created By:</strong> {remark.createdBy || '-'}
+              </p>
+              <p className="text-sm">
+                <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
+              </p>
+              <p className="text-sm">
+                <strong>Status:</strong> {remark.status_name}
+              </p>
+              <p className="text-sm">
+                <strong>Due Date:</strong>{" "}
+                {new Date(remark.due_date)
+                  .toLocaleString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })
+                  .replace(/(am|pm)/, (match) => match.toUpperCase())}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
 
         <Dialog
           open={!!selectedRemark}

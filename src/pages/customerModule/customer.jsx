@@ -322,7 +322,7 @@ const WonList = () => {
 
       {displayedData.length === 0 ? (
         <div className="text-center text-gray-500 text-sm sm:text-base py-8">
-          No deals found.
+          No Cutomers found.
         </div>
       ) : (
         <>

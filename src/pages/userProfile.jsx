@@ -464,7 +464,7 @@ showAppMessage("Profile updated successfully!", "success");
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className="relative">
-                  <FaUser className="absolute top-3 left-3 text-gray-500" />
+                  <FaUser className="absolute top-4 left-3 text-gray-500" />
                   <input
                     type="text"
                     name="cFull_name"
@@ -477,7 +477,7 @@ showAppMessage("Profile updated successfully!", "success");
                   />
                 </div>
                 <div className="relative">
-                  <FaIdBadge className="absolute top-3 left-3 text-gray-500" />
+                  <FaIdBadge className="absolute top-4  left-3 text-gray-500" />
                   <input
                     type="text"
                     name="cUser_name"
@@ -493,7 +493,7 @@ showAppMessage("Profile updated successfully!", "success");
               
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className="relative">
-                  <FaEnvelope className="absolute top-3 left-3 text-gray-500" />
+                  <FaEnvelope className="absolute top-4 left-3 text-gray-500" />
                   <input
                     type="email"
                     name="cEmail"
@@ -507,7 +507,7 @@ showAppMessage("Profile updated successfully!", "success");
                 </div>
 
                 <div className="relative">
-                  <FaBriefcase className="absolute top-3 left-3 text-gray-500" />
+                  <FaBriefcase className="absolute top-4 left-3 text-gray-500" />
                   <input
                     type="text"
                     name="cjob_title"
@@ -528,12 +528,12 @@ showAppMessage("Profile updated successfully!", "success");
                     name="i_bPhone_no" 
                     value={editFormData.i_bPhone_no}
                     onChange={handleChange}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    className="w-full border p-4 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                     maxLength={15}
                   />
                 </div>
                 <div className="relative">
-                  <FaPhone className="absolute top-3 left-3 text-gray-500" />
+                  <FaPhone className="absolute top-4 left-3 text-gray-500" />
                   <input
                     type="text"
                     name="iphone_no"
@@ -549,7 +549,7 @@ showAppMessage("Profile updated successfully!", "success");
              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 
                 <div className="relative">
-                  <FaPhone className="absolute top-3 left-3 text-gray-500" />
+                  <FaPhone className="absolute top-4 left-3 text-gray-500" />
                   <input
                     type="text"
                     name="Role"
@@ -560,7 +560,7 @@ showAppMessage("Profile updated successfully!", "success");
                     maxLength={15}
                   />
                 </div>
-                <FaUserTie className="absolute top-3 left-3 text-gray-500" />
+                <FaUserTie className="absolute top-4 left-3 text-gray-500" />
                 <select
                   name="reports_to"
                   value={editFormData.reports_to}

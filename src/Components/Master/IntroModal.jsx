@@ -1,6 +1,3 @@
-// IntroModal.js
-import React from "react";
-
 export const IntroModal = ({ onClose, masterTitle }) => {
   const getInstructions = () => {
     switch (masterTitle) {
@@ -15,9 +12,26 @@ export const IntroModal = ({ onClose, masterTitle }) => {
     }
   };
 
+  const handleBackdropClick = (e) => {
+    // Only close if clicking directly on the backdrop (not the modal content)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleContinueClick = () => {
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+    <div 
+      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4" 
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"
+        onClick={(e) => e.stopPropagation()} 
+      >
         <h2 className="text-xl font-bold mb-4 text-blue-800">
           {masterTitle} Management
         </h2>
@@ -31,7 +45,7 @@ export const IntroModal = ({ onClose, masterTitle }) => {
         </div>
         <div className="flex justify-end">
           <button
-            onClick={onClose}
+            onClick={handleContinueClick}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Continue to {masterTitle}

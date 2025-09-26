@@ -273,7 +273,7 @@ export default function SalesPipelineAnalysis() {
                 <YAxis
                   allowDecimals={false}
                   label={{
-                    value: "Number of Deals",
+                    value: "Number of Customers",
                     angle: -90,
                     position: "left",
                     offset: 0,

@@ -94,6 +94,21 @@ const TaskSameDay = ({ onTasksFetched }) => {
     nextSunday.setDate(nextMonday.getDate() + 6);
     nextSunday.setHours(23, 59, 59, 999);
 
+    const yesterday = new Date(now);
+yesterday.setDate(yesterday.getDate() - 1);
+
+const thisWeekStart = new Date(now);
+const currentDow = thisWeekStart.getDay(); // Sunday = 0
+// Week starts Monday, so adjust
+const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
+thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
+thisWeekStart.setHours(0, 0, 0, 0);
+
+const thisWeekEnd = new Date(thisWeekStart);
+thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+thisWeekEnd.setHours(23, 59, 59, 999);
+
+
     const filtered = tasks.filter((task) => {
       if (!task.task_date) return false;
       
@@ -101,15 +116,20 @@ const TaskSameDay = ({ onTasksFetched }) => {
       taskDate.setHours(0, 0, 0, 0); // Normalize task date for comparison
       
       switch (filter) {
-        case "Today":
-          return taskDate.getTime() === now.getTime();
-        case "Tomorrow":
-          return taskDate.getTime() === tomorrow.getTime();
-        case "Next Week":
-          return taskDate >= nextMonday && taskDate <= nextSunday;
-        default:
-          return true;
-      }
+  case "Today":
+    return taskDate.getTime() === now.getTime();
+  case "Yesterday":
+    return taskDate.getTime() === yesterday.getTime();
+  case "Tomorrow":
+    return taskDate.getTime() === tomorrow.getTime();
+  case "This Week":
+    return taskDate >= thisWeekStart && taskDate <= thisWeekEnd;
+  case "Next Week":
+    return taskDate >= nextMonday && taskDate <= nextSunday;
+  default:
+    return true;
+}
+
     });
 
     setFilteredTasks(filtered);
@@ -140,28 +160,49 @@ const TaskSameDay = ({ onTasksFetched }) => {
   };
 
   // Helper function to display date ranges for debugging
-  const getDateRangeInfo = () => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const nextMonday = new Date(now);
-    const dayOfWeek = nextMonday.getDay();
-    const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
-    
-    const nextSunday = new Date(nextMonday);
-    nextSunday.setDate(nextMonday.getDate() + 6);
-    
-    return {
-      today: now.toLocaleDateString('en-IN'),
-      tomorrow: tomorrow.toLocaleDateString('en-IN'),
-      nextWeekStart: nextMonday.toLocaleDateString('en-IN'),
-      nextWeekEnd: nextSunday.toLocaleDateString('en-IN')
-    };
+const getDateRangeInfo = () => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  // Calculate yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Calculate tomorrow
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Calculate next week range
+  const nextMonday = new Date(now);
+  const dayOfWeek = nextMonday.getDay();
+  const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+  nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
+
+  const nextSunday = new Date(nextMonday);
+  nextSunday.setDate(nextMonday.getDate() + 6);
+
+  // Calculate this week range (Monday - Sunday)
+  const thisWeekStart = new Date(now);
+  const currentDow = thisWeekStart.getDay();
+  const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
+  thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
+  thisWeekStart.setHours(0, 0, 0, 0);
+
+  const thisWeekEnd = new Date(thisWeekStart);
+  thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+  thisWeekEnd.setHours(23, 59, 59, 999);
+
+  return {
+    today: now.toLocaleDateString('en-IN'),
+    yesterday: yesterday.toLocaleDateString('en-IN'),
+    tomorrow: tomorrow.toLocaleDateString('en-IN'),
+    nextWeekStart: nextMonday.toLocaleDateString('en-IN'),
+    nextWeekEnd: nextSunday.toLocaleDateString('en-IN'),
+    thisWeekStart: thisWeekStart.toLocaleDateString('en-IN'),
+    thisWeekEnd: thisWeekEnd.toLocaleDateString('en-IN'),
   };
+};
+
 
   const dateRanges = getDateRangeInfo();
 
@@ -170,14 +211,17 @@ const TaskSameDay = ({ onTasksFetched }) => {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl text-gray-800">Tasks</h1>
         <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border rounded-md p-1 text-sm"
-        >
-          <option value="Today">Today</option>
-          <option value="Tomorrow">Tomorrow</option>
-          <option value="Next Week">Next Week</option>
-        </select>
+  value={filter}
+  onChange={e => setFilter(e.target.value)}
+  className="border rounded-md p-1 text-sm"
+>
+  <option value="Today">Today</option>
+  <option value="Yesterday">Yesterday</option>
+  <option value="Tomorrow">Tomorrow</option>
+  <option value="This Week">This Week</option>
+  <option value="Next Week">Next Week</option>
+</select>
+
       </div>
 
       {/* Debug information - you can remove this in production */}
@@ -185,6 +229,9 @@ const TaskSameDay = ({ onTasksFetched }) => {
         {filter === "Today" && `Showing tasks for: ${dateRanges.today}`}
         {filter === "Tomorrow" && `Showing tasks for: ${dateRanges.tomorrow}`}
         {filter === "Next Week" && `Showing tasks from: ${dateRanges.nextWeekStart} to ${dateRanges.nextWeekEnd}`}
+        {filter === "Yesterday" && `Showing tasks for: ${dateRanges.yesterday}`}
+{filter === "This Week" && `Showing tasks from: ${dateRanges.thisWeekStart} to ${dateRanges.thisWeekEnd}`}
+
       </div>
 
       {loading && <p className="text-center text-gray-600">Loading tasks...</p>}

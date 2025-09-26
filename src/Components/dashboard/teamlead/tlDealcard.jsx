@@ -280,8 +280,8 @@ export default function DealsTable() {
                   className="py-8 text-center text-gray-500"
                 >
                   {dealsData.length === 0
-                    ? "  No active and converted deals found for you."
-                    : " No active and converted deals found for you."}
+                    ? "  No active and converted Leads found for you."
+                    : " No active and converted Leads found for you."}
                 </td>
               </tr>
             )}

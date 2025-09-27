@@ -56,20 +56,20 @@ const [remindersThisWeek, setRemindersThisWeek] = useState([]);
 
           //Yesterdays range setup
           const yesterday = new Date(now);
-yesterday.setDate(yesterday.getDate() - 1);
-yesterday.setHours(0, 0, 0, 0);
+          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setHours(0, 0, 0, 0);
 
-//this week Range Setup
+          //this week Range Setup
 
-const thisWeekStart = new Date(now);
-const currentDow = thisWeekStart.getDay(); // Sunday = 0
-const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
-thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
-thisWeekStart.setHours(0, 0, 0, 0);
+          const thisWeekStart = new Date(now);
+          const currentDow = thisWeekStart.getDay(); // Sunday = 0
+          const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
+          thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
+          thisWeekStart.setHours(0, 0, 0, 0);
 
-const thisWeekEnd = new Date(thisWeekStart);
-thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
-thisWeekEnd.setHours(23, 59, 59, 999);
+          const thisWeekEnd = new Date(thisWeekStart);
+          thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+          thisWeekEnd.setHours(23, 59, 59, 999);
 
           
           // Next Week range (Monday to Sunday of next week)
@@ -93,20 +93,20 @@ thisWeekEnd.setHours(23, 59, 59, 999);
           });
 
           // Yesterday
-const yesterdayFiltered = allReminders.filter(reminder => {
-  if (!reminder.dremainder_dt) return false;
-  const reminderDate = new Date(reminder.dremainder_dt);
-  reminderDate.setHours(0, 0, 0, 0);
-  return reminderDate.getTime() === yesterday.getTime();
-});
+          const yesterdayFiltered = allReminders.filter(reminder => {
+            if (!reminder.dremainder_dt) return false;
+            const reminderDate = new Date(reminder.dremainder_dt);
+            reminderDate.setHours(0, 0, 0, 0);
+            return reminderDate.getTime() === yesterday.getTime();
+          });
 
-// This Week (Monday-Sunday this week)
-const thisWeekFiltered = allReminders.filter(reminder => {
-  if (!reminder.dremainder_dt) return false;
-  const reminderDate = new Date(reminder.dremainder_dt);
-  reminderDate.setHours(0, 0, 0, 0);
-  return reminderDate >= thisWeekStart && reminderDate <= thisWeekEnd;
-});
+          // This Week (Monday-Sunday this week)
+          const thisWeekFiltered = allReminders.filter(reminder => {
+            if (!reminder.dremainder_dt) return false;
+            const reminderDate = new Date(reminder.dremainder_dt);
+            reminderDate.setHours(0, 0, 0, 0);
+            return reminderDate >= thisWeekStart && reminderDate <= thisWeekEnd;
+          });
 
 
           // Filter reminders for Next Week (between next Monday and next Sunday)
@@ -120,7 +120,7 @@ const thisWeekFiltered = allReminders.filter(reminder => {
           setRemindersTomorrow(tomorrowFiltered);
           setRemindersNextWeek(nextWeekFiltered);
           setRemindersYesterday(yesterdayFiltered);
-setRemindersThisWeek(thisWeekFiltered);
+          setRemindersThisWeek(thisWeekFiltered);
 
         } catch (error) {
           console.error("Failed to fetch reminders:", error);
@@ -132,23 +132,23 @@ setRemindersThisWeek(thisWeekFiltered);
     }
   }, [filter]);
 
-  // Select reminders based on filter
-let currentReminders = [];
-if (filter === "Today") {
-  currentReminders = reminder_data || [];
-} else if (filter === "Yesterday") {
-  currentReminders = remindersYesterday;
-} else if (filter === "Tomorrow") {
-  currentReminders = remindersTomorrow;
-} else if (filter === "This Week") {
-  currentReminders = remindersThisWeek;
-} else if (filter === "Next Week") {
-  currentReminders = remindersNextWeek;
-}
+    // Select reminders based on filter
+    let currentReminders = [];
+    if (filter === "Today") {
+      currentReminders = reminder_data || [];
+    } else if (filter === "Yesterday") {
+      currentReminders = remindersYesterday;
+    } else if (filter === "Tomorrow") {
+      currentReminders = remindersTomorrow;
+    } else if (filter === "This Week") {
+      currentReminders = remindersThisWeek;
+    } else if (filter === "Next Week") {
+      currentReminders = remindersNextWeek;
+    }
 
 
-  const now = new Date();
-  const remindersToDisplay = currentReminders?.map((reminder) => {
+    const now = new Date();
+    const remindersToDisplay = currentReminders?.map((reminder) => {
     const target = new Date(reminder.dremainder_dt);
     const timeRemainingMs = target - now;
     let remainingText = "Reminder time passed";

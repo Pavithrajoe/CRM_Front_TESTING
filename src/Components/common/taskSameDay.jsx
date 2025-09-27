@@ -234,16 +234,17 @@ const getDateRangeInfo = () => {
 
       </div>
 
-      {loading && <p className="text-center text-gray-600">Loading tasks...</p>}
+{!loading && !error && tasks.length === 0 && (
+  <div className="text-center text-red-500 p-4">
+    <button
+      onClick={() => window.location.reload()}
+      className="ml-2 text-gray-400"
+    >
+      No task for the day!!!!!
+    </button>
+  </div>
+)}
 
-        <div className="text-center text-red-500 p-4">
-         
-          <button
-            onClick={() => window.location.reload()}
-            className="ml-2 text-gray-400"
-          >
-No task for the day!!!!!          </button>
-        </div>
       
 
       {!loading && !error && (

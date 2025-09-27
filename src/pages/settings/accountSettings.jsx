@@ -50,6 +50,7 @@ const AccountSettings = () => {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const list = res.data?.data?.data || [];
+      console.log(list)
       setBusinessTypes(list.filter(bt => bt.bactive));
     }).catch(console.error);
   }, [token]);
@@ -286,49 +287,50 @@ const handleSaveGeneralSettings = useCallback(async () => {
       </div>
 
       {/* Lead Form Type */}
-      <div className="border-t pt-4 mb-6">
-        <h2 className="text-[18px] font-medium text-gray-900 mb-4">Company Lead Form Type</h2>
-        {businessTypes.length === 0 ? (
-          <p className="text-gray-500 text-sm">Loading business types...</p>
+    <div className="border-t pt-4 mb-6">
+  <h2 className="text-[18px] font-medium text-gray-900 mb-4">
+    Company Lead Form Type
+  </h2>
+
+  {businessTypes.length === 0 ? (
+    <p className="text-gray-500 text-sm">Loading business types...</p>
+  ) : (
+    <div className="flex flex-wrap gap-3">
+      {businessTypes.map((bt) => (
+        <button
+          key={bt.id}
+          type="button"
+          onClick={() => setLeadFormType(bt.id)}
+          disabled={loading}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition
+            ${
+              leadFormType === bt.id
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+        >
+          {bt.name}
+        </button>
+      ))}
+
+      {/* Profile Save Button */}
+      <div className="flex justify-end w-full mt-4">
+        {isProfileLoaded ? (
+          <button
+            onClick={handleSaveProfileChanges}
+            disabled={loading || Object.keys(errors).length > 0}
+            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+          >
+            Save Profile Changes
+          </button>
         ) : (
-          <div className="flex flex-wrap gap-4">
-            {businessTypes.map(bt => (
-              <div key={bt.id} className="flex items-center">
-                <input
-                  id={`bt-${bt.id}`}
-                  type="radio"
-                  value={bt.id}
-                  name="leadFormType"
-                  checked={leadFormType === bt.id}
-                  onChange={handleLeadFormTypeChange}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                  disabled={loading}
-                />
-                <label htmlFor={`bt-${bt.id}`} className="ml-2 text-sm font-medium text-gray-700">
-                  {bt.name}
-                </label>
-              </div>
-            ))}
-
-              {/* Profile Save Button */}
-              <div className="flex justify-end w-full">
-                  {isProfileLoaded ? (
-                    <button
-                      onClick={handleSaveProfileChanges}
-                      disabled={loading || Object.keys(errors).length > 0}
-                      className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
-                    >
-                      Save Profile Changes
-                    </button>
-                  ) : (
-                    <p className="text-gray-600">Ask your admin to update</p>
-                  )}
-            </div>
-              
-          </div>
+          <p className="text-gray-600">Ask your admin to update</p>
         )}
-
       </div>
+    </div>
+  )}
+</div>
+
 
       {/* General Settings Section */}
       <div className="border-t pt-4 mb-6 space-y-3">

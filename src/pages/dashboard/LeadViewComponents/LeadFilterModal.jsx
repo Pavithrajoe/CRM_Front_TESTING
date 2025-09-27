@@ -18,7 +18,6 @@ const LeadFilterModal = ({
     potentials,
     statuses,
     sources,
-    // Add these new props here
     industries,
     services,
     selectedIndustry,
@@ -33,100 +32,107 @@ const LeadFilterModal = ({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 max-h-full overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
-                <label className="block text-sm text-gray-700">
-                    From
-                    <input
-                        type="date"
-                        value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    />
-                </label>
-                <label className="block text-sm text-gray-700">
-                    To
-                    <input
-                        type="date"
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    />
-                </label>
-                <label className="block text-sm text-gray-700">
-                    Potential
-                    <select
-                        value={selectedPotential}
-                        onChange={(e) => setSelectedPotential(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    >
-                        <option value="">All Potentials</option>
-                        {potentials.map(p => (
-                            <option key={p.ileadpoten_id} value={p.clead_name}>
-                                {p.clead_name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="block text-sm text-gray-700">
-                    Status
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    >
-                        <option value="">All Statuses</option>
-                        {statuses.map(s => (
-                            <option key={s.ilead_status_id} value={s.clead_name}>
-                                {s.clead_name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="block text-sm text-gray-700">
-                    Source
-                    <select
-                        value={selectedSource}
-                        onChange={(e) => setSelectedSource(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    >
-                        <option value="">All Sources</option>
-                        {sources.map(s => (
-                            <option key={s.source_id} value={s.source_id}>
-                                {s.source_name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="block text-sm text-gray-700">
-                    Industry
-                    <select
-                        value={selectedIndustry}
-                        onChange={(e) => setSelectedIndustry(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    >
-                        <option value="">All Industries</option>
-                        {industries.map(i => (
-                            <option key={i.iindustry_id} value={i.iindustry_id}>
-                                {i.cindustry_name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="block text-sm text-gray-700">
-                    Service
-                    <select
-                        value={selectedService}
-                        onChange={(e) => setSelectedService(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-                    >
-                        <option value="">All Services</option>
-                        {services.map(s => (
-                            <option key={s.iservice_id} value={s.iservice_id}>
-                                {s.cservice_name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                {/* <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2> */}
+                <h2 className="text-lg font-medium text-gray-800 text-center">Filter by Data</h2>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <label className="block text-sm text-gray-700">
+                        From
+                        <input
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        />
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        To
+                        <input
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        />
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        Potential
+                        <select
+                            value={selectedPotential}
+                            onChange={(e) => setSelectedPotential(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">All Potentials</option>
+                            {potentials.map(p => (
+                                <option key={p.ileadpoten_id} value={p.clead_name}>
+                                    {p.clead_name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        Status
+                        <select
+                            value={selectedStatus}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">All Statuses</option>
+                            {statuses.map(s => (
+                                <option key={s.ilead_status_id} value={s.clead_name}>
+                                    {s.clead_name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        Source
+                        <select
+                            value={selectedSource}
+                            onChange={(e) => setSelectedSource(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">All Sources</option>
+                            {sources.map(s => (
+                                <option key={s.source_id} value={s.source_id}>
+                                    {s.source_name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        Industry
+                        <select
+                            value={selectedIndustry}
+                            onChange={(e) => setSelectedIndustry(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">All Industries</option>
+                            {industries.map(i => (
+                                <option key={i.iindustry_id} value={i.iindustry_id}>
+                                    {i.cindustry_name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="block text-sm text-gray-700">
+                        Service
+                        <select
+                            value={selectedService}
+                            onChange={(e) => setSelectedService(e.target.value)}
+                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">All Services</option>
+                            {services.map(s => (
+                                <option key={s.iservice_id} value={s.iservice_id}>
+                                    {s.cservice_name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                
+                </div>
+                
+                {/* Button section  */}
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={onReset}
@@ -170,7 +176,14 @@ export default LeadFilterModal;
 //     setSelectedSource,
 //     potentials,
 //     statuses,
-//     sources
+//     sources,
+//     // Add these new props here
+//     industries,
+//     services,
+//     selectedIndustry,
+//     setSelectedIndustry,
+//     selectedService,
+//     setSelectedService
 // }) => {
 //     if (!showModal) {
 //         return null;
@@ -178,7 +191,7 @@ export default LeadFilterModal;
 
 //     return (
 //         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-//             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+//             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 max-h-full overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 //                 <h2 className="text-lg font-medium text-gray-800">Filter by Data</h2>
 //                 <label className="block text-sm text-gray-700">
 //                     From
@@ -237,8 +250,38 @@ export default LeadFilterModal;
 //                     >
 //                         <option value="">All Sources</option>
 //                         {sources.map(s => (
-//                             <option key={s.source_id} value={s.source_id}> 
+//                             <option key={s.source_id} value={s.source_id}>
 //                                 {s.source_name}
+//                             </option>
+//                         ))}
+//                     </select>
+//                 </label>
+//                 <label className="block text-sm text-gray-700">
+//                     Industry
+//                     <select
+//                         value={selectedIndustry}
+//                         onChange={(e) => setSelectedIndustry(e.target.value)}
+//                         className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+//                     >
+//                         <option value="">All Industries</option>
+//                         {industries.map(i => (
+//                             <option key={i.iindustry_id} value={i.iindustry_id}>
+//                                 {i.cindustry_name}
+//                             </option>
+//                         ))}
+//                     </select>
+//                 </label>
+//                 <label className="block text-sm text-gray-700">
+//                     Service
+//                     <select
+//                         value={selectedService}
+//                         onChange={(e) => setSelectedService(e.target.value)}
+//                         className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+//                     >
+//                         <option value="">All Services</option>
+//                         {services.map(s => (
+//                             <option key={s.iservice_id} value={s.iservice_id}>
+//                                 {s.cservice_name}
 //                             </option>
 //                         ))}
 //                     </select>

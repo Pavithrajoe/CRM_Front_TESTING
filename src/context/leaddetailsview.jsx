@@ -894,7 +894,7 @@ return (
       {/* Tab Navigation and Action Buttons */}
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
         <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-          {["Activity", "Follow -Up", "Comments", "Reminders"]
+          {["Activity", "Task", "Comments", "Reminders"]
           .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15))
           .map((label, idx) => (
             <button
@@ -1486,8 +1486,6 @@ return (
     </div>
   </form>
 </div>
-
-
       </div>
     </div>
   </div>

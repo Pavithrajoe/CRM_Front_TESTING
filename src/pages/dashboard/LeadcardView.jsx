@@ -65,16 +65,6 @@ const LeadCardViewPage = () => {
     const pageFromUrl = Number(params.get("page")) || 1;
     const [currentPage, setCurrentPage] = useState(pageFromUrl);
 
-    const filteredData = useMemo(() => {
-    let result = allLeads;
-    if (selectedFilter === 'lost') {
-        result = lostLeads;
-    } else if (selectedFilter === 'assignedToMe') {
-        result = assignedLeads;
-    }
-    return result;
-    }, [allLeads, lostLeads, assignedLeads, selectedFilter]);
-    
     const token = localStorage.getItem("token"); 
 
     useEffect(() => {
@@ -136,21 +126,6 @@ const LeadCardViewPage = () => {
         setLeadsToShow(null);
         setShowPagination(true);
     };
-
-    useEffect(() => {
-    let newData;
-    if (leadsToShow !== null) {
-        newData = filteredData.slice(0, leadsToShow);
-    } else {
-        const startIndex = (currentPage - 1) * leadsPerPage;
-        const endIndex = startIndex + leadsPerPage;
-        newData = filteredData.slice(startIndex, endIndex);
-    }
-    setDisplayedData(newData);
-}, [filteredData, leadsToShow, currentPage, leadsPerPage]);
-
-    useEffect(() => {
-    }, [leads]);
 
     useEffect(() => {
         const handleRefreshEvent = () => {
@@ -221,7 +196,7 @@ const LeadCardViewPage = () => {
         }
     }, []);
 
-// Fetch users for assignment
+    // Fetch users for assignment
     useEffect(() => {
         if (!currentToken) return;
         
@@ -235,7 +210,6 @@ const LeadCardViewPage = () => {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    // console.log("Users data:", data);
                     
                     // Handle different response structures
                     let usersArray = [];
@@ -333,7 +307,7 @@ const LeadCardViewPage = () => {
 
             const isConverted = item.bisConverted === true || item.bisConverted === 'true';
             const isActive = item.bactive === true || item.bactive === 'true';
-            const isWebsite = item.website_lead === true || item.website_lead === 'true';
+            const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
 
             if (selectedFilter === 'all') {
                 return matchesSearch && matchesDate;
@@ -478,20 +452,20 @@ const LeadCardViewPage = () => {
     }, [currentUserId, currentToken]);
 
     useEffect(() => {
-    if (!currentUserId || !currentToken) return;
-    if (selectedFilter !== 'lost') {
-        setShowLostLeads(true);
-        setShowLostDeals(true);
-    }
-    if (selectedFilter === 'assignedToMe') {
-        fetchAssignedLeads();
-    } else if (selectedFilter === 'lost') {
-        fetchLostLeads();
-    } else {
-        fetchLeads();
-    }
-  }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchAssignedLeads, fetchLostLeads, refreshTrigger]);
-    
+        if (!currentUserId || !currentToken) return;
+        setCurrentPage(1);
+        if (selectedFilter !== 'lost') {
+            setShowLostLeads(true);
+            setShowLostDeals(true);
+        }
+        if (selectedFilter === 'assignedToMe') {
+            fetchAssignedLeads();
+        } else if (selectedFilter === 'lost') {
+            fetchLostLeads();
+        } else {
+            fetchLeads();
+        }
+    }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchAssignedLeads, fetchLostLeads, refreshTrigger]);
 
     useEffect(() => {
         navigate(`?page=${currentPage}`, { replace: true });
@@ -603,57 +577,51 @@ const LeadCardViewPage = () => {
         return sortableItems;
     }, [dataToDisplay, sortConfig]);
 
-    // const totalPages = Math.ceil(sortedData.length / leadsPerPage);
-    const totalPages = leadsToShow ? 1 : Math.ceil(filteredData.length / leadsPerPage);
-    const calculateDisplayedData = (filteredData, leadsToShow, currentPage, leadsPerPage) => {
-        if (leadsToShow !== null) {
-            return filteredData.slice(0, leadsToShow);
-        } else {
-            const startIndex = (currentPage - 1) * leadsPerPage;
-            const endIndex = startIndex + leadsPerPage;
-            return filteredData.slice(startIndex, endIndex);
-        }
-    };
+    const totalPages = Math.ceil(sortedData.length / leadsPerPage);
 
     useEffect(() => {
-        const newDisplayedData = calculateDisplayedData(filteredData, leadsToShow, currentPage, leadsPerPage);
-        setDisplayedData(newDisplayedData);
-    }, [filteredData, leadsToShow, currentPage, leadsPerPage]);
+        const paginatedData = sortedData.slice(
+            (currentPage - 1) * leadsPerPage,
+            currentPage * leadsPerPage
+        );
+        setDisplayedData(paginatedData);
+    }, [sortedData, currentPage, leadsPerPage]);
+
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1);
     };
 
     const handleFilterApply = () => {
-            // console.log("1st lead object:", allLeads[0]); 
         let filtered = [...allLeads];
 
         // Filter by Potential
         if (selectedPotential) {
-            filtered = filtered.filter(lead => lead.lead_potential?.clead_name === selectedPotential);
-            // console.log("Filtered by potential:", filtered);
+            filtered = filtered.filter(
+                lead => lead.lead_potential?.clead_name === selectedPotential
+            );
         }
 
         // Filter by Status
         if (selectedStatus) {
-            filtered = filtered.filter(lead => lead.lead_status?.clead_name === selectedStatus);
-            // console.log("Filtered by status:", filtered);
+            filtered = filtered.filter(
+                lead => lead.lead_status?.clead_name === selectedStatus
+            );
         }
+
         // Filter by Source
         if (selectedSource) {
             filtered = filtered.filter(lead => lead.lead_source_id === Number(selectedSource));
-            // console.log("Filtered by source:", filtered);
         }
 
         // Filter by Industry
         if (selectedIndustry) {
             filtered = filtered.filter(lead => lead.cindustry_id === Number(selectedIndustry));
-            // console.log("Filtered by industry:", filtered);
         }
+
         // Filter by Service
         if (selectedService) {
             filtered = filtered.filter(lead => lead.iservice_id === Number(selectedService));
-            // console.log("Filtered by service:", filtered);
         }
 
         // Filter Lost Leads/Deals
@@ -700,16 +668,12 @@ const LeadCardViewPage = () => {
         setSelectedSource('');
         setSelectedIndustry('');
         setSelectedService('');
-        setDisplayedData(leads);
+        setDisplayedData(allLeads);
     };
 
     const goToDetail = (id) => {
         navigate(`/leaddetailview/${id}?page=${currentPage}`);
     };
-
-    // const goToDetail = (id) => {
-    //     navigate(`/leaddetailview/${id}`);
-    // };
 
     const getSortIndicator = (key) => {
         if (sortConfig.key === key) {
@@ -805,61 +769,54 @@ const LeadCardViewPage = () => {
         }
     };
 
-const handleBulkAssign = async () => {
-    const assignedToUserId = parseInt(selectedUser);
-    
-    if (!assignedToUserId || isNaN(assignedToUserId) || selectedLeads.length === 0) {
-        setAssignError("Please select a valid user to assign leads to");
-        return;
-    }
-    
-    setAssignLoading(true);
-    setAssignError(null);
-    
-    try {
-        const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`,
-            },
-            body: JSON.stringify({
-                leadIds: selectedLeads,
-                assignedTo: assignedToUserId
-            }),
-        });
+    const handleBulkAssign = async () => {
+        const assignedToUserId = parseInt(selectedUser);
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            setAssignSuccess(true);
-            setTimeout(() => {
-                setShowAssignModal(false);
-                setSelectedLeads([]);
-                setSelectedUser(''); 
-                setShowBulkActions(false);
-                if (selectedFilter === 'assignedToMe') fetchAssignedLeads();
-                else if (selectedFilter === 'lost') fetchLostLeads();
-                else fetchLeads();
-            }, 1500);
-        } else {
-            setAssignError(data.Message || "Failed to assign leads");
+        if (!assignedToUserId || isNaN(assignedToUserId) || selectedLeads.length === 0) {
+            setAssignError("Please select a valid user to assign leads to");
+            return;
         }
-    } catch (error) {
-        console.error("Assignment error:", error);
-        setAssignError("An error occurred during assignment");
-    } finally {
-        setAssignLoading(false);
-        useEffect(() => {
-        setSelectedLeads([]);
-        setShowBulkActions(false);
-    }, [selectedFilter, currentPage]);
+        
+        setAssignLoading(true);
+        setAssignError(null);
+        
+        try {
+            const response = await fetch(ENDPOINTS.BULK_ASSIGN, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`,
+                },
+                body: JSON.stringify({
+                    leadIds: selectedLeads,
+                    assignedTo: assignedToUserId
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                setAssignSuccess(true);
+                setTimeout(() => {
+                    setShowAssignModal(false);
+                    setSelectedLeads([]);
+                    setSelectedUser(''); 
+                    setShowBulkActions(false);
+                    if (selectedFilter === 'assignedToMe') fetchAssignedLeads();
+                    else if (selectedFilter === 'lost') fetchLostLeads();
+                    else fetchLeads();
+                }, 1500);
+            } else {
+                setAssignError(data.Message || "Failed to assign leads");
+            }
+        } catch (error) {
+            console.error("Assignment error:", error);
+            setAssignError("An error occurred during assignment");
+        } finally {
+            setAssignLoading(false);
+        }
+    };
 
-    useEffect(() => {
-        setShowBulkActions(selectedLeads.length > 0);
-    }, [selectedLeads]);
-    }
-};
     useEffect(() => {
         setSelectedLeads([]);
         setShowBulkActions(false);
@@ -1042,17 +999,15 @@ const handleBulkAssign = async () => {
                 statuses={statuses}
                 sources={sources}
                 industries={industries}
-                setIndustries={setIndustries}
                 selectedIndustry={selectedIndustry}
                 setSelectedIndustry={setSelectedIndustry}
                 services={services}
-                setServices={setServices}
                 selectedService={selectedService}
                 setSelectedService={setSelectedService}
             />
 
             {showAssignModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex col col-2 items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
                         <h2 className="text-lg font-medium text-gray-800">Assign Selected Leads</h2>
                         
@@ -1229,12 +1184,12 @@ const handleBulkAssign = async () => {
                     {viewMode === 'list' && (
                         <>
                         <div className="flex justify-end my-4">
-            <LeadCountSelector
-                leadsCount={filteredData.length}
-                onSelect={handleSelectCount}
-                selectedCount={leadsToShow}
-            />
-        </div>  
+                            <LeadCountSelector
+                                leadsCount={sortedData.length}
+                                onSelect={handleSelectCount}
+                                selectedCount={leadsToShow}
+                            />
+                        </div>  
                         <div className="overflow-x-auto rounded-2xl shadow-md border bg-white border-gray-200">
                             <div className={`min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium ${selectedFilter === 'assignedToMe' ? 'grid-cols-10' : 'grid-cols-7'}`}>
                                 {/* Select All checkbox */}
@@ -1312,7 +1267,7 @@ const handleBulkAssign = async () => {
                                     } else if (isConverted) {
                                         statusText = 'Deal';
                                         statusBgColor = getStatusColor('deal');
-                                    } else if (item.website_lead === true || item.website_lead === 'true') {
+                                    } else if (item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1) {
                                         statusText = 'Website Lead';
                                         statusBgColor = getStatusColor('website lead');
                                     } else {
@@ -1401,7 +1356,7 @@ const handleBulkAssign = async () => {
                                         if (isConverted) {
                                             statusText = 'Deal';
                                             statusBgColor = getStatusColor('deal');
-                                        } else if (item.website_lead === true || item.website_lead === 'true') {
+                                        } else if (item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1) {
                                             statusText = 'Website Lead';
                                             statusBgColor = getStatusColor('website lead');
                                         } else {
@@ -1426,13 +1381,13 @@ const handleBulkAssign = async () => {
                                             className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
                                         />
                                         </div>
-
                                         
-                                        {(item.website_lead === true || item.website_lead === 'true') && (
+                                        {(item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1 ) && (
                                             <div className="absolute top-3 left-10 text-blue-600" title="Website Lead">
                                                 <FaGlobe size={18} />
                                             </div>
                                         )}
+
                                         <div onClick={() => goToDetail(item.ilead_id)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
                                                 <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
@@ -1503,8 +1458,7 @@ const handleBulkAssign = async () => {
                     Next
                     </button>
                 </div>
-                )}
-
+            )}
         </div>
     );
 };

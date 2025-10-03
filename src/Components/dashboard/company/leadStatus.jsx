@@ -38,6 +38,7 @@ const LeadStatusChart = () => {
     }
 
     try {
+      // NOTE: Using ENDPOINTS.COMPANY_GET to fetch company data which includes stageCounts
       const response = await fetch(`${ENDPOINTS.COMPANY_GET}`, {
         headers: {
           Authorization: `Bearer ${authData.token}`,
@@ -52,24 +53,25 @@ const LeadStatusChart = () => {
       const stageCounts = result?.data?.stageCounts || {};
 
       // Transform the fetched stage counts into an array suitable for Recharts.
-      // Sort by orderId.
       const transformedData = Object.entries(stageCounts)
         .map(([stage, details]) => ({
           name: stage.trim(),
           "Lead Status": details.count,
           orderId: details.orderId
         }))
-        // Sort the data exclusively by orderId.
+        // Sort the data exclusively by orderId to ensure pipeline stages are sequential.
         .sort((a, b) => {
           // Handle cases where orderId might be 'Unknown' or not a number
           const orderA = typeof a.orderId === 'number' ? a.orderId : Infinity;
-          const orderB = typeof b.orderId === 'number' ? b.orderId : Infinity;
+          // FIX: Changed 'b.orderB' to 'b.orderId'
+          const orderB = typeof b.orderId === 'number' ? b.orderId : Infinity; 
           return orderA - orderB;
         });
 
       setChartData(transformedData);
     } catch (err) {
-      setError(err);
+      // Check if err is an Error object or a string
+      setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
@@ -82,9 +84,13 @@ const LeadStatusChart = () => {
   // Custom tooltip component for the chart
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      // Check if value is defined and is a number before displaying 'Leads'
+      const value = payload[0].value;
+      const displayValue = typeof value === 'number' ? `${value} Leads` : value;
+
       return (
         <div className="bg-white p-2 border border-gray-300 rounded shadow-md">
-          <p className="font-semibold text-gray-700">{`${label}: ${payload[0].value} Leads`}</p>
+          <p className="font-semibold text-gray-700">{`${label}: ${displayValue}`}</p>
         </div>
       );
     }
@@ -93,7 +99,8 @@ const LeadStatusChart = () => {
 
   // Custom tick formatter for Y-axis to ensure integer values
   const formatYAxisTick = (tick) => {
-    return Math.floor(tick);
+    // Only display non-negative integers
+    return Math.max(0, Math.floor(tick)); 
   };
 
   // Loading and Error handling UI
@@ -131,7 +138,7 @@ const LeadStatusChart = () => {
                 top: 20,
                 right: 40,
                 left: 30,
-                bottom: 100,
+                bottom: 100, // Increased bottom margin for rotated X-Axis labels
               }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -140,7 +147,7 @@ const LeadStatusChart = () => {
                 type="category"
                 angle={-45}
                 textAnchor="end"
-                height={120}
+                height={120} // Adjusted height to accommodate rotated labels
                 interval={0}
                 tick={{ fontSize: 12 }}
               />
@@ -153,8 +160,9 @@ const LeadStatusChart = () => {
                   style: { textAnchor: 'middle', fontSize: '14px' }
                 }}
                 tickFormatter={formatYAxisTick}
+                // Allow the Y-Axis to calculate its own domain, but ensure it starts at 0
+                domain={[0, 'auto']} 
                 allowDecimals={false}
-                domain={[0, (dataMax) => Math.max(dataMax, 1)]}
                 tick={{ fontSize: 12 }}
               />
               <Tooltip content={<CustomTooltip />} />

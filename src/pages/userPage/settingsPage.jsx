@@ -84,10 +84,16 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   </div>
 );
 
-
-const SettingsPage = () => {
+const SettingsPage = ({ settingsData }) => {
   const { userId: urlUserId } = useParams();
   const { users } = useContext(UserContext);
+
+  const [settingsProps, setSettingsProps] = useState({
+    mail_active: false,
+    phone_active: false,
+    website_active: false,
+    whatsapp_active: false,
+  });
 
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -96,71 +102,94 @@ const SettingsPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+
   const [whatsappActive, setWhatsappActive] = useState(false);
   const [mailActive, setMailActive] = useState(false);
   const [websiteActive, setWebsiteActive] = useState(false);
   const [phoneActive, setPhoneActive] = useState(false);
+
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [usernameError, setUsernameError] = useState('');
-useEffect(() => {
-  const fetchUserProfile = async () => {
-    if (!urlUserId) {
-      if (users && users.length > 0) {
-        const user = users[0];
-        setName(user.cFull_name || '');
-        setUsername(user.cUser_name || '');
-        setEmail(user.cEmail || '');
-        // Set access settings from user data
-        setWhatsappActive(user.whatsapp_access || false);
-        setMailActive(user.mail_access || false);
-        setWebsiteActive(user.website_access || false);
-        setPhoneActive(user.phone_access || false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!urlUserId) {
+        if (users && users.length > 0) {
+          const user = users[0];
+          setName(user.cFull_name || '');
+          setUsername(user.cUser_name || '');
+          setEmail(user.cEmail || '');
+          setWhatsappActive(user.whatsapp_access || false);
+          setMailActive(user.mail_access || false);
+          setWebsiteActive(user.website_access || false);
+          setPhoneActive(user.phone_access || false);
+        }
+        setLoadingProfile(false);
+        return;
       }
-      setLoadingProfile(false);
-      return;
+
+      setLoadingProfile(true);
+      const authToken = localStorage.getItem("token");
+      if (!authToken) {
+        toast.error("Authentication required to fetch user details.");
+        setLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${ENDPOINTS.USER_GET}/${urlUserId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Error fetching user details");
+
+        setName(data.cFull_name || '');
+        setUsername(data.cUser_name || '');
+        setEmail(data.cEmail || '');
+        setWhatsappActive(data.whatsapp_access || false);
+        setMailActive(data.mail_access || false);
+        setWebsiteActive(data.website_access || false);
+        setPhoneActive(data.phone_access || false);
+      } catch (err) {
+        console.error("Error fetching user details:", err);
+        toast.error("Failed to load user profile: " + err.message);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    fetchUserProfile();
+  }, [urlUserId, users]);
+
+  useEffect(() => {
+    if (settingsData && settingsData.result) {
+      const result = settingsData.result;
+
+      const updatedSettings = {
+        whatsapp_active: result.whatsapp_active || false,
+        mail_active: result.mail_active || false,
+        website_active: result.website_active || false,
+        phone_active: result.phone_active || false,
+      };
+
+      setSettingsProps(updatedSettings);
+
+      // Update toggle states to match settings
+      setWhatsappActive(updatedSettings.whatsapp_active);
+      setMailActive(updatedSettings.mail_active);
+      setWebsiteActive(updatedSettings.website_active);
+      setPhoneActive(updatedSettings.phone_active);
     }
-
-    setLoadingProfile(true);
-    const authToken = localStorage.getItem("token");
-    if (!authToken) {
-      toast.error("Authentication required to fetch user details.");
-      setLoadingProfile(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${ENDPOINTS.USER_GET}/${urlUserId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error fetching user details");
-
-      setName(data.cFull_name || '');
-      setUsername(data.cUser_name || '');
-      setEmail(data.cEmail || '');
-      // Set access settings from user data
-      setWhatsappActive(data.whatsapp_access || false);
-      setMailActive(data.mail_access || false);
-      setWebsiteActive(data.website_access || false);
-      setPhoneActive(data.phone_access || false);
-    } catch (err) {
-      console.error("Error fetching user details:", err);
-      toast.error("Failed to load user profile: " + err.message);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-  fetchUserProfile();
-}, [urlUserId, users]);
+  }, [settingsData]);
 
   const fetchGeneralSettings = async () => {
     setLoadingSettings(true);
@@ -181,17 +210,26 @@ useEffect(() => {
       });
 
       const data = await response.json();
-      // console.log("General Settings Data:", data);
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
       
-      const settings = data.result && Array.isArray(data.result) && data.result.length > 0
-                         ? data.result[0]
-                         : {};
+      const settings = data.result && !Array.isArray(data.result) 
+        ? data.result
+        : (Array.isArray(data.result) && data.result.length > 0) ? data.result[0] : {};
 
-      setWhatsappActive(settings.whatsapp_active || false);
-      setMailActive(settings.mail_active || false);
-      setWebsiteActive(settings.website_active || false);
-      setPhoneActive(settings.phone_active || false);
+      const updatedSettings = {
+        whatsapp_active: settings.whatsapp_active || false,
+        mail_active: settings.mail_active || false,
+        website_active: settings.website_active || false,
+        phone_active: settings.phone_active || false,
+      };
+
+      setSettingsProps(updatedSettings);
+
+      setWhatsappActive(updatedSettings.whatsapp_active);
+      setMailActive(updatedSettings.mail_active);
+      setWebsiteActive(updatedSettings.website_active);
+      setPhoneActive(updatedSettings.phone_active);
+
     } catch (err) {
       console.error("Error fetching general settings:", err);
       toast.error("Failed to load settings: " + err.message);
@@ -265,55 +303,55 @@ useEffect(() => {
     }
   };
 
-const handleSaveChanges = async () => {
-  const isNameValid = validateName();
-  const isEmailValid = validateEmail();
-  const isUsernameValid = validateUsername();
+  const handleSaveChanges = async () => {
+    const isNameValid = validateName();
+    const isEmailValid = validateEmail();
+    const isUsernameValid = validateUsername();
 
-  if (!isNameValid || !isEmailValid || !isUsernameValid) {
-    toast.error('Please fix validation errors before saving');
-    return;
-  }
-
-  setIsSaving(true);
-  const authToken = localStorage.getItem("token");
-  if (!authToken) {
-    toast.error("Authentication required to save changes.");
-    setIsSaving(false);
-    return;
-  }
-
-  try {
-    const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`,
-      },
-      body: JSON.stringify({
-        cFull_name: name,
-        cUser_name: username,
-        cEmail: email,
-        whatsapp_access: whatsappActive,
-        mail_access: mailActive,
-        website_access: websiteActive,
-        phone_access: phoneActive,
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.message || 'Failed to update profile');
+    if (!isNameValid || !isEmailValid || !isUsernameValid) {
+      toast.error('Please fix validation errors before saving');
+      return;
     }
 
-    toast.success('Changes saved successfully!');
-  } catch (error) {
-    console.error('Error saving changes:', error);
-    toast.error(`Failed to save changes: ${error.message}`);
-  } finally {
-    setIsSaving(false);
-  }
-};
+    setIsSaving(true);
+    const authToken = localStorage.getItem("token");
+    if (!authToken) {
+      toast.error("Authentication required to save changes.");
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          cFull_name: name,
+          cUser_name: username,
+          cEmail: email,
+          whatsapp_access: whatsappActive,
+          mail_access: mailActive,
+          website_access: websiteActive,
+          phone_access: phoneActive,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update profile');
+      }
+
+      toast.success('Changes saved successfully!');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      toast.error(`Failed to save changes: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
@@ -354,75 +392,73 @@ const handleSaveChanges = async () => {
     }
   };
 
-const updateCallLogAccess = async () => {
-  try {
-    const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem("token")}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: Number(urlUserId),
-        isMailActive: mailActive,
-        isPhoneActive: phoneActive,
-        isWebsiteActive: websiteActive,
-        isWhatsappActive: whatsappActive,
-      }),
-    });
+  const updateCallLogAccess = async () => {
+    try {
+      const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: Number(urlUserId),
+          isMailActive: mailActive,
+          isPhoneActive: phoneActive,
+          isWebsiteActive: websiteActive,
+          isWhatsappActive: whatsappActive,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to update call log access');
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update call log access');
+      }
+
+      if (data.result) {
+        setMailActive(data.result.isMailActive || false);
+        setPhoneActive(data.result.isPhoneActive || false);
+        setWebsiteActive(data.result.isWebsiteActive || false);
+        setWhatsappActive(data.result.isWhatsappActive || false);
+      }
+
+      toast.success(data.Message || "Access saved successfully.");
+      return true;
+    } catch (error) {
+      console.error('Error updating call log access:', error);
+      toast.error(`Failed to update access: ${error.message}`);
+      return false;
     }
-
-    // Update local state with the response data
-    if (data.result) {
-      setMailActive(data.result.isMailActive || false);
-      setPhoneActive(data.result.isPhoneActive || false);
-      setWebsiteActive(data.result.isWebsiteActive || false);
-      setWhatsappActive(data.result.isWhatsappActive || false);
-    }
-
-    toast.success(data.Message || "Access saved successfully.");
-    return true;
-  } catch (error) {
-    console.error('Error updating call log access:', error);
-    toast.error(`Failed to update access: ${error.message}`);
-    return false;
-  }
-};
-
-const handleToggle = async (type) => {
-  // Save original state in case we need to revert
-  const originalState = {
-    whatsapp: whatsappActive,
-    mail: mailActive,
-    website: websiteActive,
-    phone: phoneActive
   };
 
-  // Update local state immediately for responsive UI
-  switch(type) {
-    case 'whatsapp': setWhatsappActive(prev => !prev); break;
-    case 'mail': setMailActive(prev => !prev); break;
-    case 'website': setWebsiteActive(prev => !prev); break;
-    case 'phone': setPhoneActive(prev => !prev); break;
-    default: break;
-  }
+  const handleToggle = async (type) => {
+    const originalState = {
+      whatsapp: whatsappActive,
+      mail: mailActive,
+      website: websiteActive,
+      phone: phoneActive
+    };
 
-  // Then make the API call
-  const success = await updateCallLogAccess();
-  
-  // If the API call failed, revert the state
-  if (!success) {
-    setWhatsappActive(originalState.whatsapp);
-    setMailActive(originalState.mail);
-    setWebsiteActive(originalState.website);
-    setPhoneActive(originalState.phone);
-  }
-};
+    // Update local state immediately for responsiveness
+    switch(type) {
+      case 'whatsapp': setWhatsappActive(prev => !prev); break;
+      case 'mail': setMailActive(prev => !prev); break;
+      case 'website': setWebsiteActive(prev => !prev); break;
+      case 'phone': setPhoneActive(prev => !prev); break;
+      default: break;
+    }
+
+    // Sync with server
+    const success = await updateCallLogAccess();
+
+    if (!success) {
+      // Revert state if failure
+      setWhatsappActive(originalState.whatsapp);
+      setMailActive(originalState.mail);
+      setWebsiteActive(originalState.website);
+      setPhoneActive(originalState.phone);
+    }
+  };
 
   const handleUploadPicture = (e) => {
     const file = e.target.files?.[0];
@@ -493,19 +529,11 @@ const handleToggle = async (type) => {
                   <input id="picture-upload" type="file" accept="image/*" onChange={handleUploadPicture} className="hidden" />
                 </label>
                 <p className="text-xs text-gray-500 mt-2">Max size 500kb</p>
-              </div> 
-       
+              </div>
             </div>
-            
           )}
-                 <div className=" justify-center mt-8 pt-6 border-t border-gray-200">
-          <Button
-            text={isSaving ? 'Saving...' : 'Save All Changes'}
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-            className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
-          />
-        </div>
+
+          
         </section>
 
         <div className="section-divider"></div>
@@ -532,7 +560,7 @@ const handleToggle = async (type) => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer p-1"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
-                  {showCurrentPassword ? <Eye size={20} /> : <EyeOff size={20} /> }
+                  {showCurrentPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </div>
               </InputGroup>
 
@@ -578,38 +606,45 @@ const handleToggle = async (type) => {
             </div>
           ) : (
             <>
-              <ToggleSwitch 
-                label="WhatsApp" 
-                isChecked={whatsappActive} 
-                onToggle={() => handleToggle('whatsapp')}
-              />
-              <ToggleSwitch 
-                label="Mail" 
-                isChecked={mailActive} 
-                onToggle={() => handleToggle('mail')}
-              />
-              <ToggleSwitch 
-                label="Website" 
-                isChecked={websiteActive} 
-                onToggle={() => handleToggle('website')}
-              />
-              <ToggleSwitch 
-                label="Phone" 
-                isChecked={phoneActive} 
-                onToggle={() => handleToggle('phone')}
-              />
+              {settingsProps.whatsapp_active && (
+                <ToggleSwitch 
+                  label="WhatsApp" 
+                  isChecked={whatsappActive} 
+                  onToggle={() => handleToggle('whatsapp')}
+                />
+              )}
+              {settingsProps.mail_active && (
+                <ToggleSwitch 
+                  label="Mail" 
+                  isChecked={mailActive} 
+                  onToggle={() => handleToggle('mail')}
+                />)}
+              {settingsProps.website_active && (
+                <ToggleSwitch 
+                  label="Website" 
+                  isChecked={websiteActive} 
+                  onToggle={() => handleToggle('website')}
+                />
+              )}
+              {settingsProps.phone_active && (
+                <ToggleSwitch 
+                  label="Phone" 
+                  isChecked={phoneActive} 
+                  onToggle={() => handleToggle('phone')}
+                />
+              )}
             </>
           )}
         </section>
 
-        <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
-         {/* <Button
-  text={isSaving ? 'Saving...' : 'Save the Access'}
-  onClick={updateCallLogAccess}
-  disabled={isSaving}
-  className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
-/> */}
-        </div>
+        <div className="justify-center mt-8 pt-6 border-t border-gray-200">
+            <Button
+              text={isSaving ? 'Saving...' : 'Save All Changes'}
+              onClick={handleSaveChanges}
+              disabled={isSaving}
+              className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
+            />
+          </div>
       </div>
 
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />

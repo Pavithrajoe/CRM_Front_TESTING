@@ -40,8 +40,7 @@ const LeadCardViewPage = () => {
     const [potentials, setPotentials] = useState([]);
     const [statuses, setStatuses] = useState([]);
     const [sources, setSources] = useState([]);
-    const [leads, setLeads] = useState([]);               
-    const [displayedData, setDisplayedData] = useState([]);    
+    const [displayedData, setDisplayedData] = useState([]);
   
     // New states for bulk assignment
     const [selectedLeads, setSelectedLeads] = useState([]);
@@ -61,11 +60,155 @@ const LeadCardViewPage = () => {
     const [selectedSource, setSelectedSource] = useState('');
     const [leadsToShow, setLeadsToShow] = useState(null);
     const [showPagination, setShowPagination] = useState(true);
+
+    // Get page from URL or state
     const params = new URLSearchParams(location.search);
     const pageFromUrl = Number(params.get("page")) || 1;
-    const [currentPage, setCurrentPage] = useState(pageFromUrl);
+    const pageFromState = location.state?.returnPage;
+    
+    // Initialize currentPage with proper priority
+    const [currentPage, setCurrentPage] = useState(() => {
+        return pageFromState || pageFromUrl || 1;
+    });
 
     const token = localStorage.getItem("token"); 
+
+    // FIXED: Proper tab filtration logic
+// FIXED: Add modal filter states to dependencies
+const dataToDisplay = useMemo(() => {
+    let data = [];
+    
+    // First get the base data based on selected filter
+    if (selectedFilter === 'assignedToMe') {
+        data = assignedLeads;
+    } else if (selectedFilter === 'lost') {
+        data = lostLeads;
+    } else {
+        data = allLeads;
+    }
+
+    // Then apply search and date filters with tab-specific logic
+    return data.filter((item) => {
+        const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch =
+            match(item.clead_name) ||
+            match(item.corganization || item.c_organization) ||
+            match(item.cemail || item.c_email) ||
+            match(item.iphone_no || item.c_phone) ||
+            (selectedFilter === 'assignedToMe' && match(item.iassigned_by_name)) ||
+            (selectedFilter === 'assignedToMe' && match(item.statusDisplay));
+
+        let dateToFilter = item.dmodified_dt || item.d_modified_date;
+        if (selectedFilter === 'assignedToMe') {
+            dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+        }
+        
+        const isWithinDateRange = (date) => {
+            if (!date) return true;
+            const d = new Date(date);
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
+            return (!from || d >= from) && (!to || d <= to);
+        };
+        
+        const matchesDate = isWithinDateRange(dateToFilter);
+
+        // ADDED: Modal filters for specific tabs
+        let matchesModalFilters = true;
+        
+        // Only apply modal filters to these tabs
+        if (selectedFilter === 'all' || selectedFilter === 'leads' || selectedFilter === 'websiteLeads') {
+            // Filter by Potential
+            if (selectedPotential) {
+                const itemPotential = item.lead_potential?.clead_name || item.potentialDisplay;
+                if (itemPotential !== selectedPotential) {
+                    matchesModalFilters = false;
+                }
+            }
+            
+            // Filter by Status
+            if (selectedStatus) {
+                const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
+                if (itemStatus !== selectedStatus) {
+                    matchesModalFilters = false;
+                }
+            }
+            
+            // Filter by Source
+            if (selectedSource) {
+                if (item.lead_source_id !== Number(selectedSource)) {
+                    matchesModalFilters = false;
+                }
+            }
+            
+            // Filter by Industry
+            if (selectedIndustry) {
+                if (item.cindustry_id !== Number(selectedIndustry)) {
+                    matchesModalFilters = false;
+                }
+            }
+            
+            // Filter by Service
+            if (selectedService) {
+                if (item.iservice_id !== Number(selectedService)) {
+                    matchesModalFilters = false;
+                }
+            }
+        }
+
+        // Tab-specific business logic
+        const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+        const isActive = item.bactive === true || item.bactive === 'true';
+        const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
+
+        if (selectedFilter === 'all') {
+            return matchesSearch && matchesDate && matchesModalFilters && isActive;
+        } else if (selectedFilter === 'leads') {
+            return matchesSearch && matchesDate && matchesModalFilters && isActive && !isConverted && !isWebsite;
+        } else if (selectedFilter === 'websiteLeads') {
+            return matchesSearch && matchesDate && matchesModalFilters && isWebsite && isActive;
+        } else if (selectedFilter === 'lost') {
+            if (isActive === false) {
+                const isLeadLost = !isConverted && showLostLeads;
+                const isDealLost = isConverted && showLostDeals;
+                return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+            }
+            return false;
+        } else if (selectedFilter === 'assignedToMe') {
+            return matchesSearch && matchesDate && isActive;
+        }
+        return matchesSearch && matchesDate && matchesModalFilters;
+    });
+}, [
+    selectedFilter, 
+    assignedLeads, 
+    lostLeads, 
+    allLeads, 
+    searchTerm, 
+    fromDate, 
+    toDate, 
+    showLostLeads, 
+    showLostDeals,
+    // ADD THESE DEPENDENCIES:
+    selectedPotential,
+    selectedStatus,
+    selectedSource,
+    selectedIndustry,
+    selectedService
+]);
+
+    // FIXED: Proper displayed data calculation
+    const displayedDataCalculated = useMemo(() => {
+        if (leadsToShow !== null) {
+            return dataToDisplay.slice(0, leadsToShow);
+        } else {
+            const startIndex = (currentPage - 1) * leadsPerPage;
+            const endIndex = startIndex + leadsPerPage;
+            return dataToDisplay.slice(startIndex, endIndex);
+        }
+    }, [dataToDisplay, leadsToShow, currentPage, leadsPerPage]);
+
+    const totalPages = leadsToShow ? 1 : Math.ceil(dataToDisplay.length / leadsPerPage);
 
     useEffect(() => {
         // Change this function to async
@@ -127,6 +270,11 @@ const LeadCardViewPage = () => {
         setShowPagination(true);
     };
 
+    // Update displayed data when calculated data changes
+    useEffect(() => {
+        setDisplayedData(displayedDataCalculated);
+    }, [displayedDataCalculated]);
+
     useEffect(() => {
         const handleRefreshEvent = () => {
             setRefreshTrigger(prev => prev + 1);
@@ -159,6 +307,15 @@ const LeadCardViewPage = () => {
             setSelectedFilter(location.state.activeTab);
         }
     }, [location.state]);
+
+    // Handle back navigation from detail page
+    useEffect(() => {
+        if (location.state?.returnPage) {
+            setCurrentPage(location.state.returnPage);
+            // Clear the state after using it to prevent infinite loop
+            navigate(location.pathname + location.search, { replace: true, state: {} });
+        }
+    }, [location.state, location.pathname, location.search, navigate]);
 
     useEffect(() => {
         let extractedUserId = null;
@@ -279,55 +436,6 @@ const LeadCardViewPage = () => {
                 return 'bg-gray-300 text-gray-700';
         }
     };
-
-    const isWithinDateRange = (date) => {
-        if (!date) return true;
-        const d = new Date(date);
-        const from = fromDate ? new Date(fromDate) : null;
-        const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
-        return (!from || d >= from) && (!to || d <= to);
-    };
-
-    const applyFilters = useCallback((data, isAssigned = false) => {
-        return data.filter((item) => {
-            const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesSearch =
-                match(item.clead_name) ||
-                match(item.corganization || item.c_organization) ||
-                match(item.cemail || item.c_email) ||
-                match(item.iphone_no || item.c_phone) ||
-                (isAssigned && match(item.iassigned_by_name)) ||
-                (isAssigned && match(item.statusDisplay));
-
-            let dateToFilter = item.dmodified_dt || item.d_modified_date;
-            if (isAssigned) {
-                dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
-            }
-            const matchesDate = isWithinDateRange(dateToFilter);
-
-            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
-            const isActive = item.bactive === true || item.bactive === 'true';
-            const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
-
-            if (selectedFilter === 'all') {
-                return matchesSearch && matchesDate;
-            } else if (selectedFilter === 'leads') {
-                return matchesSearch && matchesDate && isActive && !isConverted && !isWebsite;
-            } else if (selectedFilter === 'websiteLeads') {
-                return matchesSearch && matchesDate && isWebsite && isActive;
-            } else if (selectedFilter === 'lost') {
-                if (isActive === false) {
-                    const isLeadLost = !isConverted && showLostLeads;
-                    const isDealLost = isConverted && showLostDeals;
-                    return matchesSearch && matchesDate && (isLeadLost || isDealLost);
-                }
-                return false;
-            } else if (selectedFilter === 'assignedToMe') {
-                return matchesSearch && matchesDate && isActive;
-            }
-            return matchesSearch && matchesDate;
-        });
-    }, [searchTerm, fromDate, toDate, selectedFilter, showLostLeads, showLostDeals]);
 
     const fetchLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) {
@@ -451,13 +559,12 @@ const LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken]);
 
+    // FIXED: Fetch data based on selected filter
     useEffect(() => {
         if (!currentUserId || !currentToken) return;
-        setCurrentPage(1);
-        if (selectedFilter !== 'lost') {
-            setShowLostLeads(true);
-            setShowLostDeals(true);
-        }
+        
+        setCurrentPage(1); // Reset to first page when filter changes
+        
         if (selectedFilter === 'assignedToMe') {
             fetchAssignedLeads();
         } else if (selectedFilter === 'lost') {
@@ -465,15 +572,12 @@ const LeadCardViewPage = () => {
         } else {
             fetchLeads();
         }
-    }, [selectedFilter, currentUserId, currentToken, fetchLeads, fetchAssignedLeads, fetchLostLeads, refreshTrigger]);
+    }, [selectedFilter, currentUserId, currentToken, refreshTrigger, fetchLeads, fetchAssignedLeads, fetchLostLeads]);
 
+    // Update URL when currentPage changes
     useEffect(() => {
         navigate(`?page=${currentPage}`, { replace: true });
-    }, [currentPage, navigate]); 
-
-    useEffect(() => {
-        setCurrentPage(pageFromUrl);
-    }, [pageFromUrl]);
+    }, [currentPage, navigate]);
 
     const handleSort = useCallback((key) => {
         setSortConfig(prevSortConfig => {
@@ -485,194 +589,52 @@ const LeadCardViewPage = () => {
         });
     }, []);
 
-    const dataToDisplay = useMemo(() => {
-        let data = [];
-        if (selectedFilter === 'assignedToMe') {
-            data = applyFilters(assignedLeads, true);
-        } else if (selectedFilter === 'lost') {
-            data = applyFilters(lostLeads, false);
-        } else {
-            data = applyFilters(allLeads, false);
-        }
-        return data;
-    }, [selectedFilter, assignedLeads, lostLeads, allLeads, applyFilters]);
-
-    const sortedData = useMemo(() => {
-        let sortableItems = [...dataToDisplay];
-        if (sortConfig.key) {
-            sortableItems.sort((a, b) => {
-                const getStringValue = (item, keys) => {
-                    for (const key of keys) {
-                        if (item && item[key] !== undefined && item[key] !== null) {
-                            return String(item[key]).toLowerCase();
-                        }
-                    }
-                    return '';
-                };
-                const getDateValue = (item, keys) => {
-                    for (const key of keys) {
-                        if (item && item[key]) {
-                            const date = new Date(item[key]);
-                            return isNaN(date.getTime()) ? new Date(0) : date;
-                        }
-                    }
-                    return new Date(0);
-                };
-
-                let aValue, bValue;
-                switch (sortConfig.key) {
-                    case 'clead_name':
-                        aValue = getStringValue(a, ['clead_name']);
-                        bValue = getStringValue(b, ['clead_name']);
-                        break;
-                    case 'corganization':
-                        aValue = getStringValue(a, ['corganization', 'c_organization']);
-                        bValue = getStringValue(b, ['corganization', 'c_organization']);
-                        break;
-                    case 'cemail':
-                        aValue = getStringValue(a, ['cemail', 'c_email']);
-                        bValue = getStringValue(b, ['cemail', 'c_email']);
-                        break;
-                    case 'iphone_no':
-                        aValue = getStringValue(a, ['iphone_no', 'c_phone']);
-                        bValue = getStringValue(b, ['iphone_no', 'c_phone']);
-                        break;
-                    case 'iassigned_by_name':
-                        aValue = getStringValue(a, ['iassigned_by_name']);
-                        bValue = getStringValue(b, ['iassigned_by_name']);
-                        break;
-                    case 'dcreate_dt':
-                        aValue = getDateValue(a, ['dcreate_dt', 'd_created_date']);
-                        bValue = getDateValue(b, ['dcreate_dt', 'd_created_date']);
-                        break;
-                    case 'dupdate_dt':
-                        aValue = getDateValue(a, ['dupdate_dt', 'dmodified_dt', 'd_modified_date']);
-                        bValue = getDateValue(b, ['dupdate_dt', 'dmodified_dt', 'd_modified_date']);
-                        break;
-                    case 'dmodified_dt':
-                        aValue = getDateValue(a, ['dmodified_dt', 'd_modified_date']);
-                        bValue = getDateValue(b, ['dmodified_dt', 'd_modified_date']);
-                        break;
-                    case 'statusDisplay':
-                        aValue = getStringValue(a, ['statusDisplay']);
-                        bValue = getStringValue(b, ['statusDisplay']);
-                        break;
-                    case 'lead_status':
-                        aValue = getStringValue(a.lead_status, ['clead_name']);
-                        bValue = getStringValue(b.lead_status, ['clead_name']);
-                        break;
-                    default:
-                        aValue = String(a[sortConfig.key] || '').toLowerCase();
-                        bValue = String(b[sortConfig.key] || '').toLowerCase();
-                }
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-        return sortableItems;
-    }, [dataToDisplay, sortConfig]);
-
-    const totalPages = Math.ceil(sortedData.length / leadsPerPage);
-
-    useEffect(() => {
-        const paginatedData = sortedData.slice(
-            (currentPage - 1) * leadsPerPage,
-            currentPage * leadsPerPage
-        );
-        setDisplayedData(paginatedData);
-    }, [sortedData, currentPage, leadsPerPage]);
-
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1);
     };
 
-    const handleFilterApply = () => {
-        let filtered = [...allLeads];
+    // FIXED: Simplified filter apply
+const handleFilterApply = () => {
+  // Close modal
+  setShowFilterModal(false);
+  // Reset to page 1 for new filter set
+  setCurrentPage(1);
+  // This triggers useMemo recalculation on dataToDisplay because filtering states changed
+};
 
-        // Filter by Potential
-        if (selectedPotential) {
-            filtered = filtered.filter(
-                lead => lead.lead_potential?.clead_name === selectedPotential
-            );
-        }
 
-        // Filter by Status
-        if (selectedStatus) {
-            filtered = filtered.filter(
-                lead => lead.lead_status?.clead_name === selectedStatus
-            );
-        }
+   const handleResetFilters = () => {
+    setFromDate('');
+    setToDate('');
+    setSelectedPotential('');
+    setSelectedStatus('');
+    setSelectedSource('');
+    setSelectedIndustry('');
+    setSelectedService('');
+    setSearchTerm(''); // Also reset search
+    setCurrentPage(1);
+};
 
-        // Filter by Source
-        if (selectedSource) {
-            filtered = filtered.filter(lead => lead.lead_source_id === Number(selectedSource));
-        }
-
-        // Filter by Industry
-        if (selectedIndustry) {
-            filtered = filtered.filter(lead => lead.cindustry_id === Number(selectedIndustry));
-        }
-
-        // Filter by Service
-        if (selectedService) {
-            filtered = filtered.filter(lead => lead.iservice_id === Number(selectedService));
-        }
-
-        // Filter Lost Leads/Deals
-        if (selectedFilter === 'lost') {
-            if (!showLostLeads) {
-                filtered = filtered.filter(
-                    lead => lead.bisConverted === true || lead.bactive === true
-                );
-            }
-            if (!showLostDeals) {
-                filtered = filtered.filter(
-                    lead => lead.bisConverted !== true
-                );
-            }
-        }
-        // Filter by date
-        if (fromDate) {
-            const fromDateObj = new Date(fromDate);
-            fromDateObj.setHours(0, 0, 0, 0);
-
-            filtered = filtered.filter(
-                lead => new Date(lead.dcreated_dt) >= fromDateObj
-            );
-        }
-
-        if (toDate) {
-            const toDateObj = new Date(toDate);
-            toDateObj.setHours(23, 59, 59, 999);
-            
-            filtered = filtered.filter(
-                lead => new Date(lead.dcreated_dt) <= toDateObj
-            );
-        }
-
-        setDisplayedData(filtered);
-        setShowFilterModal(false); 
-    };
-
-    const handleResetFilters = () => {
-        setFromDate('');
-        setToDate('');
+// Add this useEffect to clear modal filters when switching to assignedToMe or lost
+useEffect(() => {
+    if (selectedFilter === 'assignedToMe' || selectedFilter === 'lost') {
         setSelectedPotential('');
         setSelectedStatus('');
         setSelectedSource('');
         setSelectedIndustry('');
         setSelectedService('');
-        setDisplayedData(allLeads);
-    };
+    }
+}, [selectedFilter]);
 
     const goToDetail = (id) => {
-        navigate(`/leaddetailview/${id}?page=${currentPage}`);
+        // Pass current page state to detail page
+        navigate(`/leaddetailview/${id}`, { 
+            state: { 
+                returnPage: currentPage,
+                activeTab: selectedFilter 
+            } 
+        });
     };
 
     const getSortIndicator = (key) => {
@@ -862,6 +824,7 @@ const LeadCardViewPage = () => {
                 </div>
             )}
 
+
             <div className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-3">
                 <input
                     type="text"
@@ -917,17 +880,20 @@ const LeadCardViewPage = () => {
                         <button
                             key={filterKey}
                             onClick={() => {
-                                setSelectedFilter(filterKey);
-                                setSearchTerm('');
-                                setFromDate('');
-                                setToDate('');
-                                setCurrentPage(1);
-                                setSelectedPotential('');
-                                setSelectedStatus('');
-                                setSelectedSource('');
-                                setSelectedIndustry(''); 
-                                setSelectedService('');
-                            }}
+    setSelectedFilter(filterKey);
+    setSearchTerm('');
+    setFromDate('');
+    setToDate('');
+    setCurrentPage(1);
+    setSelectedPotential('');
+    setSelectedStatus('');
+    setSelectedSource('');
+    setSelectedIndustry(''); 
+    setSelectedService('');
+    
+    // Clear any location state when changing filters
+    navigate(location.pathname, { replace: true });
+}}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 selectedFilter === filterKey
                                     ? (filterKey === 'lost' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')
@@ -999,15 +965,17 @@ const LeadCardViewPage = () => {
                 statuses={statuses}
                 sources={sources}
                 industries={industries}
+                setIndustries={setIndustries}
                 selectedIndustry={selectedIndustry}
                 setSelectedIndustry={setSelectedIndustry}
                 services={services}
+                setServices={setServices}
                 selectedService={selectedService}
                 setSelectedService={setSelectedService}
             />
 
             {showAssignModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-30 flex col col-2 items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
                         <h2 className="text-lg font-medium text-gray-800">Assign Selected Leads</h2>
                         
@@ -1185,7 +1153,7 @@ const LeadCardViewPage = () => {
                         <>
                         <div className="flex justify-end my-4">
                             <LeadCountSelector
-                                leadsCount={sortedData.length}
+                                leadsCount={dataToDisplay.length}
                                 onSelect={handleSelectCount}
                                 selectedCount={leadsToShow}
                             />
@@ -1381,13 +1349,13 @@ const LeadCardViewPage = () => {
                                             className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
                                         />
                                         </div>
+
                                         
-                                        {(item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1 ) && (
+                                        {(item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1) && (
                                             <div className="absolute top-3 left-10 text-blue-600" title="Website Lead">
                                                 <FaGlobe size={18} />
                                             </div>
                                         )}
-
                                         <div onClick={() => goToDetail(item.ilead_id)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
                                                 <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
@@ -1434,7 +1402,7 @@ const LeadCardViewPage = () => {
                 </>
             )}
 
-            {totalPages > 1 && (
+            {totalPages > 1 && showPagination && (
                 <div className="flex justify-center items-center space-x-2 mt-6">
                     <button
                     onClick={() =>
@@ -1459,6 +1427,7 @@ const LeadCardViewPage = () => {
                     </button>
                 </div>
             )}
+
         </div>
     );
 };

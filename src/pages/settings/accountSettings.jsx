@@ -246,6 +246,7 @@ const handleSaveGeneralSettings = useCallback(async () => {
 
 
   return (
+    <>
     <div className="relative w-full bg-[#f9f9f9] rounded-3xl shadow-md p-6 mt-4 border border-gray-200">
       {loading && (
         <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-50 rounded-3xl">
@@ -430,6 +431,10 @@ const handleSaveGeneralSettings = useCallback(async () => {
         )}
       </AnimatePresence>
     </div>
+    {false && <SettingsPage settingsData={generalSettings } />}
+    {false && <LeadDetailView settingsData={generalSettings } />}
+
+    </>
   );
 };
 

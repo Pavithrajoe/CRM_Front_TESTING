@@ -84,6 +84,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     projectValue: '',
     assignedTo: '',
     assignToMe: false,
+    notifiedTo: '',
+    notifyToMe: false,
     dueDate: '',
   });
   const [remarkErrors, setRemarkErrors] = useState({
@@ -95,10 +97,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [demoSessions, setDemoSessions] = useState([]);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
-    const [dueDate, setDueDate] = useState(null);
-
-
-
+  const [dueDate, setDueDate] = useState(null);
 
    const PopperProps = {
     placement: 'top-start',
@@ -347,7 +346,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
-
       const statusMap = {};
       const formattedStages = Array.isArray(data.response)
         ? data.response
@@ -497,7 +495,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       remark: '', 
       projectValue: '',
       assignedTo: '',
-      assignToMe: false
+      assignToMe: false,
+      notifiedTo: '', 
+      notifyToMe: false,
     });
     setRemarkErrors({ remark: '', projectValue: '' });
     setShowRemarkDialog(true);
@@ -532,7 +532,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         remark: '', 
         projectValue: '',
         assignedTo: '',
-        assignToMe: false
+        assignToMe: false,
+        notifiedTo: '',
+        notifyToMe: false,
+        dueDate: '',
       });
       setRemarkErrors({ remark: '', projectValue: '' });
       setShowRemarkDialog(true);
@@ -652,12 +655,30 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }));
   };
 
+  const handleNotifyToMeChange = (e) => {
+    const checked = e.target.checked;
+    setRemarkData(prev => ({
+      ...prev,
+      notifyToMe: checked,
+      notifiedTo: checked ? loggedInUserId : ''
+    }));
+  };
+
   const handleAssignedToChange = (e) => {
     const value = e.target.value;
     setRemarkData(prev => ({
       ...prev,
       assignedTo: value,
       assignToMe: value === loggedInUserId
+    }));
+  };
+
+    const handleNotifiedToChange = (e) => {
+    const value = e.target.value;
+    setRemarkData(prev => ({
+      ...prev,
+      notifiedTo: value,
+      NotifyToMe: value === loggedInUserId
     }));
   };
 
@@ -1131,18 +1152,56 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               </p>
             </div>
 
-   <LocalizationProvider dateAdapter={AdapterDayjs}>
-  <DateTimePicker
-    label="Due Date & Time"
-    value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
-     inputFormat="DD/MM/YYYY hh:mm a"
-    onChange={newValue => {
-       
-      setRemarkData(prev => ({
-        ...prev,
-dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      }));
-    }}
-      
+            {/* Notify To Section */}
+            <div className="mt-4 mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-gray-700">
+                  Notify To
+                </label>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={remarkData.notifyToMe}
+                      onChange={handleNotifyToMeChange}
+                      color="primary"
+                    />
+                  }
+                  label="Notify to me"
+                />
+              </div>
+              
+              <select
+                className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm"
+                value={remarkData.notifiedTo}
+                onChange={handleNotifiedToChange}
+                disabled={remarkData.notifyToMe}
+              >
+                <option value="">Select User</option>
+                {users
+                  .filter(user => user.bactive === true)
+                  .map((user) => (
+                    <option key={user.iUser_id} value={user.iUser_id}>
+                      {user.cFull_name}
+                    </option>
+                  ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Optionally notify this lead to someone when submitting the remark
+              </p>
+            </div>
+
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker
+              label="Due Date & Time"
+              value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
+              inputFormat="DD/MM/YYYY hh:mm a"
+              onChange={newValue => {
+                
+                setRemarkData(prev => ({
+                  ...prev,
+          dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      }));
+              }}
+                
 
     
     viewRenderers={{

@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 export default function KPIStats(data) {
-  // console.log("KPIStats data:", data);
+  console.log("KPIStats data:", data);
   const [hotCount, setHotCount] = useState(0);
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);
@@ -125,49 +125,6 @@ useEffect(() => {
   setLostCount(lost);
   setWebsiteLeadCount(websiteLeads);
 }, [leads]);
-
-  //   let hot = 0;
-  //   let warm = 0;
-  //   let cold = 0;
-  //   let won = 0;
-  //   let lost = 0;
-  //   let active = 0;
-
-  //   leads.forEach((lead) => {
-  //     if (lead.bactive === false) {
-  //       // A lead is lost if bactive is false
-  //       lost++;
-  //     } else {
-  //       // These are active leads (bactive === true)
-  //       active++;
-
-  //       // Check for 'Won' leads
-  //       if (lead.bisConverted === true) {
-  //         won++;
-  //       }
-
-  //       // Check for Hot, Warm, Cold only if not converted yet and active
-  //       // Assuming 'Won' leads are not also 'Hot/Warm/Cold' in the same context
-  //       if (lead.bisConverted === false) {
-  //         const potential = lead.lead_potential?.clead_name;
-  //         if (potential === "HOT") {
-  //           hot++;
-  //         } else if (potential === "WARM") {
-  //           warm++;
-  //         } else if (potential === "COLD") {
-  //           cold++;
-  //         }
-  //       }
-  //     }
-  //   });
-
-  //   setHotCount(hot);
-  //   setWarmCount(warm);
-  //   setColdCount(cold);
-  //   setWonCount(won);
-  //   setActiveCount(active);
-  //   setLostCount(lost);
-  // }, [leads]);
 
   const kpiData = [
     {

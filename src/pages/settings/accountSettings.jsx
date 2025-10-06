@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ENDPOINTS } from '../../api/constraints';
+import LeadDetailView from "../../context/leaddetailsview";
 
 const AccountSettings = () => {
   const token = localStorage.getItem("token");
@@ -432,7 +433,6 @@ const handleSaveGeneralSettings = useCallback(async () => {
       </AnimatePresence>
     </div>
     {false && <SettingsPage settingsData={generalSettings } />}
-    {false && <LeadDetailView settingsData={generalSettings } />}
 
     </>
   );

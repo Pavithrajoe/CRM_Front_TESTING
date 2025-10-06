@@ -57,7 +57,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const ProfileCard = () => {
+const ProfileCard = ({   settingsData, isLoadingSettings = false}) => {
   const { leadId } = useParams();
   const [history, setHistory] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -108,6 +108,20 @@ const ProfileCard = () => {
   };
 
     const editFormRef = useRef(null);
+
+      useEffect(() => {
+    if (settingsData) {
+      console.log("ProfileCard received settings:", settingsData);
+          }
+  }, [settingsData]);
+
+  if (isLoadingSettings) {
+    return <div>Loading settings...</div>;
+  }
+
+useEffect(() => {
+  console.log("Profile settings from parent:", settingsData);
+}, [settingsData]);
 
 
       useEffect(() => {
@@ -473,18 +487,18 @@ const ProfileCard = () => {
             >
               <FiEdit size={18} />
             </button>
-
-            <button
-              onClick={() => {
-                // console.log("Mail button clicked!");
-                setIsMailHistoryModalOpen(true);
-              }}
-              className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
-              aria-label="Mail History"
-              title="Mail History"
-            >
-              <FiMail size={18} />
-            </button>
+      {settingsData?.mail_access && (
+  <button
+    onClick={() => {
+      setIsMailHistoryModalOpen(true);
+    }}
+    className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+    aria-label="Mail History"
+    title="Mail History"
+  >
+    <FiMail size={18} />
+  </button>
+)}
           </div>
 
           <div className=" items-start and w-full sm:items-startsm:gap-6 pt-6">
@@ -850,7 +864,12 @@ const ProfileCard = () => {
             </div>
           </div>
         )}
+
+
+    
       </>
+
+      
     </ErrorBoundary>
   );
 };

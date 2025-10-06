@@ -135,6 +135,7 @@ const LeadDetailView = () => {
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
   const [mailContent, setMailContent] = useState("");
+const [showUserProfile, setShowUserProfile] = useState(false);
   const [isWon, setIsWon] = useState(false);
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
@@ -143,6 +144,14 @@ const LeadDetailView = () => {
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [isSendingMail, setIsSendingMail] = useState(false);
   const [statusRemarks, setStatusRemarks] = useState([]);
+    const [users, setUsers] = useState([]);
+      const [urlUserId, setUrlUserId] = useState(null); 
+        const [loadingProfile, setLoadingProfile] = useState(false);
+
+
+
+
+  
 
   // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
@@ -160,6 +169,18 @@ const LeadDetailView = () => {
 
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '',currencyId: null  });
+
+  const [profileSettings, setProfileSettings] = useState(null);
+
+const [userSettings, setUserSettings] = useState({
+    mail_access: false,
+    whatsapp_access: false,
+    phone_access: false,
+    website_access: false
+  });
+
+
+
 
   // Derived state
   const isLeadActive =
@@ -180,6 +201,8 @@ const LeadDetailView = () => {
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
+
+  
 
   // Extract company info from localStorage
   const extractAllUserInfo = () => {
@@ -225,6 +248,69 @@ const LeadDetailView = () => {
       extractAllUserInfo();
     }
   }, [leadId]);
+
+ // Add this useEffect to call fetchUserProfile when component mounts
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      setLoadingProfile(true);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Authentication required!");
+        setLoadingProfile(false);
+        return;
+      }
+
+      // Decode JWT token to extract user ID
+      const base64Payload = token.split(".")[1];
+      const decodedPayload = JSON.parse(atob(base64Payload));
+      const userId = decodedPayload?.id || decodedPayload?.user_id;
+
+      // If no ID in token, use fallback or show error
+      if (!userId && !urlUserId) {
+        toast.error("User ID not found!");
+        setLoadingProfile(false);
+        return;
+      }
+
+      const finalUserId = urlUserId || userId;
+
+      // Fetch user details
+      const response = await fetch(`${ENDPOINTS.USERS}/${finalUserId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to fetch user");
+
+
+
+
+setProfileSettings(data)
+      // Update settings
+      setUserSettings({
+        mail_access: data.mail_access || data.email_access || false,
+        whatsapp_access: data.whatsapp_access || false,
+        phone_access: data.phone_access || false,
+        website_access: data.website_access || false,
+      });
+
+      console.log("✅ User settings loaded:", data);
+    } catch (err) {
+      console.error("❌ Error fetching user:", err);
+      toast.error("Failed to load user details.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  fetchUserProfile();
+}, [urlUserId]);
 
   // PDF View Handler
 const handleViewPdf = async (quotation) => {
@@ -304,6 +390,8 @@ const handleDownloadPdf = async (quotation) => {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    
 
     if (!convertResponse.ok) {
       setImmediateWonStatus(false);
@@ -402,6 +490,9 @@ const handleLostClick = () => {
       console.error("Failed to fetch currencies", error);
     }
   };
+  const handleCloseMail = () => {
+  setIsMailOpen(false);
+};
 
   useEffect(() => {
     fetchCurrencies();
@@ -851,6 +942,7 @@ const formatDate = (dateInput) => {
 };
 
 return (
+  <>
   <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
     {showConfetti && (
       <Confetti
@@ -866,6 +958,7 @@ return (
       <div className="sticky top-4 z-10 space-y-4">
         <ProfileCard
           leadId={leadId}
+          settingsData={profileSettings}
           isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
         {isLeadActive && <ActionCard leadId={leadId} />}
@@ -944,6 +1037,8 @@ return (
           
           {showActionButtons && (
             <>
+                {userSettings.mail_access && (
+
               <button
                 onClick={() => setIsMailOpen(true)}
                 className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
@@ -953,6 +1048,7 @@ return (
                 <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
                 <div className="w-px h-5 bg-gray-600"></div>
               </button>
+                )}
 
               {!(leadData?.bisConverted === true) && (
                 <button
@@ -1293,9 +1389,9 @@ return (
       {/* Email Compose Dialog */}
      {isMailOpen && (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll" onClick={handleCloseMail}
   >
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"   onClick={(e) => e.stopPropagation()} >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -1491,6 +1587,11 @@ return (
   </div>
 )}
     </div>
+    {showUserProfile && <UserProfile settingsData={settingsData} />}
+    </>
+
+                 
+
   );
 };
 

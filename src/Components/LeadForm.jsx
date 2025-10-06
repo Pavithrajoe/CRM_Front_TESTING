@@ -1940,7 +1940,7 @@ const handleSubmit = async (e) => {
             displayField: "subindustry_name",
             formField: "csubindustry_id",
             error: errors.csubindustry_id,
-            disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
+            disabled: !form.cindustry_id || filteredSubIndustries.d === 0,
             required: false,
             emptyType: "subindustry"
           },

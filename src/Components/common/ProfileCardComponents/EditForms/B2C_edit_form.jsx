@@ -763,12 +763,15 @@ const handleSubmit = async (e) => {
       await updateLeadProfile(form); 
       await onSave(form); 
       showPopup("Success", "Profile updated successfully!", "success");
-      setSuccessMessage("Profile updated successfully!");
-    } catch (error) {
+      // setSuccessMessage("Profile updated successfully!");
+      setTimeout(() => {onClose(); }, 1000);
+    } 
+    catch (error) {
       showPopup("Error", "Failed to update profile.", "error");
       console.error("Error saving profile:", error);
     }
-  } else {
+  } 
+  else {
     // console.log("Validation failed:", errors);
   }
 };
@@ -1322,7 +1325,7 @@ const handleSubmit = async (e) => {
               </label>
             <div className="flex gap-2">
               {/* Country Code Dropdown */}
-              {/*
+              
               <div className="relative" ref={phoneCountryCodeRef}>
                 <button
                   type="button"
@@ -1351,7 +1354,7 @@ const handleSubmit = async (e) => {
                   </div>
                 )}
               </div>
-              */}
+             
 
               <input
                 type="text"
@@ -1377,7 +1380,7 @@ const handleSubmit = async (e) => {
                 WhatsApp Number
               </label>
               <div className="flex gap-2">
-              {/* <div className="relative" ref={whatsappCountryCodeRef}>
+              <div className="relative" ref={whatsappCountryCodeRef}>
                 <button
                   type="button"
                   onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
@@ -1388,9 +1391,9 @@ const handleSubmit = async (e) => {
                   {!isReadOnly && <FiChevronDown size={16} className="ml-1" />}
                 </button>
                 {isWhatsappCountryCodeOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> */}
+                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm"> 
                     {/* Use the dynamically generated allCountries array */}
-                    {/* {allCountries.map((country) => (
+                     {allCountries.map((country) => (
                       <div
                         key={country.countryCode}
                         className={dropdownItemClasses}
@@ -1405,7 +1408,7 @@ const handleSubmit = async (e) => {
                     ))}
                   </div>
                 )}
-              </div> */}
+              </div> 
               <input
                 type="text"
                 id="cwhatsapp"

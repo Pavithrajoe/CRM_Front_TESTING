@@ -9,11 +9,25 @@ import AcheivementDashboard from './userPage/acheivementPage';
 import UserCallLogs from './userPage/userCallLogs';
 import UserLead from '../pages/userPage/userLead'
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
+import UserDashboard from './userPage/userOverview'; 
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
   FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, FaMobile,
   FaGlobe, FaWhatsapp, FaEnvelopeOpen
 } from 'react-icons/fa';
+
+// Placeholder for the new Overview component (Dashboard)
+const OverviewDashboard = ({ userId }) => (
+    <div className="text-center p-10">
+        <FaChartLine size={50} className="text-blue-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800">User Overview Dashboard</h2>
+        <p className="text-gray-600">Summary and key metrics for user ID: {userId}</p>
+        <div className="mt-4 p-4 bg-gray-50 border rounded-lg">
+            {/* Insert actual dashboard content here */}
+            <p className="text-sm text-gray-500">This area shows an aggregate view of the user's performance.</p>
+        </div>
+    </div>
+);
 
 // Reusable ToggleSwitch component
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
@@ -79,14 +93,15 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   </div>
 );
 
-const tabs = ['Target', 'History', 'Settings', 'Achievement', 'Call Logs', 'User Leads'];
+const tabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'Call Logs', 'User Leads'];
 
 const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
   const { userId } = useParams();
-    const token = localStorage.getItem('token'); 
+  const token = localStorage.getItem('token'); 
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('Target');
+  // const [activeTab, setActiveTab] = useState('Target');
+  const [activeTab, setActiveTab] = useState('Overview');
   const [showForm, setShowForm] = useState(false);
   const [editFormData, setEditFormData] = useState({
     cFull_name: '',
@@ -278,19 +293,19 @@ const showAppMessage = (message, type = 'success') => {
     showAppMessage('DCRM user created and settings configured successfully!', 'success');
   }, []);
 
- const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
-  
-  setEditFormData((prev) => ({
-    ...prev,
-    [name]: 
-      type === "checkbox"
-        ? checked
-        : name === "reports_to"
-          ? value === "" ? null : parseInt(value)
-          : value,
-  }));
-};
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: 
+        type === "checkbox"
+          ? checked
+          : name === "reports_to"
+            ? value === "" ? null : parseInt(value)
+            : value,
+    }));
+  };
 
 
 
@@ -301,8 +316,6 @@ const showAppMessage = (message, type = 'success') => {
 
   try {
     const token = localStorage.getItem("token");
-
-    // Prepare payload ensuring reports_to is null instead of ""
     const payload = {
       ...editFormData,
       reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
@@ -323,7 +336,7 @@ const showAppMessage = (message, type = 'success') => {
 
     setUser(updated);
     setShowForm(false);
-showAppMessage("Profile updated successfully!", "success");
+    showAppMessage("Profile updated successfully!", "success");
   } catch (err) {
     console.error(err);
     showAppMessage(`Failed to update profile: ${err.message}`, "error");
@@ -331,7 +344,6 @@ showAppMessage("Profile updated successfully!", "success");
     setIsSubmitting(false);
   }
 };
-
 
   const handleFormClose = () => {
     setEditFormData({
@@ -384,6 +396,54 @@ showAppMessage("Profile updated successfully!", "success");
 
       <div className="flex items-center gap-4 flex-wrap mt-6">
         {isProfileCardVisible ? (
+          <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-4"> 
+            <div className="flex items-center gap-4">
+              <FaUserCircle size={60} className="text-blue-600" />
+              <div className="flex-grow">
+                <h3 className="text-lg font-semibold text-gray-800">{user.cFull_name}</h3>
+                <p className="text-sm text-gray-600">@{user.cUser_name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2"> 
+                  {user.bactive !== undefined && (
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize inline-block ${
+                      user.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
+                    </span>
+                  )}
+
+                  {user.DCRM_enabled && (
+                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
+                      DCRM Enabled
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 self-start"> 
+              <button
+                onClick={() => setIsProfileCardVisible(false)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium border border-blue-600 px-3 py-1 rounded-lg transition-colors"
+              >
+                Collapse
+              </button>
+              <button
+                onClick={() => setShowForm(true)}
+                className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-300"
+                aria-label="Edit Profile"
+              >
+                <FaEdit size={18} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <FaUserCircle
+            size={60}
+            className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
+            onClick={() => setIsProfileCardVisible(true)}
+            aria-label="Expand Profile Card"
+          />
+        )}
+        {/* {isProfileCardVisible ? (
           <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
             <FaUserCircle size={60} className="text-blue-600" />
             <div className="flex-grow">
@@ -395,6 +455,8 @@ showAppMessage("Profile updated successfully!", "success");
                   {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
                 </span>
               )}
+
+              
               {user.DCRM_enabled && (
                 <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
                   DCRM Enabled
@@ -424,7 +486,7 @@ showAppMessage("Profile updated successfully!", "success");
             onClick={() => setIsProfileCardVisible(true)}
             aria-label="Expand Profile Card"
           />
-        )}
+        )} */}
 
         <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
           {tabs.map((tab) => (
@@ -442,6 +504,14 @@ showAppMessage("Profile updated successfully!", "success");
       </div>
 
       <div className="flex-grow mt-6">
+         {/* UserDashboard */}
+        {activeTab === 'Overview' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            {/* <UserDashboard profileUserId={userId} />  */}
+            <UserDashboard /> 
+          </div>
+        )}
+
         {activeTab === 'Target' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
             <TargetDashboard userId={userId} />
@@ -469,21 +539,21 @@ showAppMessage("Profile updated successfully!", "success");
         )}
 
        {activeTab === 'User Leads' && (
-  <div className="p-4 bg-white rounded-xl shadow-md">
-    <UserLead userId={userId} token={token} />
-  </div>
-)}
-      </div>
+        <div className="p-4 bg-white rounded-xl shadow-md">
+          <UserLead userId={userId} token={token} />
+        </div>
+      )}
+    </div>
 
       {showForm && (
-  <div 
-    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-    onClick={handleFormClose} 
-  >
-    <div 
-      className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10"
-      onClick={(e) => e.stopPropagation()} 
-    >
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+          onClick={handleFormClose} 
+        >
+        <div 
+          className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10"
+          onClick={(e) => e.stopPropagation()} 
+        >
       <button
         onClick={handleFormClose}
         className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100"

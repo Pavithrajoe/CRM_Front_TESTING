@@ -1,20 +1,19 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {FiSave, FiX, FiChevronDown, FiCamera,} from "react-icons/fi";
 import axios from "axios";
-// import { ENDPOINTS } from "../../../../api/constraints";
-// import { ENDPOINTS } from "../../../../api/constraints";
 import { ENDPOINTS } from "./../../../../api/constraints";
 import { usePopup } from "../../../../context/PopupContext";
 import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
+import { useNavigate } from "react-router-dom";
 import countries from 'i18n-iso-countries';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
 const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
-    const modalRef = useRef(null);
-
-    const { showPopup } = usePopup(); 
+  const navigate = useNavigate();
+  const modalRef = useRef(null);
+  const { showPopup } = usePopup(); 
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = "";
@@ -764,6 +763,7 @@ const handleSubmit = async (e) => {
       await updateLeadProfile(); 
       await onSave(form); 
       showPopup("Success", "Profile updated successfully!", "success");
+      setTimeout(() => {onClose();  }, 1000);
     } catch (error) {
       showPopup("Error", "Failed to update profile.", "error");
       console.error("Error saving profile:", error);
@@ -773,7 +773,7 @@ const handleSubmit = async (e) => {
 
   useEffect(() => {
   if (successMessage) {
-    const timeout = setTimeout(() => setSuccessMessage(""), 3000);
+    const timeout = setTimeout(() => setSuccessMessage(""), 1000);
     return () => clearTimeout(timeout);
   }
 }, [successMessage]);
@@ -1350,8 +1350,6 @@ const handleSubmit = async (e) => {
                   </div>
                 )}
               </div>
-              
-
               <input
                 type="text"
                 id="iphone_no"

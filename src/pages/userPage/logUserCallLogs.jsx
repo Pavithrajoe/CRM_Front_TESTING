@@ -166,9 +166,9 @@ function LogUserCallLogs() {
     setCallLogs(logsArray);
     
     // Check if logsArray is empty and a 'no logs found' toast hasn't been shown
-    if (logsArray.length === 0) {
-      toast.info('No call logs found for this user');
-    }
+    // if (logsArray.length === 0) {
+    //   toast.info('No call logs found for this user');
+    // }
   } catch (err) {
     console.error('Fetch call logs error:', err);
     // Check if an error has already been set to avoid duplicate toasts

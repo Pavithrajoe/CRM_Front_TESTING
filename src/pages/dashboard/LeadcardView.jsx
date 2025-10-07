@@ -1051,7 +1051,7 @@ useEffect(() => {
 
             {showImportModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 " onClick={() => setShowImportModal(false)}>
-                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4" onClick={(e)=>e.stopPropagation()} >
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 h-[50vh] overflow-y-scroll " onClick={(e)=>e.stopPropagation()} >
                         <h2 className="text-lg font-medium text-gray-800">Import Leads</h2>
 
                         <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-4">

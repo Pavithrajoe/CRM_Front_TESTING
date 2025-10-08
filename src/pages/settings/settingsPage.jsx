@@ -38,7 +38,7 @@ const SettingsPage = () => {
           </div>
 
            <div>
-            <h2 className="text-lg font-semibold mb-3">Access Control</h2>
+            <h2 className="text-lg font-semibold mb-3">Company Masters</h2>
             <ul className="space-y-2">
               <li><NavLink to="lable" className={navLinkClass}>Lable Master</NavLink></li>
               <li><NavLink to="terms" className={navLinkClass}>Terms and condition</NavLink></li>

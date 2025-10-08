@@ -85,7 +85,19 @@ export default function MasterModal({
   const [isLoadingParentOptions, setIsLoadingParentOptions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [openParents, setOpenParents] = useState({});
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => {
+  if (!master) return false;
+  const hasSeen = localStorage.getItem(`master_intro_seen_${master.title}_${userId}`);
+  return !hasSeen;
+});
+
+// Add this function to handle intro close properly
+const handleIntroClose = () => {
+  if (master && userId) {
+    localStorage.setItem(`master_intro_seen_${master.title}_${userId}`, 'true');
+  }
+  setShowIntro(false);
+};
 
   const isLabelMaster = useMemo(
     () => master?.title === "Label Master",
@@ -1146,10 +1158,26 @@ toast.success(`${master.title} deleted successfully!`, {
     "link",
   ];
 
-  if (!master) {
+
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    // If intro is showing and user clicks outside, close the intro
+    if (showIntro && !event.target.closest('.intro-modal-content')) {
+      handleIntroClose();
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [showIntro]);
+
+
+     if (!master) {
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl text-center">
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl text-center" onClick={(e) => e.stopPropagation()}>
           <h2 className="text-xl font-bold mb-4 text-red-600">
             Error: Master configuration not provided.
           </h2>
@@ -1165,9 +1193,7 @@ toast.success(`${master.title} deleted successfully!`, {
         </div>
       </div>
     );
-  }
-
-if (showIntro) {
+  } 
   return (
     <>
       <ToastContainer
@@ -1181,587 +1207,607 @@ if (showIntro) {
         draggable
         pauseOnHover
       />
-      <IntroModal 
-        masterTitle={master.title} 
-        onClose={() => setShowIntro(false)} 
-      />
-    </>
-  );
-}
-
-  return (
-  <>
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-    />
-    <div 
-      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose} 
-    >
       <div 
-        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()} 
+        className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4"
+        onClick={onClose} 
       >
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-800">
-          {master.title} Master
-        </h2>
-        <button
-          onClick={onClose}
-          className="related top-10 right-10 ms-[800px] mt-[-65px] text-gray-500 hover:text-gray-700 text-3xl font-bold"
+        <div 
+          className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl h-[75vh] flex flex-col border border-blue-200 overflow-y-scroll"
+          onClick={(e) => e.stopPropagation()} 
         >
-          &times;
-        </button>
+          {showIntro ? (
+            // Intro content
+            <div className="intro-modal-content flex-1 flex flex-col">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-100">
+                <h2 className="text-2xl font-bold text-blue-800">
+                  {master.title} Management
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="text-blue-500 hover:text-blue-700 text-2xl font-bold bg-blue-50 hover:bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                >
+                  &times;
+                </button>
+              </div>
 
-        {apiError && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-            role="alert"
-          >
-            {apiError}
-          </div>
-        )}
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="mb-8 text-center">
+                  <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 mb-6">
+                    <p className="text-gray-700 mb-4 text-lg font-medium">
+                      {master.title === "Label Master" 
+                        ? "Here you can customize the names of all services and forms." 
+                        : master.title === "Industry"
+                        ? "Add or edit industry categories for your company."
+                        : master.title === "Lead Source"
+                        ? "Manage the sources from which you acquire leads."
+                        : "Here you can manage your company's master data. Add, edit or delete items as needed."}
+                    </p>
+                    <p className="text-blue-600">
+                      {master.title === "Label Master"
+                        ? "Customize labels to match your company's terminology."
+                        : "Add new items or modify existing ones as your business evolves."}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <button
+                    onClick={handleIntroClose}
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    Continue to {master.title}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Main modal content (your existing content)
+            <>
+              <div className="flex justify-between items-center mb-4 pb-4 border-b border-blue-100">
+                <h2 className="text-2xl font-bold text-blue-800">
+                  {master.title} Master
+                </h2>
+                <button
+                  onClick={onClose}
+                  className="text-blue-500 hover:text-blue-700 text-2xl font-bold bg-blue-50 hover:bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                >
+                  &times;
+                </button>
+              </div>
 
-        <div className="flex flex-1 mt-10 overflow-hidden">
-          {/* Existing Items List (Left Side) */}
-          <div className="w-1/2 pr-4 overflow-y-auto border-r border-gray-200">
-  <h3 className="text-xl font-semibold mb-3 text-blue-700">
-    Existing {master.title}
-  </h3>
-  
-  {/* Search Bar */}
-  <div className="mb-4 relative">
-    <input
-      type="text"
-      placeholder={`Search ${master.title}...`}
-      className="w-full p-2 pl-8 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-      value={searchTerm}
-      onChange={handleSearchChange}
-    />
-    <svg
-      className="absolute left-2.5 top-3 h-4 w-4 text-gray-400"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-      ></path>
-    </svg>
-  </div>
+              {apiError && (
+                <div
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4"
+                  role="alert"
+                >
+                  {apiError}
+                </div>
+              )}
 
-  {isLoadingItems ? (
-    <div className="flex justify-center items-center h-full">
-      <p>Loading items...</p>
-    </div>
-            ) : (
-              <>
-                {master.isHierarchical ? (
-                  <div className="space-y-4">
-                    {groupedSubItems.length > 0 ? (
-                      groupedSubItems.map(group => (
-                        <div key={group.parentId} className="mb-4 border rounded-md">
-                          {/* Parent Section Header */}
-                          <div
-                            onClick={() =>
-                              setOpenParents(prev => ({
-                                ...prev,
-                                [group.parentId]: !prev[group.parentId]
-                              }))
-                            }
-                            className="bg-gray-100 p-3 font-medium cursor-pointer flex justify-between items-center"
-                          >
-                            <span className="font-semibold text-blue-700">
-                              {group.parentName}
-                            </span>
-                            <span className="text-gray-500 text-sm">
-                              {openParents[group.parentId] ? '▼' : '▶'} ({group.children.length}{' '}
-                              {master.title.includes("Industry") ? "sub-industries" : "sub-services"})
-                            </span>
-                          </div>
+              <div className="flex flex-1 mt-4 overflow-hidden">
+                {/* Your existing left side content */}
+                <div className="w-1/2 pr-4 overflow-y-auto border-r border-gray-200">
+                  <h3 className="text-xl font-semibold mb-3 text-blue-700">
+                    Existing {master.title}
+                  </h3>
+                  
+                  {/* Search Bar */}
+                  <div className="mb-4 relative">
+                    <input
+                      type="text"
+                      placeholder={`Search ${master.title}...`}
+                      className="w-full p-2 pl-8 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                    />
+                    <svg
+                      className="absolute left-2.5 top-3 h-4 w-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      ></path>
+                    </svg>
+                  </div>
 
-                          {/* Children List (expandable) */}
-                          {openParents[group.parentId] && (
-                            <ul className="divide-y divide-gray-200">
-                              {group.children.map(child => (
-                                <li
-                                  key={child[master.idKey]}
-                                  className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
-                                    selectedItemForEdit &&
-                                    selectedItemForEdit[master.idKey] === child[master.idKey]
-                                      ? "bg-blue-100 border-blue-400"
-                                      : "bg-white"
-                                  }`}
+                  {isLoadingItems ? (
+                    <div className="flex justify-center items-center h-full">
+                      <p>Loading items...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {master.isHierarchical ? (
+                        <div className="space-y-4">
+                          {groupedSubItems.length > 0 ? (
+                            groupedSubItems.map(group => (
+                              <div key={group.parentId} className="mb-4 border rounded-md">
+                                {/* Parent Section Header */}
+                                <div
+                                  onClick={() =>
+                                    setOpenParents(prev => ({
+                                      ...prev,
+                                      [group.parentId]: !prev[group.parentId]
+                                    }))
+                                  }
+                                  className="bg-gray-100 p-3 font-medium cursor-pointer flex justify-between items-center"
                                 >
-                                  <div>
-                                    <span className="font-medium text-gray-800">
-                                      {child[master.payloadKey]}
-                                      {master.title === "Status" && child.orderId !== undefined && (
-                                        <span className="ml-2 text-sm text-gray-500">
-                                          (Order: {child.orderId})
-                                        </span>
-                                      )}
-                                    </span>
-                                    {master.activeStatusPayloadKey &&
-                                      child[master.activeStatusPayloadKey] !== undefined && (
-                                        <span
-                                          className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                                            child[master.activeStatusPayloadKey]
-                                              ? 'bg-green-100 text-green-800'
-                                              : 'bg-red-100 text-red-800'
-                                          }`}
-                                        >
-                                          {child[master.activeStatusPayloadKey]
-                                            ? 'Active'
-                                            : 'Inactive'}
-                                        </span>
-                                      )}
-                                  </div>
-                                  <div className="flex space-x-2">
+                                  <span className="font-semibold text-blue-700">
+                                    {group.parentName}
+                                  </span>
+                                  <span className="text-gray-500 text-sm">
+                                    {openParents[group.parentId] ? '▼' : '▶'} ({group.children.length}{' '}
+                                    {master.title.includes("Industry") ? "sub-industries" : "sub-services"})
+                                  </span>
+                                </div>
+
+                                {/* Children List (expandable) */}
+                                {openParents[group.parentId] && (
+                                  <ul className="divide-y divide-gray-200">
+                                    {group.children.map(child => (
+                                      <li
+                                        key={child[master.idKey]}
+                                        className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
+                                          selectedItemForEdit &&
+                                          selectedItemForEdit[master.idKey] === child[master.idKey]
+                                            ? "bg-blue-100 border-blue-400"
+                                            : "bg-white"
+                                        }`}
+                                      >
+                                        <div>
+                                          <span className="font-medium text-gray-800">
+                                            {child[master.payloadKey]}
+                                            {master.title === "Status" && child.orderId !== undefined && (
+                                              <span className="ml-2 text-sm text-gray-500">
+                                                (Order: {child.orderId})
+                                              </span>
+                                            )}
+                                          </span>
+                                          {master.activeStatusPayloadKey &&
+                                            child[master.activeStatusPayloadKey] !== undefined && (
+                                              <span
+                                                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                                                  child[master.activeStatusPayloadKey]
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
+                                                }`}
+                                              >
+                                                {child[master.activeStatusPayloadKey]
+                                                  ? 'Active'
+                                                  : 'Inactive'}
+                                              </span>
+                                            )}
+                                        </div>
+                                        <div className="flex space-x-2">
+                                          <button
+                                            onClick={() => setSelectedItemForEdit(child)}
+                                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
+                                            title="Edit"
+                                          >
+                                            <Edit size={18} />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDelete(child[master.idKey])}
+                                            className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100"
+                                            title="Delete"
+                                            disabled={isDeleting || !master.delete}
+                                          >
+                                            <Trash2 size={18} />
+                                          </button>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 text-center py-4">
+                              {searchTerm ? 'No matching items found' : 'No items available'}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <ul className="space-y-2">
+                          {filteredItems.length > 0 ? (
+                            filteredItems.map((item) => (
+                              <li
+                                key={item[master.idKey]}
+                                className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
+                                  selectedItemForEdit &&
+                                  selectedItemForEdit[master.idKey] === item[master.idKey]
+                                    ? "bg-blue-100 border-blue-400"
+                                    : "bg-gray-50 hover:bg-gray-100"
+                                }`}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-gray-800">
+                                    {item[master.payloadKey]}
+                                    {master.title === "Status" && item.orderId !== undefined && (
+                                      <span className="ml-2 text-sm text-gray-500">
+                                        (Order: {item.orderId})
+                                      </span>
+                                    )}
+                                  </span>
+                                  {master.title === "Email Template" ? (
+                                    <>
+                                      <span className="text-sm text-gray-500 mt-1">
+                                        {stripHtmlTags(item.mailBody).substring(0, 100)}
+                                        {stripHtmlTags(item.mailBody).length > 100 ? "..." : ""}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {master.additionalFields &&
+                                        master.additionalFields.map((field) => {
+                                          if (
+                                            master.isHierarchical &&
+                                            master.parentMasterConfig &&
+                                            field ===
+                                              (master.parentMasterConfig.formFieldKey ||
+                                                "parentId")
+                                          ) {
+                                            return null;
+                                          }
+                                          return (
+                                            item[field] && (
+                                              <span
+                                                key={field}
+                                                className="text-sm text-gray-500"
+                                              >
+                                                {item[field]}
+                                              </span>
+                                            )
+                                          );
+                                        })}
+                                    </>
+                                  )}
+                                </div>
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => setSelectedItemForEdit(item)}
+                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
+                                    title="Edit"
+                                  >
+                                    <Edit size={18} />
+                                  </button>
+                                  {!isLabelMaster && (
                                     <button
-                                      onClick={() => setSelectedItemForEdit(child)}
-                                      className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100"
-                                      title="Edit"
-                                    >
-                                      <Edit size={18} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(child[master.idKey])}
-                                      className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100"
-                                      title="Delete"
+                                      onClick={() => handleDelete(item[master.idKey])}
                                       disabled={isDeleting || !master.delete}
+                                      className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
+                                      title="Delete"
                                     >
                                       <Trash2 size={18} />
                                     </button>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
+                                  )}
+                                </div>
+                              </li>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 text-center py-4">
+                              {searchTerm ? 'No matching items found' : 'No items available'}
+                            </p>
                           )}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">
-                        {searchTerm ? 'No matching items found' : 'No items available'}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {filteredItems.length > 0 ? (
-                      filteredItems.map((item) => (
+                        </ul>
+                      )}
+                    </>
+                  )}
+                </div>
 
-                        <li
-                          key={item[master.idKey]}
-                          className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
-                            selectedItemForEdit &&
-                            selectedItemForEdit[master.idKey] === item[master.idKey]
-                              ? "bg-blue-100 border-blue-400"
-                              : "bg-gray-50 hover:bg-gray-100"
-                          }`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-800">
-                              {item[master.payloadKey]}
-                              {master.title === "Status" && item.orderId !== undefined && (
-                                <span className="ml-2 text-sm text-gray-500">
-                                  (Order: {item.orderId})
-                                </span>
-                              )}
-                            </span>
-                            {master.title === "Email Template" ? (
-                            <>
-                              <span className="font-medium text-gray-800">
-                                {/* {item.subject || "No Subject"} */}
-                              </span>
-                              <span className="text-sm text-gray-500 mt-1">
-                                {stripHtmlTags(item.mailBody).substring(0, 100)}
-                                {stripHtmlTags(item.mailBody).length > 100 ? "..." : ""}
-                              </span>
-                            </>
-                             ) : (
-                            <>
-                              {/* <span className="font-medium text-gray-800">
-                                {item[master.payloadKey]}
-                                {master.title === "Status" && item.orderId !== undefined && (
-                                  <span className="ml-2 text-sm text-gray-500">(Order: {item.orderId})</span>
-                                )}
-                              </span> */}
-                            {master.additionalFields &&
-                              master.additionalFields.map((field) => {
-                                if (
-                                  master.isHierarchical &&
-                                  master.parentMasterConfig &&
-                                  field ===
-                                    (master.parentMasterConfig.formFieldKey ||
-                                      "parentId")
-                                ) {
-                                  return null;
-                                }
-                                return (
-                                  item[field] && (
-                                    <span
-                                      key={field}
-                                      className="text-sm text-gray-500"
-                                    >
-                                      {item[field]}
-                                    </span>
-                                  )
-                                );
-                              })}
-                                    </>
-                             )}</div>
-                    
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => setSelectedItemForEdit(item)}
-                              className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-200 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            {!isLabelMaster && (
-                              <button
-                                onClick={() => handleDelete(item[master.idKey])}
-                                disabled={isDeleting || !master.delete}
-                                className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-200 disabled:opacity-50 transition-colors"
-                                title="Delete"
+                {/* Your existing right side content */}
+                <div className="w-1/2 pl-4 flex flex-col">
+                  <h3 className="text-xl font-semibold mb-3 text-blue-700">
+                    {selectedItemForEdit
+                      ? `Edit Existing ${master.modalKey || master.title}`
+                      : `Add New ${master.modalKey || master.title}`}
+                  </h3>
+                  
+                  {/* Show parent name when editing hierarchical items */}
+                  {selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
+                    <div className="mb-3">
+                      <h3 className="text-lg font-semibold text-blue-700">
+                        Parent: {(() => {
+                          const parentId = selectedItemForEdit[
+                            master.parentMasterConfig.parentIdInChildResponseKey || "parentId"
+                          ];
+                          const matchedParent = parentOptions.find(
+                            (parent) => 
+                              String(parent[master.parentMasterConfig.idKey]) === String(parentId)
+                          );
+                          return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
+                        })()}
+                      </h3>
+                    </div>
+                  )}
+                  
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSave();
+                    }}
+                    className="space-y-4"
+                  >
+                    {/* Your existing form fields */}
+                    {master.isHierarchical &&
+                      master.parentMasterConfig &&
+                      formParentKey && (
+                        <div className="mb-4">
+                          <label
+                            htmlFor={formParentKey}
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            {parentLabel}:
+                          </label>
+                          <select
+                            id={formParentKey}
+                            name={formParentKey}
+                            value={
+                              formData[formParentKey] === null || formData[formParentKey] === undefined
+                                ? ""
+                                : String(formData[formParentKey])
+                            }
+                            onChange={handleChange}
+                            required={master.parentMasterConfig.required}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            disabled={isSaving || (selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Service"))}
+                          >
+                            <option value="">Select a {parentLabel}</option>
+                            {parentOptions.map((parent) => (
+                              <option
+                                key={parent[master.parentMasterConfig.idKey]}
+                                value={String(parent[master.parentMasterConfig.idKey])}
                               >
-                                <Trash2 size={18} />
-                              </button>
-                            )}
+                                {parent[master.parentMasterConfig.nameKey]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    
+                    {/* Rest of your form fields */}
+                    <div className="mb-4">
+                      <label
+                        htmlFor={master.payloadKey}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        {master.modalKey || master.title}:
+                        {master.title !== "Email Template" && (
+                          <span className="ml-2 text-xs text-green-500">
+                            {formData[master.payloadKey]?.length || 0}/50
+                          </span>
+                        )}
+                      </label>
+
+                      {master.title === "Email Template" && master.payloadKey === "mailBody" ? (
+                        <>
+                          {/* Email Subject Field */}
+                          <div className="mb-4">
+                            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                              Subject:
+                            </label>
+                            <input
+                              id="subject"
+                              name="subject"
+                              type="text"
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                              value={formData.subject || ""}
+                              onChange={handleChange}
+                              required
+                              disabled={isSaving}
+                            />
                           </div>
-                        </li>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">
-                        {searchTerm ? 'No matching items found' : 'No items available'}
-                      </p>
-                    )}
-                  </ul>
-                )}
-              </>
-            )}
-          </div>
 
-          {/* Form for Add/Edit (Right Side) */}
-          <div className="w-1/2 pl-4 flex flex-col">
-            <h3 className="text-xl font-semibold mb-3 text-blue-700">
-              {selectedItemForEdit
-                ? `Edit Existing ${master.modalKey || master.title}`
-                : `Add New ${master.modalKey || master.title}`}
-            </h3>
-            
-            {/* Show parent name when editing hierarchical items (Sub-Industry or Sub-Service) */}
-{selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
-  <div className="mb-3">
-    <h3 className="text-lg font-semibold text-blue-700">
-      Parent: {(() => {
-        const parentId = selectedItemForEdit[
-          master.parentMasterConfig.parentIdInChildResponseKey || "parentId"
-        ];
-        const matchedParent = parentOptions.find(
-          (parent) => 
-            // Convert both to string for consistent comparison
-            String(parent[master.parentMasterConfig.idKey]) === String(parentId)
-        );
-        return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
-      })()}
-    </h3>
-  </div>
-)}
-  <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-              }}
-              className="space-y-4"
-            >
-              {master.isHierarchical &&
-  master.parentMasterConfig &&
-  formParentKey && (
-    <div className="mb-4">
-      <label
-        htmlFor={formParentKey}
-        className="block text-sm font-medium text-gray-700 mb-1"
-      >
-        {parentLabel}:
-      </label>
-     <select
-  id={formParentKey}
-  name={formParentKey}
-  value={
-    formData[formParentKey] === null || formData[formParentKey] === undefined
-      ? ""
-      : String(formData[formParentKey]) // Ensure string comparison
-  }
-  onChange={handleChange}
-  required={master.parentMasterConfig.required}
-  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-  disabled={isSaving || (selectedItemForEdit && (master.title === "Sub-Industries" || master.title === "Sub-Service"))}
->
-  <option value="">Select a {parentLabel}</option>
-  {parentOptions.map((parent) => (
-    <option
-      key={parent[master.parentMasterConfig.idKey]}
-      value={String( // Convert to string for consistent comparison
-        parent[master.parentMasterConfig.idKey]
-      )}
-    >
-      {parent[master.parentMasterConfig.nameKey]}
-    </option>
-  ))}
-</select>
-    </div>
-  )}
-<div className="mb-4">
-  <label
-    htmlFor={master.payloadKey}
-    className="block text-sm font-medium text-gray-700 mb-1"
-  >
-    {master.modalKey || master.title}:
-    {master.title !== "Email Template" && (
-      <span className="ml-2 text-xs text-green-500">
-        {formData[master.payloadKey]?.length || 0}/50
-      </span>
-    )}
-  </label>
+                          {/* Email Body Editor */}
+                          <div className="mb-2 h-[150px] overflow-y-scroll">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Content:
+                            </label>
+                            <ReactQuill
+                              theme="snow"
+                              value={formData["mailBody"] || ""}
+                              onChange={(value) =>
+                                handleChange({
+                                  target: { name: "mailBody", value },
+                                })
+                              }
+                              readOnly={isSaving}
+                              className="bg-white rounded-md border border-gray-300 h-[150px] overflow-y-auto"
+                              modules={{
+                                toolbar: [
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  ['link'],
+                                  ['clean']
+                                ],
+                                clipboard: { matchVisual: false }
+                              }}
+                            />
+                          </div>
 
-  {master.title === "Email Template" && master.payloadKey === "mailBody" ? (
-    <>
-      {/* Email Subject Field */}
-      <div className="mb-4">
-        <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-          Subject:
-        </label>
-        <input
-          id="subject"
-          name="subject"
-          type="text"
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-          value={formData.subject || ""}
-          onChange={handleChange}
-          required
-          disabled={isSaving}
-        />
-      </div>
+                          {/* Plain Text Preview */}
+                          {(formData.subject || formData.mailBody) && (
+                            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                              <div className="mb-2">
+                                <span className="font-semibold text-gray-700">Title:</span>
+                                <span className="ml-2">{formData.subject || ''}</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
+                                <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+                                  {stripHtmlTags(formData["mailBody"])}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <input
+                          id={master.payloadKey}
+                          name={master.payloadKey}
+                          type="text"
+                          className={`mt-1 block w-full border ${
+                            formData[master.payloadKey]?.length > 0 &&
+                            (formData[master.payloadKey]?.length < 3 ||
+                              formData[master.payloadKey]?.length > 50)
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+                          value={formData[master.payloadKey] || ""}
+                          onChange={handleChange}
+                          required
+                          minLength={3}
+                          maxLength={50}
+                          disabled={isSaving}
+                        />
+                      )}
 
-      {/* Email Body Editor */}
-      <div className="mb-2 h-[150px] overflow-y-scroll">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Content:
-        </label>
-       <ReactQuill
-  theme="snow"
-  value={formData["mailBody"] || ""}
-  onChange={(value) =>
-    handleChange({
-      target: { name: "mailBody", value },
-    })
-  }
-  readOnly={isSaving}
-  className="bg-white rounded-md border border-gray-300 h-[150px] overflow-y-auto"
-  modules={{
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['link'],
-      ['clean']
-    ],
-    clipboard: { matchVisual: false }
-  }}
-/>
-      </div>
+                      {master.title !== "Email Template" &&
+                        formData[master.payloadKey]?.length > 0 && (
+                          <p
+                            className={`mt-1 text-xs ${
+                              formData[master.payloadKey]?.length < 3 ||
+                              formData[master.payloadKey]?.length > 50
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {formData[master.payloadKey]?.length < 3
+                              ? "Minimum 3 characters required"
+                              : formData[master.payloadKey]?.length > 50
+                              ? "Maximum 50 characters exceeded"
+                              : "Valid length"}
+                          </p>
+                        )}
+                    </div>
 
-      {/* Plain Text Preview: Title and Body */}
-      {(formData.subject || formData.mailBody) && (
-        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-          <div className="mb-2">
-            <span className="font-semibold text-gray-700">Title:</span>
-            <span className="ml-2">{formData.subject || ''}</span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
-<div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
-  {stripHtmlTags(formData["mailBody"])}
-</div>
-          </div>
-        </div>
-      )}
-    </>
-  ) : (
-    <input
-      id={master.payloadKey}
-      name={master.payloadKey}
-      type="text"
-      className={`mt-1 block w-full border ${
-        formData[master.payloadKey]?.length > 0 &&
-        (formData[master.payloadKey]?.length < 3 ||
-          formData[master.payloadKey]?.length > 50)
-          ? "border-red-500"
-          : "border-gray-300"
-      } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-      value={formData[master.payloadKey] || ""}
-      onChange={handleChange}
-      required
-      minLength={3}
-      maxLength={50}
-      disabled={isSaving}
-    />
-  )}
-
-  {master.title !== "Email Template" &&
-    formData[master.payloadKey]?.length > 0 && (
-      <p
-        className={`mt-1 text-xs ${
-          formData[master.payloadKey]?.length < 3 ||
-          formData[master.payloadKey]?.length > 50
-            ? "text-red-600"
-            : "text-green-600"
-        }`}
-      >
-        {formData[master.payloadKey]?.length < 3
-          ? "Minimum 3 characters required"
-          : formData[master.payloadKey]?.length > 50
-          ? "Maximum 50 characters exceeded"
-          : "Valid length"}
-      </p>
-    )}
-</div>
-
-
-              {master.title === "Status" &&
-                shouldFieldBeRendered("orderId", formData) && (
-                  <div className="mb-4">
-                    <label
-                      htmlFor="orderId"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Sort Order:
-                    </label>
-                    <input
-                      id="orderId"
-                      name="orderId"
-                      type="number"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={
-                        formData.orderId !== undefined &&
-                        formData.orderId !== null
-                          ? formData.orderId
-                          : ""
-                      }
-                      onChange={handleChange}
-                      disabled={isSaving}
-                    />
-                  </div>
-                )}
-
-              {master.additionalFields &&
-                master.additionalFields.map((field) => {
-                  if (
-                    master.isHierarchical &&
-                    master.parentMasterConfig &&
-                    field ===
-                      (master.parentMasterConfig.formFieldKey || "parentId")
-                  ) {
-                    return null;
-                  }
-                  return (
-                    shouldFieldBeRendered(field, formData) && (
-                      <div className="mb-4" key={field}>
-                        <label
-                          htmlFor={field}
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          {field
-                            .replace(/([A-Z])/g, " $1")
-                            .replace(/^./, (str) => str.toUpperCase())}
-                          :
-                        </label>
-                        {field === "mailBody" ? (
-                          <div>
-  <ReactQuill
-    theme="snow"
-    value={formData["mailBody"] || ""}
-    onChange={(value) =>
-      handleChange({ target: { name: "mailBody", value } })
-    }
-    readOnly={isSaving}
-    className="mt-1 mb-4"
-    modules={modules}
-    formats={formats}
-    style={{ height: '100%' }} 
-  />
-  <style>{`
-    /* Fix editor height and enable scroll inside */
-    .ql-editor {
-      height: 330px !important;
-      max-height: 330px !important;
-      overflow-y: scroll !important;
-    }
-    .ql-container {
-      height: 100% !important;
-    }
-  `}</style>
-</div>
-
-                        ) : (
+                    {/* Rest of your form fields */}
+                    {master.title === "Status" &&
+                      shouldFieldBeRendered("orderId", formData) && (
+                        <div className="mb-4">
+                          <label
+                            htmlFor="orderId"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Sort Order:
+                          </label>
                           <input
-                            id={field}
-                            name={field}
-                            type="text"
-                            className="mt-1 block w-full border border-blue-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={formData[field] || ""}
+                            id="orderId"
+                            name="orderId"
+                            type="number"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={
+                              formData.orderId !== undefined &&
+                              formData.orderId !== null
+                                ? formData.orderId
+                                : ""
+                            }
                             onChange={handleChange}
                             disabled={isSaving}
                           />
-                        )}
-                      </div>
-                    )
-                  );
-                })}
+                        </div>
+                      )}
 
-              <div className="flex justify-end space-x-2 mt-auto pt-4">
-                {selectedItemForEdit && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedItemForEdit(null)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-                    disabled={isSaving}
-                  >
-                    Cancel Edit
-                  </button>
-                )}
-                {(!isLabelMaster ||
-                  (isLabelMaster && areLabelFieldsEmpty)) && (
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    disabled={isSaving}
-                  >
-                    {isSaving
-                      ? "Saving..."
-                      : selectedItemForEdit
-                      ? "Update"
-                      : "Add"}
-                  </button>
-                )}
+                    {master.additionalFields &&
+                      master.additionalFields.map((field) => {
+                        if (
+                          master.isHierarchical &&
+                          master.parentMasterConfig &&
+                          field ===
+                            (master.parentMasterConfig.formFieldKey || "parentId")
+                        ) {
+                          return null;
+                        }
+                        return (
+                          shouldFieldBeRendered(field, formData) && (
+                            <div className="mb-4" key={field}>
+                              <label
+                                htmlFor={field}
+                                className="block text-sm font-medium text-gray-700 mb-1"
+                              >
+                                {field
+                                  .replace(/([A-Z])/g, " $1")
+                                  .replace(/^./, (str) => str.toUpperCase())}
+                                :
+                              </label>
+                              {field === "mailBody" ? (
+                                <div>
+                                  <ReactQuill
+                                    theme="snow"
+                                    value={formData["mailBody"] || ""}
+                                    onChange={(value) =>
+                                      handleChange({ target: { name: "mailBody", value } })
+                                    }
+                                    readOnly={isSaving}
+                                    className="mt-1 mb-4"
+                                    modules={modules}
+                                    formats={formats}
+                                    style={{ height: '100%' }} 
+                                  />
+                                  <style>{`
+                                    .ql-editor {
+                                      height: 330px !important;
+                                      max-height: 330px !important;
+                                      overflow-y: scroll !important;
+                                    }
+                                    .ql-container {
+                                      height: 100% !important;
+                                    }
+                                  `}</style>
+                                </div>
+                              ) : (
+                                <input
+                                  id={field}
+                                  name={field}
+                                  type="text"
+                                  className="mt-1 block w-full border border-blue-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                  value={formData[field] || ""}
+                                  onChange={handleChange}
+                                  disabled={isSaving}
+                                />
+                              )}
+                            </div>
+                          )
+                        );
+                      })}
+
+                    <div className="flex justify-end space-x-2 mt-auto pt-4">
+                      {selectedItemForEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedItemForEdit(null)}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+                          disabled={isSaving}
+                        >
+                          Cancel Edit
+                        </button>
+                      )}
+                      {(!isLabelMaster ||
+                        (isLabelMaster && areLabelFieldsEmpty)) && (
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                          disabled={isSaving}
+                        >
+                          {isSaving
+                            ? "Saving..."
+                            : selectedItemForEdit
+                            ? "Update"
+                            : "Add"}
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
               </div>
-            </form>
-          </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
     </>
   );
 };

@@ -111,10 +111,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     ],
   };
 
-  // Custom slot props for DateTimePicker to control positioning
   const timeSlotProps = {
     popper: {
-      placement: 'top-start', // This makes it appear above the field
+      placement: 'top-start', 
       modifiers: [
         {
           name: 'preventOverflow',
@@ -124,21 +123,20 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         },
       ],
       sx: { 
-        zIndex: 9999, // High z-index to appear above everything
+        zIndex: 9999, 
         '& .MuiPickersPopper-paper': {
-          marginBottom: '60px', // Add some space below the popper
+          marginBottom: '60px', 
         }
       }
     },
     desktopPaper: {
       sx: { 
         zIndex: 9999,
-        position: 'relative' // Prevent scrolling issues
+        position: 'relative' 
       }
     }
   };
 
-  // Set logged in user info
   useEffect(() => {
     const userString = localStorage.getItem("user");
     if (userString) {
@@ -258,7 +256,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }
 
     if (remarkData.projectValue) {
-      // 1. Declare and assign numValue inside this block
       const numValue = parseFloat(remarkData.projectValue); 
       
       if (isNaN(numValue)) {
@@ -272,19 +269,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         isValid = false;
       }
     }
-
-    // if (remarkData.projectValue && isNaN(parseFloat(remarkData.projectValue))) {
-    //   const numValue = parseFloat(remarkData.projectValue);
-    //   newErrors.projectValue = 'Project value must be a valid number';
-    //   isValid = false;
-    // } else if (remarkData.projectValue && parseFloat(remarkData.projectValue) < 0) {
-    //   newErrors.projectValue = 'Project value cannot be negative';
-    //   isValid = false;
-    // } else if (numValue > MAX_PROJECT_VALUE) {
-    //     newErrors.projectValue = `Project value cannot exceed ${MAX_PROJECT_VALUE.toLocaleString()}`;
-    //     isValid = false;
-    //   }
-
     setRemarkErrors(newErrors);
     return isValid;
   };
@@ -702,109 +686,120 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }));
   };
 
-  // Function to send assignment notification email
-  const sendAssignmentNotification = async (assignedUserId, assignedUserName) => {
-    try {
-      const token = localStorage.getItem('token');
-      const assignedUser = users.find(user => user.iUser_id === parseInt(assignedUserId));
-      
-      if (!assignedUser || !assignedUser.cEmail) {
-        console.error('Assigned user not found or no email available');
-        return;
-      }
+  const sendAssignmentNotification = async (
+      assignedUser, 
+      notifiedUser, 
+      leadDetails,  
+      token,
+      userId 
+  ) => {
+      if (!assignedUser && !notifiedUser) return; 
 
-      const mailPayload = {
-        userName: assignedUser.cUser_name,
-        time: new Date().toISOString(),
-        leadName: leadData.clead_name,
-        leadURL: window.location.href,
-        mailId: assignedUser.cEmail,
-        assignedTo: assignedUser.cUser_name,
-        notifyTo: assignedUser.cEmail,
+      const emailPayload = {
+          "userName": userId.cFull_name, 
+          "time": new Date().toLocaleString(), 
+          "leadName": leadDetails?.clead_name || 'CRM Lead', 
+          "leadURL": `${window.location.origin}/leaddetailview/${leadDetails?.ilead_id}`, 
+          "mailId": assignedUser ? assignedUser.cEmail : null, 
+          "assignedTo": assignedUser ? assignedUser.cFull_name : null, 
+          "notifyTo": notifiedUser ? notifiedUser.cEmail : null,
       };
 
-      await axios.post(`${ENDPOINTS.ASSIGNED_TO_MAIL}`, mailPayload, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      showToast('success', `Assignment notification sent to ${assignedUser.cUser_name}`);
-    } catch (mailErr) {
-      console.error('Failed to send notification email:', mailErr);
-      showToast('error', 'Assignment saved but notification failed to send');
-    }
+      if (emailPayload.mailId || emailPayload.notifyTo) {
+          try {
+              await axios.post(ENDPOINTS.LEAD_STATUS_NOTIFICATION_MAIL, emailPayload, {
+                  headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`,
+                  },
+              });
+              console.log('Assignment/Notification emails initiated successfully.');
+          } catch (mailErr) {
+              console.error('Failed to send assignment/notification email:', mailErr);
+          }
+      }
   };
 
   const handleRemarkSubmit = async () => {
     if (!validateRemark()) return;
 
     const token = localStorage.getItem('token');
-    const userId = JSON.parse(localStorage.getItem('user'));
-    const payload = {
-      remark: remarkData.remark.trim(),
-      leadId: parseInt(leadId),
-      leadStatusId: remarkStageId,
-      createBy: userId.iUser_id,
-      ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
-      ...(remarkData.dueDate && { dueDate: new Date(remarkData.dueDate).toISOString() }),
+    const userId = JSON.parse(localStorage.getItem('user')); 
+    const leadDetails = { clead_name: 'Lead Name Example', ilead_id: parseInt(leadId) }; 
 
+    const remarkPayload = {
+        remark: remarkData.remark.trim(),
+        leadId: parseInt(leadId),
+        leadStatusId: remarkStageId,
+        createBy: userId.iUser_id,
+        ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+        ...(remarkData.dueDate && { dueDate: new Date(remarkData.dueDate).toISOString() }),
     };
 
-    try {
-      // Submit the remark first
-      await axios.post(ENDPOINTS.STATUS_REMARKS, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const assignedUser = remarkData.assignedTo 
+        ? users.find(user => user.iUser_id === Number(remarkData.assignedTo))
+        : null;
+    
+    const notifiedUser = remarkData.notifiedTo 
+        ? users.find(user => user.iUser_id === Number(remarkData.notifiedTo))
+        : null;
 
-      // Handle assignment separately if assigned to someone
-      if (remarkData.assignedTo) {
-        try {
-          await axios.post(
-            `${ENDPOINTS.GET_ASSIGN}`,
-            {
-              iassigned_by: userId.iUser_id,
-              iassigned_to: Number(remarkData.assignedTo),
-              ilead_id: Number(leadId),
-            },
-            {
-              headers: {
+    try {
+        await axios.post(ENDPOINTS.STATUS_REMARKS, remarkPayload, {
+            headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
-              },
+            },
+        });
+
+        let assignmentSuccess = true;
+
+        if (remarkData.assignedTo) {
+            try {
+                await axios.post(
+                    `${ENDPOINTS.GET_ASSIGN}`,
+                    {
+                        iassigned_by: userId.iUser_id,
+                        iassigned_to: Number(remarkData.assignedTo),
+                        ilead_id: Number(leadId),
+                        ...(remarkData.notifiedTo && { notify_to: Number(remarkData.notifiedTo) }), 
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            } catch (assignErr) {
+                console.error('Failed to assign lead:', assignErr);
+                assignmentSuccess = false;
+                showToast('error', 'Remark submitted, but assignment update failed.');
             }
-          );
-
-          // Send notification email to the assigned user
-          const assignedUser = users.find(user => user.iUser_id === parseInt(remarkData.assignedTo));
-          if (assignedUser) {
-            await sendAssignmentNotification(remarkData.assignedTo, assignedUser.cUser_name);
-          }
-
-          showToast('success', 'Remark submitted and lead assigned!');
-        } catch (assignErr) {
-          console.error('Failed to assign lead:', assignErr);
-          showToast('success', 'Remark submitted but assignment failed.');
         }
-      } else {
-        showToast('success', 'Remark submitted!');
-      }
 
-      const newIndex = stages.findIndex(s => s.id === remarkStageId);
-      await updateStage(newIndex, remarkStageId);
-      setShowRemarkDialog(false);
-      await getStatusRemarks();
+        if (assignedUser || notifiedUser) {
+            await sendAssignmentNotification(assignedUser, notifiedUser, leadDetails, token, userId);
+        }
+
+        if (assignmentSuccess && (assignedUser || notifiedUser)) {
+            showToast('success', 'Remark submitted, and lead assigned/notified!');
+        } else if (assignmentSuccess) {
+            showToast('success', 'Remark submitted!');
+        }
+
+        const newIndex = stages.findIndex(s => s.id === remarkStageId);
+        await updateStage(newIndex, remarkStageId);
+        setShowRemarkDialog(false);
+        await getStatusRemarks();
+
     } catch (err) {
-      const serverMsg = err.response?.data?.Message;
-      const issues = Array.isArray(serverMsg?.issues)
-        ? serverMsg.issues.join(', ')
-        : serverMsg?.message || 'Failed to submit remark';
+        const serverMsg = err.response?.data?.Message;
+        const issues = Array.isArray(serverMsg?.issues)
+            ? serverMsg.issues.join(', ')
+            : serverMsg?.message || 'Failed to submit remark';
 
-      showToast('error', issues);
+        showToast('error', issues);
     }
   };
 
@@ -896,24 +891,24 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </div>
 
         {isWon && (
-  <div className="flex justify-center mt-4">
-    <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-5 w-5" 
-        viewBox="0 0 20 20" 
-        fill="currentColor"
-      >
-        <path 
-          fillRule="evenodd" 
-          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-          clipRule="evenodd" 
-        />
-      </svg>
-      <span className="font-bold tracking-wide uppercase text-sm">Lead Won</span>
-    </div>
-  </div>
-)}
+        <div className="flex justify-center mt-4">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-5 w-5" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+            <span className="font-bold tracking-wide uppercase text-sm">Lead Won</span>
+          </div>
+        </div>
+        )}
 
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Enter Details</DialogTitle>
@@ -1143,38 +1138,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             /> 
-             {/* 
-
-              <TextField
-                label="Project Value (optional)"
-                type="number"
-                fullWidth
-                value={remarkData.projectValue}
-                onChange={e => {
-                  const value = e.target.value;
-                  if (value === '' || parseFloat(value) <= MAX_PROJECT_VALUE) {
-                    setRemarkData(prev => ({ ...prev, projectValue: value }));
-                  }
-                }}
-                inputProps={{ max: MAX_PROJECT_VALUE }} 
-                error={!!remarkErrors.projectValue}
-                helperText={remarkErrors.projectValue}
-                sx={{ mt: 2 }}
-                InputLabelProps={{ shrink: true }}
-              />
-
-            {/* <TextField
-              label="Project Value (optional)"
-              type="number"
-              fullWidth
-              value={remarkData.projectValue}
-              onChange={e => setRemarkData(prev => ({ ...prev, projectValue: e.target.value }))}
-              error={!!remarkErrors.projectValue}
-              helperText={remarkErrors.projectValue}
-              sx={{ mt: 2 }}
-              InputLabelProps={{ shrink: true }}
-            /> */}
-            
+             
             {/* Assigned To Section */}
             <div className="mt-4 mb-2">
               <div className="flex items-center justify-between mb-2">
@@ -1277,7 +1241,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 InputLabelProps: { shrink: true },
               },
               popper: {
-              placement: 'top-start', // This makes it appear above the field
+              placement: 'top-start', 
               modifiers: [
                 {
                   name: 'preventOverflow',
@@ -1287,16 +1251,16 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                 },
               ],
               sx: { 
-                zIndex: 9999, // High z-index to appear above everything
+                zIndex: 9999, 
                 '& .MuiPickersPopper-paper': {
-                  marginBottom: '60px', // Add some space below the popper
+                  marginBottom: '60px', 
                 }
               }
             },
               desktopPaper: {
               sx: { 
                 zIndex: 9999,
-                position: 'relative' // Prevent scrolling issues
+                position: 'relative' 
               }
             }
             }}
@@ -1304,7 +1268,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             minDateTime={dayjs()} 
           />
         </LocalizationProvider>
-            
 
           </DialogContent>
           <DialogActions>
@@ -1433,56 +1396,55 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </Dialog>
 
         {statusRemarks.length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-    <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-      {statusRemarks.map((remark, index) => (
-        <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
-          {index !== statusRemarks.length - 1 && (
-            <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
-          )}
-          <div
-            className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
-            style={{ minWidth: "250px", maxWidth: "250px" }} 
-            onClick={() => setSelectedRemark(remark)}
-          >
-            <div className="space-y-2 text-sm">
-              <p
-                className="text-sm break-words line-clamp-3"
-                title={remark.lead_status_remarks} // tooltip with full text on hover
-              >
-                <strong>Remark:</strong> {remark.lead_status_remarks}
-              </p>
-              <p className="text-sm">
-                <strong>Created By:</strong> {remark.createdBy || '-'}
-              </p>
-              <p className="text-sm">
-                <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
-              </p>
-              <p className="text-sm">
-                <strong>Status:</strong> {remark.status_name}
-              </p>
-              <p className="text-sm">
-                <strong>Due Date:</strong>{" "}
-                {new Date(remark.due_date)
-                  .toLocaleString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  })
-                  .replace(/(am|pm)/, (match) => match.toUpperCase())}
-              </p>
-            </div>
+        <div className="mt-6">
+          <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+          <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
+            {statusRemarks.map((remark, index) => (
+              <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
+                {index !== statusRemarks.length - 1 && (
+                  <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
+                )}
+                <div
+                  className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
+                  style={{ minWidth: "250px", maxWidth: "250px" }} 
+                  onClick={() => setSelectedRemark(remark)}
+                >
+                  <div className="space-y-2 text-sm">
+                    <p
+                      className="text-sm break-words line-clamp-3"
+                      title={remark.lead_status_remarks} // tooltip with full text on hover
+                    >
+                      <strong>Remark:</strong> {remark.lead_status_remarks}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Created By:</strong> {remark.createdBy || '-'}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Status:</strong> {remark.status_name}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Due Date:</strong>{" "}
+                      {new Date(remark.due_date)
+                        .toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                        .replace(/(am|pm)/, (match) => match.toUpperCase())}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
-
+       )}
 
         <Dialog
           open={!!selectedRemark}
@@ -1585,3 +1547,4 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 };
 
 export default StatusBar;
+

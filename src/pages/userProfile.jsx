@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ENDPOINTS } from '../../src/api/constraints';
@@ -16,14 +17,12 @@ import {
   FaGlobe, FaWhatsapp, FaEnvelopeOpen
 } from 'react-icons/fa';
 
-// Placeholder for the new Overview component (Dashboard)
 const OverviewDashboard = ({ userId }) => (
     <div className="text-center p-10">
         <FaChartLine size={50} className="text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800">User Overview Dashboard</h2>
         <p className="text-gray-600">Summary and key metrics for user ID: {userId}</p>
         <div className="mt-4 p-4 bg-gray-50 border rounded-lg">
-            {/* Insert actual dashboard content here */}
             <p className="text-sm text-gray-500">This area shows an aggregate view of the user's performance.</p>
         </div>
     </div>
@@ -508,7 +507,8 @@ const showAppMessage = (message, type = 'success') => {
         {activeTab === 'Overview' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
             {/* <UserDashboard profileUserId={userId} />  */}
-            <UserDashboard /> 
+<UserDashboard userId={userId} />
+            {/* <UserDashboard />  */}
           </div>
         )}
 

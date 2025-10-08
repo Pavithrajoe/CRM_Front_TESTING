@@ -1102,18 +1102,24 @@ return (
       fullWidth
       maxWidth="sm"
     >
+      
       <DialogTitle>Enter Remark for Won Status</DialogTitle>
       <DialogContent>
         <TextField
-          label="Remark *"
-          fullWidth
-          multiline
-          rows={3}
-          value={remarkData.remark}
-          onChange={e => setRemarkData({...remarkData, remark: e.target.value})}
-          sx={{ mt: 2 }}
-          InputLabelProps={{ shrink: true }}
-        />
+  label={
+    <span>
+      Remark <span style={{ color: 'red' }}>*</span>
+    </span>
+  }
+  fullWidth
+  multiline
+  rows={3}
+  value={remarkData.remark}
+  onChange={e => setRemarkData({ ...remarkData, remark: e.target.value })}
+  sx={{ mt: 2 }}
+  InputLabelProps={{ shrink: true }}
+/>
+
         <Autocomplete
           options={currencies}
           getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
@@ -1124,10 +1130,14 @@ return (
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Currency *"
+              label={
+    <span>
+      Currency <span style={{ color: 'red' }}>*</span>
+    </span>
+  }
               sx={{ mt: 2 }}
-              error={!remarkData.currencyId}
-              helperText={!remarkData.currencyId ? 'Currency is required' : ''}
+              // error={!remarkData.currencyId}
+              // helperText={!remarkData.currencyId ? 'Currency is required' : ''}
               InputLabelProps={{ shrink: true }}
             />
           )}
@@ -1589,10 +1599,6 @@ return (
     </div>
     {showUserProfile && <UserProfile settingsData={settingsData} />}
     </>
-
-                 
-
   );
 };
-
 export default LeadDetailView;

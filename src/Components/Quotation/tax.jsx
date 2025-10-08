@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Plus, X, AlertCircle, Search, RefreshCw } from 'lucide-react'; 
+import { Edit, Trash2, Plus, X, AlertCircle, Search, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,8 +8,8 @@ import { ENDPOINTS } from '../../api/constraints';
 
 // Custom Spinner Component for better loading state
 const Spinner = () => (
-    <div className="flex justify-center items-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-600"></div>
+    <div className="flex justify-center items-center py-12"> {/* Reduced padding */}
+        <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-b-4 border-blue-600"></div> {/* Slightly smaller spinner */}
     </div>
 );
 
@@ -253,141 +253,47 @@ function Tax() {
                     <p className="text-xl text-red-600 font-bold mb-2">Access Denied</p>
                     <p className="text-gray-600">Authentication data is missing. Please log in to manage tax rates.</p>
                 </div>
-                 <ToastContainer position="top-right" autoClose={3000} />
+                   <ToastContainer position="top-right" autoClose={3000} />
             </div>
         );
     }
 
     // --- Main Component Render ---
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <ToastContainer position="bottom-right" autoClose={3000} />
-            <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="min-h-[80vh] bg-gray-50 p-4 md:p-8">
+            <ToastContainer position="top-right" autoClose={3000} />
+            <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6"> {/* Reduced gap */}
                 
-                {/* Left Panel: Tax List */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl p-6 lg:col-span-2  h-[580px] order-2 lg:order-1"> 
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-                        <h2 className="font-extrabold text-3xl text-blue-800">Active Tax Rates</h2>
-                        <div className='flex items-center space-x-3 mt-4 sm:mt-0'>
-                            {/* Search Input */}
-                            <div className="relative w-full sm:w-64">
-                                <input
-                                    type="text"
-                                    placeholder="Search tax by name..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 transition w-full"
-                                />
-                                <Search
-                                    className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                                    aria-hidden="true"
-                                />
-                            </div>
-                             <button
-                                onClick={fetchTaxRates}
-                                disabled={loading || isDeleting || isSaving}
-                                className="text-gray-500 hover:text-blue-600 transition-colors p-2 rounded-full disabled:opacity-50"
-                                title="Refresh Tax Rates"
-                            >
-                                <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {loading ? (
-                        <Spinner />
-                    ) : (
-                        <div className="max-h-[70vh] overflow-y-auto pr-3">
-                            <ul className="space-y-4">
-                                {filteredTaxRates.length > 0 ? (
-                                    filteredTaxRates.map((tax) => (
-                                        <li
-                                            key={tax.iTax_id}
-                                            className={`p-4 rounded-xl flex justify-between items-center transition-all duration-300 ease-in-out cursor-pointer shadow-md border-l-4 
-                                                ${selectedTax?.iTax_id === tax.iTax_id
-                                                    ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-300'
-                                                    : 'bg-white border-gray-200 hover:bg-gray-100'
-                                                }`}
-                                            onClick={() => handleEditClick(tax)}
-                                        >
-                                            <div className="flex-1 min-w-0 pr-4">
-                                                <h4 className="font-bold text-xl text-gray-900 truncate">
-                                                    {tax.cTax_name}
-                                                </h4>
-                                                <p className="text-base text-gray-600 mt-1">
-                                                    Rate: 
-                                                    <span className="font-extrabold text-2xl text-green-600 ml-2">
-                                                        {parseFloat(tax.fTax_rate).toFixed(2)}%
-                                                    </span>
-                                                </p>
-                                            </div>
-                                            <div className="flex space-x-2 ml-4 self-center">
-                                                {/* Edit Button */}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleEditClick(tax);
-                                                    }}
-                                                    className="p-2 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
-                                                    title="Edit Tax Rate"
-                                                >
-                                                    <Edit size={18} />
-                                                </button>
-                                                {/* Delete Button */}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(tax.iTax_id, tax.cTax_name);
-                                                    }}
-                                                    disabled={isDeleting}
-                                                    className="p-2 text-red-600 bg-red-100 rounded-full hover:bg-red-200 transition-colors disabled:opacity-50"
-                                                    title="Inactivate Tax Rate"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-16 text-gray-500 bg-gray-100 rounded-xl border border-dashed border-gray-300">
-                                        <AlertCircle size={30} className="mx-auto text-gray-400 mb-3" />
-                                        <p className="text-lg font-medium">{searchTerm ? 'No matching tax rates found.' : 'No active tax rates found. Start by adding one!'}</p>
-                                    </div>
-                                )}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-
-                {/* Right Panel: Add/Edit Form */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl p-6 w-full lg:col-span-1 sticky top-4 order-1 lg:order-2 h-[580px]"> 
-                    <div className="flex justify-between items-center mb-8 border-b pb-4 ">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                             {selectedTax ? (
+                {/* Right Panel: Add/Edit Form (Order 1 on mobile, Order 2 on large screens) */}
+                {/* Removed lg:min-h-[400px] to let it shrink */}
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl p-5 w-full lg:col-span-1 order-1 lg:order-2 lg:sticky lg:top-6"> 
+                    <div className="flex justify-between items-center mb-6 border-b pb-3 "> {/* Reduced margin and padding */}
+                        <h2 className="text-xl font-bold text-gray-800 flex items-center"> {/* Reduced font size */}
+                              {selectedTax ? (
                                 <>
-                                    <Edit size={24} className="mr-2 text-orange-500" /> Edit Tax Rate
+                                    <Edit size={20} className="mr-2 text-orange-500" /> Edit Tax Rate
                                 </>
                             ) : (
                                 <>
-                                    <Plus size={24} className="mr-2 text-green-500" /> Create New Rate
+                                    <Plus size={20} className="mr-2 text-green-500" /> Create New Rate
                                 </>
                             )}
                         </h2>
                         {selectedTax && (
                             <button
                                 onClick={resetForm}
-                                className="p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors"
+                                className="p-1 text-red-500 hover:bg-red-100 rounded-full transition-colors"
                                 title="Cancel editing and create new"
                             >
-                                <X size={24} />
+                                <X size={20} /> {/* Reduced icon size */}
                             </button>
                         )}
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4"> {/* Reduced space-y */}
                         {/* Tax Name Input */}
                         <div>
-                            <label htmlFor="cTax_name" className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label htmlFor="cTax_name" className="block text-sm font-semibold text-gray-700 mb-1"> {/* Reduced margin */}
                                 Tax Name <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -396,14 +302,14 @@ function Tax() {
                                 name="cTax_name"
                                 value={formData.cTax_name}
                                 onChange={handleChange}
-                                className={`w-full p-3 border rounded-xl focus:ring-blue-500 focus:border-blue-500 transition-shadow text-lg 
-                                    ${errors.cTax_name ? 'border-red-500 ring-red-200' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow text-base 
+                                    ${errors.cTax_name ? 'border-red-500 ring-red-200' : 'border-gray-300'}`} // Reduced padding and font size
                                 placeholder="e.g., HST, VAT, GST"
                                 required
                             />
                             {errors.cTax_name && (
-                                <p className="mt-2 text-sm text-red-600 flex items-center bg-red-50 p-2 rounded-lg">
-                                    <AlertCircle size={16} className="mr-2 flex-shrink-0" />
+                                <p className="mt-1 text-xs text-red-600 flex items-center bg-red-50 p-1 rounded-md"> {/* Reduced padding and font size */}
+                                    <AlertCircle size={14} className="mr-1 flex-shrink-0" /> {/* Reduced icon size */}
                                     {errors.cTax_name}
                                 </p>
                             )}
@@ -411,7 +317,7 @@ function Tax() {
 
                         {/* Tax Rate Input */}
                         <div>
-                            <label htmlFor="fTax_rate" className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label htmlFor="fTax_rate" className="block text-sm font-semibold text-gray-700 mb-1"> {/* Reduced margin */}
                                 Tax Rate (%) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -420,8 +326,8 @@ function Tax() {
                                 name="fTax_rate"
                                 value={formData.fTax_rate}
                                 onChange={handleChange}
-                                className={`w-full p-3 border rounded-xl focus:ring-blue-500 focus:border-blue-500 transition-shadow text-lg 
-                                    ${errors.fTax_rate ? 'border-red-500 ring-red-200' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow text-base 
+                                    ${errors.fTax_rate ? 'border-red-500 ring-red-200' : 'border-gray-300'}`} // Reduced padding and font size
                                 placeholder="e.g., 13.00"
                                 step="0.01"
                                 min="0"
@@ -429,43 +335,43 @@ function Tax() {
                                 required
                             />
                             {errors.fTax_rate && (
-                                <p className="mt-2 text-sm text-red-600 flex items-center bg-red-50 p-2 rounded-lg">
-                                    <AlertCircle size={16} className="mr-2 flex-shrink-0" />
+                                <p className="mt-1 text-xs text-red-600 flex items-center bg-red-50 p-1 rounded-md"> {/* Reduced padding and font size */}
+                                    <AlertCircle size={14} className="mr-1 flex-shrink-0" /> {/* Reduced icon size */}
                                     {errors.fTax_rate}
                                 </p>
                             )}
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex justify-end space-x-3 pt-4 border-t pt-6">
+                        <div className="flex justify-end space-x-2 pt-4 border-t"> {/* Reduced space-x and pt */}
                             <button
                                 onClick={resetForm}
-                                className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                                className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm" // Reduced padding and font size
                             >
                                 Clear
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving || !isFormValid()}
-                                className={`px-6 py-3 font-semibold text-white rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px] shadow-lg
-                                     ${selectedTax
+                                className={`px-4 py-2 font-semibold text-white rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px] shadow-lg text-sm
+                                    ${selectedTax
                                         ? 'bg-orange-500 hover:bg-orange-600'
                                         : 'bg-green-500 hover:bg-green-600'
-                                    }`}
+                                    }`} // Reduced padding, min-width, and font size
                             >
                                 {isSaving ? (
                                     <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div> {/* Reduced spinner size */}
                                         Saving...
                                     </>
                                 ) : selectedTax ? (
                                     <>
-                                        <Edit size={20} className="mr-2" />
+                                        <Edit size={16} className="mr-1" /> {/* Reduced icon size */}
                                         Update Rate
                                     </>
                                 ) : (
                                     <>
-                                        <Plus size={20} className="mr-2" />
+                                        <Plus size={16} className="mr-1" /> {/* Reduced icon size */}
                                         Add Rate
                                     </>
                                 )}
@@ -473,6 +379,104 @@ function Tax() {
                         </div>
                     </div>
                 </div>
+                
+                {/* Left Panel: Tax List (Order 2 on mobile, Order 1 on large screens) */}
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl p-5 lg:col-span-1 order-2 lg:order-1 lg:min-h-[500px]"> 
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b pb-3"> {/* Reduced margin and padding */}
+                        <h2 className="font-extrabold text-2xl text-blue-800">Active Tax Rates</h2> {/* Reduced font size */}
+                        <div className='flex items-center space-x-2 mt-3 sm:mt-0'> {/* Reduced space-x and margin */}
+                            {/* Search Input */}
+                            <div className="relative w-full sm:w-46"> {/* Reduced width */}
+                                <input
+                                    type="text"
+                                    placeholder="Search tax ..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition w-full text-sm" // Reduced padding and font size
+                                />
+                                <Search
+                                    className="absolute left-2.5 top-2 h-4 w-4 text-gray-400" // Adjusted position and reduced icon size
+                                    aria-hidden="true"
+                                />
+                            </div>
+                           <button
+                                onClick={fetchTaxRates}
+                                disabled={loading || isDeleting || isSaving}
+                                className="text-gray-500 hover:text-blue-600 transition-colors p-1.5 rounded-full disabled:opacity-50" // Reduced padding
+                                title="Refresh Tax Rates"
+                            >
+                                {/* <RefreshCw size={20} className={loading ? 'animate-spin' : ''} /> */}
+                                 {/* Reduced icon size */}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {loading ? (
+                        <Spinner />
+                    ) : (
+                        // NEW: Reduced max-height to 50vh for all screen sizes
+                        <div className="max-h-[50vh] overflow-y-auto pr-2"> {/* Reduced max-height and padding-right */}
+                            <ul className="space-y-3"> {/* Reduced space-y */}
+                                {filteredTaxRates.length > 0 ? (
+                                    filteredTaxRates.map((tax) => (
+                                        <li
+                                            key={tax.iTax_id}
+                                            className={`p-3 rounded-lg flex justify-between items-center transition-all duration-300 ease-in-out cursor-pointer shadow-sm border-l-4 
+                                                ${selectedTax?.iTax_id === tax.iTax_id
+                                                    ? 'bg-blue-50 border-blue-600 ring-2 ring-blue-300'
+                                                    : 'bg-white border-gray-200 hover:bg-gray-100'
+                                                }`} // Reduced padding and shadow
+                                            onClick={() => handleEditClick(tax)}
+                                        >
+                                            <div className="flex-1 min-w-0 pr-3"> {/* Reduced padding-right */}
+                                                <h4 className="font-semibold text-lg text-gray-900 truncate"> {/* Reduced font size */}
+                                                    {tax.cTax_name}
+                                                </h4>
+                                                <p className="text-sm text-gray-600 mt-0.5"> {/* Reduced font size and margin-top */}
+                                                    Rate: 
+                                                    <span className="font-extrabold text-xl text-green-600 ml-2"> {/* Reduced font size */}
+                                                        {parseFloat(tax.fTax_rate).toFixed(2)}%
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div className="flex space-x-1 ml-3 self-center"> {/* Reduced space-x and margin-left */}
+                                                {/* Edit Button */}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEditClick(tax);
+                                                    }}
+                                                    className="p-1.5 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors" // Reduced padding
+                                                    title="Edit Tax Rate"
+                                                >
+                                                    <Edit size={16} /> {/* Reduced icon size */}
+                                                </button>
+                                                {/* Delete Button (Inactivate) */}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(tax.iTax_id, tax.cTax_name);
+                                                    }}
+                                                    disabled={isDeleting}
+                                                    className="p-1.5 text-red-600 bg-red-100 rounded-full hover:bg-red-200 transition-colors disabled:opacity-50" // Reduced padding
+                                                    title="Inactivate Tax Rate"
+                                                >
+                                                    <Trash2 size={16} /> {/* Reduced icon size */}
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12 text-gray-500 bg-gray-100 rounded-xl border border-dashed border-gray-300"> {/* Reduced padding */}
+                                        <AlertCircle size={24} className="mx-auto text-gray-400 mb-2" /> {/* Reduced icon size */}
+                                        <p className="text-base font-medium">{searchTerm ? 'No matching tax rates found.' : 'No active tax rates found. Start by adding one!'}</p> {/* Reduced font size */}
+                                    </div>
+                                )}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+
             </div>
         </div>
     );

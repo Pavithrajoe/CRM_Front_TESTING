@@ -117,23 +117,13 @@ export default function LeadTimeline({ leadId }) {
         {!error && !loading && history.length === 0 && (
           <div className="text-gray-500 text-sm italic text-center py-4">No activity found for this lead.</div>
         )}
-
-        {/* Timeline visualization container - makes it scrollable if content exceeds height */}
-        {/* Adjust the h-[...] value based on your layout. For example, h-[calc(100vh-200px)] 
-            if you have a header/footer taking up 200px, or just remove the fixed height 
-            and overflow-y-auto if you want the page to scroll naturally. */}
         <div className="flex flex-col  items-center space-y-8 h-full overflow-y-auto">
-
           {history.map((entry, index) => {
-            // Alternate content side
             const isLeft = index % 2 === 0;
             const isLast = index === history.length - 1;
             const message = getActivityMessage(entry);
-
             const performedBy = entry.user?.cFull_name || `User ${entry.performedbyid || "System"}`;
             const date = new Date(entry.activitytimestamp);
-
-            // Format the date using 'en-GB' for DD/MM/YYYY and ensure AM/PM is uppercase
             const humanReadable = date.toLocaleString("en-GB", {
               day: "numeric",
               month: "numeric",
@@ -165,16 +155,17 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base truncate">{message}</p>
+                      <p className="text-gray-700 text-base whitespace-pre-wrap break-words">{message}</p>
+                      {/* <p className="text-gray-700 text-base truncate">{message}</p> */}
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
-  <img
-    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
-    alt={`Avatar of ${performedBy}`}
-    className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
-    loading="lazy"
-  />
-  <time dateTime={date.toISOString()}>{humanReadable}</time>
-</footer>
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
+                        alt={`Avatar of ${performedBy}`}
+                        className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
+                        loading="lazy"
+                      />
+                      <time dateTime={date.toISOString()}>{humanReadable}</time>
+                    </footer>
                     </article>
                   )}
                 </div>
@@ -200,7 +191,6 @@ export default function LeadTimeline({ leadId }) {
                       width: 25,
                       height: 4,
                       backgroundColor: color,
-                      // Position based on which side the card is
                       ...(isLeft ? { right: "calc(100% + 12px)" } : { left: "calc(100% + 12px)" }),
                     }}
                     aria-hidden="true"
@@ -211,7 +201,7 @@ export default function LeadTimeline({ leadId }) {
                     <div
                       className="w-1 rounded-full mt-2"
                       style={{
-                        height: "100px", // Limits the line's height to create consistent spacing
+                        height: "100px",
                         backgroundColor: color,
                         opacity: 0.6,
                       }}
@@ -234,7 +224,8 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base truncate">{message}</p>
+                      <p className="text-gray-700 text-base whitespace-pre-wrap break-words">{message}</p>
+                      {/* <p className="text-gray-700 text-base truncate">{message}</p> */}
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}

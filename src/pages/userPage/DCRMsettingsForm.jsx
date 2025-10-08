@@ -93,8 +93,8 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Invalid email format';
       case 'password_hash':
         return value.length >= 8 ? '' : 'Minimum 8 characters required';
-      case 'phone_number':
-        return value ? /^\d{15}$/.test(value) ? '' : 'Maximum 15 digits Allowed' : '';
+      // case 'phone_number':
+      //   return value ? /^\d{15}$/.test(value) ? '' : 'Maximum 15 digits Allowed' : '';
       case 'company_name': // Correct field name for validation
         return value.trim().length >= 2 ? '' : 'Minimum 2 characters required';
       default:
@@ -189,8 +189,8 @@ const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-2xl relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-2xl relative h-[65vh] overflow-y-scroll" onClick={(e)=> e.stopPropagation()}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 transition-colors rounded-full p-1 hover:bg-gray-100"

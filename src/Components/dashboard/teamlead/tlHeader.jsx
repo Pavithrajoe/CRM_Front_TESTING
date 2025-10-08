@@ -21,7 +21,7 @@ export default function TeamleadHeader() {
     if (storedUserData) {
       try {
         const parsedData = JSON.parse(storedUserData);
-        const phoneAccess = parsedData?.phone_access === true;
+        const phoneAccess = parsedData?.DCRM_enabled === true;
         setPhoneActive(phoneAccess);
 
         // Optional: Keep it in flat localStorage for legacy use
@@ -31,7 +31,7 @@ export default function TeamleadHeader() {
       }
     } else {
       // Fallback to previous method
-      const phoneAccess = localStorage.getItem('phone_access') === 'true';
+      const phoneAccess = localStorage.getItem('DCRM_enabled') === 'true';
       setPhoneActive(phoneAccess);
     }
   }, []);

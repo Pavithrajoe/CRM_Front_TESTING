@@ -204,24 +204,32 @@ function LabelMaster() {
 
   if (isLoading) {
       return (
-          <div className="p-8 w-full bg-gray-50 min-h-screen flex items-center justify-center">
+        //5 screen responsive styles
+          <div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 py-8 w-full bg-gray-50 min-h-screen">
+
               <p className="text-blue-600 font-semibold">Loading label status...</p>
           </div>
       );
   }
 
   return (
-    <div className="p-8 w-full bg-gray-50 min-h-screen">
-      <p className="font-bold text-3xl text-blue-900 text-center mb-10">
+<div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 py-8 w-full bg-gray-50 min-h-screen">
+<p className="font-bold text-2xl sm:text-3xl md:text-4xl text-blue-900 text-center mb-10">
         Label Master
       </p>
 
       {/* Conditional Grid Layout */}
-      <div className={`grid gap-8 ${isEditMode ? "md:grid-cols-2" : "md:grid-cols-1 max-w-2xl mx-auto"}`}>
+<div
+  className={`grid gap-8 ${
+    isEditMode
+      ? "sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
+      : "sm:grid-cols-1 md:grid-cols-1 lg:max-w-3xl mx-auto"
+  }`}
+>
         
         {/* Existing Label Info  */}
         {isEditMode && existingLabel && (
-            <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200 order-first">
+            <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-6 md:p-8 border border-gray-200 order-first">
                 <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-blue-900">
                     <List size={23} className="text-blue-600" />
                     Current Label Set
@@ -296,7 +304,7 @@ function LabelMaster() {
                     name={field}
                     value={formData[field]}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+  className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={
                       field === "leadFormTitle"
                         ? `e.g. Lead Registration Form (Max ${MAX_LENGTH} chars)`
@@ -313,7 +321,7 @@ function LabelMaster() {
               )
             )}
 
-            <div className="flex justify-end gap-3 pt-4">
+<div className="flex flex-col sm:flex-row justify-end gap-3 pt-6">
                {/* Revert/Clear Button */}
                <button
                   onClick={() => resetForm(existingLabel)}

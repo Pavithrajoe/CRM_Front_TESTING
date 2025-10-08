@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 
 
 const mandatoryInputStages = ['Proposal', 'Won'];
+const MAX_PROJECT_VALUE = 10000000;  // 1 crore
 const MAX_REMARK_LENGTH = 500;
 const MAX_NOTES_LENGTH = 200;
 const MAX_PLACE_LENGTH = 200;
@@ -61,7 +62,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [users, setUsers] = useState([]);
   const { showToast } = useToast();
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-
   const [proposalSendModes, setProposalSendModes] = useState([]);
   const [openProposalDialog, setOpenProposalDialog] = useState(false);
   const [proposalDialogValue, setProposalDialogValue] = useState({
@@ -257,13 +257,33 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       isValid = false;
     }
 
-    if (remarkData.projectValue && isNaN(parseFloat(remarkData.projectValue))) {
-      newErrors.projectValue = 'Project value must be a valid number';
-      isValid = false;
-    } else if (remarkData.projectValue && parseFloat(remarkData.projectValue) < 0) {
-      newErrors.projectValue = 'Project value cannot be negative';
-      isValid = false;
+    if (remarkData.projectValue) {
+      // 1. Declare and assign numValue inside this block
+      const numValue = parseFloat(remarkData.projectValue); 
+      
+      if (isNaN(numValue)) {
+        newErrors.projectValue = 'Project value must be a valid number';
+        isValid = false;
+      } else if (numValue < 0) {
+        newErrors.projectValue = 'Project value cannot be negative';
+        isValid = false;
+      } else if (numValue > MAX_PROJECT_VALUE) {
+        newErrors.projectValue = `Project value cannot exceed ${MAX_PROJECT_VALUE.toLocaleString()}`;
+        isValid = false;
+      }
     }
+
+    // if (remarkData.projectValue && isNaN(parseFloat(remarkData.projectValue))) {
+    //   const numValue = parseFloat(remarkData.projectValue);
+    //   newErrors.projectValue = 'Project value must be a valid number';
+    //   isValid = false;
+    // } else if (remarkData.projectValue && parseFloat(remarkData.projectValue) < 0) {
+    //   newErrors.projectValue = 'Project value cannot be negative';
+    //   isValid = false;
+    // } else if (numValue > MAX_PROJECT_VALUE) {
+    //     newErrors.projectValue = `Project value cannot exceed ${MAX_PROJECT_VALUE.toLocaleString()}`;
+    //     isValid = false;
+    //   }
 
     setRemarkErrors(newErrors);
     return isValid;
@@ -728,7 +748,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       leadStatusId: remarkStageId,
       createBy: userId.iUser_id,
       ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
-      dueDate: remarkData.dueDate ? new Date(remarkData.dueDate).toISOString() : null
+      ...(remarkData.dueDate && { dueDate: new Date(remarkData.dueDate).toISOString() }),
 
     };
 
@@ -1102,7 +1122,48 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
+             <TextField
+              label="Project Value (optional)"
+              type="number"
+              fullWidth
+              value={remarkData.projectValue}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === '' || Number(value) <= 10000000) {
+                  setRemarkData(prev => ({ ...prev, projectValue: value }));
+                  if (remarkErrors.projectValue) {
+                    setRemarkErrors(prev => ({ ...prev, projectValue: '' }));
+                  }
+                } else {
+                  setRemarkErrors(prev => ({ ...prev, projectValue: 'Maximum allowed value is 1 crore' }));
+                }
+              }}
+              error={!!remarkErrors.projectValue}
+              helperText={remarkErrors.projectValue || 'Max value: 1 crore'}
+              sx={{ mt: 2 }}
+              InputLabelProps={{ shrink: true }}
+            /> 
+             {/* 
+
+              <TextField
+                label="Project Value (optional)"
+                type="number"
+                fullWidth
+                value={remarkData.projectValue}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value === '' || parseFloat(value) <= MAX_PROJECT_VALUE) {
+                    setRemarkData(prev => ({ ...prev, projectValue: value }));
+                  }
+                }}
+                inputProps={{ max: MAX_PROJECT_VALUE }} 
+                error={!!remarkErrors.projectValue}
+                helperText={remarkErrors.projectValue}
+                sx={{ mt: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+
+            {/* <TextField
               label="Project Value (optional)"
               type="number"
               fullWidth
@@ -1112,7 +1173,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
               helperText={remarkErrors.projectValue}
               sx={{ mt: 2 }}
               InputLabelProps={{ shrink: true }}
-            />
+            /> */}
             
             {/* Assigned To Section */}
             <div className="mt-4 mb-2">
@@ -1202,60 +1263,48 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      }));
               }}
                 
-
-    
-    viewRenderers={{
-      hours: renderTimeViewClock,
-      minutes: renderTimeViewClock,
-      seconds: renderTimeViewClock,
-    }}
-    slotProps={{
-      textField: {
-        
-        fullWidth: true,
-        
-        sx: { mt: 2 },
-        InputLabelProps: { shrink: true },
-      },
-      popper: {
-      placement: 'top-start', // This makes it appear above the field
-      modifiers: [
-        {
-          name: 'preventOverflow',
-          options: {
-            mainAxis: false,
-          },
-        },
-      ],
-      sx: { 
-        zIndex: 9999, // High z-index to appear above everything
-        '& .MuiPickersPopper-paper': {
-          marginBottom: '60px', // Add some space below the popper
-        }
-      }
-    },
-      desktopPaper: {
-      sx: { 
-        zIndex: 9999,
-        position: 'relative' // Prevent scrolling issues
-      }
-    }
-    }}
-    desktopModeMediaQuery="@media (min-width: 0px)"
-    minDateTime={dayjs()} 
-  />
-</LocalizationProvider>
-            {/* <TextField
-              label="Due Date"
-              type="date"
-              fullWidth
-              sx={{ mt: 2 }}
-              value={remarkData.dueDate || ''}
-              onChange={e => 
-                setRemarkData(prev => ({ ...prev, dueDate: e.target.value }))
+            viewRenderers={{
+              hours: renderTimeViewClock,
+              minutes: renderTimeViewClock,
+              seconds: renderTimeViewClock,
+            }}
+            slotProps={{
+              textField: {
+                
+                fullWidth: true,
+                
+                sx: { mt: 2 },
+                InputLabelProps: { shrink: true },
+              },
+              popper: {
+              placement: 'top-start', // This makes it appear above the field
+              modifiers: [
+                {
+                  name: 'preventOverflow',
+                  options: {
+                    mainAxis: false,
+                  },
+                },
+              ],
+              sx: { 
+                zIndex: 9999, // High z-index to appear above everything
+                '& .MuiPickersPopper-paper': {
+                  marginBottom: '60px', // Add some space below the popper
+                }
               }
-              InputLabelProps={{ shrink: true }}
-            /> */}
+            },
+              desktopPaper: {
+              sx: { 
+                zIndex: 9999,
+                position: 'relative' // Prevent scrolling issues
+              }
+            }
+            }}
+            desktopModeMediaQuery="@media (min-width: 0px)"
+            minDateTime={dayjs()} 
+          />
+        </LocalizationProvider>
+            
 
           </DialogContent>
           <DialogActions>

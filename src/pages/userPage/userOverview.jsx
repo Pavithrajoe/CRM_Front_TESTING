@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../api/constraints";
@@ -15,7 +16,6 @@ export default function User_Overview_KPIStats({ userId }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -41,7 +41,6 @@ export default function User_Overview_KPIStats({ userId }) {
         const jsonRes = await response.json();
         if (!response.ok) throw new Error(jsonRes.message || "API error");
 
-
         setLeads(jsonRes.details || []);
         setLoading(false);
       } catch (e) {
@@ -53,7 +52,6 @@ export default function User_Overview_KPIStats({ userId }) {
     fetchLeads();
   }, [userId]); 
 
-
   useEffect(() => {
     let total = 0, hot = 0, warm = 0, cold = 0, won = 0, lost = 0, active = 0, website = 0;
     leads.forEach((lead) => {
@@ -63,7 +61,6 @@ export default function User_Overview_KPIStats({ userId }) {
         if (lead.lead_potential?.clead_name?.toUpperCase() === "WARM") warm++;
         if (lead.lead_potential?.clead_name?.toUpperCase() === "COLD") cold++;
       }
-
 
       // Won
       if (lead.bisConverted === true && lead.bactive === true) { won++; }
@@ -84,54 +81,59 @@ export default function User_Overview_KPIStats({ userId }) {
     setLostCount(lost);
   }, [leads]);
 
-
   const kpiData = [
     { 
       title: "Total Leads", 
       value: totalLeadCount, 
-      plain: true 
+      plain: true,
+      bgColor: "bg-stone-200"
     },
     { 
       title: "Active Leads", 
       value: activeCount, 
-      plain: true 
+      plain: true,
+      bgColor: "bg-pink-200"
     },
-    { 
-      title: "Website Leads", 
-      value: websiteLeadCount, 
-      plain: true 
-    },
+    // { 
+    //   title: "Website Leads", 
+    //   value: websiteLeadCount, 
+    //   plain: true 
+    // },
     { 
       title: "Total Lost", 
       value: lostCount, 
-      plain: true 
+      plain: true,
+      bgColor: "bg-purple-200"
     },
     { 
       title: "Hot", 
       value: hotCount, 
       color: "text-red-500", 
-      bg: "/illustrations/hot.svg" 
+      bgColor: "bg-red-200"
+      // bg: "/illustrations/hot.svg"
     },
     { 
       title: "Warm", 
       value: warmCount, 
       color: "text-orange-500", 
-      bg: "/illustrations/warm.svg" 
+      bgColor: "bg-amber-200"
+      // bg: "/illustrations/warm.svg"
     },
     { 
       title: "Cold", 
       value: coldCount, 
       color: "text-blue-500", 
-      bg: "/illustrations/cold.svg" 
+      bgColor: "bg-blue-200"
+      // bg: "/illustrations/cold.svg"
     },
     { 
       title: "Total Won", 
       value: wonCount, 
       color: "text-green-600", 
-      bg: "/illustrations/win.svg" 
+      bgColor: "bg-green-200"
+      // bg: "/illustrations/win.svg"
     },
   ];
-
 
   if (loading) {
     return (
@@ -148,7 +150,6 @@ export default function User_Overview_KPIStats({ userId }) {
     );
   }
 
-
   return (
     <div className="px-4 py-6">
       <div className="max-w-5xl mx-auto space-y-6"> 
@@ -157,23 +158,23 @@ export default function User_Overview_KPIStats({ userId }) {
           {kpiData.slice(0, 4).map((kpi, index) => (
             <div
               key={index}
-              className="bg-white/60 border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer"
+              className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`}
             >
-              <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight">
+              <h3 className="text-lg text-center  font-bold text-gray-900 mb-1 tracking-tight">
+              {/* <h3 className="text-xs font-bold text-gray-600 mb-1 tracking-tight"> */}
                 {kpi.title}
               </h3>
-              <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+              <p className="text-2xl font-bold text-center text-gray-900">{kpi.value}</p>
             </div>
           ))}
         </div>
-
 
         {/* Second row: Hot, Warm, Cold, Won */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6"> 
           {kpiData.slice(4).map((kpi, index) => (
             <div
               key={index + 4} 
-              className="relative min-h-[160px] backdrop-blur-md bg-white/60 border border-white/30 shadow-[0_4px_30px_rgba(0,0,0,0.05)] rounded-2xl p-5 transition-all hover:shadow-lg overflow-hidden cursor-pointer"
+              className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`}
               style={{
                 backgroundImage: `url(${kpi.bg})`,
                 backgroundRepeat: "no-repeat",
@@ -183,10 +184,10 @@ export default function User_Overview_KPIStats({ userId }) {
             >
               <div className="flex flex-col justify-between h-full">
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-600 mb-1 tracking-tight">
+                  <h3 className="text-lg text-center  font-bold text-gray-900 mb-1 tracking-tight">
                     {kpi.title}
                   </h3>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold text-center text-gray-900">
                     {kpi.value}
                   </p>
                 </div>

@@ -1102,6 +1102,7 @@ return (
       fullWidth
       maxWidth="sm"
     >
+      
       <DialogTitle>Enter Remark for Won Status</DialogTitle>
       <DialogContent>
         <TextField
@@ -1589,10 +1590,6 @@ return (
     </div>
     {showUserProfile && <UserProfile settingsData={settingsData} />}
     </>
-
-                 
-
   );
 };
-
 export default LeadDetailView;

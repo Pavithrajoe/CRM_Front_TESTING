@@ -204,22 +204,22 @@ const handleOutsideClick = (event) => {
 
 
   // Close form when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showForm && formRef.current && !formRef.current.contains(event.target)) {
-        console.log("Click outside detected, closing form.");
-        setShowForm(false);
-        setEditingTask(null);
-        setIsListening(false);
-      }
-    };
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (showForm && formRef.current && !formRef.current.contains(event.target)) {
+//         console.log("Click outside detected, closing form.");
+//         setShowForm(false);
+//         setEditingTask(null);
+//         setIsListening(false);
+//       }
+//     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showForm]);
+//     document.addEventListener("mousedown", handleClickOutside);
+//     
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, [showForm]);
 
 
   // Form handlers

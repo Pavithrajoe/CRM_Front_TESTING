@@ -194,6 +194,15 @@ const Tasks = () => {
     };
   }, [isListening]);
 
+const handleOutsideClick = (event) => {
+  if (formRef.current && !formRef.current.contains(event.target)) {
+    setShowForm(false);
+    setIsListening(false);
+    setEditingComment(null);
+  }
+};
+
+
   // Close form when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -626,11 +635,11 @@ const Tasks = () => {
 
         {showForm && (
           <>
-            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity"></div>
+            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleOutsideClick}></div>
            <div
               ref={formRef}
               className="fixed top-1/2 left-1/2 transform -translate-x-1/4 -translate-y-1/2 w-[95%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 z-50 transition-all duration-300"
-            >
+            onClick={(e) => e.stopPropagation}>
               <div className="flex justify-between items-center mb-3 sm:mb-4">
                 <h3 className="font-medium text-lg sm:text-xl text-gray-800">
                   {editingTask ? "Edit Task" : "Add Task"}

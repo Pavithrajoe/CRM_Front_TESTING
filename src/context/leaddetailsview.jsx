@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useRef  } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -112,6 +112,9 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
 const LeadDetailView = () => {
   const { leadId } = useParams();
   const { showPopup } = usePopup();
+
+    const lostReasonDialogRef = useRef(null);
+
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.only('xs'));
   const isSm = useMediaQuery(theme.breakpoints.only('sm'));
@@ -677,6 +680,25 @@ const sendEmail = async () => {
   }
 };
 
+useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (lostReasonDialogRef.current && 
+          !lostReasonDialogRef.current.contains(event.target)) {
+        setLeadLostDescriptionTrue(false);
+      }
+    };
+
+    // Add event listener when dialog is open
+    if (leadLostDescriptionTrue) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [leadLostDescriptionTrue]);
+
 
 const fetchLeadData = async () => {
   try {
@@ -939,6 +961,14 @@ const formatDate = (dateInput) => {
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12 || 12;
   return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+};
+
+const handleOutsideClick = (event) => {
+  if (formRef.current && !formRef.current.contains(event.target)) {
+    setShowForm(false);
+    setIsListening(false);
+    setEditingComment(null);
+  }
 };
 
 return (
@@ -1298,70 +1328,81 @@ return (
       quotationNumber={currentQuotation?.cQuote_number || ''}
       onDownload={handleDownloadFromViewer}
     />
+
+    
     
     {/* Lead Lost Reason Dialog */}
-    {leadLostDescriptionTrue && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div>
-              <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
-                Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
-              </label>
-              <select
-                id="lostReason"
-                name="lostReason"
-                value={selectedLostReasonId}
-                onChange={handleReasonChange}
-                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                required
+{/* Lead Lost Reason Dialog */}
+{leadLostDescriptionTrue && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+  >
+    <div 
+      ref={lostReasonDialogRef} // Add the ref here
+      className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
+      // Remove the onClick handler from here
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
+        Why mark this lead as Lost?
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div>
+          <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
+            Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
+          </label>
+          <select
+            id="lostReason"
+            name="lostReason"
+            value={selectedLostReasonId}
+            onChange={handleReasonChange}
+            className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+            required
+          >
+            <option value="">Select a reason</option>
+            {lostReasons.map((reason) => (
+              <option
+                key={reason.ilead_lost_reason_id}
+                value={reason.ilead_lost_reason_id}
               >
-                <option value="">Select a reason</option>
-                {lostReasons.map((reason) => (
-                  <option
-                    key={reason.ilead_lost_reason_id}
-                    value={reason.ilead_lost_reason_id}
-                  >
-                    {reason.cLeadLostReason}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
-                Remarks
-              </label>
-              <textarea
-                id="lostDescription"
-                name="lostDescription"
-                rows="3"
-                value={lostDescription}
-                onChange={(e) => setLostDescription(e.target.value)}
-                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                placeholder="Enter a brief description for marking as lost..."
-              ></textarea>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setLeadLostDescriptionTrue(false)}
-                className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
-              >
-                Submit
-              </button>
-            </div>
-            </form>
-          </div>
+                {reason.cLeadLostReason}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+
+        <div>
+          <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
+            Remarks
+          </label>
+          <textarea
+            id="lostDescription"
+            name="lostDescription"
+            rows="3"
+            value={lostDescription}
+            onChange={(e) => setLostDescription(e.target.value)}
+            className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+            placeholder="Enter a brief description for marking as lost..."
+          ></textarea>
+        </div>
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={() => setLeadLostDescriptionTrue(false)}
+            className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
       
       {/* Status Remarks Section */}
       {/* {(isWon || immediateWonStatus || leadData?.bisConverted) && statusRemarks.length > 0 && (

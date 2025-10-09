@@ -300,9 +300,9 @@ setProfileSettings(data)
         website_access: data.website_access || false,
       });
 
-      console.log("✅ User settings loaded:", data);
+      // console.log("✅ User settings loaded:", data);
     } catch (err) {
-      console.error("❌ Error fetching user:", err);
+      console.error("Error fetching user:", err);
       toast.error("Failed to load user details.");
     } finally {
       setLoadingProfile(false);

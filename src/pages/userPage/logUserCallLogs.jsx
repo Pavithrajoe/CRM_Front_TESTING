@@ -34,6 +34,8 @@ function LogUserCallLogs() {
         rejectedCalls: 0
     });
 
+    
+
     // Helper functions
     const formatDateForInput = useCallback((date) => {
         if (!date) return '';

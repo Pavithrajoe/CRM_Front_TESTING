@@ -39,6 +39,8 @@ const Tasks = () => {
   const [assignToMe, setAssignToMe] = useState(true);
   const formRef = useRef(null);
   const searchInputRef = useRef(null);
+  // const dateTimePickerRef = useRef(null); // Removed as it's not strictly necessary for MUI picker
+  
 
   // const COMPANY_ID = process.env.VITE_XCODEFIX_FLOW;
   const COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
@@ -194,32 +196,34 @@ const Tasks = () => {
     };
   }, [isListening]);
 
-const handleOutsideClick = (event) => {
-  if (formRef.current && !formRef.current.contains(event.target)) {
-    setShowForm(false);
-    setIsListening(false);
-    setEditingComment(null);
-  }
-};
+  // Close form when clicking outside logic
+  const handleClickOutside = useCallback((event) => {
+    if (!showForm) return;
+
+    const formEl = formRef.current;
+    // Select the DateTimePicker popover/modal elements
+    const pickerPopup = document.querySelector('.MuiPopper-root'); 
+    const calendarDialog = document.querySelector('.MuiModal-root');
+
+    // Check if click is inside form or DateTimePicker popups
+    const clickedInsideForm = formEl?.contains(event.target);
+    const clickedInsidePicker =
+      pickerPopup?.contains(event.target) || calendarDialog?.contains(event.target);
+
+    // Only close if click is outside everything
+    if (!clickedInsideForm && !clickedInsidePicker) {
+      setShowForm(false);
+      setEditingTask(null);
+      setIsListening(false);
+    }
+  }, [showForm, setEditingTask, setIsListening]);
 
 
-  // Close form when clicking outside
+  // Attach listener
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showForm && formRef.current && !formRef.current.contains(event.target)) {
-        console.log("Click outside detected, closing form.");
-        setShowForm(false);
-        setEditingTask(null);
-        setIsListening(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showForm]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [handleClickOutside]);
 
 
   // Form handlers
@@ -271,7 +275,7 @@ const handleOutsideClick = (event) => {
       updatedValue = value.charAt(0).toUpperCase() + value.slice(1);
     } else if (name === "ctask_content") {
       if (value.length > 500) {
-        showPopup("Warning", "Description cannot exceed 500 characters.", "warning"); // Corrected to 500 from 70
+        showPopup("Warning", "Description cannot exceed 500 characters.", "warning");
         return;
       }
     }
@@ -311,13 +315,13 @@ const handleOutsideClick = (event) => {
       showPopup("Warning", "Description must be at least 5 characters long.", "warning");
       return;
     }
-    
-    if (editingTask && !canEditTask(editingTask)) {
-        showPopup("Error", "This task can no longer be edited.", "error");
-        setEditingTask(null); 
-        setShowForm(false);
-        return;
-    }
+    
+    if (editingTask && !canEditTask(editingTask)) {
+        showPopup("Error", "This task can no longer be edited.", "error");
+        setEditingTask(null); 
+        setShowForm(false);
+        return;
+    }
 
     const payload = {
       ...formData,
@@ -368,7 +372,7 @@ const handleOutsideClick = (event) => {
         showPopup("Success", "🎉 Task saved successfully!", "success");
         
         setShowForm(false);
-        setEditingTask(null); // Clear editing state after successful save
+        setEditingTask(null); // Clear editing state after successful save
         await fetchTasks();
       } else {
         showPopup("Error", response.data.message || "Failed to save task.", "error");
@@ -431,65 +435,58 @@ const handleOutsideClick = (event) => {
   };
 
 
-    /**
-     * Checks if a task is the most recently created one.
-     * @param {object} task The task object to check.
-     * @param {array} allTasks The array of all tasks (must be sorted by dcreate_dt DESC).
-     * @returns {boolean} True if the task is the most recent, false otherwise.
-     */
-    const isMostRecentTask = useCallback((task, allTasks) => {
-        if (!allTasks || allTasks.length === 0) return true; 
-        const mostRecentTask = allTasks[0];
-        return task.itask_id === mostRecentTask.itask_id;
-    }, []);
+    /**
+     * Checks if a task is the most recently created one.
+     * @param {object} task The task object to check.
+     * @param {array} allTasks The array of all tasks (must be sorted by dcreate_dt DESC).
+     * @returns {boolean} True if the task is the most recent, false otherwise.
+     */
+    const isMostRecentTask = useCallback((task, allTasks) => {
+        if (!allTasks || allTasks.length === 0) return true; 
+        const mostRecentTask = allTasks[0];
+        return task.itask_id === mostRecentTask.itask_id;
+    }, []);
 
-    /**
-     * Determines if the current user can edit the task based on the restrictions.
-     * @param {object} task The task object.
-     * @returns {boolean} True if editable, false otherwise.
-     */
-    const canEditTask = useCallback((task) => {
-        const isCreator = userId === task.icreated_by;
-        if (!isCreator) return false;
+    /**
+     * Determines if the current user can edit the task based on the restrictions.
+     * @param {object} task The task object.
+     * @returns {boolean} True if editable, false otherwise.
+     */
+    const canEditTask = useCallback((task) => {
+        const isCreator = userId === task.icreated_by;
+        if (!isCreator) return false;
 
-        const dueDate = task.task_date ? parseISO(task.task_date) : null;
-        if (dueDate && isPast(dueDate)) {
-            return false; 
-        }
-        
-        if (companyId && Number(companyId) === COMPANY_ID) {
-            return isMostRecentTask(task, tasks); 
-        }
+        const dueDate = task.task_date ? parseISO(task.task_date) : null;
+        if (dueDate && isPast(dueDate)) {
+            return false; 
+        }
+        
+        if (companyId && Number(companyId) === Number(COMPANY_ID)) {
+            return isMostRecentTask(task, tasks); 
+        }
 
-        return true; 
-    }, [userId, companyId, tasks, isMostRecentTask]);
-
-
-    /**
-     * Determines if the current user can delete the task based on the restrictions.
-     * @param {object} task The task object.
-     * @returns {boolean} True if deletable, false otherwise.
-     */
-
-    const canDeleteTask = useCallback((task) => {
-    const isCreator = userId === task.icreated_by;
-    const isDeleteHiddenCompany = companyId && (Number(companyId) === Number(COMPANY_ID));
-    const dueDate = task.task_date ? parseISO(task.task_date) : null;
-
-    // Disable delete if not creator, or company restriction applies, or task is expired
-    if (!isCreator || isDeleteHiddenCompany || (dueDate && isPast(dueDate))) {
-        return false;
-    }
-
-    return true;
-    }, [userId, companyId]);
+        return true; 
+    }, [userId, companyId, tasks, isMostRecentTask]);
 
 
-//   const canDeleteTask = useCallback((task) => {
-//     const isCreator = userId === task.icreated_by;
-//     const isDeleteHiddenCompany = companyId && (Number(companyId) === Number(COMPANY_ID)); 
-//     return isCreator && !isDeleteHiddenCompany;
-//   }, [userId, companyId]);
+    /**
+     * Determines if the current user can delete the task based on the restrictions.
+     * @param {object} task The task object.
+     * @returns {boolean} True if deletable, false otherwise.
+     */
+
+    const canDeleteTask = useCallback((task) => {
+    const isCreator = userId === task.icreated_by;
+    const isDeleteHiddenCompany = companyId && (Number(companyId) === Number(COMPANY_ID));
+    const dueDate = task.task_date ? parseISO(task.task_date) : null;
+
+    // Disable delete if not creator, or company restriction applies, or task is expired
+    if (!isCreator || isDeleteHiddenCompany || (dueDate && isPast(dueDate))) {
+        return false;
+    }
+
+    return true;
+    }, [userId, companyId]);
 
   // Focus the search input when it opens
   useEffect(() => {
@@ -548,10 +545,10 @@ const handleOutsideClick = (event) => {
             </p>
           ) : (
             currentTasks.map((task) => {
-                const canEdit = canEditTask(task);
-                const canDelete = canDeleteTask(task);
+                const canEdit = canEditTask(task);
+                const canDelete = canDeleteTask(task);
 
-                return (
+                return (
               <div
                 key={task.itask_id}
                 className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out relative"
@@ -565,11 +562,11 @@ const handleOutsideClick = (event) => {
                       <button
                         onClick={() => canEdit ? handleEditClick(task) : null}
                         className={`
-                            text-gray-400 hover:text-blue-500 transition-colors duration-200
-                            ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-                        `}
+                            text-gray-400 hover:text-blue-500 transition-colors duration-200
+                            ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
+                        `}
                         title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-                        disabled={!canEdit}
+                        disabled={!canEdit}
                       >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -635,11 +632,13 @@ const handleOutsideClick = (event) => {
 
         {showForm && (
           <>
-            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleOutsideClick}></div>
-           <div
+            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity space-y-10 " onClick={handleClickOutside}></div>
+           <div
               ref={formRef}
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/4 -translate-y-1/2 w-[95%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 z-50 transition-all duration-300"
-            onClick={(e) => e.stopPropagation}>
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl h-[58vh] p-4 sm:p-6 z-50 transition-all duration-300"
+              // Add stopPropagation to prevent the modal from closing when clicking inside
+              onClick={(e) => e.stopPropagation()} 
+            >
               <div className="flex justify-between items-center mb-3 sm:mb-4">
                 <h3 className="font-medium text-lg sm:text-xl text-gray-800">
                   {editingTask ? "Edit Task" : "Add Task"}
@@ -648,7 +647,7 @@ const handleOutsideClick = (event) => {
                   onClick={() => {
                     setShowForm(false);
                     setIsListening(false);
-                        setEditingTask(null); 
+                    setEditingTask(null); 
                   }}
                   className="text-xl sm:text-2xl text-gray-500 hover:text-red-500"
                 >
@@ -753,35 +752,36 @@ const handleOutsideClick = (event) => {
                     </select>
                   </div>
                 </div>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Due Date <span className="text-red-600">*</span>
-                  </label>
+  <label className="block text-sm font-medium text-gray-700 mt-[-10px]">
+    Due Date <span className="text-red-600">*</span>
+  </label>
 
-                  <DateTimePicker
-                    value={formData.task_date}
-                    onChange={handleDateChange}
-                    format="dd/MM/yyyy HH:mm aa" 
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                      seconds: renderTimeViewClock,
-                    }}
-                    slotProps={{
-                       popper: {
-                         sx: { zIndex: 9999 } 
-                        },
-                      textField: {
-                        className:
-                          "pr-10 py-2 p-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
-                      },
-                    }}
-                    required
-                  />
-                  
-                </div>
-                </LocalizationProvider>
+  {/* MUI Date Time Picker implementation */}
+  {/* Apply margin top to align correctly with other inputs */}
+  <div className="mt-3"> 
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <DateTimePicker
+        label="Task Date & Time"
+        value={formData.task_date}
+        onChange={handleDateChange}
+        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock, seconds: renderTimeViewClock }}
+        slotProps={{
+          textField: {
+            size: "small",
+            fullWidth: true,
+            // REMOVED: style: { height: "40px", fontSize: "14px", marginTop:"30px" },
+            InputProps: {
+              style: { height: "40px", fontSize: "14px" }, 
+            },
+          },
+        }}
+      />
+    </LocalizationProvider>
+  </div>
+</div>
+                
                 <button
                   type="submit"
                   className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4"
@@ -811,7 +811,7 @@ const handleOutsideClick = (event) => {
                   ) : null}
                   {editingTask ? (canEditTask(editingTask) ? "Update Task" : "Edit Disabled") : "Add Task"}
                 </button>
-              </form>
+              </form> 
             </div>
           </>
         )}

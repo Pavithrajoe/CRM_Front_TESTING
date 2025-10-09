@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { ENDPOINTS } from '../../src/api/constraints';
 import ProfileHeader from '../Components/common/ProfileHeader';
@@ -18,7 +18,6 @@ import {
 
 const OverviewDashboard = ({ userId }) => (
     <div className="text-center p-10">
-        <FaChartLine size={50} className="text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800">User Overview Dashboard</h2>
         <p className="text-gray-600">Summary and key metrics for user ID: {userId}</p>
         <div className="mt-4 p-4 bg-gray-50 border rounded-lg">
@@ -91,14 +90,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   </div>
 );
 
-const tabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'Call Logs', 'User Leads'];
-
 const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
   const { userId } = useParams();
   const token = localStorage.getItem('token'); 
   const [email, setEmail] = useState('');
   const [user, setUser] = useState(null);
-  // const [activeTab, setActiveTab] = useState('Target');
   const [activeTab, setActiveTab] = useState('Overview');
   const [showForm, setShowForm] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -107,7 +103,6 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
     cEmail: '',
     cjob_title: '',
     cRole_name:'',
-    // reports_to: '',
     i_bPhone_no: '', 
     iphone_no: '',
     bactive: true,
@@ -125,21 +120,58 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmModalMessage, setConfirmModalMessage] = useState('');
   const [confirmModalAction, setConfirmModalAction] = useState(null);
+  const [phoneActive, setPhoneActive] = useState(false);
 
-const showAppMessage = (message, type = 'success') => {
-  if (type === 'success') {
-    setSuccessMessage(message);
-    setErrorMessage('');
-  } else {
-    setErrorMessage(message);
-    setSuccessMessage('');
-  }
-  setTimeout(() => {
-    setSuccessMessage('');
-    setErrorMessage('');
-  }, 5000);
-};
+  // Define tabs conditionally based on DCRM status
+  const tabs = useMemo(() => {
+    const baseTabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'User Leads'];
+    
+    // Add 'Call Logs' only if DCRM is enabled
+    if (phoneActive) {
+      // Insert 'Call Logs' after 'Achievement'
+      const achievementIndex = baseTabs.indexOf('Achievement');
+      if (achievementIndex !== -1) {
+        baseTabs.splice(achievementIndex + 1, 0, 'Call Logs');
+      }
+    }
+    
+    return baseTabs;
+  }, [phoneActive]);
 
+  const showAppMessage = (message, type = 'success') => {
+    if (type === 'success') {
+      setSuccessMessage(message);
+      setErrorMessage('');
+    } else {
+      setErrorMessage(message);
+      setSuccessMessage('');
+    }
+    setTimeout(() => {
+      setSuccessMessage('');
+      setErrorMessage('');
+    }, 5000);
+  };
+
+  useEffect(() => {
+    // Get the entire user data from localStorage
+    const storedUserData = localStorage.getItem('user');
+    if (storedUserData) {
+      try {
+        const parsedData = JSON.parse(storedUserData);
+        const phoneAccess = parsedData?.DCRM_enabled === true;
+        setPhoneActive(phoneAccess);
+
+        // Optional: Keep it in flat localStorage for legacy use
+        localStorage.setItem('phone_access', phoneAccess);
+      } catch (error) {
+        console.error('Error parsing user_data:', error);
+      }
+    } else {
+      // Fallback to previous method
+      const phoneAccess = localStorage.getItem('DCRM_enabled') === 'true';
+      setPhoneActive(phoneAccess);
+    }
+  }, []);
 
   // Fetch user data
   useEffect(() => {
@@ -305,43 +337,40 @@ const showAppMessage = (message, type = 'success') => {
     }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+        ...editFormData,
+        reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
+      };
 
+      const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+      const updated = await res.json();
 
-  try {
-    const token = localStorage.getItem("token");
-    const payload = {
-      ...editFormData,
-      reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
-    };
+      if (!res.ok) throw new Error(updated.message || "Failed to update profile");
 
-    const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const updated = await res.json();
-
-    if (!res.ok) throw new Error(updated.message || "Failed to update profile");
-
-    setUser(updated);
-    setShowForm(false);
-    showAppMessage("Profile updated successfully!", "success");
-  } catch (err) {
-    console.error(err);
-    showAppMessage(`Failed to update profile: ${err.message}`, "error");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      setUser(updated);
+      setShowForm(false);
+      showAppMessage("Profile updated successfully!", "success");
+    } catch (err) {
+      console.error(err);
+      showAppMessage(`Failed to update profile: ${err.message}`, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleFormClose = () => {
     setEditFormData({
@@ -361,7 +390,7 @@ const showAppMessage = (message, type = 'success') => {
     setShowForm(false);
   };
 
-   useEffect(() => {
+  useEffect(() => {
       if (settingsData) {
         // console.log("ProfileCard received settings:", settingsData);
             }
@@ -441,50 +470,6 @@ const showAppMessage = (message, type = 'success') => {
             aria-label="Expand Profile Card"
           />
         )}
-        {/* {isProfileCardVisible ? (
-          <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
-            <FaUserCircle size={60} className="text-blue-600" />
-            <div className="flex-grow">
-              <h3 className="text-lg font-semibold text-gray-800">{user.cFull_name}</h3>
-              <p className="text-sm text-gray-600">@{user.cUser_name}</p>
-              {user.bactive !== undefined && (
-                <span className={`px-2 py-1 mt-1 rounded-full text-xs font-semibold capitalize inline-block ${
-                  user.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
-                </span>
-              )}
-
-              
-              {user.DCRM_enabled && (
-                <span className="ml-2 px-2 py-1 mt-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
-                  DCRM Enabled
-                </span>
-              )}
-            </div>
-            <div className="ml-auto flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={() => setIsProfileCardVisible(false)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                Collapse
-              </button>
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                aria-label="Edit Profile"
-              >
-                <FaEdit size={18} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <FaUserCircle
-            size={60}
-            className="text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
-            onClick={() => setIsProfileCardVisible(true)}
-            aria-label="Expand Profile Card"
-          />
-        )} */}
 
         <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
           {tabs.map((tab) => (
@@ -502,12 +487,10 @@ const showAppMessage = (message, type = 'success') => {
       </div>
 
       <div className="flex-grow mt-6">
-         {/* UserDashboard */}
+        {/* UserDashboard */}
         {activeTab === 'Overview' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
-            {/* <UserDashboard profileUserId={userId} />  */}
-<UserDashboard userId={userId} />
-            {/* <UserDashboard />  */}
+            <UserDashboard userId={userId} />
           </div>
         )}
 
@@ -658,82 +641,6 @@ const showAppMessage = (message, type = 'success') => {
                   />
                 </div>
               </div>
-              
-
-             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-
-                {/* <div className="relative">
-                  <FaPhone className="absolute top-4 left-3 text-gray-500" />
-                  <input
-                    type="text"
-                    name="Role"
-                    placeholder="Personal Phone"
-                    value={editFormData.irole_id}
-                    onChange={handleChange}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    maxLength={15}
-                  />
-                </div> */}
-                
-              </div>
-{/* 
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">Access Permissions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="mail_access"
-                      name="mail_access"
-                      checked={editFormData.mail_access}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="mail_access" className="ml-2 block text-sm text-gray-700 flex items-center">
-                      <FaEnvelopeOpen className="mr-1" /> Mail Access
-                    </label>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="phone_access"
-                      name="phone_access"
-                      checked={editFormData.phone_access}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="phone_access" className="ml-2 block text-sm text-gray-700 flex items-center">
-                      <FaPhone className="mr-1" /> Phone Access
-                    </label>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="website_access"
-                      name="website_access"
-                      checked={editFormData.website_access}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="website_access" className="ml-2 block text-sm text-gray-700 flex items-center">
-                      <FaGlobe className="mr-1" /> Website Access
-                    </label>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="whatsapp_access"
-                      name="whatsapp_access"
-                      checked={editFormData.whatsapp_access}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="whatsapp_access" className="ml-2 block text-sm text-gray-700 flex items-center">
-                      <FaWhatsapp className="mr-1" /> WhatsApp Access
-                    </label>
-                  </div>
-                </div>
-              </div> */}
 
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch

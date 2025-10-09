@@ -194,6 +194,25 @@ const Tasks = () => {
     };
   }, [isListening]);
 
+  // Close form when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showForm && formRef.current && !formRef.current.contains(event.target)) {
+        console.log("Click outside detected, closing form.");
+        setShowForm(false);
+        setEditingTask(null);
+        setIsListening(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showForm]);
+
+
   // Form handlers
   const handleNewTaskClick = () => {
     setFormData({
@@ -459,12 +478,9 @@ const Tasks = () => {
 
 //   const canDeleteTask = useCallback((task) => {
 //     const isCreator = userId === task.icreated_by;
-//     const isDeleteHiddenCompany = companyId && (Number(companyId) === Number(COMPANY_ID)); // COMPANY_ID from env
+//     const isDeleteHiddenCompany = companyId && (Number(companyId) === Number(COMPANY_ID)); 
 //     return isCreator && !isDeleteHiddenCompany;
 //   }, [userId, companyId]);
-
-    
-
 
   // Focus the search input when it opens
   useEffect(() => {

@@ -623,7 +623,8 @@ const Tasks = () => {
             <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleClickOutside}></div>
             <div
               ref={formRef}
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300"
+              className="fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300"
+              // className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-3 sm:mb-4 p-4 sm:p-6 border-b sticky top-0 bg-white z-10">
@@ -741,30 +742,30 @@ const Tasks = () => {
                 </div>
                 
                 <div>
-  <label className="block text-sm font-medium text-gray-700">
-    Due Date <span className="text-red-600">*</span>
-  </label>
-  <div className="mt-2">
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <DateTimePicker
-        label="Task Date & Time"
-        value={formData.task_date}
-        format="dd/MM/yyyy hh:mm a"
-        onChange={handleDateChange}
-        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock, seconds: renderTimeViewClock }}
-        slotProps={{
-          textField: {
-            size: "small",
-            fullWidth: true,
-            InputProps: {
-              style: { height: "40px", fontSize: "14px" }, 
-            },
-          },
-        }}
-      />
-    </LocalizationProvider>
-  </div>
-</div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Due Date <span className="text-red-600">*</span>
+                  </label>
+                  <div className="mt-2">
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DateTimePicker
+                        label="Task Date & Time"
+                        value={formData.task_date}
+                        format="dd/MM/yyyy hh:mm a"
+                        onChange={handleDateChange}
+                        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock, seconds: renderTimeViewClock }}
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            InputProps: {
+                              style: { height: "40px", fontSize: "14px" }, 
+                            },
+                          },
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
                 
                 <button
                   type="submit"

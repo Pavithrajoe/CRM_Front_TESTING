@@ -60,7 +60,7 @@ import AccountSettings from "./pages/settings/accountSettings";
 import NotificationSettings from "./pages/settings/notificationSettings";
 import BillingSettings from "./pages/settings/billingSettings";
 import MembersSettings from "./pages/settings/membersSettings";
-import GeneratePoster from "./Components/common/Poster/GeneratePoster.jsx";
+import GeneratePoster from "./Components/Tools/Poster/GeneratePoster.jsx";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';

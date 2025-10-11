@@ -138,7 +138,7 @@ export default function LeadTimeline({ leadId }) {
             return (
               <div
                 key={entry.id || index}
-                className="flex w-full relative min-h-[170px]" // ms-[-100px] removed to ensure centering
+                className="flex w-full relative min-h-[170px]" 
                 aria-label={`Timeline event: ${message}`}
               >
                 {/* Left content column */}

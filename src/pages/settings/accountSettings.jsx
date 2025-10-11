@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { ENDPOINTS } from '../../api/constraints';
+import LeadDetailView from "../../context/leaddetailsview";
 
 const AccountSettings = () => {
   const token = localStorage.getItem("token");
@@ -247,192 +248,144 @@ const handleSaveGeneralSettings = useCallback(async () => {
 
   return (
     <>
-    <div className="relative w-full bg-[#f9f9f9] rounded-3xl shadow-md p-6 mt-4 border border-gray-200">
-      {loading && (
-        <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-50 rounded-3xl">
-          <div className="w-8 h-8 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+   <div className="relative w-full bg-[#f9f9f9] rounded-3xl shadow-md p-4 sm:p-6 lg:p-8 mt-4 border border-gray-200 overflow-y-scroll">
+  {loading && (
+    <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-50 rounded-3xl">
+      <div className="w-8 h-8 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )}
 
-      {/* Profile Section */}
-      <div className="mb-6 flex items-center gap-4">
-        <h1 className="text-[22px] font-semibold text-gray-900">Profile Settings</h1>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {[
-          ["Company Name*", "companyName", "text", 50],
-          ["Email", "email", "email", 50],
-          ["Phone*", "phone", "tel", 10],
-          ["GST No", "gst", "text", 15],
-          ["Website", "website", "url", 50],
-          ["Address 1", "address1", "text", 50],
-          ["Address 2", "address2", "text", 50],
-          ["Address 3", "address3", "text", 50],
-        ].map(([label, name, type, maxLength]) => (
-          <div key={name} className="flex flex-col">
-            <label className="text-xs text-gray-600 mb-1">{label}</label>
-            <input
-              type={type}
-              name={name}
-              value={profile[name]}
-              onChange={handleInputChange}
-              maxLength={maxLength}
-              className={`px-3 py-2 rounded-xl border ${
-                errors[name] ? "border-red-500" : "border-gray-300"
-              } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
-              disabled={loading}
-            />
-            {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-          </div>
-        ))}
-      </div>
+  {/* Profile Section */}
+  <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 " >
+    <h1 className="text-[20px] sm:text-[22px] font-semibold text-gray-900">Profile Settings</h1>
+  </div>
 
-      {/* Lead Form Type */}
-    <div className="border-t pt-4 mb-6">
-  <h2 className="text-[18px] font-medium text-gray-900 mb-4">
-    Company Lead Form Type
-  </h2>
-
-  {businessTypes.length === 0 ? (
-    <p className="text-gray-500 text-sm">Loading business types...</p>
-  ) : (
-    <div className="flex flex-wrap gap-3">
-      {businessTypes.map((bt) => (
-        <button
-          key={bt.id}
-          type="button"
-          onClick={() => setLeadFormType(bt.id)}
+  {/* Inputs */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 mb-6">
+    {[
+      ["Company Name*", "companyName", "text", 50],
+      ["Email", "email", "email", 50],
+      ["Phone*", "phone", "tel", 10],
+      ["GST No", "gst", "text", 15],
+      ["Website", "website", "url", 50],
+      ["Address 1", "address1", "text", 50],
+      ["Address 2", "address2", "text", 50],
+      ["Address 3", "address3", "text", 50],
+    ].map(([label, name, type, maxLength]) => (
+      <div key={name} className="flex flex-col w-full">
+        <label className="text-sm text-gray-600 mb-1">{label}</label>
+        <input
+          type={type}
+          name={name}
+          value={profile[name]}
+          onChange={handleInputChange}
+          maxLength={maxLength}
+          className={`px-3 py-2 rounded-xl border ${
+            errors[name] ? "border-red-500" : "border-gray-300"
+          } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
           disabled={loading}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition
-            ${
+        />
+        {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
+      </div>
+    ))}
+  </div>
+
+  {/* Lead Form Type */}
+  <div className="border-t pt-4 mb-6">
+    <h2 className="text-[18px] font-medium text-gray-900 mb-4">
+      Company Lead Form Type
+    </h2>
+
+    {businessTypes.length === 0 ? (
+      <p className="text-gray-500 text-sm">Loading business types...</p>
+    ) : (
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        {businessTypes.map(bt => (
+          <button
+            key={bt.id}
+            type="button"
+            onClick={() => setLeadFormType(bt.id)}
+            disabled={loading}
+            className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition ${
               leadFormType === bt.id
                 ? "bg-blue-600 text-white shadow-md"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-        >
-          {bt.name}
-        </button>
-      ))}
-
-      {/* Profile Save Button */}
-      <div className="flex justify-end w-full mt-4">
-        {isProfileLoaded ? (
-          <button
-            onClick={handleSaveProfileChanges}
-            disabled={loading || Object.keys(errors).length > 0}
-            className="px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
           >
-            Save Profile Changes
+            {bt.name}
           </button>
-        ) : (
-          <p className="text-gray-600">Ask your admin to update</p>
-        )}
-      </div>
-    </div>
-  )}
-</div>
-
-
-      {/* General Settings Section */}
-      <div className="border-t pt-4 mb-6 space-y-3">
-        <h2 className="text-[18px] font-medium text-gray-900 mb-2">Company Additional Settings</h2>
-        {[
-          { id: "whatsapp_active", label: "WhatsApp Access" },
-          { id: "mail_active", label: "Email Accesss" },
-          { id: "website_active", label: "Website Access" },
-          { id: "phone_active", label: "Phone Access" },
-          { id: "sub_src_active", label: "Sub Source Access" },
-        ].map(({ id, label }) => (
-          <div key={id} className="flex items-center">
-            <input
-              type="checkbox"
-              id={id}
-              checked={generalSettings[id]}
-              onChange={() => handleToggleChange(id)}
-              className="mr-2"
-              disabled={loading}
-            />
-            <label htmlFor={id} className="font-medium text-gray-700">{label}</label>
-          </div>
         ))}
-        <div className="flex items-center mt-3">
-          <label htmlFor="quotation_prefix" className="font-medium text-gray-700 mr-3">
-            Set your company prefix
-          </label>
+        <div className="flex justify-end w-full mt-3 sm:mt-4">
+          {isProfileLoaded ? (
+            <button
+              onClick={handleSaveProfileChanges}
+              disabled={loading || Object.keys(errors).length > 0}
+              className="px-4 sm:px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+            >
+              Save Profile Changes
+            </button>
+          ) : (
+            <p className="text-gray-600">Ask your admin to update</p>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* General Settings Section */}
+  <div className="border-t pt-4 mb-6 space-y-3">
+    <h2 className="text-[18px] font-medium text-gray-900 mb-2">Company Additional Settings</h2>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+      {[
+        { id: "whatsapp_active", label: "WhatsApp Access" },
+        { id: "mail_active", label: "Email Access" },
+        { id: "website_active", label: "Website Access" },
+        { id: "phone_active", label: "Phone Access" },
+        { id: "sub_src_active", label: "Sub Source Access" },
+      ].map(({ id, label }) => (
+        <div key={id} className="flex items-center space-x-2">
           <input
-            type="text"
-            id="quotation_prefix"
-            name="quotation_prefix"
-            value={generalSettings.quotation_prefix}
-            onChange={e => setGeneralSettings(prev => ({ ...prev, quotation_prefix: e.target.value }))}
-            className="border rounded-lg p-2"
+            type="checkbox"
+            id={id}
+            checked={generalSettings[id]}
+            onChange={() => handleToggleChange(id)}
+            className="h-4 w-4"
             disabled={loading}
           />
+          <label htmlFor={id} className="text-sm font-medium text-gray-700">
+            {label}
+          </label>
         </div>
-        <button
-          className="mt-3 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
-          onClick={handleSaveGeneralSettings}
-          disabled={loading}
-        >
-          Save General Settings
-        </button>
-      </div>
-
-
-      <AnimatePresence>
-        {showCreatePanel && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50"
-          >
-            <motion.div className="bg-white rounded-2xl p-6 w-96 shadow-xl border border-gray-200">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900">Create New Profile</h2>
-              <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-auto mb-4">
-                {[
-                  ["Company Name*", "companyName", "text", 50],
-                  ["Email", "email", "email", 50],
-                  ["Phone*", "phone", "tel", 10],
-                  ["GST No", "gst", "text", 15],
-                  ["Website", "website", "url", 50],
-                  ["Address 1", "address1", "text", 50],
-                  ["Address 2", "address2", "text", 50],
-                  ["Address 3", "address3", "text", 50],
-                  ["City ID", "cityId", "number"]
-                ].map(([label, name, type, maxLength]) => (
-                  <div key={name} className="flex flex-col">
-                    <label className="text-xs text-gray-600 mb-1">{label}</label>
-                    <input
-                      type={type}
-                      name={name}
-                      value={profile[name] || ""}
-                      onChange={handleInputChange}
-                      maxLength={maxLength}
-                      className={`px-3 py-2 rounded-xl border ${
-                        errors[name] ? 'border-red-500' : 'border-gray-300'
-                      } bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition`}
-                      disabled={loading}
-                    />
-                    {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  onClick={() => setShowCreatePanel(false)}
-                  className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-full hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      ))}
     </div>
+
+    <div className="flex flex-col sm:flex-row items-start sm:items-center mt-4 gap-2 sm:gap-3">
+      <label htmlFor="quotation_prefix" className="text-sm font-medium text-gray-700">
+        Set your company prefix
+      </label>
+      <input
+        type="text"
+        id="quotation_prefix"
+        name="quotation_prefix"
+        value={generalSettings.quotation_prefix}
+        onChange={e => setGeneralSettings(prev => ({ ...prev, quotation_prefix: e.target.value }))}
+        className="border rounded-lg p-2 w-full sm:w-auto"
+        disabled={loading}
+      />
+    </div>
+
+    <button
+      className="mt-3 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 w-full sm:w-auto"
+      onClick={handleSaveGeneralSettings}
+      disabled={loading}
+    >
+      Save General Settings
+    </button>
+  </div>
+</div>
+
     {false && <SettingsPage settingsData={generalSettings } />}
-    {false && <LeadDetailView settingsData={generalSettings } />}
 
     </>
   );

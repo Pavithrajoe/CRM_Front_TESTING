@@ -214,6 +214,16 @@ const Comments = () => {
     }
   };
 
+const handleOutsideClick = (event) => {
+  if (formRef.current && !formRef.current.contains(event.target)) {
+    setShowForm(false);
+    setIsListening(false);
+    setEditingComment(null);
+  }
+};
+
+
+
   // Focus the search input when it opens
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -323,61 +333,73 @@ const Comments = () => {
         </div>
 
         {/* Add Comment Form Overlay (Modal) */}
-        {showForm && (
-          <>
-            {/* Backdrop */}
-            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity"></div>
-            {/* Form Dialog */}
-            <div
-              ref={formRef}
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 z-50 transition-all duration-300"
+{showForm && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity flex justify-center items-center"
+    onClick={handleOutsideClick} // ✅ Use function
+  >
+    <div
+      ref={formRef}
+      className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-md sm:max-w-lg md:max-w-xl p-6 transition-all duration-300"
+      onClick={(e) => e.stopPropagation()} // ✅ Prevent click inside from closing
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium text-xl text-gray-800">
+          {editingComment ? "Edit Comment" : "Add Comment"}
+        </h3>
+        <button
+          onClick={() => {
+            setShowForm(false);
+            setIsListening(false);
+            setEditingComment(null);
+          }}
+          className="text-2xl text-gray-500 hover:text-red-500"
+        >
+          ×
+        </button>
+      </div>
+
+      <form
+        onSubmit={editingComment ? handleEditSubmission : handleFormSubmission}
+        className="flex flex-col gap-4"
+      >
+        <textarea
+          name="comments"
+          onChange={handleChange}
+          value={formData.comments}
+          className="w-full border rounded-xl p-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+          placeholder="Write your comment..."
+        />
+
+        <div className="flex justify-between items-center">
+          {mic && (
+            <button
+              type="button"
+              onClick={() => setIsListening((prev) => !prev)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                isListening
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-gray-300 text-black"
+              }`}
             >
-              <div className="flex justify-between items-center mb-3 sm:mb-4">
-                <h3 className="font-medium text-lg sm:text-xl text-gray-800">
-                  {editingComment ? "Edit Comment" : "Add Comment"}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setIsListening(false);
-                    setEditingComment(null); // Clear editing state when closing
-                  }}
-                  className="text-xl sm:text-2xl text-gray-500 hover:text-red-500"
-                >
-                  ×
-                </button>
-              </div>
-              <form onSubmit={editingComment ? handleEditSubmission : handleFormSubmission} className="flex flex-col h-full">
-                <textarea
-                  name="comments"
-                  onChange={handleChange}
-                  value={formData.comments}
-                  className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-                  placeholder="Write your comment..."
-                />
-                <div className="flex justify-between items-center mt-3 sm:mt-4">
-                  {mic && ( // Only show microphone button if SpeechRecognition is available
-                    <button
-                      type="button"
-                      onClick={() => setIsListening((prev) => !prev)}
-                      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                        isListening ? "bg-red-500 text-white animate-pulse" : "bg-gray-300 text-black"
-                      }`}
-                    >
-                      {isListening ? "🎙️ Stop" : "🎤 Start"}
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    className="bg-indigo-700 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full hover:bg-indigo-800 text-sm sm:text-base"
-                  >
-                    {editingComment ? "Update" : "Submit"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </>
-        )}
+              {isListening ? "🎙️ Stop" : "🎤 Start"}
+            </button>
+          )}
+
+          <button
+            type="submit"
+            className="bg-indigo-700 text-white px-5 py-2 rounded-full hover:bg-indigo-800 text-base"
+          >
+            {editingComment ? "Update" : "Submit"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+
+
       </div>
     </div>
   );

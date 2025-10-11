@@ -324,59 +324,44 @@ useEffect(() => {
   title: 'Sub Source',
   value: 'Sub Source Masters',
   modalKey: 'Sub Source',
-  
-  // ID key from backend response
+
   idKey: 'isub_src_id',
-  
-  // Display name from backend response - this should match GET response
-  payloadKey: 'ssub_src_name', // ✅ Correct for GET response display
-  
+  payloadKey: 'ssub_src_name',
   responseKey: 'data',
   parentIdInChildResponseKey: 'isrc_id',
-  
-  // API endpoints
+
   get: ENDPOINTS.MASTER_SUB_SOURCE_GET,
   post: ENDPOINTS.MASTER_SUB_SOURCE_POST,
   put: ENDPOINTS.MASTER_SUB_SOURCE_PUT,
-  delete: ENDPOINTS.MASTER_SUB_SOURCE_CHANGE,
-  
-  // ✅ CORRECTED Payload mapping
+
+  // 👇 delete endpoint now uses id in URL
+  delete: (id) => `${ENDPOINTS.MASTER_SUB_SOURCE_CHANGE}/${id}`,
+
   payloadMapping: {
     isub_src_id: 'subSrcId',
-    ssub_src_name: 'subSrcName', // Map frontend field to backend field
+    ssub_src_name: 'subSrcName',
     isrc_id: 'srcId'
   },
-  
-  // ✅ CORRECTED Base payloads
+
   basePostPayload: {
-    ssub_src_name: "", // Frontend form field name
+    ssub_src_name: "",
     srcId: null
   },
-  
+
   basePutPayload: { 
-    ssub_src_name: '', // Frontend form field name
+    ssub_src_name: '',
     srcId: null
   },
-  
-  // ✅ CORRECTED Payload fields (use frontend field names)
-  postPayloadFields: [
-    "ssub_src_name", // Frontend form field name
-    "srcId"
-  ],
-  
-  putPayloadFields: [
-    "isub_src_id",
-    "ssub_src_name", // Frontend form field name
-    "srcId"
-  ],
-  
-  // Rest of the configuration remains the same...
+
+  postPayloadFields: ["ssub_src_name", "srcId"],
+  putPayloadFields: ["isub_src_id", "ssub_src_name", "srcId"],
+
   skipCompanyIdInjection: true,
   modifierIdPayloadKey: { post: null, put: null, delete: null },
   updatedDtPayloadKey: { post: null, put: null, delete: null },
   activeStatusPayloadKey: 'status',
   isHierarchical: true,
-  
+
   parentMasterConfig: {
     masterName: "LEAD_SOURCE",
     getEndpoint: ENDPOINTS.MASTER_SOURCE_GET,
@@ -387,13 +372,9 @@ useEffect(() => {
     formFieldKey: 'srcId',
     modalLabel: 'Parent Source',
     required: true
-  },
-  
-  deletePayload: {
-    subSrcId: null,
-    status: false
   }
 },
+
 
         
     {

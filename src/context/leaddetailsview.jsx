@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useRef  } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -112,6 +112,9 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
 const LeadDetailView = () => {
   const { leadId } = useParams();
   const { showPopup } = usePopup();
+
+    const lostReasonDialogRef = useRef(null);
+
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.only('xs'));
   const isSm = useMediaQuery(theme.breakpoints.only('sm'));
@@ -135,6 +138,7 @@ const LeadDetailView = () => {
   const [sentTo, setSentTo] = useState("");
   const [mailSubject, setMailSubject] = useState("");
   const [mailContent, setMailContent] = useState("");
+const [showUserProfile, setShowUserProfile] = useState(false);
   const [isWon, setIsWon] = useState(false);
   const [loggedInUserName, setLoggedInUserName] = useState("Your Name");
   const [loggedInCompanyName, setLoggedInCompanyName] = useState("Your Company");
@@ -143,6 +147,14 @@ const LeadDetailView = () => {
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [isSendingMail, setIsSendingMail] = useState(false);
   const [statusRemarks, setStatusRemarks] = useState([]);
+    const [users, setUsers] = useState([]);
+      const [urlUserId, setUrlUserId] = useState(null); 
+        const [loadingProfile, setLoadingProfile] = useState(false);
+
+
+
+
+  
 
   // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
@@ -160,6 +172,18 @@ const LeadDetailView = () => {
 
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '',currencyId: null  });
+
+  const [profileSettings, setProfileSettings] = useState(null);
+
+const [userSettings, setUserSettings] = useState({
+    mail_access: false,
+    whatsapp_access: false,
+    phone_access: false,
+    website_access: false
+  });
+
+
+
 
   // Derived state
   const isLeadActive =
@@ -180,6 +204,8 @@ const LeadDetailView = () => {
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
+
+  
 
   // Extract company info from localStorage
   const extractAllUserInfo = () => {
@@ -225,6 +251,69 @@ const LeadDetailView = () => {
       extractAllUserInfo();
     }
   }, [leadId]);
+
+ // Add this useEffect to call fetchUserProfile when component mounts
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      setLoadingProfile(true);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Authentication required!");
+        setLoadingProfile(false);
+        return;
+      }
+
+      // Decode JWT token to extract user ID
+      const base64Payload = token.split(".")[1];
+      const decodedPayload = JSON.parse(atob(base64Payload));
+      const userId = decodedPayload?.id || decodedPayload?.user_id;
+
+      // If no ID in token, use fallback or show error
+      if (!userId && !urlUserId) {
+        toast.error("User ID not found!");
+        setLoadingProfile(false);
+        return;
+      }
+
+      const finalUserId = urlUserId || userId;
+
+      // Fetch user details
+      const response = await fetch(`${ENDPOINTS.USERS}/${finalUserId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to fetch user");
+
+
+
+
+setProfileSettings(data)
+      // Update settings
+      setUserSettings({
+        mail_access: data.mail_access || data.email_access || false,
+        whatsapp_access: data.whatsapp_access || false,
+        phone_access: data.phone_access || false,
+        website_access: data.website_access || false,
+      });
+
+      // console.log("✅ User settings loaded:", data);
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      toast.error("Failed to load user details.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  fetchUserProfile();
+}, [urlUserId]);
 
   // PDF View Handler
 const handleViewPdf = async (quotation) => {
@@ -304,6 +393,8 @@ const handleDownloadPdf = async (quotation) => {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    
 
     if (!convertResponse.ok) {
       setImmediateWonStatus(false);
@@ -402,6 +493,9 @@ const handleLostClick = () => {
       console.error("Failed to fetch currencies", error);
     }
   };
+  const handleCloseMail = () => {
+  setIsMailOpen(false);
+};
 
   useEffect(() => {
     fetchCurrencies();
@@ -585,6 +679,25 @@ const sendEmail = async () => {
     setIsSendingMail(false);
   }
 };
+
+useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (lostReasonDialogRef.current && 
+          !lostReasonDialogRef.current.contains(event.target)) {
+        setLeadLostDescriptionTrue(false);
+      }
+    };
+
+    // Add event listener when dialog is open
+    if (leadLostDescriptionTrue) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [leadLostDescriptionTrue]);
 
 
 const fetchLeadData = async () => {
@@ -850,7 +963,16 @@ const formatDate = (dateInput) => {
   return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
 };
 
+const handleOutsideClick = (event) => {
+  if (formRef.current && !formRef.current.contains(event.target)) {
+    setShowForm(false);
+    setIsListening(false);
+    setEditingComment(null);
+  }
+};
+
 return (
+  <>
   <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
     {showConfetti && (
       <Confetti
@@ -866,6 +988,7 @@ return (
       <div className="sticky top-4 z-10 space-y-4">
         <ProfileCard
           leadId={leadId}
+          settingsData={profileSettings}
           isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
         />
         {isLeadActive && <ActionCard leadId={leadId} />}
@@ -944,6 +1067,8 @@ return (
           
           {showActionButtons && (
             <>
+                {userSettings.mail_access && (
+
               <button
                 onClick={() => setIsMailOpen(true)}
                 className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
@@ -953,6 +1078,7 @@ return (
                 <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
                 <div className="w-px h-5 bg-gray-600"></div>
               </button>
+                )}
 
               {!(leadData?.bisConverted === true) && (
                 <button
@@ -1006,18 +1132,24 @@ return (
       fullWidth
       maxWidth="sm"
     >
+      
       <DialogTitle>Enter Remark for Won Status</DialogTitle>
       <DialogContent>
         <TextField
-          label="Remark *"
-          fullWidth
-          multiline
-          rows={3}
-          value={remarkData.remark}
-          onChange={e => setRemarkData({...remarkData, remark: e.target.value})}
-          sx={{ mt: 2 }}
-          InputLabelProps={{ shrink: true }}
-        />
+  label={
+    <span>
+      Remark <span style={{ color: 'red' }}>*</span>
+    </span>
+  }
+  fullWidth
+  multiline
+  rows={3}
+  value={remarkData.remark}
+  onChange={e => setRemarkData({ ...remarkData, remark: e.target.value })}
+  sx={{ mt: 2 }}
+  InputLabelProps={{ shrink: true }}
+/>
+
         <Autocomplete
           options={currencies}
           getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
@@ -1028,10 +1160,14 @@ return (
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Currency *"
+              label={
+    <span>
+      Currency <span style={{ color: 'red' }}>*</span>
+    </span>
+  }
               sx={{ mt: 2 }}
-              error={!remarkData.currencyId}
-              helperText={!remarkData.currencyId ? 'Currency is required' : ''}
+              // error={!remarkData.currencyId}
+              // helperText={!remarkData.currencyId ? 'Currency is required' : ''}
               InputLabelProps={{ shrink: true }}
             />
           )}
@@ -1192,70 +1328,81 @@ return (
       quotationNumber={currentQuotation?.cQuote_number || ''}
       onDownload={handleDownloadFromViewer}
     />
+
+    
     
     {/* Lead Lost Reason Dialog */}
-    {leadLostDescriptionTrue && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">Why mark this lead as Lost?</h2>
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div>
-              <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
-                Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
-              </label>
-              <select
-                id="lostReason"
-                name="lostReason"
-                value={selectedLostReasonId}
-                onChange={handleReasonChange}
-                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                required
+{/* Lead Lost Reason Dialog */}
+{leadLostDescriptionTrue && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+  >
+    <div 
+      ref={lostReasonDialogRef} // Add the ref here
+      className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
+      // Remove the onClick handler from here
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
+        Why mark this lead as Lost?
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div>
+          <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
+            Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
+          </label>
+          <select
+            id="lostReason"
+            name="lostReason"
+            value={selectedLostReasonId}
+            onChange={handleReasonChange}
+            className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+            required
+          >
+            <option value="">Select a reason</option>
+            {lostReasons.map((reason) => (
+              <option
+                key={reason.ilead_lost_reason_id}
+                value={reason.ilead_lost_reason_id}
               >
-                <option value="">Select a reason</option>
-                {lostReasons.map((reason) => (
-                  <option
-                    key={reason.ilead_lost_reason_id}
-                    value={reason.ilead_lost_reason_id}
-                  >
-                    {reason.cLeadLostReason}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
-                Remarks
-              </label>
-              <textarea
-                id="lostDescription"
-                name="lostDescription"
-                rows="3"
-                value={lostDescription}
-                onChange={(e) => setLostDescription(e.target.value)}
-                className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                placeholder="Enter a brief description for marking as lost..."
-              ></textarea>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setLeadLostDescriptionTrue(false)}
-                className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
-              >
-                Submit
-              </button>
-            </div>
-            </form>
-          </div>
+                {reason.cLeadLostReason}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+
+        <div>
+          <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
+            Remarks
+          </label>
+          <textarea
+            id="lostDescription"
+            name="lostDescription"
+            rows="3"
+            value={lostDescription}
+            onChange={(e) => setLostDescription(e.target.value)}
+            className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+            placeholder="Enter a brief description for marking as lost..."
+          ></textarea>
+        </div>
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={() => setLeadLostDescriptionTrue(false)}
+            className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
       
       {/* Status Remarks Section */}
       {/* {(isWon || immediateWonStatus || leadData?.bisConverted) && statusRemarks.length > 0 && (
@@ -1293,9 +1440,9 @@ return (
       {/* Email Compose Dialog */}
      {isMailOpen && (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll" onClick={handleCloseMail}
   >
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"   onClick={(e) => e.stopPropagation()} >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -1491,7 +1638,8 @@ return (
   </div>
 )}
     </div>
+    {showUserProfile && <UserProfile settingsData={settingsData} />}
+    </>
   );
 };
-
 export default LeadDetailView;

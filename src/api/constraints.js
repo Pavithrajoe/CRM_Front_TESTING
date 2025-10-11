@@ -37,6 +37,7 @@ export const ENDPOINTS = {
   UPDATE_PASSWORD: `${BASE_URL}/update-password`,
   GET_DEALS: `${BASE_URL}/lead/deals`,
   DEMO_MAIL: `${BASE_URL}/sentmail`,
+  LEAD_STATUS_NOTIFICATION_MAIL: `${BASE_URL}/assigned-to-mail`,
   DEMO_REQUEST: `${BASE_URL}/request-demo`,
   ASSIGN_TO_ME: `${BASE_URL}/assigned-to/get-asssigned-leads`,
   TEAM_KPI: `${BASE_URL}/lead/manager`,

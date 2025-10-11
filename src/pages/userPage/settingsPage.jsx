@@ -7,6 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { UserContext } from '../../context/UserContext';
 import { ENDPOINTS } from '../../api/constraints';
 
+// --- Shared Components ---
+
 const InputGroup = ({ 
   label, 
   placeholder, 
@@ -84,10 +86,13 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   </div>
 );
 
+// --- SettingsPage Component ---
+
 const SettingsPage = ({ settingsData }) => {
   const { userId: urlUserId } = useParams();
   const { users } = useContext(UserContext);
 
+  // This state holds the *master* settings to determine if a toggle should be shown
   const [settingsProps, setSettingsProps] = useState({
     mail_active: false,
     phone_active: false,
@@ -95,35 +100,44 @@ const SettingsPage = ({ settingsData }) => {
     whatsapp_active: false,
   });
 
+  // Profile fields state
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  
+  // Password fields state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  // Communication Channel Toggle states (Current User Access)
   const [whatsappActive, setWhatsappActive] = useState(false);
   const [mailActive, setMailActive] = useState(false);
   const [websiteActive, setWebsiteActive] = useState(false);
   const [phoneActive, setPhoneActive] = useState(false);
 
+  // Loading and Saving states
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Validation Error states
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [usernameError, setUsernameError] = useState('');
 
+  // 1. Fetch User Profile Details (Name, Email, initial Toggle values)
   useEffect(() => {
     const fetchUserProfile = async () => {
+      // Logic for user without URL ID (e.g., current logged-in user from context)
       if (!urlUserId) {
         if (users && users.length > 0) {
           const user = users[0];
           setName(user.cFull_name || '');
           setUsername(user.cUser_name || '');
           setEmail(user.cEmail || '');
+          // Set initial toggle states from user profile
           setWhatsappActive(user.whatsapp_access || false);
           setMailActive(user.mail_access || false);
           setWebsiteActive(user.website_access || false);
@@ -133,6 +147,7 @@ const SettingsPage = ({ settingsData }) => {
         return;
       }
 
+      // Logic for fetching profile by URL ID
       setLoadingProfile(true);
       const authToken = localStorage.getItem("token");
       if (!authToken) {
@@ -156,6 +171,7 @@ const SettingsPage = ({ settingsData }) => {
         setName(data.cFull_name || '');
         setUsername(data.cUser_name || '');
         setEmail(data.cEmail || '');
+        // Set initial toggle states from user profilez
         setWhatsappActive(data.whatsapp_access || false);
         setMailActive(data.mail_access || false);
         setWebsiteActive(data.website_access || false);
@@ -170,32 +186,12 @@ const SettingsPage = ({ settingsData }) => {
     fetchUserProfile();
   }, [urlUserId, users]);
 
-  useEffect(() => {
-    if (settingsData && settingsData.result) {
-      const result = settingsData.result;
-
-      const updatedSettings = {
-        whatsapp_active: result.whatsapp_active || false,
-        mail_active: result.mail_active || false,
-        website_active: result.website_active || false,
-        phone_active: result.phone_active || false,
-      };
-
-      setSettingsProps(updatedSettings);
-
-      // Update toggle states to match settings
-      setWhatsappActive(updatedSettings.whatsapp_active);
-      setMailActive(updatedSettings.mail_active);
-      setWebsiteActive(updatedSettings.website_active);
-      setPhoneActive(updatedSettings.phone_active);
-    }
-  }, [settingsData]);
-
+  // 2. Fetch General Settings (Master Channel Activation - Determines if toggle is shown)
   const fetchGeneralSettings = async () => {
     setLoadingSettings(true);
     const authToken = localStorage.getItem("token");
     if (!authToken) {
-      toast.error("Please login to access settings.");
+      // User must be logged in, handled by parent/profile fetch, but good for redundancy
       setLoadingSettings(false);
       return;
     }
@@ -223,16 +219,12 @@ const SettingsPage = ({ settingsData }) => {
         phone_active: settings.phone_active || false,
       };
 
+      // Set the master settings that control visibility
       setSettingsProps(updatedSettings);
-
-      setWhatsappActive(updatedSettings.whatsapp_active);
-      setMailActive(updatedSettings.mail_active);
-      setWebsiteActive(updatedSettings.website_active);
-      setPhoneActive(updatedSettings.phone_active);
 
     } catch (err) {
       console.error("Error fetching general settings:", err);
-      toast.error("Failed to load settings: " + err.message);
+      toast.error("Failed to load general settings: " + err.message);
     } finally {
       setLoadingSettings(false);
     }
@@ -242,13 +234,32 @@ const SettingsPage = ({ settingsData }) => {
     fetchGeneralSettings();
   }, []);
 
+  // Use the optional prop settingsData if provided (e.g., from a parent component)
+  useEffect(() => {
+    if (settingsData && settingsData.result) {
+      const result = settingsData.result;
+
+      const updatedSettings = {
+        whatsapp_active: result.whatsapp_active || false,
+        mail_active: result.mail_active || false,
+        website_active: result.website_active || false,
+        phone_active: result.phone_active || false,
+      };
+      // Overwrite master settings if settingsData prop is provided
+      setSettingsProps(updatedSettings);
+    }
+  }, [settingsData]);
+
+
+  // --- Validation Handlers ---
+
   const validateName = () => {
     if (!name.trim()) {
-      setNameError('Name is required');
+      setNameError('Full Name is required');
       return false;
     }
     if (name.length > 60) {
-      setNameError('Name must be 60 characters or less');
+      setNameError('Full Name must be 60 characters or less');
       return false;
     }
     setNameError('');
@@ -303,6 +314,9 @@ const SettingsPage = ({ settingsData }) => {
     }
   };
 
+  // --- API Handlers ---
+
+  // Handler for Profile Information changes (Name, Username, Email)
   const handleSaveChanges = async () => {
     const isNameValid = validateName();
     const isEmailValid = validateEmail();
@@ -322,6 +336,7 @@ const SettingsPage = ({ settingsData }) => {
     }
 
     try {
+      // NOTE: Removed channel access properties here, as they are handled by updateCallLogAccess
       const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
         method: 'PUT',
         headers: {
@@ -332,10 +347,6 @@ const SettingsPage = ({ settingsData }) => {
           cFull_name: name,
           cUser_name: username,
           cEmail: email,
-          whatsapp_access: whatsappActive,
-          mail_access: mailActive,
-          website_access: websiteActive,
-          phone_access: phoneActive,
         }),
       });
 
@@ -344,15 +355,18 @@ const SettingsPage = ({ settingsData }) => {
         throw new Error(result.message || 'Failed to update profile');
       }
 
-      toast.success('Changes saved successfully!');
+      toast.success('Profile changes saved successfully!');
+      
     } catch (error) {
-      console.error('Error saving changes:', error);
-      toast.error(`Failed to save changes: ${error.message}`);
+      console.error('Error saving profile changes:', error);
+      toast.error(`Failed to save profile changes: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
   };
+  
 
+  // Handler for Password changes
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
     if (!authToken) return toast.error("Authentication required.");
@@ -375,8 +389,10 @@ const SettingsPage = ({ settingsData }) => {
           'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          email: email,
-          password: newPassword,
+          email: email, // Assuming the API uses email to identify the user for password change
+          password: newPassword, // The API seems to just take the new password for update.
+          // Ideally this should include the currentPassword for verification.
+          // current_password: currentPassword, // <-- Add this if your API supports it!
         }),
       });
 
@@ -392,20 +408,31 @@ const SettingsPage = ({ settingsData }) => {
     }
   };
 
-  const updateCallLogAccess = async () => {
+  // Handler for Communication Channel Toggles
+  const updateCallLogAccess = async (newMailActive, newPhoneActive, newWebsiteActive, newWhatsappActive) => {
+    const authToken = localStorage.getItem("token");
+    if (!authToken) {
+      toast.error("Authentication required.");
+      return false;
+    }
+    if (!urlUserId) {
+        toast.error("User ID is required for access update.");
+        return false;
+    }
+
     try {
       const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           userId: Number(urlUserId),
-          isMailActive: mailActive,
-          isPhoneActive: phoneActive,
-          isWebsiteActive: websiteActive,
-          isWhatsappActive: whatsappActive,
+          isMailActive: newMailActive,
+          isPhoneActive: newPhoneActive,
+          isWebsiteActive: newWebsiteActive,
+          isWhatsappActive: newWhatsappActive,
         }),
       });
 
@@ -415,6 +442,7 @@ const SettingsPage = ({ settingsData }) => {
         throw new Error(data.message || 'Failed to update call log access');
       }
 
+      // Update state with the confirmed values from the server response
       if (data.result) {
         setMailActive(data.result.isMailActive || false);
         setPhoneActive(data.result.isPhoneActive || false);
@@ -431,32 +459,42 @@ const SettingsPage = ({ settingsData }) => {
     }
   };
 
+  // Unified toggle handler
   const handleToggle = async (type) => {
-    const originalState = {
-      whatsapp: whatsappActive,
+    // Determine the new state for the specific toggle and prepare the full payload
+    let newState = {
       mail: mailActive,
+      phone: phoneActive,
       website: websiteActive,
-      phone: phoneActive
+      whatsapp: whatsappActive
     };
 
-    // Update local state immediately for responsiveness
-    switch(type) {
-      case 'whatsapp': setWhatsappActive(prev => !prev); break;
-      case 'mail': setMailActive(prev => !prev); break;
-      case 'website': setWebsiteActive(prev => !prev); break;
-      case 'phone': setPhoneActive(prev => !prev); break;
-      default: break;
-    }
+    const toggleSetter = {
+        'whatsapp': setWhatsappActive,
+        'mail': setMailActive,
+        'website': setWebsiteActive,
+        'phone': setPhoneActive,
+    };
 
-    // Sync with server
-    const success = await updateCallLogAccess();
+    // Calculate the new value for the toggled item
+    const currentValue = newState[type];
+    const newValue = !currentValue;
+    newState[type] = newValue;
+
+    // Optimistic UI update
+    toggleSetter[type](newValue);
+
+    // Sync with server using the calculated new states for all four
+    const success = await updateCallLogAccess(
+        newState.mail,
+        newState.phone,
+        newState.website,
+        newState.whatsapp
+    );
 
     if (!success) {
-      // Revert state if failure
-      setWhatsappActive(originalState.whatsapp);
-      setMailActive(originalState.mail);
-      setWebsiteActive(originalState.website);
-      setPhoneActive(originalState.phone);
+      // Revert state if API call failed
+      toggleSetter[type](currentValue);
     }
   };
 
@@ -478,7 +516,9 @@ const SettingsPage = ({ settingsData }) => {
     <div className="">
       <div className="bg-white p-6 space-y-8 rounded-xl w-full mx-auto">
         <section className="animate-fade-in-down">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Personal Information</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
+            Personal Information
+          </h2>
           {isLoading ? (
             <div className="animate-pulse space-y-5">
               <div className="h-10 bg-gray-200 rounded-md"></div>
@@ -532,14 +572,14 @@ const SettingsPage = ({ settingsData }) => {
               </div>
             </div>
           )}
-
-          
         </section>
 
         <div className="section-divider"></div>
 
         <section className="animate-fade-in-down">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">Password Settings</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
+            Password Settings
+          </h2>
           {isLoading ? (
             <div className="animate-pulse space-y-5">
               <div className="h-10 bg-gray-200 rounded-md"></div>
@@ -595,8 +635,11 @@ const SettingsPage = ({ settingsData }) => {
 
         <section className="animate-fade-in-down">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-blue-900 border-b-4 border-blue-400 pb-3 text-center tracking-tight">
-            Communication Channel Activation
+            Communication Channel Access
           </h2>
+          <p className="text-center text-sm text-gray-600 mb-6">
+            Control which communication channels are active for your profile. Only channels enabled by administration are shown.
+          </p>
           {isLoading ? (
             <div className="animate-pulse space-y-3">
               <div className="h-10 bg-gray-200 rounded-md"></div>
@@ -606,29 +649,30 @@ const SettingsPage = ({ settingsData }) => {
             </div>
           ) : (
             <>
+              {/* Communication Channel Toggles - only show if master setting is true */}
               {settingsProps.whatsapp_active && (
                 <ToggleSwitch 
-                  label="WhatsApp" 
+                  label="WhatsApp Access" 
                   isChecked={whatsappActive} 
                   onToggle={() => handleToggle('whatsapp')}
                 />
               )}
               {settingsProps.mail_active && (
                 <ToggleSwitch 
-                  label="Mail" 
+                  label="Mail Access" 
                   isChecked={mailActive} 
                   onToggle={() => handleToggle('mail')}
                 />)}
               {settingsProps.website_active && (
                 <ToggleSwitch 
-                  label="Website" 
+                  label="Website Access" 
                   isChecked={websiteActive} 
                   onToggle={() => handleToggle('website')}
                 />
               )}
               {settingsProps.phone_active && (
                 <ToggleSwitch 
-                  label="Phone" 
+                  label="Phone Access" 
                   isChecked={phoneActive} 
                   onToggle={() => handleToggle('phone')}
                 />
@@ -637,12 +681,12 @@ const SettingsPage = ({ settingsData }) => {
           )}
         </section>
 
-        <div className="justify-center mt-8 pt-6 border-t border-gray-200">
+        <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
             <Button
-              text={isSaving ? 'Saving...' : 'Save All Changes'}
+              text={isSaving ? 'Saving Profile...' : 'Save All Profile Changes'}
               onClick={handleSaveChanges}
               disabled={isSaving}
-              className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[180px] shadow-2xl transform active:scale-95 transition-transform"
+              className="bg-black text-white hover:bg-gray-800 focus:ring-gray-900 w-full max-w-[280px] shadow-2xl transform active:scale-95 transition-transform"
             />
           </div>
       </div>

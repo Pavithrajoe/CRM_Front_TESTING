@@ -884,18 +884,30 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
     };
 
     // Get filtered table data
-    const getFilteredTableData = () => {
-      switch (tableActiveTab) {
-        case 'reminders':
-          return filterTableData(reminderList, 'reminders');
-        case 'calendarEvents':
-          return filterTableData(userCalendarEvents, 'calendarEvents');
-        case 'tasks':
-          return filterTableData(userTask, 'tasks');
-        default:
-          return [];
-      }
-    };
+   // Get filtered AND SORTED table data (latest first)
+const getFilteredTableData = () => {
+  let filteredData = [];
+  
+  switch (tableActiveTab) {
+    case 'reminders':
+      filteredData = filterTableData(reminderList, 'reminders');
+      // Sort reminders by dremainder_dt descending (latest first)
+      return filteredData.sort((a, b) => new Date(b.dremainder_dt) - new Date(a.dremainder_dt));
+    
+    case 'calendarEvents':
+      filteredData = filterTableData(userCalendarEvents, 'calendarEvents');
+      // Sort calendar events by devent_startdt descending (latest first)
+      return filteredData.sort((a, b) => new Date(b.devent_startdt) - new Date(a.devent_startdt));
+    
+    case 'tasks':
+      filteredData = filterTableData(userTask, 'tasks');
+      // Sort tasks by task_date descending (latest first)
+      return filteredData.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
+    
+    default:
+      return [];
+  }
+};
 
     const filteredTableData = getFilteredTableData();
 

@@ -2,10 +2,11 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ENDPOINTS } from "../../api/constraints";
 
-// Helper to return only non-empty values
+// ✅ Helper to return only non-empty values
 const safeField = (value) => {
-  if (!value || value.toString().trim() === "") return null;
-  return value;
+  if (value === null || value === undefined) return null;
+  const str = String(value).trim();
+  return str === "" || str.toLowerCase() === "null" ? null : str;
 };
 
 export const generateQuotationPDF = async (quotation, returnDataUrl = false) => {
@@ -13,25 +14,19 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
   console.log("lead ID", leadId);
 
   try {
-    // Fetch quotation data from API
-    const response = await fetch(
-      `http://192.168.29.236:3000/api/quotation/lead/${leadId}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
 
     if (!response.ok) throw new Error("Failed to fetch quotation data");
-
     const result = await response.json();
 
     if (!result.data || result.data.length === 0)
       throw new Error("No quotation data found");
 
-    // Use the first quotation record
     const q = result.data[0];
-    console.log("q data", q)
+    console.log("q data", q);
 
     const doc = new jsPDF();
     const margin = 15;
@@ -50,7 +45,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
     doc.text("QUOTATION", 195 - margin, 20, { align: "right" });
     doc.setTextColor(0);
 
-    // === COMPANY DETAILS (Left) ===
+    // === COMPANY DETAILS ===
     let yPos = 30;
     const companyDetails = [
       safeField(quotation.cCompany_address),
@@ -76,7 +71,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
       yPos += 5;
     });
 
-    // === QUOTATION DETAILS (Right Box) ===
+    // === QUOTATION DETAILS ===
     const quoteNumber = q.cQuote_number || "QTN-000-000";
     const quoteDate = quotation.dCreated_at
       ? new Date(quotation.dCreated_at).toLocaleDateString()
@@ -84,6 +79,9 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
     const validUntil = quotation.dValid_until
       ? new Date(quotation.dValid_until).toLocaleDateString()
       : "-";
+
+    const currencySymbol =
+      q.formattedTotalAmount?.match(/^[^\d]+/)?.[0] || "$";
 
     autoTable(doc, {
       startY: 30,
@@ -94,6 +92,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
         ["Quotation No:", quoteNumber],
         ["Date:", quoteDate],
         ["Valid Until:", validUntil],
+        ["Currency:", currencySymbol],
       ],
       columnStyles: {
         0: { fontStyle: "bold", cellWidth: 40 },
@@ -114,7 +113,9 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
     const clientBlock = [
       safeField(quotation.lead_name) && `Name: ${quotation.lead_name}`,
       safeField(quotation.lead_organization || quotation.cOrganization_name) &&
-        `Company: ${quotation.lead_organization || quotation.cOrganization_name}`,
+        `Company: ${
+          quotation.lead_organization || quotation.cOrganization_name
+        }`,
       [quotation.clead_address1, quotation.clead_address2, quotation.clead_address3, quotation.cpincode]
         .filter(Boolean).length > 0
         ? `Address: ${[quotation.clead_address1, quotation.clead_address2, quotation.clead_address3, quotation.cpincode].filter(Boolean).join(", ")}`
@@ -134,45 +135,41 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
 
     // === SERVICES TABLE ===
     yPos += 5;
-
     autoTable(doc, {
       startY: yPos,
       head: [["SERVICE", "QTY", "PRICE", "DISCOUNT", "TAX", "TOTAL"]],
       body: quotation.services.map((s) => [
         s.cService_name,
-        // s.cDescription || "-",
         s.iQuantity?.toString() || "1",
-        `₹${s.fPrice}`,
+        `${currencySymbol}${s.fPrice || 0}`,
         s.fDiscount ? `${s.fDiscount}%` : "-",
-        s.fTax ? `₹${s.fTax}` : "-",
-        `₹${s.fTotal_price}`,
+        s.fTax ? `${currencySymbol}${s.fTax}` : "-",
+        `${currencySymbol}${s.fTotal_price || 0}`,
       ]),
       theme: "grid",
       headStyles: { fillColor: [255, 204, 0], textColor: 0 },
       styles: { fontSize: 8, cellPadding: 2 },
     });
 
-   // === TOTALS ===
-let totalsY = doc.lastAutoTable.finalY + 10;
+    // === TOTALS ===
+    let totalsY = doc.lastAutoTable.finalY + 10;
+    const totals = [
+      ["Sub Total", q.formattedSubtotal || `${currencySymbol}${q.fSubtotal}`],
+      q.fDiscount && q.fDiscount > 0
+        ? [`Discount (${q.fDiscount}%)`, `${currencySymbol}${q.fDiscount || 0}`]
+        : null,
+      ["Total Tax", q.formattedTaxAmount || `${currencySymbol}${q.fTax_amount}`],
+      ["Total Amount", q.formattedTotalAmount || `${currencySymbol}${q.fTotal_amount}`],
+    ].filter(Boolean);
 
-const totals = [
-  ["Sub Total", q.formattedSubtotal || "₹0"],
-  q.fDiscount && q.fDiscount > 0
-    ? [`Discount (${q.fDiscount}%)`, q.formattedDiscount || `-₹${q.fDiscount}`]
-    : null,
-  ["Total Tax", q.formattedTaxAmount || "₹0"],
-  ["Total Amount", q.formattedTotalAmount || "₹0"],
-].filter(Boolean);
-
-autoTable(doc, {
-  startY: totalsY,
-  margin: { left: 120 },
-  theme: "plain",
-  body: totals,
-  styles: { fontSize: 10, halign: "right" },
-  columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right" } },
-});
-
+    autoTable(doc, {
+      startY: totalsY,
+      margin: { left: 120 },
+      theme: "plain",
+      body: totals,
+      styles: { fontSize: 10, halign: "right" },
+      columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right" } },
+    });
 
     // === TERMS & CONDITIONS ===
     totalsY = doc.lastAutoTable.finalY + 15;
@@ -207,7 +204,9 @@ autoTable(doc, {
     doc.text(`Done by: ${quotation.created_by_user_name || "Lead Owner"}`, margin, 280);
 
     doc.setFontSize(10).setTextColor(100);
-    doc.text("Thanks for your business! Please visit us again.", 105, 290, { align: "center" });
+    doc.text("Thanks for your business! Please visit us again.", 105, 290, {
+      align: "center",
+    });
 
     // === RETURN ===
     if (returnDataUrl) {

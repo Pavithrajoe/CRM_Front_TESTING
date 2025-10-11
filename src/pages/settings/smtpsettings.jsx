@@ -79,7 +79,7 @@ export default function SmtpSettings() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     const error = validateField(name, value);
     setErrors({
       ...errors,
@@ -94,7 +94,7 @@ export default function SmtpSettings() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = {};
     Object.keys(form).forEach(key => {
       if (key !== 'isActive' && key !== 'smtp_id') {
@@ -148,7 +148,7 @@ export default function SmtpSettings() {
         throw new Error(`HTTP error ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
+      await response.json();
       showSnackbar(`SMTP settings ${isUpdate ? 'updated' : 'created'} successfully!`, 'success');
       await loadData(); 
     } catch (error) {
@@ -159,108 +159,42 @@ export default function SmtpSettings() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="mx-auto p-6 bg-white rounded-2xl shadow-xl">
-        <div className="grid grid-cols-1 py-10 sm:grid-cols-2 gap-4">
-          {/* Host */}
-          <div>
-            <label className="block text-sm rounded font-medium text-gray-700">Host</label>
-            <input
-              type="text"
-              name="host"
-              placeholder="Host name"
-              autoComplete="off"
-              value={form.host}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md p-2 border-gray-300 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.host && <p className="text-red-500 text-xs mt-1">{errors.host}</p>}
-          </div>
-
-          {/* Port */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Port</label>
-            <input
-              type="text"
-              name="port"
-              placeholder="Port number"
-              autoComplete="off"
-              value={form.port}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.port && <p className="text-red-500 text-xs mt-1">{errors.port}</p>}
-          </div>
-
-          {/* Server */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Server</label>
-            <input
-              type="text"
-              name="server"
-              placeholder="Server name"
-              autoComplete="off"
-              value={form.server}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.server && <p className="text-red-500 text-xs mt-1">{errors.server}</p>}
-          </div>
-
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter your name"
-              autoComplete="name"
-              value={form.name}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">E-mail</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              value={form.email}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              value={form.password}
-              onChange={handleChange}
-              maxLength={MAX_LENGTH}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:ring-black focus:border-black"
-            />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-          </div>
+      <form 
+        onSubmit={handleSubmit} 
+        className="
+           mx-auto mt-10 bg-white/60 backdrop-blur-lg border h-[40vh] border-gray-200 shadow-xl rounded-3xl p-8 space-y-6
+        "
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 " >
+          {[
+            { label: 'Host', name: 'host', type: 'text', placeholder: 'Host name' },
+            { label: 'Port', name: 'port', type: 'text', placeholder: 'Port number' },
+            { label: 'Server', name: 'server', type: 'text', placeholder: 'Server name' },
+            { label: 'Name', name: 'name', type: 'text', placeholder: 'Your name' },
+            { label: 'E-mail', name: 'email', type: 'email', placeholder: 'Email address' },
+            { label: 'Password', name: 'password', type: 'password', placeholder: 'Password' },
+          ].map(({ label, name, type, placeholder }) => (
+            <div key={name} className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700">{label}</label>
+              <input
+                type={type}
+                name={name}
+                value={form[name]}
+                onChange={handleChange}
+                placeholder={placeholder}
+                maxLength={MAX_LENGTH}
+                className="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-black focus:border-black transition"
+              />
+              {errors[name] && (
+                <p className="text-xs text-red-500 mt-1">{errors[name]}</p>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Toggle Active */}
-        <div className="flex items-center justify-between mt-6">
-          <label className="inline-flex relative items-center cursor-pointer">
+        {/* Toggle + Button Row */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10">
+          <label className="inline-flex items-center cursor-pointer mt-10">
             <input
               type="checkbox"
               name="isActive"
@@ -268,26 +202,30 @@ export default function SmtpSettings() {
               onChange={handleChange}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-black transition-all duration-300"></div>
-            <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-full peer-checked:border-black transition-transform duration-300 border"></div>
+            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-black transition-all duration-300 relative">
+              <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-full border transition-transform duration-300"></div>
+            </div>
             <span className="ml-3 text-sm font-medium text-gray-700">Active / Inactive</span>
           </label>
 
           <button
             type="submit"
-            className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
             disabled={Object.keys(errors).some(key => errors[key])}
+            className="w-full sm:w-auto px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition disabled:opacity-50 mt-10"
           >
             Save Changes
           </button>
         </div>
       </form>
 
-      {/* Snackbar Notification */}
+      {/* Snackbar */}
       {snackbar.open && (
-        <div className={`fixed bottom-4 right-4 px-6 py-6 rounded-md shadow-xl text-white ${
-          snackbar.type === 'error' ? 'bg-red-500' : 
-          snackbar.type === 'success' ? 'bg-green-500' : 'bg-blue-900'
+        <div className={`fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg text-white text-sm ${
+          snackbar.type === 'error'
+            ? 'bg-red-500'
+            : snackbar.type === 'success'
+            ? 'bg-green-500'
+            : 'bg-blue-900'
         }`}>
           {snackbar.message}
         </div>

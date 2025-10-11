@@ -16,13 +16,13 @@ const SettingsPage = () => {
       
       {/* <h1 className="text-3xl text-black font-medium mb-2 ms-[20px] mt-[-10px]">Profile</h1> */}
 
-      <div className="flex h-[90vh]">
+      <div className="flex h-[100vh]">
         {/* Dark Sidebar */}
 <aside className="w-72 m-4 p-6 bg-[#164CA1] border border-blue-900 rounded-2xl text-white space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-3">GENERAL SETTINGS</h2>
             <ul className="space-y-2">
-              <li><NavLink to="account" className={navLinkClass}>Account</NavLink></li>
+              <li><NavLink to="account" className={navLinkClass}>Account Settings</NavLink></li>
               <li><NavLink to="notification" className={navLinkClass}>Notification</NavLink></li>
               <li><NavLink to="smtpsettings" className={navLinkClass}>SMTP Settings</NavLink></li>
             </ul>
@@ -38,7 +38,7 @@ const SettingsPage = () => {
           </div>
 
            <div>
-            <h2 className="text-lg font-semibold mb-3">Access Control</h2>
+            <h2 className="text-lg font-semibold mb-3">Company Masters</h2>
             <ul className="space-y-2">
               <li><NavLink to="lable" className={navLinkClass}>Lable Master</NavLink></li>
               <li><NavLink to="terms" className={navLinkClass}>Terms and condition</NavLink></li>
@@ -51,7 +51,7 @@ const SettingsPage = () => {
         </aside>
 
         {/* Light Main Content Area */}
-        <main className="flex-1 p-6 overflow-y-scroll">
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>

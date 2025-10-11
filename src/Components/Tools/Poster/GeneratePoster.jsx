@@ -4,7 +4,9 @@ import { Download, X, UploadCloud, Trash2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
+// console.log('API Endpoint:', apiEndPoint);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+// console.log('API Base URL:', apiBaseUrl);
 
 const GeneratePoster = () => {
   const [image, setImage] = useState(null);
@@ -127,6 +129,7 @@ const GeneratePoster = () => {
         const fileName = file.name.split('.').slice(0, -1).join('.');
         formData.append('cPoster_name', fileName);
         formData.append('poster_file', file);
+
 
         fetch(`${apiEndPoint}/poster`, {
           method: 'POST',

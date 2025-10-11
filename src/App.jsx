@@ -65,6 +65,7 @@ import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
 import UserLead from "./pages/userPage/userLead.jsx";
+import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 function App() {
   return (
     <PopupProvider>
@@ -126,6 +127,8 @@ function App() {
                   <Route path="/reports/:userId" element={<UserReportPage />} />
                   <Route path="/first-response" element={<FirstResponseTimeReport />} />
                  <Route path="/generate-poster" element={<GeneratePoster />} />
+                  <Route path="/gst-compliance" element={<GSTCompliancePage />} />
+
                   <Route path="settingspage" element={<SettingsPage />}>
                     <Route path="account" element={<AccountSettings />} />
                     <Route path="lable" element={<LableMaster />} />
@@ -136,6 +139,7 @@ function App() {
                     <Route path="members" element={<MembersSettings />} />
                     <Route path="support" element={<SupportSettings />} />
                     <Route path="smtpsettings" element={<SmtpSettings />} />
+
 
                   </Route>
                 </Route>

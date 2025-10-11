@@ -5,11 +5,9 @@ import { Tabs, Tab, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
 
-// Target company ID is retrieved from the environment variable
 const TARGET_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
 const Sidebar = () => {
-    // Moved companyId state declaration to the top with other states
     const [companyId, setCompanyId] = useState(null); 
     const [isCollapsed, setIsCollapsed] = useState(true);
     const [userRoleId, setUserRoleId] = useState(null);
@@ -17,7 +15,6 @@ const Sidebar = () => {
     const { tabs, activeTab, openTab, closeTab } = useTabs();
     const navigate = useNavigate();
 
-    // Define a function to generate menu items conditionally based on companyId
     const getFullMenuItems = (currentCompanyId) => {
         const isTargetCompany = currentCompanyId === TARGET_COMPANY_ID;
         const leadLabel = isTargetCompany ? 'My Leads' : 'Lead';
@@ -25,7 +22,6 @@ const Sidebar = () => {
 
         return [
             { iconPath: '/images/nav/home.png', label: 'Home', route: '/leaddashboard' },
-            // Conditional Lead Menu Item based on company ID
             { iconPath: '/images/nav/group.png', label: leadLabel, route: leadRoute },
             { iconPath: '/images/nav/customers.png', label: 'Customer', route: '/customers' },
             { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
@@ -44,13 +40,10 @@ const Sidebar = () => {
             try {
                 const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, '+').replace(/_/g, '/')));
                 const roleId = payload.role_id;
-                // Extract and set company ID from the token payload
                 const compId = payload.company_id ? Number(payload.company_id) : null;
                 
                 setUserRoleId(roleId);
-                setCompanyId(compId); // Set company ID state
-
-                // Get the menu items with the correct label/route
+                setCompanyId(compId); 
                 const fullItems = getFullMenuItems(compId);
 
                 if (roleId === 1) {
@@ -60,7 +53,6 @@ const Sidebar = () => {
                         ['Home', 'Organisation', 'Reports', 'Chat', 'Settings', 'Support'].includes(item.label)
                     ));
                 } else {
-                    // For other roles, filter based on the new/old 'Lead' label.
                     setMenuItems(fullItems.filter(item =>
                         ['Home', 'Lead', 'My Leads', 'Customer', 'Calendar', 'Chat'].includes(item.label)
                     ));
@@ -75,7 +67,7 @@ const Sidebar = () => {
             setCompanyId(null);
             setMenuItems([]);
         }
-    }, []); // Empty dependency array means this runs once after the initial render
+    }, []); 
 
 
     const toggleSidebar = () => setIsCollapsed(prev => !prev);
@@ -160,7 +152,6 @@ const Sidebar = () => {
                         onChange={(_, newValue) => {
                             const sel = menuItems.find(m => m.route === newValue);
                             navigate(newValue);
-                            // Pass the correct label to openTab
                             openTab(newValue, sel?.label || 'New');
                         }}
                         variant="scrollable"

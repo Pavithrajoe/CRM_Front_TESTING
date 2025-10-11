@@ -48,6 +48,9 @@ import Confetti from "react-confetti";
 import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 
+const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
+
+
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
   return (
@@ -181,9 +184,6 @@ const [userSettings, setUserSettings] = useState({
     phone_access: false,
     website_access: false
   });
-
-
-
 
   // Derived state
   const isLeadActive =
@@ -1018,7 +1018,8 @@ return (
       <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
         <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
           {["Activity", "Task", "Comments", "Reminders"]
-          .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15))
+          .filter((label) => !(label === "Reminders" && companyInfo?.company_id === XCODEFIX_COMPANY_ID)) 
+          // .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15)) // XCODEFIX_COMPANY_ID
           .map((label, idx) => (
             <button
               key={label}

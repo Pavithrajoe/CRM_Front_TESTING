@@ -430,7 +430,7 @@ const Xcode_LeadCardViewPage = () => {
             tokenFromStorage = localStorage.getItem('token');
             if (tokenFromStorage) {
             const decodedToken = jwtDecode(tokenFromStorage);
-            console.log("Decoded Token:", decodedToken);
+            // console.log("Decoded Token:", decodedToken);
             extractedUserId = decodedToken.user_id;
             extractedRoleID = decodedToken.role_id;
             extractedRoleType = decodedToken.roleType || '';     
@@ -604,7 +604,7 @@ const Xcode_LeadCardViewPage = () => {
             },
             
         });
-        console.log("response from ALL_LEADS:", res);
+        // console.log("response from ALL_LEADS:", res);
         if (!res.ok) {
             const bodyText = await res.text();
             let errorDetails = `HTTP error! status: ${res.status}`;
@@ -740,7 +740,7 @@ const Xcode_LeadCardViewPage = () => {
 
     //  Fetch data based on selected filter
     useEffect(() => {
-        console.log('useEffect running for fetching leads', {selectedFilter, roleType});
+        // console.log('useEffect running for fetching leads', {selectedFilter, roleType});
         if (!currentUserId || !currentToken || !roleType) return;
         
         setCurrentPage(1); 
@@ -750,12 +750,12 @@ const Xcode_LeadCardViewPage = () => {
         } else if (selectedFilter === 'lost') {
             fetchLostLeads();
         } else if (selectedFilter === 'all') {
-            console.log("coming in all leads");
+            // console.log("coming in all leads");
             if (roleType === 'Super_admin') {
-                console.log("coming to superadmin role")
+                // console.log("coming to superadmin role")
                 fetchAllLeads();
             } else {
-                console.log("coming to not superadmin role")
+                // console.log("coming to not superadmin role")
                 fetchLeads();
             }
         } else {
@@ -1071,7 +1071,7 @@ const Xcode_LeadCardViewPage = () => {
                         <button
                             key={filterKey}
                             onClick={() => {
-                            console.log('Tab clicked:', filterKey, 'User role:', roleType);
+                            // console.log('Tab clicked:', filterKey, 'User role:', roleType);
                             setSelectedFilter(filterKey);
                             setSearchTerm('');
                             setFromDate('');

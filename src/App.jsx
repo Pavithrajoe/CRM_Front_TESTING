@@ -36,6 +36,7 @@ import SalesPipelineAnalysis from "./Components/reports/Sales_pipeline_analysis.
 import LeadsDashboard from "./pages/dashboard/teamLeadDashboard";
 import LeadListViewPage from "./pages/dashboard/LeadListView";
 import LeadCardViewPage from "./pages/dashboard/LeadcardView";
+import Xcode_LeadCardViewPage from "./pages/dashboard/XcodeFix_LeadCardView.jsx";
 import LeadManagePage from "./pages/LeadManagePage";
 import LeadTimeline from "./Components/LeadTimeline";
 import AllLeadsPage from "./pages/dashboard/AllLeadsPage";
@@ -107,6 +108,7 @@ function App() {
                   <Route path="/leads" element={<LeadsDashboard />} />
                   <Route path="leadlistview" element={<LeadListViewPage />} />
                   <Route path="leadcardview" element={<LeadCardViewPage />} />
+                  <Route path="xcodefix_leadcardview" element={<Xcode_LeadCardViewPage />} />
                   <Route path="leadmanage" element={<LeadManagePage />} />
                   <Route path="leadtimeline" element={<LeadTimeline />} />
                   <Route path="allleadpage" element={<AllLeadsPage />} />
@@ -125,7 +127,7 @@ function App() {
                   <Route path="userdeals/:userId" element={<UserDeals />} />
                   <Route path="/reports/:userId" element={<UserReportPage />} />
                   <Route path="/first-response" element={<FirstResponseTimeReport />} />
-                 <Route path="/generate-poster" element={<GeneratePoster />} />
+                  <Route path="/generate-poster" element={<GeneratePoster />} />
                   <Route path="settingspage" element={<SettingsPage />}>
                     <Route path="account" element={<AccountSettings />} />
                     <Route path="lable" element={<LableMaster />} />

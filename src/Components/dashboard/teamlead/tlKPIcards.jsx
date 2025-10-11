@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
 export default function KPIStats(data) {
-  console.log("KPIStats data:", data);
+  // console.log("KPIStats data:", data);
   const [hotCount, setHotCount] = useState(0);
   const [warmCount, setWarmCount] = useState(0);
   const [coldCount, setColdCount] = useState(0);

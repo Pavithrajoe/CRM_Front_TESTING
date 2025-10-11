@@ -10,7 +10,6 @@ import LeadForm from '../../Components/LeadForm';
 
 function LogUserCallLogs() {
     const { users } = useContext(UserContext);
-
     const [callLogs, setCallLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,14 +17,11 @@ function LogUserCallLogs() {
     const [endDate, setEndDate] = useState('');
     const [loggedInUserEmail, setLoggedInUserEmail] = useState(null);
     const [isDefaultFilter, setIsDefaultFilter] = useState(true);
-
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [currentPage, setCurrentPage] = useState(1);
     const [logsPerPage] = useState(10);
-
     const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
     const [leadFormInitialData, setLeadFormInitialData] = useState(null);
-
     const [callStats, setCallStats] = useState({
         totalCalls: 0,
         incomingCalls: 0,
@@ -52,7 +48,7 @@ function LogUserCallLogs() {
     }, [formatDateForInput]);
 
     const formatDisplayDate = useCallback((isoString) => {
-        if (!isoString) return 'N/A';
+        if (!isoString) return '-';
         try {
             const date = new Date(isoString);
             if (isNaN(date.getTime())) return 'Invalid Date';

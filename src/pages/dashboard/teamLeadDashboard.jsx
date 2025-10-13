@@ -461,7 +461,7 @@ const LeadsDashboard = () => {
                       color="text.secondary"
                       fontStyle="italic"
                     >
-                      No missed tasks found ✅
+                      No missed tasks found for the selected status 🎉
                     </Typography>
                   )}
                 </TabPanel>

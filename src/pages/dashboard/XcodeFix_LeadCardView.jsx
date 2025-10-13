@@ -393,7 +393,7 @@ const Xcode_LeadCardViewPage = () => {
             tokenFromStorage = localStorage.getItem('token');
             if (tokenFromStorage) {
             const decodedToken = jwtDecode(tokenFromStorage);
-            // console.log("Decoded Token:", decodedToken);
+            console.log("Decoded Token:", decodedToken);
             extractedUserId = decodedToken.user_id;
             extractedRoleID = decodedToken.role_id;
             extractedRoleType = decodedToken.roleType || '';     

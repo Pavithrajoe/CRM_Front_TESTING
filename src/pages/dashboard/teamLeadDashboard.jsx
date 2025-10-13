@@ -121,13 +121,13 @@ const LeadsDashboard = () => {
         },
       });
       const taskData = await taskRes.json(); 
-      // console.log("All tasks fetched for missed tasks filtering:", taskData);
+      //  console.log("All tasks fetched for missed tasks filtering:", taskData);
 
       // Use taskData here only
       const tasksArray = taskData?.data || [];
       // console.log("All tasks array for missed tasks filtering:", tasksArray);
       const missed = tasksArray.filter((task) => task.istatus_id === statusId);
-      // console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
+      //  console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
       setMissedTasks(missed);
 
     } catch (error) {
@@ -159,7 +159,7 @@ const LeadsDashboard = () => {
         setLeads(jsonRes.details || []);
       } catch (e) {
         setLeadsError(e.message);
-        // console.error("Error fetching leads:", e); // Console clear
+        console.error("Error fetching leads:", e); // Console clear
       } finally {
         setLoadingLeads(false);
       }
@@ -445,6 +445,76 @@ const LeadsDashboard = () => {
                   <p className="text-gray-300 text-center w-full mt-10">
                     These are the missed tasks.
                   </p>
+
+                  {loadingTasks ? (
+                    <Typography textAlign="center" mt={4}>
+                      Loading missed tasks...
+                    </Typography>
+                  ) : taskError ? (
+                    <Typography textAlign="center" color="error">
+                      {taskError}
+                    </Typography>
+                  ) : missedTasks.length > 0 ? (
+                    <div className="p-3">
+                      <div className="grid gap-4">
+                        {missedTasks.map((task) => (
+                          <div
+                            key={task.itask_id}
+                            className="bg-white border rounded-lg p-3 shadow hover:shadow-md transition"
+                          >
+                            <div className="flex justify-between mb-2">
+                              <h3 className="font-semibold text-lg text-gray-800">{task.ctitle}</h3>
+                              <span className="text-sm text-red-500 font-semibold">Missed</span>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{task.ctask_content}</p>
+
+                            <p className="text-sm text-gray-500">
+                              <strong>Lead:</strong> {task.crm_lead?.clead_name || "N/A"}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              <strong>Assigned To:</strong>{" "}
+                              {task.user_task_iassigned_toTouser?.cFull_name || "Unknown"}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              <strong>Created By:</strong>{" "}
+                              {task.user_task_icreated_byTouser?.cFull_name || "Unknown"}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              <strong>Due Date:</strong>{" "}
+                              {new Date(task.task_date).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <Typography
+                      textAlign="center"
+                      mt={4}
+                      color="text.secondary"
+                      fontStyle="italic"
+                    >
+                      No missed tasks found for the selected status 🎉
+                    </Typography>
+                  )}
+                </TabPanel>
+              )}
+
+              {/* {tabIndices.ExpiredTasks !== undefined && (
+                <TabPanel index={tabIndices.ExpiredTasks}>
+                  <p className="text-gray-300 text-center w-full mt-10">
+                    These are the missed tasks.
+                  </p>
                   {loadingTasks ? (
                     <Typography textAlign="center" mt={4}>
                       Loading missed tasks...
@@ -466,7 +536,7 @@ const LeadsDashboard = () => {
                     </Typography>
                   )}
                 </TabPanel>
-              )}
+              )} */}
             </Box>
           </Box>
         </div>

@@ -107,9 +107,9 @@ const LeadsDashboard = () => {
         },
       });
       const companyData = await companyRes.json();
-      console.log("Company data fetched for missed tasks:", companyData);
+      // console.log("Company data fetched for missed tasks:", companyData);
       const statusId = companyData?.result?.companySettings?.task_missed_status;
-      console.log("Missed Task Status ID from company settings:", statusId);
+      // console.log("Missed Task Status ID from company settings:", statusId);
       setTaskMissedStatus(statusId);
 
       // Fetch tasks for the user
@@ -121,69 +121,19 @@ const LeadsDashboard = () => {
         },
       });
       const taskData = await taskRes.json(); 
-      console.log("All tasks fetched for missed tasks filtering:", taskData);
+      // console.log("All tasks fetched for missed tasks filtering:", taskData);
 
       // Use taskData here only
       const tasksArray = taskData?.data || [];
-      console.log("All tasks array for missed tasks filtering:", tasksArray);
+      // console.log("All tasks array for missed tasks filtering:", tasksArray);
       const missed = tasksArray.filter((task) => task.istatus_id === statusId);
-      console.log(`pavithra Missed tasks filtered with status ID ${statusId}:`, missed);
+      // console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
       setMissedTasks(missed);
 
     } catch (error) {
       console.error("Error fetching missed tasks:", error);
     }
     };
-
-
-    // const fetchCompanyAndMissedTasks = async () => {
-    //   try {
-    //     const companyRes = await fetch(`${ENDPOINTS.COMPANY}/${userObj.iCompany_id}`,
-    //       {
-    //         method: "GET",
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //           Authorization: `Bearer ${token}`,
-    //         },
-    //       }
-    //     );
-    //     const companyData = await companyRes.json();
-    //     // console.log("Company data fetched for missed tasks:", companyData);
-    //     const statusId = companyData?.result?.companySettings?.task_missed_status;
-    //     // console.log("Missed Task Status ID from company settings:", statusId);
-    //     setTaskMissedStatus(statusId);
-
-    //     const taskRes = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
-    //       {
-    //         method: "GET",
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //           Authorization: `Bearer ${token}`,
-    //         },
-    //       }
-    //     );
-
-
-    //      const tasksArray = taskData?.data || [];
-    //      console.log("All tasks fetched for missed tasks filtering:", tasksArray);
-    //      const missed = tasksArray.filter( (task) => task.istatus_id === statusId );
-    //      console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
-
-
-
-
-
-
-
-    //     // const taskData = await taskRes.json();
-    //     // console.log("All tasks fetched for missed tasks filtering:", taskData);
-    //     // const missed = taskData?.filter( (task) => task.istatus_id === statusId ) || [];
-    //     // console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
-    //     setMissedTasks(missed);
-    //   } catch (error) {
-    //      console.error("Error fetching missed tasks:", error); // Console clear
-    //   }
-    // };
 
     const fetchLeads = async (userId, token) => {
       if (!userId) {
@@ -493,7 +443,7 @@ const LeadsDashboard = () => {
               {tabIndices.ExpiredTasks !== undefined && (
                 <TabPanel index={tabIndices.ExpiredTasks}>
                   <p className="text-gray-300 text-center w-full mt-10">
-                    These are the missed tasks (based on company settings).
+                    These are the missed tasks.
                   </p>
                   {loadingTasks ? (
                     <Typography textAlign="center" mt={4}>

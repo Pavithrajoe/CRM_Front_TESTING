@@ -384,43 +384,6 @@ const Xcode_LeadCardViewPage = () => {
 
     const [userInfo, setUserInfo] = useState({ userId: null, roleId: null, companyId: null, roleType: '' });
 
-        // useEffect(() => {
-        //   const token = localStorage.getItem('token');
-        //   if (!token) {
-        //     setError("Authentication required");
-        //     setLoading(false);
-        //     return;
-        //   }
-        //   try {
-        //     const decodedToken = jwtDecode(token);
-        //     // Optional: check if token expired
-        //     if (decodedToken.exp * 1000 < Date.now()) {
-        //       setError("Token expired, please log in again");
-        //       setLoading(false);
-        //       return;
-        //     }
-        //     const { user_id, role_id, company_id, roleType } = decodedToken;
-
-        //     // Validate presence
-        //     if (!user_id || !role_id || !company_id || !roleType) {
-        //       throw new Error("Invalid token payload");
-        //     }
-
-        //     // Set token info in a single state object
-        //     setUserInfo({ userId: user_id, roleId: role_id, companyId: company_id, roleType });
-        //     setCurrentToken(token); // if needed elsewhere
-        //     setCurrentUserId(user_id); // if still used outside
-        //     setRoleID(role_id);
-        //     setRoleType(roleType);
-        //     setCompanyId(company_id);
-        //   } catch (err) {
-        //     setError(`Error decoding token: ${err.message}`);
-        //   }
-        //   setLoading(false);
-        // }, []);
-        //     const [roleType, setRoleType] = useState('');
-    
-
     useEffect(() => {
         let extractedUserId = null;
         let extractedRoleID = null;
@@ -431,7 +394,7 @@ const Xcode_LeadCardViewPage = () => {
             tokenFromStorage = localStorage.getItem('token');
             if (tokenFromStorage) {
             const decodedToken = jwtDecode(tokenFromStorage);
-            // console.log("Decoded Token:", decodedToken);
+            console.log("Decoded Token:", decodedToken);
             extractedUserId = decodedToken.user_id;
             extractedRoleID = decodedToken.role_id;
             extractedRoleType = decodedToken.roleType || '';     
@@ -478,7 +441,6 @@ const Xcode_LeadCardViewPage = () => {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    // Handle different response structures
                     let usersArray = [];
                     
                     if (Array.isArray(data)) {
@@ -491,7 +453,6 @@ const Xcode_LeadCardViewPage = () => {
                         console.error("Unexpected response structure:", data);
                     }
                     
-                    // Filter out any invalid users and ensure iuser_id exists
                     const validUsers = usersArray.filter(user => 
                         user && user.iUser_id !== undefined && user.iUser_id !== null
                     );
@@ -590,7 +551,7 @@ const Xcode_LeadCardViewPage = () => {
             return lead.icompany_id === companyId; 
         });
             
-        // console.log(`[Super Admin Filter] Total leads fetched: ${leads.length}, Leads filtered for company ${companyId}: ${filteredLeads.length}`);
+        // console.log(`Super Admin Filter- Total leads fetched: ${leads.length}, Leads filtered for company ${companyId}: ${filteredLeads.length}`);
         leads = filteredLeads;
         }
 
@@ -790,7 +751,6 @@ setAllLeads(sorted);
                 fetchLeads();
             }
         } else {
-            // You can handle other filters if any
             fetchLeads();
         }
     }, [selectedFilter, currentUserId, currentToken, refreshTrigger, roleType, fetchLeads, fetchAssignedLeads, fetchLostLeads, fetchAllLeads]); 
@@ -799,9 +759,6 @@ setAllLeads(sorted);
        useEffect(() => {
         navigate(`?page=${currentPage}`, { replace: true });
     }, [currentPage, navigate]);
-
-   // This block performs the sort based on the column clicked.
-
 
     const handleSort = useCallback((key) => {
         setSortConfig(prevSortConfig => {
@@ -835,7 +792,6 @@ setAllLeads(sorted);
         setCurrentPage(1);
     };
 
-    // Add this useEffect to clear modal filters when switching to assignedToMe or lost
     useEffect(() => {
         if (selectedFilter === 'assignedToMe' || selectedFilter === 'lost') {
             setSelectedPotential('');
@@ -847,7 +803,6 @@ setAllLeads(sorted);
     }, [selectedFilter]);
 
     const goToDetail = (id) => {
-        // Pass current page state to detail page
         navigate(`/leaddetailview/${id}`, { 
             state: { 
                 returnPage: currentPage,
@@ -1466,16 +1421,6 @@ setAllLeads(sorted);
                                         statusText = 'Website Lead';
                                         statusBgColor = getStatusColor('website lead');
                                     }  
-                            // // 🚨 CORRECTED LOGIC FOR ASSIGNED LEADS ON DEFAULT TAB
-                            //         else if (item.user?.cFull_name) { 
-                            //             // Only non-empty item.user?.cFull_name means it's assigned to someone (in this default view)
-                            //             // Use the lead's current status, and add "(Assigned)" text
-                            //             statusText = `${item.lead_status?.clead_name || 'Lead'} (Assigned Pavi)`; 
-                            //             // Use the distinct background color
-                            //             statusBgColor = getStatusColor('assigned'); 
-                            //         } 
-                            //         // END OF CORRECTED LOGIC
-                            
 
                                     else {
                                             // statusBgColor = getStatusColor(statusText.toLowerCase()); 

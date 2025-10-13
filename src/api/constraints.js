@@ -72,6 +72,7 @@ export const ENDPOINTS = {
   CURRENCY: `${BASE_URL}/currency`,
   BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
   ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
+  COMPANY:`${BASE_URL}/company`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

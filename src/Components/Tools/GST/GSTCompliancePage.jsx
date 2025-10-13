@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import GSTValidationTab from "./GSTValidationTab";
 import GSTReturnsTab from "./GSTReturnsTab";
+import ProfileHeader from "../../common/ProfileHeader";
 
 const DAILY_LIMIT = 5;
 
@@ -53,7 +54,8 @@ const GSTCompliancePage = () => {
   const limitReached = remaining <= 0;
 
   return (
-    
+    <>
+    <ProfileHeader/>
       <Card
         elevation={0}
         sx={{
@@ -188,7 +190,7 @@ const GSTCompliancePage = () => {
           </Box>
         </CardContent>
       </Card>
-   
+   </>
   );
 };
 

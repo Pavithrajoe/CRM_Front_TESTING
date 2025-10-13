@@ -67,6 +67,8 @@ import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
 import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
+import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
+import DistanceToClient from "./Components/Tools/Maps/DistanceToClient.jsx";
 function App() {
   return (
     <PopupProvider>
@@ -130,7 +132,8 @@ function App() {
                   <Route path="/first-response" element={<FirstResponseTimeReport />} />
                  <Route path="/generate-poster" element={<GeneratePoster />} />
                   <Route path="/gst-compliance" element={<GSTCompliancePage />} />
-
+                  <Route path="/calculator" element={<QuickCalculator />} />
+                  <Route path="/maps" element={<DistanceToClient/>}/>
                   <Route path="settingspage" element={<SettingsPage />}>
                     <Route path="account" element={<AccountSettings />} />
                     <Route path="lable" element={<LableMaster />} />

@@ -39,7 +39,7 @@ const LeadsDashboard = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
-    console.log("Token from localStorage:", token);
+    // console.log("Token from localStorage:", token);
     if (!storedUser || !token) return;
 
     const userObj = JSON.parse(storedUser);
@@ -47,11 +47,11 @@ const LeadsDashboard = () => {
 
     // Decode token 
     const decoded = jwtDecode(token);
-    console.log("Decoded JWT:", decoded);
+    // console.log("Decoded JWT:", decoded);
     const companyId = decoded.company_id;
-    console.log("Company ID from token:", companyId);
+    // console.log("Company ID from token:", companyId);
     const userId = decoded.user_id;
-    console.log("User ID from token:", userId);
+    // console.log("User ID from token:", userId);
 
     if (!localStorage.getItem("hasSeenDashboardIntro")) {
       setShowPopup(true);
@@ -74,7 +74,7 @@ const LeadsDashboard = () => {
         const data = await response.json();
         setDashboardData(data);
       } catch (error) {
-        // console.error("Error fetching dashboard data:", error); // Console clear
+        console.error("Error fetching dashboard data:", error);
       }
     };
 
@@ -98,41 +98,92 @@ const LeadsDashboard = () => {
     };
 
     const fetchCompanyAndMissedTasks = async () => {
-      try {
-        const companyRes = await fetch(`${ENDPOINTS.COMPANY}/${userObj.iCompany_id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const companyData = await companyRes.json();
-        console.log("Company data fetched for missed tasks:", companyData);
-        const statusId = companyData?.result?.companySettings?.task_missed_status;
-        setTaskMissedStatus(statusId);
+    try {
+      const companyRes = await fetch(`${ENDPOINTS.COMPANY}/${userObj.iCompany_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const companyData = await companyRes.json();
+      console.log("Company data fetched for missed tasks:", companyData);
+      const statusId = companyData?.result?.companySettings?.task_missed_status;
+      console.log("Missed Task Status ID from company settings:", statusId);
+      setTaskMissedStatus(statusId);
 
-        const taskRes = await fetch(
-           `${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const taskData = await taskRes.json();
-        console.log("All tasks fetched for missed tasks filtering:", taskData);
-        const missed = taskData?.filter(
-          (task) => task.istatus_id === statusId
-        ) || [];
-        setMissedTasks(missed);
-      } catch (error) {
-        // console.error("Error fetching missed tasks:", error); // Console clear
-      }
+      // Fetch tasks for the user
+      const taskRes = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const taskData = await taskRes.json(); 
+      console.log("All tasks fetched for missed tasks filtering:", taskData);
+
+      // Use taskData here only
+      const tasksArray = taskData?.data || [];
+      console.log("All tasks array for missed tasks filtering:", tasksArray);
+      const missed = tasksArray.filter((task) => task.istatus_id === statusId);
+      console.log(`pavithra Missed tasks filtered with status ID ${statusId}:`, missed);
+      setMissedTasks(missed);
+
+    } catch (error) {
+      console.error("Error fetching missed tasks:", error);
+    }
     };
+
+
+    // const fetchCompanyAndMissedTasks = async () => {
+    //   try {
+    //     const companyRes = await fetch(`${ENDPOINTS.COMPANY}/${userObj.iCompany_id}`,
+    //       {
+    //         method: "GET",
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           Authorization: `Bearer ${token}`,
+    //         },
+    //       }
+    //     );
+    //     const companyData = await companyRes.json();
+    //     // console.log("Company data fetched for missed tasks:", companyData);
+    //     const statusId = companyData?.result?.companySettings?.task_missed_status;
+    //     // console.log("Missed Task Status ID from company settings:", statusId);
+    //     setTaskMissedStatus(statusId);
+
+    //     const taskRes = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
+    //       {
+    //         method: "GET",
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           Authorization: `Bearer ${token}`,
+    //         },
+    //       }
+    //     );
+
+
+    //      const tasksArray = taskData?.data || [];
+    //      console.log("All tasks fetched for missed tasks filtering:", tasksArray);
+    //      const missed = tasksArray.filter( (task) => task.istatus_id === statusId );
+    //      console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
+
+
+
+
+
+
+
+    //     // const taskData = await taskRes.json();
+    //     // console.log("All tasks fetched for missed tasks filtering:", taskData);
+    //     // const missed = taskData?.filter( (task) => task.istatus_id === statusId ) || [];
+    //     // console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
+    //     setMissedTasks(missed);
+    //   } catch (error) {
+    //      console.error("Error fetching missed tasks:", error); // Console clear
+    //   }
+    // };
 
     const fetchLeads = async (userId, token) => {
       if (!userId) {
@@ -225,9 +276,9 @@ const LeadsDashboard = () => {
 
   // Tabs visibility logic
   const showRemindersTab = companyId !== Number(COMPANY_ID); 
-  console.log("Company ID:", companyId, "Show Reminders Tab:", showRemindersTab);
+  // console.log("Company ID:", companyId, "Show Reminders Tab:", showRemindersTab);
   const showExpiredTasksTab = companyId == Number(COMPANY_ID);
-  console.log("Company ID:", companyId, "Show Expired Tasks Tab:", showExpiredTasksTab);
+  // console.log("Company ID:", companyId, "Show Expired Tasks Tab:", showExpiredTasksTab);
   // const showRemindersTab = companyId !== 15; 
   // const showExpiredTasksTab = companyId == 15;
 

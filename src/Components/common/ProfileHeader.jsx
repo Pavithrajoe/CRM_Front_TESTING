@@ -102,6 +102,10 @@ const ProfileHeader = () => {
     setShowAppMenu(false);
   };
 
+const handleMaps = () => {
+    navigate("/maps");
+    setShowAppMenu(false);
+  };
   const handleGSTVerification = () => {
     navigate("/gst-compliance");
     setShowAppMenu(false);
@@ -204,7 +208,25 @@ const ProfileHeader = () => {
     GST Verification
   </span>
 </div>
+
             </div>
+             <div
+              onClick={handleMaps}
+              className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition"
+            >
+              <img
+                src="/illustrations/map_dist.png"
+                alt="gst"
+                className="w-8 h-8 mb-1 opacity-90"
+              />
+              <div className="flex items-center justify-center">
+  <span className="text-sm font-semibold text-green-700">
+    Find Location
+  </span>
+</div>
+
+            </div>
+       
           </div>
         )}
       </div>

@@ -539,6 +539,8 @@ const Xcode_LeadCardViewPage = () => {
                 return 'bg-orange-500 text-white';
             case 'website lead':
                 return 'bg-blue-100 text-blue-700';
+            case 'assigned':
+                return 'bg-yellow-100 text-yellow-800'; 
             case 'lead':
                 return 'bg-indigo-100 text-indigo-700';
             default:
@@ -1434,7 +1436,19 @@ const Xcode_LeadCardViewPage = () => {
                                     } else if (item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1) {
                                         statusText = 'Website Lead';
                                         statusBgColor = getStatusColor('website lead');
-                                    } else {
+                                    }  
+                            // // 🚨 CORRECTED LOGIC FOR ASSIGNED LEADS ON DEFAULT TAB
+                            //         else if (item.user?.cFull_name) { 
+                            //             // Only non-empty item.user?.cFull_name means it's assigned to someone (in this default view)
+                            //             // Use the lead's current status, and add "(Assigned)" text
+                            //             statusText = `${item.lead_status?.clead_name || 'Lead'} (Assigned Pavi)`; 
+                            //             // Use the distinct background color
+                            //             statusBgColor = getStatusColor('assigned'); 
+                            //         } 
+                            //         // END OF CORRECTED LOGIC
+                            
+
+                                    else {
                                             // statusBgColor = getStatusColor(statusText.toLowerCase()); 
                                             statusText = item.lead_status?.clead_name || 'Lead';
                                             statusBgColor = getStatusColor(item.lead_status?.clead_name || 'lead');

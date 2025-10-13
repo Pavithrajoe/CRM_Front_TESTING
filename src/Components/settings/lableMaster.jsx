@@ -219,13 +219,13 @@ function LabelMaster() {
       </p>
 
       {/* Conditional Grid Layout */}
-<div
-  className={`grid gap-8 ${
-    isEditMode
-      ? "sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
-      : "sm:grid-cols-1 md:grid-cols-1 lg:max-w-3xl mx-auto"
-  }`}
->
+      <div
+        className={`grid gap-8 ${
+          isEditMode
+            ? "sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
+            : "sm:grid-cols-1 md:grid-cols-1 lg:max-w-3xl mx-auto"
+        }`}
+      >
         
         {/* Existing Label Info  */}
         {isEditMode && existingLabel && (
@@ -304,7 +304,7 @@ function LabelMaster() {
                     name={field}
                     value={formData[field]}
                     onChange={handleChange}
-  className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={
                       field === "leadFormTitle"
                         ? `e.g. Lead Registration Form (Max ${MAX_LENGTH} chars)`
@@ -314,14 +314,14 @@ function LabelMaster() {
                         ? `e.g. Contact Details (Max ${MAX_LENGTH} chars)`
                         : `e.g. Additional Information (Max ${MAX_LENGTH} chars)`
                     }
-                    maxLength={MAX_LENGTH} // char limit
+                    maxLength={MAX_LENGTH} // character limit
                     required
                   />
                 </div>
               )
             )}
 
-<div className="flex flex-col sm:flex-row justify-end gap-3 pt-6">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6">
                {/* Revert/Clear Button */}
                <button
                   onClick={() => resetForm(existingLabel)}

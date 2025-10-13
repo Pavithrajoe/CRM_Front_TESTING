@@ -280,7 +280,7 @@ const LeadsDashboard = () => {
                   <Tab
                     label={
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        Expired Tasks
+                        Missed Tasks
                         {expiredTasksCount > 0 && (
                           <Box
                             sx={{
@@ -352,7 +352,6 @@ const LeadsDashboard = () => {
                   ) : taskError ? (
                     <Typography textAlign="center" color="error">{taskError}</Typography>
                   ) : expiredTasksCount > 0 ? (
-                    // Reusing TaskSameDay component. Consider renaming/creating a dedicated component if presentation logic differs.
                     <TaskSameDay tasks={expiredTasks} isExpiredView={true} /> 
                   ) : (
                     <Typography textAlign="center" mt={4} color="text.secondary" fontStyle="italic">

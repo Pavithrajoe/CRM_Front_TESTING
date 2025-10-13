@@ -8,6 +8,7 @@ import LeadFilterModal from './LeadViewComponents/LeadFilterModal';
 import LeadCountSelector from './LeadViewComponents/LeadCountSelector';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
+import { isAwaitKeyword } from 'typescript';
 
 const Xcode_LeadCardViewPage = () => {
     const location = useLocation();
@@ -61,7 +62,7 @@ const Xcode_LeadCardViewPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [companyId, setCompanyId] = useState(null);
     const [roleType, setRoleType] = useState('');
-
+    const [addAssignedLeads,setAddAssignedLeads]=useState(false)
     // Get page from URL or state
     const params = new URLSearchParams(location.search);
     const pageFromUrl = Number(params.get("page")) || 1;
@@ -547,49 +548,7 @@ const Xcode_LeadCardViewPage = () => {
                 return 'bg-gray-300 text-gray-700';
         }
     };
-
-    const fetchLeads = useCallback(async () => {
-        if (!currentUserId || !currentToken) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-            });
-
-            if (!res.ok) {
-                const bodyText = await res.text();
-                let errorDetails = `HTTP error! status: ${res.status}`;
-                try {
-                    const errorJson = JSON.parse(bodyText);
-                    errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
-                } catch {
-                    errorDetails += `, Message: ${bodyText || res.statusText}`;
-                }
-                throw new Error(errorDetails);
-            }
-            const data = await res.json();
-            const sorted = (Array.isArray(data.details) ? data.details : []).sort(
-                (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
-            );
-            setAllLeads(sorted);
-        } catch (err) {
-            console.error("Failed to fetch leads:", err);
-            setError(`Failed to fetch leads: ${err.message}`);
-            setAllLeads([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentUserId, currentToken]);
-
-
+ 
     const fetchAllLeads = useCallback(async () => {
     if (!currentToken) {
         setLoading(false);
@@ -649,14 +608,7 @@ const Xcode_LeadCardViewPage = () => {
     }
     }, [currentToken, companyId, roleType]); 
 
-    useEffect(() => {
-    if (roleType === 'Super_admin') {
-        fetchAllLeads();
-    } else {
-        fetchLeads();
-    }
-    }, [roleType, fetchLeads, fetchAllLeads]);
-
+   
 
 
     const fetchLostLeads = useCallback(async () => {
@@ -691,54 +643,131 @@ const Xcode_LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken]);
 
-    const fetchAssignedLeads = useCallback(async () => {
-        if (!currentUserId || !currentToken) {
-            setLoading(false);
-            return;
-        }
+   // fetchAssignedLeads: return an array always, and don't toggle global loading
+const fetchAssignedLeads = useCallback(async () => {
+  if (!currentUserId || !currentToken) return [];
 
-        setLoading(true);
-        setError(null);
+  console.log("Called the assigned to api function");
+  setError(null);
 
-        try {
-            const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${currentToken}`,
-                },
-            });
+  try {
+    const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${currentToken}`,
+      },
+    });
 
-            if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
-            }
+    console.log("Function is also called when clicking active leads");
 
-            const resJson = await response.json();
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
+    }
 
-            const assignedEntries = resJson?.data?.assignedEntries || [];
-            const leadsAssigned = resJson?.data?.leadsAssigned || [];
+    const resJson = await response.json();
+    const assignedEntries = resJson?.data?.assignedEntries || [];
+    const leadsAssigned = resJson?.data?.leadsAssigned || [];
 
-            // Flatten assignedEntries with lead details for frontend
-            const mergedLeads = assignedEntries.map(entry => {
-                const leadDetails = leadsAssigned.find(lead => lead.ilead_id === entry.ilead_id) || {};
-                return {
-                    ...entry,
-                    ...leadDetails, 
-                    statusDisplay: leadDetails?.lead_status?.clead_name || 'Unknown',
-                    potentialDisplay: leadDetails?.lead_potential?.clead_name || 'Unknown',
-                };
-            });
+    // Merge both data arrays
+    const mergedLeads = assignedEntries.map((entry) => {
+      const leadDetails = leadsAssigned.find((lead) => lead.ilead_id === entry.ilead_id) || {};
+      return {
+        ...entry,
+        ...leadDetails,
+        statusDisplay: leadDetails?.lead_status?.clead_name || "Unknown",
+        potentialDisplay: leadDetails?.lead_potential?.clead_name || "Unknown",
+      };
+    });
 
-            setAssignedLeads(mergedLeads);
+    // ✅ Remove duplicates efficiently using Map (based on ilead_id)
+    const uniqueLeads = Array.from(
+      new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+    );
 
-        } catch (err) {
-            console.error("Failed to fetch assigned leads:", err);
-            setError(`Failed to fetch assigned leads: ${err.message}`);
-            setAssignedLeads([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentUserId, currentToken]);
+    console.log("Unique merged data:", uniqueLeads);
+
+    setAssignedLeads(uniqueLeads);
+    return uniqueLeads;
+  } catch (err) {
+    console.error("Failed to fetch assigned leads:", err);
+    setError(`Failed to fetch assigned leads: ${err.message}`);
+    setAssignedLeads([]);
+    return [];
+  }
+}, [currentUserId, currentToken, ENDPOINTS]);
+
+
+ //fetch active leads function 
+// fetchLeads: await the assigned fetch and then merge
+const fetchLeads = useCallback(async () => {
+  if (!currentUserId || !currentToken) {
+    return;
+  }
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      const bodyText = await res.text();
+      let errorDetails = `HTTP error! status: ${res.status}`;
+      try {
+        const errorJson = JSON.parse(bodyText);
+        errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
+      } catch {
+        errorDetails += `, Message: ${bodyText || res.statusText}`;
+      }
+      throw new Error(errorDetails);
+    }
+
+    const data = await res.json();
+
+    // await here so assignedData is an array, not a Promise
+    const assignedData = await fetchAssignedLeads();
+
+    console.log("active leads length:", data.details?.length, "Assigned lead length:", assignedData.length);
+
+   const mergedLeads = Array.isArray(data.details)
+  ? [...data.details, ...assignedData]
+  : [...assignedData];
+
+//  Remove duplicates by ilead_id using a Map (fast and clean)
+const uniqueLeads = Array.from(
+  new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+);
+
+//  Sort after de-duplication
+const sorted = uniqueLeads.sort(
+  (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
+);
+
+setAllLeads(sorted);
+
+  } catch (err) {
+    console.error("Failed to fetch leads:", err);
+    setError(`Failed to fetch leads: ${err.message}`);
+    setAllLeads([]);
+  } finally {
+    setLoading(false);
+  }
+}, [currentUserId, currentToken, ENDPOINTS, fetchAssignedLeads]);
+
+ useEffect(() => {
+    if (roleType === 'Super_admin') {
+        fetchAllLeads();
+    } else {
+        fetchLeads();
+      
+    }
+    }, [roleType, fetchLeads, fetchAllLeads]);
+
 
     //  Fetch data based on selected filter
     useEffect(() => {
@@ -1094,7 +1123,7 @@ const Xcode_LeadCardViewPage = () => {
                         >
                             {filterKey === 'all'
                                 ? 'All Leads'
-                                : filterKey === 'leads'
+                                : filterKey === ''
                                     ? 'My Active Leads'
                                     : filterKey === 'websiteLeads'
                                         ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>

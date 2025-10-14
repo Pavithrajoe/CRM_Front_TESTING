@@ -39,7 +39,6 @@ const LeadsDashboard = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
-    // console.log("Token from localStorage:", token);
     if (!storedUser || !token) return;
 
     const userObj = JSON.parse(storedUser);
@@ -47,11 +46,8 @@ const LeadsDashboard = () => {
 
     // Decode token 
     const decoded = jwtDecode(token);
-    // console.log("Decoded JWT:", decoded);
     const companyId = decoded.company_id;
-    // console.log("Company ID from token:", companyId);
     const userId = decoded.user_id;
-    // console.log("User ID from token:", userId);
 
     if (!localStorage.getItem("hasSeenDashboardIntro")) {
       setShowPopup(true);
@@ -107,9 +103,7 @@ const LeadsDashboard = () => {
         },
       });
       const companyData = await companyRes.json();
-      // console.log("Company data fetched for missed tasks:", companyData);
       const statusId = companyData?.result?.companySettings?.task_missed_status;
-      // console.log("Missed Task Status ID from company settings:", statusId);
       setTaskMissedStatus(statusId);
 
       // Fetch tasks for the user
@@ -121,13 +115,10 @@ const LeadsDashboard = () => {
         },
       });
       const taskData = await taskRes.json(); 
-      //  console.log("All tasks fetched for missed tasks filtering:", taskData);
 
       // Use taskData here only
       const tasksArray = taskData?.data || [];
-      // console.log("All tasks array for missed tasks filtering:", tasksArray);
       const missed = tasksArray.filter((task) => task.istatus_id === statusId);
-      //  console.log(`Missed tasks filtered with status ID ${statusId}:`, missed);
       setMissedTasks(missed);
 
     } catch (error) {
@@ -226,11 +217,8 @@ const LeadsDashboard = () => {
 
   // Tabs visibility logic
   const showRemindersTab = companyId !== Number(COMPANY_ID); 
-  // console.log("Company ID:", companyId, "Show Reminders Tab:", showRemindersTab);
   const showExpiredTasksTab = companyId == Number(COMPANY_ID);
-  // console.log("Company ID:", companyId, "Show Expired Tasks Tab:", showExpiredTasksTab);
-  // const showRemindersTab = companyId !== 15; 
-  // const showExpiredTasksTab = companyId == 15;
+  
 
   const tabIndices = {};
   let currentTabIndex = 0;
@@ -509,34 +497,6 @@ const LeadsDashboard = () => {
                   )}
                 </TabPanel>
               )}
-
-              {/* {tabIndices.ExpiredTasks !== undefined && (
-                <TabPanel index={tabIndices.ExpiredTasks}>
-                  <p className="text-gray-300 text-center w-full mt-10">
-                    These are the missed tasks.
-                  </p>
-                  {loadingTasks ? (
-                    <Typography textAlign="center" mt={4}>
-                      Loading missed tasks...
-                    </Typography>
-                  ) : taskError ? (
-                    <Typography textAlign="center" color="error">
-                      {taskError}
-                    </Typography>
-                  ) : missedTasks.length > 0 ? (
-                    <TaskSameDay tasks={missedTasks} isMissedView={true} />
-                  ) : (
-                    <Typography
-                      textAlign="center"
-                      mt={4}
-                      color="text.secondary"
-                      fontStyle="italic"
-                    >
-                      No missed tasks found for the selected status 🎉
-                    </Typography>
-                  )}
-                </TabPanel>
-              )} */}
             </Box>
           </Box>
         </div>

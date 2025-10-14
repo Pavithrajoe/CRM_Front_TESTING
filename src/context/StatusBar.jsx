@@ -713,7 +713,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                       Authorization: `Bearer ${token}`,
                   },
               });
-              console.log('Assignment/Notification emails initiated successfully.');
           } catch (mailErr) {
               console.error('Failed to send assignment/notification email:', mailErr);
           }

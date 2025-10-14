@@ -394,7 +394,6 @@ const Xcode_LeadCardViewPage = () => {
             tokenFromStorage = localStorage.getItem('token');
             if (tokenFromStorage) {
             const decodedToken = jwtDecode(tokenFromStorage);
-            console.log("Decoded Token:", decodedToken);
             extractedUserId = decodedToken.user_id;
             extractedRoleID = decodedToken.role_id;
             extractedRoleType = decodedToken.roleType || '';     
@@ -526,7 +525,6 @@ const Xcode_LeadCardViewPage = () => {
             },
             
         });
-        // console.log("response from ALL_LEADS:", res);
         if (!res.ok) {
             const bodyText = await res.text();
             let errorDetails = `HTTP error! status: ${res.status}`;
@@ -540,18 +538,13 @@ const Xcode_LeadCardViewPage = () => {
         }
 
         const data = await res.json();
-        // console.log("Data from All Leads:", data);
         let leads = Array.isArray(data) ? data : (data && Array.isArray(data.details) ? data.details : []);
-        // console.log("Total leads fetched:", leads.length);
-        // console.log("LEADS:", leads);
-
 
         if (roleType === 'Super_admin' && companyId) {
             const filteredLeads = leads.filter(lead => {
             return lead.icompany_id === companyId; 
         });
             
-        // console.log(`Super Admin Filter- Total leads fetched: ${leads.length}, Leads filtered for company ${companyId}: ${filteredLeads.length}`);
         leads = filteredLeads;
         }
 
@@ -568,9 +561,6 @@ const Xcode_LeadCardViewPage = () => {
         setLoading(false);
     }
     }, [currentToken, companyId, roleType]); 
-
-   
-
 
     const fetchLostLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) {
@@ -604,59 +594,58 @@ const Xcode_LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken]);
 
-   // fetchAssignedLeads: return an array always, and don't toggle global loading
-const fetchAssignedLeads = useCallback(async () => {
-  if (!currentUserId || !currentToken) return [];
+    const fetchAssignedLeads = useCallback(async () => {
+    if (!currentUserId || !currentToken) return [];
 
-  console.log("Called the assigned to api function");
-  setError(null);
+    console.log("Called the assigned to api function");
+    setError(null);
 
-  try {
-    const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${currentToken}`,
-      },
-    });
+    try {
+        const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${currentToken}`,
+        },
+        });
 
-    console.log("Function is also called when clicking active leads");
+        console.log("Function is also called when clicking active leads");
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
+        if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
+        }
+
+        const resJson = await response.json();
+        const assignedEntries = resJson?.data?.assignedEntries || [];
+        const leadsAssigned = resJson?.data?.leadsAssigned || [];
+
+        // Merge both data arrays
+        const mergedLeads = assignedEntries.map((entry) => {
+        const leadDetails = leadsAssigned.find((lead) => lead.ilead_id === entry.ilead_id) || {};
+        return {
+            ...entry,
+            ...leadDetails,
+            statusDisplay: leadDetails?.lead_status?.clead_name || "Unknown",
+            potentialDisplay: leadDetails?.lead_potential?.clead_name || "Unknown",
+        };
+        });
+
+        // ✅ Remove duplicates efficiently using Map (based on ilead_id)
+        const uniqueLeads = Array.from(
+        new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+        );
+
+        console.log("Unique merged data:", uniqueLeads);
+
+        setAssignedLeads(uniqueLeads);
+        return uniqueLeads;
+    } catch (err) {
+        console.error("Failed to fetch assigned leads:", err);
+        setError(`Failed to fetch assigned leads: ${err.message}`);
+        setAssignedLeads([]);
+        return [];
     }
-
-    const resJson = await response.json();
-    const assignedEntries = resJson?.data?.assignedEntries || [];
-    const leadsAssigned = resJson?.data?.leadsAssigned || [];
-
-    // Merge both data arrays
-    const mergedLeads = assignedEntries.map((entry) => {
-      const leadDetails = leadsAssigned.find((lead) => lead.ilead_id === entry.ilead_id) || {};
-      return {
-        ...entry,
-        ...leadDetails,
-        statusDisplay: leadDetails?.lead_status?.clead_name || "Unknown",
-        potentialDisplay: leadDetails?.lead_potential?.clead_name || "Unknown",
-      };
-    });
-
-    // ✅ Remove duplicates efficiently using Map (based on ilead_id)
-    const uniqueLeads = Array.from(
-      new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
-    );
-
-    console.log("Unique merged data:", uniqueLeads);
-
-    setAssignedLeads(uniqueLeads);
-    return uniqueLeads;
-  } catch (err) {
-    console.error("Failed to fetch assigned leads:", err);
-    setError(`Failed to fetch assigned leads: ${err.message}`);
-    setAssignedLeads([]);
-    return [];
-  }
-}, [currentUserId, currentToken, ENDPOINTS]);
+    }, [currentUserId, currentToken, ENDPOINTS]);
 
 
  //fetch active leads function 
@@ -742,12 +731,9 @@ setAllLeads(sorted);
         } else if (selectedFilter === 'lost') {
             fetchLostLeads();
         } else if (selectedFilter === 'all') {
-            // console.log("coming in all leads");
             if (roleType === 'Super_admin') {
-                // console.log("coming to superadmin role")
                 fetchAllLeads();
             } else {
-                // console.log("coming to not superadmin role")
                 fetchLeads();
             }
         } else {

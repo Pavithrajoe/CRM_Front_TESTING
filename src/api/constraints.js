@@ -73,6 +73,8 @@ export const ENDPOINTS = {
   BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
   ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
   COMPANY:`${BASE_URL}/company`,
+      MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
+  MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

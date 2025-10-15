@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { FaPlus, FaTrashAlt, FaChevronDown, FaCheck } from 'react-icons/fa';
-// import MilestoneDetails from './mileStoneDetails'; 
 import PaymentAndDomainDetailsCombined from './mileStoneDetails';
+import { ENDPOINTS } from "../../../../../api/constraints";
 
 const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -96,8 +96,8 @@ const PostSalesForm = () => {
     const fetchMasterData = async () => {
       try {
         const [servicesRes, subservicesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/lead-service`, authHeaders),
-          fetch(`${API_BASE_URL}/sub-service`, authHeaders)
+          fetch(ENDPOINTS.MASTER_SERVICE_GET, authHeaders),
+          fetch(ENDPOINTS.SUB_SERVICE, authHeaders)
         ]);
 
         if (!servicesRes.ok || !subservicesRes.ok) {

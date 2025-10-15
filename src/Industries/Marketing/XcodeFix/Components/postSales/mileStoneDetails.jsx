@@ -217,14 +217,14 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
 
     const transformToPostSalesFormat = (data) => {
-        return {
-            ilead_id: data.leadId,
+        return {    
+            ilead_id: parseInt(data.leadId, 10),
             proposalId: data.proposalId,
             duration: parseInt(data.duration, 10), // converts string → integer (base 10)
             paymentPhases: String(data.paymentPhases),
             totalProjectAmount: data.totals?.subTotal || 0,
             paymentTermsAndConditions: data.termsAndConditions,
-            discountPercentageAmount: data.totals?.discountPercentage || 0,
+            discountPercentageAmount:    data.totals?.discountPercentage || 0,
             currencyId: data.currency === "INR" ? 2 : 2, // Example mapping; adjust as needed
             postSalesServices: data.items.map((item) => ({
                 serviceId: item.serviceId,

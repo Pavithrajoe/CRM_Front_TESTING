@@ -1435,30 +1435,30 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
         )} */}
 
 
-                {/* for postsales form */}
-                {showPostSalesForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-5xl relative">
-                        <button
-                            type="button"
-                            onClick={() => setShowPostSalesForm(false)}
-                            className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-                            title="Close Form"
-                        >
-                            ✕
-                        </button>
+        {/* for postsales form */}
+        {showPostSalesForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-tranparent rounded-xl shadow-2xl p-6 w-full max-w-5xl relative">
+              <button
+                type="button"
+                onClick={() => setShowPostSalesForm(false)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+                title="Close Form"
+              >
+                ✕
+              </button>
 
-                        {/* PostSalesForm content will be rendered here */}
-                        <PostSalesForm 
-                leadId={leadId} 
-                
-                
+              {/* PostSalesForm content will be rendered here */}
+              <PostSalesForm
+                leadId={leadId}
+
+
                 onBack={() => setShowPostSalesForm(false)}
-            /> 
-                        {/* <PostSalesForm />  */}
-                    </div>
-                </div>
-            )}
+              />
+              {/* <PostSalesForm />  */}
+            </div>
+          </div>
+        )}
 
             {/* Email Compose Dialog */}
             {isMailOpen && (

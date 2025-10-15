@@ -75,6 +75,9 @@ export const ENDPOINTS = {
   COMPANY:`${BASE_URL}/company`,
       MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
   MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
+  GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
+   
+  
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

@@ -55,12 +55,21 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
   );
 };
 
+// **UNIT OPTIONS ARRAY (New Constant)**
+const UNIT_OPTIONS = [
+    { id: 'numbers', name: 'Numbers' },
+    { id: 'months', name: 'Months' },
+    { id: 'pages', name: 'Pages' },
+];
+
 const initialServiceRow = {
   serviceId: null,
   serviceName: '',
   subserviceIds: [],
   unitPrice: 0,
   quantity: 0,
+  // **New Field: unit**
+  unit: 'numbers', // Default unit
   amount: 0,
 };
 
@@ -166,6 +175,9 @@ const PostSalesForm = () => {
         const selectedService = masterServices.find(s => s.iservice_id === value);
         updatedRow.serviceName = selectedService ? selectedService.cservice_name : '';
       }
+      
+      // 'unit' change doesn't affect amount, so no extra logic is needed for it.
+      // It just updates the value in the row.
 
       if (name === 'quantity' || name === 'unitPrice') {
         const quantity = parseFloat(updatedRow.quantity) || 0;
@@ -285,6 +297,8 @@ const PostSalesForm = () => {
       subserviceIds: row.subserviceIds,
       unitPrice: parseFloat(row.unitPrice) || 0,
       quantity: parseFloat(row.quantity) || 0,
+      // **Added unit to submission data**
+      unit: row.unit,
       amount: parseFloat(row.amount.toFixed(2)) || 0,
     }));
 
@@ -395,6 +409,8 @@ const PostSalesForm = () => {
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">Subservice</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit Price</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Quantity</th>
+                  {/* **New Column Header for Unit** */}
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">Action</th>
                 </tr>
@@ -448,6 +464,21 @@ const PostSalesForm = () => {
                           onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
                           className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
                         />
+                      </td>
+                       {/* **New Column Data for Unit Dropdown** */}
+                       <td className="px-3 py-2">
+                        <select
+                          name="unit"
+                          value={row.unit}
+                          onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                          className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                        >
+                          {UNIT_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-gray-800">
                         {displaySymbol}{row.amount.toFixed(2)}

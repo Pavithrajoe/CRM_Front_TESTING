@@ -34,7 +34,7 @@ import ProfileCard from "../../../../../Components/common/ProfileCard";
 import Comments from "../../../../../Components/commandshistory";
 import Tasks from "../../../../../Components/task";
 import RemainderPage from "../../../../../pages/RemainderPage";
-import StatusBar from "../../../../../context/StatusBar";
+import MilestoneStatusBar from "./mileStoneStatusBar";
 import LeadTimeline from "../../../../../Components/LeadTimeline";
 import ActionCard from "../../../../../Components/common/ActrionCard";
 import QuotationForm from "../../../../../Components/Quotation/QuotationForm";
@@ -972,7 +972,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
       {/* Right Column: Status Bar, Tabs, and Content */}
       <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
-        <StatusBar
+        <MilestoneStatusBar
           leadId={leadId}
           leadData={leadData}
           isLost={isLost}

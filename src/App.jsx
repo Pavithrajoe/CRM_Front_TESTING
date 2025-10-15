@@ -54,6 +54,7 @@ import CompanyPage from "./pages/companypage";
 import UserAnalyticsPage from "./pages/user_analytics";
 import TeamviewDashboard from "./pages/dashboard/teamviewdashboard";
 import LeadDetailView from "./context/leaddetailsview";
+import LeadDetailWithMileStone from "./Industries/Marketing/XcodeFix/Components/postSales/leadDetailWithMileStone.jsx";
 import UserDeals from "./pages/userPage/userDeal.jsx";
 import UserReportPage from "./pages/userPage/UserReportPage.jsx";
 import SettingsPage from "./pages/settings/settingsPage";
@@ -127,6 +128,7 @@ function App() {
                   <Route path="analytics" element={<UserAnalyticsPage />} />
                   <Route path="teamview" element={<TeamviewDashboard />} />
                   <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
+                  <Route path="xcodefix_leaddetailview_milestone/:leadId" element={<LeadDetailWithMileStone />} />
                   <Route path="userdeals/:userId" element={<UserDeals />} />
                   <Route path="/reports/:userId" element={<UserReportPage />} />
                   <Route path="/first-response" element={<FirstResponseTimeReport />} />

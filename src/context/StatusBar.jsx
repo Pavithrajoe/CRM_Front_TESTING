@@ -21,6 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+// import PaymentAndDomainDetailsCombined from '../../src/Industries/Marketing/XcodeFix/Components/postSales/domainDeatils'
 import dayjs from 'dayjs';
 
 
@@ -824,6 +825,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   }, []);
 
   return (
+    <>
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div className="w-11/12 md:w-5/6 lg:w-4/5 xl:w-[90%] mx-auto px-4 py-6">
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
@@ -1542,6 +1544,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         {showConfetti && <Confetti />}
       </div>
     </LocalizationProvider>
+    
+    </>
   );
 };
 

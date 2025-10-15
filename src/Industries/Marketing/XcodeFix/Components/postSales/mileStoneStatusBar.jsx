@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
-import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
-// import MileStoneStatusBar from './mileStoneStatusBar'; 
 
 const initialMilestoneRow = (sNo, defaultAmount) => {
     return {
@@ -33,27 +31,15 @@ const calculateBalancedSplit = (totalAmount, totalPhases) => {
     return amounts;
 };
 
-const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, leadId  }) => {
-    const navigate = useNavigate(); 
-    const location = useLocation();
-    console.log("leadID", leadId)
-    
+
+const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance }) => {
     const totalAmount = parseFloat(totalBalance) || 0; 
     const [termsAndConditions, setTermsAndConditions] = useState('');
     const [paymentPhases, setPaymentPhases] = useState(0); 
     const [milestones, setMilestones] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
     const [domainData, setDomainData] = useState(null); 
-
-    // Get URL search params and state
-    const searchParams = new URLSearchParams(location.search);
-    const pageFromUrl = Number(searchParams.get("page")) || 1;
-    const pageFromState = location.state?.returnPage;
-    const selectedFilter = location.state?.activeTab;
-
-    const [currentPage, setCurrentPage] = useState(() => {
-        return pageFromState || pageFromUrl || 1;
-    });
+    const [currentMilestoneId, setCurrentMilestoneId] = useState(1); 
 
     useEffect(() => {
         const newPhases = parseInt(paymentPhases);
@@ -114,93 +100,77 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
     
     const handleDomainDataUpdate = useCallback((data) => {
         setDomainData(data);
-    }, []);
+    }, []); 
 
     const handleSave = () => {
-        const tolerance = 0.01;
+        const tolerance = 0.01; 
 
         if (paymentPhases === 0) {
-            alert("Error: Please select the number of Payment Phases.");
-            return;
+              alert("Error: Please select the number of Payment Phases.");
+              return;
         }
 
         if (milestones.length === 0) {
             alert("Error: Please add at least one Milestone.");
             return;
         }
-
+        
         if (Math.abs(currentMilestoneSum - totalAmount) > tolerance) {
-            alert(
-                `Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(
-                2
-                )}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`
-            );
+            alert(`Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(2)}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`);
             return;
         }
-
-        const hasEmptyDateOrMilestone = milestones.some(
-            (m) => !m.milestone || !m.milestoneDate
-        );
+        
+        const hasEmptyDateOrMilestone = milestones.some(m => !m.milestone || !m.milestoneDate);
         if (hasEmptyDateOrMilestone) {
-            alert("Error: Please fill in the Milestone name and Date for all entries.");
-            return;
+              alert("Error: Please fill in the Milestone name and Date for all entries.");
+              return;
         }
-
+        
         if (!domainData) {
             alert("Error: Please fill and validate the Domain Details section.");
             return;
         }
-
         const finalSubmission = {
-            ...serviceData,
-            leadId,
+            ...serviceData, 
             termsAndConditions,
             paymentPhases: paymentPhases,
-            milestones: milestones.map((m) => ({
+            milestones: milestones.map(m => ({
                 sNo: m.sNo,
                 milestone: m.milestone,
                 milestoneDate: m.milestoneDate,
-                amount: parseFloat(m.amount.toFixed(2)),
+                amount: parseFloat(m.amount.toFixed(2)), 
             })),
-            domainDetails: domainData,
+            domainDetails: domainData, 
             finalTotalBalance: totalAmount.toFixed(2),
         };
-
-        console.log("Submitting final data:", finalSubmission);
-        alert("Data successfully compiled and ready for API submission!");
-
-        // ✅ After save or API call, navigate to the next page
-        navigate(`/xcodefix_leaddetailview_milestone/${29}`, {
-            state: {
-                returnPage: currentPage,
-                activeTab: selectedFilter,
-            },
-        });
+        alert("Data successfully compiled and ready for API submission! Check console for full object.");
+        
     };
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
 
-                {/* Header and Back Button */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-                    <button 
+                     <button 
                         onClick={onBack} 
                         className="flex items-center text-blue-600 hover:text-blue-800 transition text-sm font-semibold mb-3 sm:mb-0"
                     >
                         <FaArrowLeft className="mr-2" /> Back to Service Details
                     </button>
-                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details (Lead ID: {leadId || 'N/A'})</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details</h2>
                 </div>
                 
-                {/* Total Amount Display */}
                 <div className="flex justify-end mb-6">
                     <div className="text-xl font-extrabold text-green-700">
                         Total Amount Due: ${totalAmount.toFixed(2)}
                     </div>
                 </div>
 
-                {/* Payment Terms and Condition */}
+                
+
+                <hr className="my-8 border-t-2 border-blue-200" />
+                
                 <div className="mb-6 border p-4 rounded-lg bg-gray-50">
                     <label htmlFor="terms" className="block text-md font-medium text-gray-700 mb-2">
                         Payment Terms and Conditions
@@ -218,6 +188,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                 </div>
 
                 {/* Payment Phases Selection */}
+                {/* ... (existing phases selection code) ... */}
                 <div className="mb-6 border p-4 rounded-lg bg-blue-50">
                     <label htmlFor="phases" className="block text-md font-medium text-gray-700 mb-2">
                         Select Payment Phases for Initial Split (Optional: You can customize below)
@@ -236,15 +207,18 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                 </div>
 
                 {/* Milestone Table */}
+                {/* ... (existing milestone table and logic) ... */}
                 {paymentPhases > 0 && (
                     <div className="mb-8">
+                        {/* ... (table code) ... */}
                         <h3 className="text-lg font-semibold mb-3 text-blue-600">
                             Payment Milestones
                         </h3>
                         
-                        {/* Milestone table */}
+                        {/* Milestone table and Add button code here */}
                         <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                             <table className="min-w-full divide-y divide-gray-200">
+                                {/* ... (table body and rows) ... */}
                                 <thead className="bg-blue-100">
                                     <tr>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
@@ -310,8 +284,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                             </table>
                         </div>
                         
-                        {/* Add Milestone Button and Totals */}
-                        <div className="flex justify-between items-start mt-4">
+                        {/* Add Milestone Button */}
+                        <div className="flex justify-start mt-4">
                             <button
                                 type="button"
                                 onClick={handleAddMilestone}
@@ -319,6 +293,10 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                             >
                                 <FaPlusCircle className="mr-2" size={16} /> Add Custom Milestone
                             </button>
+                        </div>
+
+                        {/* (Difference) */}
+                        <div className="flex justify-end mt-4">
                             <div className="w-full max-w-xs space-y-2">
                                 <div className="flex justify-between font-bold text-gray-700 text-base border-t pt-2">
                                     <span>Total Due:</span>

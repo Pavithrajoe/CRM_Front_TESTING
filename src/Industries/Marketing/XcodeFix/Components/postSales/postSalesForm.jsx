@@ -5,7 +5,6 @@ import { ENDPOINTS } from "../../../../../api/constraints";
 
 const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleOption = (value) => {
     let newSelection;
     if (selectedValues.includes(value)) {
@@ -35,7 +34,9 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-40 overflow-y-auto">
+        <div className="absolute z-[9999] mt-1 w-max min-w-full rounded-md bg-white shadow-2xl border border-gray-200 max-h-48 overflow-y-auto">
+
+        {/* <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200 max-h-40 overflow-y-auto"> */}
           {options.length > 0 ? (
             options.map((option) => (
               <div
@@ -65,7 +66,6 @@ const initialServiceRow = {
   amount: 0,
 };
 
-const API_BASE_URL = "http://192.168.29.236:3000/api"; 
 
 const PostSalesForm = () => {
   const [step, setStep] = useState(1); 

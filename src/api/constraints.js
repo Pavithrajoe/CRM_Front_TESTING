@@ -142,4 +142,5 @@ export const ENDPOINTS = {
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
+  POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`
 };

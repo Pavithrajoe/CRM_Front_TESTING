@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
+import axios from 'axios';
+import { ENDPOINTS } from '../../../../../api/constraints.js';
 // import MileStoneStatusBar from './mileStoneStatusBar'; 
 
 const initialMilestoneRow = (sNo, defaultAmount) => {
@@ -33,10 +35,10 @@ const calculateBalancedSplit = (totalAmount, totalPhases) => {
     return amounts;
 };
 
-const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, leadId  }) => {
+const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
     const navigate = useNavigate(); 
     const location = useLocation();
-    console.log("leadID", leadId)
+    console.log("leadID idi", leadId)
     
     const totalAmount = parseFloat(totalBalance) || 0; 
     const [termsAndConditions, setTermsAndConditions] = useState('');
@@ -165,10 +167,23 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
             domainDetails: domainData,
             finalTotalBalance: totalAmount.toFixed(2),
         };
-
+        
+        //BINDING THE API FOR CREATING POST SALES 
+        const postSalesCreate=async ()=>{
+         try {
+            const response=await axios.post(ENDPOINTS.POST_SALES_POST_METHOD,finalSubmission,{
+                headers:{
+                    Authorization:localStorage.getItem("token")
+                }
+            })
+            alert(response.data)
+         } catch (e) {
+            console.error("Error in post sales post method: ",e.message)
+         }
+        }
         console.log("Submitting final data:", finalSubmission);
         alert("Data successfully compiled and ready for API submission!");
-
+         
         navigate(`/xcodefix_leaddetailview_milestone/${29}`, {
             state: {
                 returnPage: currentPage,
@@ -249,7 +264,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">Milestone Name</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[120px]">Milestone Date</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ($)</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ({currencySymbol})</th>
                                         <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-10">Action</th>
                                     </tr>
                                 </thead>
@@ -321,11 +336,11 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                             <div className="w-full max-w-xs space-y-2">
                                 <div className="flex justify-between font-bold text-gray-700 text-base border-t pt-2">
                                     <span>Total Due:</span>
-                                    <span>${totalAmount.toFixed(2)}</span>
+                                    <span>{currencySymbol}{totalAmount.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between font-bold text-gray-700 text-base">
                                     <span>Milestones Sum:</span>
-                                    <span>${currentMilestoneSum.toFixed(2)}</span>
+                                    <span>{currencySymbol}{currentMilestoneSum.toFixed(2)}</span>
                                 </div>
                                 <div className={`flex justify-between font-extrabold pt-2 border-t-2 ${isSumValid ? 'text-green-600' : 'text-red-600'}`}>
                                     <span>Difference:</span>

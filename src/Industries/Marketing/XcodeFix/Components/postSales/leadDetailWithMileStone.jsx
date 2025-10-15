@@ -1439,7 +1439,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
                         </button>
 
                         <PostSalesForm 
-                            leadId={leadId} 
+                            leadId={Number(leadId)} 
                             onBack={() => setShowPostSalesForm(false)}
                         /> 
                         {/* <PostSalesForm />  */}

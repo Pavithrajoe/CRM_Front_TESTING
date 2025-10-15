@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
+// Required fields logic remains the same
 const requiredFields = {
-    'own': ['domainName', 'registerDate', 'renewalDate', 'hostingProvider'],
-    'company': ['hostingProvider']
+    // 'own': Client's Own Domain: Needs domainName and hostingProvider
+    'own': ['domainName', 'hostingProvider'], 
+    // 'company': XcodeFix Domain: Needs domainName, registerDate, renewalDate, and hostingProvider
+    'company': ['domainName', 'registerDate', 'renewalDate', 'hostingProvider']
 };
 
 const DomainDetails = ({ onUpdate }) => {
@@ -13,9 +16,10 @@ const DomainDetails = ({ onUpdate }) => {
     const [renewalDate, setRenewalDate] = useState('');
     const [hostingProvider, setHostingProvider] = useState('');
     const [isDataValid, setIsDataValid] = useState(false);
+    
+    // The validateData function remains the same
     const validateData = useCallback(() => {
         const fieldsToCheck = requiredFields[domainStatus] || [];
-        let missingFields = [];
 
         if (!domainStatus) {
             return { isValid: false, data: null };
@@ -34,13 +38,13 @@ const DomainDetails = ({ onUpdate }) => {
             return value && value.length > 0;
         });
 
-        const dataToSend = {
+        let dataToSend = {
             domainStatus,
+            domainName: currentData.domainName,
             hostingProvider: currentData.hostingProvider,
         };
 
-        if (domainStatus === 'own') {
-            dataToSend.domainName = currentData.domainName;
+        if (domainStatus === 'company') {
             dataToSend.registerDate = currentData.registerDate;
             dataToSend.renewalDate = currentData.renewalDate;
         }
@@ -57,40 +61,74 @@ const DomainDetails = ({ onUpdate }) => {
         
     }, [domainStatus, domainName, registerDate, renewalDate, hostingProvider, onUpdate, validateData]);
     
+    // Helper to determine if a field is required based on current domain status
+    const isFieldRequired = (fieldName) => {
+        return (requiredFields[domainStatus] || []).includes(fieldName);
+    };
+    
+    // Handler to change status and clear fields
+    const handleDomainStatusChange = (status) => {
+        setDomainStatus(status);
+        setDomainName('');
+        setRegisterDate('');
+        setRenewalDate('');
+    };
+
     
     return (
         <div className="p-4 rounded-xl border border-gray-300 bg-gray-50 shadow-inner">
             <h3 className="text-xl font-bold text-indigo-700 mb-4 flex items-center">
-                Domain & Hosting Details
-               
+                Domain & Hosting Details 
+                {isDataValid ? (
+                    <FaCheckCircle className="ml-2 text-green-500 text-lg" />
+                ) : (
+                    domainStatus && <FaExclamationCircle className="ml-2 text-red-500 text-lg" />
+                )}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                {/*  Domain Status  */}
-                <div>
-                    <label htmlFor="domainStatus" className="block text-sm font-medium text-gray-700 mb-1">
-                        Domain Status <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        id="domainStatus"
-                        value={domainStatus}
-                        onChange={(e) => {
-                            setDomainStatus(e.target.value);
-                            setDomainName('');
-                            setRegisterDate('');
-                            setRenewalDate('');
-                        }}
-                        className="w-full border p-2 rounded-lg text-sm focus:ring-indigo-400 focus:border-indigo-400 bg-white"
-                        required
-                    >
-                        <option value="">Select Domain Owner</option>
-                        <option value="own">Client's Own Domain</option>
-                        <option value="company">Company Domain (Purchased by us)</option>
-                    </select>
+                {/*  Domain Status - COMBINED LABEL AND BUTTONS ON ONE LINE */}
+                {/* This wrapper now spans 2 columns to give space for the buttons */}
+                <div className="md:col-span-2">
+                    {/* Use flex to align label and buttons horizontally */}
+                    <div className="flex items-center space-x-4"> 
+                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            Domain Status <span className="text-red-500">*</span>
+                        </label>
+                        
+                        {/* Wrapper for the buttons */}
+                        <div className="flex space-x-4"> 
+                            {/* Client's Own Domain Button */}
+                            <button
+                                type="button"
+                                onClick={() => handleDomainStatusChange('own')}
+                                className={`p-2 rounded-lg text-sm font-semibold transition duration-150 ease-in-out border-2 whitespace-nowrap ${
+                                    domainStatus === 'own' 
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                        : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                                }`}
+                            >
+                                Client's Own Domain
+                            </button>
+                            
+                            {/* XcodeFix Domain Button */}
+                            <button
+                                type="button"
+                                onClick={() => handleDomainStatusChange('company')}
+                                className={`p-2 rounded-lg text-sm font-semibold transition duration-150 ease-in-out border-2 whitespace-nowrap ${
+                                    domainStatus === 'company' 
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                        : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                                }`}
+                            >
+                                XcodeFix Domain
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
-                {/* Hosting Provider */}
+                {/* Hosting Provider (Column 1) */}
                 <div>
                     <label htmlFor="hostingProvider" className="block text-sm font-medium text-gray-700 mb-1">
                         Hosting Provider <span className="text-red-500">*</span>
@@ -106,29 +144,31 @@ const DomainDetails = ({ onUpdate }) => {
                     />
                 </div>
 
-                {/*  if Client's Own Domain is selected */}
-                {domainStatus === 'own' && (
+                {/* Domain Name (Column 2 - Same row as Hosting Provider) */}
+                {domainStatus && (
+                    <div> 
+                        <label htmlFor="domainName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Domain Name (e.g., example.com) {isFieldRequired('domainName') && <span className="text-red-500">*</span>}
+                        </label>
+                        <input
+                            type="text"
+                            id="domainName"
+                            value={domainName}
+                            onChange={(e) => setDomainName(e.target.value)}
+                            placeholder="Enter primary domain name"
+                            className="w-full border p-2 rounded-lg text-sm focus:ring-indigo-400 focus:border-indigo-400"
+                            required={isFieldRequired('domainName')}
+                        />
+                    </div>
+                )}
+                
+                {/* Registration Date and Renewal Date are only shown/required for 'company' */}
+                {domainStatus === 'company' && (
                     <>
-                        {/* Domain Name */}
-                        <div className="md:col-span-2"> 
-                            <label htmlFor="domainName" className="block text-sm font-medium text-gray-700 mb-1">
-                                Domain Name (e.g., example.com) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="domainName"
-                                value={domainName}
-                                onChange={(e) => setDomainName(e.target.value)}
-                                placeholder="Enter primary domain name"
-                                className="w-full border p-2 rounded-lg text-sm focus:ring-indigo-400 focus:border-indigo-400"
-                                required
-                            />
-                        </div>
-
-                        {/* Registration Date */}
+                        {/* Registration Date (Column 1) */}
                         <div>
                             <label htmlFor="registerDate" className="block text-sm font-medium text-gray-700 mb-1">
-                                Registration Date <span className="text-red-500">*</span>
+                                Registration Date {isFieldRequired('registerDate') && <span className="text-red-500">*</span>}
                             </label>
                             <input
                                 type="date"
@@ -136,14 +176,14 @@ const DomainDetails = ({ onUpdate }) => {
                                 value={registerDate}
                                 onChange={(e) => setRegisterDate(e.target.value)}
                                 className="w-full border p-2 rounded-lg text-sm focus:ring-indigo-400 focus:border-indigo-400"
-                                required
+                                required={isFieldRequired('registerDate')}
                             />
                         </div>
 
-                        {/* Renewal Date */}
+                        {/* Renewal Date (Column 2) */}
                         <div>
                             <label htmlFor="renewalDate" className="block text-sm font-medium text-gray-700 mb-1">
-                                Renewal Date <span className="text-red-500">*</span>
+                                Renewal Date {isFieldRequired('renewalDate') && <span className="text-red-500">*</span>}
                             </label>
                             <input
                                 type="date"
@@ -151,7 +191,7 @@ const DomainDetails = ({ onUpdate }) => {
                                 value={renewalDate}
                                 onChange={(e) => setRenewalDate(e.target.value)}
                                 className="w-full border p-2 rounded-lg text-sm focus:ring-indigo-400 focus:border-indigo-400"
-                                required
+                                required={isFieldRequired('renewalDate')}
                             />
                         </div>
                     </>

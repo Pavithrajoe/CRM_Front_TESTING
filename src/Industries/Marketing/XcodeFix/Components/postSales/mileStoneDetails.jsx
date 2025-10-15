@@ -1,21 +1,18 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
-<<<<<<< HEAD
 import axios from 'axios';
 import { ENDPOINTS } from '../../../../../api/constraints.js';
+import { transform } from 'framer-motion';
+import { setDefaultLocale } from 'react-datepicker';
 // import MileStoneStatusBar from './mileStoneStatusBar'; 
-=======
-import MilestoneStatusBar from './mileStoneStatusBar.jsx';
->>>>>>> 5784e1cf4ce008a3b9d7f133799aa9984dc09820
 
-const initialMilestoneRow = (sNo, defaultAmount, milestoneName = '') => {
+const initialMilestoneRow = (sNo, defaultAmount) => {
     return {
         id: Date.now() + Math.random(), 
         sNo,
-        milestone: milestoneName || `Milestone ${sNo}`,
+        milestone: `Milestone ${sNo}`,
         milestoneDate: '',
         amount: parseFloat(defaultAmount.toFixed(2)),
     };
@@ -48,6 +45,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     const totalAmount = parseFloat(totalBalance) || 0; 
     const [termsAndConditions, setTermsAndConditions] = useState('');
     const [paymentPhases, setPaymentPhases] = useState(0); 
+    const [duration, setDuration] = useState(0)
     const [milestones, setMilestones] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
     const [domainData, setDomainData] = useState(null); 
@@ -62,26 +60,14 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         return pageFromState || pageFromUrl || 1;
     });
 
-    // Auto-split functionality
     useEffect(() => {
         const newPhases = parseInt(paymentPhases);
         
         if (newPhases > 0 && !isInitialized) {
             const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
-            
-            // Create milestone names based on phase count
-            const milestoneNames = {
-                2: ['Initial Payment', 'Final Payment'],
-                3: ['Initial Payment', 'Progress Payment', 'Final Payment'],
-                4: ['Initial Payment', 'Second Payment', 'Third Payment', 'Final Payment']
-            };
 
             const newMilestones = splitAmounts.map((amount, index) => 
-                initialMilestoneRow(
-                    index + 1, 
-                    amount, 
-                    milestoneNames[newPhases]?.[index] || `Milestone ${index + 1}`
-                )
+                initialMilestoneRow(index + 1, amount)
             );
             
             setMilestones(newMilestones);
@@ -95,7 +81,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     const handlePhaseSelect = (e) => {
         const value = parseInt(e.target.value);
         setPaymentPhases(value);
-        setIsInitialized(false); // Reset initialization to trigger auto-split
+        setIsInitialized(false); 
     };
 
     const handleMilestoneChange = (id, name, value) => {
@@ -115,11 +101,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     };
     
     const handleDeleteMilestone = (id) => {
-        if (milestones.length <= 1) {
-            alert("Cannot delete the only milestone. At least one milestone is required.");
-            return;
-        }
-        
         setMilestones(prevMilestones => {
             const filtered = prevMilestones.filter(m => m.id !== id);
             return filtered.map((m, index) => ({
@@ -140,6 +121,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         setDomainData(data);
     }, []);
 
+
+
     const handleSave = () => {
         const tolerance = 0.01;
 
@@ -156,7 +139,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         if (Math.abs(currentMilestoneSum - totalAmount) > tolerance) {
             alert(
                 `Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(
-                2
+                    2
                 )}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`
             );
             return;
@@ -175,11 +158,13 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
             return;
         }
 
+        // 🧩 STEP 1: Prepare your local submission object
         const finalSubmission = {
             ...serviceData,
             leadId,
             termsAndConditions,
-            paymentPhases: paymentPhases,
+            duration,
+            paymentPhases,
             milestones: milestones.map((m) => ({
                 sNo: m.sNo,
                 milestone: m.milestone,
@@ -189,39 +174,84 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
             domainDetails: domainData,
             finalTotalBalance: totalAmount.toFixed(2),
         };
-        
-        //BINDING THE API FOR CREATING POST SALES 
-        const postSalesCreate=async ()=>{
-         try {
-            const response=await axios.post(ENDPOINTS.POST_SALES_POST_METHOD,finalSubmission,{
-                headers:{
-                    Authorization:localStorage.getItem("token")
-                }
-            })
-            alert(response.data)
-         } catch (e) {
-            console.error("Error in post sales post method: ",e.message)
-         }
-        }
-        console.log("Submitting final data:", finalSubmission);
-        alert("Data successfully compiled and ready for API submission!");
-<<<<<<< HEAD
-         
-        navigate(`/xcodefix_leaddetailview_milestone/${29}`, {
-=======
 
-        navigate(`/xcodefix_leaddetailview_milestone/${9}`, {
->>>>>>> 5784e1cf4ce008a3b9d7f133799aa9984dc09820
-            state: {
-                returnPage: currentPage,
-                activeTab: selectedFilter,
+        // 🧠 STEP 2: Transform data into backend-required format
+        const transformedData = transformToPostSalesFormat(finalSubmission);
+
+        // 🧨 STEP 3: Actually hit the API
+        const postSalesCreate = async () => {
+            try {
+                console.log("📦 Final API Payload:", transformedData);
+
+                console.log("The token is:", localStorage.getItem("token"))
+
+                const response = await axios.post(
+                    ENDPOINTS.POST_SALES_POST_METHOD,
+                    transformedData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                    }
+                );
+
+                alert("✅ Post sales created successfully!");
+                console.log("Response:", response.data);
+
+                // Optionally redirect only after success
+                navigate(`/xcodefix_leaddetailview_milestone/${leadId}`, {
+                    state: {
+                        returnPage: currentPage,
+                        activeTab: selectedFilter,
+                    },
+                });
+            } catch (e) {
+                console.error("❌ Error in post sales post method: ", e.message);
+                alert("Something went wrong while creating post sales.");
+            }
+        };
+
+        // 🚀 STEP 4: Call the API function!
+        postSalesCreate();
+    };
+
+
+    const transformToPostSalesFormat = (data) => {
+        return {
+            ilead_id: data.leadId,
+            proposalId: data.proposalId,
+            duration: parseInt(data.duration, 10), // converts string → integer (base 10)
+            paymentPhases: String(data.paymentPhases),
+            totalProjectAmount: data.totals?.subTotal || 0,
+            paymentTermsAndConditions: data.termsAndConditions,
+            discountPercentageAmount: data.totals?.discountPercentage || 0,
+            currencyId: data.currency === "INR" ? 2 : 2, // Example mapping; adjust as needed
+            postSalesServices: data.items.map((item) => ({
+                serviceId: item.serviceId,
+                subServiceId: item.subserviceIds?.[0] || null,
+                unitPrice: item.unitPrice,
+                quantity: item.quantity,
+                amount: item.amount,
+            })),
+            milestones: data.milestones.map((m) => ({
+                expectedAmount: m.amount,
+                expectedMilestoneDate: m.milestoneDate,
+            })),
+            clientDomain: {
+                domainName: data.domainDetails?.domainName,
+                hostingProvider: data.domainDetails?.hostingProvider,
+                ownDomain: data.domainDetails?.domainStatus === "own",
+                registerDate: new Date().toISOString().split("T")[0],
+                renewalDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+                    .toISOString()
+                    .split("T")[0],
             },
-        });
+        };
     };
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
-            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-6xl mx-auto max-h-[95vh] overflow-y-auto">
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
 
                 {/* Header and Back Button */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
@@ -241,15 +271,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                     </div>
                 </div>
 
-                {/* Milestone Status Bar */}
-                {leadId && (
-                    <div className="mb-8 border border-blue-200 rounded-lg p-4 bg-white shadow-sm">
-                        <MilestoneStatusBar leadId={leadId} />
-                    </div>
-                )}
-
-                <hr className="my-8 border-t-2 border-blue-200" />
-                
                 {/* Payment Terms and Condition */}
                 <div className="mb-6 border p-4 rounded-lg bg-gray-50">
                     <label htmlFor="terms" className="block text-md font-medium text-gray-700 mb-2">
@@ -269,26 +290,57 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
                 {/* Payment Phases Selection */}
                 <div className="mb-6 border p-4 rounded-lg bg-blue-50">
-                    <label htmlFor="phases" className="block text-md font-medium text-gray-700 mb-2">
+                    <label
+                        htmlFor="phases"
+                        className="block text-md font-medium text-gray-700 mb-2"
+                    >
                         Select Payment Phases for Initial Split (Optional: You can customize below)
                     </label>
-                    <select
-                        id="phases"
-                        value={paymentPhases}
-                        onChange={handlePhaseSelect}
-                        className="w-full sm:w-1/2 md:w-1/3 border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
-                    >
-                        <option value="0" disabled>Select number of phases</option>
-                        <option value="2">2 Phases (Auto-Split)</option>
-                        <option value="3">3 Phases (Auto-Split)</option>
-                        <option value="4">4 Phases (Auto-Split)</option>
-                    </select>
-                    {paymentPhases > 0 && (
-                        <p className="text-sm text-green-600 mt-2">
-                            ✅ Auto-split applied! Amount divided into {paymentPhases} equal phases. You can customize below.
-                        </p>
-                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                        {/* Dropdown */}
+                        <div className="w-full sm:w-1/3">
+                            <label
+                                htmlFor="phases"
+                                className="block text-sm font-medium text-gray-600 mb-1"
+                            >
+                                Payment Phases
+                            </label>
+                            <select
+                                id="phases"
+                                value={paymentPhases}
+                                onChange={handlePhaseSelect}
+                                className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
+                            >
+                                <option value="0" disabled>Select number of phases</option>
+                                <option value="2">2 Phases (Auto-Split)</option>
+                                <option value="3">3 Phases (Auto-Split)</option>
+                                <option value="4">4 Phases (Auto-Split)</option>
+                            </select>
+                        </div>
+
+                        {/* Input field for duration */}
+                        <div className="w-full sm:flex-1 mt-3 sm:mt-0">
+                            <label
+                                htmlFor="duration"
+                                className="block text-sm font-medium text-gray-600 mb-1"
+                            >
+                                Duration
+                            </label>
+                            <input
+                                type="number"
+                                id="duration"
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                maxLength={200}
+                                placeholder="Enter duration (e.g. 12 months)"
+                                className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
+                            />
+                        </div>
+                    </div>
                 </div>
+
+
 
                 {/* Milestone Table */}
                 {paymentPhases > 0 && (
@@ -355,9 +407,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                                     onClick={() => handleDeleteMilestone(row.id)}
                                                     className="text-red-500 hover:text-red-700 transition"
                                                     title="Delete Milestone"
-                                                    disabled={milestones.length <= 1}
                                                 >
-                                                    <FaTrashAlt size={16} className={milestones.length <= 1 ? 'opacity-50' : ''} />
+                                                    <FaTrashAlt size={16} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -386,7 +437,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 </div>
                                 <div className={`flex justify-between font-extrabold pt-2 border-t-2 ${isSumValid ? 'text-green-600' : 'text-red-600'}`}>
                                     <span>Difference:</span>
-                                    <span>${amountDifference}</span>
+                                    <span>{amountDifference}</span>
                                 </div>
                             </div>
                         </div>

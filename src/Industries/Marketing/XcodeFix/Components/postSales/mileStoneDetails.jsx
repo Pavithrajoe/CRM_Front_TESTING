@@ -1,16 +1,21 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
+<<<<<<< HEAD
 import axios from 'axios';
 import { ENDPOINTS } from '../../../../../api/constraints.js';
 // import MileStoneStatusBar from './mileStoneStatusBar'; 
+=======
+import MilestoneStatusBar from './mileStoneStatusBar.jsx';
+>>>>>>> 5784e1cf4ce008a3b9d7f133799aa9984dc09820
 
-const initialMilestoneRow = (sNo, defaultAmount) => {
+const initialMilestoneRow = (sNo, defaultAmount, milestoneName = '') => {
     return {
         id: Date.now() + Math.random(), 
         sNo,
-        milestone: `Milestone ${sNo}`,
+        milestone: milestoneName || `Milestone ${sNo}`,
         milestoneDate: '',
         amount: parseFloat(defaultAmount.toFixed(2)),
     };
@@ -57,14 +62,26 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         return pageFromState || pageFromUrl || 1;
     });
 
+    // Auto-split functionality
     useEffect(() => {
         const newPhases = parseInt(paymentPhases);
         
         if (newPhases > 0 && !isInitialized) {
             const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
+            
+            // Create milestone names based on phase count
+            const milestoneNames = {
+                2: ['Initial Payment', 'Final Payment'],
+                3: ['Initial Payment', 'Progress Payment', 'Final Payment'],
+                4: ['Initial Payment', 'Second Payment', 'Third Payment', 'Final Payment']
+            };
 
             const newMilestones = splitAmounts.map((amount, index) => 
-                initialMilestoneRow(index + 1, amount)
+                initialMilestoneRow(
+                    index + 1, 
+                    amount, 
+                    milestoneNames[newPhases]?.[index] || `Milestone ${index + 1}`
+                )
             );
             
             setMilestones(newMilestones);
@@ -78,7 +95,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     const handlePhaseSelect = (e) => {
         const value = parseInt(e.target.value);
         setPaymentPhases(value);
-        setIsInitialized(false); 
+        setIsInitialized(false); // Reset initialization to trigger auto-split
     };
 
     const handleMilestoneChange = (id, name, value) => {
@@ -98,6 +115,11 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     };
     
     const handleDeleteMilestone = (id) => {
+        if (milestones.length <= 1) {
+            alert("Cannot delete the only milestone. At least one milestone is required.");
+            return;
+        }
+        
         setMilestones(prevMilestones => {
             const filtered = prevMilestones.filter(m => m.id !== id);
             return filtered.map((m, index) => ({
@@ -183,8 +205,13 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         }
         console.log("Submitting final data:", finalSubmission);
         alert("Data successfully compiled and ready for API submission!");
+<<<<<<< HEAD
          
         navigate(`/xcodefix_leaddetailview_milestone/${29}`, {
+=======
+
+        navigate(`/xcodefix_leaddetailview_milestone/${9}`, {
+>>>>>>> 5784e1cf4ce008a3b9d7f133799aa9984dc09820
             state: {
                 returnPage: currentPage,
                 activeTab: selectedFilter,
@@ -194,7 +221,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
-            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
+            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-6xl mx-auto max-h-[95vh] overflow-y-auto">
 
                 {/* Header and Back Button */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
@@ -214,6 +241,15 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                     </div>
                 </div>
 
+                {/* Milestone Status Bar */}
+                {leadId && (
+                    <div className="mb-8 border border-blue-200 rounded-lg p-4 bg-white shadow-sm">
+                        <MilestoneStatusBar leadId={leadId} />
+                    </div>
+                )}
+
+                <hr className="my-8 border-t-2 border-blue-200" />
+                
                 {/* Payment Terms and Condition */}
                 <div className="mb-6 border p-4 rounded-lg bg-gray-50">
                     <label htmlFor="terms" className="block text-md font-medium text-gray-700 mb-2">
@@ -247,6 +283,11 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                         <option value="3">3 Phases (Auto-Split)</option>
                         <option value="4">4 Phases (Auto-Split)</option>
                     </select>
+                    {paymentPhases > 0 && (
+                        <p className="text-sm text-green-600 mt-2">
+                            ✅ Auto-split applied! Amount divided into {paymentPhases} equal phases. You can customize below.
+                        </p>
+                    )}
                 </div>
 
                 {/* Milestone Table */}
@@ -314,8 +355,9 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                                     onClick={() => handleDeleteMilestone(row.id)}
                                                     className="text-red-500 hover:text-red-700 transition"
                                                     title="Delete Milestone"
+                                                    disabled={milestones.length <= 1}
                                                 >
-                                                    <FaTrashAlt size={16} />
+                                                    <FaTrashAlt size={16} className={milestones.length <= 1 ? 'opacity-50' : ''} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -344,7 +386,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 </div>
                                 <div className={`flex justify-between font-extrabold pt-2 border-t-2 ${isSumValid ? 'text-green-600' : 'text-red-600'}`}>
                                     <span>Difference:</span>
-                                    <span>{amountDifference}</span>
+                                    <span>${amountDifference}</span>
                                 </div>
                             </div>
                         </div>

@@ -1,347 +1,591 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
-import DomainDetails from "./domainDeatils.jsx"; 
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, Circle, X, Calendar, DollarSign, User } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
+  Button,
+  IconButton,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material';
+import { useToast} from '../../../../../context/ToastContext'
+import axios from 'axios';
+import { ENDPOINTS } from '../../../../../api/constraints';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
 
-const initialMilestoneRow = (sNo, defaultAmount) => {
-    return {
-        id: Date.now() + Math.random(), 
-        sNo,
-        milestone: `Milestone ${sNo}`,
-        milestoneDate: '',
-        amount: parseFloat(defaultAmount.toFixed(2)),
-    };
-};
+const MAX_REMARK_LENGTH = 500;
 
-const calculateBalancedSplit = (totalAmount, totalPhases) => {
-    if (totalPhases <= 0 || isNaN(totalAmount) || totalAmount <= 0) return [];
-    
-    const totalRemaining = Math.round(totalAmount * 100); 
-    const baseAmountCents = Math.floor(totalRemaining / totalPhases);
-    let remainderCents = totalRemaining % totalPhases;
-    
-    const amounts = Array.from({ length: totalPhases }, () => {
-        let amount = baseAmountCents;
-        if (remainderCents > 0) {
-            amount += 1;
-            remainderCents--;
+const MilestoneStatusBar = ({ leadId }) => {
+  const [milestones, setMilestones] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const [error, setError] = useState(null);
+  const { showToast } = useToast();
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
+
+  const [formData, setFormData] = useState({
+    actualAmount: '',
+    actualMilestoneDate: null,
+    remarks: '',
+    assignedTo: '',
+    assignToMe: false,
+    notifiedTo: '',
+    notifyToMe: false,
+    balanceAmount: ''
+  });
+
+  const [formErrors, setFormErrors] = useState({
+    actualAmount: '',
+    actualMilestoneDate: '',
+    remarks: '',
+  });
+
+  const timeSlotProps = {
+    popper: {
+      placement: 'top-start', 
+      modifiers: [
+        {
+          name: 'preventOverflow',
+          options: {
+            mainAxis: false,
+          },
+        },
+      ],
+      sx: { 
+        zIndex: 9999, 
+        '& .MuiPickersPopper-paper': {
+          marginBottom: '60px', 
         }
-        return amount / 100; 
+      }
+    },
+    desktopPaper: {
+      sx: { 
+        zIndex: 9999,
+        position: 'relative' 
+      }
+    }
+  };
+
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const userObject = JSON.parse(userString);
+        if (userObject && userObject.iUser_id) {
+          setLoggedInUserId(userObject.iUser_id);
+        }
+      } catch (error) {
+        console.error("Failed to parse user data from localStorage", error);
+      }
+    }
+  }, []);
+
+  const fetchMilestones = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${ENDPOINTS.MILESTONE_BY_LEAD}/${leadId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        const milestoneData = response.data.data;
+        setMilestones(milestoneData);
+        
+        const currentIndex = milestoneData.findIndex(milestone => 
+          !milestone.actualAmount || milestone.actualAmount === 0 || !milestone.actualMilestoneDate
+        );
+        setCurrentStageIndex(currentIndex === -1 ? milestoneData.length : currentIndex);
+      }
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+      setError('Failed to fetch milestones data');
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${ENDPOINTS.USERS}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (leadId) {
+      fetchMilestones();
+      fetchUsers();
+    }
+  }, [leadId]);
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
+  };
+
+  const isMilestoneCompleted = (milestone, index) => {
+    return milestone.actualAmount && milestone.actualAmount > 0 && milestone.actualMilestoneDate && index < currentStageIndex;
+  };
+
+  const isCurrentMilestone = (index) => {
+    return index === currentStageIndex;
+  };
+
+  const handleMilestoneClick = (milestone, index) => {
+    if (index > currentStageIndex) {
+      showToast('info', 'Please complete previous milestones first.');
+      return;
+    }
+
+    setSelectedMilestone(milestone);
+    const balance = milestone.expectedAmount - (milestone.actualAmount || 0);
     
-    return amounts;
-};
+    setFormData({
+      actualAmount: milestone.actualAmount || '',
+      actualMilestoneDate: milestone.actualMilestoneDate ? dayjs(milestone.actualMilestoneDate) : null,
+      remarks: milestone.remarks || '',
+      assignedTo: '',
+      assignToMe: false,
+      notifiedTo: '',
+      notifyToMe: false,
+      balanceAmount: balance
+    });
+    setFormErrors({
+      actualAmount: '',
+      actualMilestoneDate: '',
+      remarks: '',
+    });
+    setOpenDialog(true);
+  };
 
-
-const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance }) => {
-    const totalAmount = parseFloat(totalBalance) || 0; 
-    const [termsAndConditions, setTermsAndConditions] = useState('');
-    const [paymentPhases, setPaymentPhases] = useState(0); 
-    const [milestones, setMilestones] = useState([]);
-    const [isInitialized, setIsInitialized] = useState(false);
-    const [domainData, setDomainData] = useState(null); 
-    const [currentMilestoneId, setCurrentMilestoneId] = useState(1); 
-
-    useEffect(() => {
-        const newPhases = parseInt(paymentPhases);
-        
-        if (newPhases > 0 && !isInitialized) {
-            const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
-
-            const newMilestones = splitAmounts.map((amount, index) => 
-                initialMilestoneRow(index + 1, amount)
-            );
-            
-            setMilestones(newMilestones);
-            setIsInitialized(true); 
-        } else if (newPhases === 0) {
-            setMilestones([]);
-            setIsInitialized(false);
-        }
-    }, [paymentPhases, totalAmount]);
-
-    const handlePhaseSelect = (e) => {
-        const value = parseInt(e.target.value);
-        setPaymentPhases(value);
-        setIsInitialized(false); 
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      actualAmount: '',
+      actualMilestoneDate: '',
+      remarks: '',
     };
 
-    const handleMilestoneChange = (id, name, value) => {
-        setMilestones(prevMilestones => {
-            return prevMilestones.map(m => 
-                m.id === id ? { ...m, [name]: name === 'amount' ? parseFloat(value) || 0 : value } : m
-            );
-        });
-    };
-    
-    const handleAddMilestone = () => {
-        setMilestones(prevMilestones => {
-            const nextSNo = prevMilestones.length > 0 ? Math.max(...prevMilestones.map(m => m.sNo)) + 1 : 1;
-            const newRow = initialMilestoneRow(nextSNo, 0); 
-            return [...prevMilestones, newRow];
-        });
-    };
-    
-    const handleDeleteMilestone = (id) => {
-        setMilestones(prevMilestones => {
-            const filtered = prevMilestones.filter(m => m.id !== id);
-            return filtered.map((m, index) => ({
-                ...m,
-                sNo: index + 1 
-            }));
-        });
-    };
+    if (!formData.actualAmount) {
+      newErrors.actualAmount = 'Actual amount is required';
+      isValid = false;
+    } else if (parseFloat(formData.actualAmount) > selectedMilestone.expectedAmount) {
+      newErrors.actualAmount = 'Actual amount cannot exceed expected amount';
+      isValid = false;
+    } else if (parseFloat(formData.actualAmount) <= 0) {
+      newErrors.actualAmount = 'Actual amount must be greater than 0';
+      isValid = false;
+    }
 
-    const currentMilestoneSum = useMemo(() => 
-        milestones.reduce((sum, m) => sum + parseFloat(m.amount), 0)
-    , [milestones]);
-    
-    const amountDifference = (totalAmount - currentMilestoneSum).toFixed(2);
-    const isSumValid = Math.abs(amountDifference) < 0.01;
-    
-    const handleDomainDataUpdate = useCallback((data) => {
-        setDomainData(data);
-    }, []); 
+    if (!formData.actualMilestoneDate) {
+      newErrors.actualMilestoneDate = 'Actual date is required';
+      isValid = false;
+    }
 
-    const handleSave = () => {
-        const tolerance = 0.01; 
+    if (formData.remarks && formData.remarks.length > MAX_REMARK_LENGTH) {
+      newErrors.remarks = `Remarks cannot exceed ${MAX_REMARK_LENGTH} characters`;
+      isValid = false;
+    }
 
-        if (paymentPhases === 0) {
-              alert("Error: Please select the number of Payment Phases.");
-              return;
-        }
+    setFormErrors(newErrors);
+    return isValid;
+  };
 
-        if (milestones.length === 0) {
-            alert("Error: Please add at least one Milestone.");
-            return;
-        }
-        
-        if (Math.abs(currentMilestoneSum - totalAmount) > tolerance) {
-            alert(`Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(2)}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`);
-            return;
-        }
-        
-        const hasEmptyDateOrMilestone = milestones.some(m => !m.milestone || !m.milestoneDate);
-        if (hasEmptyDateOrMilestone) {
-              alert("Error: Please fill in the Milestone name and Date for all entries.");
-              return;
-        }
-        
-        if (!domainData) {
-            alert("Error: Please fill and validate the Domain Details section.");
-            return;
-        }
-        const finalSubmission = {
-            ...serviceData, 
-            termsAndConditions,
-            paymentPhases: paymentPhases,
-            milestones: milestones.map(m => ({
-                sNo: m.sNo,
-                milestone: m.milestone,
-                milestoneDate: m.milestoneDate,
-                amount: parseFloat(m.amount.toFixed(2)), 
-            })),
-            domainDetails: domainData, 
-            finalTotalBalance: totalAmount.toFixed(2),
-        };
-        alert("Data successfully compiled and ready for API submission! Check console for full object.");
-        
-    };
+  const handleAssignToMeChange = (e) => {
+    const checked = e.target.checked;
+    setFormData(prev => ({
+      ...prev,
+      assignToMe: checked,
+      assignedTo: checked ? loggedInUserId : ''
+    }));
+  };
 
+  const handleNotifyToMeChange = (e) => {
+    const checked = e.target.checked;
+    setFormData(prev => ({
+      ...prev,
+      notifyToMe: checked,
+      notifiedTo: checked ? loggedInUserId : ''
+    }));
+  };
+
+  const handleAssignedToChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      assignedTo: value,
+      assignToMe: value === loggedInUserId
+    }));
+  };
+
+  const handleNotifiedToChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      notifiedTo: value,
+      notifyToMe: value === loggedInUserId
+    }));
+  };
+
+  const handleActualAmountChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      actualAmount: value,
+      balanceAmount: selectedMilestone ? selectedMilestone.expectedAmount - (parseFloat(value) || 0) : 0
+    }));
+
+    if (formErrors.actualAmount) {
+      setFormErrors(prev => ({ ...prev, actualAmount: '' }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        actualAmount: parseFloat(formData.actualAmount),
+        actualMilestoneDate: formData.actualMilestoneDate.toISOString(),
+        remarks: formData.remarks,
+        ...(formData.assignedTo && { assignedTo: parseInt(formData.assignedTo) }),
+        ...(formData.notifiedTo && { notifiedTo: parseInt(formData.notifiedTo) })
+      };
+
+      await axios.put(`${ENDPOINTS.MILESTONE_UPDATE}/${selectedMilestone.id}`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast('success', 'Milestone updated successfully!');
+      setOpenDialog(false);
+      fetchMilestones();
+    } catch (error) {
+      console.error('Error updating milestone:', error);
+      showToast('error', 'Failed to update milestone');
+    }
+  };
+
+  if (!milestones.length) {
     return (
-        <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
-            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
-
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-                     <button 
-                        onClick={onBack} 
-                        className="flex items-center text-blue-600 hover:text-blue-800 transition text-sm font-semibold mb-3 sm:mb-0"
-                    >
-                        <FaArrowLeft className="mr-2" /> Back to Service Details
-                    </button>
-                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details</h2>
-                </div>
-                
-                <div className="flex justify-end mb-6">
-                    <div className="text-xl font-extrabold text-green-700">
-                        Total Amount Due: ${totalAmount.toFixed(2)}
-                    </div>
-                </div>
-
-                
-
-                <hr className="my-8 border-t-2 border-blue-200" />
-                
-                <div className="mb-6 border p-4 rounded-lg bg-gray-50">
-                    <label htmlFor="terms" className="block text-md font-medium text-gray-700 mb-2">
-                        Payment Terms and Conditions
-                    </label>
-                    <textarea
-                        id="terms"
-                        value={termsAndConditions}
-                        onChange={(e) => setTermsAndConditions(e.target.value)}
-                        maxLength={1000} 
-                        rows="4"
-                        placeholder="Enter the specific payment terms and conditions for this deal..."
-                        className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 resize-none"
-                    />
-                    <p className="text-xs text-gray-500 text-right">{termsAndConditions.length} / 1000 characters</p>
-                </div>
-
-                <div className="mb-6 border p-4 rounded-lg bg-blue-50">
-                    <label htmlFor="phases" className="block text-md font-medium text-gray-700 mb-2">
-                        Select Payment Phases for Initial Split (Optional: You can customize below)
-                    </label>
-                    <select
-                        id="phases"
-                        value={paymentPhases}
-                        onChange={handlePhaseSelect}
-                        className="w-full sm:w-1/2 md:w-1/3 border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
-                    >
-                        <option value="0" disabled>Select number of phases</option>
-                        <option value="2">2 Phases (Auto-Split)</option>
-                        <option value="3">3 Phases (Auto-Split)</option>
-                        <option value="4">4 Phases (Auto-Split)</option>
-                    </select>
-                </div>
-
-                {paymentPhases > 0 && (
-                    <div className="mb-8">
-                        <h3 className="text-lg font-semibold mb-3 text-blue-600">
-                            Payment Milestones
-                        </h3>
-                        
-                        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-blue-100">
-                                    <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">Milestone Name</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[120px]">Milestone Date</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ($)</th>
-                                        <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-10">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {milestones.map((row) => (
-                                        <tr key={row.id}>
-                                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">{row.sNo}</td>
-                                            
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="text"
-                                                    value={row.milestone}
-                                                    onChange={(e) => handleMilestoneChange(row.id, 'milestone', e.target.value)}
-                                                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                                                    placeholder="e.g., Initial Deposit"
-                                                />
-                                            </td>
-                                            
-                                            <td className="px-3 py-2">
-                                                <div className="relative">
-                                                    <input
-                                                        type="date"
-                                                        value={row.milestoneDate}
-                                                        onChange={(e) => handleMilestoneChange(row.id, 'milestoneDate', e.target.value)}
-                                                        className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400 pr-8"
-                                                        required
-                                                    />
-                                                    <FaCalendarAlt className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
-                                                </div>
-                                            </td>
-
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={row.amount}
-                                                    onChange={(e) => handleMilestoneChange(row.id, 'amount', e.target.value)}
-                                                    className="w-full border p-1 rounded text-sm font-semibold text-gray-800 focus:ring-blue-400 focus:border-blue-400"
-                                                    required
-                                                />
-                                            </td>
-                                            
-                                            <td className="px-3 py-2 text-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteMilestone(row.id)}
-                                                    className="text-red-500 hover:text-red-700 transition"
-                                                    title="Delete Milestone"
-                                                >
-                                                    <FaTrashAlt size={16} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {/* Add Milestone Button */}
-                        <div className="flex justify-start mt-4">
-                            <button
-                                type="button"
-                                onClick={handleAddMilestone}
-                                className="flex items-center text-blue-600 hover:text-blue-800 transition font-semibold text-sm"
-                            >
-                                <FaPlusCircle className="mr-2" size={16} /> Add Custom Milestone
-                            </button>
-                        </div>
-
-                        {/* (Difference) */}
-                        <div className="flex justify-end mt-4">
-                            <div className="w-full max-w-xs space-y-2">
-                                <div className="flex justify-between font-bold text-gray-700 text-base border-t pt-2">
-                                    <span>Total Due:</span>
-                                    <span>${totalAmount.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-gray-700 text-base">
-                                    <span>Milestones Sum:</span>
-                                    <span>${currentMilestoneSum.toFixed(2)}</span>
-                                </div>
-                                <div className={`flex justify-between font-extrabold pt-2 border-t-2 ${isSumValid ? 'text-green-600' : 'text-red-600'}`}>
-                                    <span>Difference:</span>
-                                    <span>{amountDifference}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                )}
-                
-                <hr className="my-8 border-t-2 border-blue-200" />
-                
-                {/* DOMAIN DETAILS  */}
-                <DomainDetails 
-                    onUpdate={handleDomainDataUpdate}
-                />
-                
-                <hr className="my-8 border-t-2 border-blue-200" />
-
-                {/* Final Save Button */}
-                <div className="mt-8 text-center pt-6">
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={paymentPhases === 0 || milestones.length === 0 || !isSumValid || !domainData}
-                        className="w-full sm:w-auto bg-green-600 text-white py-3 px-8 rounded-xl hover:bg-green-800 transition text-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <FaSave className="inline mr-2" /> Save & Finalize 
-                    </button>
-                    {(!isSumValid && paymentPhases > 0) && (
-                        <p className="mt-3 text-sm text-red-600 font-medium">
-                            🚨 Milestone amounts do not match the total balance. Please adjust amounts to proceed.
-                        </p>
-                    )}
-                    {(!domainData) && (
-                        <p className="mt-3 text-sm text-orange-500 font-medium">
-                            Please fill in all required Domain Details to finalize the deal.
-                        </p>
-                    )}
-                </div>
-            </div>
-        </div>
+      <div className="text-center text-gray-500 py-4">
+        No milestones defined
+      </div>
     );
+  }
+
+  return (
+    <>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <div className="w-full mx-auto px-4 py-6">
+          {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+
+          <h3 className="text-lg font-semibold mb-4 text-blue-700 text-center">
+            Payment Milestones Status
+          </h3>
+
+          <div className="flex items-center justify-between w-full">
+            {milestones.map((milestone, index) => {
+              const isCompleted = isMilestoneCompleted(milestone, index);
+              const isActive = isCurrentMilestone(index);
+              const isClickable = index <= currentStageIndex;
+
+              return (
+                <React.Fragment key={milestone.id}>
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      onClick={() => isClickable && handleMilestoneClick(milestone, index)}
+                      className={`relative flex items-center justify-center w-12 h-12 rounded-full
+                        ${
+                          isCompleted
+                            ? 'bg-green-600 text-white'
+                            : isActive
+                            ? 'bg-blue-600 text-white'
+                            : isClickable
+                            ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }
+                        transition-colors duration-200 border-2 border-white shadow-lg`}
+                      title={`Milestone ${index + 1}: ${formatAmount(milestone.expectedAmount)} - Due: ${formatDate(milestone.expectedMilestoneDate)}`}
+                    >
+                      {isCompleted ? <CheckCircle size={24} /> : <Circle size={24} />}
+                      <span className="absolute -bottom-6 text-xs font-bold">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <span className="mt-6 text-sm text-center font-medium max-w-20 break-words">
+                      Milestone {index + 1}
+                    </span>
+                    <div className="mt-1 text-xs text-center text-gray-600">
+                      {formatAmount(milestone.expectedAmount)}
+                    </div>
+                    <div className="mt-1 text-xs text-center text-gray-500">
+                      Due: {formatDate(milestone.expectedMilestoneDate)}
+                    </div>
+                    {milestone.actualAmount > 0 && (
+                      <div className="mt-1 text-xs text-center text-green-600 font-semibold">
+                        Paid: {formatAmount(milestone.actualAmount)}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {index < milestones.length - 1 && (
+                    <div
+                      className={`flex-1 h-1 mx-2 -mt-12 z-0
+                        ${
+                          isCompleted
+                            ? 'border-t-2 border-dotted border-green-600'
+                            : 'border-t-2 border-dotted border-gray-300'
+                        }`}
+                    ></div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="font-semibold text-gray-700">Total Milestones</div>
+              <div className="text-lg font-bold text-blue-600">{milestones.length}</div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="font-semibold text-gray-700">Completed</div>
+              <div className="text-lg font-bold text-green-600">{currentStageIndex}</div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="font-semibold text-gray-700">Remaining</div>
+              <div className="text-lg font-bold text-orange-600">
+                {milestones.length - currentStageIndex}
+              </div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="font-semibold text-gray-700">Current</div>
+              <div className="text-lg font-bold text-purple-600">
+                {currentStageIndex < milestones.length ? `Milestone ${currentStageIndex + 1}` : 'Completed'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Dialog 
+          open={openDialog} 
+          onClose={() => setOpenDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <div className="flex justify-between items-center">
+              <span>Update Milestone {selectedMilestone && milestones.findIndex(m => m.id === selectedMilestone.id) + 1}</span>
+              <IconButton onClick={() => setOpenDialog(false)}>
+                <X size={20} />
+              </IconButton>
+            </div>
+          </DialogTitle>
+          <DialogContent>
+            {selectedMilestone && (
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <div className="text-sm font-semibold text-blue-700">Expected Amount</div>
+                    <div className="text-lg font-bold">{formatAmount(selectedMilestone.expectedAmount)}</div>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <div className="text-sm font-semibold text-green-700">Expected Date</div>
+                    <div className="text-lg font-bold">{formatDate(selectedMilestone.expectedMilestoneDate)}</div>
+                  </div>
+                </div>
+
+                <TextField
+                  label="Actual Amount *"
+                  fullWidth
+                  type="number"
+                  value={formData.actualAmount}
+                  onChange={handleActualAmountChange}
+                  error={!!formErrors.actualAmount}
+                  helperText={formErrors.actualAmount}
+                  sx={{ mt: 2 }}
+                  InputProps={{
+                    startAdornment: <DollarSign size={20} className="text-gray-400 mr-2" />
+                  }}
+                />
+
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DateTimePicker
+                    label="Actual Date & Time *"
+                    value={formData.actualMilestoneDate}
+                    onChange={newValue => setFormData(prev => ({ ...prev, actualMilestoneDate: newValue }))}
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        sx: { mt: 2 },
+                        error: !!formErrors.actualMilestoneDate,
+                        helperText: formErrors.actualMilestoneDate,
+                        InputLabelProps: { shrink: true },
+                      },
+                      popper: timeSlotProps.popper,
+                      desktopPaper: timeSlotProps.desktopPaper,
+                    }}
+                    desktopModeMediaQuery="@media (min-width: 0px)"
+                  />
+                </LocalizationProvider>
+
+                <TextField
+                  label="Remarks"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  value={formData.remarks}
+                  onChange={e => {
+                    if (e.target.value.length <= MAX_REMARK_LENGTH) {
+                      setFormData(prev => ({ ...prev, remarks: e.target.value }));
+                    }
+                  }}
+                  error={!!formErrors.remarks}
+                  helperText={
+                    formErrors.remarks || 
+                    `${formData.remarks.length}/${MAX_REMARK_LENGTH} characters`
+                  }
+                  sx={{ mt: 2 }}
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                <TextField
+                  label="Balance Amount"
+                  fullWidth
+                  type="number"
+                  value={formData.balanceAmount}
+                  disabled
+                  sx={{ mt: 2 }}
+                  InputProps={{
+                    startAdornment: <DollarSign size={20} className="text-gray-400 mr-2" />
+                  }}
+                  helperText="Calculated automatically (Expected - Actual)"
+                />
+
+                <div className="mt-4 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Assign To
+                    </label>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.assignToMe}
+                          onChange={handleAssignToMeChange}
+                          color="primary"
+                        />
+                      }
+                      label="Assign to me"
+                    />
+                  </div>
+                  
+                  <select
+                    className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm"
+                    value={formData.assignedTo}
+                    onChange={handleAssignedToChange}
+                    disabled={formData.assignToMe}
+                  >
+                    <option value="">Select User</option>
+                    {users
+                      .filter(user => user.bactive === true)
+                      .map((user) => (
+                        <option key={user.iUser_id} value={user.iUser_id}>
+                          {user.cFull_name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="mt-4 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Notify To
+                    </label>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.notifyToMe}
+                          onChange={handleNotifyToMeChange}
+                          color="primary"
+                        />
+                      }
+                      label="Notify to me"
+                    />
+                  </div>
+                  
+                  <select
+                    className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition text-sm"
+                    value={formData.notifiedTo}
+                    onChange={handleNotifiedToChange}
+                    disabled={formData.notifyToMe}
+                  >
+                    <option value="">Select User</option>
+                    {users
+                      .filter(user => user.bactive === true)
+                      .map((user) => (
+                        <option key={user.iUser_id} value={user.iUser_id}>
+                          {user.cFull_name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained" color="primary">
+              Update Milestone
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </LocalizationProvider>
+    </>
+  );
 };
 
-export default PaymentAndDomainDetailsCombined;
+export default MilestoneStatusBar;

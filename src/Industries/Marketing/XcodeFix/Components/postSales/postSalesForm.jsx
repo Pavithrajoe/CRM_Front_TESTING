@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { FaPlus, FaTrashAlt, FaChevronDown, FaCheck } from 'react-icons/fa';
-import MilestoneDetails from './MilestoneDetails'; 
+// import MilestoneDetails from './MilestoneDetails'; 
+import MilestoneDetails from './mileStoneDetails'; 
+// import initialMilestoneRow from './mileStoneDetails'
 
 const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -280,7 +282,7 @@ const PostSalesForm = () => {
 
   if (step === 2) {
     return (
-      <MilestoneDetails 
+        <MilestoneDetails  
         serviceData={submissionData} 
         onBack={() => setStep(1)} 
         totalBalance={totalBalance} 

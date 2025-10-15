@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
-// Required fields logic remains the same
 const requiredFields = {
-    // 'own': Client's Own Domain: Needs domainName and hostingProvider
     'own': ['domainName', 'hostingProvider'], 
-    // 'company': XcodeFix Domain: Needs domainName, registerDate, renewalDate, and hostingProvider
     'company': ['domainName', 'registerDate', 'renewalDate', 'hostingProvider']
 };
 
@@ -61,12 +58,10 @@ const DomainDetails = ({ onUpdate }) => {
         
     }, [domainStatus, domainName, registerDate, renewalDate, hostingProvider, onUpdate, validateData]);
     
-    // Helper to determine if a field is required based on current domain status
     const isFieldRequired = (fieldName) => {
         return (requiredFields[domainStatus] || []).includes(fieldName);
     };
     
-    // Handler to change status and clear fields
     const handleDomainStatusChange = (status) => {
         setDomainStatus(status);
         setDomainName('');
@@ -79,19 +74,12 @@ const DomainDetails = ({ onUpdate }) => {
         <div className="p-4 rounded-xl border border-gray-300 bg-gray-50 shadow-inner">
             <h3 className="text-xl font-bold text-indigo-700 mb-4 flex items-center">
                 Domain & Hosting Details 
-                {isDataValid ? (
-                    <FaCheckCircle className="ml-2 text-green-500 text-lg" />
-                ) : (
-                    domainStatus && <FaExclamationCircle className="ml-2 text-red-500 text-lg" />
-                )}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                {/*  Domain Status - COMBINED LABEL AND BUTTONS ON ONE LINE */}
-                {/* This wrapper now spans 2 columns to give space for the buttons */}
+                {/*  Domain Status */}
                 <div className="md:col-span-2">
-                    {/* Use flex to align label and buttons horizontally */}
                     <div className="flex items-center space-x-4"> 
                         <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                             Domain Status <span className="text-red-500">*</span>
@@ -99,7 +87,6 @@ const DomainDetails = ({ onUpdate }) => {
                         
                         {/* Wrapper for the buttons */}
                         <div className="flex space-x-4"> 
-                            {/* Client's Own Domain Button */}
                             <button
                                 type="button"
                                 onClick={() => handleDomainStatusChange('own')}
@@ -128,7 +115,7 @@ const DomainDetails = ({ onUpdate }) => {
                     </div>
                 </div>
                 
-                {/* Hosting Provider (Column 1) */}
+                {/* Hosting Provider  */}
                 <div>
                     <label htmlFor="hostingProvider" className="block text-sm font-medium text-gray-700 mb-1">
                         Hosting Provider <span className="text-red-500">*</span>
@@ -144,7 +131,7 @@ const DomainDetails = ({ onUpdate }) => {
                     />
                 </div>
 
-                {/* Domain Name (Column 2 - Same row as Hosting Provider) */}
+                {/* Domain Name */}
                 {domainStatus && (
                     <div> 
                         <label htmlFor="domainName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -162,10 +149,10 @@ const DomainDetails = ({ onUpdate }) => {
                     </div>
                 )}
                 
-                {/* Registration Date and Renewal Date are only shown/required for 'company' */}
+                {/* Registration Date and Renewal Date */}
                 {domainStatus === 'company' && (
                     <>
-                        {/* Registration Date (Column 1) */}
+                        {/* Registration Date */}
                         <div>
                             <label htmlFor="registerDate" className="block text-sm font-medium text-gray-700 mb-1">
                                 Registration Date {isFieldRequired('registerDate') && <span className="text-red-500">*</span>}
@@ -180,7 +167,7 @@ const DomainDetails = ({ onUpdate }) => {
                             />
                         </div>
 
-                        {/* Renewal Date (Column 2) */}
+                        {/* Renewal Date  */}
                         <div>
                             <label htmlFor="renewalDate" className="block text-sm font-medium text-gray-700 mb-1">
                                 Renewal Date {isFieldRequired('renewalDate') && <span className="text-red-500">*</span>}

@@ -187,8 +187,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance }) 
                     <p className="text-xs text-gray-500 text-right">{termsAndConditions.length} / 1000 characters</p>
                 </div>
 
-                {/* Payment Phases Selection */}
-                {/* ... (existing phases selection code) ... */}
                 <div className="mb-6 border p-4 rounded-lg bg-blue-50">
                     <label htmlFor="phases" className="block text-md font-medium text-gray-700 mb-2">
                         Select Payment Phases for Initial Split (Optional: You can customize below)
@@ -206,19 +204,14 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance }) 
                     </select>
                 </div>
 
-                {/* Milestone Table */}
-                {/* ... (existing milestone table and logic) ... */}
                 {paymentPhases > 0 && (
                     <div className="mb-8">
-                        {/* ... (table code) ... */}
                         <h3 className="text-lg font-semibold mb-3 text-blue-600">
                             Payment Milestones
                         </h3>
                         
-                        {/* Milestone table and Add button code here */}
                         <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                             <table className="min-w-full divide-y divide-gray-200">
-                                {/* ... (table body and rows) ... */}
                                 <thead className="bg-blue-100">
                                     <tr>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
@@ -318,7 +311,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance }) 
                 
                 <hr className="my-8 border-t-2 border-blue-200" />
                 
-                {/* DOMAIN DETAILS COMPONENT RENDERED HERE */}
+                {/* DOMAIN DETAILS  */}
                 <DomainDetails 
                     onUpdate={handleDomainDataUpdate}
                 />

@@ -169,7 +169,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
         console.log("Submitting final data:", finalSubmission);
         alert("Data successfully compiled and ready for API submission!");
 
-        // ✅ After save or API call, navigate to the next page
         navigate(`/xcodefix_leaddetailview_milestone/${29}`, {
             state: {
                 returnPage: currentPage,
@@ -340,7 +339,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, le
                 
                 <hr className="my-8 border-t-2 border-blue-200" />
                 
-                {/* DOMAIN DETAILS COMPONENT RENDERED HERE */}
+                {/* DOMAIN DETAILS  */}
                 <DomainDetails 
                     onUpdate={handleDomainDataUpdate}
                 />

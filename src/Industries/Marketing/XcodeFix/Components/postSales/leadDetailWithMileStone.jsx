@@ -244,7 +244,6 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
       }
     }, [leadId]);
 
-  // Add this useEffect to call fetchUserProfile when component mounts
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -631,7 +630,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
           cc: ccRecipients,
           mailSubject,
           mailContent,
-          leadId: leadIdAsNumber, // Use the converted number here
+          leadId: leadIdAsNumber, 
         }),
       });
 
@@ -890,7 +889,6 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
     setMailContent(template.mailBody);
   };
 
-  // You'll need to fetch stages for the StatusBar component
   const [stages, setStages] = useState([]);
 
   const fetchStages = async () => {
@@ -1023,7 +1021,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
               </div>
             )}
 
-            {/* View Quotations Button (only visible when Won and has quotations) */}
+            {/* View Quotations Button */}
             {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
               <button
                 onClick={() => setShowQuotationsList(true)}
@@ -1033,7 +1031,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
               </button>
             )}
             
-            {/* Create Quotation Button (only visible when Won) */}
+            {/* Create Quotation Button */}
             {showCreateQuotationButton && (
               <>
               <button
@@ -1054,13 +1052,6 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
                   Post Sales
                 </button>
               )}
-
-              {/* <button
-                className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                onClick={() => setShowPostSalesForm(true)}
-              >
-                Post Sales
-              </button> */}
 
               </>
             )}
@@ -1447,13 +1438,10 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
                             ✕
                         </button>
 
-                        {/* PostSalesForm content will be rendered here */}
                         <PostSalesForm 
-                leadId={leadId} 
-                
-                
-                onBack={() => setShowPostSalesForm(false)}
-            /> 
+                            leadId={leadId} 
+                            onBack={() => setShowPostSalesForm(false)}
+                        /> 
                         {/* <PostSalesForm />  */}
                     </div>
                 </div>

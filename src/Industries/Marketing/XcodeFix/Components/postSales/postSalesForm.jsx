@@ -480,7 +480,7 @@ const PostSalesForm = (passedData) => {
                       View/Edit
                     </button>
                 </td>
-                <td style={{ color: item.bactive ? 'green' : 'red', fontWeight: 'bold' }}> {item.bactive ? 'Completed' : 'Not Completed'} </td>
+                <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}> {item.bactive ? 'Not Completed' : 'Completed'} </td>
               </tr>
             ))}
           </tbody>

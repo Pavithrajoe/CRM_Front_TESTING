@@ -76,6 +76,7 @@ export const ENDPOINTS = {
       MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
   MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
   GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
+    MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
    
   
 

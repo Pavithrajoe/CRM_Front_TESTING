@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const requiredFields = {
     'own': ['domainName', 'hostingProvider'], 

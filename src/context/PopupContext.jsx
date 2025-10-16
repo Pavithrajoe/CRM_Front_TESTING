@@ -1,4 +1,3 @@
-// src/context/PopupContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const PopupContext = createContext();
@@ -15,17 +14,14 @@ export const PopupProvider = ({ children }) => {
     setPopup({ ...popup, visible: false });
   };
 
-  // 🎉 New useEffect hook for auto-closing the popup
   useEffect(() => {
     if (popup.visible) {
       const timer = setTimeout(() => {
         closePopup();
       }, 2000); // 2000 milliseconds = 2 seconds
-
-      // Clean up the timer when the component unmounts or the popup closes
       return () => clearTimeout(timer);
     }
-  }, [popup.visible]); // Dependency array: run this effect when popup.visible changes
+  }, [popup.visible]); 
 
   const getStyles = () => {
     switch (popup.type) {

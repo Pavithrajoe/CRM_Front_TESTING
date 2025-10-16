@@ -1,482 +1,419 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { FaArrowLeft, FaSave, FaCalendarAlt, FaTrashAlt, FaPlusCircle } from 'react-icons/fa';
-import { useNavigate, useLocation } from 'react-router-dom';
-import DomainDetails from "./domainDeatils.jsx"; 
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { ENDPOINTS } from '../../../../../api/constraints.js';
-import { transform } from 'framer-motion';
-import { setDefaultLocale } from 'react-datepicker';
-// import MileStoneStatusBar from './mileStoneStatusBar'; 
+import { ENDPOINTS } from "../../../../../api/constraints"; // Assuming correct path
 
-const initialMilestoneRow = (sNo, defaultAmount) => {
-    return {
-        id: Date.now() + Math.random(), 
-        sNo,
-        milestone: `Milestone ${sNo}`,
-        milestoneDate: '',
-        amount: parseFloat(defaultAmount.toFixed(2)),
-    };
+// Helper function to format date objects to YYYY-MM-DD string
+const formatDate = (date) => {
+    if (!date) return '';
+    if (typeof date === 'string') {
+        // Handle ISO string from API (e.g., "2025-10-15T00:00:00.000Z")
+        return date.split('T')[0];
+    }
+    // Handle Date object
+    return date.toISOString().split('T')[0];
 };
 
-const calculateBalancedSplit = (totalAmount, totalPhases) => {
-    if (totalPhases <= 0 || isNaN(totalAmount) || totalAmount <= 0) return [];
-    
-    const totalRemaining = Math.round(totalAmount * 100); 
-    const baseAmountCents = Math.floor(totalRemaining / totalPhases);
-    let remainderCents = totalRemaining % totalPhases;
-    
-    const amounts = Array.from({ length: totalPhases }, () => {
-        let amount = baseAmountCents;
-        if (remainderCents > 0) {
-            amount += 1;
-            remainderCents--;
-        }
-        return amount / 100; 
-    });
-    
-    return amounts;
-};
+// **Updated Component for Step 2**
+const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance, currencySymbol, leadId, initialData }) => {
+    // State for Project Duration
+    const [projectDuration, setProjectDuration] = useState(initialData.projectDuration || 6);
 
-const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
-    const navigate = useNavigate(); 
-    const location = useLocation();
-    console.log("leadID idi", leadId)
-    
-    const totalAmount = parseFloat(totalBalance) || 0; 
-    const [termsAndConditions, setTermsAndConditions] = useState('');
-    const [paymentPhases, setPaymentPhases] = useState(0); 
-    const [duration, setDuration] = useState(0)
-    const [milestones, setMilestones] = useState([]);
-    const [isInitialized, setIsInitialized] = useState(false);
-    const [domainData, setDomainData] = useState(null); 
+    // State for Domain Details
+    const [domainName, setDomainName] = useState(initialData.clientDomain?.domainName || '');
+    const [ownDomain, setOwnDomain] = useState(initialData.clientDomain?.ownDomain === false ? 'no' : 'yes'); // 'yes' or 'no'
+    const [registerDate, setRegisterDate] = useState(formatDate(initialData.clientDomain?.registerDate));
+    const [renewalDate, setRenewalDate] = useState(formatDate(initialData.clientDomain?.renewalDate));
 
-    // Get URL search params and state
-    const searchParams = new URLSearchParams(location.search);
-    const pageFromUrl = Number(searchParams.get("page")) || 1;
-    const pageFromState = location.state?.returnPage;
-    const selectedFilter = location.state?.activeTab;
+    // State for Payment Details
+    const [paymentPhases, setPaymentPhases] = useState(initialData.paymentPhases || '3'); // '2', '3', '4'
+    const [paymentTermsAndConditions, setPaymentTermsAndConditions] = useState(initialData.paymentTermsAndConditions || '');
 
-    const [currentPage, setCurrentPage] = useState(() => {
-        return pageFromState || pageFromUrl || 1;
-    });
-
-    useEffect(() => {
-        const newPhases = parseInt(paymentPhases);
-        
-        if (newPhases > 0 && !isInitialized) {
-            const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
-
-            const newMilestones = splitAmounts.map((amount, index) => 
-                initialMilestoneRow(index + 1, amount)
-            );
-            
-            setMilestones(newMilestones);
-            setIsInitialized(true); 
-        } else if (newPhases === 0) {
-            setMilestones([]);
-            setIsInitialized(false);
-        }
-    }, [paymentPhases, totalAmount]);
-
-    const handlePhaseSelect = (e) => {
-        const value = parseInt(e.target.value);
-        setPaymentPhases(value);
-        setIsInitialized(false); 
-    };
-
-    const handleMilestoneChange = (id, name, value) => {
-        setMilestones(prevMilestones => {
-            return prevMilestones.map(m => 
-                m.id === id ? { ...m, [name]: name === 'amount' ? parseFloat(value) || 0 : value } : m
-            );
-        });
-    };
-    
-    const handleAddMilestone = () => {
-        setMilestones(prevMilestones => {
-            const nextSNo = prevMilestones.length > 0 ? Math.max(...prevMilestones.map(m => m.sNo)) + 1 : 1;
-            const newRow = initialMilestoneRow(nextSNo, 0); 
-            return [...prevMilestones, newRow];
-        });
-    };
-    
-    const handleDeleteMilestone = (id) => {
-        setMilestones(prevMilestones => {
-            const filtered = prevMilestones.filter(m => m.id !== id);
-            return filtered.map((m, index) => ({
-                ...m,
-                sNo: index + 1 
+    // State for Milestones
+    const initialMilestones = useMemo(() => {
+        if (initialData.milestones && initialData.milestones.length > 0) {
+            // Map historical milestones to our state structure
+            return initialData.milestones.map((m, index) => ({
+                id: m.id, // Keep the history ID for update API
+                expectedAmount: m.expectedAmount,
+                expectedMilestoneDate: formatDate(m.expectedMilestoneDate),
+                name: `Milestone ${index + 1}`, // Generate name based on index
+                // Keep actual fields from history item if needed for viewing/context
+                actualAmount: m.actualAmount || 0,
+                actualMilestoneDate: m.actualMilestoneDate,
             }));
-        });
-    };
-
-    const currentMilestoneSum = useMemo(() => 
-        milestones.reduce((sum, m) => sum + parseFloat(m.amount), 0)
-    , [milestones]);
-    
-    const amountDifference = (totalAmount - currentMilestoneSum).toFixed(2);
-    const isSumValid = Math.abs(amountDifference) < 0.01;
-    
-    const handleDomainDataUpdate = useCallback((data) => {
-        setDomainData(data);
-    }, []);
-
-
-
-    const handleSave = () => {
-        const tolerance = 0.01;
-
-        if (paymentPhases === 0) {
-            alert("Error: Please select the number of Payment Phases.");
-            return;
         }
+        return [];
+    }, [initialData.milestones]);
 
-        if (milestones.length === 0) {
-            alert("Error: Please add at least one Milestone.");
-            return;
-        }
+    const [milestones, setMilestones] = useState(initialMilestones);
+    const [isEditingExistingProposal] = useState(initialData.isEditingExisting || false);
+    const [originalProposalId] = useState(initialData.proposalId); // Keep ID for update
 
-        if (Math.abs(currentMilestoneSum - totalAmount) > tolerance) {
-            alert(
-                `Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(
-                    2
-                )}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`
-            );
-            return;
-        }
+    // --- Core Logic: Milestone Calculation ---
+    // Calculate the total balance after tax (passed from Step 1)
+    const netTotal = parseFloat(totalBalance) || 0;
 
-        const hasEmptyDateOrMilestone = milestones.some(
-            (m) => !m.milestone || !m.milestoneDate
-        );
-        if (hasEmptyDateOrMilestone) {
-            alert("Error: Please fill in the Milestone name and Date for all entries.");
-            return;
-        }
-
-        if (!domainData) {
-            alert("Error: Please fill and validate the Domain Details section.");
-            return;
-        }
-
-        // 🧩 STEP 1: Prepare your local submission object
-        const finalSubmission = {
-            ...serviceData,
-            leadId,
-            termsAndConditions,
-            duration,
-            paymentPhases,
-            milestones: milestones.map((m) => ({
-                sNo: m.sNo,
-                milestone: m.milestone,
-                milestoneDate: m.milestoneDate,
-                amount: parseFloat(m.amount.toFixed(2)),
-            })),
-            domainDetails: domainData,
-            finalTotalBalance: totalAmount.toFixed(2),
-        };
-
-        // 🧠 STEP 2: Transform data into backend-required format
-        const transformedData = transformToPostSalesFormat(finalSubmission);
-
-        // 🧨 STEP 3: Actually hit the API
-        const postSalesCreate = async () => {
-            try {
-                console.log("📦 Final API Payload:", transformedData);
-
-                console.log("The token is:", localStorage.getItem("token"))
-
-                const response = await axios.post(
-                    ENDPOINTS.POST_SALES_POST_METHOD,
-                    transformedData,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem("token")}`,
-                        },
-                    }
-                );
-
-                alert("✅ Post sales created successfully!");
-                console.log("Response:", response.data);
-
-                // Optionally redirect only after success
-                navigate(`/xcodefix_leaddetailview_milestone/${leadId}`, {
-                    state: {
-                        returnPage: currentPage,
-                        activeTab: selectedFilter,
-                    },
+    // Recalculate milestones when paymentPhases or netTotal changes
+    useEffect(() => {
+        // Only auto-split if we are NOT editing an existing proposal 
+        // OR if the history data didn't contain any milestones (a rare edge case)
+        if (!isEditingExistingProposal || initialMilestones.length === 0) {
+            const numPhases = parseInt(paymentPhases);
+            if (numPhases > 0 && netTotal > 0) {
+                const equalSplitAmount = netTotal / numPhases;
+                const newMilestones = Array.from({ length: numPhases }, (_, index) => {
+                    const existingMilestone = milestones.find(m => m.name === `Milestone ${index + 1}`);
+                    return {
+                        id: existingMilestone ? existingMilestone.id : null, // Preserve ID if it exists
+                        expectedAmount: equalSplitAmount,
+                        expectedMilestoneDate: '', // Clear date for new split
+                        name: `Milestone ${index + 1}`, // Set milestone name
+                        actualAmount: 0,
+                        actualMilestoneDate: null,
+                    };
                 });
-            } catch (e) {
-                console.error("❌ Error in post sales post method: ", e.message);
-                alert("Something went wrong while creating post sales.");
+                setMilestones(newMilestones);
+            } else {
+                setMilestones([]);
             }
-        };
+        }
+        // If isEditingExistingProposal is true, the initialMilestones are preserved by the initial state setup.
+    }, [paymentPhases, netTotal, isEditingExistingProposal, initialMilestones]);
 
-        // 🚀 STEP 4: Call the API function!
-        postSalesCreate();
+
+    // Handle individual milestone amount change
+    const handleMilestoneAmountChange = (index, value) => {
+        const newMilestones = [...milestones];
+        newMilestones[index] = { ...newMilestones[index], expectedAmount: parseFloat(value) || 0 };
+        setMilestones(newMilestones);
     };
 
-
-    const transformToPostSalesFormat = (data) => {
-        return {    
-            ilead_id: parseInt(data.leadId, 10),
-            proposalId: data.proposalId,
-            duration: parseInt(data.duration, 10), // converts string → integer (base 10)
-            paymentPhases: String(data.paymentPhases),
-            totalProjectAmount: data.totals?.subTotal || 0,
-            paymentTermsAndConditions: data.termsAndConditions,
-            discountPercentageAmount:    data.totals?.discountPercentage || 0,
-            currencyId: data.currency === "INR" ? 2 : 2, // Example mapping; adjust as needed
-            postSalesServices: data.items.map((item) => ({
-                serviceId: item.serviceId,
-                subServiceId: item.subserviceIds?.[0] || null,
-                unitPrice: item.unitPrice,
-                quantity: item.quantity,
-                amount: item.amount,
-            })),
-            milestones: data.milestones.map((m) => ({
-                expectedAmount: m.amount,
-                expectedMilestoneDate: m.milestoneDate,
-            })),
-            clientDomain: {
-                domainName: data.domainDetails?.domainName,
-                hostingProvider: data.domainDetails?.hostingProvider,
-                ownDomain: data.domainDetails?.domainStatus === "own",
-                registerDate: new Date().toISOString().split("T")[0],
-                renewalDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-                    .toISOString()
-                    .split("T")[0],
-            },
-        };
+    // Handle individual milestone date change
+    const handleMilestoneDateChange = (index, date) => {
+        const newMilestones = [...milestones];
+        newMilestones[index] = { ...newMilestones[index], expectedMilestoneDate: date };
+        setMilestones(newMilestones);
     };
+
+    // Calculate sum of expected milestone amounts for validation
+    const milestoneSum = milestones.reduce((sum, m) => sum + (m.expectedAmount || 0), 0);
+    const isMilestoneSumValid = Math.abs(milestoneSum - netTotal) < 0.01; // Allow for floating point error
+
+    // Handle submission (Final Step)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!isMilestoneSumValid) {
+            alert(`Milestone total (${currencySymbol}${milestoneSum.toFixed(2)}) must equal the Total Balance (${currencySymbol}${netTotal.toFixed(2)}).`);
+            return;
+        }
+        if (milestones.some(m => !m.expectedMilestoneDate)) {
+             alert("All milestones must have an expected date set.");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Authentication token missing.");
+            return;
+        }
+
+        const domainDetails = {
+            domainName,
+            ownDomain: ownDomain === 'yes',
+            registerDate: ownDomain === 'yes' ? registerDate : null, // Only send dates if own domain is 'yes'
+            renewalDate: ownDomain === 'yes' ? renewalDate : null
+        };
+        // If using XcodeFix domain, use the initial data's domain details if available
+        if (ownDomain === 'no' && initialData.clientDomain) {
+             domainDetails.domainName = initialData.clientDomain.domainName;
+             domainDetails.registerDate = initialData.clientDomain.registerDate;
+             domainDetails.renewalDate = initialData.clientDomain.renewalDate;
+        }
+
+
+        // Construct the payload
+        const payload = {
+            id: isEditingExistingProposal ? initialData.id : null, // ID of the post-sales record if editing
+            leadId: leadId,
+            bactive: true, // Assuming a new/updated proposal starts as active
+            proposalId: originalProposalId,
+            projectDuration: parseInt(projectDuration),
+            paymentTermsAndConditions: paymentTermsAndConditions,
+            paymentPhases: paymentPhases,
+            projectValue: serviceData.totals.taxableAmount, // Project Value (After Discount, Before GST)
+            discount: serviceData.totals.discountPercentage,
+            milestones: milestones.map(m => ({
+                // When updating, we might need to send the history milestone ID.
+                // When creating new, the backend handles the ID.
+                id: m.id || null, 
+                expectedAmount: m.expectedAmount,
+                expectedMilestoneDate: m.expectedMilestoneDate,
+            })),
+            services: serviceData.items.map(s => ({
+                // NOTE: The API response structure implies service and subservice IDs are handled.
+                // Here we map back the calculated service items.
+                serviceId: s.serviceId,
+                subServiceId: s.subserviceIds && s.subserviceIds.length > 0 ? s.subserviceIds[0] : null, // Assuming API handles one subservice for simplicity or first in array
+                unitPrice: s.unitPrice,
+                unit: s.unit,
+                quantity: s.quantity,
+                amount: s.amount
+            })),
+            currency: serviceData.currency, // Currency Code (e.g., "INR")
+            clientDomain: domainDetails,
+            // Include tax/GST calculation if needed by the backend, otherwise calculate it there
+            gstAmount: serviceData.totals.gstAmount,
+            totalBalance: netTotal,
+        };
+
+        const apiEndpoint = isEditingExistingProposal 
+            ? ENDPOINTS.UPDATE_POST_SALES // Assuming a dedicated update endpoint or a PUT/PATCH to a specific ID
+            : ENDPOINTS.POST_SALES_CREATE;
+
+        try {
+            // Note: Update endpoint might require the ID in the URL. Adjust if necessary.
+            const response = await axios.post(apiEndpoint, payload, { 
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log("Post Sales Submission Successful:", response.data);
+            alert(`Proposal ${originalProposalId} successfully ${isEditingExistingProposal ? 'updated' : 'created'}!`);
+            
+            // Redirect or clear form (e.g., force a refresh or navigate away)
+            window.location.reload(); 
+
+        } catch (error) {
+            console.error("Post Sales Submission Error:", error.response?.data || error.message);
+            alert(`Submission failed: ${error.response?.data?.message || error.message}`);
+        }
+    };
+
+    const isDomainFieldsRequired = ownDomain === 'yes';
 
     return (
-        <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
-            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-auto max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-blue-700 mb-6 border-b pb-3">
+                Step 2: Payment & Project Details
+                {isEditingExistingProposal && <span className="text-base font-normal text-red-500 ml-3">(Editing Existing Proposal: {originalProposalId})</span>}
+            </h2>
 
-                {/* Header and Back Button */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
-                    <button 
-                        onClick={onBack} 
-                        className="flex items-center text-blue-600 hover:text-blue-800 transition text-sm font-semibold mb-3 sm:mb-0"
-                    >
-                        <FaArrowLeft className="mr-2" /> Back to Service Details
-                    </button>
-                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details (Lead ID: {leadId || 'N/A'})</h2>
-                </div>
-                
-                {/* Total Amount Display */}
-                <div className="flex justify-end mb-6">
-                    <div className="text-xl font-extrabold text-green-700">
-                        Total Amount Due: ${totalAmount.toFixed(2)}
-                    </div>
-                </div>
+            {/* Total Summary */}
+            <div className="bg-green-50 p-4 rounded-lg mb-6 flex justify-between items-center border border-green-200">
+                <span className="text-xl font-semibold text-green-700">Total Project Balance (Including GST):</span>
+                <span className="text-2xl font-extrabold text-green-900">{currencySymbol}{netTotal.toFixed(2)}</span>
+            </div>
 
-                {/* Payment Terms and Condition */}
-                <div className="mb-6 border p-4 rounded-lg bg-gray-50">
-                    <label htmlFor="terms" className="block text-md font-medium text-gray-700 mb-2">
-                        Payment Terms and Conditions
+            {/* Payment Phases & Project Duration */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Payment Phases */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-2">
+                        Payment Phases <span style={{ color: "red" }}>*</span>
                     </label>
-                    <textarea
-                        id="terms"
-                        value={termsAndConditions}
-                        onChange={(e) => setTermsAndConditions(e.target.value)}
-                        maxLength={1000} 
-                        rows="4"
-                        placeholder="Enter the specific payment terms and conditions for this deal..."
-                        className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 resize-none"
-                    />
-                    <p className="text-xs text-gray-500 text-right">{termsAndConditions.length} / 1000 characters</p>
-                </div>
-
-                {/* Payment Phases Selection */}
-                <div className="mb-6 border p-4 rounded-lg bg-blue-50">
-                    <label
-                        htmlFor="phases"
-                        className="block text-md font-medium text-gray-700 mb-2"
-                    >
-                        Select Payment Phases for Initial Split (Optional: You can customize below)
-                    </label>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
-                        {/* Dropdown */}
-                        <div className="w-full sm:w-1/3">
-                            <label
-                                htmlFor="phases"
-                                className="block text-sm font-medium text-gray-600 mb-1"
-                            >
-                                Payment Phases
-                            </label>
-                            <select
-                                id="phases"
-                                value={paymentPhases}
-                                onChange={handlePhaseSelect}
-                                className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
-                            >
-                                <option value="0" disabled>Select number of phases</option>
-                                <option value="2">2 Phases (Auto-Split)</option>
-                                <option value="3">3 Phases (Auto-Split)</option>
-                                <option value="4">4 Phases (Auto-Split)</option>
-                            </select>
-                        </div>
-
-                        {/* Input field for duration */}
-                        <div className="w-full sm:flex-1 mt-3 sm:mt-0">
-                            <label
-                                htmlFor="duration"
-                                className="block text-sm font-medium text-gray-600 mb-1"
-                            >
-                                Duration
-                            </label>
-                            <input
-                                type="number"
-                                id="duration"
-                                value={duration}
-                                onChange={(e) => setDuration(e.target.value)}
-                                maxLength={200}
-                                placeholder="Enter duration (e.g. 12 months)"
-                                className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-
-
-                {/* Milestone Table */}
-                {paymentPhases > 0 && (
-                    <div className="mb-8">
-                        <h3 className="text-lg font-semibold mb-3 text-blue-600">
-                            Payment Milestones
-                        </h3>
-                        
-                        {/* Milestone table */}
-                        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-blue-100">
-                                    <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">Milestone Name</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[120px]">Milestone Date</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ({currencySymbol})</th>
-                                        <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-10">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {milestones.map((row) => (
-                                        <tr key={row.id}>
-                                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">{row.sNo}</td>
-                                            
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="text"
-                                                    value={row.milestone}
-                                                    onChange={(e) => handleMilestoneChange(row.id, 'milestone', e.target.value)}
-                                                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                                                    placeholder="e.g., Initial Deposit"
-                                                />
-                                            </td>
-                                            
-                                            <td className="px-3 py-2">
-                                                <div className="relative">
-                                                    <input
-                                                        type="date"
-                                                        value={row.milestoneDate}
-                                                        onChange={(e) => handleMilestoneChange(row.id, 'milestoneDate', e.target.value)}
-                                                        className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400 pr-8"
-                                                        required
-                                                    />
-                                                    <FaCalendarAlt className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
-                                                </div>
-                                            </td>
-
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={row.amount}
-                                                    onChange={(e) => handleMilestoneChange(row.id, 'amount', e.target.value)}
-                                                    className="w-full border p-1 rounded text-sm font-semibold text-gray-800 focus:ring-blue-400 focus:border-blue-400"
-                                                    required
-                                                />
-                                            </td>
-                                            
-                                            <td className="px-3 py-2 text-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteMilestone(row.id)}
-                                                    className="text-red-500 hover:text-red-700 transition"
-                                                    title="Delete Milestone"
-                                                >
-                                                    <FaTrashAlt size={16} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {/* Add Milestone Button and Totals */}
-                        <div className="flex justify-between items-start mt-4">
+                    <div className="flex space-x-2">
+                        {['2', '3', '4'].map(phase => (
                             <button
+                                key={phase}
                                 type="button"
-                                onClick={handleAddMilestone}
-                                className="flex items-center text-blue-600 hover:text-blue-800 transition font-semibold text-sm"
+                                onClick={() => setPaymentPhases(phase)}
+                                className={`flex-1 px-4 py-2 rounded-lg transition text-sm font-semibold ${
+                                    paymentPhases === phase ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
                             >
-                                <FaPlusCircle className="mr-2" size={16} /> Add Custom Milestone
+                                {phase} Phases (Auto-Split)
                             </button>
-                            <div className="w-full max-w-xs space-y-2">
-                                <div className="flex justify-between font-bold text-gray-700 text-base border-t pt-2">
-                                    <span>Total Due:</span>
-                                    <span>{currencySymbol}{totalAmount.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-gray-700 text-base">
-                                    <span>Milestones Sum:</span>
-                                    <span>{currencySymbol}{currentMilestoneSum.toFixed(2)}</span>
-                                </div>
-                                <div className={`flex justify-between font-extrabold pt-2 border-t-2 ${isSumValid ? 'text-green-600' : 'text-red-600'}`}>
-                                    <span>Difference:</span>
-                                    <span>{amountDifference}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
+                        ))}
                     </div>
-                )}
-                
-                <hr className="my-8 border-t-2 border-blue-200" />
-                
-                {/* DOMAIN DETAILS  */}
-                <DomainDetails 
-                    onUpdate={handleDomainDataUpdate}
-                />
-                
-                <hr className="my-8 border-t-2 border-blue-200" />
+                </div>
 
-                {/* Final Save Button */}
-                <div className="mt-8 text-center pt-6">
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={paymentPhases === 0 || milestones.length === 0 || !isSumValid || !domainData}
-                        className="w-full sm:w-auto bg-green-600 text-white py-3 px-8 rounded-xl hover:bg-green-800 transition text-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <FaSave className="inline mr-2" /> Save & Finalize 
-                    </button>
-                    {(!isSumValid && paymentPhases > 0) && (
-                        <p className="mt-3 text-sm text-red-600 font-medium">
-                            🚨 Milestone amounts do not match the total balance. Please adjust amounts to proceed.
-                        </p>
-                    )}
-                    {(!domainData) && (
-                        <p className="mt-3 text-sm text-orange-500 font-medium">
-                            Please fill in all required Domain Details to finalize the deal.
-                        </p>
-                    )}
+                {/* Project Duration */}
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-2">
+                        Project Duration (Months) <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                        type="number"
+                        min="1"
+                        value={projectDuration}
+                        onChange={(e) => setProjectDuration(e.target.value)}
+                        className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                        placeholder="e.g., 6"
+                        required
+                    />
                 </div>
             </div>
-        </div>
+            
+            {/* Domain & Hosting Details */}
+            <div className="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Domain & Hosting Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Own Domain Status */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-2">
+                            Client Has Own Domain? <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <div className="flex space-x-4 items-center">
+                            <label className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    name="ownDomain"
+                                    value="yes"
+                                    checked={ownDomain === 'yes'}
+                                    onChange={(e) => setOwnDomain(e.target.value)}
+                                    className="form-radio text-blue-600"
+                                />
+                                <span className="ml-2 text-sm">Yes</span>
+                            </label>
+                            <label className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    name="ownDomain"
+                                    value="no"
+                                    checked={ownDomain === 'no'}
+                                    onChange={(e) => setOwnDomain(e.target.value)}
+                                    className="form-radio text-blue-600"
+                                />
+                                <span className={`ml-2 text-sm ${ownDomain === 'no' ? 'font-bold text-red-600' : ''}`}>
+                                    No (Use XcodeFix Domain)
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    {/* Domain Name */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-2">
+                            Domain Name {isDomainFieldsRequired && <span style={{ color: "red" }}>*</span>}
+                        </label>
+                        <input
+                            type="text"
+                            value={domainName}
+                            onChange={(e) => setDomainName(e.target.value)}
+                            className={`border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 ${!isDomainFieldsRequired ? 'bg-gray-100' : ''}`}
+                            placeholder="e.g., www.clientwebsite.com"
+                            required={isDomainFieldsRequired}
+                            disabled={!isDomainFieldsRequired}
+                        />
+                    </div>
+                    
+                    {/* Registration Date */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-2">
+                            Registration Date {isDomainFieldsRequired && <span style={{ color: "red" }}>*</span>}
+                        </label>
+                        <input
+                            type="date"
+                            value={registerDate}
+                            onChange={(e) => setRegisterDate(e.target.value)}
+                            className={`border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 ${!isDomainFieldsRequired ? 'bg-gray-100' : ''}`}
+                            required={isDomainFieldsRequired}
+                            disabled={!isDomainFieldsRequired}
+                        />
+                    </div>
+                    
+                    {/* Renewal Date */}
+                    <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-700 mb-2">
+                            Renewal Date {isDomainFieldsRequired && <span style={{ color: "red" }}>*</span>}
+                        </label>
+                        <input
+                            type="date"
+                            value={renewalDate}
+                            onChange={(e) => setRenewalDate(e.target.value)}
+                            className={`border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 ${!isDomainFieldsRequired ? 'bg-gray-100' : ''}`}
+                            required={isDomainFieldsRequired}
+                            disabled={!isDomainFieldsRequired}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Payment Milestones Table */}
+            <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Payment Milestones ({paymentPhases} Phases)</h3>
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-yellow-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Milestone Name</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Date</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Amount ({currencySymbol})</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {milestones.map((milestone, index) => (
+                                <tr key={index}>
+                                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                        {milestone.name}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <input
+                                            type="date"
+                                            value={milestone.expectedMilestoneDate}
+                                            onChange={(e) => handleMilestoneDateChange(index, e.target.value)}
+                                            className="w-full border p-1 rounded text-sm"
+                                            required
+                                        />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={milestone.expectedAmount.toFixed(2)}
+                                            onChange={(e) => handleMilestoneAmountChange(index, e.target.value)}
+                                            className="w-full border p-1 rounded text-sm text-right font-semibold"
+                                            required
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                {/* Validation Summary */}
+                <div className={`mt-3 p-2 rounded text-sm font-semibold flex justify-between ${isMilestoneSumValid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <span>Milestone Total:</span>
+                    <span>{currencySymbol}{milestoneSum.toFixed(2)} / {currencySymbol}{netTotal.toFixed(2)}</span>
+                    <span className='font-bold'>{isMilestoneSumValid ? 'Total Valid' : 'Total Mismatch!'}</span>
+                </div>
+            </div>
+
+            {/* Payment Terms and Conditions */}
+            <div className="mb-8">
+                <label className="text-sm font-medium text-gray-700 mb-2">
+                    Payment Terms and Conditions
+                </label>
+                <textarea
+                    value={paymentTermsAndConditions}
+                    onChange={(e) => setPaymentTermsAndConditions(e.target.value)}
+                    rows="4"
+                    className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Enter any specific terms and conditions here..."
+                ></textarea>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between">
+                <button
+                    type="button"
+                    onClick={onBack}
+                    className="bg-gray-500 text-white py-2 px-6 rounded-xl hover:bg-gray-700 transition text-md font-semibold"
+                >
+                    &larr; Back to Services
+                </button>
+                <button
+                    type="submit"
+                    disabled={!isMilestoneSumValid}
+                    className="bg-blue-600 text-white py-3 px-8 rounded-xl hover:bg-blue-800 transition text-lg font-semibold shadow-lg disabled:opacity-50"
+                >
+                    {isEditingExistingProposal ? 'Final Update Proposal' : 'Create Proposal'}
+                </button>
+            </div>
+        </form>
     );
 };
 

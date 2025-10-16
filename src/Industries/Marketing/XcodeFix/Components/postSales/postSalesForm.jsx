@@ -457,6 +457,8 @@ const PostSalesForm = (passedData) => {
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment phases</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Discount percentage</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -478,6 +480,7 @@ const PostSalesForm = (passedData) => {
                       View/Edit
                     </button>
                 </td>
+                <td style={{ color: item.bactive ? 'green' : 'red', fontWeight: 'bold' }}> {item.bactive ? 'Completed' : 'Not Completed'} </td>
               </tr>
             ))}
           </tbody>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, X, Calendar } from 'lucide-react';
 import {
@@ -23,19 +24,20 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import PaymentAndDomainDetailsCombined from './mileStoneDetails';
+import PostSalesForm from './postSalesForm';
 
 const MAX_REMARK_LENGTH = 500;
 
 const MilestoneStatusBar = ({ leadId }) => {
+  const { showToast } = useToast();
   const [milestones, setMilestones] = useState([]);
   const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [error, setError] = useState(null);
-  const { showToast } = useToast();
   const [loggedInUserId, setLoggedInUserId] = useState(null);
-
   const [formData, setFormData] = useState({
     actualAmount: '',
     actualMilestoneDate: null,
@@ -44,9 +46,8 @@ const MilestoneStatusBar = ({ leadId }) => {
     assignToMe: false,
     notifiedTo: '',
     notifyToMe: false,
-    balanceAmount: ''
+    balanceAmount: '',
   });
-
   const [formErrors, setFormErrors] = useState({
     actualAmount: '',
     actualMilestoneDate: '',
@@ -57,9 +58,9 @@ const MilestoneStatusBar = ({ leadId }) => {
     popper: {
       placement: 'top-start',
       modifiers: [{ name: 'preventOverflow', options: { mainAxis: false } }],
-      sx: { zIndex: 9999, '& .MuiPickersPopper-paper': { marginBottom: '60px' } }
+      sx: { zIndex: 9999, '& .MuiPickersPopper-paper': { marginBottom: '60px' } },
     },
-    desktopPaper: { sx: { zIndex: 9999, position: 'relative' } }
+    desktopPaper: { sx: { zIndex: 9999, position: 'relative' } },
   };
 
   useEffect(() => {
@@ -76,25 +77,49 @@ const MilestoneStatusBar = ({ leadId }) => {
     }
   }, []);
 
+  // Function to patch post sales status when sums match
+  const updatePostSalesStatusIfComplete = async (postSalesId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const url = `${ENDPOINTS.MILESTONE_STATUS_PATCH}/${postSalesId}/change-status`;
+      await axios.patch(
+        url,
+        { status: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast('success', 'Post sales status updated successfully!');
+    } catch (err) {
+      console.error('Error updating post sales status:', err);
+      showToast('error', 'Failed to update post sales status.');
+    }
+  };
+
   const fetchMilestones = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${ENDPOINTS.MILESTONE_BY_LEAD}/${leadId}`, {
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.data) {
-        // Sort milestones by id ascending before using them
         const milestoneData = [...response.data.data].sort((a, b) => a.id - b.id);
         setMilestones(milestoneData);
 
-        // First not completed
+        const totalExpected = milestoneData.reduce((sum, m) => sum + (parseFloat(m.expectedAmount) || 0), 0);
+        const totalActual = milestoneData.reduce((sum, m) => sum + (parseFloat(m.actualAmount) || 0), 0);
+
+        const postSalesId = milestoneData[0]?.postSalesId;
+
+        if (postSalesId && Math.abs(totalExpected - totalActual) < 0.01) {
+          await updatePostSalesStatusIfComplete(postSalesId);
+        }
+
         const currentIndex = milestoneData.findIndex(
           m => !(m.actualAmount > 0 && m.actualMilestoneDate)
         );
         setCurrentStageIndex(currentIndex === -1 ? milestoneData.length : currentIndex);
       }
-    } catch (error) {
-      console.error('Error fetching milestones:', error);
+    } catch (err) {
+      console.error('Error fetching milestones:', err);
       setError('Failed to fetch milestones data');
     }
   };
@@ -103,13 +128,13 @@ const MilestoneStatusBar = ({ leadId }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${ENDPOINTS.USERS}`, {
-        headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) }
+        headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
       });
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
       setUsers(data);
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
+    } catch (err) {
+      console.error('Error fetching users:', err.message);
     }
   };
 
@@ -176,9 +201,7 @@ const MilestoneStatusBar = ({ leadId }) => {
     if (!formData.actualAmount) {
       newErrors.actualAmount = 'Actual amount is required';
       isValid = false;
-    } else if (actualAmount > expectedAmount) {
-      newErrors.actualAmount = `Actual amount cannot exceed expected amount (${formatAmount(expectedAmount)})`;
-      isValid = false;
+  
     } else if (actualAmount <= 0) {
       newErrors.actualAmount = 'Actual amount must be greater than 0';
       isValid = false;
@@ -256,6 +279,8 @@ const MilestoneStatusBar = ({ leadId }) => {
         ...(formData.assignedTo && { assignedTo: parseInt(formData.assignedTo) }),
         ...(formData.notifiedTo && { notifiedTo: parseInt(formData.notifiedTo) })
       };
+
+      
       await axios.patch(`${ENDPOINTS.MILESTONE_UPDATE}/${selectedMilestone.id}`, payload, {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
       });
@@ -311,7 +336,7 @@ const MilestoneStatusBar = ({ leadId }) => {
                       Milestone {index + 1}
                     </span>
                     <div className="mt-1 text-xs text-center text-gray-600">
-                      {formatAmount(milestone.expectedAmount)}
+                      {(milestone.expectedAmount)}
                     </div>
                     <div className="mt-1 text-xs text-center text-gray-500">
                       <Calendar size={10} className="inline mr-1" />
@@ -544,6 +569,13 @@ const MilestoneStatusBar = ({ leadId }) => {
           </DialogActions>
         </Dialog>
       </LocalizationProvider>
+      <div style={{display:"none"}}>
+{milestones.length > 0 && (
+  <PostSalesForm isRecurring={true} />
+)}
+      </div>
+                    
+
     </>
   );
 };

@@ -433,7 +433,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 htmlFor="duration"
                                 className="block text-sm font-medium text-gray-600 mb-1"
                             >
-                                Duration (in Months/Days)
+                                 Project Duration (in Months/Days)
                             </label>
                             <input
                                 type="text" 

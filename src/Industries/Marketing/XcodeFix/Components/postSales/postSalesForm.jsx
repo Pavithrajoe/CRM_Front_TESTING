@@ -456,7 +456,7 @@ const PostSalesForm = (passedData,isRecurring) => {
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proposal ID</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment phases</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Discount percentage</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Offer percentage</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
 
@@ -711,7 +711,7 @@ const PostSalesForm = (passedData,isRecurring) => {
       {/* Discount Section */}
       <div className="p-3 bg-yellow-50 rounded-lg shadow-inner">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {discountType === 'percentage' ? 'Discount Percentage' : 'Final Closed Amount'}
+          {discountType === 'percentage' ? 'Offer Percentage' : 'Final Closed Amount'}
         </label>
         <div className="flex gap-2 mb-2">
           <button
@@ -721,7 +721,7 @@ const PostSalesForm = (passedData,isRecurring) => {
               discountType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Discount (%)
+            Offer (%)
           </button>
           <button
             type="button"
@@ -745,7 +745,7 @@ const PostSalesForm = (passedData,isRecurring) => {
           className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
         />
         <div className="flex justify-between mt-2 text-xs text-gray-600">
-          <span>Total Discount Applied:</span>
+          <span>Total Offer Applied:</span>
           <span className="font-semibold text-red-600">
             -{displaySymbol}{discountAmount} ({calculatedDiscountPercentage}%)
           </span>
@@ -849,7 +849,7 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Discount:</span>
+              <span className="text-gray-600">Offer:</span>
               <span className="font-semibold text-red-600">{historyData.discount}%</span>
             </div>
             <div className="flex justify-between">

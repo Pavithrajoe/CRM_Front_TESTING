@@ -144,12 +144,12 @@ const DomainDetails = ({ onUpdate }) => {
                 )}
                 
                 {/* Registration Date and Renewal Date */}
-                {domainStatus === 'company' && (
-                    <>
+                {/* {domainStatus === 'company' && (
+                    <> */}
                         {/* Registration Date */}
                         <div>
                             <label htmlFor="registerDate" className="block text-sm font-medium text-gray-700 mb-1">
-                                Registration Date {isFieldRequired('registerDate') && <span className="text-red-500">*</span>}
+                                Registration Date <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -164,7 +164,7 @@ const DomainDetails = ({ onUpdate }) => {
                         {/* Renewal Date  */}
                         <div>
                             <label htmlFor="renewalDate" className="block text-sm font-medium text-gray-700 mb-1">
-                                Renewal Date {isFieldRequired('renewalDate') && <span className="text-red-500">*</span>}
+                                Renewal Date <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -175,8 +175,8 @@ const DomainDetails = ({ onUpdate }) => {
                                 required={isFieldRequired('renewalDate')}
                             />
                         </div>
-                    </>
-                )}
+                    {/* </>
+                )} */}
             </div>
         </div>
     );

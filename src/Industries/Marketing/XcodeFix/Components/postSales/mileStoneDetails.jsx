@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
 import axios from 'axios';
 import { ENDPOINTS } from '../../../../../api/constraints.js';
-// Removed unused imports: transform, setDefaultLocale, Input (was imported but unused)
 
 
 /**
@@ -31,7 +30,7 @@ const initialMilestoneRow = (sNo, defaultAmount, milestoneDate = '') => {
         id: Date.now() + Math.random(), 
         sNo,
         milestone: `Milestone ${sNo}`,
-        milestoneDate: milestoneDate, // Now correctly receives a calculated date
+        milestoneDate: milestoneDate, 
         amount: parseFloat(defaultAmount.toFixed(2)),
     };
 };

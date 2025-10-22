@@ -62,11 +62,10 @@ const calculateBalancedSplit = (totalAmount, totalPhases) => {
 
 
 const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
-    
+     console.table(serviceData)
     const navigate = useNavigate(); 
     const location = useLocation();
     const totalAmount = parseFloat(totalBalance) || 0; 
-
     // --- State Management ---
     const [termsAndConditions, setTermsAndConditions] = useState('');
     const [paymentPhases, setPaymentPhases] = useState(0); 
@@ -300,6 +299,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         return {    
             ilead_id: parseInt(data.leadId, 10),
             proposalId: data.proposalId,
+           
             duration: parseInt(data.duration, 10),
             paymentPhases: String(data.paymentPhases),
             totalProjectAmount: data.totals?.subTotal || 0,
@@ -314,6 +314,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                 amount: item.amount,
             })),
             milestones: data.milestones.map((m) => ({
+                 paymentMode: data.paymentMethod,
+                mileStoneName:m.milestone,
                 expectedAmount: m.amount,
                 expectedMilestoneDate: m.milestoneDate,
             })),
@@ -459,7 +461,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 <thead className="bg-blue-100">
                                     <tr>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">Milestone Name</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">
+                                            Milestone Name</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[120px]">Milestone Date</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ({currencySymbol})</th>
                                         <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-10">Action</th>

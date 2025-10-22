@@ -10,13 +10,11 @@ export const useTabs = () => {
 
 export const TabProvider = ({ children }) => {
   const [tabs, setTabs] = useState([
-    // { path: '/leads', label: 'Home' },
   ]);
   const [activeTab, setActiveTab] = useState('/leads');
-  const navigate = useNavigate(); // ← initialize router navigation
+  const navigate = useNavigate(); 
 
   const openTab = (path, label) => {
-    // If the tab doesn't exist, add it to the state
     if (!tabs.find((tab) => tab.path === path)) {
       setTabs([...tabs, { path, label }]);
     }
@@ -28,7 +26,6 @@ export const TabProvider = ({ children }) => {
   const closeTab = (path) => {
     const updatedTabs = tabs.filter((tab) => tab.path !== path);
     setTabs(updatedTabs);
-    // If the tab being closed is the active tab, set the active tab to the last one in the updated tabs array
     if (activeTab === path && updatedTabs.length > 0) {
       setActiveTab(updatedTabs[updatedTabs.length - 1].path);
       navigate(updatedTabs[updatedTabs.length - 1].path);

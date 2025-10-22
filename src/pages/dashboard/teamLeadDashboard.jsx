@@ -256,7 +256,8 @@ const LeadsDashboard = () => {
           >
             <KPIStats data={dashboardData?.details} />
             <Typography variant="caption" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-              {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : `Total Leads Fetched: ${leads.length}`}
+               {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : ''}
+               {/* {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : `Total Leads Fetched: ${leads.length}`} */}
             </Typography>
           </Box>
 

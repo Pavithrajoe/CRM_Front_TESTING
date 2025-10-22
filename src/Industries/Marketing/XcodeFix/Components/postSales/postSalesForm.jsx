@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { FaPlus, FaTrashAlt, FaChevronDown, FaCheck } from 'react-icons/fa';
-import PaymentAndDomainDetailsCombined from './mileStoneDetails'; // Assuming this is Step 2 component
+import PaymentAndDomainDetailsCombined from './mileStoneDetails';
 import { ENDPOINTS } from "../../../../../api/constraints";
 import axios from 'axios';
 
 
-// MultiSelectDropdown component (remains unchanged)
 const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleOption = (value) => {
@@ -27,9 +26,8 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full border p-1 rounded text-left text-sm flex justify-between items-center transition ${
-          disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white focus:ring-blue-400 focus:border-blue-400'
-        }`}
+        className={`w-full border p-1 rounded text-left text-sm flex justify-between items-center transition ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white focus:ring-blue-400 focus:border-blue-400'
+          }`}
         disabled={disabled}
       >
         <span className="truncate">{displayLabel}</span>
@@ -60,9 +58,9 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
 
 // **UNIT OPTIONS ARRAY (New Constant)**
 const UNIT_OPTIONS = [
-    { id: 'numbers', name: 'Numbers' },
-    { id: 'months', name: 'Months' },
-    { id: 'pages', name: 'Pages' },
+  { id: 'numbers', name: 'Numbers' },
+  { id: 'months', name: 'Months' },
+  { id: 'pages', name: 'Pages' },
 ];
 
 const initialServiceRow = {
@@ -71,25 +69,25 @@ const initialServiceRow = {
   subserviceIds: [],
   unitPrice: 0,
   quantity: 0,
-  unit: 'numbers', 
+  unit: 'numbers',
   amount: 0,
 };
 
-const PostSalesForm = (passedData,isRecurring) => {
-  const [step, setStep] = useState(1);
-  const [submissionData, setSubmissionData] = useState({});
-  const [services, setServices] = useState([initialServiceRow]);
-  const [discountType, setDiscountType] = useState('percentage');
-  const [discountPercentage, setDiscountPercentage] = useState(0);
-  const [finalClosedAmount, setFinalClosedAmount] = useState(0);
-  const [masterServices, setMasterServices] = useState([]);
-  const [masterSubservices, setMasterSubservices] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [serviceHistory, setServiceHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [currentFormData, setCurrentFormData] = useState(null); // data from history row
-  const [isEditing, setIsEditing] = useState(false); // controls read-only vs editable
-  const [viewMode, setViewMode] = useState('form'); // 'form' | 'history' | 'view'
+const PostSalesForm = (passedData, isRecurring) => {
+  const [step, setStep] = useState(1);
+  const [submissionData, setSubmissionData] = useState({});
+  const [services, setServices] = useState([initialServiceRow]);
+  const [discountType, setDiscountType] = useState('percentage');
+  const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [finalClosedAmount, setFinalClosedAmount] = useState(0);
+  const [masterServices, setMasterServices] = useState([]);
+  const [masterSubservices, setMasterSubservices] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [serviceHistory, setServiceHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [currentFormData, setCurrentFormData] = useState(null); // data from history row
+  const [isEditing, setIsEditing] = useState(false); // controls read-only vs editable
+  const [viewMode, setViewMode] = useState('form'); // 'form' | 'history' | 'view'
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
 
   // New state for dynamic currencies
@@ -98,8 +96,9 @@ const PostSalesForm = (passedData,isRecurring) => {
   const [error, setError] = useState(null);
   // New fields
   const [proposalId, setProposalId] = useState('');
-  const [currency, setCurrency] = useState(''); 
-
+  const [currency, setCurrency] = useState('');
+  //payment method 
+  const [paymentMethod, setPaymentMethod] = useState('');
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -121,7 +120,7 @@ const PostSalesForm = (passedData,isRecurring) => {
           fetch(ENDPOINTS.SUB_SERVICE, authHeaders),
           fetch(ENDPOINTS.CURRENCY, authHeaders)
         ]);
-        
+
         // --- Error Handling ---
         if (!servicesRes.ok || !subservicesRes.ok || !currencyRes.ok) {
           const status = `Services: ${servicesRes.status}, Subservices: ${subservicesRes.status}, Currency: ${currencyRes.status}`;
@@ -141,7 +140,7 @@ const PostSalesForm = (passedData,isRecurring) => {
           a.cservice_name.localeCompare(b.cservice_name)
         );
         setMasterServices(sortedServices);
-        
+
         //  Subservices
         setMasterSubservices(subservicesData.data);
 
@@ -153,7 +152,7 @@ const PostSalesForm = (passedData,isRecurring) => {
         if (activeCurrencies.length > 0) {
           setCurrency(activeCurrencies[0].currency_code);
         } else {
-            setCurrency('USD'); 
+          setCurrency('USD');
         }
 
       } catch (err) {
@@ -178,7 +177,7 @@ const PostSalesForm = (passedData,isRecurring) => {
         const selectedService = masterServices.find(s => s.iservice_id === value);
         updatedRow.serviceName = selectedService ? selectedService.cservice_name : '';
       }
-      
+
       // Calculate amount if unitPrice or quantity changes
       if (name === 'quantity' || name === 'unitPrice') {
         const quantity = parseFloat(updatedRow.quantity) || 0;
@@ -227,7 +226,7 @@ const PostSalesForm = (passedData,isRecurring) => {
     // NOTE: The current API response implies the discount is a percentage
     // We will honor the form's dual logic (percentage/amount) for new proposals,
     // but for editing, we'll try to infer the type or assume percentage if it's the `discount` field.
-    
+
     if (discountType === 'percentage') {
       const percentageValue = parseFloat(discountPercentage) || 0;
       calculatedDiscountAmount = subTotalNum * (percentageValue / 100);
@@ -237,9 +236,9 @@ const PostSalesForm = (passedData,isRecurring) => {
 
     } else {
       const closedAmountValue = parseFloat(finalClosedAmount) || 0;
-      
+
       // FinalTaxableAmount is the Closed Amount in this mode
-      finalTaxableAmount = Math.min(closedAmountValue, subTotalNum); 
+      finalTaxableAmount = Math.min(closedAmountValue, subTotalNum);
       calculatedDiscountAmount = Math.max(0, subTotalNum - finalTaxableAmount);
 
       calculatedPercentage = subTotalNum > 0
@@ -284,12 +283,12 @@ const PostSalesForm = (passedData,isRecurring) => {
 
     // Find the symbol for the selected currency
     const selectedCurrency = masterCurrencies.find(c => c.currency_code === currency);
-    const currencySymbol = selectedCurrency ? selectedCurrency.symbol : '$'; 
-    
+    const currencySymbol = selectedCurrency ? selectedCurrency.symbol : '$';
+
     // Simple validation for currency
     if (!currency) {
-        alert("Please select a valid currency.");
-        return;
+      alert("Please select a valid currency.");
+      return;
     }
     if (!proposalId) {
       alert("Please enter a Proposal ID.");
@@ -318,7 +317,7 @@ const PostSalesForm = (passedData,isRecurring) => {
       serviceId: row.serviceId,
       serviceName: row.serviceName,
       // Subservices are stored as an array of IDs
-      subserviceIds: row.subserviceIds, 
+      subserviceIds: row.subserviceIds,
       unitPrice: parseFloat(row.unitPrice) || 0,
       quantity: parseFloat(row.quantity) || 0,
       unit: row.unit,
@@ -328,37 +327,12 @@ const PostSalesForm = (passedData,isRecurring) => {
 
     setSubmissionData({
       proposalId,
+      paymentMethod,
       currency,
       currencySymbol, // Pass symbol to the next component if needed
       items: serviceItems,
       totals: totals
     });
-
-    // *** Key Update Here ***
-    // Pass the full historical context if we are in 'editing' mode
-    if (isEditing && historyDataForStep2) {
-        setSubmissionData(prev => ({
-            ...prev,
-            // Pass the original details from the API response for auto-populating Step 2
-            projectDuration: historyDataForStep2.projectDuration, 
-            paymentPhases: historyDataForStep2.paymentPhases,
-            paymentTermsAndConditions: historyDataForStep2.paymentTermsAndConditions,
-            clientDomain: historyDataForStep2.clientDomain,
-            milestones: historyDataForStep2.milestones,
-            isEditingExisting: true, // Flag to tell Step 2 it's loading historical data
-        }));
-    } else {
-        // Clear any old history data for a new proposal
-        setSubmissionData(prev => ({
-            ...prev,
-            projectDuration: null,
-            paymentPhases: null,
-            paymentTermsAndConditions: null,
-            clientDomain: null,
-            milestones: null,
-            isEditingExisting: false,
-        }));
-    }
 
     setStep(2);
   };
@@ -375,27 +349,25 @@ const PostSalesForm = (passedData,isRecurring) => {
   // Get the symbol for display in the table/summary
   const displaySymbol = masterCurrencies.find(c => c.currency_code === currency)?.symbol || '$';
 
-  // Function to fecth the service history agaist an lead id  
+  // Function to fecth the service history agaist an lead id  
   const fetchServiceHistory = async () => {
-      if (!passedData.leadId) return;
+    if (!passedData.leadId) return;
 
-      setLoadingHistory(true);
-      const token = localStorage.getItem("token");
+    setLoadingHistory(true);
 
-      try {
-        // [UPDATE] Use the correct ENDPOINT structure
-        const response = await axios.get(`${ENDPOINTS.GET_SERVICE_HISTORY}/${passedData.leadId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    try {
+      const response = await axios.get(`${ENDPOINTS.GET_SERVICE_HISTORY}/${passedData.leadId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-        setServiceHistory(response.data.data);
-      } catch (err) {
-        console.error("Error fetching service history:", err);
-      } finally {
-        setLoadingHistory(false);
-      }
+      setServiceHistory(response.data.data);
+    } catch (err) {
+      console.error("Error fetching service history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
   };
 
 
@@ -404,22 +376,13 @@ const PostSalesForm = (passedData,isRecurring) => {
     const newServices = historyItem.services.map(s => {
       const serviceObj = masterServices.find(ms => ms.iservice_id === s.serviceId);
 
-      // The API returns 'Nos', 'Months', etc. We map to internal IDs 'numbers', 'months'
-      const unitId = UNIT_OPTIONS.find(u => u.name.toLowerCase() === s.unit?.toLowerCase())?.id || 
-                     UNIT_OPTIONS.find(u => u.id === s.unit?.toLowerCase())?.id || 
-                     'numbers';
-
-      // API structure for subservices is complex, sometimes it's an array of IDs, sometimes single ID/null.
-      // We assume single ID from this API response for simplicity.
-      const subserviceIdsArray = s.subServiceId ? (Array.isArray(s.subServiceId) ? s.subServiceId : [s.subServiceId]) : [];
-
       return {
         serviceId: s.serviceId,
         serviceName: serviceObj ? serviceObj.cservice_name : `Service ${s.serviceId}`,
-        subserviceIds: subserviceIdsArray, 
+        subserviceIds: s.subServiceId ? [s.subServiceId] : [],
         unitPrice: s.unitPrice,
         quantity: s.quantity,
-        unit: unitId,
+        unit: UNIT_OPTIONS.find(u => u.name.toLowerCase() === s.unit?.toLowerCase())?.id || UNIT_OPTIONS.find(u => u.id === s.unit?.toLowerCase())?.id || 'numbers',
         amount: s.amount,
       };
     });
@@ -427,19 +390,17 @@ const PostSalesForm = (passedData,isRecurring) => {
     // Calculate subTotal from the mapped services
     const subTotalFromHistory = newServices.reduce((sum, row) => sum + row.amount, 0);
 
-    // Set discount logic based on percentage from API
+    // We will stick to the percentage discount field from the API for simplicity
     const discountPercent = historyItem.discount || 0;
-    const closedAmount = subTotalFromHistory * (1 - (discountPercent / 100)); 
+    const closedAmount = subTotalFromHistory * (1 - (discountPercent / 100));
 
     // Set all states
     setServices(newServices.length > 0 ? newServices : [initialServiceRow]);
     setProposalId(historyItem.proposalId);
     setCurrency(historyItem.currency?.code || '');
-    setDiscountType('percentage'); 
+    setDiscountType('percentage');
     setDiscountPercentage(discountPercent.toString());
-    setFinalClosedAmount(closedAmount.toFixed(2).toString()); 
-    // *** Key Update Here ***
-    setHistoryDataForStep2(historyItem); // Store full item for passing to Step 2
+    setFinalClosedAmount(closedAmount.toFixed(2).toString());
 
     // Also set currentFormData to enable 'New Proposal' button
     setCurrentFormData(historyItem);
@@ -459,10 +420,9 @@ const PostSalesForm = (passedData,isRecurring) => {
         serviceData={submissionData}
         onBack={() => setStep(1)}
         totalBalance={totalBalance}
-        currencySymbol={displaySymbol} 
+        currencySymbol={displaySymbol}
         leadId={passedData.leadId}
-        // [Key Pass] Pass the submission data which now contains the full history context
-        initialData={submissionData} 
+        isRecurring={isRecurring.isRecurring}
       />
     );
   }
@@ -470,358 +430,374 @@ const PostSalesForm = (passedData,isRecurring) => {
 
   return (
     <div className="p-4 sm:p-6 bg-transparent min-h-full">
-  {viewMode === 'history' ?  (
-    //  HISTORY VIEW
-    <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-semibold text-blue-700 uppercase mb-4">
-          Service History
-        </h3>
-      <button
-  onClick={() => setViewMode('form')} 
-  className="text-red-600 font-bold hover:text-red-800"
->
-  Back
-</button>
-      </div>
+      {viewMode === 'history' ? (
+        //  HISTORY VIEW
+        <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-base font-semibold text-blue-700 uppercase mb-4">
+              Service History
+            </h3>
+            <button
+              onClick={() => setViewMode('form')}
+              className="text-red-600 font-bold hover:text-red-800"
+            >
+              Back
+            </button>
+          </div>
 
-      {loadingHistory ? (
-        <p>Loading...</p>
-      ) : serviceHistory.length === 0 ? (
-        <p>No history available for this lead.</p>
-      ) : (
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">S.No.</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proposal ID</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment phases</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Discount percentage</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          {loadingHistory ? (
+            <p>Loading...</p>
+          ) : serviceHistory.length === 0 ? (
+            <p>No history available for this lead.</p>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">S.No.</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proposal ID</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment phases</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Offer percentage</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
 
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {serviceHistory.map((item, index) => (
-              <tr key={index}>
-                <td className="px-3 py-2 text-sm text-gray-900">{index + 1}</td>
-                <td className="px-3 py-2 text-sm text-gray-900">{item.proposalId}</td>
-                <td className="px-3 py-2 text-sm text-gray-900">{item.projectValue}</td>
-                <td className="px-3 py-2 text-sm text-gray-900">{item.paymentPhases}</td>
-                <td className="px-3 py-2 text-sm text-gray-900">{item.discount} %</td>
-                <td className="px-3 py-2 text-sm text-gray-900 space-x-2">
-                  <button
-                      className="text-blue-600 hover:text-blue-800"
-                      onClick={async () => {
-                        setSelectedHistoryItem(item);
-                        setViewMode('view'); 
-                      }}
-                    >
-                      View
-{/* /Edit */}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {serviceHistory.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-3 py-2 text-sm text-gray-900">{index + 1}</td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{item.proposalId}</td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{item.projectValue}</td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{item.paymentPhases}</td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{item.discount} %</td>
+                    <td className="px-3 py-2 text-sm text-gray-900 space-x-2">
+                      <button
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={async () => {
+                          setSelectedHistoryItem(item);
+                          setViewMode('view');
+                        }}
+                      >
+                        View
+                        {/* /Edit */}
 
-                    </button>
-                </td>
-                <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}> {item.bactive ? 'Not Completed' : 'Completed'} </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  )
-  
-  : viewMode === 'view' ? (
-      
-      <ServiceHistoryView 
-        historyData={selectedHistoryItem}
-        onBack={() => setViewMode('history')}
-        onEdit={() => {
-          mapHistoryToForm(selectedHistoryItem);
-        }}
-      />
-    )
-  : (
-   <form
-  onSubmit={handleNext}
-  className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto"
->
-  {/* Header & Service History Button */}
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">
-      {isEditing ? 'Edit Service Details' : 'Step 1: Service Details'}
-    </h2>
-    <div className="flex gap-2">
-      {isEditing && (
-  <button
-    type="button"
-    onClick={() => {
-      setCurrentFormData(null);
-      setIsEditing(false);
-      setHistoryDataForStep2(null); // IMPORTANT: Clear history context
-      setServices([initialServiceRow]);
-      setProposalId('');
-      setDiscountPercentage(0);
-      setFinalClosedAmount(0);
-      setDiscountType('percentage');
-      setCurrency(masterCurrencies[0]?.currency_code || 'USD'); 
-      setViewMode('form'); 
-    }}
-    className="bg-gray-500 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
-  >
-    New Proposal
-  </button>
-)}
-      <button
-  type="button"
-  onClick={() => {
-    setViewMode('history'); 
-    fetchServiceHistory();
-  }}
-  className="bg-blue-500 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
->
-  View Service History
-</button>
-    </div>
-  </div>
+                      </button>
+                    </td>
+                    <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}> {item.bactive ? 'Not Completed' : 'Completed'} </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )
 
-  {/* Proposal ID & Currency */}
-  <div className="flex flex-wrap gap-4 mb-6 items-center">
-    <div className="flex flex-col flex-1 min-w-[200px]">
-      <label className="text-sm font-medium text-gray-700 mb-1">
-        Proposal ID <span style={{ color: "red" }}>*</span>
-      </label>
-      <input
-        type="text"
-        value={proposalId}
-        onChange={(e) => setProposalId(e.target.value)}
-        className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-        placeholder="Enter Proposal ID"
-        required
-      />
-    </div>
-    <div className="flex flex-col flex-1 min-w-[180px]">
-      <label className="text-sm font-medium text-gray-700 mb-1">
-        Currency <span style={{ color: "red" }}>*</span>
-      </label>
-      <select
-        value={currency}
-        onChange={(e) => setCurrency(e.target.value)}
-        className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-        required
-      >
-        {masterCurrencies.length === 0 ? (
-          <option value="" disabled>No Currencies Available</option>
-        ) : (
-          <>
-            <option value="" disabled>Select Currency</option>
-            {masterCurrencies.map((c) => (
-              <option key={c.icurrency_id} value={c.currency_code}>
-                {c.currency_code} - {c.symbol} ({c.currency_name})
-              </option>
-            ))}
-          </>
-        )}
-      </select>
-    </div>
-  </div>
-  
-  {/* SERVICE TABLE */}
-  <div className="mb-8">
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-blue-50">
-          <tr>
-            <th className="sticky left-0 bg-blue-50 z-10 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">S.No.</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[150px]">Service</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">Subservice</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit Price</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Quantity</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Amount</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">Action</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {services.map((row, index) => {
-            const subserviceOptions = getSubserviceOptions(row.serviceId);
+        : viewMode === 'view' ? (
 
-
-            return (
-              <tr key={index}>
-                <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">{index + 1}</td>
-                <td className="px-3 py-2">
-                  <select
-                    name="serviceId"
-                    value={row.serviceId || ''}
-                    onChange={(e) => handleServiceChange(index, e.target.name, parseInt(e.target.value))}
-                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                  >
-                    <option value="" disabled>Select Service</option>
-                    {masterServices.map((service) => (
-                      <option key={service.iservice_id} value={service.iservice_id}>
-                        {service.cservice_name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <MultiSelectDropdown
-                    options={subserviceOptions || []}
-                    selectedValues={row.subserviceIds || []}
-                    onChange={(newIds) => handleServiceChange(index, 'subserviceIds', newIds)}
-                    disabled={!row.serviceId || subserviceOptions.length === 0}
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    name="unitPrice"
-                    min="0"
-                    value={row.unitPrice}
-                    onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    name="quantity"
-                    min="0"
-                    value={row.quantity}
-                    onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    name="unit"
-                    value={row.unit}
-                    onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                    className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                  >
-                    {UNIT_OPTIONS.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-gray-800">
-                  {displaySymbol}{row.amount?.toFixed(2) || '0.00'}
-                </td>
-                <td className="px-3 py-2 text-center">
+          <ServiceHistoryView
+            historyData={selectedHistoryItem}
+            onBack={() => setViewMode('history')}
+            onEdit={() => {
+              mapHistoryToForm(selectedHistoryItem);
+            }}
+          />
+        )
+          : (
+            <form
+              onSubmit={handleNext}
+              className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto"
+            >
+              {/* Header & Service History Button */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-blue-700">
+                  {isEditing ? 'Edit Service Details' : 'Step 1: Service Details'}
+                </h2>
+                <div className="flex gap-2">
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentFormData(null);
+                        setIsEditing(false);
+                        setServices([initialServiceRow]);
+                        setProposalId('');
+                        setDiscountPercentage(0);
+                        setFinalClosedAmount(0);
+                        setDiscountType('percentage');
+                        setCurrency(masterCurrencies[0]?.currency_code || 'USD');
+                        setViewMode('form');
+                      }}
+                      className="bg-gray-500 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
+                    >
+                      New Proposal
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => removeServiceRow(index)}
-                    className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                    disabled={services.length === 1}
-                    title="Remove Row"
+                    onClick={() => {
+                      setViewMode('history');
+                      fetchServiceHistory();
+                    }}
+                    className="bg-blue-500 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
                   >
-                    <FaTrashAlt size={14} />
+                    View Service History
                   </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                </div>
+              </div>
+
+              {/* Proposal ID & Currency */}
+              <div className="flex flex-wrap gap-4 mb-6 items-center">
+                <div className="flex flex-col flex-1 min-w-[200px]">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    Proposal ID <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={proposalId}
+                    onChange={(e) => setProposalId(e.target.value)}
+                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Enter Proposal ID"
+                    required
+                  />
+                </div>
+                {/* Currency selection  */}
+                <div className="flex flex-col flex-1 min-w-[180px]">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    Currency <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                    required
+                  >
+                    {masterCurrencies.length === 0 ? (
+                      <option value="" disabled>No Currencies Available</option>
+                    ) : (
+                      <>
+                        <option value="" disabled>Select Currency</option>
+                        {masterCurrencies.map((c) => (
+                          <option key={c.icurrency_id} value={c.currency_code}>
+                            {c.currency_code} - {c.symbol} ({c.currency_name})
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+                {/* Payment method field */}
+                <div className="flex flex-col flex-1 min-w-[200px]">
+                  <label className="text-sm font-medium text-gray-700 mb-1">
+                    Payment Method
+                    <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                    required
+                  >
+                    <option value="" disabled>Select Payment Method</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="case">Case</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* SERVICE TABLE */}
+              <div className="mb-8">
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-blue-50">
+                      <tr>
+                        <th className="sticky left-0 bg-blue-50 z-10 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">S.No.</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[150px]">Service</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">Subservice</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit Price</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Quantity</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Amount</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {services.map((row, index) => {
+                        const subserviceOptions = getSubserviceOptions(row.serviceId);
+
+
+                        return (
+                          <tr key={index}>
+                            <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">{index + 1}</td>
+                            <td className="px-3 py-2">
+                              <select
+                                name="serviceId"
+                                value={row.serviceId || ''}
+                                onChange={(e) => handleServiceChange(index, e.target.name, parseInt(e.target.value))}
+                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                              >
+                                <option value="" disabled>Select Service</option>
+                                {masterServices.map((service) => (
+                                  <option key={service.iservice_id} value={service.iservice_id}>
+                                    {service.cservice_name}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <MultiSelectDropdown
+                                options={subserviceOptions || []}
+                                selectedValues={row.subserviceIds || []}
+                                onChange={(newIds) => handleServiceChange(index, 'subserviceIds', newIds)}
+                                disabled={!row.serviceId || subserviceOptions.length === 0}
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                name="unitPrice"
+                                min="0"
+                                value={row.unitPrice}
+                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                name="quantity"
+                                min="0"
+                                value={row.quantity}
+                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                name="unit"
+                                value={row.unit}
+                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                              >
+                                {UNIT_OPTIONS.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-gray-800">
+                              {displaySymbol}{row.amount?.toFixed(2) || '0.00'}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removeServiceRow(index)}
+                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                disabled={services.length === 1}
+                                title="Remove Row"
+                              >
+                                <FaTrashAlt size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Add Row Button */}
+                <button
+                  type="button"
+                  onClick={addServiceRow}
+                  className="mt-3 flex items-center bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition text-sm shadow-md"
+                >
+                  <FaPlus className="mr-2" /> Add Service Row
+                </button>
+              </div>
+
+              {/* SUMMARY & CALCULATION SECTION */}
+              <div className="flex justify-end">
+                <div className="w-full max-w-xs sm:max-w-sm space-y-3">
+                  {/* Sub Total */}
+                  <div className="flex justify-between items-center text-md font-medium border-t pt-3">
+                    <span className="text-gray-700">Sub Total:</span>
+                    <span className="text-gray-900 font-bold">{displaySymbol}{subTotal}</span>
+
+                  </div>
+
+                  {/* Discount Section */}
+                  <div className="p-3 bg-yellow-50 rounded-lg shadow-inner">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {discountType === 'percentage' ? 'Offer Percentage' : 'Final Closed Amount'}
+                    </label>
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setDiscountType('percentage')}
+                        className={`flex-1 px-3 py-1 text-xs rounded-full transition ${discountType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                      >
+                        Offer (%)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDiscountType('amount')}
+                        className={`flex-1 px-3 py-1 text-xs rounded-full transition ${discountType === 'amount' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                      >
+                        Closed Amount ({displaySymbol})
+                      </button>
+                    </div>
+                    {/* Discount Input */}
+                    <input
+                      type="number"
+                      min="0"
+                      max={discountType === 'amount' ? subTotal : 100}
+                      step={discountType === 'percentage' ? "0.01" : "any"}
+                      placeholder={getPlaceholder()}
+                      value={currentDiscountValue}
+                      onChange={handleDiscountInputChange}
+                      className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
+                    />
+                    <div className="flex justify-between mt-2 text-xs text-gray-600">
+                      <span>Total Offer Applied:</span>
+                      <span className="font-semibold text-red-600">
+                        -{displaySymbol}{discountAmount} ({calculatedDiscountPercentage}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tax & Total */}
+                  <div className="flex justify-between items-center text-md font-medium">
+                    <span className="text-gray-700">Taxable Amount:</span>
+                    <span className="text-gray-900 font-bold">{displaySymbol}{taxableAmount}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-md font-medium">
+                    <span className="text-gray-700">GST (18%):</span>
+                    <span className="text-green-600 font-bold">+ {displaySymbol}{gstAmount}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xl font-extrabold border-t-2 border-blue-700 pt-3 mt-3">
+                    <span className="text-blue-700">TOTAL BALANCE:</span>
+                    <span className="text-blue-700">{displaySymbol}{totalBalance}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Button */}
+              <div className="mt-8 text-center">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-xl hover:bg-blue-800 transition text-lg font-semibold shadow-lg"
+                >
+                  {isEditing ? 'Update & Continue' : 'Next: Payment Details'}
+                </button>
+              </div>
+            </form>
+          )}
     </div>
-
-    {/* Add Row Button */}
-    <button
-      type="button"
-      onClick={addServiceRow}
-      className="mt-3 flex items-center bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition text-sm shadow-md"
-    >
-      <FaPlus className="mr-2" /> Add Service Row
-    </button>
-  </div>
-
-  {/* SUMMARY & CALCULATION SECTION */}
-  <div className="flex justify-end">
-    <div className="w-full max-w-xs sm:max-w-sm space-y-3">
-      {/* Sub Total */}
-      <div className="flex justify-between items-center text-md font-medium border-t pt-3">
-        <span className="text-gray-700">Sub Total:</span>
-        <span className="text-gray-900 font-bold">{displaySymbol}{subTotal}</span>
-        
-      </div>
-
-      {/* Discount Section */}
-      <div className="p-3 bg-yellow-50 rounded-lg shadow-inner">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {discountType === 'percentage' ? 'Discount Percentage' : 'Final Closed Amount'}
-        </label>
-        <div className="flex gap-2 mb-2">
-          <button
-            type="button"
-            onClick={() => setDiscountType('percentage')}
-            className={`flex-1 px-3 py-1 text-xs rounded-full transition ${
-              discountType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Discount (%)
-          </button>
-          <button
-            type="button"
-            onClick={() => setDiscountType('amount')}
-            className={`flex-1 px-3 py-1 text-xs rounded-full transition ${
-              discountType === 'amount' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Closed Amount ({displaySymbol})
-          </button>
-        </div>
-        {/* Discount Input */}
-        <input
-          type="number"
-          min="0"
-          max={discountType === 'amount' ? subTotal : 100}
-          step={discountType === 'percentage' ? "0.01" : "any"}
-          placeholder={getPlaceholder()}
-          value={currentDiscountValue}
-          onChange={handleDiscountInputChange}
-          className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-        />
-        <div className="flex justify-between mt-2 text-xs text-gray-600">
-          <span>Total Discount Applied:</span>
-          <span className="font-semibold text-red-600">
-            -{displaySymbol}{discountAmount} ({calculatedDiscountPercentage}%)
-          </span>
-        </div>
-      </div>
-
-      {/* Tax & Total */}
-      <div className="flex justify-between items-center text-md font-medium">
-        <span className="text-gray-700">Taxable Amount:</span>
-        <span className="text-gray-900 font-bold">{displaySymbol}{taxableAmount}</span>
-      </div>
-      <div className="flex justify-between items-center text-md font-medium">
-        <span className="text-gray-700">GST (18%):</span>
-        <span className="text-green-600 font-bold">+ {displaySymbol}{gstAmount}</span>
-      </div>
-      <div className="flex justify-between items-center text-xl font-extrabold border-t-2 border-blue-700 pt-3 mt-3">
-        <span className="text-blue-700">TOTAL BALANCE:</span>
-        <span className="text-blue-700">{displaySymbol}{totalBalance}</span>
-      </div>
-    </div>
-  </div>
-
-  {/* Next Button */}
-  <div className="mt-8 text-center">
-    <button
-      type="submit"
-      className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-xl hover:bg-blue-800 transition text-lg font-semibold shadow-lg"
-    >
-      {isEditing ? 'Update & Continue' : 'Next: Payment Details'}
-    </button>
-  </div>
-</form>
-  )}
-</div>
   );
 };
 
@@ -832,59 +808,52 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    // Ensure date formatting handles the Z suffix correctly
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (e) {
-      return dateString.split('T')[0]; // Fallback to YYYY-MM-DD
-    }
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const formatCurrency = (amount, currency) => {
     const currencyCode = currency?.code || 'USD';
-    const currencySymbol = currency?.symbol || '$';
     if (amount === null || amount === undefined) return '-';
 
     try {
-      // Use the currency symbol/code from the history data if available
       return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: currencyCode,
       }).format(amount);
     } catch (e) {
       console.error("Currency formatting error:", e);
-      return `${currencySymbol}${amount}`; 
+      return `${currencyCode} ${amount}`;
     }
   };
 
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-auto max-h-[90vh] overflow-y-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <div>
-          <h2 className="text-2xl font-bold text-blue-700">Service Proposal Details</h2>
-          <p className="text-gray-600 text-sm mt-1">Proposal ID: {historyData.proposalId}</p>
-        </div>
-        <div className="flex gap-3">
-{/*           <button
-            onClick={onEdit}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm"
-          >
-            Edit Proposal
-          </button> */}
-          <button
-            onClick={onBack}
-            className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition text-sm"
-          >
-            Back to History
-          </button>
-        </div>
-        
-      </div>
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-auto max-h-[90vh] overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <div>
+          <h2 className="text-2xl font-bold text-blue-700">Service Proposal Details</h2>
+          <p className="text-gray-600 text-sm mt-1">Proposal ID: {historyData.proposalId}</p>
+        </div>
+        <div className="flex gap-3">
+          {/*           <button
+            onClick={onEdit}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition text-sm"
+          >
+            Edit Proposal
+          </button> */}
+          <button
+            onClick={onBack}
+            className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition text-sm"
+          >
+            Back to History
+          </button>
+        </div>
+
+      </div>
 
       {/* Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -894,12 +863,11 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Project Value:</span>
               <span className="font-semibold">
-                {/* Note: API response doesn't give currency symbol, so this might need adjustment */}
                 {formatCurrency(historyData.projectValue, historyData.currency)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Discount:</span>
+              <span className="text-gray-600">Offer:</span>
               <span className="font-semibold text-red-600">{historyData.discount}%</span>
             </div>
             <div className="flex justify-between">
@@ -913,7 +881,6 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Currency:</span>
               <span className="font-semibold">
-                {/* Fallback added here for currency object */}
                 {historyData.currency?.code || 'N/A'} - {historyData.currency?.currency_name || 'N/A'}
               </span>
             </div>
@@ -930,9 +897,8 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Own Domain:</span>
-              {/* Highlight if ownDomain is false (using XcodeFix domain) */}
-              <span className={`font-semibold ${!historyData.clientDomain?.ownDomain ? 'text-red-600' : 'text-green-600'}`}>
-                {historyData.clientDomain?.ownDomain === true ? 'Yes' : historyData.clientDomain?.ownDomain === false ? 'No (Using XcodeFix)' : '-'}
+              <span className="font-semibold">
+                {historyData.clientDomain?.ownDomain === true ? 'Yes' : historyData.clientDomain?.ownDomain === false ? 'No' : '-'}
               </span>
             </div>
             <div className="flex justify-between">
@@ -1008,7 +974,7 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {historyData.milestones?.map((milestone, index) => (
-                <tr key={milestone.id} className={milestone.actualAmount && milestone.actualAmount > 0 ? 'bg-green-50' : ''}>
+                <tr key={milestone.id} className={milestone.actualAmount ? 'bg-green-50' : ''}>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">
                     Milestone {index + 1}
                   </td>
@@ -1022,15 +988,14 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
                     {milestone.actualMilestoneDate ? formatDate(milestone.actualMilestoneDate) : '-'}
                   </td>
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-                    {milestone.actualAmount && milestone.actualAmount > 0 ? formatCurrency(milestone.actualAmount, historyData.currency) : '-'}
+                    {milestone.actualAmount ? formatCurrency(milestone.actualAmount, historyData.currency) : '-'}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      milestone.actualAmount && milestone.actualAmount > 0 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {milestone.actualAmount && milestone.actualAmount > 0 ? 'Completed' : 'Pending'}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${milestone.actualAmount
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {milestone.actualAmount ? 'Completed' : 'Pending'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
@@ -1090,3 +1055,4 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
 };
 
 export default PostSalesForm;
+

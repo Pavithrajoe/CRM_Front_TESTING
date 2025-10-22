@@ -111,7 +111,7 @@ const ProfileCard = ({   settingsData, isLoadingSettings = false}) => {
 
       useEffect(() => {
     if (settingsData) {
-      console.log("ProfileCard received settings:", settingsData);
+      // console.log("ProfileCard received settings:", settingsData);
           }
   }, [settingsData]);
 
@@ -120,7 +120,7 @@ const ProfileCard = ({   settingsData, isLoadingSettings = false}) => {
   }
 
 useEffect(() => {
-  console.log("Profile settings from parent:", settingsData);
+  // console.log("Profile settings from parent:", settingsData);
 }, [settingsData]);
 
 

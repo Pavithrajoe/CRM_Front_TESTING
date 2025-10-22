@@ -4,10 +4,25 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import DomainDetails from "./domainDeatils.jsx"; 
 import axios from 'axios';
 import { ENDPOINTS } from '../../../../../api/constraints.js';
-// Note: 'transform' from 'framer-motion' and 'setDefaultLocale' from 'react-datepicker' were unused and removed.
-import { Input } from '@mui/material'; // Note: Input from MUI is imported but not used in the final JSX.
 
-// import MileStoneStatusBar from './mileStoneStatusBar'; 
+
+/**
+ * Helper to format a Date object into 'YYYY-MM-DD' string for input value.
+ * @param {Date} date 
+ * @returns {string}
+ */
+const formatDateForInput = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
+};
 
 
 const initialMilestoneRow = (sNo, defaultAmount, milestoneDate = '') => {
@@ -15,14 +30,13 @@ const initialMilestoneRow = (sNo, defaultAmount, milestoneDate = '') => {
         id: Date.now() + Math.random(), 
         sNo,
         milestone: `Milestone ${sNo}`,
-        milestoneDate: milestoneDate,
+        milestoneDate: milestoneDate, 
         amount: parseFloat(defaultAmount.toFixed(2)),
     };
 };
 
 /**
  * Calculates a balanced split of a total amount into a specified number of phases.
- * Distributes remainder cents one-by-one to ensure the sum is exactly the total amount.
  * @param {number} totalAmount 
  * @param {number} totalPhases 
  * @returns {number[]} Array of calculated amounts.
@@ -30,7 +44,7 @@ const initialMilestoneRow = (sNo, defaultAmount, milestoneDate = '') => {
 const calculateBalancedSplit = (totalAmount, totalPhases) => {
     if (totalPhases <= 0 || isNaN(totalAmount) || totalAmount <= 0) return [];
     
-    const totalRemaining = Math.round(totalAmount * 100); // work with cents
+    const totalRemaining = Math.round(totalAmount * 100); 
     const baseAmountCents = Math.floor(totalRemaining / totalPhases);
     let remainderCents = totalRemaining % totalPhases;
     
@@ -40,34 +54,32 @@ const calculateBalancedSplit = (totalAmount, totalPhases) => {
             amount += 1;
             remainderCents--;
         }
-        return amount / 100; // convert back to dollars
+        return amount / 100; 
     });
     
     return amounts;
 };
 
 
-const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
-    
+const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
+     console.table(serviceData)
     const navigate = useNavigate(); 
     const location = useLocation();
     const totalAmount = parseFloat(totalBalance) || 0; 
-
     // --- State Management ---
     const [termsAndConditions, setTermsAndConditions] = useState('');
     const [paymentPhases, setPaymentPhases] = useState(0); 
     const [duration, setDuration] = useState(0)
     const [milestones, setMilestones] = useState([]);
-    const [isInitialized, setIsInitialized] = useState(false); // Controls re-initialization of milestones
+    const [isInitialized, setIsInitialized] = useState(false); 
     const [domainData, setDomainData] = useState(null); 
     
-    //MILESTONE VARIABLE: Determines if we use dropdown or custom month/date inputs
-    const [isMilestoneTrue, setIsMilestoneTrue] = useState(false) // Renamed for clarity: isMonthlyPaymentMode
-    // --- NEW STATE FOR MONTH and DATE ---
+    // Monthly Payment Mode States
+    const [isMilestoneTrue, setIsMilestoneTrue] = useState(false) 
     const [enteredMonth, setEnteredMonth] = useState('');
-    const [selectedMilestoneDate, setSelectedMilestoneDate] = useState('');
+    const [selectedMilestoneDate, setSelectedMilestoneDate] = useState(''); 
 
-    // Get URL search params and state
+    // Get URL search params and state (kept for context)
     const searchParams = new URLSearchParams(location.search);
     const pageFromUrl = Number(searchParams.get("page")) || 1;
     const pageFromState = location.state?.returnPage;
@@ -76,61 +88,65 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         return pageFromState || pageFromUrl || 1;
     });
 
-    // BINDING THE MILESTONE DETAILS (For initial check/status, not directly for split)
+    // Fetches initial milestone status
     const fetchMilestones = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            // Assuming this endpoint fetches existing milestones and determines the mode
-            const response = await axios.get(`${ENDPOINTS.MILESTONE_BY_LEAD}/${leadId}`, {
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-            });
-            const milestone = response.data.data;
-            // The logic here seems to just set the mode based on whether milestones exist
-            milestone.length > 0 ? setIsMilestoneTrue(true) : setIsMilestoneTrue(false);
-        } catch (error) {
-            console.error('Error fetching milestones:', error);
-            setIsMilestoneTrue(false)
-        }
+         try {
+             const token = localStorage.getItem('token');
+             const response = await axios.get(`${ENDPOINTS.MILESTONE_BY_LEAD}/${leadId}`, {
+                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+             });
+             const milestone=response.data.data;
+             milestone.length>0?setIsMilestoneTrue(true):setIsMilestoneTrue(false);
+         } catch (error) {
+             console.error('Error fetching milestones:', error);
+             setIsMilestoneTrue(false)        
+         }
     };
     
-    // CALLING the fetchMilestones function
     useEffect(() => { fetchMilestones() }, [])
 
-
-    // --- CORE LOGIC: Auto-Split Calculation on Phase or Total Amount Change ---
+    // --- FIXED CORE LOGIC: Auto-Split Calculation and Date Calculation ---
     useEffect(() => {
         const newPhases = parseInt(paymentPhases);
 
-        // Only run the auto-split if phases > 0 AND it hasn't been initialized yet (or was explicitly reset)
+
         if (newPhases > 0 && !isInitialized) {
             const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
             
-            // Apply date only if in month mode AND a date has been selected
-            const dateToUse = isMilestoneTrue && selectedMilestoneDate ? selectedMilestoneDate : '';
-            
-            const newMilestones = splitAmounts.map((amount, index) => 
-                initialMilestoneRow(index + 1, amount, dateToUse)
-            );
+            const newMilestones = splitAmounts.map((amount, index) => {
+                let milestoneDate = '';
+                
+                if (isMilestoneTrue && selectedMilestoneDate) {
+                    const startDate = new Date(selectedMilestoneDate);
+                    const calculatedDate = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth() + index, startDate.getDate()));
+                    milestoneDate = formatDateForInput(calculatedDate);
+                } else if (!isMilestoneTrue) {
+                    milestoneDate = '';
+                }
+
+                return initialMilestoneRow(index + 1, amount, milestoneDate);
+            });
             
             setMilestones(newMilestones);
             setIsInitialized(true); 
+
         } else if (newPhases === 0) {
             setMilestones([]);
             setIsInitialized(false);
         }
-    }, [paymentPhases, totalAmount, isInitialized, isMilestoneTrue, selectedMilestoneDate]); 
-    // isMilestoneTrue and selectedMilestoneDate are kept in deps to ensure the date is applied on initial split in month mode
 
+    }, [paymentPhases, totalAmount, isInitialized, isMilestoneTrue, selectedMilestoneDate]); 
 
     const handlePhaseSelect = (e) => {
         const value = parseInt(e.target.value);
         setPaymentPhases(value);
-        setIsInitialized(false); // Forces the useEffect to run and recalculate the split
-        setEnteredMonth(''); // Clear month if switching back to dropdown
-        setSelectedMilestoneDate(''); // Clear date if switching back to dropdown
+        setIsInitialized(false); 
+        setEnteredMonth(''); 
+        setSelectedMilestoneDate(''); 
     };
+    
+    useEffect(() => { fetchMilestones() }, [])
 
-    // Handler for manual month input change (when isMilestoneTrue is active)
     const handleMonthInputChange = (e) => {
         const val = e.target.value;
         const numVal = parseInt(val) || 0;
@@ -138,6 +154,12 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         setPaymentPhases(numVal);
         setIsInitialized(false); // Forces the useEffect to run and recalculate the split
     };
+
+    // Handler for start date change (when isMilestoneTrue is active)
+    const handleStartDateChange = (e) => {
+        setSelectedMilestoneDate(e.target.value);
+        setIsInitialized(false); 
+    }
 
     const handleMilestoneChange = (id, name, value) => {
         setMilestones(prevMilestones => {
@@ -150,8 +172,21 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     const handleAddMilestone = () => {
         setMilestones(prevMilestones => {
             const nextSNo = prevMilestones.length > 0 ? Math.max(...prevMilestones.map(m => m.sNo)) + 1 : 1;
-            const dateToUse = isMilestoneTrue && selectedMilestoneDate ? selectedMilestoneDate : '';
-            const newRow = initialMilestoneRow(nextSNo, 0, dateToUse); 
+            
+            let newDate = '';
+            // If in monthly mode, calculate the next date in sequence
+            if (isMilestoneTrue && prevMilestones.length > 0) {
+                // Take the date of the last existing milestone
+                const lastMilestoneDate = new Date(prevMilestones[prevMilestones.length - 1].milestoneDate);
+                // Add one month to the last date
+                const nextDate = new Date(Date.UTC(lastMilestoneDate.getFullYear(), lastMilestoneDate.getMonth() + 1, lastMilestoneDate.getDate()));
+                newDate = formatDateForInput(nextDate);
+            } else if (isMilestoneTrue && selectedMilestoneDate) {
+                 // If no milestones exist but in monthly mode, use the selected start date
+                 newDate = selectedMilestoneDate;
+            }
+
+            const newRow = initialMilestoneRow(nextSNo, 0, newDate); 
             return [...prevMilestones, newRow];
         });
     };
@@ -159,7 +194,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     const handleDeleteMilestone = (id) => {
         setMilestones(prevMilestones => {
             const filtered = prevMilestones.filter(m => m.id !== id);
-            // Re-index the sNo after deletion
             return filtered.map((m, index) => ({
                 ...m,
                 sNo: index + 1 
@@ -178,8 +212,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         setDomainData(data);
     }, []);
 
-    // ... (handleSave and transformToPostSalesFormat remain the same) ...
-
     const handleSave = () => {
         const tolerance = 0.01;
         if (paymentPhases === 0) {
@@ -192,9 +224,9 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         }
         if (Math.abs(currentMilestoneSum - totalAmount) > tolerance) {
             alert(
-                `Error: Sum of milestone amounts ($${currentMilestoneSum.toFixed(
+                `Error: Sum of milestone amounts (${currencySymbol}${currentMilestoneSum.toFixed(
                     2
-                )}) must equal the Total Balance ($${totalAmount.toFixed(2)}). Please adjust.`
+                )}) must equal the Total Balance (${currencySymbol}${totalAmount.toFixed(2)}). Please adjust.`
             );
             return;
         }
@@ -254,15 +286,16 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
 
     const transformToPostSalesFormat = (data) => {
-        return {    
+        return {    
             ilead_id: parseInt(data.leadId, 10),
             proposalId: data.proposalId,
+           
             duration: parseInt(data.duration, 10),
             paymentPhases: String(data.paymentPhases),
             totalProjectAmount: data.totals?.subTotal || 0,
             paymentTermsAndConditions: data.termsAndConditions,
-            discountPercentageAmount:    data.totals?.discountPercentage || 0,
-            currencyId: data.currency === "INR" ? 2 : 2, // Example mapping; adjust as needed
+            discountPercentageAmount:    data.totals?.discountPercentage || 0,
+            currencyId: data.currency === "INR" ? 2 : 2, 
             postSalesServices: data.items.map((item) => ({
                 serviceId: item.serviceId,
                 subServiceId: item.subserviceIds?.[0] || null,
@@ -271,6 +304,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                 amount: item.amount,
             })),
             milestones: data.milestones.map((m) => ({
+                 paymentMode: data.paymentMethod,
+                mileStoneName:m.milestone,
                 expectedAmount: m.amount,
                 expectedMilestoneDate: m.milestoneDate,
             })),
@@ -347,22 +382,24 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
                             {isMilestoneTrue ? (
                                 <div className="space-y-2">
+                                    {/* Month Count Input */}
                                     <input
                                         type='number'
                                         id="phases"
                                         value={enteredMonth}
                                         min={1}
                                         placeholder="E.g., 3"
-                                        onChange={handleMonthInputChange} // Uses new handler to set phases and trigger split
+                                        onChange={handleMonthInputChange} 
                                         className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
                                     />
-                                    <label className="block text-sm font-medium text-gray-600 mb-1"> 
+                                    {/* Start Date Input */}
+                                    <label className="block text-sm font-medium text-gray-600 pt-2 mb-1"> 
                                         Start Date 
                                     </label>
                                     <input
                                         type='date'
                                         value={selectedMilestoneDate}
-                                        onChange={e => setSelectedMilestoneDate(e.target.value)}
+                                        onChange={handleStartDateChange}
                                         className="w-full border p-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 bg-white"
                                     />
                                 </div>
@@ -387,10 +424,10 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 htmlFor="duration"
                                 className="block text-sm font-medium text-gray-600 mb-1"
                             >
-                                Duration (in Months/Days)
+                                 Project Duration (in Months)
                             </label>
                             <input
-                                type="text" // Changed to text to allow '12 months' instead of just number
+                                type="text" 
                                 id="duration"
                                 value={duration}
                                 onChange={(e) => setDuration(e.target.value)}
@@ -414,7 +451,8 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                                 <thead className="bg-blue-100">
                                     <tr>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase w-10">S.No.</th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">Milestone Name</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[150px]">
+                                            Milestone Name</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[120px]">Milestone Date</th>
                                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase min-w-[100px]">Amount ({currencySymbol})</th>
                                         <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 uppercase w-10">Action</th>

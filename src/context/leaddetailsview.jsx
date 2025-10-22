@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect , useRef  } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -994,24 +995,28 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
         {/* Tab Navigation and Action Buttons */}
         <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-            {["Activity", "Task", "Comments", "Reminders"]
-            .filter((label) => !(label === "Reminders" && companyInfo?.company_id === XCODEFIX_COMPANY_ID)) 
-            // .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15)) // XCODEFIX_COMPANY_ID
-            .map((label, idx) => (
-              <button
-                key={label}
-                onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx
-                    ? "bg-blue-100 shadow text-blue-900"
-                    : "text-gray-500 hover:bg-white hover:text-blue-900"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-        </div>
+  <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+    {[
+      companyInfo?.company_id === XCODEFIX_COMPANY_ID ? "Follow-up" : "Task",
+      "Comments",
+      "Activity",
+      "Reminders"
+    ]
+      .filter((label) => !(label === "Reminders" && companyInfo?.company_id === XCODEFIX_COMPANY_ID))
+      .map((label, idx) => (
+        <button
+          key={label}
+          onClick={() => handleTabChange(null, idx)}
+          className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+            tabIndex === idx
+              ? "bg-blue-100 shadow text-blue-900"
+              : "text-gray-500 hover:bg-white hover:text-blue-900"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+  </div>
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
             {/* Project Value Display - Only shown when there's a project value */}
@@ -1102,15 +1107,15 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
         {/* Tab Content */}
         <Box className="mt-4 relative z-0 w-full">
-          {tabIndex === 0 && (
+          {tabIndex === 3 && (
             <LeadTimeline
               leadId={leadId}
               isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
             />
           )}
-          {tabIndex === 1 && <Tasks leadId={leadId} />}
-          {tabIndex === 2 && <Comments leadId={leadId} />}
-          {tabIndex === 3 && <RemainderPage leadId={leadId} />}
+          {tabIndex === 0 && <Tasks leadId={leadId} />}
+          {tabIndex === 1 && <Comments leadId={leadId} />}
+          {tabIndex === 2 && <RemainderPage leadId={leadId} />}
         </Box>
       </div>
 

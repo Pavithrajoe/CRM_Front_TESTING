@@ -295,89 +295,91 @@ const Tasks = () => {
   };
 
   const handleFormSubmission = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (formData.ctitle.trim().length < 3) {
-      showPopup("Warning", "Title must be at least 3 characters long.", "warning");
-      return;
-    }
+  if (formData.ctitle.trim().length < 3) {
+    showPopup("Warning", "Title must be at least 3 characters long.", "warning");
+    return;
+  }
 
-    if (formData.ctask_content.trim().length < 5) {
-      showPopup("Warning", "Description must be at least 5 characters long.", "warning");
-      return;
-    }
-    
-    if (editingTask && !canEditTask(editingTask)) {
-        showPopup("Error", "This task can no longer be edited.", "error");
-        setEditingTask(null); 
-        setShowForm(false);
-        return;
-    }
+  if (formData.ctask_content.trim().length < 5) {
+    showPopup("Warning", "Description must be at least 5 characters long.", "warning");
+    return;
+  }
 
-    const payload = {
-      ...formData,
-      ilead_id: Number(leadId),
-      task_date: formData.task_date.toISOString(),
-      inotify_to: formData.inotify_to,
-    };
+  if (editingTask && !canEditTask(editingTask)) {
+    showPopup("Error", "This task can no longer be edited.", "error");
+    setEditingTask(null);
+    setShowForm(false);
+    return;
+  }
 
-    setSaving(true);
-
-    try {
-      let response;
-
-      if (editingTask) {
-        response = await axios.put(
-          `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
-          {
-            ...payload,
-            iupdated_by: userId,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-      } else {
-        response = await axios.post(
-          ENDPOINTS.TASK,
-          {
-            ...payload,
-            icreated_by: userId
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-          }
-        );
-      }
-
-      if (response.data.success || response.data.message === "Task Added Successfully") {
-        if (mic && isListening) {
-          mic.stop();
-        }
-        setIsListening(false);
-
-        showPopup("Success", "🎉 Task saved successfully!", "success");
-        
-        setShowForm(false);
-        setEditingTask(null);
-        await fetchTasks();
-      } else {
-        showPopup("Error", response.data.message || "Failed to save task.", "error");
-      }
-    } catch (error) {
-      showPopup(
-        "Error",
-        error.response?.data?.message || error.message || "Failed to save task.",
-        "error"
-      );
-      console.error("Task submission error:", error);
-    } finally {
-      setSaving(false);
-    }
+  const payload = {
+    ...formData,
+    ilead_id: Number(leadId),
+    task_date: formData.task_date.toISOString(),
+    inotify_to: formData.inotify_to,
   };
+
+  setSaving(true);
+
+  try {
+    let response;
+
+    if (editingTask) {
+      response = await axios.put(
+        `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
+        { ...payload, iupdated_by: userId },
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      response = await axios.post(
+        ENDPOINTS.TASK,
+        { ...payload, icreated_by: userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+
+    if (response.data.success || response.data.message === "Task Added Successfully") {
+      if (mic && isListening) mic.stop();
+      setIsListening(false);
+
+      showPopup("Success", "🎉 Task saved successfully!", "success");
+
+      // Auto refresh tasks and reset form immediately
+      await fetchTasks();
+
+      // Clear form and hide modal/form view
+      setFormData({
+        ctitle: "",
+        ctask_content: "",
+        iassigned_to: userId,
+        inotify_to: null,
+        task_date: new Date(),
+      });
+      setShowForm(false);
+      setEditingTask(null);
+      setAssignToMe(true);
+      setCurrentPage(1); // Reset pagination to first page
+    } else {
+      showPopup("Error", response.data.message || "Failed to save task.", "error");
+    }
+  } catch (error) {
+    showPopup(
+      "Error",
+      error.response?.data?.message || error.message || "Failed to save task.",
+      "error"
+    );
+    console.error("Task submission error:", error);
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;

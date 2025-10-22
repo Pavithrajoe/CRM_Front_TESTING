@@ -1003,6 +1003,8 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
       "Reminders"
     ]
       .filter((label) => !(label === "Reminders" && companyInfo?.company_id === XCODEFIX_COMPANY_ID))
+            .filter((label) => !(label === "Comments" && companyInfo?.company_id === XCODEFIX_COMPANY_ID))
+
       .map((label, idx) => (
         <button
           key={label}

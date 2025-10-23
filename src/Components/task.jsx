@@ -41,9 +41,7 @@ const Tasks = () => {
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
 
-  const COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
-  // console.log("Target COMPANY_ID from env:", COMPANY_ID);
-
+  const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW); // ENV is 15
   const [formData, setFormData] = useState({
     ctitle: "",
     ctask_content: "",
@@ -195,7 +193,7 @@ const Tasks = () => {
     };
   }, [isListening]);
 
-  // Close form when clicking outside logic
+  // Close form when clicking outside logic (for modal)
   const handleClickOutside = useCallback((event) => {
     if (!showForm) return;
 
@@ -214,7 +212,7 @@ const Tasks = () => {
     }
   }, [showForm, setEditingTask, setIsListening]);
 
-  // Attach listener
+  // Attach outside click listener for modal
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -296,90 +294,93 @@ const Tasks = () => {
     setFormData(prev => ({ ...prev, task_date: date }));
   };
 
-  const handleFormSubmission = async (e) => {
-    e.preventDefault();
+ const handleFormSubmission = async (e) => {
+  e.preventDefault();
 
-    if (formData.ctitle.trim().length < 3) {
-      showPopup("Warning", "Title must be at least 3 characters long.", "warning");
-      return;
-    }
+  if (formData.ctitle.trim().length < 3) {
+    showPopup("Warning", "Title must be at least 3 characters long.", "warning");
+    return;
+  }
 
-    if (formData.ctask_content.trim().length < 5) {
-      showPopup("Warning", "Description must be at least 5 characters long.", "warning");
-      return;
-    }
-    
-    if (editingTask && !canEditTask(editingTask)) {
-        showPopup("Error", "This task can no longer be edited.", "error");
-        setEditingTask(null); 
-        setShowForm(false);
-        return;
-    }
+  if (formData.ctask_content.trim().length < 5) {
+    showPopup("Warning", "Description must be at least 5 characters long.", "warning");
+    return;
+  }
 
-    const payload = {
-      ...formData,
-      ilead_id: Number(leadId),
-      task_date: formData.task_date.toISOString(),
-      inotify_to: formData.inotify_to,
-    };
+  if (editingTask && !canEditTask(editingTask)) {
+    showPopup("Error", "This task can no longer be edited.", "error");
+    setEditingTask(null);
+    setShowForm(false);
+    return;
+  }
 
-    setSaving(true);
-
-    try {
-      let response;
-
-      if (editingTask) {
-        response = await axios.put(
-          `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
-          {
-            ...payload,
-            iupdated_by: userId,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-      } else {
-        response = await axios.post(
-          ENDPOINTS.TASK,
-          {
-            ...payload,
-            icreated_by: userId
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-          }
-        );
-      }
-
-      if (response.data.success || response.data.message === "Task Added Successfully") {
-        if (mic && isListening) {
-          mic.stop();
-        }
-        setIsListening(false);
-
-        showPopup("Success", "🎉 Task saved successfully!", "success");
-        
-        setShowForm(false);
-        setEditingTask(null);
-        await fetchTasks();
-      } else {
-        showPopup("Error", response.data.message || "Failed to save task.", "error");
-      }
-    } catch (error) {
-      showPopup(
-        "Error",
-        error.response?.data?.message || error.message || "Failed to save task.",
-        "error"
-      );
-      console.error("Task submission error:", error);
-    } finally {
-      setSaving(false);
-    }
+  const payload = {
+    ...formData,
+    ilead_id: Number(leadId),
+    task_date: formData.task_date.toISOString(),
+    inotify_to: formData.inotify_to,
   };
+
+  setSaving(true);
+
+  try {
+    let response;
+
+    if (editingTask) {
+      response = await axios.put(
+        `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
+        { ...payload, iupdated_by: userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      response = await axios.post(
+        ENDPOINTS.TASK,
+        { ...payload, icreated_by: userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+
+    if (response.data.success || response.data.message === "Task Added Successfully") {
+      if (mic && isListening) mic.stop();
+      setIsListening(false);
+
+      showPopup("Success", "🎉 Task saved successfully!", "success");
+
+      // Auto refresh tasks and reset form immediately
+      await fetchTasks();
+
+      // Clear form and hide modal/form view
+      setFormData({
+        ctitle: "",
+        ctask_content: "",
+        iassigned_to: userId,
+        inotify_to: null,
+        task_date: new Date(),
+      });
+      setShowForm(false);
+      setEditingTask(null);
+      setAssignToMe(true);
+      setCurrentPage(1); // Reset pagination to first page
+    } else {
+      showPopup("Error", response.data.message || "Failed to save task.", "error");
+    }
+  } catch (error) {
+    showPopup(
+      "Error",
+      error.response?.data?.message || error.message || "Failed to save task.",
+      "error"
+    );
+    console.error("Task submission error:", error);
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
@@ -467,342 +468,391 @@ const Tasks = () => {
     }
   }, [isSearchOpen]);
 
-  return (
-    <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
-      {/* Main Container - Responsive for 5 screen sizes */}
-      <div className="relative bg-white border rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-7xl mx-auto shadow-sm">
-        
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-3 sm:gap-4">
-          {/* Search Bar */}
-          <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto min-w-[200px]">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={`
-                transition-all duration-300 ease-in-out
-                bg-transparent outline-none text-sm font-medium
-                ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0 sm:w-full sm:px-4 sm:py-2 sm:opacity-100'}
-              `}
-            />
+  // Check if company is 15
+  const isSpecialCompany = Number(companyId) === COMPANY_ID;
+
+  // Render form (as modal or side panel)
+  const renderTaskForm = () => (
+    <div
+  ref={formRef}
+  className={`${
+    isSpecialCompany
+      ? 'bg-white rounded-2xl shadow-2xl max-h-[85vh] p-6'
+      : 'fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300'
+  }`}
+  style={isSpecialCompany ? {} : { zIndex: 1001 }}
+  onClick={isSpecialCompany ? undefined : (e) => e.stopPropagation()}
+>
+  <div className="flex justify-between items-center mb-3 sm:mb-4">
+    <h3 className="font-medium text-lg sm:text-xl text-gray-800">
+      {isSpecialCompany
+        ? editingTask
+          ? "Edit Follow-up"
+          : "Add Follow-up"
+        : editingTask
+          ? "Edit Task"
+          : "Add Task"}
+    </h3>
+    {!isSpecialCompany && (
+      <button
+        onClick={() => {
+          setShowForm(false);
+          setIsListening(false);
+          setEditingTask(null);
+        }}
+        className="text-xl sm:text-2xl text-gray-500 hover:text-red-500 p-1"
+      >
+        ×
+      </button>
+    )}
+  </div>
+      <form onSubmit={handleFormSubmission} className="flex flex-col space-y-4">
+        <input
+          type="text"
+          name="ctitle"
+          onChange={handleChange}
+          value={formData.ctitle}
+          className="w-full border rounded-lg sm:rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
+          placeholder={ !isSpecialCompany ? "Task Title *"  : "Follow-up Title "  }
+          required
+        />
+        <textarea
+  name="ctask_content"
+  onChange={handleChange}
+  value={formData.ctask_content}
+  className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
+  placeholder={ !isSpecialCompany ?  "Task Description *" : "Follow-up Description * " }
+  required
+/>
+
+        <div className="flex justify-between items-center">
+          {mic && (
             <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors sm:hidden
-                ${isSearchOpen ? 'text-blue-900' : ''}
-              `}
-              aria-label="Toggle search bar"
+              type="button"
+              onClick={() => setIsListening((prev) => !prev)}
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                isListening
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-gray-300 text-black"
+              }`}
             >
-              <Search size={18} />
+              {isListening ? "🎙️ Stop" : "🎤 Start Voice Input"}
             </button>
-          </div>
-          
-          {/* New Task Button */}
-          <button
-            onClick={handleNewTaskClick}
-            className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center"
-          >
-            + New Task
-          </button>
+          )}
         </div>
+        {/* Assign to me checkbox */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="assignToMe"
+              checked={assignToMe}
+              onChange={handleAssignToMeChange}
+              className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <label
+              htmlFor="assignToMe"
+              className="text-sm sm:text-base text-gray-700 cursor-pointer select-none"
+            >
+              Assign to me ({userName})
+            </label>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Assigned to <span className="text-red-600">*</span>
+            </label>
+            <select
+              name="iassigned_to"
+              value={formData.iassigned_to || ""}
+              onChange={handleChange}
+              className="mt-1 block w-full pl-3 p-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-xl"
+              required
+              disabled={loadingUsers || assignToMe}
+            >
+              <option value="">{loadingUsers ? "Loading users..." : "Select User"}</option>
+              {companyUsers.map((user) => (
+                <option key={user.iUser_id} value={user.iUser_id}>
+                  {user.cFull_name || user.cUser_name || `User ${user.iUser_id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Notify to
+            </label>
+            <select
+              name="inotify_to"
+              value={formData.inotify_to || ""}
+              onChange={handleChange}
+              className="mt-1 block w-full pl-3 p-3 pr-10 py-2 rounded-xl text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              disabled={loadingUsers}
+            >
+              <option value="">Optional</option>
+              {companyUsers.map((user) => (
+                <option key={user.iUser_id} value={user.iUser_id}>
+                  {user.cFull_name || user.cUser_name || `User ${user.iUser_id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Due Date <span className="text-red-600">*</span>
+          </label>
+          <div className="mt-2">
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateTimePicker
+                label="Task Date & Time"
+                value={formData.task_date}
+                format="dd/MM/yyyy hh:mm a"
+                onChange={handleDateChange}
+                viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock, seconds: renderTimeViewClock }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    fullWidth: true,
+                    InputProps: {
+                      style: { height: "40px", fontSize: "14px" }, 
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </div>
+        </div>
+        <button
+  type="submit"
+  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+  disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
+>
+  {saving ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 mr-3 text-white inline-block"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        ></path>
+      </svg>
+      Saving...
+    </>
+  ) : (
+    isSpecialCompany ? (
+      editingTask ? (
+        canEditTask(editingTask) ? "Update Follow-up" : "Edit Disabled"
+      ) : "Add Follow-up"
+    ) : (
+      editingTask ? (
+        canEditTask(editingTask) ? "Update Task" : "Edit Disabled"
+      ) : "Add Task"
+    )
+  )}
+</button>
+      </form>
+    </div>
+  );
 
-        {/* Tasks Container with Scroll */}
-        <div 
-          ref={tasksContainerRef}
-          className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400"
-        >
-          {loadingTasks ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              <p className="mt-2 text-gray-500 text-sm sm:text-base">Loading tasks...</p>
-            </div>
-          ) : filteredTasks.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm sm:text-base py-8">
-              {searchQuery ? "No matching tasks found." : "No tasks created yet."}
-            </p>
-          ) : (
-            currentTasks.map((task) => {
-              const canEdit = canEditTask(task);
-              const canDelete = canDeleteTask(task);
+  // Render task list component (chat style)
+  const renderTaskHistory = () => (
+    <div
+      ref={tasksContainerRef}
+      className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 flex-1"
+    >
+      {loadingTasks ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-2 text-gray-500 text-sm sm:text-base">Loading tasks...</p>
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <p className="text-center text-gray-400 text-sm sm:text-base py-8">
+          {searchQuery ? "No matching tasks found." : "No tasks created yet."}
+        </p>
+      ) : (
+        currentTasks.map((task) => {
+          const canEdit = canEditTask(task);
+          const canDelete = canDeleteTask(task);
 
-              return (
-                <div
-                  key={task.itask_id}
-                  className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
-                      {task.ctitle}
-                    </span>
-                    {(canEdit || canDelete) && (
-                      <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-                        <button
-                          onClick={() => canEdit ? handleEditClick(task) : null}
-                          className={`
-                            text-gray-400 hover:text-blue-500 transition-colors duration-200
-                            ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-                          `}
-                          title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-                          disabled={!canEdit}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        {canDelete && ( 
-                          <button
-                            onClick={() => handleDeleteTask(task.itask_id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-                            title="Delete task"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
+          return (
+            <div
+              key={task.itask_id}
+              className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative"
+            >
+              <div className="flex justify-between items-start gap-2">
+                <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
+                  {task.ctitle}
+                </span>
+                {(canEdit || canDelete) && (
+                  <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+                    <button
+                      onClick={() => canEdit ? handleEditClick(task) : null}
+                      className={`
+                        text-gray-400 hover:text-blue-500 transition-colors duration-200
+                        ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
+                      `}
+                      title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
+                      disabled={!canEdit}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    {canDelete && ( 
+                      <button
+                        onClick={() => handleDeleteTask(task.itask_id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                        title="Delete task"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     )}
                   </div>
-                  
-                  <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
-                    {task.ctask_content}
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
-                    <p className="break-words">
-                      <span className="font-medium text-gray-700">Assigned to:</span>{" "}
-                      {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
-                    </p>
-                    <p className="break-words">
-                      <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-                      {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
-                    </p>
-                  </div>
-                  
-                  <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
-                    Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
-                  </p>
-                  
-                  <p className="text-xs text-gray-900 mt-1 italic break-words">
-                    {task.dmodified_dt
-                      ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
-                      : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
-                  </p>
-                </div>
-              );
-            })
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-1 sm:gap-2 mt-4 sm:mt-6 flex-wrap">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                    currentPage === i + 1
-                      ? "bg-indigo-600 text-white shadow"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+                )}
+              </div>
+              
+              <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
+                {task.ctask_content}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
+                <p className="break-words">
+                  <span className="font-medium text-gray-700">Assigned to:</span>{" "}
+                  {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+                </p>
+                <p className="break-words">
+                  <span className="font-semibold text-gray-700">Notified to:</span>{" "}
+                  {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
+                </p>
+              </div>
+              
+              <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
+                Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
+              </p>
+              
+              <p className="text-xs text-gray-900 mt-1 italic break-words">
+                {task.dmodified_dt
+                  ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
+                  : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Modal Form */}
-        {showForm && (
-          <>
-            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleClickOutside}></div>
-            <div
-              ref={formRef}
-              className="fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300"
-              // className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300"
-              onClick={(e) => e.stopPropagation()}
+          );
+        })
+      )}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-1 sm:gap-2 mt-4 sm:mt-6 flex-wrap">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                currentPage === i + 1
+                  ? "bg-indigo-600 text-white shadow"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
             >
-              <div className="flex justify-between items-center mb-3 sm:mb-4 p-4 sm:p-6 border-b sticky top-0 bg-white z-10">
-                <h3 className="font-medium text-lg sm:text-xl text-gray-800">
-                  {editingTask ? "Edit Task" : "Add Task"}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowForm(false);
-                    setIsListening(false);
-                    setEditingTask(null); 
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
+      <div className={`${isSpecialCompany ? "grid grid-cols-1 md:grid-cols-2 gap-6 shadow-none bg-transparent border-0" : "relative bg-white border rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-7xl mx-auto shadow-sm"}`}>
+        {isSpecialCompany ? (
+          <>
+            {/* Left: Chat/History */}
+            <div className="col-span-1 flex flex-col">
+              {/* Search Bar */}
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search follow-up..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
                   }}
-                  className="text-xl sm:text-2xl text-gray-500 hover:text-red-500 p-1"
+                  className="transition-all duration-300 ease-in-out bg-white border border-gray-200 outline-none text-sm font-medium rounded-full w-full px-4 py-2"
+                />
+              </div>
+              {/* Task history */}
+              {renderTaskHistory()}
+            </div>
+            {/* Right: Form always visible */}
+            <div className="col-span-1 flex flex-col">{renderTaskForm()}</div>
+          </>
+        ) : (
+          <>
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row justify-between items-center px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-3 sm:gap-4">
+              {/* Search Bar */}
+              <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto min-w-[200px]">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`
+                    transition-all duration-300 ease-in-out
+                    bg-transparent outline-none text-sm font-medium
+                    ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0 sm:w-full sm:px-4 sm:py-2 sm:opacity-100'}
+                  `}
+                />
+                <button
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors sm:hidden
+                    ${isSearchOpen ? 'text-blue-900' : ''}
+                  `}
+                  aria-label="Toggle search bar"
                 >
-                  ×
+                  <Search size={18} />
                 </button>
               </div>
-
-              <form onSubmit={handleFormSubmission} className="flex flex-col space-y-4 p-4 sm:p-6">
-                <input
-                  type="text"
-                  name="ctitle"
-                  onChange={handleChange}
-                  value={formData.ctitle}
-                  className="w-full border rounded-lg sm:rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-                  placeholder="Task Title *"
-                  required
-                />
-
-                <textarea
-                  name="ctask_content"
-                  onChange={handleChange}
-                  value={formData.ctask_content}
-                  className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-                  placeholder="Task Description *"
-                  required
-                />
-
-                <div className="flex justify-between items-center">
-                  {mic && (
-                    <button
-                      type="button"
-                      onClick={() => setIsListening((prev) => !prev)}
-                      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                        isListening
-                          ? "bg-red-500 text-white animate-pulse"
-                          : "bg-gray-300 text-black"
-                      }`}
-                    >
-                      {isListening ? "🎙️ Stop" : "🎤 Start Voice Input"}
-                    </button>
-                  )}
-                </div>
-
-                {/* Assign to me checkbox */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="assignToMe"
-                      checked={assignToMe}
-                      onChange={handleAssignToMeChange}
-                      className="form-checkbox h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded focus:ring-blue-500"
-                    />
-                    <label
-                      htmlFor="assignToMe"
-                      className="text-sm sm:text-base text-gray-700 cursor-pointer select-none"
-                    >
-                      Assign to me ({userName})
-                    </label>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Assigned to <span className="text-red-600">*</span>
-                    </label>
-                    <select
-                      name="iassigned_to"
-                      value={formData.iassigned_to || ""}
-                      onChange={handleChange}
-                      className="mt-1 block w-full pl-3 p-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-xl"
-                      required
-                      disabled={loadingUsers || assignToMe}
-                    >
-                      <option value="">{loadingUsers ? "Loading users..." : "Select User"}</option>
-                      {companyUsers.map((user) => (
-                        <option key={user.iUser_id} value={user.iUser_id}>
-                          {user.cFull_name || user.cUser_name || `User ${user.iUser_id}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Notify to
-                    </label>
-                    <select
-                      name="inotify_to"
-                      value={formData.inotify_to || ""}
-                      onChange={handleChange}
-                      className="mt-1 block w-full pl-3 p-3 pr-10 py-2 rounded-xl text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      disabled={loadingUsers}
-                    >
-                      <option value="">Optional</option>
-                      {companyUsers.map((user) => (
-                        <option key={user.iUser_id} value={user.iUser_id}>
-                          {user.cFull_name || user.cUser_name || `User ${user.iUser_id}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Due Date <span className="text-red-600">*</span>
-                  </label>
-                  <div className="mt-2">
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DateTimePicker
-                        label="Task Date & Time"
-                        value={formData.task_date}
-                        format="dd/MM/yyyy hh:mm a"
-                        onChange={handleDateChange}
-                        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock, seconds: renderTimeViewClock }}
-                        slotProps={{
-                          textField: {
-                            size: "small",
-                            fullWidth: true,
-                            InputProps: {
-                              style: { height: "40px", fontSize: "14px" }, 
-                            },
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
-                >
-                  {saving ? (
-                    <>
-                      <svg 
-                        className="animate-spin h-5 w-5 mr-3 text-white inline-block" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill="none" 
-                        viewBox="0 0 24 24"
-                      >
-                        <circle 
-                          className="opacity-25" 
-                          cx="12" 
-                          cy="12" 
-                          r="10" 
-                          stroke="currentColor" 
-                          strokeWidth="4"
-                        ></circle>
-                        <path 
-                          className="opacity-75" 
-                          fill="currentColor" 
-                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                        ></path>
-                      </svg>
-                      Saving...
-                    </>
-                  ) : (
-                    editingTask ? (canEditTask(editingTask) ? "Update Task" : "Edit Disabled") : "Add Task"
-                  )}
-                </button>
-              </form> 
+              
+              {/* New Task Button */}
+              <button
+                onClick={handleNewTaskClick}
+                className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center"
+              >
+              { !isSpecialCompany ? " + New Task " : "+ New Follow-up "}
+              </button>
             </div>
+            {/* Tasks Container with Scroll (history) */}
+            {renderTaskHistory()}
+            {/* Modal Form */}
+            {showForm && (
+              <>
+                <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleClickOutside}></div>
+                {renderTaskForm()}
+              </>
+            )}
           </>
         )}
       </div>

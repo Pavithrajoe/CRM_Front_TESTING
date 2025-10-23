@@ -730,30 +730,32 @@ const MilestoneStatusBar = ({ leadId }) => {
                 />
 
                 {/* DateTime Picker */}
-                <DateTimePicker
-                  label="Actual Date & Time *"
-                  value={formData.actualMilestoneDate}
-                  onChange={newValue =>
-                    setFormData(prev => ({ ...prev, actualMilestoneDate: newValue }))
-                  }
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      sx: { mt: 2 },
-                      error: !!formErrors.actualMilestoneDate,
-                      helperText: formErrors.actualMilestoneDate,
-                      InputLabelProps: { shrink: true }
-                    },
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
+<DateTimePicker
+    label="Actual Date & Time *"
+    value={formData.actualMilestoneDate}
+    onChange={(newValue) =>
+      setFormData((prev) => ({ ...prev, actualMilestoneDate: newValue }))
+    }
+    // 👇 The format needs to be changed here
+    inputFormat="DD/MM/YYYY hh:mm a" 
+    slotProps={{
+      textField: {
+        fullWidth: true,
+        sx: { mt: 2 },
+        // 👇 The placeholder should also be updated to match the format
+        placeholder: 'DD/MM/YYYY hh:mm a', 
+        error: !!formErrors.actualMilestoneDate,
+        helperText: formErrors.actualMilestoneDate,
+        InputLabelProps: { shrink: true },
+      },
+      popper: timeSlotProps?.popper,
+      desktopPaper: timeSlotProps?.desktopPaper,
+    }}
+    desktopModeMediaQuery="@media (min-width: 0px)"
+/>
+
+
+
 
                 {/* Payment Mode Dropdown */}
                 <FormControl fullWidth size="small" sx={{ mt: 2 }}>

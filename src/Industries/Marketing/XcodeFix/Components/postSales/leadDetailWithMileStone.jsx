@@ -1383,26 +1383,32 @@ const LeadDetailView = () => {
           </div>
         )}
 
-        {/* for postsales form */}
-        {showPostSalesForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative">
-              <button
-                type="button"
-                onClick={() => setShowPostSalesForm(false)}
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-                title="Close Form"
-              >
-                ✕
-              </button>
+      {showPostSalesForm && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+    onClick={() => setShowPostSalesForm(false)} // Add this back
+  >
+    <div 
+      className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
+      onClick={(e) => e.stopPropagation()} // This prevents closing when clicking inside
+    >
+      <button
+        type="button"
+        onClick={() => setShowPostSalesForm(false)}
+        className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+        title="Close Form"
+      >
+        ✕
+      </button>
 
-              <PostSalesForm 
-                leadId={Number(leadId)} 
-                onBack={() => setShowPostSalesForm(false)}
-              /> 
-            </div>
-          </div>
-        )}
+      <PostSalesForm 
+        leadId={Number(leadId)} 
+        onBack={() => setShowPostSalesForm(false)}
+        onClose={() => setShowPostSalesForm(false)} // Make sure this is passed
+      /> 
+    </div>
+  </div>
+)}
 
         {/* Email Compose Dialog */}
         {isMailOpen && (

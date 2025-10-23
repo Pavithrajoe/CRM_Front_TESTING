@@ -38,6 +38,7 @@ import StatusBar from "./StatusBar";
 import LeadTimeline from "../Components/LeadTimeline";
 import ActionCard from "../Components/common/ActrionCard";
 import QuotationForm from "../Components/Quotation/QuotationForm";
+import MilestoneStatusBar from "../Industries/Marketing/XcodeFix/Components/postSales/mileStoneStatusBar";
 import { ENDPOINTS } from "../api/constraints";
 import { usePopup } from "../context/PopupContext";
 import { MdEmail, MdExpandMore, MdExpandLess } from "react-icons/md";
@@ -984,111 +985,136 @@ const renderTabContent = () => {
 
 return (
   <>
-  <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
-    {showConfetti && (
-      <Confetti
-        width={window.innerWidth}
-        height={window.innerHeight}
-        recycle={false}
-        numberOfPieces={500}
-      />
-    )}
-
-    {/* Left Column: Profile Card & Action Card */}
-    <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
-      <div className="sticky top-4 z-10 space-y-4">
-        <ProfileCard
-          leadId={leadId}
-          settingsData={profileSettings}
-          isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={500}
         />
-        {isLeadActive && <ActionCard leadId={leadId} />}
-      </div>
-    </div>
-
-    {/* Right Column: Status Bar, Tabs, and Content */}
-    <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
-      <StatusBar
-        leadId={leadId}
-        leadData={leadData}
-        isLost={isLost}
-        isWon={isWon || immediateWonStatus || leadData?.bisConverted === true}
-      />
-
-      {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
-        <Box className="mb-4">
-          <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
-            <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
-              Quotation Available!
-            </Typography>
-          </div>
-        </Box>
       )}
 
-      {/* Tab Navigation and Action Buttons */}
-     <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-  <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-    {getTabLabels().map((label, idx) => (
-      <button
-        key={label}
-        onClick={() => handleTabChange(null, idx)}
-        className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
-          tabIndex === idx
-            ? "bg-blue-100 shadow text-blue-900"
-            : "text-gray-500 hover:bg-white hover:text-blue-900"
-        }`}
-      >
-        {label}
-      </button>
-    ))}
-  </div>
+      {/* Left Column: Profile Card & Action Card */}
+      <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
+        <div className="sticky top-4 z-10 space-y-4">
+          <ProfileCard
+            leadId={leadId}
+            settingsData={profileSettings}
+            isReadOnly={
+              isLost ||
+              isWon ||
+              immediateWonStatus ||
+              leadData?.bisConverted === true
+            }
+          />
+          {isLeadActive && <ActionCard leadId={leadId} />}
+        </div>
+      </div>
 
-        <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-          {/* Project Value Display - Only shown when there's a project value */}
-          {showProjectValue && projectValueDisplay && (
-            <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
-              <FaCheck className="mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-base font-semibold">
-                Project Value: {projectValueDisplay}
-              </span>
-            </div>
+      {/* Right Column: Status Bar, Tabs, and Content */}
+      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+        {console.log("The post sales data are:", leadData?.postSalesMaster)}
+
+        {leadData?.postSalesMaster.length === 0 ? (
+          <StatusBar
+            leadId={leadId}
+            leadData={leadData}
+            isLost={isLost}
+            isWon={
+              isWon || immediateWonStatus || leadData?.bisConverted === true
+            }
+          />
+        ) : (
+          <MilestoneStatusBar
+            leadId={leadId}
+            leadData={leadData}
+            isLost={isLost}
+            isWon={
+              isWon || immediateWonStatus || leadData?.bisConverted === true
+            }
+          />
+        )}
+
+        {(isWon || immediateWonStatus || leadData?.bisConverted) &&
+          quotations.length > 0 && (
+            <Box className="mb-4">
+              <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
+                <Typography
+                  variant="h6"
+                  className="flex text-center ms-[30px] justify-center items-center text-green-600"
+                >
+                  Quotation Available!
+                </Typography>
+              </div>
+            </Box>
           )}
 
-          {/* View Quotations Button (only visible when Won and has quotations) */}
-          {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
-            <button
-              onClick={() => setShowQuotationsList(true)}
-              className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-            >
-              <FaEye className="mr-1" /> View Quotations
-            </button>
-          )}
-          
-          {/* Create Quotation Button (only visible when Won) */}
-          {showCreateQuotationButton && (
-            <>
-            <button
-              className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-              onClick={() => setShowQuotationForm(true)}
-            >
-              <FaPlus className="mr-1" /> Create Quotation
-            </button>
-
-            {/* Post Sales Button */}
-            {companyInfo?.company_id === XCODEFIX_COMPANY_ID && (
+        {/* Tab Navigation and Action Buttons */}
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+            {getTabLabels().map((label, idx) => (
               <button
-                type="button"
-                onClick={() => setShowPostSalesForm(true)}
-                className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                key={label}
+                onClick={() => handleTabChange(null, idx)}
+                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+                  tabIndex === idx
+                    ? "bg-blue-100 shadow text-blue-900"
+                    : "text-gray-500 hover:bg-white hover:text-blue-900"
+                }`}
               >
-                Post Sales
+                {label}
               </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+            {/* Project Value Display - Only shown when there's a project value */}
+            {showProjectValue && projectValueDisplay && (
+              <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+                <FaCheck className="mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm md:text-base font-semibold">
+                  Project Value: {projectValueDisplay}
+                </span>
+              </div>
             )}
-            </>
-          )}
-          
-          {showActionButtons && (
-            <>
+
+            {/* View Quotations Button (only visible when Won and has quotations) */}
+            {(isWon || immediateWonStatus || leadData?.bisConverted) &&
+              quotations.length > 0 && (
+                <button
+                  onClick={() => setShowQuotationsList(true)}
+                  className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                >
+                  <FaEye className="mr-1" /> View Quotations
+                </button>
+              )}
+
+            {/* Create Quotation Button (only visible when Won) */}
+            {showCreateQuotationButton && (
+              <>
+                <button
+                  className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                  onClick={() => setShowQuotationForm(true)}
+                >
+                  <FaPlus className="mr-1" /> Create Quotation
+                </button>
+
+                {/* Post Sales Button */}
+                {companyInfo?.company_id === XCODEFIX_COMPANY_ID && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPostSalesForm(true)}
+                    className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                  >
+                    Post Sales
+                  </button>
+                )}
+              </>
+            )}
+
+            {showActionButtons && (
+              <>
                 {userSettings.mail_access && (
                   <button
                     onClick={() => setIsMailOpen(true)}
@@ -1096,256 +1122,317 @@ return (
                     title="Email"
                   >
                     <div className="w-px h-5 bg-gray-600"></div>
-                    <img src="../../public/images/detailview/email.svg" className="hidden sm:block" size={16} alt="Email icon" />
+                    <img
+                      src="../../public/images/detailview/email.svg"
+                      className="hidden sm:block"
+                      size={16}
+                      alt="Email icon"
+                    />
                     <div className="w-px h-5 bg-gray-600"></div>
                   </button>
-                    )}
+                )}
 
-                  {!(leadData?.bisConverted === true) && (
-                    <button
-                      className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                      onClick={handleWonClick}
-                    >
-                      <FaPlus className="mr-1" /> Won
-                    </button>
-                  )}
-
+                {!(leadData?.bisConverted === true) && (
                   <button
-                    className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
-                    onClick={handleLostClick}
+                    className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    onClick={handleWonClick}
                   >
-                    Lost
+                    <FaPlus className="mr-1" /> Won
                   </button>
-            </>
-          )}
+                )}
+
+                <button
+                  className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
+                  onClick={handleLostClick}
+                >
+                  Lost
+                </button>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Tab Content */}
+        <Box className="mt-4 relative z-0 w-full">{renderTabContent()}</Box>
       </div>
 
-      {/* Tab Content */}
-      <Box className="mt-4 relative z-0 w-full">
-        {renderTabContent()}
-      </Box>
-    </div>
+      {/* Quotation Form Dialog */}
+      <QuotationForm
+        open={showQuotationForm}
+        onClose={() => setShowQuotationForm(false)}
+        leadId={leadId}
+        leadData={leadData}
+        companyInfo={companyInfo}
+        quotations={quotations}
+        onQuotationCreated={handleQuotationCreated}
+      />
 
-    {/* Quotation Form Dialog */}
-    <QuotationForm
-      open={showQuotationForm}
-      onClose={() => setShowQuotationForm(false)}
-      leadId={leadId}
-      leadData={leadData}
-      companyInfo={companyInfo}
-      quotations={quotations}
-      onQuotationCreated={handleQuotationCreated}
-    />
+      {/* Remark Dialog */}
+      <Dialog
+        open={showRemarkDialog}
+        onClose={() => setShowRemarkDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Enter Remark for Won Status</DialogTitle>
+        <DialogContent>
+          <TextField
+            label={
+              <span>
+                Remark <span style={{ color: "red" }}>*</span>
+              </span>
+            }
+            fullWidth
+            multiline
+            rows={3}
+            value={remarkData.remark}
+            onChange={(e) =>
+              setRemarkData({ ...remarkData, remark: e.target.value })
+            }
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
 
-    {/* Remark Dialog */}
-    <Dialog 
-      open={showRemarkDialog} 
-      onClose={() => setShowRemarkDialog(false)}
-      fullWidth
-      maxWidth="sm"
-    >
-      
-      <DialogTitle>Enter Remark for Won Status</DialogTitle>
-      <DialogContent>
-        <TextField
-          label={
-            <span>
-              Remark <span style={{ color: 'red' }}>*</span>
-            </span>
-          }
-          fullWidth
-          multiline
-          rows={3}
-          value={remarkData.remark}
-          onChange={e => setRemarkData({ ...remarkData, remark: e.target.value })}
-          sx={{ mt: 2 }}
-          InputLabelProps={{ shrink: true }}
-        />
+          <Autocomplete
+            options={currencies}
+            getOptionLabel={(option) =>
+              `${option.country_name} - ${option.symbol}`
+            }
+            value={
+              currencies.find(
+                (c) => c.icurrency_id === remarkData.currencyId
+              ) || null
+            }
+            onChange={(e, newValue) =>
+              setRemarkData((prev) => ({
+                ...prev,
+                currencyId: newValue?.icurrency_id || null,
+              }))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={
+                  <span>
+                    Currency <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                sx={{ mt: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+            )}
+          />
 
-        <Autocomplete
-          options={currencies}
-          getOptionLabel={(option) => `${option.country_name} - ${option.symbol}`}
-          value={currencies.find(c => c.icurrency_id === remarkData.currencyId) || null}
-          onChange={(e, newValue) =>
-            setRemarkData(prev => ({ ...prev, currencyId: newValue?.icurrency_id || null }))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label={
-                <span>
-                  Currency <span style={{ color: 'red' }}>*</span>
-                </span>
-              }
-              sx={{ mt: 2 }}
-              InputLabelProps={{ shrink: true }}
-            />
-          )}
-        />
-        
-        <TextField
-          label="Project Value (optional)"
-          type="number"
-          fullWidth
-          value={remarkData.projectValue}
-          onChange={e => setRemarkData({...remarkData, projectValue: e.target.value})}
-          sx={{ mt: 2 }}
-          InputLabelProps={{ shrink: true }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-        <Button onClick={handleRemarkSubmit} variant="contained">
-          Submit
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <TextField
+            label="Project Value (optional)"
+            type="number"
+            fullWidth
+            value={remarkData.projectValue}
+            onChange={(e) =>
+              setRemarkData({ ...remarkData, projectValue: e.target.value })
+            }
+            sx={{ mt: 2 }}
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+          <Button onClick={handleRemarkSubmit} variant="contained">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* Quotations List Dialog with Detailed View */}
-    <Dialog 
-      open={showQuotationsList} 
-      onClose={() => setShowQuotationsList(false)} 
-      maxWidth="lg" 
-      fullWidth
-      scroll="paper"
-    >
-      <DialogTitle className="bg-blue-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center text-blue-700">
-            Quotation Details
+      {/* Quotations List Dialog with Detailed View */}
+      <Dialog
+        open={showQuotationsList}
+        onClose={() => setShowQuotationsList(false)}
+        maxWidth="lg"
+        fullWidth
+        scroll="paper"
+      >
+        <DialogTitle className="bg-blue-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-blue-700">
+              Quotation Details
+            </div>
+            <IconButton
+              onClick={() => setShowQuotationsList(false)}
+              size="small"
+            >
+              <MdExpandLess />
+            </IconButton>
           </div>
-          <IconButton onClick={() => setShowQuotationsList(false)} size="small">
-            <MdExpandLess />
-          </IconButton>
-        </div>
-      </DialogTitle>
-      <DialogContent dividers className="bg-gray-50">
-        {quotationsLoading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height={200}>
-            <CircularProgress />
-          </Box>
-        ) : quotations.length > 0 ? (
-          <List>
-            {quotations.map((quotation) => (
-              <Card key={quotation.iQuotation_id} className="mb-3">
-                <ListItem 
-                  className="bg-blue-50"
-                  secondaryAction={
-                    <div className="flex items-center">
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewPdf(quotation);
-                        }}
-                        title="View PDF"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDownloadPdf(quotation);
-                        }}
-                        title="Download PDF"
-                      >
-                        {/* <FaDownload /> */}
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => toggleQuotationExpand(quotation.iQuotation_id, e)}
-                      >
-                        {expandedQuotation === quotation.iQuotation_id ? <MdExpandLess /> : <MdExpandMore />}
-                      </IconButton>
-                    </div>
-                  }
-                >
-                  <ListItemText
-                    primary={
-                      <Typography variant="h6" className="text-blue-800">
-                        {quotation.cQuote_number}
-                      </Typography>
-                    }
-                    secondary={
-                      <div className="text-sm text-gray-600">
-                        Valid until: {formatDate(quotation.dValid_until)}
-                        {quotation.fTotal_amount && ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+        </DialogTitle>
+        <DialogContent dividers className="bg-gray-50">
+          {quotationsLoading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height={200}
+            >
+              <CircularProgress />
+            </Box>
+          ) : quotations.length > 0 ? (
+            <List>
+              {quotations.map((quotation) => (
+                <Card key={quotation.iQuotation_id} className="mb-3">
+                  <ListItem
+                    className="bg-blue-50"
+                    secondaryAction={
+                      <div className="flex items-center">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewPdf(quotation);
+                          }}
+                          title="View PDF"
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadPdf(quotation);
+                          }}
+                          title="Download PDF"
+                        >
+                          {/* <FaDownload /> */}
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={(e) =>
+                            toggleQuotationExpand(quotation.iQuotation_id, e)
+                          }
+                        >
+                          {expandedQuotation === quotation.iQuotation_id ? (
+                            <MdExpandLess />
+                          ) : (
+                            <MdExpandMore />
+                          )}
+                        </IconButton>
                       </div>
                     }
-                  />
-                </ListItem>
-                <Collapse in={expandedQuotation === quotation.iQuotation_id} timeout="auto" unmountOnExit>
-                  <CardContent>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" className="font-bold">Terms & Conditions</Typography>
-                        <Typography variant="body2" className="mt-2 text-gray-700">
-                          {quotation.cTerms || "No terms specified"}
+                  >
+                    <ListItemText
+                      primary={
+                        <Typography variant="h6" className="text-blue-800">
+                          {quotation.cQuote_number}
                         </Typography>
+                      }
+                      secondary={
+                        <div className="text-sm text-gray-600">
+                          Valid until: {formatDate(quotation.dValid_until)}
+                          {quotation.fTotal_amount &&
+                            ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+                        </div>
+                      }
+                    />
+                  </ListItem>
+                  <Collapse
+                    in={expandedQuotation === quotation.iQuotation_id}
+                    timeout="auto"
+                    unmountOnExit
+                  >
+                    <CardContent>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" className="font-bold">
+                            Terms & Conditions
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            className="mt-2 text-gray-700"
+                          >
+                            {quotation.cTerms || "No terms specified"}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" className="font-bold">
+                            Financial Details
+                          </Typography>
+                          <TableContainer component={Paper} className="mt-2">
+                            <Table size="small">
+                              <TableBody>
+                                <TableRow>
+                                  <TableCell className="font-bold">
+                                    Subtotal
+                                  </TableCell>
+                                  <TableCell>
+                                    {quotation.fSub_total?.toFixed(2) || "0.00"}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-bold">
+                                    Tax Amount
+                                  </TableCell>
+                                  <TableCell>
+                                    {quotation.fTax_amount?.toFixed(2) ||
+                                      "0.00"}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell className="font-bold">
+                                    Total Amount
+                                  </TableCell>
+                                  <TableCell className="font-bold">
+                                    {quotation.fTotal_amount?.toFixed(2) ||
+                                      "0.00"}
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2" className="font-bold">
+                            Additional Information
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            className="mt-2 text-gray-700"
+                          >
+                            {quotation.cNotes || "No additional notes"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" className="font-bold">Financial Details</Typography>
-                        <TableContainer component={Paper} className="mt-2">
-                          <Table size="small">
-                            <TableBody>
-                              <TableRow>
-                                <TableCell className="font-bold">Subtotal</TableCell>
-                                <TableCell>{quotation.fSub_total?.toFixed(2) || "0.00"}</TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="font-bold">Tax Amount</TableCell>
-                                <TableCell>{quotation.fTax_amount?.toFixed(2) || "0.00"}</TableCell>
-                              </TableRow>
-                              <TableRow>
-                                <TableCell className="font-bold">Total Amount</TableCell>
-                                <TableCell className="font-bold">{quotation.fTotal_amount?.toFixed(2) || "0.00"}</TableCell>
-                              </TableRow>
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" className="font-bold">Additional Information</Typography>
-                        <Typography variant="body2" className="mt-2 text-gray-700">
-                          {quotation.cNotes || "No additional notes"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Collapse>
-              </Card>
-            ))}
-          </List>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            No quotations found for this lead.
-          </div>
-        )}
-      </DialogContent>
-      <DialogActions className="bg-gray-100">
-        <Button onClick={() => setShowQuotationsList(false)} variant="outlined">
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+                    </CardContent>
+                  </Collapse>
+                </Card>
+              ))}
+            </List>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No quotations found for this lead.
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions className="bg-gray-100">
+          <Button
+            onClick={() => setShowQuotationsList(false)}
+            variant="outlined"
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-    {/* PDF Viewer Dialog */}
-    <PDFViewer
-      open={pdfViewerOpen}
-      onClose={() => setPdfViewerOpen(false)}
-      pdfUrl={currentPdfUrl}
-      quotationNumber={currentQuotation?.cQuote_number || ''}
-      onDownload={handleDownloadFromViewer}
-    />
+      {/* PDF Viewer Dialog */}
+      <PDFViewer
+        open={pdfViewerOpen}
+        onClose={() => setPdfViewerOpen(false)}
+        pdfUrl={currentPdfUrl}
+        quotationNumber={currentQuotation?.cQuote_number || ""}
+        onDownload={handleDownloadFromViewer}
+      />
 
       {/* Lead Lost Reason Dialog */}
       {leadLostDescriptionTrue && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
-        >
-          <div 
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div
             ref={lostReasonDialogRef}
             className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
           >
@@ -1354,8 +1441,12 @@ return (
             </h2>
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
-                <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
-                  Pick the reason for marking this lead as Lost<span className="text-red-500">*</span>
+                <label
+                  htmlFor="lostReason"
+                  className="block font-medium mb-1 text-sm sm:text-base"
+                >
+                  Pick the reason for marking this lead as Lost
+                  <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="lostReason"
@@ -1378,7 +1469,10 @@ return (
               </div>
 
               <div>
-                <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
+                <label
+                  htmlFor="lostDescription"
+                  className="block font-medium mb-1 text-sm sm:text-base"
+                >
                   Remarks
                 </label>
                 <textarea
@@ -1410,11 +1504,11 @@ return (
           </div>
         </div>
       )}
-      
+
       {/* for postsales form */}
       {showPostSalesForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-tranparent rounded-xl shadow-2xl p-6 w-full max-w-5xl relative">
+          <div className="bg-tranparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative">
             <button
               type="button"
               onClick={() => setShowPostSalesForm(false)}
@@ -1433,12 +1527,16 @@ return (
         </div>
       )}
 
-          {/* Email Compose Dialog */}
-          {isMailOpen && (
+      {/* Email Compose Dialog */}
+      {isMailOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll"
+          onClick={handleCloseMail}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll" onClick={handleCloseMail}
+            className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"
+            onClick={(e) => e.stopPropagation()}
           >
-          <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"   onClick={(e) => e.stopPropagation()} >
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -1475,7 +1573,9 @@ return (
               {/* Templates Section */}
               <div className="w-full md:w-1/2 lg:w-2/5 h-[600px] p-4 rounded-xl border border-gray-200 ">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-lg text-gray-800">Email Templates</h3>
+                  <h3 className="font-bold text-lg text-gray-800">
+                    Email Templates
+                  </h3>
                 </div>
 
                 {templatesLoading ? (
@@ -1513,9 +1613,13 @@ return (
                             <MdEmail className="text-blue-600" size={18} />
                           </div>
                           <div>
-                            <h4 className="font-semibold">{template.mailTitle}</h4>
+                            <h4 className="font-semibold">
+                              {template.mailTitle}
+                            </h4>
                             <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {template.mailBody.replace(/<[^>]*>/g, "").substring(0, 100)}
+                              {template.mailBody
+                                .replace(/<[^>]*>/g, "")
+                                .substring(0, 100)}
                             </p>
                           </div>
                         </div>
@@ -1525,117 +1629,125 @@ return (
                 )}
               </div>
 
-            {/* Email Form Section */}
-            <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  sendEmail();
-                }}
-                className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-xl p-5 rounded-2xl shadow-lg overflow-y-auto max-h-[50vh]"
-              >
-                <div className="grid grid-cols-1 gap-4">
-                  {/* To Field */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">To</label>
-                    <input
-                      type="email"
-                      className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                      placeholder="example@email.com"
-                      value={sentTo}
-                      onChange={(e) => setSentTo(e.target.value)}
-                      required
-                    />
+              {/* Email Form Section */}
+              <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendEmail();
+                  }}
+                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-xl p-5 rounded-2xl shadow-lg overflow-y-auto max-h-[50vh]"
+                >
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* To Field */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        To
+                      </label>
+                      <input
+                        type="email"
+                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                        placeholder="example@email.com"
+                        value={sentTo}
+                        onChange={(e) => setSentTo(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* CC Field */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        CC
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                        placeholder="cc@example.com (separate with commas)"
+                        value={ccRecipients}
+                        onChange={(e) => setCcRecipients(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Subject Field */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Subject
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                        value={mailSubject}
+                        onChange={(e) => setMailSubject(e.target.value)}
+                        placeholder="Write subject..."
+                        required
+                      />
+                    </div>
                   </div>
 
-                  {/* CC Field */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">CC</label>
-                    <input
-                      type="text"
-                      className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                      placeholder="cc@example.com (separate with commas)"
-                      value={ccRecipients}
-                      onChange={(e) => setCcRecipients(e.target.value)}
-                    />
+                  {/* Message Editor */}
+                  <div className="flex-grow flex flex-col min-h-[300px]">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Message
+                    </label>
+                    <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
+                      <ReactQuill
+                        theme="snow"
+                        value={mailContent}
+                        onChange={setMailContent}
+                        modules={{
+                          ...modules,
+                          toolbar: [
+                            [{ header: [1, 2, false] }],
+                            ["bold", "italic", "underline", "strike"],
+                            [{ color: [] }, { background: [] }],
+                            [{ list: "ordered" }, { list: "bullet" }],
+                            ["link"],
+                            ["clean"],
+                          ],
+                        }}
+                        formats={formats}
+                        className="min-h-[200px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[200px]"
+                        style={{ border: "white" }}
+                      />
+                    </div>
                   </div>
 
-                  {/* Subject Field */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Subject</label>
-                    <input
-                      type="text"
-                      className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                      value={mailSubject}
-                      onChange={(e) => setMailSubject(e.target.value)}
-                      placeholder="Write subject..."
-                      required
-                    />
+                  {/* Action Buttons (sticky) */}
+                  <div className="flex justify-end space-x-3 pt-2 sticky bottom-0 bg-white/70 backdrop-blur-md pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMailOpen(false)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                      disabled={isSendingMail}
+                    >
+                      {isSendingMail ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <MdEmail size={16} />
+                          <span>Send Email</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                </div>
-
-                {/* Message Editor */}
-                <div className="flex-grow flex flex-col min-h-[300px]">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Message</label>
-                  <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
-                    <ReactQuill
-                      theme="snow"
-                      value={mailContent}
-                      onChange={setMailContent}
-                      modules={{
-                        ...modules,
-                        toolbar: [
-                          [{ header: [1, 2, false] }],
-                          ["bold", "italic", "underline", "strike"],
-                          [{ color: [] }, { background: [] }],
-                          [{ list: "ordered" }, { list: "bullet" }],
-                          ["link"],
-                          ["clean"],
-                        ],
-                      }}
-                      formats={formats}
-                      className="min-h-[200px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[200px]"
-                      style={{ border: "white" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Action Buttons (sticky) */}
-                <div className="flex justify-end space-x-3 pt-2 sticky bottom-0 bg-white/70 backdrop-blur-md pb-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsMailOpen(false)}
-                    className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                    disabled={isSendingMail}
-                  >
-                    {isSendingMail ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Sending...</span>
-                      </>
-                    ) : (
-                      <>
-                        <MdEmail size={16} />
-                        <span>Send Email</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
     {showUserProfile && <UserProfile settingsData={settingsData} />}
-    </>
-  );
+  </>
+);
 };
 export default LeadDetailView;

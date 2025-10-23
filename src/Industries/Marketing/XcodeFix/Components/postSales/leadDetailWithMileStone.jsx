@@ -1462,7 +1462,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
                 {/* for postsales form */}
                 {showPostSalesForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-5xl relative">
+                    <div className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative">
                         <button
                             type="button"
                             onClick={() => setShowPostSalesForm(false)}

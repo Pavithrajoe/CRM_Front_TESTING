@@ -7,35 +7,50 @@ import axios from 'axios';
 
 const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   const toggleOption = (value) => {
     let newSelection;
     if (selectedValues.includes(value)) {
-      newSelection = selectedValues.filter(v => v !== value);
+      newSelection = selectedValues.filter((v) => v !== value);
     } else {
       newSelection = [...selectedValues, value];
     }
     onChange(newSelection);
   };
 
-  const displayLabel = selectedValues.length > 0
-    ? selectedValues.map(v => options.find(o => o.id === v)?.name).join(', ')
-    : 'Select Subservices...';
+  // Truncate each selected option to 20 chars for the button label
+  const displayLabel =
+    selectedValues.length > 0
+      ? selectedValues
+          .map((v) => {
+            const name = options.find((o) => o.id === v)?.name || "";
+            return name.length > 20 ? name.slice(0, 20) + "..." : name;
+          })
+          .join(", ")
+      : "Select Subservices...";
 
   return (
     <div className="relative w-full">
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full border p-1 rounded text-left text-sm flex justify-between items-center transition ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white focus:ring-blue-400 focus:border-blue-400'
-          }`}
+        className={`w-full border p-1 rounded text-left text-sm flex justify-between items-center transition ${
+          disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white focus:ring-blue-400 focus:border-blue-400"
+        }`}
         disabled={disabled}
       >
         <span className="truncate">{displayLabel}</span>
-        <FaChevronDown className={`ml-2 h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : 'rotate-0'}`} />
+        <FaChevronDown
+          className={`ml-2 h-3 w-3 transition-transform ${
+            isOpen ? "rotate-180" : "rotate-0"
+          }`}
+        />
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-[9999] mt-1 w-max min-w-full rounded-md bg-white shadow-2xl border border-gray-200 max-h-48 overflow-y-auto">
+        <div className="absolute z-[9999] mt-1 w-max min-w-full bg-white shadow-2xl border border-gray-200 max-h-48 overflow-y-auto">
           {options.length > 0 ? (
             options.map((option) => (
               <div
@@ -43,12 +58,20 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
                 onClick={() => toggleOption(option.id)}
                 className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-blue-100 text-sm"
               >
-                <span>{option.name}</span>
-                {selectedValues.includes(option.id) && <FaCheck className="text-blue-600" size={12} />}
+                <span className="truncate max-w-[150px] block">
+                  {option.name.length > 20
+                    ? option.name.slice(0, 20) + "..."
+                    : option.name}
+                </span>
+                {selectedValues.includes(option.id) && (
+                  <FaCheck className="text-blue-600" size={12} />
+                )}
               </div>
             ))
           ) : (
-            <div className="px-3 py-2 text-sm text-gray-500">No subservices available.</div>
+            <div className="px-3 py-2 text-sm text-gray-500">
+              No subservices available.
+            </div>
           )}
         </div>
       )}
@@ -428,305 +451,289 @@ const PostSalesForm = (passedData, isRecurring) => {
   }
 
 
-  return (
-    <div className="p-4 sm:p-6 bg-transparent min-h-full">
-      {viewMode === 'history' ? (
-        //  HISTORY VIEW
-        <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-base font-semibold text-blue-700 uppercase mb-4">
-              Service History
-            </h3>
+ return (
+  <div className="p-4 sm:p-6 bg-transparent min-h-full">
+    {viewMode === 'history' ? (
+      //  HISTORY VIEW
+      <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-blue-700 uppercase mb-4">
+            Service History
+          </h3>
+          <button
+            onClick={() => setViewMode('form')}
+            className="text-red-700 font-bold hover:text-red-900"
+          >
+            Back
+          </button>
+        </div>
+
+        {loadingHistory ? (
+          <p className="text-sm">Loading...</p>
+        ) : serviceHistory.length === 0 ? (
+          <p className="text-sm">No history available for this lead.</p>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-100 text-xs">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">S.No.</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Proposal ID</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Amount</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Payment phases</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Offer percentage</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 text-sm">
+              {serviceHistory.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-3 py-2 text-gray-900">{index + 1}</td>
+                  <td className="px-3 py-2 text-gray-900">{item.proposalId}</td>
+                  <td className="px-3 py-2 text-gray-900">{item.projectValue}</td>
+                  <td className="px-3 py-2 text-gray-900">{item.paymentPhases}</td>
+                  <td className="px-3 py-2 text-gray-900">{item.discount} %</td>
+                  <td className="px-3 py-2 space-x-2">
+                    <button
+                      className="text-blue-700 hover:text-blue-900 text-sm"
+                      onClick={async () => {
+                        setSelectedHistoryItem(item);
+                        setViewMode('view');
+                      }}
+                    >
+                      View
+                    </button>
+                  </td>
+                  <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}>
+                    {item.bactive ? 'Not Completed' : 'Completed'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    ) : viewMode === 'view' ? (
+      <ServiceHistoryView
+        historyData={selectedHistoryItem}
+        onBack={() => setViewMode('history')}
+        onEdit={() => mapHistoryToForm(selectedHistoryItem)}
+      />
+    ) : (
+      <form
+        onSubmit={handleNext}
+        className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto"
+      >
+        {/* Header & Service History Button */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-blue-700">
+            {isEditing ? 'Edit Service Details' : 'Step 1: Service Details'}
+          </h2>
+          <div className="flex gap-2 text-sm">
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentFormData(null);
+                  setIsEditing(false);
+                  setServices([initialServiceRow]);
+                  setProposalId('');
+                  setDiscountPercentage(0);
+                  setFinalClosedAmount(0);
+                  setDiscountType('percentage');
+                  setCurrency(masterCurrencies[0]?.currency_code || 'USD');
+                  setViewMode('form');
+                }}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md"
+              >
+                New Proposal
+              </button>
+            )}
             <button
-              onClick={() => setViewMode('form')}
-              className="text-red-600 font-bold hover:text-red-800"
+              type="button"
+              onClick={() => {
+                setViewMode('history');
+                fetchServiceHistory();
+              }}
+              className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md"
             >
-              Back
+              View Service History
             </button>
           </div>
-
-          {loadingHistory ? (
-            <p>Loading...</p>
-          ) : serviceHistory.length === 0 ? (
-            <p>No history available for this lead.</p>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">S.No.</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proposal ID</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment phases</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Offer percentage</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {serviceHistory.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-3 py-2 text-sm text-gray-900">{index + 1}</td>
-                    <td className="px-3 py-2 text-sm text-gray-900">{item.proposalId}</td>
-                    <td className="px-3 py-2 text-sm text-gray-900">{item.projectValue}</td>
-                    <td className="px-3 py-2 text-sm text-gray-900">{item.paymentPhases}</td>
-                    <td className="px-3 py-2 text-sm text-gray-900">{item.discount} %</td>
-                    <td className="px-3 py-2 text-sm text-gray-900 space-x-2">
-                      <button
-                        className="text-blue-600 hover:text-blue-800"
-                        onClick={async () => {
-                          setSelectedHistoryItem(item);
-                          setViewMode('view');
-                        }}
-                      >
-                        View
-                        {/* /Edit */}
-
-                      </button>
-                    </td>
-                    <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}> {item.bactive ? 'Not Completed' : 'Completed'} </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
-      )
 
-        : viewMode === 'view' ? (
-
-          <ServiceHistoryView
-            historyData={selectedHistoryItem}
-            onBack={() => setViewMode('history')}
-            onEdit={() => {
-              mapHistoryToForm(selectedHistoryItem);
-            }}
-          />
-        )
-          : (
-            <form
-              onSubmit={handleNext}
-              className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto"
+        {/* Proposal ID & Currency */}
+        <div className="flex flex-wrap gap-4 mb-6 items-center text-sm">
+          <div className="flex flex-col flex-1 min-w-[200px]">
+            <label className="font-medium text-gray-700 mb-1">Proposal ID <span style={{ color: "red" }}>*</span></label>
+            <input
+              type="text"
+              value={proposalId}
+              onChange={(e) => setProposalId(e.target.value)}
+              className="border px-3 py-2 rounded-lg focus:ring-blue-400 focus:border-blue-400 text-sm"
+              placeholder="Enter Proposal ID"
+              required
+            />
+          </div>
+          <div className="flex flex-col flex-1 min-w-[180px]">
+            <label className="font-medium text-gray-700 mb-1">Currency <span style={{ color: "red" }}>*</span></label>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="border px-3 py-2 rounded-lg focus:ring-blue-400 focus:border-blue-400 text-sm"
+              required
             >
-              {/* Header & Service History Button */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-700">
-                  {isEditing ? 'Edit Service Details' : 'Step 1: Service Details'}
-                </h2>
-                <div className="flex gap-2">
-                  {isEditing && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentFormData(null);
-                        setIsEditing(false);
-                        setServices([initialServiceRow]);
-                        setProposalId('');
-                        setDiscountPercentage(0);
-                        setFinalClosedAmount(0);
-                        setDiscountType('percentage');
-                        setCurrency(masterCurrencies[0]?.currency_code || 'USD');
-                        setViewMode('form');
-                      }}
-                      className="bg-gray-500 hover:bg-gray-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
-                    >
-                      New Proposal
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewMode('history');
-                      fetchServiceHistory();
-                    }}
-                    className="bg-blue-500 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow-md"
-                  >
-                    View Service History
-                  </button>
-                </div>
-              </div>
+              {masterCurrencies.length === 0 ? (
+                <option value="" disabled>No Currencies Available</option>
+              ) : (
+                <>
+                  <option value="" disabled>Select Currency</option>
+                  {masterCurrencies.map((c) => (
+                    <option key={c.icurrency_id} value={c.currency_code}>
+                      {c.currency_code} - {c.symbol} ({c.currency_name})
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+          </div>
+          <div className="flex flex-col flex-1 min-w-[200px]">
+            <label className="font-medium text-gray-700 mb-1">Payment Method <span style={{ color: "red" }}>*</span></label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="border px-3 py-2 rounded-lg focus:ring-blue-400 focus:border-blue-400 text-sm"
+              required
+            >
+              <option value="" disabled>Select Payment Method</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cheque">Cheque</option>
+              <option value="case">Case</option>
+            </select>
+          </div>
+        </div>
 
-              {/* Proposal ID & Currency */}
-              <div className="flex flex-wrap gap-4 mb-6 items-center">
-                <div className="flex flex-col flex-1 min-w-[200px]">
-                  <label className="text-sm font-medium text-gray-700 mb-1">
-                    Proposal ID <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={proposalId}
-                    onChange={(e) => setProposalId(e.target.value)}
-                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="Enter Proposal ID"
-                    required
-                  />
-                </div>
-                {/* Currency selection  */}
-                <div className="flex flex-col flex-1 min-w-[180px]">
-                  <label className="text-sm font-medium text-gray-700 mb-1">
-                    Currency <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-                    required
-                  >
-                    {masterCurrencies.length === 0 ? (
-                      <option value="" disabled>No Currencies Available</option>
-                    ) : (
-                      <>
-                        <option value="" disabled>Select Currency</option>
-                        {masterCurrencies.map((c) => (
-                          <option key={c.icurrency_id} value={c.currency_code}>
-                            {c.currency_code} - {c.symbol} ({c.currency_name})
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </div>
-                {/* Payment method field */}
-                <div className="flex flex-col flex-1 min-w-[200px]">
-                  <label className="text-sm font-medium text-gray-700 mb-1">
-                    Payment Method
-                    <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400"
-                    required
-                  >
-                    <option value="" disabled>Select Payment Method</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="cheque">Cheque</option>
-                    <option value="cash">Cash</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* SERVICE TABLE */}
-              <div className="mb-8">
-                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-blue-50">
-                      <tr>
-                        <th className="sticky left-0 bg-blue-50 z-10 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">S.No.</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[150px]">Service</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">Subservice</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit Price</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Quantity</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Unit</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[100px]">Amount</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">Action</th>
+        {/* SERVICE TABLE */}
+        <div className="mb-8 text-sm">
+          <div className="overflow-y-visible rounded-lg border border-gray-200 shadow-sm">
+            <div className="overflow-visible">
+              <table className="min-w-full divide-y divide-gray-200 relative overflow-visible z-0 text-sm">
+                <thead className="bg-blue-50 text-xs">
+                  <tr>
+                    <th className="sticky left-0 bg-blue-50 z-10 px-3 py-2 text-left font-medium text-gray-500 uppercase w-10">S.No.</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[150px]">Service</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[200px]">Subservice</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[100px]">Unit Price</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[100px]">Quantity</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[100px]">Unit</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase min-w-[100px]">Amount</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase w-10">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200 text-sm">
+                  {services.map((row, index) => {
+                    const subserviceOptions = getSubserviceOptions(row.serviceId);
+                    return (
+                      <tr key={index}>
+                        <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap font-medium text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="px-3 py-2">
+                          <select
+                            name="serviceId"
+                            value={row.serviceId || ""}
+                            onChange={(e) => handleServiceChange(index, e.target.name, parseInt(e.target.value))}
+                            className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                          >
+                            <option value="" disabled>Select Service</option>
+                            {masterServices.map((service) => (
+                              <option key={service.iservice_id} value={service.iservice_id}>
+                                {service.cservice_name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-3 py-2 bg-white z-[100]">
+                          <MultiSelectDropdown
+                            options={subserviceOptions || []}
+                            selectedValues={row.subserviceIds || []}
+                            onChange={(newIds) => handleServiceChange(index, "subserviceIds", newIds)}
+                            disabled={!row.serviceId || subserviceOptions.length === 0}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            name="unitPrice"
+                            min="0"
+                            value={row.unitPrice}
+                            onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                            className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            name="quantity"
+                            min="0"
+                            value={row.quantity}
+                            onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                            className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <select
+                            name="unit"
+                            value={row.unit}
+                            onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
+                            className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
+                          >
+                            {UNIT_OPTIONS.map((option) => (
+                              <option key={option.id} value={option.id}>{option.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap font-semibold text-gray-800">{displaySymbol}{row.amount?.toFixed(2) || "0.00"}</td>
+                        <td className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => removeServiceRow(index)}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            disabled={services.length === 1}
+                            title="Remove Row"
+                          >
+                            <FaTrashAlt size={14} />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {services.map((row, index) => {
-                        const subserviceOptions = getSubserviceOptions(row.serviceId);
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
+          {/* Add Row Button */}
+          <button
+            type="button"
+            onClick={addServiceRow}
+            className="mt-3 flex items-center bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition text-sm shadow-md"
+          >
+            <FaPlus className="mr-2" /> Add Service Row
+          </button>
+        </div>
 
-                        return (
-                          <tr key={index}>
-                            <td className="sticky left-0 bg-white px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium">{index + 1}</td>
-                            <td className="px-3 py-2">
-                              <select
-                                name="serviceId"
-                                value={row.serviceId || ''}
-                                onChange={(e) => handleServiceChange(index, e.target.name, parseInt(e.target.value))}
-                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                              >
-                                <option value="" disabled>Select Service</option>
-                                {masterServices.map((service) => (
-                                  <option key={service.iservice_id} value={service.iservice_id}>
-                                    {service.cservice_name}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="px-3 py-2">
-                              <MultiSelectDropdown
-                                options={subserviceOptions || []}
-                                selectedValues={row.subserviceIds || []}
-                                onChange={(newIds) => handleServiceChange(index, 'subserviceIds', newIds)}
-                                disabled={!row.serviceId || subserviceOptions.length === 0}
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                name="unitPrice"
-                                min="0"
-                                value={row.unitPrice}
-                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                name="quantity"
-                                min="0"
-                                value={row.quantity}
-                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <select
-                                name="unit"
-                                value={row.unit}
-                                onChange={(e) => handleServiceChange(index, e.target.name, e.target.value)}
-                                className="w-full border p-1 rounded text-sm focus:ring-blue-400 focus:border-blue-400"
-                              >
-                                {UNIT_OPTIONS.map((option) => (
-                                  <option key={option.id} value={option.id}>
-                                    {option.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-gray-800">
-                              {displaySymbol}{row.amount?.toFixed(2) || '0.00'}
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => removeServiceRow(index)}
-                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                                disabled={services.length === 1}
-                                title="Remove Row"
-                              >
-                                <FaTrashAlt size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Add Row Button */}
-                <button
-                  type="button"
-                  onClick={addServiceRow}
-                  className="mt-3 flex items-center bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition text-sm shadow-md"
-                >
-                  <FaPlus className="mr-2" /> Add Service Row
-                </button>
-              </div>
-
-              {/* SUMMARY & CALCULATION SECTION */}
-              <div className="flex justify-end">
+        {/* SUMMARY & CALCULATION SECTION */}
+           <div className="flex justify-end">
                 <div className="w-full max-w-xs sm:max-w-sm space-y-3">
                   {/* Sub Total */}
                   <div className="flex justify-between items-center text-md font-medium border-t pt-3">
                     <span className="text-gray-700">Sub Total:</span>
                     <span className="text-gray-900 font-bold">{displaySymbol}{subTotal}</span>
 
+
                   </div>
+
 
                   {/* Discount Section */}
                   <div className="p-3 bg-yellow-50 rounded-lg shadow-inner">
@@ -770,6 +777,7 @@ const PostSalesForm = (passedData, isRecurring) => {
                     </div>
                   </div>
 
+
                   {/* Tax & Total */}
                   <div className="flex justify-between items-center text-md font-medium">
                     <span className="text-gray-700">Taxable Amount:</span>
@@ -786,19 +794,22 @@ const PostSalesForm = (passedData, isRecurring) => {
                 </div>
               </div>
 
-              {/* Next Button */}
-              <div className="mt-8 text-center">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-xl hover:bg-blue-800 transition text-lg font-semibold shadow-lg"
-                >
-                  {isEditing ? 'Update & Continue' : 'Next: Payment Details'}
-                </button>
-              </div>
-            </form>
-          )}
-    </div>
-  );
+
+
+        {/* Next Button */}
+        <div className="mt-8 text-center">
+          <button
+            type="submit"
+            className="w-full sm:w-auto bg-blue-600 text-white py-3 px-8 rounded-xl hover:bg-blue-800 transition text-lg font-semibold shadow-lg"
+          >
+            {isEditing ? 'Update & Continue' : 'Next: Payment Details'}
+          </button>
+        </div>
+      </form>
+    )}
+  </div>
+);
+
 };
 
 
@@ -920,8 +931,8 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
       {/* Services Section */}
       <div className="mb-8">
         <h3 className="font-semibold text-gray-800 mb-4 text-lg">Services</h3>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
+<div className="overflow-x-auto overflow-y-visible rounded-lg border border-gray-200 relative z-10">
+<table className="min-w-full divide-y divide-gray-200 overflow-visible relative z-10">
             <thead className="bg-blue-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>

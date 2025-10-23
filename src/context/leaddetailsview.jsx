@@ -985,7 +985,7 @@ const renderTabContent = () => {
 
 return (
   <>
-    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}

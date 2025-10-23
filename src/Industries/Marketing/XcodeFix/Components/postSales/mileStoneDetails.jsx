@@ -333,7 +333,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
     // --- JSX Render ---
     return (
-        <div className="p-4 sm:p-6 bg-gray-50 min-h-full">
+        <div className="p-4 sm:p-6  min-h-full">
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full lg:max-w-4xl mx-auto max-h-[95vh] overflow-y-auto">
 
                 {/* Header and Back Button */}

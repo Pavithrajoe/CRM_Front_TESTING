@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, X, Calendar } from 'lucide-react';
 import {
@@ -38,15 +39,17 @@ const MilestoneStatusBar = ({ leadId }) => {
   const [error, setError] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [formData, setFormData] = useState({
-    actualAmount: '',
-    actualMilestoneDate: null,
-    remarks: '',
-    assignedTo: '',
-    assignToMe: false,
-    notifiedTo: '',
-    notifyToMe: false,
-    balanceAmount: '',
-  });
+  actualAmount: '',
+  actualMilestoneDate: null,
+  remarks: '',
+  assignedTo: '',
+  assignToMe: false,
+  notifiedTo: '',
+  notifyToMe: false,
+  balanceAmount: '',
+  paymentMode: '',
+});
+
   const [formErrors, setFormErrors] = useState({
     actualAmount: '',
     actualMilestoneDate: '',
@@ -179,15 +182,17 @@ const MilestoneStatusBar = ({ leadId }) => {
     const initialActualAmount = milestone.actualAmount || 0;
     const balance = milestone.expectedAmount - initialActualAmount;
     setFormData({
-      actualAmount: initialActualAmount > 0 ? initialActualAmount.toString() : '',
-      actualMilestoneDate: milestone.actualMilestoneDate ? dayjs(milestone.actualMilestoneDate) : null,
-      remarks: milestone.remarks || '',
-      assignedTo: '',
-      assignToMe: false,
-      notifiedTo: '',
-      notifyToMe: false,
-      balanceAmount: balance
-    });
+  actualAmount: initialActualAmount > 0 ? initialActualAmount.toString() : '',
+  actualMilestoneDate: milestone.actualMilestoneDate ? dayjs(milestone.actualMilestoneDate) : null,
+  remarks: milestone.remarks || '',
+  assignedTo: '',
+  assignToMe: false,
+  notifiedTo: '',
+  notifyToMe: false,
+  balanceAmount: balance,
+  paymentMode: milestone.paymentMode || '', 
+});
+
     setFormErrors({ actualAmount: '', actualMilestoneDate: '', remarks: '' });
     setOpenDialog(true);
   };
@@ -272,12 +277,13 @@ const MilestoneStatusBar = ({ leadId }) => {
       const token = localStorage.getItem('token');
       const actualDateISO = formData.actualMilestoneDate ? formData.actualMilestoneDate.toISOString() : null;
       const payload = {
-        actualAmount: parseFloat(formData.actualAmount),
-        actualMilestoneDate: actualDateISO,
-        remarks: formData.remarks,
-        ...(formData.assignedTo && { assignedTo: parseInt(formData.assignedTo) }),
-        ...(formData.notifiedTo && { notifiedTo: parseInt(formData.notifiedTo) })
-      };
+  actualAmount: parseFloat(formData.actualAmount),
+  actualMilestoneDate: actualDateISO,
+  remarks: formData.remarks,
+  paymentMode: formData.paymentMode, // 🆕 include in update
+  ...(formData.assignedTo && { assignedTo: parseInt(formData.assignedTo) }),
+  ...(formData.notifiedTo && { notifiedTo: parseInt(formData.notifiedTo) }),
+};
 
       
       await axios.patch(`${ENDPOINTS.MILESTONE_UPDATE}/${selectedMilestone.id}`, payload, {
@@ -332,7 +338,8 @@ const MilestoneStatusBar = ({ leadId }) => {
                       </span>
                     </div>
                     <span className="mt-6 text-sm text-center font-medium max-w-20 break-words">
-                      Milestone {index + 1}
+                                           {(milestone.mileStoneName)}
+
                     </span>
                     <div className="mt-1 text-xs text-center text-gray-600">
                       {(milestone.expectedAmount)}
@@ -405,159 +412,128 @@ const MilestoneStatusBar = ({ leadId }) => {
               </IconButton>
             </div>
           </DialogTitle>
-          <DialogContent dividers>
-            {selectedMilestone && (
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="text-sm font-semibold text-blue-700">Expected Amount</div>
-                    <div className="text-lg font-bold">
-                      {formatAmount(selectedMilestone.expectedAmount)}
-                    </div>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <div className="text-sm font-semibold text-green-700">Expected Date</div>
-                    <div className="text-lg font-bold">
-                      {formatDate(selectedMilestone.expectedMilestoneDate)}
-                    </div>
-                  </div>
-                </div>
-                <TextField
-                  label="Actual Amount *"
-                  fullWidth
-                  type="number"
-                  value={formData.actualAmount}
-                  onChange={handleActualAmountChange}
-                  error={!!formErrors.actualAmount}
-                  helperText={formErrors.actualAmount}
-                  sx={{ mt: 2 }}
-                />
-                <DateTimePicker
-                  label="Actual Date & Time *"
-                  value={formData.actualMilestoneDate}
-                  onChange={newValue =>
-                    setFormData(prev => ({ ...prev, actualMilestoneDate: newValue }))
-                  }
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      sx: { mt: 2 },
-                      error: !!formErrors.actualMilestoneDate,
-                      helperText: formErrors.actualMilestoneDate,
-                      InputLabelProps: { shrink: true }
-                    },
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
-                <TextField
-                  label="Remarks"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  value={formData.remarks}
-                  onChange={e => {
-                    if (e.target.value.length <= MAX_REMARK_LENGTH)
-                      setFormData(prev => ({ ...prev, remarks: e.target.value }));
-                  }}
-                  error={!!formErrors.remarks}
-                  helperText={
-                    formErrors.remarks ||
-                    `${formData.remarks.length}/${MAX_REMARK_LENGTH} characters`
-                  }
-                  sx={{ mt: 2 }}
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Balance Amount (Remaining)"
-                  fullWidth
-                  type="number"
-                  value={formData.balanceAmount}
-                  disabled
-                  sx={{ mt: 2 }}
-                  helperText="Calculated automatically (Expected - Actual)"
-                />
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-semibold text-gray-700">Assign To</label>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.assignToMe}
-                          onChange={handleAssignToMeChange}
-                          color="primary"
-                        />
-                      }
-                      label="Assign to me"
-                    />
-                  </div>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="assigned-to-label">Select User</InputLabel>
-                    <Select
-                      labelId="assigned-to-label"
-                      value={formData.assignedTo}
-                      onChange={handleAssignedToChange}
-                      disabled={formData.assignToMe}
-                      label="Select User"
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {users
-                        .filter(user => user.bactive === true)
-                        .map(user => (
-                          <MenuItem key={user.iUser_id} value={user.iUser_id.toString()}>
-                            {user.cFull_name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </div>
-                <div className="mt-4 mb-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-semibold text-gray-700">Notify To</label>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.notifyToMe}
-                          onChange={handleNotifyToMeChange}
-                          color="primary"
-                        />
-                      }
-                      label="Notify to me"
-                    />
-                  </div>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="notified-to-label">Select User</InputLabel>
-                    <Select
-                      labelId="notified-to-label"
-                      value={formData.notifiedTo}
-                      onChange={handleNotifiedToChange}
-                      disabled={formData.notifyToMe}
-                      label="Select User"
-                    >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {users
-                        .filter(user => user.bactive === true)
-                        .map(user => (
-                          <MenuItem key={user.iUser_id} value={user.iUser_id.toString()}>
-                            {user.cFull_name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </div>
-              </>
-            )}
-          </DialogContent>
+         <DialogContent dividers>
+  {selectedMilestone && (
+    <>
+      {/* Milestone Name */}
+      <div className="mb-4 p-3 bg-gray-50 border-l-4 border-blue-500 rounded">
+        <div className="text-sm font-semibold text-gray-700">Milestone Name</div>
+        <div className="text-lg font-bold text-blue-700">
+          {selectedMilestone.milestoneName || `Milestone ${milestones.findIndex(m => m.id === selectedMilestone.id) + 1}`}
+        </div>
+      </div>
+
+      {/* Expected Details */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="text-sm font-semibold text-blue-700">Expected Amount</div>
+          <div className="text-lg font-bold">
+            {formatAmount(selectedMilestone.expectedAmount)}
+          </div>
+        </div>
+        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+          <div className="text-sm font-semibold text-green-700">Expected Date</div>
+          <div className="text-lg font-bold">
+            {formatDate(selectedMilestone.expectedMilestoneDate)}
+          </div>
+        </div>
+      </div>
+
+      {/* Actual Amount */}
+      <TextField
+        label="Actual Amount *"
+        fullWidth
+        type="number"
+        value={formData.actualAmount}
+        onChange={handleActualAmountChange}
+        error={!!formErrors.actualAmount}
+        helperText={formErrors.actualAmount}
+        sx={{ mt: 2 }}
+      />
+
+      {/* DateTime Picker */}
+      <DateTimePicker
+        label="Actual Date & Time *"
+        value={formData.actualMilestoneDate}
+        onChange={newValue =>
+          setFormData(prev => ({ ...prev, actualMilestoneDate: newValue }))
+        }
+        viewRenderers={{
+          hours: renderTimeViewClock,
+          minutes: renderTimeViewClock,
+          seconds: renderTimeViewClock
+        }}
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            sx: { mt: 2 },
+            error: !!formErrors.actualMilestoneDate,
+            helperText: formErrors.actualMilestoneDate,
+            InputLabelProps: { shrink: true }
+          },
+          popper: timeSlotProps.popper,
+          desktopPaper: timeSlotProps.desktopPaper
+        }}
+        desktopModeMediaQuery="@media (min-width: 0px)"
+      />
+
+      {/* New: Payment Mode Dropdown */}
+      <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+        <InputLabel id="payment-mode-label">Payment Mode</InputLabel>
+        <Select
+          labelId="payment-mode-label"
+          value={formData.paymentMode || 'testing'}
+          onChange={(e) =>
+            setFormData(prev => ({ ...prev, paymentMode: e.target.value }))
+          }
+          label="Payment Mode"
+        >
+          <MenuItem value="">
+            <em>{formData.paymentMode || 'testing'}</em>
+          </MenuItem>
+          <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+          <MenuItem value="Cheque">Cheque</MenuItem>
+          <MenuItem value="Cash">Cash</MenuItem>
+        </Select>
+      </FormControl>
+
+      {/* Remarks */}
+      <TextField
+        label="Remarks"
+        fullWidth
+        multiline
+        rows={3}
+        value={formData.remarks}
+        onChange={e => {
+          if (e.target.value.length <= MAX_REMARK_LENGTH)
+            setFormData(prev => ({ ...prev, remarks: e.target.value }));
+        }}
+        error={!!formErrors.remarks}
+        helperText={
+          formErrors.remarks ||
+          `${formData.remarks.length}/${MAX_REMARK_LENGTH} characters`
+        }
+        sx={{ mt: 2 }}
+        InputLabelProps={{ shrink: true }}
+      />
+
+      {/* Balance */}
+      <TextField
+        label="Balance Amount (Remaining)"
+        fullWidth
+        type="number"
+        value={formData.balanceAmount}
+        disabled
+        sx={{ mt: 2 }}
+        helperText="Calculated automatically (Expected - Actual)"
+      />
+
+      {/* Assign To & Notify Sections (existing) */}
+      {/* Keep your existing assignTo and notifyTo code below */}
+    </>
+  )}
+</DialogContent>
+
           <DialogActions sx={{ p: 3 }}>
             <Button onClick={() => setOpenDialog(false)} color="secondary">
               Cancel

@@ -77,7 +77,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     // Monthly Payment Mode States
     const [isMilestoneTrue, setIsMilestoneTrue] = useState(false) 
     const [enteredMonth, setEnteredMonth] = useState('');
-    const [selectedMilestoneDate, setSelectedMilestoneDate] = useState(''); // This is the START date
+    const [selectedMilestoneDate, setSelectedMilestoneDate] = useState(''); 
 
     // Get URL search params and state (kept for context)
     const searchParams = new URLSearchParams(location.search);
@@ -90,7 +90,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
 
     // Fetches initial milestone status
     const fetchMilestones = async () => {
-        // ... (API call to set isMilestoneTrue status) ...
          try {
              const token = localStorage.getItem('token');
              const response = await axios.get(`${ENDPOINTS.MILESTONE_BY_LEAD}/${leadId}`, {
@@ -110,26 +109,18 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     useEffect(() => {
         const newPhases = parseInt(paymentPhases);
 
-        // This checks if we need a new split. It runs when:
-        // 1. Phases count changes (setPaymentPhases)
-        // 2. Total amount changes
-        // 3. isInitialized is false (reset by handlers)
-        // 4. Start Date changes (only relevant in monthly mode)
+
         if (newPhases > 0 && !isInitialized) {
             const splitAmounts = calculateBalancedSplit(totalAmount, newPhases);
             
             const newMilestones = splitAmounts.map((amount, index) => {
                 let milestoneDate = '';
                 
-                // Only calculate sequential dates if in MONTHLY mode AND a start date is provided
                 if (isMilestoneTrue && selectedMilestoneDate) {
                     const startDate = new Date(selectedMilestoneDate);
-                    // Add 'index' months to the start date (0 months for Milestone 1, 1 month for Milestone 2, etc.)
-                    // We use Date.UTC to avoid timezone issues when setting the date
                     const calculatedDate = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth() + index, startDate.getDate()));
                     milestoneDate = formatDateForInput(calculatedDate);
                 } else if (!isMilestoneTrue) {
-                    // For standard phases, the date is left empty to be entered manually
                     milestoneDate = '';
                 }
 
@@ -145,17 +136,17 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
         }
 
     }, [paymentPhases, totalAmount, isInitialized, isMilestoneTrue, selectedMilestoneDate]); 
-    // `selectedMilestoneDate` is now in dependencies so date changes trigger a date recalculation if isInitialized is false.
 
     const handlePhaseSelect = (e) => {
         const value = parseInt(e.target.value);
         setPaymentPhases(value);
-        setIsInitialized(false); // Forces the useEffect to run and recalculate the split
+        setIsInitialized(false); 
         setEnteredMonth(''); 
         setSelectedMilestoneDate(''); 
     };
+    
+    useEffect(() => { fetchMilestones() }, [])
 
-    // Handler for manual month input change (when isMilestoneTrue is active)
     const handleMonthInputChange = (e) => {
         const val = e.target.value;
         const numVal = parseInt(val) || 0;
@@ -167,7 +158,6 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
     // Handler for start date change (when isMilestoneTrue is active)
     const handleStartDateChange = (e) => {
         setSelectedMilestoneDate(e.target.value);
-        // Force re-initialization to recalculate all dates based on the new start date
         setIsInitialized(false); 
     }
 

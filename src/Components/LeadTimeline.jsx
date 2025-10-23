@@ -15,7 +15,6 @@ const activityColors = {
 const getActivityMessage = (activity) => {
   const { activitytype, data, user, performedbyid, activitytimestamp } = activity;
   const userName = user?.cFull_name || `User ${performedbyid || 'System'}`;
-  
   // Format the activity date in DD/MM/YYYY format
   const activityDate = new Date(activitytimestamp).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -24,7 +23,9 @@ const getActivityMessage = (activity) => {
   });
 
   const personalizeMessage = (msg) =>
-    typeof msg === "string" ? msg.replace(`User ${performedbyid}`, userName).replace(`${performedbyid}`, userName) : msg;
+    typeof msg === "string"
+      ? msg.replace(`User ${performedbyid}`, userName).replace(`${performedbyid}`, userName)
+      : msg;
 
   switch (activitytype) {
     case "lead_created":
@@ -50,13 +51,21 @@ const getActivityMessage = (activity) => {
 // Helper: Get color for a given activity type, fallback to default
 const getActivityColor = (type) => activityColors[type] || activityColors.default;
 
+function getFirstTwoLines(text) {
+  if (!text) return "";
+  // Split by lines, including both \r\n and \n as line breaks
+  const lines = text.split(/\r?\n/);
+  if (lines.length <= 2) return text;
+  return lines.slice(0, 2).join('\n') + "......";
+}
+
 export default function LeadTimeline({ leadId }) {
   const [history, setHistory] = useState([]);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
 
   const fetchActivityLog = async () => {
-    setLoading(true); // Set loading true when fetching starts
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -75,17 +84,15 @@ export default function LeadTimeline({ leadId }) {
       }
 
       const data = await response.json();
-      // Sort in descending order (newest first)
       const sortedHistory = data.sort(
         (a, b) => new Date(b.activitytimestamp) - new Date(a.activitytimestamp)
       );
-
       setHistory(sortedHistory);
     } catch (err) {
       console.error("Fetch Error:", err);
       setError(err.message || "Unable to fetch timeline data");
     } finally {
-      setLoading(false); // Set loading false when fetching ends (success or error)
+      setLoading(false);
     }
   };
 
@@ -93,27 +100,23 @@ export default function LeadTimeline({ leadId }) {
     if (leadId) {
       fetchActivityLog();
     } else {
-      setHistory([]); // Clear history if leadId is not provided
+      setHistory([]);
       setLoading(false);
     }
   }, [leadId]);
 
   return (
     <div className="relative  w-full px-4 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Container for timeline content - ensures centering and max width */}
-      <div className=" h-[130vh] mx-auto"> 
+      <div className=" h-[130vh] mx-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">Lead Activity Timeline</h2>
-        
         {loading && (
           <div className="text-center text-gray-500 text-lg">Loading activity history...</div>
         )}
-
         {error && !loading && (
           <div className="text-red-700 bg-red-100 rounded-lg px-6 py-3 text-sm shadow-md w-full max-w-md mx-auto text-center">
             {error}
           </div>
         )}
-
         {!error && !loading && history.length === 0 && (
           <div className="text-gray-500 text-sm italic text-center py-4">No activity found for this lead.</div>
         )}
@@ -131,21 +134,22 @@ export default function LeadTimeline({ leadId }) {
               hour: "numeric",
               minute: "2-digit",
               hour12: true,
-            }).toUpperCase(); // Converts 'am'/'pm' to 'AM'/'PM'
-
+            }).toUpperCase();
             const color = getActivityColor(entry.activitytype);
+
+            const summary = typeof message === "string" ? getFirstTwoLines(message) : message;
 
             return (
               <div
                 key={entry.id || index}
-                className="flex w-full relative min-h-[170px]" 
-                aria-label={`Timeline event: ${message}`}
+                className="flex w-full relative min-h-[170px]"
+                aria-label={`Timeline event: ${summary}`}
               >
                 {/* Left content column */}
                 <div className="w-1/2 flex justify-end pr-8">
                   {isLeft && (
                     <article
-                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300 h-[18vh]"
                       role="region"
                       aria-live="polite"
                     >
@@ -155,24 +159,30 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base whitespace-pre-wrap break-words">{message}</p>
-                      {/* <p className="text-gray-700 text-base truncate">{message}</p> */}
+<p
+  className="text-gray-700 text-base break-words overflow-hidden text-ellipsis line-clamp-2"
+  style={{
+    display: "-webkit-box",
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: 2,
+  }}
+>
+  {summary}
+</p>
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
-                        alt={`Avatar of ${performedBy}`}
-                        className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
-                        loading="lazy"
-                      />
-                      <time dateTime={date.toISOString()}>{humanReadable}</time>
-                    </footer>
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}
+                          alt={`Avatar of ${performedBy}`}
+                          className="w-7 h-7 rounded-full shadow-sm border border-gray-300"
+                          loading="lazy"
+                        />
+                        <time dateTime={date.toISOString()}>{humanReadable}</time>
+                      </footer>
                     </article>
                   )}
                 </div>
-
                 {/* Center timeline (Dot and Lines) */}
                 <div className="flex flex-col items-center w-0 relative">
-                  {/* Activity dot */}
                   <span
                     className="block rounded-full border-4 border-white shadow-md"
                     style={{
@@ -183,8 +193,6 @@ export default function LeadTimeline({ leadId }) {
                     }}
                     aria-hidden="true"
                   />
-                  
-                  {/* Horizontal connection line from dot to card */}
                   <span
                     className="absolute top-[10px]"
                     style={{
@@ -195,8 +203,6 @@ export default function LeadTimeline({ leadId }) {
                     }}
                     aria-hidden="true"
                   />
-                  
-                  {/* Vertical tracking line (between dots) */}
                   {!isLast && (
                     <div
                       className="w-1 rounded-full mt-2"
@@ -209,12 +215,11 @@ export default function LeadTimeline({ leadId }) {
                     />
                   )}
                 </div>
-
                 {/* Right content column */}
                 <div className="w-1/2 flex justify-start pl-8">
                   {!isLeft && (
                     <article
-                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300"
+                      className="bg-white shadow-md shadow-gray-600 rounded-3xl p-6 w-96 hover:shadow-xl transition-shadow duration-300 h-[18vh]"
                       role="region"
                       aria-live="polite"
                     >
@@ -224,8 +229,7 @@ export default function LeadTimeline({ leadId }) {
                       >
                         Activity
                       </h3>
-                      <p className="text-gray-700 text-base whitespace-pre-wrap break-words">{message}</p>
-                      {/* <p className="text-gray-700 text-base truncate">{message}</p> */}
+                      <p className="text-gray-700 text-base whitespace-pre-line break-words">{summary}</p>
                       <footer className="mt-4 flex items-center space-x-3 text-sm text-gray-500">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(performedBy)}`}

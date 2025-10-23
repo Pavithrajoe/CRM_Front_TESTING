@@ -294,7 +294,7 @@ const Tasks = () => {
     setFormData(prev => ({ ...prev, task_date: date }));
   };
 
-  const handleFormSubmission = async (e) => {
+ const handleFormSubmission = async (e) => {
   e.preventDefault();
 
   if (formData.ctitle.trim().length < 3) {
@@ -330,7 +330,7 @@ const Tasks = () => {
       response = await axios.put(
         `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
         { ...payload, iupdated_by: userId },
-        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } else {
       response = await axios.post(
@@ -380,6 +380,7 @@ const Tasks = () => {
     setSaving(false);
   }
 };
+
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
@@ -512,17 +513,18 @@ const Tasks = () => {
           onChange={handleChange}
           value={formData.ctitle}
           className="w-full border rounded-lg sm:rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-          placeholder="Task Title *"
+          placeholder={ !isSpecialCompany ? "Task Title *"  : "Follow-up Title "  }
           required
         />
         <textarea
-          name="ctask_content"
-          onChange={handleChange}
-          value={formData.ctask_content}
-          className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-          placeholder="Task Description *"
-          required
-        />
+  name="ctask_content"
+  onChange={handleChange}
+  value={formData.ctask_content}
+  className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
+  placeholder={ !isSpecialCompany ?  "Task Description *" : "Follow-up Description * " }
+  required
+/>
+
         <div className="flex justify-between items-center">
           {mic && (
             <button
@@ -623,38 +625,46 @@ const Tasks = () => {
           </div>
         </div>
         <button
-          type="submit"
-          className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
-        >
-          {saving ? (
-            <>
-              <svg 
-                className="animate-spin h-5 w-5 mr-3 text-white inline-block" 
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24"
-              >
-                <circle 
-                  className="opacity-25" 
-                  cx="12" 
-                  cy="12" 
-                  r="10" 
-                  stroke="currentColor" 
-                  strokeWidth="4"
-                ></circle>
-                <path 
-                  className="opacity-75" 
-                  fill="currentColor" 
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              Saving...
-            </>
-          ) : (
-            editingTask ? (canEditTask(editingTask) ? "Update Task" : "Edit Disabled") : "Add Task"
-          )}
-        </button>
+  type="submit"
+  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+  disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
+>
+  {saving ? (
+    <>
+      <svg
+        className="animate-spin h-5 w-5 mr-3 text-white inline-block"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        ></path>
+      </svg>
+      Saving...
+    </>
+  ) : (
+    isSpecialCompany ? (
+      editingTask ? (
+        canEditTask(editingTask) ? "Update Follow-up" : "Edit Disabled"
+      ) : "Add Follow-up"
+    ) : (
+      editingTask ? (
+        canEditTask(editingTask) ? "Update Task" : "Edit Disabled"
+      ) : "Add Task"
+    )
+  )}
+</button>
       </form>
     </div>
   );
@@ -779,7 +789,7 @@ const Tasks = () => {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Search follow-up..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -831,7 +841,7 @@ const Tasks = () => {
                 onClick={handleNewTaskClick}
                 className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center"
               >
-                + New Follow-up
+              { !isSpecialCompany ? " + New Task " : "+ New Follow-up "}
               </button>
             </div>
             {/* Tasks Container with Scroll (history) */}

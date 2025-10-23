@@ -37,6 +37,7 @@ const MilestoneStatusBar = ({ leadId }) => {
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [editingExpectedDate, setEditingExpectedDate] = useState(null);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const [currentStageName, setCurrentStageName] = useState('');
   const [error, setError] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [savingNextMilestone, setSavingNextMilestone] = useState(false);
@@ -50,7 +51,6 @@ const MilestoneStatusBar = ({ leadId }) => {
     notifyToMe: false,
     balanceAmount: '',
     paymentMode: '',
-    // New field for next milestone expected date
     nextMilestoneExpectedDate: null,
   });
 
@@ -128,10 +128,20 @@ const MilestoneStatusBar = ({ leadId }) => {
           await updatePostSalesStatusIfComplete(postSalesId);
         }
 
+        // Find current stage index and name
         const currentIndex = milestoneData.findIndex(
           m => !(m.actualAmount > 0 && m.actualMilestoneDate)
         );
         setCurrentStageIndex(currentIndex === -1 ? milestoneData.length : currentIndex);
+        
+        // Set current stage name
+        if (currentIndex === -1) {
+          setCurrentStageName('All Milestones Completed');
+        } else if (currentIndex < milestoneData.length) {
+          setCurrentStageName(milestoneData[currentIndex].mileStoneName || `Milestone ${currentIndex + 1}`);
+        } else {
+          setCurrentStageName('No Active Milestone');
+        }
       }
     } catch (err) {
       console.error('Error fetching milestones:', err);
@@ -172,7 +182,7 @@ const MilestoneStatusBar = ({ leadId }) => {
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
-    return `${day}:${month}:${year}`;
+    return `${day}/${month}/${year}`;
   };
 
   const isMilestoneCompleted = milestone =>
@@ -213,6 +223,14 @@ const MilestoneStatusBar = ({ leadId }) => {
     return milestones[milestoneIndex + 1];
   };
 
+  // Get current milestone name dynamically
+  const getCurrentMilestoneName = () => {
+    if (currentStageIndex < milestones.length) {
+      return milestones[currentStageIndex].mileStoneName || `Milestone ${currentStageIndex + 1}`;
+    }
+    return 'All Milestones Completed';
+  };
+
   // Only the current stage is clickable
   const handleMilestoneClick = (milestone, index) => {
     if (index > currentStageIndex) {
@@ -240,7 +258,6 @@ const MilestoneStatusBar = ({ leadId }) => {
       notifyToMe: false,
       balanceAmount: balance,
       paymentMode: milestone.paymentMode || '',
-      // Set next milestone expected date if available
       nextMilestoneExpectedDate: nextMilestone && nextMilestone.expectedMilestoneDate ? 
         dayjs(nextMilestone.expectedMilestoneDate) : null,
     });
@@ -260,7 +277,7 @@ const MilestoneStatusBar = ({ leadId }) => {
     setOpenExpectedDateDialog(true);
   };
 
-  // NEW: Handle next milestone expected date change and save immediately
+  // Handle next milestone expected date change and save immediately
   const handleNextMilestoneDateChange = async (newValue) => {
     if (!selectedMilestone) return;
     
@@ -459,6 +476,32 @@ const MilestoneStatusBar = ({ leadId }) => {
           <h3 className="text-lg font-semibold mb-4 text-blue-700 text-center">
             Payment Milestones Status
           </h3>
+          
+          {/* Current Stage Display */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Current Stage
+                </h4>
+                {/* <p className="text-2xl font-bold text-blue-700 mt-1">
+                  {currentStageName}
+                </p> */}
+                <p className="text-sm text-gray-600 mt-1">
+                  {currentStageIndex < milestones.length 
+                    ? `Milestone ${currentStageIndex + 1} of ${milestones.length}`
+                    : 'All milestones completed'}
+                </p>
+              </div>
+              <div className="mt-2 md:mt-0">
+                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-2 animate-pulse"></div>
+                  {currentStageIndex < milestones.length ? 'Active' : 'Completed'}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between w-full">
             {milestones.map((milestone, index) => {
               const isCompleted = isMilestoneCompleted(milestone);
@@ -563,7 +606,7 @@ const MilestoneStatusBar = ({ leadId }) => {
               <div className="text-center p-3 bg-orange-50 rounded-lg">
                 <div className="font-semibold text-orange-700">Pending Amount</div>
                 <div className="text-lg font-bold text-orange-800">
-{formatAmount(Math.max(0, (amountCompletion.totalExpected || 0) - (amountCompletion.totalActual || 0)))}
+                  {formatAmount(Math.max(0, (amountCompletion.totalExpected || 0) - (amountCompletion.totalActual || 0)))}
                 </div>
               </div>
             </div>
@@ -589,9 +632,7 @@ const MilestoneStatusBar = ({ leadId }) => {
               <div className="text-center p-3 bg-gray-50 rounded-lg shadow-sm">
                 <div className="font-semibold text-gray-700">Current Stage</div>
                 <div className="text-lg font-bold text-purple-600">
-                  {currentStageIndex < milestones.length
-                    ? `Milestone ${currentStageIndex + 1}`
-                    : "Completed"}
+                  {getCurrentMilestoneName()}
                 </div>
               </div>
             </div>
@@ -603,9 +644,7 @@ const MilestoneStatusBar = ({ leadId }) => {
           <DialogTitle>
             <div className="flex justify-between items-center text-blue-800 font-bold">
               <span>
-                Update Milestone{" "}
-                {selectedMilestone &&
-                  milestones.findIndex(m => m.id === selectedMilestone.id) + 1}
+                Update {getCurrentMilestoneName()}
               </span>
               <IconButton onClick={() => setOpenDialog(false)}>
                 <X size={20} className="text-red-500" />
@@ -654,7 +693,7 @@ const MilestoneStatusBar = ({ leadId }) => {
                       )}
                     </div>
                     <DateTimePicker
-                      label={`Milestone ${milestones.findIndex(m => m.id === selectedMilestone.id) + 2} Expected Date`}
+                      label={`${getNextMilestone(milestones.findIndex(m => m.id === selectedMilestone.id)).mileStoneName} Expected Date`}
                       value={formData.nextMilestoneExpectedDate}
                       onChange={handleNextMilestoneDateChange}
                       viewRenderers={{

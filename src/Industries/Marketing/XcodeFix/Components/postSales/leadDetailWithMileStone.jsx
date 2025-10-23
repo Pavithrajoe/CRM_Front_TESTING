@@ -946,6 +946,43 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
     }
   };
 
+  // FIXED: Correct tab configuration based on company
+  const getTabLabels = () => {
+    const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
+    
+    if (isXcodeFix) {
+      // For XcodeFix - hide Comments and Reminders, show only Follow-up and Activity
+      return ["Follow-up", "Activity"];
+    } else {
+      // For other companies - show all tabs
+      return ["Task", "Comments", "Reminders", "Activity"];
+    }
+  };
+  
+  const renderTabContent = () => {
+    const tabLabels = getTabLabels();
+    const currentTabLabel = tabLabels[tabIndex];
+    
+    switch (currentTabLabel) {
+      case "Follow-up":
+      case "Task":
+        return <Tasks leadId={leadId} />;
+      case "Comments":
+        // This won't be reached for XcodeFix since Comments tab is hidden
+        return <Comments leadId={leadId} />;
+      case "Reminders":
+        // This won't be reached for XcodeFix since Reminders tab is hidden
+        return <RemainderPage leadId={leadId} />;
+      case "Activity":
+        return <LeadTimeline
+                  leadId={leadId}
+                  isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+                />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
     <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
@@ -989,26 +1026,23 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
           </Box>
         )}
 
-        {/* Tab Navigation and Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-            {["Activity", "Task", "Comments", "Reminders"]
-            .filter((label) => !(label === "Reminders" && companyInfo?.company_id === XCODEFIX_COMPANY_ID)) 
-            // .filter((label) => !(label === "Reminders" && companyInfo?.company_id === 15)) // XCODEFIX_COMPANY_ID
-            .map((label, idx) => (
-              <button
-                key={label}
-                onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx
-                    ? "bg-blue-100 shadow text-blue-900"
-                    : "text-gray-500 hover:bg-white hover:text-blue-900"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-        </div>
+       {/* Tab Navigation and Action Buttons */}
+     <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+  <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+    {getTabLabels().map((label, idx) => (
+      <button
+        key={label}
+        onClick={() => handleTabChange(null, idx)}
+        className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+          tabIndex === idx
+            ? "bg-blue-100 shadow text-blue-900"
+            : "text-gray-500 hover:bg-white hover:text-blue-900"
+        }`}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
 
           <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
             {/* Project Value Display - Only shown when there's a project value */}

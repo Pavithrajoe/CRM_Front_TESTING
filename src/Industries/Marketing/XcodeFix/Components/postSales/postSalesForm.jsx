@@ -601,7 +601,7 @@ const PostSalesForm = (passedData, isRecurring) => {
                     <option value="" disabled>Select Payment Method</option>
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cheque">Cheque</option>
-                    <option value="case">Case</option>
+                    <option value="cash">Cash</option>
                   </select>
                 </div>
               </div>

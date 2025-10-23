@@ -358,7 +358,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                         placeholder="Enter the specific payment terms and conditions for this deal..."
                         className="w-full border px-3 py-2 rounded-lg text-sm focus:ring-blue-400 focus:border-blue-400 resize-none"
                     />
-                    <p className="text-xs text-gray-500 text-right">{termsAndConditions.length} / 1000 characters</p>
+                    <p className="text-xs text-gray-700 text-right">{termsAndConditions.length} / 1000 characters</p>
                 </div>
 
                 {/* Payment Phases Selection - FIXED/COMBINED LOGIC */}

@@ -123,7 +123,7 @@ export default function User_Overview_KPIStats({ userId }) { 
   if (loading) {
     return (
       <div className="text-center text-gray-400 py-8 text-lg font-medium">
-        Loading KPI data for user {userId}... 🚀
+        Loading KPI data 
       </div>
     );
   }

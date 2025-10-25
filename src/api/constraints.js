@@ -79,7 +79,6 @@ export const ENDPOINTS = {
   MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
   LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
    
-  
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,

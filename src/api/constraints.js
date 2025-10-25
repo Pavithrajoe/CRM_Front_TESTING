@@ -73,10 +73,11 @@ export const ENDPOINTS = {
   BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
   ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
   COMPANY:`${BASE_URL}/company`,
-      MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
+  MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
   MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
   GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
-    MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
+  MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
+  LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
    
   
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, X, Grid as AppsIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LeadForm from "../LeadForm";
@@ -110,6 +110,10 @@ const handleMaps = () => {
     navigate("/gst-compliance");
     setShowAppMenu(false);
   };
+  const handleBulkMail = () => {
+    navigate("/mailsender");
+    setShowAppMenu(false);
+  };
 
   // Close when clicking outside
   useEffect(() => {
@@ -210,9 +214,11 @@ const handleMaps = () => {
 </div>
 
             </div>
+
+            
              <div
               onClick={handleMaps}
-              className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition"
+              className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
                 src="/illustrations/map_dist.png"
@@ -224,6 +230,25 @@ const handleMaps = () => {
     Find Location
   </span>
 </div>
+
+
+            </div>
+
+            <div
+              onClick={handleBulkMail}
+              className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:to-yellow-200 border border-yellow-200 rounded-xl p-3 cursor-pointer transition"
+            >
+              <img
+                src="/illustrations/bulkMail.png"
+                alt="gst"
+                className="w-15 h-8 mb-1 opacity-90"
+              />
+              <div className="flex items-center justify-center">
+            <span className="text-sm font-semibold text-blue-700">
+    Bulk Mail
+  </span>
+</div>
+
 
             </div>
        

@@ -38,6 +38,7 @@ export default function KPIStats(data) {
       tokenFromStorage = localStorage.getItem("token");
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
+        // console.log("token", decodedToken )
         extractedUserId = decodedToken.user_id;
         if (!extractedUserId) throw new Error("User ID not found in token.");
       } else {

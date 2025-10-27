@@ -128,6 +128,8 @@ export const ENDPOINTS = {
   QUOTATION: `${BASE_URL}/quotation`,
   QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
   USERLEADS: `${BASE_URL}/lead/user`,
+  BULK_MAIL:`${BASE_URL}/bulk-mail`,
+  BULK_MAIL_GET_BY_USER:`${BASE_URL}/bulk-mail/user`,
 
 
   MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,

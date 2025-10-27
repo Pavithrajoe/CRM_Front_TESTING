@@ -14,6 +14,7 @@ import PrivateRoute from "./Components/PrivateRoute.jsx";
 import { UserProvider } from "./context/UserContext";
 import { TabProvider } from "./context/TabContext";
 
+
 // All your other imports...
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
@@ -66,6 +67,8 @@ import GeneratePoster from "./Components/Tools/Poster/GeneratePoster.jsx";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
+import BulkMailSender from "./Components/bulkMail/BulkMailSender.jsx";
+import BulkMailStatus from "./Components/bulkMail/BulkMailStatus.jsx";
 import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
@@ -127,6 +130,8 @@ function App() {
                   <Route path="companypage" element={<CompanyPage />} />
                   <Route path="analytics" element={<UserAnalyticsPage />} />
                   <Route path="teamview" element={<TeamviewDashboard />} />
+                  <Route path="/mailsender" element={<BulkMailSender />} />
+                  <Route path="/mailstatus" element={<BulkMailStatus />} />
                   <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
                   <Route path="xcodefix_leaddetailview_milestone/:leadId" element={<LeadDetailWithMileStone />} />
                   <Route path="userdeals/:userId" element={<UserDeals />} />

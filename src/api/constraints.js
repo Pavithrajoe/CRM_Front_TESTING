@@ -51,7 +51,7 @@ export const ENDPOINTS = {
   LOST_REASON: `${BASE_URL}/lead-lostreason`,
   LEAD_DETAILS: `${BASE_URL}/lead/`,
   GET_SETTINGS: `${BASE_URL}/general-setting/info`,
-  GENERAL_SETTING:`${BASE_URL}/general-setting`,
+  GENERAL_SETTING: `${BASE_URL}/general-setting`,
   GET_PARAMS_TARGET: `${BASE_URL}/user-target/get-user-target`,
   GET_ASSIGN: `${BASE_URL}/assigned-to`,
   GET_METRICS_TARGET: `${BASE_URL}/user-target`,
@@ -70,15 +70,13 @@ export const ENDPOINTS = {
   TAX: `${BASE_URL}/tax`,
   TERMS: `${BASE_URL}/terms`,
   CURRENCY: `${BASE_URL}/currency`,
-  BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
-  ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
-  COMPANY:`${BASE_URL}/company`,
-      MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
+  BULK_ASSIGN: `${BASE_URL}/leadBulkAssign`,
+  ALLREMINDER: `${BASE_URL}/reminder/user-reminder`,
+  COMPANY: `${BASE_URL}/company`,
+  MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
   MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
-  GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
-    MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
-   
-  
+  GET_SERVICE_HISTORY: `${BASE_URL}/post-sales/lead`,
+  MILESTONE_STATUS_PATCH: `${BASE_URL}/post-sales`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -129,7 +127,6 @@ export const ENDPOINTS = {
   QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
   USERLEADS: `${BASE_URL}/lead/user`,
 
-
   MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,
   MASTER_SUB_SOURCE_PUT: `${BASE_URL}/subSrc/editSubSrc`,
   MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
@@ -139,14 +136,14 @@ export const ENDPOINTS = {
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,
   PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
-  DAILY_TASK : `${BASE_URL}/task/upcoming-task`,
+  DAILY_TASK: `${BASE_URL}/task/upcoming-task`,
   GET_FILTER_TASK: `${BASE_URL}/task/user`,
-  USERCALENDEREVENT:`${BASE_URL}/calender-event/user`,
+  USERCALENDEREVENT: `${BASE_URL}/calender-event/user`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
-  POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`
+  POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`,
 };

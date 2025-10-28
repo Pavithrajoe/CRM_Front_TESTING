@@ -32,7 +32,7 @@ export default function LeadsTable({ data }) {
             })
             .replace(/am|pm/, (match) => match.toUpperCase());
           return `${datePart}\n${timePart}`;
-        })(),
+        })  (),
         avatar: "/images/dashboard/grl.png",
       }));
   }, [data]);

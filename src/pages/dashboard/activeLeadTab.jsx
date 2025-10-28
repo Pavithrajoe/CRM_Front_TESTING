@@ -28,7 +28,7 @@ const ActiveLeadTab = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await fetch(
-          `${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
+          `${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,  
           {
             method: "GET",
             headers: {

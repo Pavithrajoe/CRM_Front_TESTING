@@ -73,8 +73,7 @@ const LeadCardViewPage = () => {
 
     const token = localStorage.getItem("token"); 
 
-    // FIXED: Proper tab filtration logic
-// FIXED: Add modal filter states to dependencies
+    //Proper tab filtration logic
 const dataToDisplay = useMemo(() => {
     let data = [];
     
@@ -113,7 +112,7 @@ const dataToDisplay = useMemo(() => {
         
         const matchesDate = isWithinDateRange(dateToFilter);
 
-        // ADDED: Modal filters for specific tabs
+        // Modal filters for specific tabs
         let matchesModalFilters = true;
         
         // Only apply modal filters to these tabs
@@ -189,7 +188,6 @@ const dataToDisplay = useMemo(() => {
     toDate, 
     showLostLeads, 
     showLostDeals,
-    // ADD THESE DEPENDENCIES:
     selectedPotential,
     selectedStatus,
     selectedSource,
@@ -197,7 +195,7 @@ const dataToDisplay = useMemo(() => {
     selectedService
 ]);
 
-    // FIXED: Proper displayed data calculation
+    // Proper displayed data calculation
     const displayedDataCalculated = useMemo(() => {
         if (leadsToShow !== null) {
             return dataToDisplay.slice(0, leadsToShow);

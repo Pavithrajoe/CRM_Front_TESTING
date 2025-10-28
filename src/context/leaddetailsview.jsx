@@ -116,7 +116,6 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
 const LeadDetailView = () => {
   const { leadId } = useParams();
   const { showPopup } = usePopup();
-
   const lostReasonDialogRef = useRef(null);
 
   const theme = useTheme();

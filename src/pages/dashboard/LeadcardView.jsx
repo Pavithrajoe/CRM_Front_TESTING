@@ -1066,7 +1066,7 @@ useEffect(() => {
 
                         <div className="flex justify-center mb-4">
                             <a
-                                href="../../../public/files/import_leads.xls"
+                                href="../../../public/files/Leads_import_Template_final.xls"
                                 download="Leads_Import_Template.xls"
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
                             >

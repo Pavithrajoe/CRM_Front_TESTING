@@ -70,13 +70,15 @@ export const ENDPOINTS = {
   TAX: `${BASE_URL}/tax`,
   TERMS: `${BASE_URL}/terms`,
   CURRENCY: `${BASE_URL}/currency`,
-  BULK_ASSIGN: `${BASE_URL}/leadBulkAssign`,
-  ALLREMINDER: `${BASE_URL}/reminder/user-reminder`,
-  COMPANY: `${BASE_URL}/company`,
+  BULK_ASSIGN:`${BASE_URL}/leadBulkAssign`,
+  ALLREMINDER:`${BASE_URL}/reminder/user-reminder`,
+  COMPANY:`${BASE_URL}/company`,
   MILESTONE_BY_LEAD: `${BASE_URL}/post-sales/milestone-by-lead`,
   MILESTONE_UPDATE: `${BASE_URL}/post-sales/milestontes`,
-  GET_SERVICE_HISTORY: `${BASE_URL}/post-sales/lead`,
-  MILESTONE_STATUS_PATCH: `${BASE_URL}/post-sales`,
+  GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
+  MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
+  LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
+   
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -126,6 +128,8 @@ export const ENDPOINTS = {
   QUOTATION: `${BASE_URL}/quotation`,
   QUOTATION_LEAD: `${BASE_URL}/quotation/lead`,
   USERLEADS: `${BASE_URL}/lead/user`,
+  BULK_MAIL:`${BASE_URL}/bulk-mail`,
+  BULK_MAIL_GET_BY_USER:`${BASE_URL}/bulk-mail/user`,
 
   MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,
   MASTER_SUB_SOURCE_PUT: `${BASE_URL}/subSrc/editSubSrc`,

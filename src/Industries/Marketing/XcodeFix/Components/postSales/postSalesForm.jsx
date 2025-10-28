@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect , useRef} from "react";
 import { FaPlus, FaTrashAlt, FaChevronDown, FaCheck } from 'react-icons/fa';
 import PaymentAndDomainDetailsCombined from './mileStoneDetails';
 import { ENDPOINTS } from "../../../../../api/constraints";
@@ -28,6 +28,8 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
           })
           .join(", ")
       : "Select Subservices...";
+
+      
 
   return (
     <div className="relative w-full">
@@ -122,6 +124,23 @@ const PostSalesForm = (passedData, isRecurring) => {
   const [currency, setCurrency] = useState('');
   //payment method 
   const [paymentMethod, setPaymentMethod] = useState('');
+  const formContainerRef = useRef(null);
+
+   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formContainerRef.current && !formContainerRef.current.contains(event.target)) {
+        if (passedData.onClose) {
+          passedData.onClose();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [passedData.onClose]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -188,6 +207,9 @@ const PostSalesForm = (passedData, isRecurring) => {
 
     fetchMasterData();
   }, []); // Empty dependency array ensures this runs only once on mount
+
+
+   
 
   const handleServiceChange = useCallback((index, name, value) => {
     setServices(prevServices => {
@@ -451,22 +473,33 @@ const PostSalesForm = (passedData, isRecurring) => {
   }
 
 
+
  return (
-  <div className="p-4 sm:p-6 bg-transparent min-h-full">
-    {viewMode === 'history' ? (
-      //  HISTORY VIEW
-      <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-blue-700 uppercase mb-4">
-            Service History
-          </h3>
-          <button
-            onClick={() => setViewMode('form')}
-            className="text-red-700 font-bold hover:text-red-900"
-          >
-            Back
-          </button>
-        </div>
+  <div ref={formContainerRef} className="p-4 sm:p-6 bg-transparent min-h-full">
+      {viewMode === 'history' ? (
+        // HISTORY VIEW - Now closes when clicking outside
+        <div className="bg-white p-6 rounded-xl shadow-2xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-blue-700 uppercase mb-4">
+              Service History
+            </h3>
+            <div className="flex gap-2">
+              {/* Back button - goes back to form view */}
+              <button
+                onClick={() => setViewMode('form')}
+                className="text-blue-700 font-bold hover:text-blue-900"
+              >
+                Back to Form
+              </button>
+              {/* Close button - closes entire modal */}
+              <button
+                onClick={passedData.onClose}
+                className="text-red-700 font-bold hover:text-red-900"
+              >
+                Close
+              </button>
+            </div>
+          </div>
 
         {loadingHistory ? (
           <p className="text-sm">Loading...</p>
@@ -522,10 +555,11 @@ const PostSalesForm = (passedData, isRecurring) => {
     ) : (
       <form
         onSubmit={handleNext}
-        className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto"
+        className="bg-white p-4 sm:p-6 rounded-xl shadow-2xl max-w-full mx-auto max-h-[80vh] overflow-y-auto " 
       >
         {/* Header & Service History Button */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6" >
+       
           <h2 className="text-2xl sm:text-3xl font-bold text-blue-700">
             {isEditing ? 'Edit Service Details' : 'Step 1: Service Details'}
           </h2>

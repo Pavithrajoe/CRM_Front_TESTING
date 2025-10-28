@@ -107,7 +107,7 @@ export default function LeadTimeline({ leadId }) {
 
   return (
     <div className="relative  w-full px-4 py-10 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className=" h-[130vh] mx-auto">
+      <div className=" h-[60vh] mx-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">Lead Activity Timeline</h2>
         {loading && (
           <div className="text-center text-gray-500 text-lg">Loading activity history...</div>

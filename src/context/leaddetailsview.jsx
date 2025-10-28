@@ -985,7 +985,7 @@ const renderTabContent = () => {
 
 return (
   <>
-    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -1506,27 +1506,34 @@ return (
       )}
 
       {/* for postsales form */}
-      {showPostSalesForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="bg-tranparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative">
-            <button
-              type="button"
-              onClick={() => setShowPostSalesForm(false)}
-              className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-              title="Close Form"
-            >
-              ✕
-            </button>
+{showPostSalesForm && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+    // REMOVE this onClick handler ↓
+    // onClick={() => setShowPostSalesForm(false)}
+  >
+    <div 
+      className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
+      // Keep this to prevent closing when clicking inside the form
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => setShowPostSalesForm(false)}
+        className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+        title="Close Form"
+      >
+        ✕
+      </button>
 
-            {/* PostSalesForm content will be rendered here */}
-            <PostSalesForm
-              leadId={leadId}
-              onBack={() => setShowPostSalesForm(false)}
-            />
-          </div>
-        </div>
-      )}
-
+      <PostSalesForm
+        leadId={leadId}
+        onBack={() => setShowPostSalesForm(false)}
+        onClose={() => setShowPostSalesForm(false)}
+      />
+    </div>
+  </div>
+)}
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div

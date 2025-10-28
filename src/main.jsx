@@ -7,7 +7,7 @@ import "./index.css";
 import { TabProvider } from "./context/TabContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <BrowserRouter>
     <TabProvider>
 
@@ -15,5 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       </TabProvider>
      
     </BrowserRouter>
-  </React.StrictMode>
+  // </React.StrictMode> 
 );
+
+

@@ -16,7 +16,7 @@ const getPotentialColor = (index) => {
   }
 };
 
-export default function KPIStats(data) {  
+export default function KPIStats() {  
   const [wonCount, setWonCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0); 
   const [lostCount, setLostCount] = useState(0);
@@ -34,7 +34,7 @@ export default function KPIStats(data) {
     let extractedUserId = null;
     let tokenFromStorage = null;
 
-    try {
+    try {      
       tokenFromStorage = localStorage.getItem("token");
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);

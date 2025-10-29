@@ -23,7 +23,7 @@ const COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 
 const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
+  const [reminderData, setReminderData] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [taskError, setTaskError] = useState(null);
@@ -31,7 +31,6 @@ const LeadsDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [missedTasks, setMissedTasks] = useState([]);
   const [taskMissedStatus, setTaskMissedStatus] = useState(null);
-  const [leads, setLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
 
@@ -44,9 +43,8 @@ const LeadsDashboard = () => {
     const userObj = JSON.parse(storedUser);
     setUser(userObj);
 
-    // Decode token 
+    // Decode token DASHBOARD_USER
     const decoded = jwtDecode(token);
-    const companyId = decoded.company_id;
     const userId = decoded.user_id;
 
     if (!localStorage.getItem("hasSeenDashboardIntro")) {
@@ -54,7 +52,9 @@ const LeadsDashboard = () => {
       localStorage.setItem("hasSeenDashboardIntro", "true");
     }
 
-    const fetchDashboardData = async () => {
+
+    // Function to fetch the reminder data  - Need to create an new API for this (or even binding)
+    const fetchReminderData = async () => {
       try {
         const response = await fetch(`${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
           {
@@ -67,12 +67,13 @@ const LeadsDashboard = () => {
         );
         if (!response.ok) throw new Error("Failed to fetch dashboard data");
         const data = await response.json();
-        setDashboardData(data);
+        setReminderData(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
     };
 
+    // Function to fetch the tasks data
     const fetchTasks = async () => {
       try {
         const response = await fetch(ENDPOINTS.DAILY_TASK, {
@@ -92,7 +93,8 @@ const LeadsDashboard = () => {
       }
     };
 
-    const fetchCompanyAndMissedTasks = async () => {
+
+    const fetchCompanyAndMissedTasks = async () => {  // We can fetch the company related data in the context and call them here !
     try {
       const companyRes = await fetch(`${ENDPOINTS.COMPANY}/${userObj.iCompany_id}`, {
         method: "GET",
@@ -125,43 +127,14 @@ const LeadsDashboard = () => {
     }
     };
 
-    const fetchLeads = async (userId, token) => {
-      if (!userId) {
-        setLoadingLeads(false);
-        setLeadsError("User ID is required to fetch specific KPI data.");
-        return;
-      }
 
-      setLoadingLeads(true);
-      setLeadsError(null);
-      try {
-        if (!token) {
-          throw new Error("Authentication token not found.");
-        }
 
-        const response = await fetch(`${ENDPOINTS.LEAD}${userId}?page=1&limit=10000`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const jsonRes = await response.json();
-        if (!response.ok) throw new Error(jsonRes.message || "API error");
-
-        setLeads(jsonRes.details || []);
-      } catch (e) {
-        setLeadsError(e.message);
-        console.error("Error fetching leads:", e); // Console clear
-      } finally {
-        setLoadingLeads(false);
-      }
-    };
-
-    fetchDashboardData();
+    fetchReminderData();
     fetchTasks();
     fetchCompanyAndMissedTasks();
-    fetchLeads(userId, token); 
   }, []); 
 
-  const reminders = dashboardData?.details?.reminders || [];
+  const reminders = reminderData?.details?.reminders || [];
   const companyId = user?.iCompany_id;
 
   // IST date helpers
@@ -253,7 +226,7 @@ const LeadsDashboard = () => {
               overflowY: "auto",
             }}
           >
-            <KPIStats data={dashboardData?.details} />
+            <KPIStats />
             <Typography variant="caption" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
                {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : ''}
                {/* {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : `Total Leads Fetched: ${leads.length}`} */}
@@ -423,7 +396,8 @@ const LeadsDashboard = () => {
                     {taskError}
                   </Typography>
                 ) : (
-                  <TaskSameDay tasks={todayTasks} />
+                  
+                  <TaskSameDay />
                 )}
               </TabPanel>
 

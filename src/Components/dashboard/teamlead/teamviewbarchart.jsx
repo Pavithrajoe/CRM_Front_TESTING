@@ -22,13 +22,14 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function LeadManagementCard() {
+export default function LeadManagementCard({
+  leads, team_members, childSubordinates
+}) {
   const [showTeam, setShowTeam] = useState(false);
   const [showActiveMembers, setShowActiveMembers] = useState(false);
   const [showInactiveMembers, setShowInactiveMembers] = useState(false);
   const [leadsData, setLeadsData] = useState([]);
   const [teamMembersData, setTeamMembersData] = useState([]);
-  const [childSubordinates, setChildSubordinates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -73,12 +74,10 @@ export default function LeadManagementCard() {
 
       setLeadsData(result.details?.lead || []);
       setTeamMembersData(result.details?.subordinates || []);
-      setChildSubordinates(result.details?.childSubordinateIds || []);
     } catch (err) {
       setError(`Failed to fetch data: ${err.message}`);
       setLeadsData([]);
       setTeamMembersData([]);
-      setChildSubordinates([]);
     } finally {
       setLoading(false);
     }

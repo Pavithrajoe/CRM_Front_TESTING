@@ -37,6 +37,9 @@ export default function TeamKPIStats() {
     }
   }, []);
 
+
+  
+
   const fetchTeamKPIs = useCallback(async () => {
     if (!currentUserId || !currentToken) {
       setLoading(false);

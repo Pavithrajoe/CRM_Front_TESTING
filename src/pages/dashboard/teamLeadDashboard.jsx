@@ -149,7 +149,7 @@ const LeadsDashboard = () => {
         setLeads(jsonRes.details || []);
       } catch (e) {
         setLeadsError(e.message);
-        console.error("Error fetching leads:", e); // Console clear
+        console.error("Error fetching leads:", e); 
       } finally {
         setLoadingLeads(false);
       }

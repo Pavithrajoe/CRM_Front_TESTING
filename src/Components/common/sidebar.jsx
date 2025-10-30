@@ -34,7 +34,6 @@ const Sidebar = () => {
         ];
     };
 
-
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {

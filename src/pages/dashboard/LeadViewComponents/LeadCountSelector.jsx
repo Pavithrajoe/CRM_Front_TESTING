@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const LeadCountSelector = ({ leadsCount, onSelect, selectedCount, onReset }) => {
-    const counts = [100, 500, 1000, 2000, 3000];
+    const counts = [50, 100, 500, 1000, 2000, 3000];
 
     const handleSelect = (event) => {
         const value = event.target.value === "all" ? null : parseInt(event.target.value, 10);

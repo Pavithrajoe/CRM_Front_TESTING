@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { CheckCircle, Circle, X, Calendar, Edit, Save } from 'lucide-react';
 import {
   Dialog,
@@ -25,10 +25,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import PaymentAndDomainDetailsCombined from './mileStoneDetails';
 import PostSalesForm from './postSalesForm';
+import { GlobUserContext } from '../../../../../context/userContex';
 
 const MAX_REMARK_LENGTH = 500;
 
 const MilestoneStatusBar = ({ leadId }) => {
+  const { user } = useContext(GlobUserContext)
   const { showToast } = useToast();
   const [milestones, setMilestones] = useState([]);
   const [users, setUsers] = useState([]);
@@ -150,17 +152,9 @@ const MilestoneStatusBar = ({ leadId }) => {
   };
 
   const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${ENDPOINTS.USERS}`, {
-        headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
-      });
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err.message);
-    }
+   
+    const filteredCompanyList = user.filter (user => (user.bactive === true || user.bactive === "true"))
+    setUsers(filteredCompanyList)
   };
 
   useEffect(() => {

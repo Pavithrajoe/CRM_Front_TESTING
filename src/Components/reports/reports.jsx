@@ -7,55 +7,61 @@ const cardsData = [
     title: "Sales by Stage Analytics",
     description: "View performance of opportunities across sales stages.",
     route: "/sales-by-stage-analytics",
-    image: "/public/illustrations/analytics.svg", // Use your actual image path here
+    image: "/public/illustrations/analytics.svg",
   },
   {
     title: "Lead Lost Analytics",
     description: "Analyze lost leads and identify drop-off patterns.",
     route: "/lead-lost-analytics",
-    image: "/public/illustrations/lost.svg", // Use your actual image path here
+    image: "/public/illustrations/lost.svg", 
   },
   //  {
   //   title: "Lead Conversion Time",
   //   description: "Analyze lost leads and identify drop-off patterns.",
   //   route: "/lead-conversion",
-  //   image: "/public/illustrations/timeline.svg", // Use your actual image path here
+  //   image: "/public/illustrations/timeline.svg", 
   // },
    {
     title: "Prospects Engaged But Not Converted",
     description: "View performance of opportunities across sales stages.",
     route: "/prospects-not-converted",
-    image: "/public/illustrations/Analytics-rafiki.svg", // Use your actual image path here
+    image: "/public/illustrations/Analytics-rafiki.svg", 
   },
   {
     title: "First Response Time for Oppertunity ",
     description: "View performance of opportunities across sales stages.",
     route: "/First-Response-Time-for-Opportunity",
-    image: "/public/illustrations/firstresponse.svg", // Use your actual image path here
+    image: "/public/illustrations/firstresponse.svg", 
   },
    {
     title: "Company Leads",
     description: "View performance of opportunities across sales stages.",
     route: "/company-leads",
-    image: "/public/illustrations/funnel.svg", // Use your actual image path here
+    image: "/public/illustrations/funnel.svg", 
   },
    {
     title: "Lead Owner Effiency",
     description: "View performance of opportunities across sales stages.",
     route: "/lead-owner-efficiency",
-    image: "/public/illustrations/efficeincy.svg", // Use your actual image path here
+    image: "/public/illustrations/efficeincy.svg", 
   },
   {
     title: "Sales Pipeline",
     description: "View performance of opportunities across sales stages.",
     route: "/Sales-pipeline",
-    image: "/public/illustrations/salespipeline.svg", // Use your actual image path here
+    image: "/public/illustrations/salespipeline.svg", 
   },
    {
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
     route: "/territory-based-analytics",
-    image: "/public/illustrations/map.png", // Use your actual image path here
+    image: "/public/illustrations/map.png", 
+  },
+   {
+    title: "Recurring Client Analytics",
+    description: "Track and analyze repeat business performance across client segments",
+    route: "/recurring-client-analytics",  
+    image: "/public/illustrations/recurring_client_report.png", 
   },
 ];
 const CardsPage = () => {
@@ -70,11 +76,10 @@ const CardsPage = () => {
     
     <div className="flex min-h-screen text-gray-900">
       {/* Sidebar */}
-      
-
+    
       {/* Main Content */}
       <div className="flex-1 px-8 py-10">
-                          <ProfileHeader />
+          <ProfileHeader />
 
         {/* Search Bar */}
         <div className="mb-8">
@@ -110,12 +115,12 @@ const CardsPage = () => {
 
                 {/* Image */}
               <div className="w-40 h-40 flex-shrink-0">
-  <img
-    src={card.image}
-    alt={card.title}
-    className="w-full h-full object-cover rounded-lg"
-  />
-</div>
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
               </div>
             ))}
           </div>

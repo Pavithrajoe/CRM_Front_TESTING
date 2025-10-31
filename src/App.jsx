@@ -13,9 +13,6 @@ import AppLayout from "./Components/AppLayout";
 import PrivateRoute from "./Components/PrivateRoute.jsx";
 import { UserProvider } from "./context/UserContext";
 import { TabProvider } from "./context/TabContext";
-
-
-// All your other imports...
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
 import UserProfile from "./pages/userProfile";
@@ -73,6 +70,9 @@ import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
 import DistanceToClient from "./Components/Tools/Maps/DistanceToClient.jsx";
+import RecurringClientAnalytics from "./Components/reports/RecurringClientAnalytics/RecurringClientAnalytics.jsx";
+
+
 function App() {
   return (
     <PopupProvider>
@@ -97,6 +97,7 @@ function App() {
                   <Route path="userprofile/:userId" element={<UserProfile />} />
                   <Route path="calenderpage" element={<CalendarPage />} />
                   <Route path="/reportpage" element={<CardsPage />} />
+                  <Route path="/recurring-client-analytics" element={<RecurringClientAnalytics />} />
                   <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
                   <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
                   <Route path="/companydashboard" element={<CompanyDashboard />} />

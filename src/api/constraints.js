@@ -78,6 +78,7 @@ export const ENDPOINTS = {
   GET_SERVICE_HISTORY : `${BASE_URL}/post-sales/lead`,
   MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
   LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
+  RECURRING_CLIENT_REPORT: `${BASE_URL}/reports/recurring-client`,
    
 
   // Master endpoints

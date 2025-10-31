@@ -4,7 +4,6 @@ import axios from 'axios';
 import { X, Search } from "lucide-react";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
-// const LeadForm = ({ onClose, onSuccess }) => {
   const LeadForm = ({ onClose, onSuccess, clientType }) => {
   const modalRef = useRef(null);
   const token = localStorage.getItem("token");
@@ -25,13 +24,13 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     console.error("Invalid or missing JWT token");
   }
 
-  const [existingLeadsList, setExistingLeadsList] = useState([]);
-  const [isLeadListVisible, setIsLeadListVisible] = useState(false);
-  const [searchError, setSearchError] = useState('');
-  const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
-  const [backendError, setBackendError] = useState("");
+  // const [existingLeadsList, setExistingLeadsList] = useState([]);
+  // const [isLeadListVisible, setIsLeadListVisible] = useState(false);
+  // const [searchError, setSearchError] = useState('');
+  // const [isExistingLeadDetailsVisible, setIsExistingLeadDetailsVisible] = useState(false);
+  // const [backendError, setBackendError] = useState("");
   const [foundLeads, setFoundLeads] = useState([]); 
-  const [isSearching, setIsSearching] = useState(false);
+  // const [isSearching, setIsSearching] = useState(false);
 // new for new/exis
   const [isExistingClientForm, setIsExistingClientForm] = useState(false);
   const [existingClientMobile, setExistingClientMobile] = useState("");
@@ -315,19 +314,7 @@ useEffect(() => {
         if (selectedCity) setSearchCity(selectedCity.cCity_name);
         // console.log("Selected City:", selectedCity);
 
-    } else {
-        // console.log("Guard condition failed. Form not populated.");
-        // console.log("existingClientData is present:", !!existingClientData);
-        // console.log("Potential list is populated:", Potential.length > 0);
-        // console.log("Status list is populated:", status.length > 0);
-        // console.log("Lead Industry list is populated:", leadIndustry.length > 0);
-        // console.log("Lead Sub Industry list is populated:", leadSubIndustry.length > 0);
-        // console.log("Source list is populated:", source.length > 0);
-        // console.log("Service list is populated:", service.length > 0);
-        // console.log("Sub Service list is populated:", subServiceList.length > 0);
-        // console.log("City list is populated:", cities.length > 0);
-      
-    }
+    } 
 }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
 
   // --- END OF NEW LOGIC ---
@@ -436,7 +423,6 @@ const checkExisting = async (fieldName, fieldValue) => {
       console.error("Error checking existing lead:", err);
     }
   };
-
 
 const handleSearchExistingLead = async () => {
   if (!searchMobile && !searchEmail) {
@@ -577,7 +563,6 @@ else {
           setter([]);
           return;
         }
-
         const rawData = await response.json();
         const processedData = transform(rawData);
         setter(Array.isArray(processedData) ? processedData : []);

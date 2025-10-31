@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Dialog,
@@ -49,6 +50,7 @@ import Confetti from "react-confetti";
 import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 import PostSalesForm from "../Industries/Marketing/XcodeFix/Components/postSales/postSalesForm";
+import { toast } from 'react-toastify';
 
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
@@ -112,19 +114,77 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
     </Dialog>
   );
 };
+const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
+  <div className="flex gap-6 justify-end items-center my-4">
+    <div className="relative group">
+      <button
+        onClick={() => {
+          if (currentIndex > 0) {
+            const prevLeadId = leadIds[currentIndex - 1];
+            navigate(`/leaddetailview/${prevLeadId}`, {
+              state: { ...location.state },
+            });
+          }
+        }}
+        disabled={currentIndex <= 0}
+        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+          currentIndex <= 0
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
+        }`}
+      >
+        ←
+      </button>
+      {currentIndex > 0 && (
+        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Previous Lead
+        </span>
+      )}
+    </div>
+
+    <div className="relative group">
+      <button
+        onClick={() => {
+          if (currentIndex < leadIds.length - 1) {
+            const nextLeadId = leadIds[currentIndex + 1];
+            navigate(`/leaddetailview/${nextLeadId}`, {
+              state: { ...location.state },
+            });
+          }
+        }}
+        disabled={currentIndex >= leadIds.length - 1}
+        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+          currentIndex >= leadIds.length - 1
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
+        }`}
+      >
+        →
+      </button>
+      {currentIndex < leadIds.length - 1 && (
+        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Next Lead
+        </span>
+      )}
+    </div>
+  </div>
+);
+
 
 const LeadDetailView = () => {
   const { leadId } = useParams();
   const { showPopup } = usePopup();
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const lostReasonDialogRef = useRef(null);
 
+// console.log("The lead list data are:", location.state?.leadList)
+    // Receive data from navigation
+  const leadsList = location.state?.leadList || [];
+  const leadIds = leadsList.map((lead) => lead.ilead_id);
+  const currentIndex = leadIds.indexOf(Number(leadId));
+
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.only('xs'));
-  const isSm = useMediaQuery(theme.breakpoints.only('sm'));
-  const isMd = useMediaQuery(theme.breakpoints.only('md'));
-  const isLg = useMediaQuery(theme.breakpoints.only('lg'));
-  const isXl = useMediaQuery(theme.breakpoints.up('xl'));
   
   // State declarations
   const [tabIndex, setTabIndex] = useState(0);
@@ -158,7 +218,46 @@ const LeadDetailView = () => {
   const [showPostSalesForm, setShowPostSalesForm] = useState(false);
 
   // New states for Quotation
-  const [showQuotationForm, setShowQuotationForm] = useState(false);
+  const [showQuotationForm, setShowQuotationForm] = useState(false);<div className="flex justify-between items-center my-4">
+  <button
+    onClick={() => {
+      if (currentIndex > 0) {
+        const prevLeadId = leadIds[currentIndex - 1];
+        navigate(`/leaddetailview/${prevLeadId}`, {
+          state: { ...location.state },
+        });
+      }
+    }}
+    disabled={currentIndex <= 0}
+    className={`px-4 py-2 rounded-lg font-semibold ${
+      currentIndex <= 0
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : "bg-blue-600 text-white hover:bg-blue-800"
+    }`}
+  >
+    ← Previous
+  </button>
+
+  <button
+    onClick={() => {
+      if (currentIndex < leadIds.length - 1) {
+        const nextLeadId = leadIds[currentIndex + 1];
+        navigate(`/leaddetailview/${nextLeadId}`, {
+          state: { ...location.state },
+        });
+      }
+    }}
+    disabled={currentIndex >= leadIds.length - 1}
+    className={`px-4 py-2 rounded-lg font-semibold ${
+      currentIndex >= leadIds.length - 1
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : "bg-blue-600 text-white hover:bg-blue-800"
+    }`}
+  >
+    Next →
+  </button>
+</div>
+
   const [quotations, setQuotations] = useState([]);
   const [showQuotationsList, setShowQuotationsList] = useState(false);
   const [quotationsLoading, setQuotationsLoading] = useState(false);
@@ -199,7 +298,7 @@ const LeadDetailView = () => {
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
-  // Extract company info from localStorage
+  // Extract company info lStorage
   const extractAllUserInfo = () => {
     try {
       const token = localStorage.getItem("token");
@@ -234,11 +333,13 @@ const LeadDetailView = () => {
     }
   };
 
+  
+
   useEffect(() => {
     if (leadId) {
-      fetchLeadData();
-      fetchLostReasons();
-      fetchQuotations();
+      // fetchLeadData();
+      // fetchLostReasons();
+      // fetchQuotations();
       extractAllUserInfo();
     }
   }, [leadId]);
@@ -889,7 +990,7 @@ const applyTemplate = (template) => {
 };
 
 // You'll need to fetch stages for the StatusBar component
-const [stages, setStages] = useState([]);
+const [stage, setStage] = useState([]);
 
 const fetchStages = async () => {
   try {
@@ -914,7 +1015,7 @@ const fetchStages = async () => {
           .sort((a, b) => a.order - b.order)
       : [];
 
-    setStages(formattedStages);
+    setStage(formattedStages);
   } catch (err) {
     console.error('Error fetching stages:', err.message);
   }
@@ -985,7 +1086,7 @@ const renderTabContent = () => {
 
 return (
   <>
-      <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
+    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -1001,12 +1102,16 @@ return (
           <ProfileCard
             leadId={leadId}
             settingsData={profileSettings}
+            
             isReadOnly={
               isLost ||
               isWon ||
               immediateWonStatus ||
               leadData?.bisConverted === true
             }
+            leadData= {leadData}
+            isDeal = {isDeal}
+            isLost = {isLost}
           />
           {isLeadActive && <ActionCard leadId={leadId} />}
         </div>
@@ -1014,16 +1119,78 @@ return (
 
       {/* Right Column: Status Bar, Tabs, and Content */}
       <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
-        {console.log("The post sales data are:", leadData?.postSalesMaster)}
+
+     <div className="flex gap-6 justify-end items-center my-4">
+  {/* Previous Button */}
+  <div className="relative group">
+    <button
+      onClick={() => {
+        if (currentIndex > 0) {
+          const prevLeadId = leadIds[currentIndex - 1];
+          navigate(`/leaddetailview/${prevLeadId}`, {
+            state: { ...location.state },
+          });
+        }
+      }}
+      disabled={currentIndex <= 0}
+      className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+        currentIndex <= 0
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
+      }`}
+    >
+      ←
+    </button>
+
+    {/* Tooltip */}
+    {currentIndex > 0 && (
+      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+        Previous Lead
+      </span>
+    )}
+  </div>
+
+  {/* Next Button */}
+  <div className="relative group">
+    <button
+      onClick={() => {
+        if (currentIndex < leadIds.length - 1) {
+          const nextLeadId = leadIds[currentIndex + 1];
+          navigate(`/leaddetailview/${nextLeadId}`, {
+            state: { ...location.state },
+          });
+        }
+      }}
+      disabled={currentIndex >= leadIds.length - 1}
+      className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+        currentIndex >= leadIds.length - 1
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
+      }`}
+    >
+      →
+    </button>
+
+    {/* Tooltip */}
+    {currentIndex < leadIds.length - 1 && (
+      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+        Next Lead
+      </span>
+    )}
+  </div>
+</div>
+
 
         {leadData?.postSalesMaster.length === 0 ? (
           <StatusBar
             leadId={leadId}
             leadData={leadData}
-            isLost={isLost}
+            isLost={isLost} 
+            statusRemarks={statusRemarks}
             isWon={
               isWon || immediateWonStatus || leadData?.bisConverted === true
             }
+            stage= {stage}
           />
         ) : (
           <MilestoneStatusBar
@@ -1033,6 +1200,7 @@ return (
             isWon={
               isWon || immediateWonStatus || leadData?.bisConverted === true
             }
+            stage={stage}
           />
         )}
 
@@ -1506,34 +1674,34 @@ return (
       )}
 
       {/* for postsales form */}
-{showPostSalesForm && (
-  <div 
-    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-    // REMOVE this onClick handler ↓
-    // onClick={() => setShowPostSalesForm(false)}
-  >
-    <div 
-      className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
-      // Keep this to prevent closing when clicking inside the form
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        type="button"
-        onClick={() => setShowPostSalesForm(false)}
-        className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-        title="Close Form"
-      >
-        ✕
-      </button>
+      {showPostSalesForm && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+          // REMOVE this onClick handler ↓
+          // onClick={() => setShowPostSalesForm(false)}
+        >
+          <div
+            className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
+            // Keep this to prevent closing when clicking inside the form
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setShowPostSalesForm(false)}
+              className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+              title="Close Form"
+            >
+              ✕
+            </button>
 
-      <PostSalesForm
-        leadId={leadId}
-        onBack={() => setShowPostSalesForm(false)}
-        onClose={() => setShowPostSalesForm(false)}
-      />
-    </div>
-  </div>
-)}
+            <PostSalesForm
+              leadId={leadId}
+              onBack={() => setShowPostSalesForm(false)}
+              onClose={() => setShowPostSalesForm(false)}
+            />
+          </div>
+        </div>
+      )}
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div

@@ -11,7 +11,7 @@ const safeField = (value) => {
 
 export const generateQuotationPDF = async (quotation, returnDataUrl = false) => {
   const leadId = quotation.iLead_id;
-  console.log("lead ID", leadId);
+  // console.log("lead ID", leadId);
 
   try {
     const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
@@ -26,7 +26,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
       throw new Error("No quotation data found");
 
     const q = result.data[0];
-    console.log("q data", q);
+    // console.log("q data", q);
 
     const doc = new jsPDF();
     const margin = 15;

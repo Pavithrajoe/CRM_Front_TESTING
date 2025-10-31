@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit } from 'react-icons/fa';
@@ -788,13 +792,14 @@ setAllLeads(sorted);
         }
     }, [selectedFilter]);
 
-    const goToDetail = (id) => {
-        navigate(`/leaddetailview/${id}`, { 
-            state: { 
-                returnPage: currentPage,
-                activeTab: selectedFilter 
-            } 
-        });
+    const goToDetail = (id, leadList) => {
+      navigate(`/leaddetailview/${id}`, {
+        state: {
+          returnPage: currentPage,
+          activeTab: selectedFilter,
+          leadList: leadList,
+        },
+      });
     };
 
     const getSortIndicator = (key) => {
@@ -1431,9 +1436,9 @@ setAllLeads(sorted);
                                             />
                                         </div>
                                         
-                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.clead_name || '-'}</div>
-                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.corganization || item.c_organization || '-'}</div>
-                                        <div className="relative group overflow-visible" onClick={() => goToDetail(item.ilead_id)}>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{item.clead_name || '-'}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{item.corganization || item.c_organization || '-'}</div>
+                                        <div className="relative group overflow-visible" onClick={() => goToDetail(item.ilead_id, displayedData)}>
                                             <span className="block truncate">
                                                 {item.cemail || item.c_email || '-'}
                                             </span>
@@ -1443,19 +1448,19 @@ setAllLeads(sorted);
                                                 </div>
                                             )}
                                         </div>
-                                        <div onClick={() => goToDetail(item.ilead_id)}>{item.iphone_no || item.c_phone || '-'}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{item.iphone_no || item.c_phone || '-'}</div>
                                         {/* <div onClick={() => goToDetail(item.ilead_id)}>{item.clead_owner || '-'}</div> */}
-                                        <div onClick={() => goToDetail(item.ilead_id)}> {item.user?.cFull_name || '-'} </div>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}> {item.user?.cFull_name || '-'} </div>
 
                                         {selectedFilter === 'assignedToMe' && (
                                             <>
-                                                <div onClick={() => goToDetail(item.ilead_id)}>{item.iassigned_by_name || '-'}</div>
-                                                <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dcreate_dt)}</div>
+                                                <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{item.iassigned_by_name || '-'}</div>
+                                                <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{formatDate(item.dcreate_dt)}</div>
                                                 {/* <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dupdate_dt || item.dmodified_dt)}</div> */}
                                             </>
                                         )}
-                                        <div onClick={() => goToDetail(item.ilead_id)}>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
-                                        <div onClick={() => goToDetail(item.ilead_id)}>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>{formatDate(item.dmodified_dt || item.d_modified_date)}</div>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>
                                             <span className={`px-3 py-1 rounded-full text-xs ${statusBgColor}`}>
                                                 {statusText}
                                             </span>
@@ -1532,7 +1537,7 @@ setAllLeads(sorted);
                                                 <FaGlobe size={18} />
                                             </div>
                                         )}
-                                        <div onClick={() => goToDetail(item.ilead_id)}>
+                                        <div onClick={() => goToDetail(item.ilead_id, displayedData)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
                                                 <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
                                                     {item.clead_name || '-'}

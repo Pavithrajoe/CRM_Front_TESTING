@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback ,useContext  } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { X, Search, Filter } from "lucide-react";
@@ -10,6 +10,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { format } from 'date-fns';
 import { usePopup } from "../context/PopupContext";
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import { GlobUserContext } from "../context/userContex";
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
@@ -22,6 +23,8 @@ const SpeechRecognition =
 let mic = null;
 
 const ReminderForm = () => {
+    const { user } = useContext(GlobUserContext)
+  
   const { leadId } = useParams();
   const { showPopup } = usePopup();
   const [showForm, setShowForm] = useState(false);
@@ -257,15 +260,18 @@ const ReminderForm = () => {
   };
 
   const fetchUsers = async () => {
-    try {
-      const res = await axios.get(`${apiEndPoint}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Failed to load users", err);
-    }
-  };
+
+    const FilterUsers= user.filter (user => (user.bactive === true ) || (user.bactive === "true")
+    )
+    // try {
+    //   const res = await axios.get(`${apiEndPoint}/users`, {
+    //     headers: { Authorization: `Bearer ${token}` },
+    //   });
+      setUsers(FilterUsers);
+  //   } catch (err) {
+  //     console.error("Failed to load users", err);
+  //   }
+  }
 
   useEffect(() => {
     getReminder();

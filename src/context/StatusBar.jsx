@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useContext } from 'react';
 import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
+import { GlobUserContext } from './userContex';
 import {
   Dialog,
   DialogTitle,
@@ -21,6 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+// import { useDemoSession } from './demo_session_session';
 // import PaymentAndDomainDetailsCombined from '../../src/Industries/Marketing/XcodeFix/Components/postSales/domainDeatils'
 import dayjs from 'dayjs';
 
@@ -32,10 +34,12 @@ const MAX_NOTES_LENGTH = 200;
 const MAX_PLACE_LENGTH = 200;
 const MAX_PROPOSAL_NOTES_LENGTH = 500;
 
-const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
-  const [stages, setStages] = useState([]);
+const StatusBar = ({ leadId, leadData, isLost, isWon , statusRemarks }) => {
+  const { user } = useContext(GlobUserContext);
+
+    const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
-  const [statusRemarks, setStatusRemarks] = useState([]);
+  const [statusRemark, setStatusRemark] = useState([]);
   const [error, setError] = useState(null);
   const [stageStatuses, setStageStatuses] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
@@ -58,6 +62,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     presentedByUsers: '',
     amount: '',
   });
+  console.log("remarks", statusRemarks)
   const [dialogStageIndex, setDialogStageIndex] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [users, setUsers] = useState([]);
@@ -295,9 +300,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   useEffect(() => {
-    fetchStages();
-    fetchUsers();
-    fetchDemoSessions();
+    // fetchUsers();
+    // fetchDemoSessions();
     fetchProposalSendModes(); 
   }, []);
 
@@ -374,32 +378,16 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${ENDPOINTS.USERS}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
-    }
+
+          const companyUsersList = user.filter( user => (user.bactive === true || user.bactive === "true"))
+      setUsers(companyUsersList);
+    
   };
 
-  const fetchDemoSessions = async () => {
+  const fetchDemoSession = async (sessions) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${ENDPOINTS.DEMO_SESSION}?leadId=${leadId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setDemoSessions(response.data.Message || []);
+      
+     await  setDemoSessions(sessions);
     } catch (error) {
       console.error('Error fetching demo sessions:', error.message);
     }
@@ -408,7 +396,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   useEffect(() => {
     fetchStages();
     fetchUsers();
-    fetchDemoSessions();
+    fetchDemoSession();
   }, []);
 
   useEffect(() => {
@@ -804,20 +792,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   const getStatusRemarks = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (Array.isArray(response.data?.Response)) {
-        setStatusRemarks(response.data.Response);
-      }
-    } catch (e) {
-      console.error('Error fetching remarks:', e.message);
-    }
+
+        setStatusRemark(statusRemarks);
+
   };
 
   useEffect(() => {
@@ -835,7 +812,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             const isCompleted = index < currentStageIndex;
             const isActive = index === currentStageIndex;
             const isClickable = index > currentStageIndex && !isLost && !isWon && stage.bactive;
-            const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
+            const matchedRemark = statusRemark.find(r => r.lead_status_id === stage.id);
 
             return (
               <React.Fragment key={stage.id}>
@@ -1396,13 +1373,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           </DialogActions>
         </Dialog>
 
-        {statusRemarks.length > 0 && (
+        {statusRemark.length > 0 && (
         <div className="mt-6">
           <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
           <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-            {statusRemarks.map((remark, index) => (
+            {statusRemark.map((remark, index) => (
               <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
-                {index !== statusRemarks.length - 1 && (
+                {index !== statusRemark.length - 1 && (
                   <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
                 )}
                 <div

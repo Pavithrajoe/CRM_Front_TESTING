@@ -264,7 +264,7 @@ const DemoSessionDetails = ({ leadId }) => {
             </Card>
           ))
         )}
-{/* 
+
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Edit Demo Session</DialogTitle>
           <DialogContent>
@@ -353,7 +353,7 @@ const DemoSessionDetails = ({ leadId }) => {
               Save
             </Button>
           </DialogActions>
-        </Dialog> */}
+        </Dialog>
 
         {/* Use context snackbar instead of local one */}
         <Snackbar

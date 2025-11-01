@@ -1065,7 +1065,7 @@ setAllLeads(sorted);
                         >
                             {filterKey === 'all'
                                 ? 'All Leads'
-                                : filterKey === ''
+                                : filterKey === 'leads'
                                     ? 'My Active Leads'
                                     : filterKey === 'websiteLeads'
                                         ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>

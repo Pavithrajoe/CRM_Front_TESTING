@@ -120,7 +120,6 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
 
-console.log("The lead list data are:", location.state?.leadList)
     // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
@@ -1117,7 +1116,6 @@ return (
     )}
   </div>
 </div>
-
 
         {leadData?.postSalesMaster.length === 0 ? (
           <StatusBar

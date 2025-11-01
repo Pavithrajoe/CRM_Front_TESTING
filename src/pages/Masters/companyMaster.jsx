@@ -55,7 +55,6 @@ useEffect(() => {
       }
 
       const data = await res.json();
-      console.log("Settings response:", data);
       setSettings(data.result); // set the nested object, not the whole response
     } catch (error) {
       console.error("Fetch error:", error);

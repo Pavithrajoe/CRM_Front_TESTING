@@ -323,8 +323,7 @@ useEffect(() => {
     setSelectedNotifyToUser(null);
 
     try {
-      await axios.post(
-        `${apiEndPoint}/assigned-to`,
+      await axios.post(`${apiEndPoint}/assigned-to`,
         {
           iassigned_by: loggedInUserId,
           iassigned_to: userIdToAssign,
@@ -865,11 +864,7 @@ useEffect(() => {
           </div>
         )}
 
-
-    
       </>
-
-      
     </ErrorBoundary>
   );
 };

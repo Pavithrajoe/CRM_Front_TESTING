@@ -51,7 +51,6 @@ const AccountSettings = () => {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const list = res.data?.data?.data || [];
-      console.log(list)
       setBusinessTypes(list.filter(bt => bt.bactive));
     }).catch(console.error);
   }, [token]);
@@ -148,7 +147,6 @@ const AccountSettings = () => {
   const handleToggleChange = (key) => {
     setGeneralSettings(prev => {
       const newState = { ...prev, [key]: !prev[key] };
-      console.log('Checkbox toggled, new state:', newState);
       return newState;
     });
   };
@@ -211,7 +209,6 @@ const AccountSettings = () => {
 const handleSaveGeneralSettings = useCallback(async () => {
   setLoading(true);
   try {
-    console.log('Saving payload:', generalSettings);
     const method = hasGeneralSettings ? 'put' : 'post';
     await axios[method](ENDPOINTS.GENERAL_SETTING, generalSettings, {
       headers: { Authorization: `Bearer ${token}` },

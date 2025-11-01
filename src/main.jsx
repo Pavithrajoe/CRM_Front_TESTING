@@ -7,15 +7,11 @@ import "./index.css";
 import { TabProvider } from "./context/TabContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-    <BrowserRouter>
+  <BrowserRouter>
     <TabProvider>
-
       <App />
-      </TabProvider>
-     
-    </BrowserRouter>
-  // </React.StrictMode> 
+    </TabProvider>
+  </BrowserRouter>
 );
 
 

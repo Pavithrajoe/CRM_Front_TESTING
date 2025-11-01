@@ -58,9 +58,10 @@ export default function SalesByStageReport() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [apiHittingCount,setApiHittingCount]=useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+        const fetchData = async () => {
       const token = localStorage.getItem("token");
       try {
         const response = await fetch(`${ENDPOINTS.STAGE_LEADS}`, {
@@ -70,7 +71,7 @@ export default function SalesByStageReport() {
             Authorization: `Bearer ${token}`,
           },
         });
-
+          console.info("Fetching stage leads data...");
         if (!response.ok) {
           throw new Error(`Can't fetch stage leads data: ${response.status}`);
         }
@@ -164,9 +165,15 @@ export default function SalesByStageReport() {
       }
     };
 
-    fetchData();
+     fetchData();
   }, []);
+     
+    
 
+
+
+  //log the api hitting count
+             console.log("API called times:",apiHittingCount);
   // Function to handle Excel export
   const handleExport = () => {
     if (tableData.length === 0) {

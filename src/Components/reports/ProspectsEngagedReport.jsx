@@ -95,19 +95,19 @@ export default function ProspectsEngagedReport() {
     return `${year}-${month}-${day}`;
   };
 
-  // Effect hook to set the default date range to the current month on initial component mount
-  useEffect(() => {
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  // // Effect hook to set the default date range to the current month on initial component mount
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  //   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
-    const formattedLastDay = formatDateForInput(lastDayOfMonth);
+  //   const formattedFirstDay = formatDateForInput(firstDayOfMonth);
+  //   const formattedLastDay = formatDateForInput(lastDayOfMonth);
 
-    setDateFilterFrom(formattedFirstDay);
-    setDateFilterTo(formattedLastDay);
-    setIsDefaultMonth(true); // Indicate that the default month filter is applied
-  }, []); // Empty dependency array ensures this runs only once on mount
+  //   setDateFilterFrom(formattedFirstDay);
+  //   setDateFilterTo(formattedLastDay);
+  //   setIsDefaultMonth(true); // Indicate that the default month filter is applied
+  // }, []); // Empty dependency array ensures this runs only once on mount
 
   // Hook for programmatic navigation
   const navigate = useNavigate();

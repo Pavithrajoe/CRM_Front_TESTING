@@ -69,21 +69,21 @@ const CompanyLeads = () => {
           fromDate: dateFilterFrom,
           toDate: dateFilterTo,
         };
-
+        if(dateFilterFrom && dateFilterTo){
         const response = await axios.get(`${ENDPOINTS.COMPANY_LEADS}/${company_id}`, {
           headers: { Authorization: `Bearer ${token}` },
           params: params, // Pass fromDate and toDate as query parameters
         });
-
+      
         const data = response.data?.data || [];
         setLeads(data);
         setFilteredLeads(data); // Initial filter based on fetched data
+      }
       } catch (err) {
         console.error('Error fetching leads:', err);
         // Optionally, show an error message to the user
       }
     };
-
     fetchData();
   }, [dateFilterFrom, dateFilterTo]); // Re-fetch data when date filters change
 

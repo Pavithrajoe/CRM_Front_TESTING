@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showTopCard, setShowTopCard] = useState(false);
   const navigate = useNavigate();
-
+const [count, setCount] = useState(0);
   useEffect(() => {
   const handleResize = () => {
     setShowTopCard(window.innerWidth <= 767);
@@ -63,14 +63,17 @@ const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
       const data = await response.json();
 
       if (response.ok && data.jwtToken) {
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
+        setCount(prevCount => prevCount + 1);
         navigate('/leaddashboard');
+        // Log the render count on successful login
+                       console.log("Login rerender count ",count);
+
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
       }
@@ -81,6 +84,11 @@ const LoginPage = () => {
     setLoading(false);
   };
 
+
+                         console.log("Login rerender count ",count);
+
+
+                         
   const LoginFailedAlert = ({ message }) => (
     <div className="flex items-center gap-3 bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl mt-4 shadow-sm animate-shake">
       <FaTimesCircle className="text-lg" />

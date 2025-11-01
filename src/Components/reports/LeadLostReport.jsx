@@ -50,31 +50,84 @@ export default function LostLeadReports() {
   };
 
   // --- NEW EFFECT FOR ALL-TIME DATA (CARDS & CHART) ---
-  useEffect(() => {
-    const fetchAllTimeData = async () => {
-      setLoadingCardsAndChart(true);
+  // useEffect(() => {
+  //   const fetchAllTimeData = async () => {
+  //     setLoadingCardsAndChart(true);
+  //     const token = localStorage.getItem("token");
+
+  //     try {
+  //       const response = await fetch(ENDPOINTS.REPORT_LOST, { 
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+
+  //       if (!response.ok) {
+  //         console.error("Can't fetch all-time lost leads data", response);
+  //         setLoadingCardsAndChart(false);
+  //         return;
+  //       }
+
+  //       const data = await response.json();
+       
+  //     } catch (error) {
+  //       console.error("Error fetching all-time report data:", error);
+  //     } finally {
+  //       setLoadingCardsAndChart(false);
+  //     }
+  //   };
+
+  //   fetchAllTimeData();
+  // }, []); 
+
+  // --- EFFECT FOR TABLE DATA (DATE FILTERED) ---
+
+  // Effect to fetch TABLE data based on date filters
+  
+    const fetchFilteredTableData = async () => {
+      setLoadingTable(true);
       const token = localStorage.getItem("token");
 
+      const queryParams = new URLSearchParams();
+      if (dateFilterFrom) {
+        queryParams.append("fromDate", new Date(dateFilterFrom).toISOString());
+      }
+      if (dateFilterTo) {
+        const endOfDay = new Date(dateFilterTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        queryParams.append("toDate", endOfDay.toISOString());
+      }
+
+      let apiUrl = `${ENDPOINTS.REPORT_LOST}`;
+      if (queryParams.toString()) {
+        apiUrl += `?${queryParams.toString()}`;
+      }
+
       try {
-        const response = await fetch(ENDPOINTS.REPORT_LOST, { // No query params for all-time data
+        // if(queryParams.fromDate && queryParams.toDate){}
+
+        const response = await fetch(apiUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
+        console.log("hit the api for table data :",apiUrl);
         if (!response.ok) {
-          console.error("Can't fetch all-time lost leads data", response);
-          setLoadingCardsAndChart(false);
+          console.error("Can't fetch filtered table data", response);
+          setLoadingTable(false);
           return;
         }
 
-        const data = await response.json();
+
+         const data = await response.json();
         const allLeadsData = data.data; // This is now your all-time data
 
         setAllTimeReportData(allLeadsData); // Set for cards
-
+        setFilteredTableData(allLeadsData.lead_details || []); // Only set lead_details for the table
         // Prepare chart data from all-time leads
         const wonDetailsForChart = allLeadsData.won_details || [];
         const lostDetailsForChart = allLeadsData.lead_details || [];
@@ -123,78 +176,20 @@ export default function LostLeadReports() {
         };
         setBarData(chartData);
 
+
+
+        // const data = await response.json();
+        setCurrentPage(1); // Reset to first page when filters change
       } catch (error) {
         console.error("Error fetching all-time report data:", error);
       } finally {
+        setLoadingTable(false)
         setLoadingCardsAndChart(false);
       }
     };
 
-    fetchAllTimeData();
-  }, []); // Run only once on mount to get all-time data
 
-  // --- EFFECT FOR TABLE DATA (DATE FILTERED) ---
-
-  // Set default current month dates for the table filter on initial load
-  useEffect(() => {
-    const today = new Date(); // Current date
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
-    const formattedLastDay = formatDateForInput(lastDayOfMonth);
-
-    setDateFilterFrom(formattedFirstDay);
-    setDateFilterTo(formattedLastDay);
-    setIsDefaultMonth(true); // Set to true as it's the default load
-  }, []); // Run only once on mount
-
-  // Effect to fetch TABLE data based on date filters
-  useEffect(() => {
-    const fetchFilteredTableData = async () => {
-      setLoadingTable(true);
-      const token = localStorage.getItem("token");
-
-      const queryParams = new URLSearchParams();
-      if (dateFilterFrom) {
-        queryParams.append("fromDate", new Date(dateFilterFrom).toISOString());
-      }
-      if (dateFilterTo) {
-        const endOfDay = new Date(dateFilterTo);
-        endOfDay.setHours(23, 59, 59, 999);
-        queryParams.append("toDate", endOfDay.toISOString());
-      }
-
-      let apiUrl = `${ENDPOINTS.REPORT_LOST}`;
-      if (queryParams.toString()) {
-        apiUrl += `?${queryParams.toString()}`;
-      }
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          console.error("Can't fetch filtered table data", response);
-          setLoadingTable(false);
-          return;
-        }
-
-        const data = await response.json();
-        setFilteredTableData(data.data.lead_details || []); // Only set lead_details for the table
-        setCurrentPage(1); // Reset to first page when filters change
-      } catch (error) {
-        console.error("Error fetching filtered table data:", error);
-      } finally {
-        setLoadingTable(false);
-      }
-    };
-
+useEffect(() => {
     fetchFilteredTableData();
   }, [dateFilterFrom, dateFilterTo]); // Re-fetch table data when date filters change
 
@@ -454,7 +449,7 @@ export default function LostLeadReports() {
           {/* Export to Excel Button */}
           <button
             onClick={handleExport}
-                       className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-colors text-sm font-semibold"
 
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#218838"} // Darker green on hover
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"} // Original green on leave
@@ -496,6 +491,7 @@ export default function LostLeadReports() {
               type="date"
               value={dateFilterTo}
               onChange={(e) => {
+                
                 setDateFilterTo(e.target.value);
                 setIsDefaultMonth(false);
               }}

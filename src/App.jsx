@@ -67,8 +67,8 @@ import GeneratePoster from "./Components/Tools/Poster/GeneratePoster.jsx";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
-import BulkMailSender from "./Components/bulkMail/BulkMailSender.jsx";
-import BulkMailStatus from "./Components/bulkMail/BulkMailStatus.jsx";
+import BulkMailSender from "./Components/bulkMail/bulkMailSender.jsx";
+import BulkMailStatus from "./Components/bulkMail/bulkMailStatus.jsx";
 import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
@@ -154,6 +154,7 @@ function App() {
 
 
                   </Route>
+
                 </Route>
               {/* </Route> */}
             </Routes>

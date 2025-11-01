@@ -202,18 +202,18 @@ const FirstResponseTimeReport = () => {
   };
 
   // Set default date range to current month on component mount
-  useEffect(() => {
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  //   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const formattedFirstDay = formatDateForInput(firstDayOfMonth);
-    const formattedLastDay = formatDateForInput(lastDayOfMonth);
+  //   const formattedFirstDay = formatDateForInput(firstDayOfMonth);
+  //   const formattedLastDay = formatDateForInput(lastDayOfMonth);
 
-    setDateFilterFrom(formattedFirstDay);
-    setDateFilterTo(formattedLastDay);
-    setIsDefaultMonth(true);
-  }, []);
+  //   setDateFilterFrom(formattedFirstDay);
+  //   setDateFilterTo(formattedLastDay);
+  //   setIsDefaultMonth(true);
+  // }, []);
 
   useEffect(() => {
     const fetchData = async () => {

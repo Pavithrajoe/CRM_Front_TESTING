@@ -1,5 +1,4 @@
 // MasterList.jsx (No changes needed from previous version)
-import React from 'react';
 
 export default function MasterList({ items, onEdit, onDelete }) {
   // console.log("[MasterList] Rendering with items:", items);

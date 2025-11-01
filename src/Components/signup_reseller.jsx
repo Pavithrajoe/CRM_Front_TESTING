@@ -145,7 +145,7 @@ const LoginPage = () => {
         <div className="relative w-full md:w-1/2 bg-[radial-gradient(circle,#2563eb,#164CA1,_#164CA1)] mb-6 md:mb-0 mt-6 md:mt-10 rounded-2xl flex items-center justify-center p-2 overflow-hidden">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md z-10 rounded-2xl"></div>
           <img
-            src="/images/signup/signup.png"
+            src="/images/signup/signup.svg"
             alt="Illustration"
             className="relative z-10 max-w-[240px] md:max-w-[300px] h-[350px]"
           />

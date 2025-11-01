@@ -189,7 +189,7 @@ const handleMaps = () => {
               className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/crop.png"
+                src="/illustrations/crop.svg"
                 alt="poster"
                 className="w-8 h-8 mb-1 opacity-90"
               />
@@ -203,7 +203,7 @@ const handleMaps = () => {
               className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/courthouse.png"
+                src="/illustrations/courthouse.svg"
                 alt="gst"
                 className="w-8 h-8 mb-1 opacity-90"
               />
@@ -221,7 +221,7 @@ const handleMaps = () => {
               className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/map_dist.png"
+                src="/illustrations/map_dist.svg"
                 alt="gst"
                 className="w-8 h-8 mb-1 opacity-90"
               />
@@ -239,7 +239,7 @@ const handleMaps = () => {
               className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:to-yellow-200 border border-yellow-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/bulkMail.png"
+                src="/illustrations/bulkMail.svg"
                 alt="gst"
                 className="w-15 h-8 mb-1 opacity-90"
               />

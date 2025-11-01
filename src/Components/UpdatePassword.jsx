@@ -67,7 +67,7 @@ const UpdatePassword = () => {
         {/* Left Image Section */}
         <div className="w-full sm:w-full md:w-2/3 lg:w-3/5 h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] flex justify-center items-center p-4 rounded-[35px] bg-[radial-gradient(circle,#2563eb,#164CA1,_#164CA1)]">
           <img
-            src="/images/login/forgot_pw.png"
+            src="/images/login/forgot_pw.svg"
             alt="Password Update Illustration"
             className="h-[180px] sm:h-[220px] md:h-[260px] lg:h-[300px] object-contain"
           />

@@ -117,7 +117,7 @@ export default function RemindersCard() {
         minute: "2-digit",
       }),
       remaining: remainingText,
-      avatar: "/images/dashboard/grl.png",
+      avatar: "/images/dashboard/grl.svg",
     };
   }).sort((a, b) => {
     const timeA = new Date(remindersData.find(r => r.iremainder_id === a.id)?.dremainder_dt);

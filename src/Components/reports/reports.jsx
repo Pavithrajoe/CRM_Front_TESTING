@@ -55,13 +55,13 @@ const cardsData = [
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
     route: "/territory-based-analytics",
-    image: "/public/illustrations/map.png", 
+    image: "/public/illustrations/map.svg", 
   },
    {
     title: "Recurring Client Analytics",
     description: "Track and analyze repeat business performance across client segments",
     route: "/recurring-client-analytics",  
-    image: "/public/illustrations/recurring_client_report.png", 
+    image: "/public/illustrations/recurring_client_report.svg", 
   },
 ];
 const CardsPage = () => {

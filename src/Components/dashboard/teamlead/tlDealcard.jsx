@@ -127,7 +127,7 @@ export default function DealsTable() {
             return `${datePart}\n${timePart}`;
           })(),
           modifiedDate: new Date(item.dmodified_dt),
-          avatar: "./images/dashboard/grl.png",
+          avatar: "./images/dashboard/grl.svg",
         }))
         .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || []
     );

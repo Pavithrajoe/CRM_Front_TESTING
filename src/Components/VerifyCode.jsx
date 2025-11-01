@@ -53,7 +53,7 @@ const VerifyCode = () => {
       <div className="flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden w-full max-w-5xl space-y-10 md:space-y-0 md:space-x-20">
         <div className="bg-[radial-gradient(circle,#2563eb,#164CA1)] w-full md:w-[500px] h-[540px] flex items-center justify-center rounded-3xl">
           <img 
-            src="/images/login/verify_code.png" 
+            src="/images/login/verify_code.svg" 
             alt="Verification Illustration" 
             className="max-w-[80%] h-auto" 
           />

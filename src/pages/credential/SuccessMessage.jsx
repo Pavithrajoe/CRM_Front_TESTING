@@ -19,7 +19,7 @@ const SuccessMessage = () => {
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
           <img
-            src="/images/login/success.png"
+            src="/images/login/success.svg"
             alt="Success"
             className="h-24 w-24"
           />

@@ -137,7 +137,7 @@ export default function LeadsTable() {
         assignedTo: item.user?.cFull_name || "Unassigned",
         modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || "Unknown",
         time: formatDateTime(item.dmodified_dt),
-        avatar: "/images/dashboard/grl.png",
+        avatar: "/images/dashboard/grl.svg",
       }));
   }, [leadsData, activeSubordinatesMap, selectedTab]);
 

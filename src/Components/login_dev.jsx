@@ -102,7 +102,7 @@ const LoginPage = () => {
         {/* Left Image */}
         <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-500 to-indigo-600 flex justify-center items-center p-6">
           <img
-            src="/images/login/login.png"
+            src="/images/login/login.svg"
             alt="Illustration"
             className="w-[250px] md:w-[300px] z-10"
           />

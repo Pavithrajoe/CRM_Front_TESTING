@@ -136,7 +136,7 @@ const Chatbot = () => {
         title={isOpen ? "Close Chat" : "Open Chat"}
       >
         <span className="drop-shadow-md">
-          <img src="/public/assets/chatbot.png" className="h-10 w-10" />
+          <img src="/public/illustrations/chatbot.svg" className="h-10 w-10" />
         </span>
       </div>
 

@@ -54,7 +54,6 @@ const TargetDashboard = ({ userId }) => {
   const [overallError, setOverallError] = useState(null);
   const [showAddTargetModal, setShowAddTargetModal] = useState(false);
 
-  // selectedFromDate, selectedToDate, and selectedTargetId are no longer actively used for filtering
   // but kept for initial state if they are default values for API calls
   const [selectedFromDate] = useState(() => {
     const today = new Date();
@@ -68,7 +67,7 @@ const TargetDashboard = ({ userId }) => {
     return lastDayOfMonth;
   });
 
-  // const [selectedTargetId] = useState(4); // Example default value
+  // const [selectedTargetId] = useState(4); 
 
 const fetchTargetMetrics = useCallback(async () => {
   setLoadingTable(true);
@@ -189,9 +188,6 @@ const fetchTargetMetrics = useCallback(async () => {
     setOverallError(null);
     fetchTargetMetrics();
   }, [userId, fetchTargetMetrics]);
-
-  // Removed handleFromDateChange, handleToDateChange, and handleTargetIdChange functions
-  // as they are no longer tied to UI elements.
 
   const closeTargetModal = () => {
     setShowAddTargetModal(false);

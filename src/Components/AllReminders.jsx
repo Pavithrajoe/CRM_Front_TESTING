@@ -9,9 +9,9 @@ const AllReminders = () => {
 
   // Profile image array
   const profileImages = [
-    '/images/nav/group.png',
-    '/images/nav/group.png',
-    '/images/nav/group.png',
+    '/images/nav/group.svg',
+    '/images/nav/group.svg',
+    '/images/nav/group.svg',
     '/profile4.png',
     '/profile5.png',
     ""
@@ -55,7 +55,7 @@ const AllReminders = () => {
             {/* Title */}
             <div className="flex items-center gap-3 text-lg font-semibold text-gray-800">
               <img
-                src="/images/nav/text.png"
+                src="/images/nav/text.svg"
                 alt="Title icon"
                 className="w-6 h-6 rounded-full object-cover"
               />

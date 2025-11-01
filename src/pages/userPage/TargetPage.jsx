@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
-import goalIcon from '../../../public/images/nav/target.png';
+import goalIcon from '../../../public/images/nav/target.svg';
 import SalesForm from '../userPage/TargetForm';
 import Select from "react-select";
 

@@ -21,15 +21,15 @@ const Sidebar = () => {
         const leadRoute = isTargetCompany ? 'xcodefix_leadcardview' : '/leadcardview';
 
         return [
-            { iconPath: '/images/nav/home.png', label: 'Home', route: '/leaddashboard' },
-            { iconPath: '/images/nav/group.png', label: leadLabel, route: leadRoute },
-            { iconPath: '/images/nav/customers.png', label: 'Customer', route: '/customers' },
-            { iconPath: '/images/nav/calen.png', label: 'Calendar', route: '/calenderpage' },
-            { iconPath: '/images/nav/userss.png', label: 'Users', route: '/userpage' },
-            { iconPath: '/images/nav/reports.png', label: 'Reports', route: '/reportpage' },
-            { iconPath: '/images/nav/org.png', label: 'Organisation', route: '/companydashboard' },
-            { iconPath: '/images/nav/masterss.png', label: 'Masters', route: '/companymaster' },
-            { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
+            { iconPath: '/images/nav/home.svg', label: 'Home', route: '/leaddashboard' },
+            { iconPath: '/images/nav/group.svg', label: leadLabel, route: leadRoute },
+            { iconPath: '/images/nav/customers.svg', label: 'Customer', route: '/customers' },
+            { iconPath: '/images/nav/Calender.svg', label: 'Calendar', route: '/calenderpage' },
+            { iconPath: '/images/nav/user.svg', label: 'Users', route: '/userpage' },
+            { iconPath: '/images/nav/reports.svg', label: 'Reports', route: '/reportpage' },
+            { iconPath: '/images/nav/org.svg', label: 'Organisation', route: '/companydashboard' },
+            { iconPath: '/images/nav/masters.svg', label: 'Masters', route: '/companymaster' },
+            { iconPath: '/images/nav/settings.svg', label: 'Settings', route: '/settingspage/account' },
         ];
     };
 
@@ -121,6 +121,8 @@ const Sidebar = () => {
                                         arrow: { sx: { color: '#374151' } }
                                     }}
                                 >
+
+                                   
                                     <div className="flex items-center justify-center w-8">
                                         <img src={item.iconPath} alt={item.label} className="w-5 h-5 object-contain" />
                                     </div>
@@ -135,11 +137,11 @@ const Sidebar = () => {
 
                 <div className="flex flex-col items-center py-6 space-y-4 mb-4">
                     <button onClick={toggleSidebar} className="flex items-center justify-center space-x-2 px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition">
-                        <img src="/images/nav/collab.png" alt="Toggle" className="w-6 h-6" />
+                        <img src="/images/nav/collab.svg" alt="Toggle" className="w-6 h-6" />
                         {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
                     </button>
                     <button onClick={handleLogout} className="flex items-center bg-black text-white space-x-2 px-4 py-2 hover:bg-red-600 rounded transition">
-                        <img src="/images/nav/logout.png" alt="Logout" className="w-5 h-5" />
+                        <img src="/images/nav/logout.svg" alt="Logout" className="w-5 h-5" />
                         {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
                     </button>
                 </div>
@@ -191,6 +193,13 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------------
 
 // import React, { useState, useEffect } from 'react';
 // import { NavLink, Outlet, useNavigate } from 'react-router-dom';

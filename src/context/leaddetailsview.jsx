@@ -274,8 +274,6 @@ const LeadDetailView = () => {
     }
   };
 
-  
-
   useEffect(() => {
     if (leadId) {
       fetchLeadData();
@@ -420,8 +418,6 @@ const handleDownloadPdf = async (quotation) => {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    
 
     if (!convertResponse.ok) {
       setImmediateWonStatus(false);

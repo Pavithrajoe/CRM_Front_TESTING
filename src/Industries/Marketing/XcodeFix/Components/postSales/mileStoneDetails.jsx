@@ -62,7 +62,6 @@ const calculateBalancedSplit = (totalAmount, totalPhases) => {
 
 
 const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,currencySymbol, leadId  }) => {
-     console.table(serviceData)
     const navigate = useNavigate(); 
     const location = useLocation();
     const totalAmount = parseFloat(totalBalance) || 0; 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
 import axios from "axios";
@@ -10,6 +10,7 @@ import { isAfter, isPast, parseISO } from 'date-fns';
 import "react-datepicker/dist/react-datepicker.css";
 import { ENDPOINTS } from "../api/constraints";
 import { Search, X } from "lucide-react";
+import { GlobUserContext } from "../context/userContex";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = SpeechRecognition ? new SpeechRecognition() : null;
@@ -20,8 +21,82 @@ if (mic) {
   mic.lang = "en-US";
 }
 
+// Memoized Task Item Component
+const TaskItem = React.memo(({ 
+  task, 
+  canEdit, 
+  canDelete, 
+  onEdit, 
+  onDelete, 
+  formatDateTime 
+}) => {
+  return (
+    <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
+      <div className="flex justify-between items-start gap-2">
+        <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
+          {task.ctitle}
+        </span>
+        {(canEdit || canDelete) && (
+          <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              onClick={() => canEdit ? onEdit(task) : null}
+              className={`
+                text-gray-400 hover:text-blue-500 transition-colors duration-200
+                ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
+              `}
+              title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
+              disabled={!canEdit}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            {canDelete && ( 
+              <button
+                onClick={() => onDelete(task.itask_id)}
+                className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                title="Delete task"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      
+      <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
+        {task.ctask_content}
+      </p>
+      
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
+        <p className="break-words">
+          <span className="font-medium text-gray-700">Assigned to:</span>{" "}
+          {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+        </p>
+        <p className="break-words">
+          <span className="font-semibold text-gray-700">Notified to:</span>{" "}
+          {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
+        </p>
+      </div>
+      
+      <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
+        Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
+      </p>
+      
+      <p className="text-xs text-gray-900 mt-1 italic break-words">
+        {task.dmodified_dt
+          ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
+          : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
+      </p>
+    </div>
+  );
+});
+
 const Tasks = () => {
   const { leadId } = useParams();
+  const { user } = useContext(GlobUserContext);
   const [tasks, setTasks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -41,7 +116,7 @@ const Tasks = () => {
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
 
-  const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW); // ENV is 15
+  const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",
     ctask_content: "",
@@ -54,8 +129,25 @@ const Tasks = () => {
   const token = localStorage.getItem("token");
   const { showPopup } = usePopup();
 
+  // Memoized values
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task =>
+      task.ctask_content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.ctitle?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [tasks, searchQuery]);
+
+  const currentTasks = useMemo(() => {
+    const indexOfLastTask = currentPage * tasksPerPage;
+    const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+    return filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+  }, [filteredTasks, currentPage, tasksPerPage]);
+
+  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+  const isSpecialCompany = Number(companyId) === COMPANY_ID;
+
   // Decode token function
-  const decodeToken = (t) => {
+  const decodeToken = useCallback((t) => {
     if (!t) return null;
     try {
       const payload = JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
@@ -64,7 +156,7 @@ const Tasks = () => {
       console.error("Error decoding token:", error);
       return null;
     }
-  };
+  }, []);
 
   // Set user and company IDs from token
   useEffect(() => {
@@ -85,35 +177,15 @@ const Tasks = () => {
         }));
       }
     }
-  }, [token]);
+  }, [token, decodeToken]);
 
   // Fetch company users
   const fetchUsers = useCallback(async () => {
-    if (!companyId || !token) return;
-
-    setLoadingUsers(true);
-    try {
-      const response = await axios.get(ENDPOINTS.USER_GET, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const usersData = response.data?.result || response.data?.data || response.data || [];
-      const activeCompanyUsers = usersData.filter(user =>
-        user.iCompany_id === companyId &&
-        (user.bactive === true || user.bactive === 1 || user.bactive === "true")
-      );
-      setCompanyUsers(activeCompanyUsers);
-
-    } catch (error) {
-      console.error("Failed to fetch users:", {
-        error: error.message,
-        response: error.response?.data,
-        config: error.config
-      });
-      showPopup("Error", "Failed to load user list. Please refresh the page.", "error");
-    } finally {
-      setLoadingUsers(false);
-    }
-  }, [companyId, token, showPopup]);
+    const activeCompanyUsers = user.filter(user => 
+      (user.bactive === true || user.bactive === 1 || user.bactive === "true")
+    );
+    setCompanyUsers(activeCompanyUsers);
+  }, [user]);
 
   // Fetch tasks
   const fetchTasks = useCallback(async () => {
@@ -133,20 +205,13 @@ const Tasks = () => {
           (a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt)
         );
         setTasks(sortedTasks);
-      } else {
-        showPopup("Error", response.data.message || "Failed to fetch tasks.", "error");
       }
     } catch (error) {
-      showPopup(
-        "Error",
-        error.response?.data?.message || error.message || "Failed to fetch tasks.",
-        "error"
-      );
       console.error("Fetch tasks error:", error);
     } finally {
       setLoadingTasks(false);
     }
-  }, [token, leadId, showPopup]);
+  }, [token, leadId]);
 
   // Initial data loading
   useEffect(() => {
@@ -155,7 +220,7 @@ const Tasks = () => {
       await fetchTasks();
     };
     loadData();
-  }, [fetchUsers, fetchTasks]);
+  }, []); // Empty dependency array
 
   // Speech recognition effect
   useEffect(() => {
@@ -164,20 +229,19 @@ const Tasks = () => {
       return;
     }
 
-    mic.onresult = (event) => {
+    const handleResult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           const transcript = event.results[i][0].transcript.trim();
           setFormData(prev => ({
             ...prev,
-            ctask_content:
-              prev.ctask_content +
-              (prev.ctask_content ? " " : "") +
-              transcript
+            ctask_content: prev.ctask_content + (prev.ctask_content ? " " : "") + transcript
           }));
         }
       }
     };
+
+    mic.onresult = handleResult;
 
     if (isListening) {
       mic.start();
@@ -193,7 +257,7 @@ const Tasks = () => {
     };
   }, [isListening]);
 
-  // Close form when clicking outside logic (for modal)
+  // Close form when clicking outside logic
   const handleClickOutside = useCallback((event) => {
     if (!showForm) return;
 
@@ -210,7 +274,7 @@ const Tasks = () => {
       setEditingTask(null);
       setIsListening(false);
     }
-  }, [showForm, setEditingTask, setIsListening]);
+  }, [showForm]);
 
   // Attach outside click listener for modal
   useEffect(() => {
@@ -219,7 +283,7 @@ const Tasks = () => {
   }, [handleClickOutside]);
 
   // Form handlers
-  const handleNewTaskClick = () => {
+  const handleNewTaskClick = useCallback(() => {
     setFormData({
       ctitle: "",
       ctask_content: "",
@@ -230,9 +294,9 @@ const Tasks = () => {
     setAssignToMe(true);
     setEditingTask(null);
     setShowForm(true);
-  };
+  }, [userId]);
 
-  const handleEditClick = (task) => {
+  const handleEditClick = useCallback((task) => {
     setEditingTask(task);
     const isAssignedToMe = task.iassigned_to === userId;
     setAssignToMe(isAssignedToMe);
@@ -245,9 +309,9 @@ const Tasks = () => {
       task_date: new Date(task.task_date),
     });
     setShowForm(true);
-  };
+  }, [userId]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
 
     let updatedValue = value;
@@ -272,9 +336,9 @@ const Tasks = () => {
     }
 
     setFormData(prev => ({ ...prev, [name]: updatedValue }));
-  };
+  }, [userId, showPopup]);
 
-  const handleAssignToMeChange = (e) => {
+  const handleAssignToMeChange = useCallback((e) => {
     const checked = e.target.checked;
     setAssignToMe(checked);
     if (checked && userId) {
@@ -288,101 +352,98 @@ const Tasks = () => {
         iassigned_to: null,
       }));
     }
-  };
+  }, [userId]);
 
-  const handleDateChange = (date) => {
+  const handleDateChange = useCallback((date) => {
     setFormData(prev => ({ ...prev, task_date: date }));
-  };
+  }, []);
 
- const handleFormSubmission = async (e) => {
-  e.preventDefault();
+  const handleFormSubmission = useCallback(async (e) => {
+    e.preventDefault();
 
-  if (formData.ctitle.trim().length < 3) {
-    showPopup("Warning", "Title must be at least 3 characters long.", "warning");
-    return;
-  }
-
-  if (formData.ctask_content.trim().length < 5) {
-    showPopup("Warning", "Description must be at least 5 characters long.", "warning");
-    return;
-  }
-
-  if (editingTask && !canEditTask(editingTask)) {
-    showPopup("Error", "This task can no longer be edited.", "error");
-    setEditingTask(null);
-    setShowForm(false);
-    return;
-  }
-
-  const payload = {
-    ...formData,
-    ilead_id: Number(leadId),
-    task_date: formData.task_date.toISOString(),
-    inotify_to: formData.inotify_to,
-  };
-
-  setSaving(true);
-
-  try {
-    let response;
-
-    if (editingTask) {
-      response = await axios.put(
-        `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
-        { ...payload, iupdated_by: userId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } else {
-      response = await axios.post(
-        ENDPOINTS.TASK,
-        { ...payload, icreated_by: userId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    if (formData.ctitle.trim().length < 3) {
+      showPopup("Warning", "Title must be at least 3 characters long.", "warning");
+      return;
     }
 
-    if (response.data.success || response.data.message === "Task Added Successfully") {
-      if (mic && isListening) mic.stop();
-      setIsListening(false);
+    if (formData.ctask_content.trim().length < 5) {
+      showPopup("Warning", "Description must be at least 5 characters long.", "warning");
+      return;
+    }
 
-      showPopup("Success", "🎉 Task saved successfully!", "success");
-
-      // Auto refresh tasks and reset form immediately
-      await fetchTasks();
-
-      // Clear form and hide modal/form view
-      setFormData({
-        ctitle: "",
-        ctask_content: "",
-        iassigned_to: userId,
-        inotify_to: null,
-        task_date: new Date(),
-      });
-      setShowForm(false);
+    if (editingTask && !canEditTask(editingTask)) {
+      showPopup("Error", "This task can no longer be edited.", "error");
       setEditingTask(null);
-      setAssignToMe(true);
-      setCurrentPage(1); // Reset pagination to first page
-    } else {
-      showPopup("Error", response.data.message || "Failed to save task.", "error");
+      setShowForm(false);
+      return;
     }
-  } catch (error) {
-    showPopup(
-      "Error",
-      error.response?.data?.message || error.message || "Failed to save task.",
-      "error"
-    );
-    console.error("Task submission error:", error);
-  } finally {
-    setSaving(false);
-  }
-};
 
+    const payload = {
+      ...formData,
+      ilead_id: Number(leadId),
+      task_date: formData.task_date.toISOString(),
+      inotify_to: formData.inotify_to,
+    };
 
-  const handleDeleteTask = async (taskId) => {
+    setSaving(true);
+
+    try {
+      let response;
+
+      if (editingTask) {
+        response = await axios.put(
+          `${ENDPOINTS.TASK}/${editingTask.itask_id}`,
+          { ...payload, iupdated_by: userId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        response = await axios.post(
+          ENDPOINTS.TASK,
+          { ...payload, icreated_by: userId },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      if (response.data.success || response.data.message === "Task Added Successfully") {
+        if (mic && isListening) mic.stop();
+        setIsListening(false);
+
+        showPopup("Success", "🎉 Task saved successfully!", "success");
+
+        await fetchTasks();
+
+        setFormData({
+          ctitle: "",
+          ctask_content: "",
+          iassigned_to: userId,
+          inotify_to: null,
+          task_date: new Date(),
+        });
+        setShowForm(false);
+        setEditingTask(null);
+        setAssignToMe(true);
+        setCurrentPage(1);
+      } else {
+        showPopup("Error", response.data.message || "Failed to save task.", "error");
+      }
+    } catch (error) {
+      showPopup(
+        "Error",
+        error.response?.data?.message || error.message || "Failed to save task.",
+        "error"
+      );
+      console.error("Task submission error:", error);
+    } finally {
+      setSaving(false);
+    }
+  }, [formData, editingTask, leadId, userId, token, isListening, showPopup, fetchTasks]);
+
+  const handleDeleteTask = useCallback(async (taskId) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
 
     try {
@@ -404,19 +465,9 @@ const Tasks = () => {
       );
       console.error("Delete task error:", error);
     }
-  };
+  }, [token, showPopup, fetchTasks]);
 
-  const filteredTasks = tasks.filter(task =>
-    task.ctask_content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.ctitle?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const indexOfLastTask = currentPage * tasksPerPage;
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
-  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
-
-  const formatDateTime = (dateStr) => {
+  const formatDateTime = useCallback((dateStr) => {
     if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, "0");
@@ -425,7 +476,7 @@ const Tasks = () => {
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
+  }, []);
 
   const isMostRecentTask = useCallback((task, allTasks) => {
     if (!allTasks || allTasks.length === 0) return true; 
@@ -443,11 +494,12 @@ const Tasks = () => {
     }
     
     if (companyId && Number(companyId) === Number(COMPANY_ID)) {
-      return isMostRecentTask(task, tasks); 
+      const mostRecentTask = tasks.length > 0 ? tasks[0] : null;
+      return mostRecentTask ? task.itask_id === mostRecentTask.itask_id : true;
     }
 
     return true; 
-  }, [userId, companyId, tasks, isMostRecentTask]);
+  }, [userId, companyId, tasks.length]);
 
   const canDeleteTask = useCallback((task) => {
     const isCreator = userId === task.icreated_by;
@@ -468,44 +520,41 @@ const Tasks = () => {
     }
   }, [isSearchOpen]);
 
-  // Check if company is 15
-  const isSpecialCompany = Number(companyId) === COMPANY_ID;
-
   // Render form (as modal or side panel)
-  const renderTaskForm = () => (
+  const renderTaskForm = useCallback(() => (
     <div
-  ref={formRef}
-  className={`${
-    isSpecialCompany
-      ? 'bg-white rounded-2xl shadow-2xl max-h-[85vh] p-6'
-      : 'fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300'
-  }`}
-  style={isSpecialCompany ? {} : { zIndex: 1001 }}
-  onClick={isSpecialCompany ? undefined : (e) => e.stopPropagation()}
->
-  <div className="flex justify-between items-center mb-3 sm:mb-4">
-    <h3 className="font-medium text-lg sm:text-xl text-gray-800">
-      {isSpecialCompany
-        ? editingTask
-          ? "Edit Follow-up"
-          : "Add Follow-up"
-        : editingTask
-          ? "Edit Task"
-          : "Add Task"}
-    </h3>
-    {!isSpecialCompany && (
-      <button
-        onClick={() => {
-          setShowForm(false);
-          setIsListening(false);
-          setEditingTask(null);
-        }}
-        className="text-xl sm:text-2xl text-gray-500 hover:text-red-500 p-1"
-      >
-        ×
-      </button>
-    )}
-  </div>
+      ref={formRef}
+      className={`${
+        isSpecialCompany
+          ? 'bg-white rounded-2xl shadow-2xl max-h-[85vh] p-6'
+          : 'fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300'
+      }`}
+      style={isSpecialCompany ? {} : { zIndex: 1001 }}
+      onClick={isSpecialCompany ? undefined : (e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
+        <h3 className="font-medium text-lg sm:text-xl text-gray-800">
+          {isSpecialCompany
+            ? editingTask
+              ? "Edit Follow-up"
+              : "Add Follow-up"
+            : editingTask
+              ? "Edit Task"
+              : "Add Task"}
+        </h3>
+        {!isSpecialCompany && (
+          <button
+            onClick={() => {
+              setShowForm(false);
+              setIsListening(false);
+              setEditingTask(null);
+            }}
+            className="text-xl sm:text-2xl text-gray-500 hover:text-red-500 p-1"
+          >
+            ×
+          </button>
+        )}
+      </div>
       <form onSubmit={handleFormSubmission} className="flex flex-col space-y-4">
         <input
           type="text"
@@ -513,17 +562,17 @@ const Tasks = () => {
           onChange={handleChange}
           value={formData.ctitle}
           className="w-full border rounded-lg sm:rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-          placeholder={ !isSpecialCompany ? "Task Title *"  : "Follow-up Title "  }
+          placeholder={!isSpecialCompany ? "Task Title *" : "Follow-up Title "}
           required
         />
         <textarea
-  name="ctask_content"
-  onChange={handleChange}
-  value={formData.ctask_content}
-  className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
-  placeholder={ !isSpecialCompany ?  "Task Description *" : "Follow-up Description * " }
-  required
-/>
+          name="ctask_content"
+          onChange={handleChange}
+          value={formData.ctask_content}
+          className="w-full border rounded-lg sm:rounded-xl p-3 h-28 sm:h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
+          placeholder={!isSpecialCompany ? "Task Description *" : "Follow-up Description * "}
+          required
+        />
 
         <div className="flex justify-between items-center">
           {mic && (
@@ -625,52 +674,56 @@ const Tasks = () => {
           </div>
         </div>
         <button
-  type="submit"
-  className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-  disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
->
-  {saving ? (
-    <>
-      <svg
-        className="animate-spin h-5 w-5 mr-3 text-white inline-block"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-        ></path>
-      </svg>
-      Saving...
-    </>
-  ) : (
-    isSpecialCompany ? (
-      editingTask ? (
-        canEditTask(editingTask) ? "Update Follow-up" : "Edit Disabled"
-      ) : "Add Follow-up"
-    ) : (
-      editingTask ? (
-        canEditTask(editingTask) ? "Update Task" : "Edit Disabled"
-      ) : "Add Task"
-    )
-  )}
-</button>
+          type="submit"
+          className="w-full bg-indigo-700 text-white justify-center items-center px-4 py-3 rounded-full hover:bg-indigo-800 text-sm sm:text-base mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loadingUsers || saving || (editingTask && !canEditTask(editingTask))}
+        >
+          {saving ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 mr-3 text-white inline-block"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+              Saving...
+            </>
+          ) : (
+            isSpecialCompany ? (
+              editingTask ? (
+                canEditTask(editingTask) ? "Update Follow-up" : "Edit Disabled"
+              ) : "Add Follow-up"
+            ) : (
+              editingTask ? (
+                canEditTask(editingTask) ? "Update Task" : "Edit Disabled"
+              ) : "Add Task"
+            )
+          )}
+        </button>
       </form>
     </div>
-  );
+  ), [
+    isSpecialCompany, editingTask, formData, assignToMe, loadingUsers, companyUsers, 
+    userName, saving, handleFormSubmission, handleChange, handleAssignToMeChange, 
+    handleDateChange, canEditTask
+  ]);
 
   // Render task list component (chat style)
-  const renderTaskHistory = () => (
+  const renderTaskHistory = useCallback(() => (
     <div
       ref={tasksContainerRef}
       className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 flex-1"
@@ -690,69 +743,15 @@ const Tasks = () => {
           const canDelete = canDeleteTask(task);
 
           return (
-            <div
+            <TaskItem
               key={task.itask_id}
-              className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative"
-            >
-              <div className="flex justify-between items-start gap-2">
-                <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
-                  {task.ctitle}
-                </span>
-                {(canEdit || canDelete) && (
-                  <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-                    <button
-                      onClick={() => canEdit ? handleEditClick(task) : null}
-                      className={`
-                        text-gray-400 hover:text-blue-500 transition-colors duration-200
-                        ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-                      `}
-                      title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-                      disabled={!canEdit}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    {canDelete && ( 
-                      <button
-                        onClick={() => handleDeleteTask(task.itask_id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-                        title="Delete task"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
-                {task.ctask_content}
-              </p>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
-                <p className="break-words">
-                  <span className="font-medium text-gray-700">Assigned to:</span>{" "}
-                  {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
-                </p>
-                <p className="break-words">
-                  <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-                  {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
-                </p>
-              </div>
-              
-              <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
-                Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
-              </p>
-              
-              <p className="text-xs text-gray-900 mt-1 italic break-words">
-                {task.dmodified_dt
-                  ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
-                  : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
-              </p>
-            </div>
+              task={task}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteTask}
+              formatDateTime={formatDateTime}
+            />
           );
         })
       )}
@@ -775,7 +774,10 @@ const Tasks = () => {
         </div>
       )}
     </div>
-  );
+  ), [
+    loadingTasks, filteredTasks, searchQuery, currentTasks, totalPages, currentPage,
+    canEditTask, canDeleteTask, handleEditClick, handleDeleteTask, formatDateTime
+  ]);
 
   return (
     <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
@@ -841,7 +843,7 @@ const Tasks = () => {
                 onClick={handleNewTaskClick}
                 className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center"
               >
-              { !isSpecialCompany ? " + New Task " : "+ New Follow-up "}
+              {!isSpecialCompany ? " + New Task " : "+ New Follow-up "}
               </button>
             </div>
             {/* Tasks Container with Scroll (history) */}

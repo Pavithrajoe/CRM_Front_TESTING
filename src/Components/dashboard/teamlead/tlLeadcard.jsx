@@ -6,7 +6,7 @@ import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 export default function LeadsTable({ data }) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortOrder, setSortOrder] = useState(null); // FOR SORTING
+  const [sortOrder, setSortOrder] = useState(null); 
   const leadsPerPage = 8;
 
   const navigate = useNavigate();
@@ -64,10 +64,7 @@ export default function LeadsTable({ data }) {
   }, [search, activeUnconvertedLeads, sortOrder]);
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
-  const currentLeads = filteredLeads.slice(
-    (currentPage - 1) * leadsPerPage,
-    currentPage * leadsPerPage
-  );
+  const currentLeads = filteredLeads.slice( (currentPage - 1) * leadsPerPage, currentPage * leadsPerPage );
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {

@@ -16,6 +16,7 @@ const Sidebar = () => {
     const navigate = useNavigate();
 
     const getFullMenuItems = (currentCompanyId) => {
+        
         const isTargetCompany = currentCompanyId === TARGET_COMPANY_ID;
         const leadLabel = isTargetCompany ? 'My Leads' : 'Lead';
         const leadRoute = isTargetCompany ? 'xcodefix_leadcardview' : '/leadcardview';
@@ -32,7 +33,6 @@ const Sidebar = () => {
             { iconPath: '/images/nav/settings.png', label: 'Settings', route: '/settingspage/account' },
         ];
     };
-
 
     useEffect(() => {
         const token = localStorage.getItem("token");

@@ -13,6 +13,7 @@ import AppLayout from "./Components/AppLayout";
 import PrivateRoute from "./Components/PrivateRoute.jsx";
 import { UserProvider } from "./context/UserContext";
 import { TabProvider } from "./context/TabContext";
+import { CompanyProvider } from "./context/companyContext.jsx";
 
 
 // All your other imports...
@@ -73,12 +74,17 @@ import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
 import DistanceToClient from "./Components/Tools/Maps/DistanceToClient.jsx";
+import { GlobeUserProvider } from "./context/userContex.jsx";
+import { DemoSessionProvider } from "./context/demo_session_session_context.jsx";
 function App() {
   return (
     <PopupProvider>
       <ToastProvider>
         <TabProvider>
           <UserProvider>
+            <GlobeUserProvider>
+            <CompanyProvider>
+              <DemoSessionProvider>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
@@ -155,6 +161,10 @@ function App() {
                 </Route>
               {/* </Route> */}
             </Routes>
+            
+            </DemoSessionProvider>
+            </CompanyProvider>
+            </GlobeUserProvider>
           </UserProvider>
         </TabProvider>
       </ToastProvider>

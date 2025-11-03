@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Box, Typography, Divider, Chip, Card, CardContent, Button,
   Dialog, DialogTitle, DialogContent, TextField, DialogActions,
   Autocomplete, Snackbar, Alert, MenuItem
 } from '@mui/material';
-import axios from 'axios';
-import { ENDPOINTS } from '../../api/constraints';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { GlobUserContext } from '../../context/userContex';
+import { useDemoSession } from '../../context/demo_session_session_context';
 
 const theme = createTheme({
   palette: {
@@ -27,90 +27,33 @@ const formatDate = (dateString) => {
 };
 
 const DemoSessionDetails = ({ leadId }) => {
-  const [sessions, setSessions] = useState([]);
+  const { user } = useContext(GlobUserContext);
+  
+  // Use the demo session context
+  const {
+    sessions,
+    loading,
+    error,
+    snackOpen,
+    snackMessage,
+    snackSeverity,
+    fetchDemoSessions,
+    updateDemoSession,
+    hideSnackbar
+  } = useDemoSession();
+
   const [selectedSession, setSelectedSession] = useState(null);
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
-  const [snackOpen, setSnackOpen] = useState(false);
-  const [snackMessage, setSnackMessage] = useState('');
-  const [snackSeverity, setSnackSeverity] = useState('success');
   const [originalAttendees, setOriginalAttendees] = useState([]);
   const [originalPresenters, setOriginalPresenters] = useState([]);
 
-  const fetchDemoDetails = async () => {
-    if (!leadId) {
-      setSessions([]);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${ENDPOINTS.DEMO_SESSION_GET}?leadId=${leadId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.data.Message && Array.isArray(res.data.Message) && res.data.Message.length > 0) {
-        const rawSessionData = res.data.Message[0];
-
-        if (rawSessionData.ilead_id !== parseInt(leadId, 10)) {
-          setSessions([]);
-          setSnackMessage(`No demo sessions found for the requested lead ID ${leadId}.`);
-          setSnackSeverity('warning');
-          setSnackOpen(true);
-          return;
-        }
-
-        const formattedSession = {
-          ...rawSessionData,
-          attendees: (rawSessionData.attendees || []).map(att => ({
-            idemoSessionAttendeesId: att.idemoSessionAttendeesId,
-            user: {
-              iUser_id: att.attendeeId,
-              cFull_name: att.user?.cFull_name || 'Unnamed User'
-            }
-          })),
-          presenters: (rawSessionData.presedtedBy || []).map(pres => ({
-            idemo_session_presented_by: pres.idemo_session_presented_by,
-            user: {
-              iUser_id: pres.presented_by,
-              cFull_name: pres.user?.cFull_name || 'Unnamed User'
-            }
-          })),
-        };
-        
-        setSessions([formattedSession]);
-      } else {
-        setSnackMessage(`No demo sessions found for lead ID ${leadId}.`);
-        setSnackSeverity('info');
-        setSnackOpen(true);
-        setSessions([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch demo session details:', err);
-      setSnackMessage('Failed to load demo session details.');
-      setSnackSeverity('error');
-      setSnackOpen(true);
-      setSessions([]);
-    }
-  };
-
   const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(ENDPOINTS.USERS, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data.map(user => ({
-        ...user,
-        cFull_name: user.cFull_name || `User ID ${user.iUser_id}`
-      })) || []);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
-      setSnackMessage('Failed to load user list.');
-      setSnackSeverity('error');
-      setSnackOpen(true);
-    }
+    const filteredCompanyList = user.filter(user => (
+      user.bactive === true || user.bactive === "true"
+    ));
+    setUsers(filteredCompanyList);
   };
 
   const toInputDateTime = (dateString) => {
@@ -154,7 +97,6 @@ const DemoSessionDetails = ({ leadId }) => {
   };
 
   const handleUpdate = async () => {
-    const token = localStorage.getItem('token');
     const { 
       cDemoSessionType, 
       cPlace, 
@@ -168,16 +110,11 @@ const DemoSessionDetails = ({ leadId }) => {
     // Validation checks
     if (!cDemoSessionType || !cPlace || !dDemoSessionStartTime || !dDemoSessionEndTime || !notes || 
         demoSessionAttendees.length === 0 || presentedByUsers.length === 0) {
-      setSnackMessage('All fields are required with at least one attendee and presenter!');
-      setSnackSeverity('warning');
-      setSnackOpen(true);
-      return;
+
     }
 
     if (new Date(dDemoSessionEndTime) < new Date(dDemoSessionStartTime)) {
-      setSnackMessage('End time must be after start time!');
-      setSnackSeverity('warning');
-      setSnackOpen(true);
+   
       return;
     }
 
@@ -220,7 +157,6 @@ const DemoSessionDetails = ({ leadId }) => {
     });
 
     const payload = {
-      demoSessionId: selectedSession.idemoSessionId,
       demoSessionType: cDemoSessionType,
       demoSessionStartTime: new Date(dDemoSessionStartTime).toISOString(),
       demoSessionEndTime: new Date(dDemoSessionEndTime).toISOString(),
@@ -232,22 +168,13 @@ const DemoSessionDetails = ({ leadId }) => {
     };
 
     try {
-      await axios.put(ENDPOINTS.DEMO_SESSION_EDIT, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSnackMessage('Session updated successfully!');
-      setSnackSeverity('success');
-      setSnackOpen(true);
+      // Use context to update the session
+      await updateDemoSession(selectedSession.idemoSessionId, payload);
       setOpenDialog(false);
-      fetchDemoDetails();
+      // The sessions will be automatically refreshed via context
     } catch (err) {
       console.error('Failed to update session:', err);
-      setSnackMessage(err.response?.data?.Message || 'Failed to update session!');
-      setSnackSeverity('error');
-      setSnackOpen(true);
+      // Error handling is done by context
     }
   };
 
@@ -257,11 +184,31 @@ const DemoSessionDetails = ({ leadId }) => {
 
   useEffect(() => {
     if (leadId) {
-      fetchDemoDetails();
-    } else {
-      setSessions([]);
+      // Use context to fetch demo sessions
+      fetchDemoSessions(leadId);
     }
-  }, [leadId]);
+  }, [leadId, fetchDemoSessions]);
+
+  // Remove local loading states since we're using context
+  if (loading) {
+    return (
+      <Box mt={4}>
+        <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', mt: 4 }}>
+          Loading demo sessions...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box mt={4}>
+        <Typography variant="h6" color="error" sx={{ textAlign: 'center', mt: 4 }}>
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -408,13 +355,14 @@ const DemoSessionDetails = ({ leadId }) => {
           </DialogActions>
         </Dialog>
 
+        {/* Use context snackbar instead of local one */}
         <Snackbar
           open={snackOpen}
           autoHideDuration={3000}
-          onClose={() => setSnackOpen(false)}
+          onClose={hideSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert severity={snackSeverity} onClose={() => setSnackOpen(false)}>
+          <Alert severity={snackSeverity} onClose={hideSnackbar}>
             {snackMessage}
           </Alert>
         </Snackbar>

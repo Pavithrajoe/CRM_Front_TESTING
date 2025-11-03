@@ -370,6 +370,8 @@ function AcheivementDashboard({ userId }) {
                         <thead>
                             <tr className="bg-gray-50">
                                 <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">S.No</th>
+                                <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Lead Name</th>
+
                                 <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Project Values</th>
                                 <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Created Date</th>
                                 <th className="p-4 text-left border-b border-gray-200 font-bold text-gray-700 uppercase text-sm whitespace-nowrap">Conversion Time</th> 
@@ -382,6 +384,9 @@ function AcheivementDashboard({ userId }) {
                                     <tr key={row.iProject_id || index} className="hover:bg-gray-50 transition-colors duration-150">
                                         <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {index + 1}
+                                        </td>
+                                         <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
+                                            {row.clead_name}
                                         </td>
                                         <td className={`p-4 text-left border-b border-gray-200 text-gray-800 ${index === achievements.historicalRevenueData.length - 1 ? 'border-b-0' : ''}`}>
                                             {formatCurrency(row.iproject_value)}

@@ -9,7 +9,7 @@ import { ENDPOINTS } from "../../api/constraints";
 import { jwtDecode } from "jwt-decode";
 
 
-const TeamviewDashboard = ({ dashboardData, reminders }) => {
+const TeamviewDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -19,6 +19,7 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
   // To fetch the current user id and token
   useEffect(() => {
     try {
+
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token not found.");
       const decoded = jwtDecode(token);
@@ -70,18 +71,15 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
 
   console.log("The response data areeeee:", teamDashboardData);
 
-  const leads = teamDashboardData?.leads || [];
-  const teamMembers = teamDashboardData?.subordinateNames || [];
-  const leadCount = leads.filter((item) => item.bisConverted === false).length;
+  const leads = teamDashboardData?.lead || [];
+  const teamMembers = teamDashboardData?.subordinates || [];
+  const dealData = teamDashboardData?.deal || [];
+  const childSubordinates = teamDashboardData?.childSubordinateIds || [];
   const leadData = leads.filter((item) => item.bisConverted === false);
-  const dealCount = leads.filter((item) => item.bisConverted === true).length;
-  const hotCount = leads.filter(
-    (lead) => lead.lead_potential?.clead_name === "HOT"
-  ).length;
-  const coldCount = leads.filter(
-    (lead) => lead.lead_potential?.clead_name === "COLD"
-  ).length;
-  const reminderMessage = reminders?.message || [];
+  const userReminders = teamDashboardData?.usersReminder || [];
+   const activeReminders = userReminders.filter(
+        (reminder) => reminder.bactive === true
+      );
   if (loading) {
     return (
       <main className="w-full flex-1 p-6  mt-[0px] min-h-screen flex items-center justify-center">
@@ -112,15 +110,14 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
 
       {console.log("The dashboard data are:", )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LeadManagementCard leads={leadData} team_members={teamMembers} />
+        <LeadManagementCard leads={leadData} team_members={teamMembers}  childSubordinates = {childSubordinates}  loading = {loading} error = {error} />
         <TeamKPIStats
-          leadCount={leadCount}
-          dealCount={dealCount}
-          hotLeadCount={hotCount}
-          coldLeadCount={coldCount}
+          leadsArray={leads}
+          subordinatesArray={teamMembers}
+          dealCountForWon={dealData}
         />
-        <LeadsTable data={leadData} />
-        <RemindersCard reminder_data={reminderMessage} />
+        <LeadsTable leadsData={leadData} subordinatesData = {teamMembers} loading = {loading} error = {error}  />
+        <RemindersCard remindersData={activeReminders} loading = {loading} error = {error} />
       </div>
     </main>
   );

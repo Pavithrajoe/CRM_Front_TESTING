@@ -2,56 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../api/constraints";
 
-const TaskSameDay = () => {
+const TaskSameDay = ({tasks, loading, error}) => {
   const [filter, setFilter] = useState("Today");
-  const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
 
-  // Need to check why this re-renders abnormally - 4 API hits
-  useEffect(() => {
-  const fetchTasks = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      const userJson = localStorage.getItem("user");
-
-      if (!token) throw new Error("No authentication token found");
-      if (!userJson) throw new Error("User not found");
-
-      const { iUser_id } = JSON.parse(userJson);
-
-      const response = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${iUser_id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-      const data = await response.json();
-      const tasksData = data.data || (Array.isArray(data) ? data : []);
-
-      setTasks(tasksData);
-    } catch (e) {
-      console.error("Failed to fetch tasks:", e);
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchTasks();
-}, []); 
-
 
   useEffect(() => {
+    console.log("The tasks are :", tasks)
     if (!tasks.length) {
       setFilteredTasks([]);
       return;
@@ -121,6 +80,7 @@ const TaskSameDay = () => {
       }
     });
 
+    
     setFilteredTasks(filtered);
   }, [tasks, filter]);
 

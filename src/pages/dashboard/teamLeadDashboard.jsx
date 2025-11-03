@@ -25,7 +25,7 @@ const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
   const [reminderData, setReminderData] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [loadingTasks, setLoadingTasks] = useState(false);
   const [taskError, setTaskError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -33,6 +33,12 @@ const LeadsDashboard = () => {
   const [taskMissedStatus, setTaskMissedStatus] = useState(null);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [leadsError, setLeadsError] = useState(null);
+
+
+
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
 
   useEffect(() => {
@@ -43,9 +49,6 @@ const LeadsDashboard = () => {
     const userObj = JSON.parse(storedUser);
     setUser(userObj);
 
-    // Decode token DASHBOARD_USER
-    const decoded = jwtDecode(token);
-    const userId = decoded.user_id;
 
     if (!localStorage.getItem("hasSeenDashboardIntro")) {
       setShowPopup(true);
@@ -56,43 +59,31 @@ const LeadsDashboard = () => {
     // Function to fetch the reminder data  - Need to create an new API for this (or even binding)
     const fetchReminderData = async () => {
       try {
-        const response = await fetch(`${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${userObj.jwtToken}`,
-            },
-          }
-        );
+        const response = await fetch(`${ENDPOINTS.USER_REMINDER}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) throw new Error("Failed to fetch dashboard data");
         const data = await response.json();
-        setReminderData(data);
+        console.log("The user related reminders are:", data);
+
+        const todayReminders = data.data?.filter((reminder) => {
+          const reminderDate = new Date(reminder.dremainder_dt);
+          return reminderDate >= startOfDay && reminderDate <= endOfDay;
+        });
+
+        console.log("Todays reminders are:", todayReminders);
+
+        setReminderData(todayReminders);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
     };
 
-    // Function to fetch the tasks data
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch(ENDPOINTS.DAILY_TASK, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch tasks");
-        const data = await response.json();
-        setTasks(data?.data || data || []);
-      } catch (error) {
-        setTaskError(error.message);
-      } finally {
-        setLoadingTasks(false);
-      }
-    };
-
+  
 
     const fetchCompanyAndMissedTasks = async () => {  // We can fetch the company related data in the context and call them here !
     try {
@@ -105,32 +96,50 @@ const LeadsDashboard = () => {
       });
       const companyData = await companyRes.json();
       const statusId = companyData?.result?.companySettings?.task_missed_status;
-      setTaskMissedStatus(statusId);
+      setTaskMissedStatus(statusId);  
 
       // Fetch tasks for the user
-      const taskRes = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const taskData = await taskRes.json(); 
+      const taskRes = await fetch(
+        `${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const taskData = await taskRes.json();
 
-      // Use taskData here only
+      // Use taskData here only      
       const tasksArray = taskData?.data || [];
-      const missed = tasksArray.filter((task) => task.istatus_id === statusId);
-      setMissedTasks(missed);
+
+      if(statusId) {
+        const missed = tasksArray.filter(
+          (task) => task.istatus_id === statusId
+        );
+        const remainingTask = tasksArray.filter(
+          (task) => task.istatus_id !== statusId
+        );
+
+        setTasks(remainingTask);
+        setMissedTasks(missed);
+      }
+      console.log('The task data are:', tasksArray);
+      
+
+      setTasks(tasksArray);
 
     } catch (error) {
       console.error("Error fetching missed tasks:", error);
+      setTaskError(error.message);
+
     }
     };
 
 
 
     fetchReminderData();
-    fetchTasks();
     fetchCompanyAndMissedTasks();
   }, []); 
 
@@ -181,6 +190,7 @@ const LeadsDashboard = () => {
     return istTaskDate >= todayStart && istTaskDate <= todayEnd;
   });
 
+  
   const todayTasksCount = todayTasks.length;
 
   // Filter expired tasks
@@ -397,7 +407,7 @@ const LeadsDashboard = () => {
                   </Typography>
                 ) : (
                   
-                  <TaskSameDay />
+                  <TaskSameDay tasks = {tasks} loading ={loadingTasks}  error ={taskError}/>
                 )}
               </TabPanel>
 

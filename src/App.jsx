@@ -151,8 +151,6 @@ function App() {
                     <Route path="members" element={<MembersSettings />} />
                     <Route path="support" element={<SupportSettings />} />
                     <Route path="smtpsettings" element={<SmtpSettings />} />
-
-
                   </Route>
                 </Route>
               {/* </Route> */}

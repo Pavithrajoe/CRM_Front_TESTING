@@ -3,73 +3,28 @@ import { Users } from "lucide-react";
 import { ENDPOINTS } from "../../../api/constraints";
 import { jwtDecode } from "jwt-decode";
 
-export default function TeamKPIStats() {
+export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountForWon }) {
   const [leadCount, setLeadCount] = useState(0); // Active Leads
   const [wonLeadCount, setWonLeadCount] = useState(0); // Won Leads
   const [lostLeadCount, setLostLeadCount] = useState(0); // Lost Leads
   const [websiteLeadCount, setWebsiteLeadCount] = useState(0); // Website Leads
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentToken, setCurrentToken] = useState(null);
   const [noData, setNoData] = useState(false);
 
-  // Get token & user_id
-  useEffect(() => {
-    try {
-      const tokenFromStorage = localStorage.getItem("token");
-      if (!tokenFromStorage) {
-        throw new Error("Authentication token not found in local storage.");
-      }
 
-      const decodedToken = jwtDecode(tokenFromStorage);
-      const extractedUserId = decodedToken.user_id;
-      if (!extractedUserId) {
-        throw new Error("User ID not found in token.");
-      }
-
-      setCurrentUserId(extractedUserId);
-      setCurrentToken(tokenFromStorage);
-    } catch (e) {
-      console.error("Error retrieving token:", e);
-      setError(`Authentication error: ${e.message}`);
-      setLoading(false);
-    }
-  }, []);
 
 
   
 
   const fetchTeamKPIs = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-      setLoading(false);
-      return;
-    }
-
-    const apiUrl = `${ENDPOINTS.TEAM_KPI}/${currentUserId}`;
-
     try {
       setLoading(true);
       setError(null);
       setNoData(false);
 
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${currentToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
-      }
-
-      const data = await response.json();
-      const leadsArray = data.details?.lead;
-      const subordinatesArray = data.details?.subordinates;
-      const dealCountForWon = data.details?.deal || 0;
+      console.log('The KPI card data are:', leadsArray, subordinatesArray, dealCountForWon);
+      
 
       if (Array.isArray(leadsArray) && Array.isArray(subordinatesArray)) {
         if (leadsArray.length === 0 && subordinatesArray.length === 0) {
@@ -80,26 +35,31 @@ export default function TeamKPIStats() {
           setWebsiteLeadCount(0);
         } else {
           const activeSubordinateIds = new Set(
-            subordinatesArray.filter(sub => sub.bactive === true).map(sub => sub.iUser_id)
+            subordinatesArray
+              .filter((sub) => sub.bactive === true)
+              .map((sub) => sub.iUser_id)
           );
 
-          const filteredLeads = leadsArray.filter(
-            lead => activeSubordinateIds.has(lead.clead_owner)
+          const filteredLeads = leadsArray.filter((lead) =>
+            activeSubordinateIds.has(lead.clead_owner)
           );
 
           // Active Leads
           const activeLeadsCount = filteredLeads.filter(
-            lead => lead.bactive === true && lead.bisConverted === false
+            (lead) => lead.bactive === true && lead.bisConverted === false
           ).length;
 
           // Lost Leads
           const lostLeadsCount = filteredLeads.filter(
-            lead => lead.bactive === false && lead.bisConverted === false
+            (lead) => lead.bactive === false && lead.bisConverted === false
           ).length;
 
           // Website Leads
           const websiteLeadsCount = filteredLeads.filter(
-            lead => lead.bactive === true && lead.website_lead === true && lead.bisConverted === false
+            (lead) =>
+              lead.bactive === true &&
+              lead.website_lead === true &&
+              lead.bisConverted === false
           ).length;
 
           setLeadCount(activeLeadsCount);
@@ -124,13 +84,12 @@ export default function TeamKPIStats() {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, currentToken]);
+  }, []);
+
 
   useEffect(() => {
-    if (currentUserId && currentToken) {
-      fetchTeamKPIs();
-    }
-  }, [currentUserId, currentToken, fetchTeamKPIs]);
+    fetchTeamKPIs();
+  }, [fetchTeamKPIs]);
 
   const kpiData = [
     {

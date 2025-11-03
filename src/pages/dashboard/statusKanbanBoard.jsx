@@ -8,7 +8,6 @@ import ProfileHeader from "../../Components/common/ProfileHeader";
 
 const StatusKanbanPage = () => {
   const [activeTab, setActiveTab] = useState('status-kanban');
-  const [dashboardData, setDashboardData] = useState(null);
   const [phoneActive, setPhoneActive] = useState(false);
 
   useEffect(() => {

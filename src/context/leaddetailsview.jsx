@@ -1176,7 +1176,7 @@ return (
               </div>
             )}
 
-            {/* View Quotations Button (only visible when Won and has quotations) */}
+            {/* View Quotations Button  */}
             {(isWon || immediateWonStatus || leadData?.bisConverted) &&
               quotations.length > 0 && (
                 <button
@@ -1187,7 +1187,7 @@ return (
                 </button>
               )}
 
-            {/* Create Quotation Button (only visible when Won) */}
+            {/* Create Quotation Button */}
             {showCreateQuotationButton && (
               <>
                 <button

@@ -1220,7 +1220,8 @@ return (
                   >
                     <div className="w-px h-5 bg-gray-600"></div>
                     <img
-                      src="../../public/images/detailview/email.svg"
+                      // src="../../public/images/detailview/email.svg" // "C:\Users\pavij\Downloads\new_update_crm_main\CRM_Front_TESTING\public\illustrations\email.svg"
+                      src="../../public/illustrations/email.svg"
                       className="hidden sm:block"
                       size={16}
                       alt="Email icon"

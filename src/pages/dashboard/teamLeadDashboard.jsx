@@ -1,16 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Tabs,
-  Tab,
-  Box,
-  Typography,
-} from "@mui/material";
-
+import { Tabs,Tab, Box, Typography} from "@mui/material";
 import { ENDPOINTS } from "../../api/constraints";
 import ProfileHeader from "@/Components/common/ProfileHeader";
 import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
@@ -150,7 +139,7 @@ const LeadsDashboard = () => {
         setLeads(jsonRes.details || []);
       } catch (e) {
         setLeadsError(e.message);
-        console.error("Error fetching leads:", e); // Console clear
+        console.error("Error fetching leads:", e); 
       } finally {
         setLoadingLeads(false);
       }
@@ -258,7 +247,6 @@ const LeadsDashboard = () => {
             <KPIStats data={dashboardData?.details} />
             <Typography variant="caption" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
                {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : ''}
-               {/* {loadingLeads ? 'Loading Leads...' : leadsError ? `Leads Error: ${leadsError}` : `Total Leads Fetched: ${leads.length}`} */}
             </Typography>
           </Box>
 

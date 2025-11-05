@@ -1,4 +1,3 @@
-//import { ENDPOINTS } from "../constraints";
 import { ENDPOINTS} from '../api/constraints';
 
 // // GET Business Types
@@ -8,9 +7,9 @@ import { ENDPOINTS} from '../api/constraints';
 //   return response.json();
 // };
 
-// GET Plan Types (Merge two tables)
+// GET Plan Types 
 export const fetchPlanTypes = async () => {
-    const response = await fetch("http://192.168.0.107:3000/api/pricing-plans"); // adjust path if needed
+    const response = await fetch("http://192.168.0.107:3000/api/pricing-plans"); 
     if (!response.ok) throw new Error("Failed to fetch plan types");
     return response.json();
   };

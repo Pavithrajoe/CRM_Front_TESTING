@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Bell, X, Grid as AppsIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LeadForm from "../LeadForm";
 import LeadFormB2C from "../LeadFormB2C";
-import axios from "axios";
-import { ENDPOINTS } from "../../api/constraints";
+import { companyContext } from "../../context/companyContext";
 
 const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
-const POLLING_INTERVAL_MS = 60000;
 
 const ProfileHeader = () => {
+  const { company } = useContext(companyContext);
+
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -17,21 +17,23 @@ const ProfileHeader = () => {
     company_name: "",
     roleType: "",
   });
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [displayedNotifications, setDisplayedNotifications] = useState([]);
   const [bellNotificationCount, setBellNotificationCount] = useState(0);
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadFormType, setLeadFormType] = useState(null);
   const [showAppMenu, setShowAppMenu] = useState(false);
 
-  const hasPushedNotification = useRef(false);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const appMenuRef = useRef(null);
 
-  // Load user & company
+  // Track if LeadForm has already been auto-opened for current business type
+  const leadFormOpenedRef = useRef(false);
+
+  // Load user & set profile on mount
   useEffect(() => {
     const userString = localStorage.getItem("user");
     const token = localStorage.getItem("token");
@@ -43,49 +45,43 @@ const ProfileHeader = () => {
         email: userObject.cEmail || "",
         role: userObject.cRole_name || userObject.irole_id || "-",
         company_name:
-          userObject.company_name ||
-          userObject.company?.cCompany_name ||
-          "-",
+          userObject.company_name || userObject.company?.cCompany_name || "-",
         roleType: userObject.roleType || "-",
       });
-
-      const companyId = userObject.iCompany_id;
-      if (!companyId) return;
-
-      axios
-        .get(`${ENDPOINTS.BASE_URL_IS}/company/${companyId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          const data = res.data?.result;
-          setLeadFormType(
-            data && data.ibusiness_type ? Number(data.ibusiness_type) : null
-          );
-        })
-        .catch(() => setLeadFormType(null));
     } catch {
       setProfile({ name: "", email: "", role: "", company_name: "" });
-      setLeadFormType(null);
     }
     if (Notification.permission === "default") {
       Notification.requestPermission();
     }
-  }, [navigate]);
+  }, []);
 
-  // LeadFormType listener
+  // Update leadFormType when company context updates
   useEffect(() => {
-    const handler = (e) => {
+    const newBusinessTypeId = company?.result?.businessType?.id ?? null;
+    if (newBusinessTypeId !== leadFormType) {
+      setLeadFormType(newBusinessTypeId);
+      leadFormOpenedRef.current = false;
+    }
+  }, [company, leadFormType]);
+
+  useEffect(() => {
+    const handler = () => {
       const userObj = JSON.parse(localStorage.getItem("user") || "{}");
-      setLeadFormType(userObj.ibusiness_type);
+      if (leadFormType !== userObj.ibusiness_type) {
+        setLeadFormType(userObj.ibusiness_type);
+        leadFormOpenedRef.current = false;
+      }
       setProfile((prev) => ({ ...prev, company_name: userObj.company_name }));
     };
     window.addEventListener("leadFormTypeChanged", handler);
     return () => window.removeEventListener("leadFormTypeChanged", handler);
-  }, []);
+  }, [leadFormType]);
 
   const handleLeadFormOpen = () => {
     if (leadFormType === 1 || leadFormType === 2) setShowLeadForm(true);
   };
+
   const handleLeadFormClose = () => setShowLeadForm(false);
 
   const handleLogout = () => {
@@ -93,7 +89,7 @@ const ProfileHeader = () => {
     localStorage.removeItem("token");
     localStorage.removeItem(LAST_SEEN_TS_KEY);
     setBellNotificationCount(0);
-    setDisplayedNotifications([]);
+    setShowLeadForm(false);
     navigate("/");
   };
 
@@ -102,7 +98,7 @@ const ProfileHeader = () => {
     setShowAppMenu(false);
   };
 
-const handleMaps = () => {
+  const handleMaps = () => {
     navigate("/maps");
     setShowAppMenu(false);
   };
@@ -115,18 +111,21 @@ const handleMaps = () => {
     setShowAppMenu(false);
   };
 
-  // Close when clicking outside
+  // Close dropdowns/notifications/apps menu on outside click
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const onClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target))
         setShowDropdown(false);
-      if (notificationRef.current && !notificationRef.current.contains(event.target))
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      )
         setShowNotifications(false);
       if (appMenuRef.current && !appMenuRef.current.contains(event.target))
         setShowAppMenu(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
   return (
@@ -135,11 +134,9 @@ const handleMaps = () => {
       {showLeadForm && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
           <div className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
-            {leadFormType === 1 && (
-              <LeadForm onClose={() => setShowLeadForm(false)} />
-            )}
+            {leadFormType === 1 && <LeadForm onClose={handleLeadFormClose} />}
             {leadFormType === 2 && (
-              <LeadFormB2C onClose={() => setShowLeadForm(false)} />
+              <LeadFormB2C onClose={handleLeadFormClose} />
             )}
           </div>
         </div>
@@ -148,6 +145,7 @@ const handleMaps = () => {
       {/* + Create Lead Button */}
       <button
         onClick={handleLeadFormOpen}
+        disabled={!(leadFormType === 1 || leadFormType === 2)}
         className={`px-5 py-2 rounded-full text-white font-medium 
           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
           border border-blue-300 shadow-lg 
@@ -158,7 +156,6 @@ const handleMaps = () => {
               ? "opacity-50 cursor-not-allowed"
               : "animate-pulse"
           }`}
-        disabled={!(leadFormType === 1 || leadFormType === 2)}
       >
         + Create Lead
       </button>
@@ -207,31 +204,23 @@ const handleMaps = () => {
                 alt="gst"
                 className="w-8 h-8 mb-1 opacity-90"
               />
-              <div className="flex items-center justify-center">
-  <span className="text-sm font-semibold text-green-700">
-    GST Verification
-  </span>
-</div>
-
+              <span className="text-sm font-semibold text-green-700">
+                GST Verification
+              </span>
             </div>
 
-            
-             <div
+            <div
               onClick={handleMaps}
               className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
                 src="/illustrations/map_dist.png"
-                alt="gst"
+                alt="map"
                 className="w-8 h-8 mb-1 opacity-90"
               />
-              <div className="flex items-center justify-center">
-  <span className="text-sm font-semibold text-green-700">
-    Find Location
-  </span>
-</div>
-
-
+              <span className="text-sm font-semibold text-green-700">
+                Find Location
+              </span>
             </div>
 
             <div
@@ -240,18 +229,13 @@ const handleMaps = () => {
             >
               <img
                 src="/illustrations/bulkMail.png"
-                alt="gst"
+                alt="bulk mail"
                 className="w-15 h-8 mb-1 opacity-90"
               />
-              <div className="flex items-center justify-center">
-            <span className="text-sm font-semibold text-blue-700">
-    Bulk Mail
-  </span>
-</div>
-
-
+              <span className="text-sm font-semibold text-blue-700">
+                Bulk Mail
+              </span>
             </div>
-       
           </div>
         )}
       </div>
@@ -260,7 +244,7 @@ const handleMaps = () => {
       <div className="relative" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
-          onClick={() => setShowDropdown(!showDropdown)}
+          onClick={() => setShowDropdown((prev) => !prev)}
         >
           <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold shadow-md">
             {profile.name
@@ -278,7 +262,9 @@ const handleMaps = () => {
           <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <div className="font-semibold text-gray-900">{profile.name}</div>
+                <div className="font-semibold text-gray-900">
+                  {profile.name}
+                </div>
                 <div className="text-gray-500">{profile.email}</div>
                 <div className="text-gray-500">Role: {profile.role}</div>
                 <div className="text-gray-500">

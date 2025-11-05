@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React from "react";
+=======
+
+>>>>>>> origin/revamp
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import store from "./Redux/store.js";
@@ -10,11 +14,11 @@ import { TabProvider } from "./context/TabContext";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <TabProvider>
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </TabProvider>
-  </BrowserRouter>
+        <Provider store={store}>
+      <App />
+        </Provider>
+      </TabProvider>
+    </BrowserRouter>
   /* </React.StrictMode> */
 );
                 

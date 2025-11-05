@@ -44,6 +44,8 @@ const TerritoryLeadsAnalytics = () => {
     fetchData();
   }, []);
 
+
+  console.log("Count the api rerender : ")
   if (!data) {
     return <div className="text-center mt-10 text-gray-500">Loading analytics data...</div>;
   }
@@ -324,8 +326,8 @@ const TerritoryLeadsAnalytics = () => {
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CityLeadsAnalytics />
-        <CountryLeadsAnalytics />  
+        <CityLeadsAnalytics conversionPerTerritory={data.conversionPerTerritory} />
+        <CountryLeadsAnalytics  leadsPerCountr={data.leadsPerCountry}/>  
       </div>
 
       <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 shadow-xl">

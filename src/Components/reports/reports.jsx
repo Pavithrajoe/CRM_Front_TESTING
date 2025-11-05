@@ -21,7 +21,7 @@ const cardsData = [
   //   route: "/lead-conversion",
   //   image: "/public/illustrations/timeline.svg", // Use your actual image path here
   // },
-   {
+  {
     title: "Prospects Engaged But Not Converted",
     description: "View performance of opportunities across sales stages.",
     route: "/prospects-not-converted",
@@ -33,13 +33,13 @@ const cardsData = [
     route: "/First-Response-Time-for-Opportunity",
     image: "/public/illustrations/firstresponse.svg", // Use your actual image path here
   },
-   {
+  {
     title: "Company Leads",
     description: "View performance of opportunities across sales stages.",
     route: "/company-leads",
     image: "/public/illustrations/funnel.svg", // Use your actual image path here
   },
-   {
+  {
     title: "Lead Owner Effiency",
     description: "View performance of opportunities across sales stages.",
     route: "/lead-owner-efficiency",
@@ -51,7 +51,7 @@ const cardsData = [
     route: "/Sales-pipeline",
     image: "/public/illustrations/salespipeline.svg", // Use your actual image path here
   },
-   {
+  {
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
     route: "/territory-based-analytics",
@@ -65,16 +65,18 @@ const CardsPage = () => {
   const filteredCards = cardsData.filter((card) =>
     card.title.toLowerCase().includes(query.toLowerCase())
   );
-
+  
+    //log how many times the component renders
+    console.log("CardsPage rendered");
   return (
-    
+
     <div className="flex min-h-screen text-gray-900">
       {/* Sidebar */}
-      
+
 
       {/* Main Content */}
       <div className="flex-1 px-8 py-10">
-                          <ProfileHeader />
+        <ProfileHeader />
 
         {/* Search Bar */}
         <div className="mb-8">
@@ -86,7 +88,7 @@ const CardsPage = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-           
+
           </div>
         </div>
 
@@ -109,13 +111,13 @@ const CardsPage = () => {
                 </div>
 
                 {/* Image */}
-              <div className="w-40 h-40 flex-shrink-0">
-  <img
-    src={card.image}
-    alt={card.title}
-    className="w-full h-full object-cover rounded-lg"
-  />
-</div>
+                <div className="w-40 h-40 flex-shrink-0">
+                  <img
+                    src={card.image}
+                    alt={card.title}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
               </div>
             ))}
           </div>

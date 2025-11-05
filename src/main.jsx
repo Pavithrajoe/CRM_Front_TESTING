@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import React from "react";
-=======
-
->>>>>>> origin/revamp
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import store from "./Redux/store.js";

@@ -30,7 +30,6 @@ const LeadsDashboard = () => {
   const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
 
-   console.log("state setter  :",user);
   useEffect(() => {
     console.log("LeadsDashboard mounted");
     const storedUser = localStorage.getItem("user");
@@ -50,6 +49,7 @@ const LeadsDashboard = () => {
     // Function to fetch the reminder data  - Need to create an new API for this (or even binding)
     const fetchReminderData = async () => {
       try {
+        console.log("Fetching reminder data...");
         const response = await fetch(`${ENDPOINTS.USER_REMINDER}`, {
           method: "GET",
           headers: {
@@ -124,18 +124,15 @@ const LeadsDashboard = () => {
     } catch (error) {
       console.error("Error fetching missed tasks:", error);
       setTaskError(error.message);
-
     }
     };
-
-
 
     fetchReminderData();
     fetchCompanyAndMissedTasks();
   }, []); 
  
   console.log("Dashboard rendering")
-  const reminders = dashboardData?.details?.reminders || [];
+  // const reminders = dashboardData?.details?.reminders || [];
   const companyId = user?.iCompany_id;
 
   // IST date helpers
@@ -165,7 +162,9 @@ const LeadsDashboard = () => {
   };
 
   // Filter same-day reminders count
-  const todayRemindersCount = reminders.filter((reminder) => {
+  console.log('The reminder data are:', reminderData);
+  
+  const todayRemindersCount = reminderData?.filter((reminder) => {
     if (!reminder.dremainder_dt) return false;
     const reminderDate = new Date(reminder.dremainder_dt);
     const istReminderDate = new Date(
@@ -175,6 +174,7 @@ const LeadsDashboard = () => {
   }).length;
 
   // Filter today's tasks
+  
   const todayTasks = tasks.filter((task) => {
     if (!task.task_date) return false;
     const taskDate = new Date(task.task_date);
@@ -370,7 +370,7 @@ const LeadsDashboard = () => {
                     the time they were created.
                   </p>
                   {todayRemindersCount > 0 ? (
-                    <RemindersCard reminder_data={reminders} />
+                    <RemindersCard reminder_data={reminderData} />
                   ) : (
                     <Typography
                       textAlign="center"

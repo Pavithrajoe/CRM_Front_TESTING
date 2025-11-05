@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+  import React, { useEffect, useState, useCallback } from "react";
 import ProfileHeader from "@/Components/common/ProfileHeader";
 import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
 import RemindersCard from "@/Components/dashboard/teamlead/teamremindercard";
@@ -7,7 +7,6 @@ import LeadManagementCard from "@/Components/dashboard/teamlead/teamviewbarchart
 import TeamKPIStats from "@/Components/dashboard/teamlead/teamKPIcard";
 import { ENDPOINTS } from "../../api/constraints";
 import { jwtDecode } from "jwt-decode";
-
 
 const TeamviewDashboard = ({ dashboardData, reminders }) => {
   const [loading, setLoading] = useState(false);
@@ -67,7 +66,6 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
   }, [fetchTeamDashboardData]);
 
   console.log("The response data areeeee:", teamDashboardData);
-
   const leads = dashboardData?.details?.leads || [];
   const teamMembers = dashboardData?.details?.subordinateNames || [];
   const childSubordinates = dashboardData?.details?.childSubordinateIds || [];
@@ -99,6 +97,7 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
       </main>
     );
   }
+
   return (
     <main className="w-full flex-1 p-6 mt-[0px] min-h-screen">
       {/* Header Section */}

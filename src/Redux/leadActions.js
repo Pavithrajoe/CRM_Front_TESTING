@@ -40,7 +40,7 @@ export const fetchLeads = () => async (dispatch) => {
     }
 };
 
-// Alternative: If your API requires pagination but you want all data, use a large limit
+// If your API requires pagination but you want all data, use a large limit
 export const fetchLeadsWithLargeLimit = () => async (dispatch) => {
     dispatch({ type: 'FETCH_LEADS_REQUEST' });
     try {

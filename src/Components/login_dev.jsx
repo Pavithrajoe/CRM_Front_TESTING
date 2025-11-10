@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FaEye, FaEyeSlash, FaTimesCircle } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
 import { ENDPOINTS } from '../api/constraints';
+import Sidebar from './common/sidebar';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
+  const [data, setData] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,8 +67,13 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
+      // console.log("testing log", data)
+
+      setData(data)
 
       if (response.ok && data.jwtToken) {
+            localStorage.setItem('loginResponse', JSON.stringify(data));
+
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
@@ -89,6 +96,7 @@ const LoginPage = () => {
   );
 
   return (
+    <>
     <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 relative">
       {/* Top Card - Shown Initially */}
       {showTopCard && (
@@ -223,6 +231,10 @@ const LoginPage = () => {
         © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 3.1
       </footer>
     </div>
+<div style={{ display: 'none', position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+  <Sidebar data={data} />
+</div>
+    </>
   );
 };
 

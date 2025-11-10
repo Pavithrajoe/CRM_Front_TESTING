@@ -211,7 +211,7 @@ const fetchTargetMetrics = useCallback(async () => {
      <div className="   p-4 md:p-6">
             <div className="dashboard-container">
   <div className="flex justify-between items-center mb-8 border-b-4 border-blue-400 pb-3 animate-fade-in-down">
-    <h2 className="text-3xl md:text-4xl font-extrabold text-blue-800 text-left tracking-tight">
+    <h2 className="text-3xl md:text-4xl w-full font-extrabold text-blue-900 text-center items-center ">
       Sales Target Dashboard
     </h2>
     <button

@@ -23,7 +23,7 @@ const SettingsPage = () => {
             <h2 className="text-lg font-semibold mb-3">GENERAL SETTINGS</h2>
             <ul className="space-y-2">
               <li><NavLink to="account" className={navLinkClass}>Account Settings</NavLink></li>
-              <li><NavLink to="notification" className={navLinkClass}>Notification</NavLink></li>
+              <li><NavLink to="controll" className={navLinkClass}>Module Access Panel</NavLink></li>
               <li><NavLink to="smtpsettings" className={navLinkClass}>SMTP Settings</NavLink></li>
             </ul>
           </div>

@@ -245,10 +245,10 @@ const handleOutsideClick = (event) => {
 
   return (
     <div className="w-full overflow-x-hidden h-[100vh] shadow rounded bg-[#f8f8f8]">
-      <div className="relative bg-white mt-10 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto">
+      <div className="relative mt-10 overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto">
         {/* Header with Search and New Comment Button */}
-        <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-4">
-          <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 sm:px-6 sm:py-4 gap-4">
+          <div className="relative flex items-center w-full sm:w-auto">
             <input
               ref={searchInputRef}
               type="text"
@@ -280,17 +280,17 @@ const handleOutsideClick = (event) => {
         </div>
 
         {/* Comments List */}
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+        <div className="p-5 sm:p-6 space-y-4 sm:space-y-5">
           {filteredComments.length === 0 ? (
             <p className="text-center text-gray-400 text-sm sm:text-base py-8">No comments found.</p>
           ) : (
             currentComments.map((comment) => (
               <div
                 key={comment.icomment_id}
-                className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
+                className="border border-gray-200 rounded-2xl shadow-xl sm:rounded-3xl p-6 sm:p-5 bg-white hover:shadow-lg transition-shadow duration-300 ease-in-out"
               >
                 <div className="flex justify-between items-start">
-                  <span className="font-medium text-gray-900 text-sm sm:text-base">{comment.name}</span>
+                  <span className="font-extrabold text-gray-600 text-xl sm:text-md">{comment.name}</span>
                   {userId && userId === comment.iuser_id && (
                     <button
                       onClick={() => handleEditClick(comment)}
@@ -303,7 +303,7 @@ const handleOutsideClick = (event) => {
                   )}
                 </div>
                 <p className="text-gray-700 text-sm mt-2 leading-normal sm:leading-relaxed">{comment.ccomment_content}</p>
-                <p className="text-xs text-gray-400 mt-2 italic">
+                <p className="text-md text-gray-400 mt-2 italic">
                   {comment.imodify_dt
                     ? `Edited by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.imodify_dt)}`
                     : `Posted by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.icreate_dt)}`}

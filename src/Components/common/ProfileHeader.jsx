@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback , useMemo  } from "react";
 import { Bell, X, Grid as AppsIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LeadForm from "../LeadForm";
@@ -6,10 +6,15 @@ import LeadFormB2C from "../LeadFormB2C";
 import axios from "axios";
 import { ENDPOINTS } from "../../api/constraints";
 
+import { useUserAccess } from "../../context/UserAccessContext";
+
+
 const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
 const POLLING_INTERVAL_MS = 60000;
 
 const ProfileHeader = () => {
+const { userModules } = useUserAccess();
+  
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -30,6 +35,13 @@ const ProfileHeader = () => {
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const appMenuRef = useRef(null);
+  const dynamicPermission = useMemo(() => {
+    return userModules.filter(
+      (attr) => 
+        attr.module_id === 1 && attr.bactive && 
+      attr.attributes_id === 23 || attr.attribute_name == "Generate PDF"
+    );
+  },[userModules])
 
   // Load user & company
   useEffect(() => {
@@ -182,21 +194,26 @@ const handleMaps = () => {
           onClick={() => setShowAppMenu((prev) => !prev)}
           className="w-10 h-10 p-2 text-indigo-600 cursor-pointer bg-white border border-indigo-300 rounded-full shadow-md hover:bg-indigo-50 transition"
         />
-        {showAppMenu && (
+        {showAppMenu &&  
+          
           <div className="absolute right-0 mt-2 w-60 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-50 grid grid-cols-2 gap-3">
-            <div
-              onClick={handleGeneratePoster}
-              className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
-            >
-              <img
-                src="/illustrations/crop.svg"
-                alt="poster"
-                className="w-8 h-8 mb-1 opacity-90"
-              />
-              <span className="text-sm font-semibold text-blue-700">
-                Generate Poster
-              </span>
-            </div>
+           
+           {dynamicPermission.map((item, index) => (
+  <div
+    key={item.attributes_id || index}
+    onClick={handleGeneratePoster}
+    className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
+  >
+    <img
+      src="/illustrations/crop.png"
+      alt="poster"
+      className="w-8 h-8 mb-1 opacity-90"
+    />
+    <span className="text-sm font-semibold text-blue-700">
+      {item.attribute_name}
+    </span>
+  </div>
+))}
 
             <div
               onClick={handleGSTVerification}
@@ -253,7 +270,7 @@ const handleMaps = () => {
             </div>
        
           </div>
-        )}
+}
       </div>
 
       {/* Profile Dropdown */}

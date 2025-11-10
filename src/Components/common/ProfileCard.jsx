@@ -1,5 +1,5 @@
 // src/Components/common/ProfileCard.jsx
-import React, { useEffect, useState , useRef } from "react";
+import React, { useEffect, useState , useRef ,useMemo } from "react";
 import {
   FiEdit,
   FiPhone,
@@ -30,6 +30,8 @@ import EditProfileForm_Customer from "./ProfileCardComponents/EditForms/B2C_edit
 import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
 import LeadMailStorage from "./ProfileCardComponents/MailStorage/LeadMailStorage.jsx";
+import { useUserAccess } from "../../context/UserAccessContext";
+
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
@@ -58,6 +60,8 @@ class ErrorBoundary extends React.Component {
 }
 
 const ProfileCard = ({   settingsData, isLoadingSettings = false}) => {
+  const { userModules } = useUserAccess();
+
   const { leadId } = useParams();
   const [history, setHistory] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -108,6 +112,19 @@ const ProfileCard = ({   settingsData, isLoadingSettings = false}) => {
   };
 
     const editFormRef = useRef(null);
+
+    
+//for FileUpload
+
+const dynamicFileUpload = useMemo(() => {
+  return userModules.filter(
+    (attr) =>
+      attr.module_id === 5 &&
+      attr.bactive &&
+    attr.attributes_id === 10 || attr.attribute_name == 
+"File attachment"
+  );
+}, [userModules]);
 
       useEffect(() => {
     if (settingsData) {
@@ -706,10 +723,15 @@ useEffect(() => {
         {/* Attachments Section */}
         <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-md mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-4">Manage Attachments</label>
-
-          <button onClick={() => setIsAttachmentModalOpen(true)} className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-900 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md">
-            <FiUpload className="mr-2" /> Upload New File
-          </button>
+       {dynamicFileUpload.map((i) => (
+  <button
+    key={i.attributes_id}                   
+    onClick={() => setIsAttachmentModalOpen(true)} 
+    className="inline-flex items-center px-4 sm:px-6 py-2 bg-blue-900 text-white text-sm font-semibold rounded-full hover:bg-blue-600 transition-colors shadow-md"
+  >
+    <FiUpload className="mr-2" /> {i.attribute_name}
+  </button>
+))}
 
           <div className="mt-5 space-y-3">
             {(!Array.isArray(attachments) || attachments.length === 0) && (
@@ -782,7 +804,7 @@ useEffect(() => {
         <Dialog open={isAssignedToModalOpen} onClose={() => setIsAssignedToModalOpen(false)} className="relative z-50">
           <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-hidden">
               <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
                 All Assigned To History
                 <button onClick={() => setIsAssignedToModalOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors">

@@ -80,6 +80,7 @@ export const ENDPOINTS = {
   LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
   RECURRING_CLIENT_REPORT: `${BASE_URL}/reports/recurring-client`,
    
+  COMPANY_SETTINGS:`${BASE_URL}/company`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -138,6 +139,16 @@ export const ENDPOINTS = {
   MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
   MASTER_SUB_SOURCE_CHANGE: `${BASE_URL}/subSrc/changeSubSrcSts`,
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
+  MODULE: `${BASE_URL}/module`,
+    MODULE_COMPANY: `${BASE_URL}/module/company`,
+
+
+
+  USER_ACCESS: `${BASE_URL}/user-attribute/user`,
+  USERACCESS_CHANGE: `${BASE_URL}/user-attribute`,
+  
+
+
   SUB_SERVICE: `${BASE_URL}/sub-service`,
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,

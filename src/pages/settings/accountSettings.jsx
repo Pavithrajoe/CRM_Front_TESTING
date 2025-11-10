@@ -51,6 +51,7 @@ const AccountSettings = () => {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const list = res.data?.data?.data || [];
+      // console.log(list)
       setBusinessTypes(list.filter(bt => bt.bactive));
     }).catch(console.error);
   }, [token]);

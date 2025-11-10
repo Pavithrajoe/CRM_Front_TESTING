@@ -339,7 +339,7 @@ function UserCallLogs({ userId }) {
     return (
         <div className="p-6 text-gray-800 ">
             <div className="dashboard-container">
-                <h2 className="text-4xl font-extrabold mb-8 text-center border-b-4 border-blue-400 pb-3">
+                <h2 className="text-4xl font-extrabold mb-8 text-center border-b-4 border-blue-400 text-blue-900 pb-3">
                     User Call Logs
                 </h2>
 

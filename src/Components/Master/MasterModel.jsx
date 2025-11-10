@@ -529,6 +529,8 @@ const handleChange = (e) => {
       newValue = value === "" ? null : Number(value);
     } else if (name === "parentLeadSourceId") {
       newValue = value === "" ? null : Number(value);
+    } else if (name === "cost") {
+      newValue = value === "" ? null: Number(value);
     }
     
     return {

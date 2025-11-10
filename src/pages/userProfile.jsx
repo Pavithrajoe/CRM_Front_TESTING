@@ -11,6 +11,7 @@ import UserCallLogs from './userPage/userCallLogs';
 import UserLead from '../pages/userPage/userLead'
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 import UserDashboard from './userPage/userOverview'; 
+import UserAttributes from './userPage/UserAttributes';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
   FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, } from 'react-icons/fa';
@@ -145,7 +146,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
 
   // Define tabs conditionally based on DCRM status
   const tabs = useMemo(() => {
-    const baseTabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'User Leads'];
+    const baseTabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'User Leads', 'User Access'];
     
     // Add 'Call Logs' only if DCRM is enabled
     if (phoneActive) {
@@ -544,6 +545,13 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
        {activeTab === 'User Leads' && (
         <div className="p-4 bg-white rounded-xl shadow-md">
           <UserLead userId={userId} token={token} />
+        </div>
+      )}
+
+      
+       {activeTab === 'User Access' && (
+        <div className="p-4 bg-white rounded-xl shadow-md">
+          <UserAttributes userId={userId} token={token} />
         </div>
       )}
     </div>

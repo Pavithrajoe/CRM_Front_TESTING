@@ -4,8 +4,11 @@ import { Sparkles } from 'lucide-react';
 import { ENDPOINTS, BASE_URL } from '../../api/constraints'; // Assuming this path is correct and BASE_URL is needed
 import { FaTimesCircle } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useSettingsAccess } from '../../context/companySettingsContext';
 
 export default function CompanyMaster() {
+
+    const { settingsAccess } = useSettingsAccess();
     const [selectedMaster, setSelectedMaster] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [settings, setSettings] = useState({})
@@ -15,6 +18,9 @@ export default function CompanyMaster() {
     const [companyId, setCompanyId] = useState(null);
     const [isLoading, setIsLoading] = useState(true); // Loading state for decoding
     const [authError, setAuthError] = useState(''); // To store authentication errors
+
+
+      console.log ("settings data received",settingsAccess)
 
     // useEffect to decode JWT token on component mount
     useEffect(() => {
@@ -73,6 +79,7 @@ useEffect(() => {
             title: 'Status',
             value: 'Status Masters',
             modalKey: 'Status', 
+            masterKey:'statusMaster',
             idKey: 'ilead_status_id',
             payloadKey: 'clead_name',
             responseKey: 'response',
@@ -107,6 +114,7 @@ useEffect(() => {
             title: 'Potential',
             value: 'Potential Masters',
             modalKey: 'Potential',
+            masterKey:'potentialMaster',
             idKey: 'ileadpoten_id', 
             payloadKey: 'clead_name', 
             responseKey: 'data', 
@@ -151,7 +159,8 @@ useEffect(() => {
         {
             title: 'Industries',
             value: 'Industry Masters',
-            modalKey: 'Industry', // Changed for clarity in UI
+            modalKey: 'Industry',
+            masterKey:'industryMaster',
             idKey: 'iindustry_id', // ID key from GET response
             payloadKey: 'cindustry_name', // Main content key from GET response/form field name
             responseKey: 'response.industry', // Path to the array of items in GET response (VERIFY THIS!)
@@ -176,6 +185,7 @@ useEffect(() => {
     title: 'Sub-Industries',
     value: 'Sub-Industry Masters',
     modalKey: 'Sub Industry',
+    masterKey:'subIndustryMaster',
     idKey: 'isubindustry',
     payloadKey: 'subindustry_name',
     responseKey: 'response.subindustries',
@@ -270,7 +280,8 @@ useEffect(() => {
             
             payloadKey: 'source_name',
             responseKey: 'data',
-            idLocation: 'params', // ID in URL for PUT/DELETE
+            idLocation: 'params',
+            masterKey:'sourceMaster', // ID in URL for PUT/DELETE
             
             // --- API Endpoints ---
             get: ENDPOINTS.MASTER_SOURCE_GET,
@@ -323,6 +334,7 @@ useEffect(() => {
   title: 'Sub Source',
   value: 'Sub Source Masters',
   modalKey: 'Sub Source',
+  masterKey:'subSourceMaster',
 
   idKey: 'isub_src_id',
   payloadKey: 'ssub_src_name',
@@ -380,6 +392,7 @@ useEffect(() => {
   title: 'Service',
   value: 'Service Masters',
   modalKey: 'Service',
+  masterKey:'serviceMaster',
   idKey: 'iservice_id',
   payloadKey: 'cservice_name',
   responseKey: 'data',
@@ -423,6 +436,7 @@ useEffect(() => {
     idKey: 'isubservice_id',
     payloadKey: 'subservice_name',
     responseKey: 'data',
+    masterKey:'subServiceMaster',
     parentIdInChildResponseKey: 'iservice_parent',
     parentNameInChildResponseKey: 'service.cservice_name', 
 
@@ -435,11 +449,12 @@ useEffect(() => {
 
     payloadMapping: {
         isubservice_id: 'isubservice_id',
-        subservice_name: 'subservice_name', // Matches API expectation
+        subservice_name: 'subservice_name', 
         iservice_parent: 'serviceParent',
         bactive: 'bactive',
-        created_by: 'createdBy', // Matches API expectation
-        updated_by: 'updated_by'
+        created_by: 'createdBy', 
+        updated_by: 'updated_by',
+        cost: 'cost', 
     },
 
     skipCompanyIdInjection: true,
@@ -461,7 +476,8 @@ useEffect(() => {
         subservice_name: '', // Must match exactly what API expects
         serviceParent: null,
         createdBy: null, // Will be populated with user ID
-        bactive: true
+        bactive: true,
+           cost: '',
     },
 
     baseDeletePayload: {},
@@ -483,13 +499,18 @@ useEffect(() => {
     postPayloadFields: [
         "subservice_name", // Must match API expectation exactly
         "serviceParent",
-        "createdBy" // Must match API expectation exactly
+        "createdBy",
+        "cost" // Must match API expectation exactly
     ],
 
     putPayloadFields: [
         "subservice_name",
-        "updated_by"
+        "updated_by",
+        "cost"
     ],
+        
+    additionalFields: ['cost'],
+
 
     deletePayloadFields: []
 },
@@ -502,6 +523,7 @@ useEffect(() => {
     modalKey: 'ProposalSendMode',
     idKey: 'proposal_send_mode_id', 
     payloadKey: 'name', 
+    masterKey:'proposalSentModeMaster',
     
     // Updated response handling for nested structure
     responseKey: 'data.data', // Now points to the actual array of items
@@ -556,6 +578,7 @@ useEffect(() => {
   title: 'Email Template',
   value: 'Email Template Masters',
   modalKey: 'Email Template',
+  masterKey:'EmailTemplateMaster',
   idKey: 'mailTemplateId',
   payloadKey: 'mailTitle', // Used for list view display
   responseKey: 'data',
@@ -695,7 +718,8 @@ useEffect(() => {
         {
             title: 'Lead Lost Reason',
             value: 'Lead Lost Reasons',
-            modalKey: 'Lost Reason', // Display label for the main input
+            modalKey: 'Lost Reason', 
+            masterKey:'leadLostReasonsMaster',
 
             idKey: 'ilead_lost_reason_id', // ID field name in GET response and for operations
             payloadKey: 'cLeadLostReason', // Main input field's key for formData
@@ -814,9 +838,19 @@ useEffect(() => {
             <h1 className="text-3xl font-extrabold mb-10 text-center">Company Master Settings</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-    {MASTER_CONFIG.filter(master =>
-  master.title === "Sub-Service" ? settings?.sub_src_active === true : true
-).map((master, index) => (
+    {MASTER_CONFIG
+  .filter(master => {
+    if (!settingsAccess || !settingsAccess.companySettings || !settingsAccess.companySettings.Masters) {
+      // If settings or Masters are not loaded yet, skip showing any masters
+      return false;
+    }
+    // Safe to check masterKey now
+    return (
+      master.masterKey &&
+      settingsAccess.companySettings.Masters[master.masterKey] === true
+    );
+  })
+    .map((master, index) => (
     <div
       key={index}
       onClick={() => handleTileClick(master)}

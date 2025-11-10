@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   FaCrown,
   FaEnvelope,
@@ -11,8 +11,12 @@ import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
 import { useNavigate } from "react-router-dom";
+import { useUserAccess } from "../../context/UserAccessContext";
+
 
 const UserPage = () => {
+  const { userModules } = useUserAccess();
+
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,10 +26,27 @@ const UserPage = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState(null); // State to hold the current user's role
+  const [userRole, setUserRole] = useState(null);
+   // State to hold the current user's role
 
   const usersPerPage = 6;
   const navigate = useNavigate();
+  //to render dynamic user create button 
+  
+const dynamicUserCreate = useMemo(() => {
+  const filtered = userModules.filter(
+    (attr) =>
+      attr.module_id === 6 &&
+      attr.bactive &&
+      (attr.attributes_id === 16 || attr.attribute_name === "User Create")
+  );
+
+  // Deduplicate by attribute_name
+  return Array.from(new Map(filtered.map(item => [item.attributes_id, item])).values());
+}, [userModules]);
+
+
+  
 
   /**
    * Decodes the JWT token from local storage.
@@ -178,14 +199,16 @@ const UserPage = () => {
         
         <div className="flex gap-3 items-center">
              {/* Conditional rendering for the "+ User" button */}
-          {isAuthorized && (
+          {dynamicUserCreate.map((i)=> (
             <button
-              onClick={createUser} // Navigates to the user creation page
+              onClick={createUser} 
               className="px-4 font-mediumpx-4 py-2 rounded-xl text-sm font-semibold  bg-blue-900 shadow-md  text-white transition"
             >
-              + User
-            </button> 
-          )}
+{i.attribute_name}            </button> 
+          ))}
+          
+          
+          
           <button
             type="button"
             onClick={() => setActiveTab("active")}

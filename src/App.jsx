@@ -13,6 +13,11 @@ import AppLayout from "./Components/AppLayout";
 import PrivateRoute from "./Components/PrivateRoute.jsx";
 import { UserProvider } from "./context/UserContext";
 import { TabProvider } from "./context/TabContext";
+import { UserAccessProvider } from "./context/UserAccessContext.jsx";
+import ModuleControll from "./context/moduleControll.jsx";
+import UserAttributes from "./pages/userPage/UserAttributes.jsx";
+
+// All your other imports...
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
 import UserProfile from "./pages/userProfile";
@@ -72,6 +77,8 @@ import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
 import DistanceToClient from "./Components/Tools/Maps/DistanceToClient.jsx";
 import RecurringClientAnalytics from "./Components/reports/RecurringClientAnalytics/RecurringClientAnalytics.jsx";
 
+import { ModuleProvider } from "./context/ModuleContext.jsx";
+import { SettingsProvider } from "./context/companySettingsContext.jsx"
 
 function App() {
   return (
@@ -79,6 +86,11 @@ function App() {
       <ToastProvider>
         <TabProvider>
           <UserProvider>
+            <UserAccessProvider>
+                  <ModuleProvider>
+                    <SettingsProvider>
+
+
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
@@ -152,12 +164,18 @@ function App() {
                     <Route path="members" element={<MembersSettings />} />
                     <Route path="support" element={<SupportSettings />} />
                     <Route path="smtpsettings" element={<SmtpSettings />} />
+                    <Route path="controll" element={<ModuleControll/>} />
+                    <Route path="userattributes" element= {<UserAttributes />} />
 
 
                   </Route>
                 </Route>
               {/* </Route> */}
             </Routes>
+            </SettingsProvider>
+                </ModuleProvider>
+
+             </UserAccessProvider>
           </UserProvider>
         </TabProvider>
       </ToastProvider>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect , useRef , useMemo  } from "react";
+import { useParams , useLocation, useNavigate} from "react-router-dom";
 import {
   Box,
   Dialog,
@@ -52,6 +52,9 @@ import PostSalesForm from "../Industries/Marketing/XcodeFix/Components/postSales
 
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
+import { useUserAccess } from "../context/UserAccessContext"
+
+
 
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
@@ -114,20 +117,22 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
 };
 
 const LeadDetailView = () => {
+  const { userModules } = useUserAccess();
+  
   const { leadId } = useParams();
   const { showPopup } = usePopup();
   const navigate = useNavigate();
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
 
-    // Receive data from navigation
+  // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
   const currentIndex = leadIds.indexOf(Number(leadId));
 
   const theme = useTheme();
   
-  // State declarations
+  // State declarations - REMOVED THE JSX FROM HERE
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
@@ -158,47 +163,8 @@ const LeadDetailView = () => {
   // for post sales form
   const [showPostSalesForm, setShowPostSalesForm] = useState(false);
 
-  // New states for Quotation
-  const [showQuotationForm, setShowQuotationForm] = useState(false);<div className="flex justify-between items-center my-4">
-  <button
-    onClick={() => {
-      if (currentIndex > 0) {
-        const prevLeadId = leadIds[currentIndex - 1];
-        navigate(`/leaddetailview/${prevLeadId}`, {
-          state: { ...location.state },
-        });
-      }
-    }}
-    disabled={currentIndex <= 0}
-    className={`px-4 py-2 rounded-lg font-semibold ${
-      currentIndex <= 0
-        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-        : "bg-blue-600 text-white hover:bg-blue-800"
-    }`}
-  >
-    ← Previous
-  </button>
-
-  <button
-    onClick={() => {
-      if (currentIndex < leadIds.length - 1) {
-        const nextLeadId = leadIds[currentIndex + 1];
-        navigate(`/leaddetailview/${nextLeadId}`, {
-          state: { ...location.state },
-        });
-      }
-    }}
-    disabled={currentIndex >= leadIds.length - 1}
-    className={`px-4 py-2 rounded-lg font-semibold ${
-      currentIndex >= leadIds.length - 1
-        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-        : "bg-blue-600 text-white hover:bg-blue-800"
-    }`}
-  >
-    Next →
-  </button>
-</div>
-
+  // New states for Quotation - FIXED: No JSX here!
+  const [showQuotationForm, setShowQuotationForm] = useState(false);
   const [quotations, setQuotations] = useState([]);
   const [showQuotationsList, setShowQuotationsList] = useState(false);
   const [quotationsLoading, setQuotationsLoading] = useState(false);
@@ -211,14 +177,29 @@ const LeadDetailView = () => {
   const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
   const [currentQuotation, setCurrentQuotation] = useState(null);
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
-  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '',currencyId: null  });
+  const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '', currencyId: null });
   const [profileSettings, setProfileSettings] = useState(null);
+
   const [userSettings, setUserSettings] = useState({
-      mail_access: false,
-      whatsapp_access: false,
-      phone_access: false,
-      website_access: false
-    });
+    mail_access: false,
+    whatsapp_access: false,
+    phone_access: false,
+    website_access: false
+  });
+
+  const dynamicPermission = useMemo(() => {
+    return userModules.filter(
+      (attr) =>
+        attr.module_id === 5 &&
+        attr.bactive &&
+        ([11, 12, 13].includes(attr.attributes_id) ||
+          ["Comments", "Task", "Reminder"].includes(attr.attribute_name))
+    );
+  }, [userModules]);
+
+
+
+
 
   // Derived state
   const isLeadActive =
@@ -1021,97 +1002,97 @@ const renderTabContent = () => {
   }
 };
 
-return (
-  <>
-    <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
-      {showConfetti && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={false}
-          numberOfPieces={500}
-        />
-      )}
-
-      {/* Left Column: Profile Card & Action Card */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
-        <div className="sticky top-4 z-10 space-y-4">
-          <ProfileCard
-            leadId={leadId}
-            settingsData={profileSettings}
-            isReadOnly={
-              isLost ||
-              isWon ||
-              immediateWonStatus ||
-              leadData?.bisConverted === true
-            }
+ return (
+    <>
+      <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
+        {showConfetti && (
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+            numberOfPieces={500}
           />
-          {isLeadActive && <ActionCard leadId={leadId} />}
+        )}
+
+        {/* Left Column: Profile Card & Action Card */}
+        <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4">
+          <div className="sticky top-4 z-10 space-y-4">
+            <ProfileCard
+              leadId={leadId}
+              settingsData={profileSettings}
+              isReadOnly={
+                isLost ||
+                isWon ||
+                immediateWonStatus ||
+                leadData?.bisConverted === true
+              }
+            />
+            {isLeadActive && <ActionCard leadId={leadId} />}
+          </div>
         </div>
-      </div>
 
-      {/* Right Column: Status Bar, Tabs, and Content */}
-      <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+        {/* Right Column: Status Bar, Tabs, and Content */}
+        <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
+          {/* Navigation Buttons - THIS IS WHERE THE JSX BELONGS */}
+          <div className="flex gap-6 justify-end items-center my-4">
+            {/* Previous Button */}
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  if (currentIndex > 0) {
+                    const prevLeadId = leadIds[currentIndex - 1];
+                    navigate(`/leaddetailview/${prevLeadId}`, {
+                      state: { ...location.state },
+                    });
+                  }
+                }}
+                disabled={currentIndex <= 0}
+                className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+                  currentIndex <= 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
+                }`}
+              >
+                ←
+              </button>
 
-     <div className="flex gap-6 justify-end items-center my-4">
-  {/* Previous Button */}
-  <div className="relative group">
-    <button
-      onClick={() => {
-        if (currentIndex > 0) {
-          const prevLeadId = leadIds[currentIndex - 1];
-          navigate(`/leaddetailview/${prevLeadId}`, {
-            state: { ...location.state },
-          });
-        }
-      }}
-      disabled={currentIndex <= 0}
-      className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-        currentIndex <= 0
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
-      }`}
-    >
-      ←
-    </button>
+              {/* Tooltip */}
+              {currentIndex > 0 && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Previous Lead
+                </span>
+              )}
+            </div>
 
-    {/* Tooltip */}
-    {currentIndex > 0 && (
-      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-        Previous Lead
-      </span>
-    )}
-  </div>
+            {/* Next Button */}
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  if (currentIndex < leadIds.length - 1) {
+                    const nextLeadId = leadIds[currentIndex + 1];
+                    navigate(`/leaddetailview/${nextLeadId}`, {
+                      state: { ...location.state },
+                    });
+                  }
+                }}
+                disabled={currentIndex >= leadIds.length - 1}
+                className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+                  currentIndex >= leadIds.length - 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
+                }`}
+              >
+                →
+              </button>
 
-  {/* Next Button */}
-  <div className="relative group">
-    <button
-      onClick={() => {
-        if (currentIndex < leadIds.length - 1) {
-          const nextLeadId = leadIds[currentIndex + 1];
-          navigate(`/leaddetailview/${nextLeadId}`, {
-            state: { ...location.state },
-          });
-        }
-      }}
-      disabled={currentIndex >= leadIds.length - 1}
-      className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-        currentIndex >= leadIds.length - 1
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
-      }`}
-    >
-      →
-    </button>
-
-    {/* Tooltip */}
-    {currentIndex < leadIds.length - 1 && (
-      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-        Next Lead
-      </span>
-    )}
-  </div>
-</div>
+              {/* Tooltip */}
+              {currentIndex < leadIds.length - 1 && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Next Lead
+                </span>
+              )}
+            </div>
+          </div>
 
         {leadData?.postSalesMaster.length === 0 ? (
           <StatusBar
@@ -1289,6 +1270,19 @@ return (
             sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
           />
+      {/* Tab Content */}
+     {/* <Box className="mt-4 relative z-0 w-full">
+  {tabIndex === 0 && (
+    <LeadTimeline
+      leadId={leadId}
+      isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+    />
+  )}
+  {tabIndex === 1 && <Tasks leadId={leadId} />}
+  {tabIndex === 2 && <Comments leadId={leadId} />}
+  {tabIndex === 3 && <RemainderPage leadId={leadId} />}
+</Box> */}
+ </DialogContent>
 
           <Autocomplete
             options={currencies}
@@ -1331,13 +1325,14 @@ return (
             sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
           />
-        </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
           <Button onClick={handleRemarkSubmit} variant="contained">
             Submit
           </Button>
         </DialogActions>
+                
+
       </Dialog>
 
       {/* Quotations List Dialog with Detailed View */}

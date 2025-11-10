@@ -1,79 +1,102 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileHeader from "../../Components/common/ProfileHeader";
+import { useSettingsAccess } from "../../context/companySettingsContext";
 
 const cardsData = [
   {
     title: "Sales by Stage Analytics",
     description: "View performance of opportunities across sales stages.",
     route: "/sales-by-stage-analytics",
-    image: "/public/illustrations/analytics.svg",
+    image: "/public/illustrations/analytics.svg", 
+    reportKey: "SalesStageReport",
   },
   {
     title: "Lead Lost Analytics",
     description: "Analyze lost leads and identify drop-off patterns.",
     route: "/lead-lost-analytics",
     image: "/public/illustrations/lost.svg", 
+    reportKey: "LostLeadReport",
   },
-  //  {
-  //   title: "Lead Conversion Time",
-  //   description: "Analyze lost leads and identify drop-off patterns.",
-  //   route: "/lead-conversion",
-  //   image: "/public/illustrations/timeline.svg", 
-  // },
-   {
+  {
     title: "Prospects Engaged But Not Converted",
     description: "View performance of opportunities across sales stages.",
     route: "/prospects-not-converted",
-    image: "/public/illustrations/Analytics-rafiki.svg", 
+    image: "/public/illustrations/Analytics-rafiki.svg",
+    reportKey: "ProspectsLostLeadsReport",
   },
   {
-    title: "First Response Time for Oppertunity ",
+    title: "First Response Time for Opportunity",
     description: "View performance of opportunities across sales stages.",
     route: "/First-Response-Time-for-Opportunity",
     image: "/public/illustrations/firstresponse.svg", 
+    reportKey: "FirstResponseTimeOpportunityReport",
   },
-   {
+  {
     title: "Company Leads",
     description: "View performance of opportunities across sales stages.",
     route: "/company-leads",
     image: "/public/illustrations/funnel.svg", 
+    reportKey: "CompanyOverallReport"
   },
-   {
-    title: "Lead Owner Effiency",
+  {
+    title: "Lead Owner Efficiency",
     description: "View performance of opportunities across sales stages.",
     route: "/lead-owner-efficiency",
     image: "/public/illustrations/efficeincy.svg", 
+    reportKey: "LeadOwnerActivityReport",
   },
   {
     title: "Sales Pipeline",
     description: "View performance of opportunities across sales stages.",
     route: "/Sales-pipeline",
-    image: "/public/illustrations/salespipeline.svg", 
+    image: "/public/illustrations/salespipeline.svg",
+    reportKey: "SalesPipelineReport"
   },
-   {
+  {
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
     route: "/territory-based-analytics",
     image: "/public/illustrations/map.svg", 
+    reportKey: "TerritoryLeadReport"
+
   },
    {
     title: "Recurring Client Analytics",
     description: "Track and analyze repeat business performance across client segments",
     route: "/recurring-client-analytics",  
     image: "/public/illustrations/recurring_client_report.svg", 
+    reportKey: "Reccuring-Client"
+
   },
 ];
+
 const CardsPage = () => {
+  const { settingsAccess } = useSettingsAccess();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
-  const filteredCards = cardsData.filter((card) =>
-    card.title.toLowerCase().includes(query.toLowerCase())
-  );
+
+  // Search by title
+  if (
+    !settingsAccess ||
+    !settingsAccess.companySettings ||
+    !settingsAccess.companySettings.Reports
+  ) {
+    return <div>Loading...</div>;
+  }
+
+  // Filter cards by search AND companySettings.Reports
+  let filteredCards = cardsData
+    .filter((card) =>
+      card.title.toLowerCase().includes(query.toLowerCase())
+    )
+    .filter(
+      (card) => settingsAccess.companySettings.Reports[card.reportKey] === true
+    );
+
 
   return (
-    
     <div className="flex min-h-screen text-gray-900">
       {/* Sidebar */}
     
@@ -86,12 +109,11 @@ const CardsPage = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search Dashbaords"
+              placeholder="Search Dashboards"
               className="w-full px-5 py-3 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-           
           </div>
         </div>
 
@@ -107,7 +129,6 @@ const CardsPage = () => {
                 onClick={() => navigate(card.route)}
                 className="flex items-center justify-between bg-white rounded-2xl p-6 min-h-[180px] shadow-sm hover:shadow-md transition cursor-pointer border border-gray-200 hover:border-blue-400"
               >
-                {/* Text Content */}
                 <div className="flex-1 pr-4">
                   <h3 className="text-xl font-medium text-gray-800 mb-2">{card.title}</h3>
                   <p className="text-sm text-gray-500">{card.description}</p>

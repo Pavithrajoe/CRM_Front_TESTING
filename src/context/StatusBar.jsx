@@ -21,9 +21,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-// import PaymentAndDomainDetailsCombined from '../../src/Industries/Marketing/XcodeFix/Components/postSales/domainDeatils'
 import dayjs from 'dayjs';
-
 
 const mandatoryInputStages = ['Proposal', 'Won'];
 const MAX_PROJECT_VALUE = 10000000;  // 1 crore
@@ -100,7 +98,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [dueDate, setDueDate] = useState(null);
 
-   const PopperProps = {
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState('');
+
+  const PopperProps = {
     placement: 'top-start',
     modifiers: [
       {
@@ -152,6 +153,51 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       }
     }
   }, []);
+
+  // Enhanced stage active check
+  const isStageActive = (stage) => {
+    if (!stage) return false;
+    
+    // Check multiple possible active properties
+    const isActive = stage.bactive !== false && 
+                    stage.is_active !== false && 
+                    stage.active !== false &&
+                    stage.status !== 'inactive';
+    
+    console.log('Stage active check:', { 
+      stage: stage.name, 
+      bactive: stage.bactive, 
+      is_active: stage.is_active,
+      active: stage.active,
+      result: isActive 
+    });
+    
+    return isActive;
+  };
+
+  // Enhanced debug function
+  const logStageClickDebug = (clickedIndex, statusId) => {
+    const stage = stages[clickedIndex];
+    const debugData = {
+      clickedIndex,
+      statusId,
+      stageName: stage?.name,
+      stageData: stage,
+      currentStageIndex,
+      isLost,
+      isWon,
+      isStageActive: isStageActive(stage),
+      conditions: {
+        isNextStage: clickedIndex > currentStageIndex,
+        isNotLostOrWon: !isLost && !isWon,
+        isActive: isStageActive(stage),
+        allConditions: clickedIndex > currentStageIndex && !isLost && !isWon && isStageActive(stage)
+      }
+    };
+    
+    console.log('=== STAGE CLICK DEBUG ===', debugData);
+    setDebugInfo(JSON.stringify(debugData, null, 2));
+  };
 
   const validateDemoSession = () => {
     let isValid = true;
@@ -351,20 +397,33 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
+      
+      console.log('Raw stages API response:', data);
+      
       const statusMap = {};
       const formattedStages = Array.isArray(data.response)
         ? data.response
             .map(item => {
-              statusMap[item.ilead_status_id] = item.bactive;
+              console.log('Processing stage item:', item);
+              // More flexible active status mapping
+              const isActive = item.bactive !== false && 
+                              item.is_active !== false && 
+                              item.active !== false;
+              
+              statusMap[item.ilead_status_id] = isActive;
               return {
                 id: item.ilead_status_id,
                 name: item.clead_name,
                 order: item.orderId || 9999,
-                bactive: item.bactive,
+                bactive: isActive, // Use the calculated active status
+                rawData: item, // Keep raw data for debugging
               };
             })
             .sort((a, b) => a.order - b.order)
         : [];
+
+      console.log('Formatted stages:', formattedStages);
+      console.log('Stage status map:', statusMap);
 
       setStages(formattedStages);
       setStageStatuses(statusMap);
@@ -406,14 +465,14 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   useEffect(() => {
-    fetchStages();
-    fetchUsers();
-    fetchDemoSessions();
-  }, []);
-
-  useEffect(() => {
     if (stages.length && leadData) {
       const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
+      console.log('Setting current stage index:', {
+        stagesCount: stages.length,
+        leadStatusId: leadData.ileadstatus_id,
+        foundIndex: index,
+        stages: stages.map(s => ({ id: s.id, name: s.name }))
+      });
       if (index !== -1) setCurrentStageIndex(index);
     }
   }, [stages, leadData]);
@@ -428,7 +487,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
   };
 
   const handleStageClick = (clickedIndex, statusId) => {
-    if (stageStatuses[statusId] === false) {
+    logStageClickDebug(clickedIndex, statusId);
+    
+    const stage = stages[clickedIndex];
+    
+    if (!isStageActive(stage)) {
       showToast('error', 'This status is currently inactive and cannot be selected');
       return;
     }
@@ -678,7 +741,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }));
   };
 
-    const handleNotifiedToChange = (e) => {
+  const handleNotifiedToChange = (e) => {
     const value = e.target.value;
     setRemarkData(prev => ({
       ...prev,
@@ -803,22 +866,38 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }
   };
 
-  const getStatusRemarks = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+const getStatusRemarks = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    console.log('=== DEBUG: Raw API Response ===', response.data);
+    
+    if (Array.isArray(response.data?.Response)) {
+      // Remove duplicates at the source before setting state
+      const uniqueRemarks = response.data.Response.filter((remark, index, self) => 
+        index === self.findIndex(r => 
+          r.ilead_status_remarks_id === remark.ilead_status_remarks_id
+        )
+      );
+      
+      console.log('=== DEBUG: Before setting state ===', {
+        originalCount: response.data.Response.length,
+        uniqueCount: uniqueRemarks.length,
+        duplicatesRemoved: response.data.Response.length - uniqueRemarks.length
       });
-      if (Array.isArray(response.data?.Response)) {
-        setStatusRemarks(response.data.Response);
-      }
-    } catch (e) {
-      console.error('Error fetching remarks:', e.message);
+      
+      setStatusRemarks(uniqueRemarks);
     }
-  };
+  } catch (e) {
+    console.error('Error fetching remarks:', e.message);
+  }
+};
 
   useEffect(() => {
     getStatusRemarks();
@@ -830,12 +909,29 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       <div className="w-11/12 md:w-5/6 lg:w-4/5 xl:w-[90%] mx-auto px-4 py-6">
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
+        {/* Debug Info Panel - Remove after fixing */}
+        {/* <div className="bg-yellow-50 border border-yellow-200 p-4 mb-4 rounded-lg">
+          <h4 className="font-bold text-yellow-800 mb-2">Debug Information:</h4>
+          <pre className="text-xs bg-white p-2 rounded border max-h-32 overflow-auto">
+            {debugInfo || 'Click on a stage to see debug info...'}
+          </pre>
+        </div> */}
+
         <div className="flex items-center justify-between w-full">
           {stages.map((stage, index) => {
             const isCompleted = index < currentStageIndex;
             const isActive = index === currentStageIndex;
-            const isClickable = index > currentStageIndex && !isLost && !isWon && stage.bactive;
+            const isClickable = index > currentStageIndex && !isLost && !isWon && isStageActive(stage);
             const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
+
+            console.log(`Stage ${stage.name}:`, {
+              index,
+              isCompleted,
+              isActive,
+              isClickable,
+              isStageActive: isStageActive(stage),
+              currentStageIndex
+            });
 
             return (
               <React.Fragment key={stage.id}>
@@ -850,28 +946,30 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
                           ? 'bg-blue-600 text-white'
                           : isClickable
                           ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
-                          : stage.bactive === false
+                          : !isStageActive(stage)
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       }
                       transition-colors duration-200`}
                     title={
-                      stage.bactive === false
+                      !isStageActive(stage)
                         ? 'This status is inactive'
                         : matchedRemark
                         ? matchedRemark.lead_status_remarks
-                        : ''
+                        : isClickable 
+                        ? `Click to move to ${stage.name}`
+                        : 'Cannot select this stage'
                     }
                   >
                     {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
                   </div>
                   <span
                     className={`mt-2 text-sm text-center ${
-                      stage.bactive === false ? 'text-gray-400' : ''
+                      !isStageActive(stage) ? 'text-gray-400' : ''
                     }`}
                   >
                     {stage.name}
-                    {stage.bactive === false && (
+                    {!isStageActive(stage) && (
                       <span className="block text-xs text-red-500">(Inactive)</span>
                     )}
                   </span>
@@ -911,6 +1009,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         </div>
         )}
 
+        {/* Rest of your dialogs remain the same */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Enter Details</DialogTitle>
           <DialogContent>
@@ -1396,56 +1495,72 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
           </DialogActions>
         </Dialog>
 
-        {statusRemarks.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-          <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-            {statusRemarks.map((remark, index) => (
-              <div key={remark.ilead_status_remarks_id} className="relative flex-shrink-0">
-                {index !== statusRemarks.length - 1 && (
-                  <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
-                )}
-                <div
-                  className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
-                  style={{ minWidth: "250px", maxWidth: "250px" }} 
-                  onClick={() => setSelectedRemark(remark)}
+{statusRemarks.length > 0 && (
+  <div className="mt-6">
+    <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+    <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
+      {(() => {
+        console.log('=== DEBUG: All Remarks ===', statusRemarks);
+        
+        // STRONG Deduplication - Remove exact duplicates
+        const uniqueRemarks = statusRemarks.filter((remark, index, self) => 
+          index === self.findIndex(r => 
+            r.ilead_status_remarks_id === remark.ilead_status_remarks_id &&
+            r.lead_status_remarks === remark.lead_status_remarks &&
+            r.dcreated_dt === remark.dcreated_dt &&
+            r.due_date === remark.due_date
+          )
+        );
+
+        console.log('=== DEBUG: After Deduplication ===', uniqueRemarks);
+
+        return uniqueRemarks.map((remark, index) => (
+          <div key={`${remark.ilead_status_remarks_id}_${index}`} className="relative flex-shrink-0">
+            {index !== uniqueRemarks.length - 1 && (
+              <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
+            )}
+            <div
+              className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
+              style={{ minWidth: "250px", maxWidth: "250px" }} 
+              onClick={() => setSelectedRemark(remark)}
+            >
+              <div className="space-y-2 text-sm">
+                <p
+                  className="text-sm break-words line-clamp-3"
+                  title={remark.lead_status_remarks}
                 >
-                  <div className="space-y-2 text-sm">
-                    <p
-                      className="text-sm break-words line-clamp-3"
-                      title={remark.lead_status_remarks} // tooltip with full text on hover
-                    >
-                      <strong>Remark:</strong> {remark.lead_status_remarks}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Created By:</strong> {remark.createdBy || '-'}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Status:</strong> {remark.status_name}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Due Date:</strong>{" "}
-                      {new Date(remark.due_date)
-                        .toLocaleString("en-GB", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
-                        .replace(/(am|pm)/, (match) => match.toUpperCase())}
-                    </p>
-                  </div>
-                </div>
+                  <strong>Remark:</strong> {remark.lead_status_remarks}
+                </p>
+                <p className="text-sm">
+                  <strong>Created By:</strong> {remark.createdBy || '-'}
+                </p>
+                <p className="text-sm">
+                  <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
+                </p>
+                <p className="text-sm">
+                  <strong>Status:</strong> {remark.status_name}
+                </p>
+                <p className="text-sm">
+                  <strong>Due Date:</strong>{" "}
+                  {remark.due_date ? new Date(remark.due_date)
+                    .toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
+                    .replace(/(am|pm)/, (match) => match.toUpperCase()) : 'Not set'}
+                </p>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-       )}
+        ));
+      })()}
+    </div>
+  </div>
+)}
 
         <Dialog
           open={!!selectedRemark}
@@ -1550,4 +1665,3 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 };
 
 export default StatusBar;
-

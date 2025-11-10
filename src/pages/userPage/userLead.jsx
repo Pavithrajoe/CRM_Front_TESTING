@@ -263,9 +263,8 @@ const UserLead = ({ userId, token }) => {
     };
 
     return (
-        <div className="min-h-screen w-full bg-gray-100 p-8">
-            <div className="max-w-full mx-auto bg-white h-[100vh] rounded-xl shadow-lg p-6 flex flex-col">
-                <h1 className="text-2xl font-bold text-blue-800 mb-6">User Leads</h1>
+<>            <div className="max-w-full mx-auto h-[100vh] rounded-xl p-6 flex flex-col">
+                <h1 className="text-center w-full font-extrabold text-3xl md:text-4xl  mb-8 border-b-4 border-blue-400 pb-3 mt-[-10px] animate-fade-in-down items-center text-blue-900">User Leads</h1>
 
                 {/* Tabs */}
                 <div className="flex border-b mb-6">
@@ -321,7 +320,7 @@ const UserLead = ({ userId, token }) => {
                     {renderTable()}
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

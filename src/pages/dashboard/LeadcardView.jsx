@@ -8,9 +8,13 @@ import LeadFilterModal from './LeadViewComponents/LeadFilterModal';
 import LeadCountSelector from './LeadViewComponents/LeadCountSelector';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
+import { useUserAccess } from "../../context/UserAccessContext";
+
 
 const LeadCardViewPage = () => {
     const location = useLocation();
+      const { userModules } = useUserAccess();
+    
     const navigate = useNavigate();
     const [allLeads, setAllLeads] = useState([]);
     const [assignedLeads, setAssignedLeads] = useState([]);
@@ -73,7 +77,17 @@ const LeadCardViewPage = () => {
 
     const token = localStorage.getItem("token"); 
 
-    //Proper tab filtration logic
+     const importPermissions = useMemo(() => {
+            return userModules.filter(
+                (attr) => 
+                    attr.module_id === 5 && 
+                    attr.bactive && 
+                     attr.attribute_name == "Import"
+            );
+        }, [userModules]);
+
+    // FIXED: Proper tab filtration logic
+// FIXED: Add modal filter states to dependencies
 const dataToDisplay = useMemo(() => {
     let data = [];
     
@@ -913,14 +927,15 @@ const goToDetail = (id, leadsList) => {
                     ))}
                 </div>
 
-                {roleID && (
+                 {importPermissions.map((permission) => (
                     <button 
+                        key={permission.iua_id} // Use iua_id as key
                         onClick={() => setShowImportModal(true)}
                         className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap'
                     >
-                        Import Leads
-                    </button>  
-                )}
+                        {permission.attribute_name} 
+                    </button>
+                ))}
             </div>
 
             {selectedFilter === 'lost' && (

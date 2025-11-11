@@ -12,6 +12,7 @@ import {
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import RouteIcon from "@mui/icons-material/AltRoute";
+import ProfileHeader from "../../common/ProfileHeader"
 const DistanceToClientMap = () => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);

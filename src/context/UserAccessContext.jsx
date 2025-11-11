@@ -22,8 +22,8 @@ export const UserAccessProvider = ({ children, data }) => {
         const moduleData = parsed.user_attributes || [];
         setUserModules(moduleData);
 
-        // console.log("Loaded user data from localStorage:", parsed);
-        // console.log("Sidebar Module List:", moduleData);
+        console.log("Loaded user data from localStorage:", parsed);
+        console.log("Sidebar Module List:", moduleData);
       } else {
         console.warn("No login data found in localStorage or props.");
       }

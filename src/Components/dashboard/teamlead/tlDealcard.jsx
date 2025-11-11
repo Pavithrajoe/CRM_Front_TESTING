@@ -98,7 +98,7 @@ export default function DealsTable({data =[]}) {
             return `${datePart}\n${timePart}`;
           })(),
           modifiedDate: new Date(item.dmodified_dt),
-          avatar: "./images/dashboard/grl.svg",
+          avatar: "./images/dashboard/grl.png",
         }))
         .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) ||
       []

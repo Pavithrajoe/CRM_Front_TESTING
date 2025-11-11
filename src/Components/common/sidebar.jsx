@@ -19,7 +19,7 @@ const Sidebar = ({ data }) => {
   const [userModule, setUserModule] = useState([]);
   const [userRoleId, setUserRoleId] = useState(null);
 
-  console.log("Sidebar rendered");
+  // console.log("Sidebar rendered");
 
   const MODULE_ROUTES = {
     Home: { route: "/leaddashboard", iconPath: "/images/nav/home.svg" },
@@ -62,47 +62,55 @@ const Sidebar = ({ data }) => {
   }, [data]);
 
   // ✅ Dynamic module filter based on access + company
-  useEffect(() => {
-    if (!modules || !userModule || !companyId) return;
+useEffect(() => {
+  if (!modules || !userModule || !companyId) return;
 
-    const allowedModuleIds = new Set(userModule.map(access => access.module_id));
-    const isTargetCompany = companyId === TARGET_COMPANY_ID;
+  const allowedModuleIds = new Set(
+    userModule
+      .filter(access => access.bactive === true) 
+      .map(access => access.module_id)
+  );
 
-    const filteredModules = modules
-      .filter(mod => allowedModuleIds.has(mod.imodule_id))
-      .sort((a, b) => a.imodule_id - b.imodule_id)
-      .map(mod => {
-        const baseLabel = mod.cmodule_name.trim();
-        const baseRoute = MODULE_ROUTES[baseLabel]?.route;
-        const baseIcon = MODULE_ROUTES[baseLabel]?.iconPath;
+  const isTargetCompany = companyId === TARGET_COMPANY_ID;
 
-        // ✅ Apply company + attribute-specific logic for Lead module
-        let label = baseLabel;
-        let route = baseRoute;
+  const filteredModules = modules
+    .filter(mod => allowedModuleIds.has(mod.imodule_id))
+    .sort((a, b) => a.imodule_id - b.imodule_id)
+    .map(mod => {
+      const baseLabel = mod.cmodule_name.trim();
+      const baseRoute = MODULE_ROUTES[baseLabel]?.route;
+      const baseIcon = MODULE_ROUTES[baseLabel]?.iconPath;
 
-        if (baseLabel === 'Lead') {
-          const userHasSpecialAccess = userModule.some(
-            attr => attr.attribute_key?.toLowerCase() === 'xcodefix_lead_access' && attr.attribute_value === 'true'
-          );
+      // ✅ Special handling for Lead module
+      let label = baseLabel;
+      let route = baseRoute;
 
-          if (isTargetCompany || userHasSpecialAccess) {
-            label = 'My Leads';
-            route = '/xcodefix_leadcardview';
-          }
+      if (baseLabel === 'Lead') {
+        const userHasSpecialAccess = userModule.some(
+          attr =>
+            attr.attribute_key?.toLowerCase() === 'xcodefix_lead_access' &&
+            attr.attribute_value === 'true'
+        );
+
+        if (isTargetCompany || userHasSpecialAccess) {
+          label = 'My Leads';
+          route = '/xcodefix_leadcardview';
         }
+      }
 
-        return {
-          key: mod.imodule_id,
-          id: mod.imodule_id,
-          label,
-          route,
-          iconPath: baseIcon,
-        };
-      })
-      .filter(item => item.route && item.iconPath);
+      return {
+        key: mod.imodule_id,
+        id: mod.imodule_id,
+        label,
+        route,
+        iconPath: baseIcon,
+      };
+    })
+    .filter(item => item.route && item.iconPath);
 
-    setMenuItems(filteredModules);
-  }, [modules, userModule, companyId]);
+  setMenuItems(filteredModules);
+}, [modules, userModule, companyId]);
+
 
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
 

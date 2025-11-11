@@ -10,7 +10,7 @@ const TaskSameDay = ({tasks, loading, error}) => {
 
 
   useEffect(() => {
-    console.log("The tasks are :", tasks)
+    // console.log("The tasks are :", tasks)
     if (!tasks.length) {
       setFilteredTasks([]);
       return;

@@ -57,7 +57,7 @@ const cardsData = [
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
     route: "/territory-based-analytics",
-    image: "/public/illustrations/map.svg", 
+    image: "/public/illustrations/map.png", 
     reportKey: "TerritoryLeadReport"
 
   },

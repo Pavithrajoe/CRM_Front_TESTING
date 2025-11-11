@@ -391,12 +391,7 @@ import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
 import KPIStats from "@/Components/dashboard/teamlead/tlKPIcards";
 import RemindersCard from "@/Components/dashboard/teamlead/tlremindercard";
 import TaskSameDay from "@/Components/common/taskSameDay";
-import { jwtDecode } from 'jwt-decode';
 import { useUserAccess } from "../../context/UserAccessContext";
-
-const COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
-
-
 
 const LeadsDashboard = () => {
   const { userModules } = useUserAccess();
@@ -661,3 +656,4 @@ const LeadsDashboard = () => {
 };
 
 export default LeadsDashboard;
+

@@ -79,7 +79,7 @@ const [count, setCount] = useState(0);
         setCount(prevCount => prevCount + 1);
         navigate('/leaddashboard');
         // Log the render count on successful login
-                       console.log("Login rerender count ",count);
+                      //  console.log("Login rerender count ",count);
 
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
@@ -92,7 +92,7 @@ const [count, setCount] = useState(0);
   };
 
 
-                         console.log("Login rerender count ",count);
+                        //  console.log("Login rerender count ",count);
 
 
                          

@@ -170,7 +170,7 @@ const [remindersThisWeek, setRemindersThisWeek] = useState([]);
       }),
       remaining: remainingText,
       ilead_id: reminder.ilead_id,
-      avatar: "/images/dashboard/grl.svg",
+      avatar: "/images/dashboard/grl.png",
     };
   }) || [];
 

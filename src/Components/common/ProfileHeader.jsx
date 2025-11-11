@@ -1,18 +1,15 @@
-import { useContext, useEffect, useRef, useState ,useMemo} from "react";
+import { useContext, useEffect, useRef, useState, useMemo } from "react";
 import { Bell, X, Grid as AppsIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LeadForm from "../LeadForm";
 import LeadFormB2C from "../LeadFormB2C";
 import { companyContext } from "../../context/companyContext";
-
 import { useUserAccess } from "../../context/UserAccessContext";
-
 
 const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
 
 const ProfileHeader = () => {
-const { userModules } = useUserAccess();
-  
+  const { userModules } = useUserAccess();
   const { company } = useContext(companyContext);
 
   const [profile, setProfile] = useState({
@@ -34,13 +31,20 @@ const { userModules } = useUserAccess();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const appMenuRef = useRef(null);
-  const dynamicPermission = useMemo(() => {
+
+  // Corrected filter logic - only show if bactive is true
+  const pdfPermissions = useMemo(() => {
     return userModules.filter(
       (attr) => 
-        attr.module_id === 1 && attr.bactive && 
-      attr.attributes_id === 23 || attr.attribute_name == "Generate PDF"
+        attr.module_id === 1 && 
+        attr.attributes_id === 23 && 
+        attr.attribute_name === "Generate PDF" &&
+        attr.bactive === true // Only show if active
     );
-  },[userModules])
+  }, [userModules]);
+
+  // Check if we have any active PDF permissions
+  const hasPdfPermission = pdfPermissions.length > 0;
 
   // Track if LeadForm has already been auto-opened for current business type
   const leadFormOpenedRef = useRef(false);
@@ -114,10 +118,12 @@ const { userModules } = useUserAccess();
     navigate("/maps");
     setShowAppMenu(false);
   };
+
   const handleGSTVerification = () => {
     navigate("/gst-compliance");
     setShowAppMenu(false);
   };
+
   const handleBulkMail = () => {
     navigate("/mailsender");
     setShowAppMenu(false);
@@ -191,33 +197,32 @@ const { userModules } = useUserAccess();
           onClick={() => setShowAppMenu((prev) => !prev)}
           className="w-10 h-10 p-2 text-indigo-600 cursor-pointer bg-white border border-indigo-300 rounded-full shadow-md hover:bg-indigo-50 transition"
         />
-        {showAppMenu &&  
-          
+        {showAppMenu && (
           <div className="absolute right-0 mt-2 w-60 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-50 grid grid-cols-2 gap-3">
-           
-           {dynamicPermission.map((item, index) => (
-  <div
-    key={item.attributes_id || index}
-    onClick={handleGeneratePoster}
-    className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
-  >
-    <img
-      src="/illustrations/crop.png"
-      alt="poster"
-      className="w-8 h-8 mb-1 opacity-90"
-    />
-    <span className="text-sm font-semibold text-blue-700">
-      {item.attribute_name}
-    </span>
-  </div>
-))}
+            {/* PDF Generation Button - Only show if permission is active */}
+            {hasPdfPermission && pdfPermissions.map((item, index) => (
+              <div
+                key={item.attributes_id || index}
+                onClick={handleGeneratePoster}
+                className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
+              >
+                <img
+                  src="/illustrations/crop.png"
+                  alt="poster"
+                  className="w-8 h-8 mb-1 opacity-90"
+                />
+                <span className="text-sm font-semibold text-blue-700">
+                  {item.attribute_name}
+                </span>
+              </div>
+            ))}
 
             <div
               onClick={handleGSTVerification}
               className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/courthouse.svg"
+                src="/illustrations/courthouse.png"
                 alt="gst"
                 className="w-8 h-8 mb-1 opacity-90"
               />
@@ -231,11 +236,11 @@ const { userModules } = useUserAccess();
               className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/map_dist.svg"
-                alt="gst"
+                src="/illustrations/map_dist.png"
+                alt="maps"
                 className="w-8 h-8 mb-1 opacity-90"
               />
-              <span className="text-sm font-semibold text-green-700">
+              <span className="text-sm font-semibold text-red-700">
                 Find Location
               </span>
             </div>
@@ -245,16 +250,16 @@ const { userModules } = useUserAccess();
               className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:to-yellow-200 border border-yellow-200 rounded-xl p-3 cursor-pointer transition"
             >
               <img
-                src="/illustrations/bulkMail.svg"
-                alt="gst"
+                src="/illustrations/bulkMail.png"
+                alt="bulk mail"
                 className="w-15 h-8 mb-1 opacity-90"
               />
-              <span className="text-sm font-semibold text-blue-700">
+              <span className="text-sm font-semibold text-yellow-700">
                 Bulk Mail
               </span>
             </div>
           </div>
-}
+        )}
       </div>
 
       {/* Profile Dropdown */}

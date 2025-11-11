@@ -50,10 +50,10 @@ import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-ico
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 import PostSalesForm from "../Industries/Marketing/XcodeFix/Components/postSales/postSalesForm";
 import { toast } from 'react-toastify';
+import { useUserAccess } from "../context/UserAccessContext";
 
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-import { useUserAccess } from "../context/UserAccessContext"
 
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
@@ -83,7 +83,7 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
         </Typography>
         <Box>
           <IconButton onClick={onDownload} color="primary" title="Download PDF">
-            {/* <Download /> */}
+            <Download />
           </IconButton>
           <IconButton onClick={onClose} title="Close">
             <Close />
@@ -179,8 +179,8 @@ const LeadDetailView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
+  const formRef = useRef(null); // Added missing formRef
 
-  // console.log("The lead list data are:", location.state?.leadList)
   // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
@@ -188,7 +188,7 @@ const LeadDetailView = () => {
 
   const theme = useTheme();
   
-  // State declarations - REMOVED THE JSX FROM HERE
+  // State declarations - FIXED: Removed JSX from useState
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
@@ -216,10 +216,7 @@ const LeadDetailView = () => {
   const [users, setUsers] = useState([]);
   const [urlUserId, setUrlUserId] = useState(null); 
   const [loadingProfile, setLoadingProfile] = useState(false);
-  // for post sales form
   const [showPostSalesForm, setShowPostSalesForm] = useState(false);
-
-  // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
   const [quotations, setQuotations] = useState([]);
   const [showQuotationsList, setShowQuotationsList] = useState(false);
@@ -227,14 +224,16 @@ const LeadDetailView = () => {
   const [companyInfo, setCompanyInfo] = useState(null);
   const [expandedQuotation, setExpandedQuotation] = useState(null);
   const [currencies, setCurrencies] = useState([]);
-
-  // PDF Viewer states
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [currentPdfUrl, setCurrentPdfUrl] = useState(null);
   const [currentQuotation, setCurrentQuotation] = useState(null);
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '', currencyId: null });
   const [profileSettings, setProfileSettings] = useState(null);
+  const [stages, setStages] = useState([]); // Fixed variable name consistency
+  const [isListening, setIsListening] = useState(false); // Added missing state
+  const [editingComment, setEditingComment] = useState(null); // Added missing state
+  const [showForm, setShowForm] = useState(false); // Added missing state
 
   const [userSettings, setUserSettings] = useState({
     mail_access: false,
@@ -272,7 +271,7 @@ const LeadDetailView = () => {
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);
 
-  // Extract company info lStorage
+  // Extract company info from localStorage
   const extractAllUserInfo = () => {
     try {
       const token = localStorage.getItem("token");
@@ -351,7 +350,7 @@ const LeadDetailView = () => {
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Failed to fetch user");
-        setProfileSettings(data)
+        setProfileSettings(data);
         // Update settings
         setUserSettings({
           mail_access: data.mail_access || data.email_access || false,
@@ -953,9 +952,7 @@ const LeadDetailView = () => {
     setMailContent(template.mailBody);
   };
 
-  // You'll need to fetch stages for the StatusBar component
-  const [stage, setStage] = useState([]);
-
+  // Fetch stages for the StatusBar component
   const fetchStages = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -979,7 +976,7 @@ const LeadDetailView = () => {
             .sort((a, b) => a.order - b.order)
         : [];
 
-      setStage(formattedStages);
+      setStages(formattedStages);
     } catch (err) {
       console.error('Error fetching stages:', err.message);
     }
@@ -1003,42 +1000,85 @@ const LeadDetailView = () => {
     return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
   };
 
-  // Correct tab configuration based on company
-  const getTabLabels = () => {
-    const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
-    
-    if (isXcodeFix) {
-      // For XcodeFix - hide Comments and Reminders, show only Follow-up and Activity
-      return ["Follow-up", "Activity"];
-    } else {
-      // For other companies - show all tabs
-      return ["Task", "Comments", "Reminders", "Activity"];
+  // Added missing handler
+  const handleOutsideClick = (event) => {
+    if (formRef.current && !formRef.current.contains(event.target)) {
+      setShowForm(false);
+      setIsListening(false);
+      setEditingComment(null);
     }
   };
 
-  const renderTabContent = () => {
-    const tabLabels = getTabLabels();
-    const currentTabLabel = tabLabels[tabIndex];
+  // Correct tab configuration based on company
+// Correct tab configuration based on module_id 5 permissions
+const getTabLabels = () => {
+  const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
+  
+  if (isXcodeFix) {
+    // For XcodeFix - fixed tabs
+    return ["Follow-up", "Activity"];
+  } else {
+    // For other companies - dynamic tabs based on module_id 5 permissions
+    const availableTabs = [];
     
-    switch (currentTabLabel) {
-      case "Follow-up":
-      case "Task":
-        return <Tasks leadId={leadId} />;
-      case "Comments":
-        // This won't be reached for XcodeFix since Comments tab is hidden
-        return <Comments leadId={leadId} />;
-      case "Reminders":
-        // This won't be reached for XcodeFix since Reminders tab is hidden
-        return <RemainderPage leadId={leadId} />;
-      case "Activity":
-        return <LeadTimeline
-                  leadId={leadId}
-                  isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
-                />;
-      default:
-        return null;
+    // Check each tab type and add if user has permission
+    if (userModules.some(module => 
+      module.module_id === 5 && 
+      module.bactive && 
+      (module.attribute_name === 'Task' || module.attributes_id === 12)
+    )) {
+      availableTabs.push("Task");
     }
-  };
+    
+    if (userModules.some(module => 
+      module.module_id === 5 && 
+      module.bactive && 
+      (module.attribute_name === 'Comments' || module.attributes_id === 11)
+    )) {
+      availableTabs.push("Comments");
+    }
+    
+    if (userModules.some(module => 
+      module.module_id === 5 && 
+      module.bactive && 
+      (module.attribute_name === 'Reminder' || module.attributes_id === 13)
+    )) {
+      availableTabs.push("Reminders");
+    }
+    
+    // Activity tab is always available
+    availableTabs.push("Activity");
+    
+    return availableTabs;
+  }
+};
+
+const renderTabContent = () => {
+  const tabLabels = getTabLabels();
+  
+  // If no tabs available (shouldn't happen as Activity is always there)
+  if (!tabLabels.length) return <div>No tabs available</div>;
+  
+  const currentTabLabel = tabLabels[tabIndex];
+  
+  // Dynamic switch based on current tab label
+  switch (currentTabLabel) {
+    case "Follow-up":
+    case "Task":
+      return <Tasks leadId={leadId} />;
+    case "Comments":
+      return <Comments leadId={leadId} />;
+    case "Reminders":
+      return <RemainderPage leadId={leadId} />;
+    case "Activity":
+      return <LeadTimeline
+                leadId={leadId}
+                isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+              />;
+    default:
+      return <div>Tab content not available</div>;
+  }
+};
 
   return (
     <>
@@ -1068,6 +1108,8 @@ const LeadDetailView = () => {
               isDeal={isDeal}
               isLost={isLost}
             />
+            {/* Added back ActionCard component */}
+            {isLeadActive && <ActionCard leadId={leadId} />}
           </div>
         </div>
 
@@ -1080,7 +1122,7 @@ const LeadDetailView = () => {
             location={location}
           />
 
-          {leadData?.postSalesMaster.length === 0 ? (
+          {leadData?.postSalesMaster?.length === 0 ? (
             <StatusBar
               leadId={leadId}
               leadData={leadData}
@@ -1089,7 +1131,7 @@ const LeadDetailView = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              stage={stage}
+              stages={stages} // Fixed prop name
             />
           ) : (
             <MilestoneStatusBar
@@ -1099,7 +1141,7 @@ const LeadDetailView = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              stage={stage}
+              stages={stages} // Fixed prop name
             />
           )}
 
@@ -1190,9 +1232,8 @@ const LeadDetailView = () => {
                     >
                       <div className="w-px h-5 bg-gray-600"></div>
                       <img
-                         src="../../public/images/detailview/email.svg" 
-                        className="hidden sm:block"
-                        size={16}
+                        src="/images/detailview/email.svg" // Fixed path
+                        className="hidden sm:block w-4 h-4"
                         alt="Email icon"
                       />
                       <div className="w-px h-5 bg-gray-600"></div>
@@ -1326,7 +1367,7 @@ const LeadDetailView = () => {
                 onClick={() => setShowQuotationsList(false)}
                 size="small"
               >
-                <MdExpandLess />
+                <Close />
               </IconButton>
             </div>
           </DialogTitle>
@@ -1366,7 +1407,7 @@ const LeadDetailView = () => {
                             }}
                             title="Download PDF"
                           >
-                            {/* <FaDownload /> */}
+                            <FaDownload />
                           </IconButton>
                           <IconButton
                             size="small"
@@ -1393,7 +1434,7 @@ const LeadDetailView = () => {
                           <div className="text-sm text-gray-600">
                             Valid until: {formatDate(quotation.dValid_until)}
                             {quotation.fTotal_amount &&
-                              ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+                              ` | Amount: ${quotation.fTotal_amount?.toFixed(2) || '0.00'}`}
                           </div>
                         }
                       />
@@ -1430,394 +1471,392 @@ const LeadDetailView = () => {
                                     <TableCell>
                                       {quotation.fSub_total?.toFixed(2) || "0.00"}
                                     </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell className="font-bold">
-                                    Tax Amount
-                                  </TableCell>
-                                  <TableCell>
-                                    {quotation.fTax_amount?.toFixed(2) ||
-                                      "0.00"}
-                                  </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell className="font-bold">
-                                    Total Amount
-                                  </TableCell>
-                                  <TableCell className="font-bold">
-                                    {quotation.fTotal_amount?.toFixed(2) ||
-                                      "0.00"}
-                                  </TableCell>
-                                </TableRow>
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
+                                  </TableRow>
+                                  <TableRow>
+                                    <TableCell className="font-bold">
+                                      Tax Amount
+                                    </TableCell>
+                                    <TableCell>
+                                      {quotation.fTax_amount?.toFixed(2) || "0.00"}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow>
+                                    <TableCell className="font-bold">
+                                      Total Amount
+                                    </TableCell>
+                                    <TableCell className="font-bold">
+                                      {quotation.fTotal_amount?.toFixed(2) || "0.00"}
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle2" className="font-bold">
+                              Additional Information
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              className="mt-2 text-gray-700"
+                            >
+                              {quotation.cNotes || "No additional notes"}
+                            </Typography>
+                          </Grid>
                         </Grid>
-                        <Grid item xs={12}>
-                          <Typography variant="subtitle2" className="font-bold">
-                            Additional Information
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            className="mt-2 text-gray-700"
-                          >
-                            {quotation.cNotes || "No additional notes"}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </CardContent>
-                  </Collapse>
-                </Card>
-              ))}
-            </List>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No quotations found for this lead.
-            </div>
-          )}
-        </DialogContent>
-        <DialogActions className="bg-gray-100">
-          <Button
-            onClick={() => setShowQuotationsList(false)}
-            variant="outlined"
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* PDF Viewer Dialog */}
-      <PDFViewer
-        open={pdfViewerOpen}
-        onClose={() => setPdfViewerOpen(false)}
-        pdfUrl={currentPdfUrl}
-        quotationNumber={currentQuotation?.cQuote_number || ""}
-        onDownload={handleDownloadFromViewer}
-      />
-
-      {/* Lead Lost Reason Dialog */}
-      {leadLostDescriptionTrue && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div
-            ref={lostReasonDialogRef}
-            className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
-          >
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
-              Why mark this lead as Lost?
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <div>
-                <label
-                  htmlFor="lostReason"
-                  className="block font-medium mb-1 text-sm sm:text-base"
-                >
-                  Pick the reason for marking this lead as Lost
-                  <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="lostReason"
-                  name="lostReason"
-                  value={selectedLostReasonId}
-                  onChange={handleReasonChange}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                  required
-                >
-                  <option value="">Select a reason</option>
-                  {lostReasons.map((reason) => (
-                    <option
-                      key={reason.ilead_lost_reason_id}
-                      value={reason.ilead_lost_reason_id}
-                    >
-                      {reason.cLeadLostReason}
-                    </option>
-                  ))}
-                </select>
+                      </CardContent>
+                    </Collapse>
+                  </Card>
+                ))}
+              </List>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No quotations found for this lead.
               </div>
-
-              <div>
-                <label
-                  htmlFor="lostDescription"
-                  className="block font-medium mb-1 text-sm sm:text-base"
-                >
-                  Remarks
-                </label>
-                <textarea
-                  id="lostDescription"
-                  name="lostDescription"
-                  rows="3"
-                  value={lostDescription}
-                  onChange={(e) => setLostDescription(e.target.value)}
-                  className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
-                  placeholder="Enter a brief description for marking as lost..."
-                ></textarea>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setLeadLostDescriptionTrue(false)}
-                  className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* for postsales form */}
-      {showPostSalesForm && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-        >
-          <div 
-            className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setShowPostSalesForm(false)}
-              className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-              title="Close Form"
+            )}
+          </DialogContent>
+          <DialogActions className="bg-gray-100">
+            <Button
+              onClick={() => setShowQuotationsList(false)}
+              variant="outlined"
             >
-              ✕
-            </button>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-            <PostSalesForm
-              leadId={leadId}
-              onBack={() => setShowPostSalesForm(false)}
-              onClose={() => setShowPostSalesForm(false)}
-            />
-          </div>
-        </div>
-      )}
+        {/* PDF Viewer Dialog */}
+        <PDFViewer
+          open={pdfViewerOpen}
+          onClose={() => setPdfViewerOpen(false)}
+          pdfUrl={currentPdfUrl}
+          quotationNumber={currentQuotation?.cQuote_number || ""}
+          onDownload={handleDownloadFromViewer}
+        />
 
-      {/* Email Compose Dialog */}
-      {isMailOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll"
-          onClick={handleCloseMail}
-        >
-          <div
-            className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <img
-                  src="../../public/images/detailview/email.svg"
-                  className="w-6 h-6"
-                  alt="Email icon"
-                />
-                Compose Email
+        {/* Lead Lost Reason Dialog */}
+        {leadLostDescriptionTrue && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div
+              ref={lostReasonDialogRef}
+              className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
+            >
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
+                Why mark this lead as Lost?
               </h2>
-              <button
-                onClick={() => setIsMailOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
-              {/* Templates Section */}
-              <div className="w-full md:w-1/2 lg:w-2/5 h-[600px] p-4 rounded-xl border border-gray-200 ">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-lg text-gray-800">
-                    Email Templates
-                  </h3>
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                <div>
+                  <label
+                    htmlFor="lostReason"
+                    className="block font-medium mb-1 text-sm sm:text-base"
+                  >
+                    Pick the reason for marking this lead as Lost
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="lostReason"
+                    name="lostReason"
+                    value={selectedLostReasonId}
+                    onChange={handleReasonChange}
+                    className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                    required
+                  >
+                    <option value="">Select a reason</option>
+                    {lostReasons.map((reason) => (
+                      <option
+                        key={reason.ilead_lost_reason_id}
+                        value={reason.ilead_lost_reason_id}
+                      >
+                        {reason.cLeadLostReason}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {templatesLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  </div>
-                ) : templates.length === 0 ? (
-                  <div className="text-center py-8 text-blue-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-12 w-12 mx-auto mb-2 text-blue-300"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p>No templates available</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
-                    {templates.map((template) => (
-                      <div
-                        key={template.mailTemplateId}
-                        className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-                        onClick={() => applyTemplate(template)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg">
-                            <MdEmail className="text-blue-600" size={18} />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">
-                              {template.mailTitle}
-                            </h4>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {template.mailBody
-                                .replace(/<[^>]*>/g, "")
-                                .substring(0, 100)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div>
+                  <label
+                    htmlFor="lostDescription"
+                    className="block font-medium mb-1 text-sm sm:text-base"
+                  >
+                    Remarks
+                  </label>
+                  <textarea
+                    id="lostDescription"
+                    name="lostDescription"
+                    rows="3"
+                    value={lostDescription}
+                    onChange={(e) => setLostDescription(e.target.value)}
+                    className="w-full border px-2 sm:px-3 py-1 sm:py-2 rounded-md text-sm sm:text-base"
+                    placeholder="Enter a brief description for marking as lost..."
+                  ></textarea>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setLeadLostDescriptionTrue(false)}
+                    className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* for postsales form */}
+        {showPostSalesForm && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+          >
+            <div 
+              className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowPostSalesForm(false)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+                title="Close Form"
+              >
+                ✕
+              </button>
+
+              <PostSalesForm
+                leadId={leadId}
+                onBack={() => setShowPostSalesForm(false)}
+                onClose={() => setShowPostSalesForm(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Email Compose Dialog */}
+        {isMailOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4 overflow-y-scroll"
+            onClick={handleCloseMail}
+          >
+            <div
+              className="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-[70vh] w-full max-w-sm sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl flex flex-col overflow-y-scroll"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <img
+                    src="/images/detailview/email.svg" // Fixed path
+                    className="w-6 h-6"
+                    alt="Email icon"
+                  />
+                  Compose Email
+                </h2>
+                <button
+                  onClick={() => setIsMailOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
 
-              {/* Email Form Section */}
-              <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    sendEmail();
-                  }}
-                  className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-xl p-5 rounded-2xl shadow-lg overflow-y-auto max-h-[50vh]"
-                >
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* To Field */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        To
-                      </label>
-                      <input
-                        type="email"
-                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                        placeholder="example@email.com"
-                        value={sentTo}
-                        onChange={(e) => setSentTo(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    {/* CC Field */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        CC
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                        placeholder="cc@example.com (separate with commas)"
-                        value={ccRecipients}
-                        onChange={(e) => setCcRecipients(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Subject Field */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Subject
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
-                        value={mailSubject}
-                        onChange={(e) => setMailSubject(e.target.value)}
-                        placeholder="Write subject..."
-                        required
-                      />
-                    </div>
+              {/* Content */}
+              <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
+                {/* Templates Section */}
+                <div className="w-full md:w-1/2 lg:w-2/5 h-[600px] p-4 rounded-xl border border-gray-200 ">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg text-gray-800">
+                      Email Templates
+                    </h3>
                   </div>
 
-                  {/* Message Editor */}
-                  <div className="flex-grow flex flex-col min-h-[300px]">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Message
-                    </label>
-                    <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
-                      <ReactQuill
-                        theme="snow"
-                        value={mailContent}
-                        onChange={setMailContent}
-                        modules={{
-                          ...modules,
-                          toolbar: [
-                            [{ header: [1, 2, false] }],
-                            ["bold", "italic", "underline", "strike"],
-                            [{ color: [] }, { background: [] }],
-                            [{ list: "ordered" }, { list: "bullet" }],
-                            ["link"],
-                            ["clean"],
-                          ],
-                        }}
-                        formats={formats}
-                        className="min-h-[200px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[200px]"
-                        style={{ border: "white" }}
-                      />
+                  {templatesLoading ? (
+                    <div className="flex justify-center items-center h-40">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
-                  </div>
+                  ) : templates.length === 0 ? (
+                    <div className="text-center py-8 text-blue-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-12 w-12 mx-auto mb-2 text-blue-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p>No templates available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
+                      {templates.map((template) => (
+                        <div
+                          key={template.mailTemplateId}
+                          className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+                          onClick={() => applyTemplate(template)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg">
+                              <MdEmail className="text-blue-600" size={18} />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">
+                                {template.mailTitle}
+                              </h4>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                {template.mailBody
+                                  .replace(/<[^>]*>/g, "")
+                                  .substring(0, 100)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                  {/* Action Buttons (sticky) */}
-                  <div className="flex justify-end space-x-3 pt-2 sticky bottom-0 bg-white/70 backdrop-blur-md pb-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsMailOpen(false)}
-                      className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
-                      disabled={isSendingMail}
-                    >
-                      {isSendingMail ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <MdEmail size={16} />
-                          <span>Send Email</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
+                {/* Email Form Section */}
+                <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      sendEmail();
+                    }}
+                    className="flex flex-col flex-grow space-y-4 bg-white/60 backdrop-blur-xl p-5 rounded-2xl shadow-lg overflow-y-auto max-h-[50vh]"
+                  >
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* To Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          To
+                        </label>
+                        <input
+                          type="email"
+                          className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                          placeholder="example@email.com"
+                          value={sentTo}
+                          onChange={(e) => setSentTo(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      {/* CC Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          CC
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                          placeholder="cc@example.com (separate with commas)"
+                          value={ccRecipients}
+                          onChange={(e) => setCcRecipients(e.target.value)}
+                        />
+                      </div>
+
+                      {/* Subject Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          Subject
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
+                          value={mailSubject}
+                          onChange={(e) => setMailSubject(e.target.value)}
+                          placeholder="Write subject..."
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Message Editor */}
+                    <div className="flex-grow flex flex-col min-h-[300px]">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Message
+                      </label>
+                      <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
+                        <ReactQuill
+                          theme="snow"
+                          value={mailContent}
+                          onChange={setMailContent}
+                          modules={{
+                            ...modules,
+                            toolbar: [
+                              [{ header: [1, 2, false] }],
+                              ["bold", "italic", "underline", "strike"],
+                              [{ color: [] }, { background: [] }],
+                              [{ list: "ordered" }, { list: "bullet" }],
+                              ["link"],
+                              ["clean"],
+                            ],
+                          }}
+                          formats={formats}
+                          className="min-h-[200px] md:min-h-[200px] lg:min-h-[250px] xl:min-h-[200px]"
+                          style={{ border: "white" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons (sticky) */}
+                    <div className="flex justify-end space-x-3 pt-2 sticky bottom-0 bg-white/70 backdrop-blur-md pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsMailOpen(false)}
+                        className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                        disabled={isSendingMail}
+                      >
+                        {isSendingMail ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MdEmail size={16} />
+                            <span>Send Email</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  </>
+        )}
+      </div>
+    </>
   );
 };
 

@@ -1,47 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useUserAccess } from "../../../context/UserAccessContext";
 
 export default function TeamleadHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userModules } = useUserAccess();
 
   const [phoneActive, setPhoneActive] = useState(false);
-  const [homeAttributes, setHomeAttributes] = useState([]);
-
   const currentPath = location.pathname;
+// Allowed attribute IDs
+const allowedAttributeIds = [1, 2, 3, 5];
 
-  // Load user access and filter unique attributes
-  useEffect(() => {
-    const storedAccess = localStorage.getItem("loginResponse");
-    if (storedAccess) {
-      try {
-        const parsed = JSON.parse(storedAccess);
-        const modules = parsed?.user_attributes || [];
+// Filter: only Home module, active, allowed attributes, and remove duplicates
+const homeAttributes = (userModules || [])
+  .filter(
+    (item) =>
+      item.module_id === 1 &&
+      item.bactive === true &&
+      allowedAttributeIds.includes(item.attributes_id)
+  )
+  // Remove duplicates based on attribute_name
+  .filter(
+    (item, index, self) =>
+      index === self.findIndex((t) => t.attribute_name === item.attribute_name)
+  );
 
-        // Only include module_id = 1 and selected attributes
-        const allowed = ["Dashboard", "Leads", "Team Dashboard", "Kanban-board"];
-        const homeData = modules
-          .filter(
-            (item) =>
-              item.module_id === 1 && allowed.includes(item.attribute_name)
-          )
-          // Remove duplicates by attribute_name
-          .filter(
-            (item, index, self) =>
-              index ===
-              self.findIndex(
-                (t) => t.attribute_name === item.attribute_name
-              )
-          );
 
-        setHomeAttributes(homeData);
-      } catch (error) {
-        console.error("Error parsing loginResponse:", error);
-      }
-    }
-  }, []);
 
-  // Handle phone access for Call Logs
+  // Route mapping for navigation
+  const routeMap = {
+    Dashboard: "/leads",
+    Leads: "/active-leads",
+    "Team Dashboard": "/teamview",
+    "Kanban-board": "/status-kanban",
+  };
+
+  // Handle navigation
+  const handleDynamicClick = (attributeName) => {
+    const path = routeMap[attributeName];
+    if (path) navigate(path);
+  };
+
+  // Check active route
+  const isActive = (attributeName) => {
+    const path = routeMap[attributeName];
+    return path && currentPath === path;
+  };
+
+  // Handle phone access (unchanged)
   useEffect(() => {
     const storedUserData = localStorage.getItem("user");
     if (storedUserData) {
@@ -58,27 +65,6 @@ export default function TeamleadHeader() {
       setPhoneActive(phoneAccess);
     }
   }, []);
-
-  // Route mapping
-  const routeMap = {
-    Dashboard: "/leads",
-    Leads: "/active-leads",
-    "Team Dashboard": "/teamview",
-    "Kanban-board": "/status-kanban",
-  };
-
-  const handleDynamicClick = (attributeName) => {
-    const path = routeMap[attributeName];
-    if (path) navigate(path);
-  };
-
-  // --- FIXED: exact match for active state ---
-  const isActive = (attributeName) => {
-    const path = routeMap[attributeName];
-    return path && currentPath === path;
-    // If you sometimes have "child" routes, use startsWith:
-    // return path && currentPath.startsWith(path);
-  };
 
   return (
     <div className="flex flex-col gap-2 bg-white rounded-lg px-4 py-2 shadow-sm">
@@ -102,6 +88,7 @@ export default function TeamleadHeader() {
           </React.Fragment>
         ))}
 
+        {/* Keep Call Logs same */}
         {phoneActive && (
           <>
             <div className="w-px h-5 bg-gray-300"></div>

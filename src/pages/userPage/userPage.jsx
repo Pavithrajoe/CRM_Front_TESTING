@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback , useRef, useContext, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useContext, useMemo } from "react";
 import {
   FaCrown,
   FaEnvelope,
   FaCity,
   FaTh,
   FaBars,
-  FaSpinner, 
+  FaSpinner,
 } from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
@@ -14,13 +14,11 @@ import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../../context/UserAccessContext";
 import { GlobUserContext } from "../../context/userContex";
 
-
-
 const UserPage = () => {
-  const { userModules } = useUserAccess();
-const { user } = useContext (GlobUserContext);
+  const { userModules, userAccess } = useUserAccess();
+  const { user } = useContext(GlobUserContext);
 
-  const effectRan = useRef(false)
+  const effectRan = useRef(false);
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,26 +29,23 @@ const { user } = useContext (GlobUserContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
-   // State to hold the current user's role
 
   const usersPerPage = 6;
   const navigate = useNavigate();
-  //to render dynamic user create button 
-  
-const dynamicUserCreate = useMemo(() => {
-  const filtered = userModules.filter(
-    (attr) =>
-      attr.module_id === 6 &&
-      attr.bactive &&
-      (attr.attributes_id === 16 || attr.attribute_name === "User Create")
-  );
 
-  // Deduplicate by attribute_name
-  return Array.from(new Map(filtered.map(item => [item.attributes_id, item])).values());
-}, [userModules]);
+  // ✅ Render "User Create" button only when bactive = true for module_id = 6
+  const dynamicUserCreate = useMemo(() => {
+    const filtered = userModules.filter(
+      (attr) =>
+        attr.module_id === 6 &&
+        attr.bactive === true &&
+        (attr.attributes_id === 16 || attr.attribute_name === "User Create")
+    );
 
+    return Array.from(new Map(filtered.map((item) => [item.attributes_id, item])).values());
+  }, [userModules]);
 
-  
+  console.log("testing", userAccess);
 
   /**
    * Decodes the JWT token from local storage.
@@ -80,43 +75,35 @@ const dynamicUserCreate = useMemo(() => {
     const payload = getDecodedToken();
     return payload?.company_id || payload?.iCompany_id;
   };
-  
+
   /**
    * Retrieves the user's role from the decoded token.
    * @returns {string | null} The user's role in lowercase.
    */
   const getUserRole = () => {
     const payload = getDecodedToken();
-    // The role name might be `role_name` or `role.cRole_name` based on your API response
-    // For now, we'll assume it's directly in the token payload.
     return payload?.roleType?.toLowerCase();
   };
 
   // Function to navigate to the user creation page
-  const createUser = () => navigate('/users');
+  const createUser = () => navigate("/users");
 
-const fetching = useRef(false);
+  const fetching = useRef(false);
 
+  useEffect(() => {
+    console.log("UserPage mounted or fetchUsers changed");
 
+    if (effectRan.current === false) {
+      setUsers(user);
+      setUserRole(getUserRole());
+      setLoading(false);
+      effectRan.current = true;
+    }
 
- useEffect(() => { 
-  console.log('UserPage mounted or fetchUsers changed');
-  
-  if (effectRan.current === false) {
-    // fetchUsers();
-    setUsers(user);
-    setUserRole(getUserRole());
-        setLoading(false); // ✅ <-- IMPORTANT
-
-    effectRan.current = true;  // <-- Important: Make sure this line remains
-  }
-
-  return () => {
-    effectRan.current = false; // Reset on unmount
-  }
-}, []);
-
-
+    return () => {
+      effectRan.current = false;
+    };
+  }, []);
 
   // Effect to filter users based on search term and active/inactive tab
   useEffect(() => {
@@ -165,8 +152,13 @@ const fetching = useRef(false);
   const startIndex = (currentPage - 1) * usersPerPage;
   const displayedUsers = filtered.slice(startIndex, startIndex + usersPerPage);
 
-  // Determine if the current user has an admin-level role
-  const isAuthorized = ["admin", "administrator", "super_admin", "super_administrator", "Administrator"].includes(userRole);
+  const isAuthorized = [
+    "admin",
+    "administrator",
+    "super_admin",
+    "super_administrator",
+    "Administrator",
+  ].includes(userRole);
 
   return (
     <div className="p-6 min-h-screen text-gray-800">
@@ -180,19 +172,19 @@ const fetching = useRef(false);
           onChange={handleSearch}
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
-        
         <div className="flex gap-3 items-center">
-             {/* Conditional rendering for the "+ User" button */}
-          {dynamicUserCreate.map((i)=> (
-            <button
-              onClick={createUser} 
-              className="px-4 font-mediumpx-4 py-2 rounded-xl text-sm font-semibold  bg-blue-900 shadow-md  text-white transition"
-            >
-{i.attribute_name}            </button> 
-          ))}
-          
-          
-          
+          {/* ✅ Conditional rendering for the "+ User" button */}
+          {dynamicUserCreate.length > 0 &&
+            dynamicUserCreate.map((i) => (
+              <button
+                key={i.attributes_id}
+                onClick={createUser}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-blue-900 shadow-md text-white transition hover:bg-blue-800"
+              >
+                {i.attribute_name}
+              </button>
+            ))}
+
           <button
             type="button"
             onClick={() => setActiveTab("active")}
@@ -204,8 +196,6 @@ const fetching = useRef(false);
           >
             Active
           </button>
-          
-       
 
           <button
             type="button"
@@ -226,6 +216,7 @@ const fetching = useRef(false);
           >
             ↕ Sort ({sortOrder})
           </button>
+
           <button
             type="button"
             onClick={() => setView("grid")}
@@ -235,11 +226,12 @@ const fetching = useRef(false);
           >
             <FaTh />
           </button>
+
           <button
             type="button"
             onClick={() => setView("list")}
             className={`p-2 rounded-xl shadow-md shadow-gray-900 border border-gray-200 ${
-              view === "list" ? "bg-blue-900 text-white" : "bg-blue-900 text-white"
+              view === "list" ? "bg-blue-900 text-white" : "bg-white text-gray-600"
             } transition-all hover:bg-blue-100`}
           >
             <FaBars />
@@ -261,7 +253,7 @@ const fetching = useRef(false);
           <p>{error}</p>
           <button
             type="button"
-            onClick={fetchUsers}
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
           >
             Retry

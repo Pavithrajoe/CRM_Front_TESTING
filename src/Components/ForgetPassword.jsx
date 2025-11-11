@@ -64,7 +64,7 @@ const ForgetPassword = () => {
         {/* Left Panel with Illustration */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 w-full md:w-1/2 flex items-center justify-center p-8">
           <img
-            src="/images/login/forgot_pw.svg"
+            src="/images/login/forgot_pw.png"
             alt="Forgot Password"
             className="w-full max-w-sm"
           />

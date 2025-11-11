@@ -166,13 +166,14 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                     stage.active !== false &&
                     stage.status !== 'inactive';
     
-    console.log('Stage active check:', { 
-      stage: stage.name, 
-      bactive: stage.bactive, 
-      is_active: stage.is_active,
-      active: stage.active,
-      result: isActive 
-    });
+  //   console.log('Stage active check:', { 
+  //     stage: stage.name, 
+  //     bactive: stage.bactive, 
+  //     is_active: stage.is_active,
+  //     active: stage.active,
+  //     result: isActive 
+  //   }
+  // );
     
     return isActive;
   };
@@ -197,7 +198,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
       }
     };
     
-    console.log('=== STAGE CLICK DEBUG ===', debugData);
+    // console.log('=== STAGE CLICK DEBUG ===', debugData);
     setDebugInfo(JSON.stringify(debugData, null, 2));
   };
 
@@ -214,13 +215,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
       
-      console.log('Raw stages API response:', data);
+      // console.log('Raw stages API response:', data);
       
       const statusMap = {};
       const formattedStages = Array.isArray(data.response)
         ? data.response
             .map(item => {
-              console.log('Processing stage item:', item);
+              // console.log('Processing stage item:', item);
               // More flexible active status mapping
               const isActive = item.bactive !== false && 
                               item.is_active !== false && 
@@ -238,8 +239,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
             .sort((a, b) => a.order - b.order)
         : [];
 
-      console.log('Formatted stages:', formattedStages);
-      console.log('Stage status map:', statusMap);
+      // console.log('Formatted stages:', formattedStages);
+      // console.log('Stage status map:', statusMap);
 
       setStages(formattedStages);
       setStageStatuses(statusMap);
@@ -297,12 +298,12 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
   useEffect(() => {
     if (stages.length > 0 && leadData && leadData.ileadstatus_id) {
       const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
-      console.log('Setting current stage index:', {
-        stagesCount: stages.length,
-        leadStatusId: leadData.ileadstatus_id,
-        foundIndex: index,
-        stages: stages.map(s => ({ id: s.id, name: s.name }))
-      });
+      // console.log('Setting current stage index:', {
+      //   stagesCount: stages.length,
+      //   leadStatusId: leadData.ileadstatus_id,
+      //   foundIndex: index,
+      //   stages: stages.map(s => ({ id: s.id, name: s.name }))
+      // });
       if (index !== -1) {
         setCurrentStageIndex(index);
       }
@@ -481,14 +482,14 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
   // FIXED: Improved handleStageClick function
   const handleStageClick = (clickedIndex, statusId) => {
-    console.log('=== STAGE CLICKED ===', {
-      clickedIndex,
-      statusId,
-      stageName: stages[clickedIndex]?.name,
-      currentStageIndex,
-      isLost,
-      isWon
-    });
+    // console.log('=== STAGE CLICKED ===', {
+    //   clickedIndex,
+    //   statusId,
+    //   stageName: stages[clickedIndex]?.name,
+    //   currentStageIndex,
+    //   isLost,
+    //   isWon
+    // });
 
     logStageClickDebug(clickedIndex, statusId);
     
@@ -513,11 +514,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     setDialogStageIndex(clickedIndex);
     setRemarkStageId(statusId);
 
-    console.log('Stage name for form detection:', stageName);
+    // console.log('Stage name for form detection:', stageName);
 
     // FIXED: Better stage name detection
     if (stageName.includes('demo') || stageName.includes('session')) {
-      console.log('Opening Demo Session Dialog');
+      // console.log('Opening Demo Session Dialog');
       setDialogValue({
         demoSessionType: '',
         demoSessionStartTime: new Date(),
@@ -541,7 +542,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
 
     if (stageName.includes('proposal')) {
-      console.log('Opening Proposal Dialog');
+      // console.log('Opening Proposal Dialog');
       setProposalDialogValue({
         proposalSendModeId: null,
         preparedBy: null,
@@ -566,7 +567,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     );
 
     if (isMandatoryStage) {
-      console.log('Opening Amount Dialog for mandatory stage:', stageName);
+      // console.log('Opening Amount Dialog for mandatory stage:', stageName);
       setDialogValue('');
       setDialogErrors({ ...dialogErrors, amount: '' });
       setOpenDialog(true);
@@ -574,7 +575,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
 
     // Default: Open remark dialog for other stages
-    console.log('Opening Remark Dialog for stage:', stageName);
+    // console.log('Opening Remark Dialog for stage:', stageName);
     setRemarkData({ 
       remark: '', 
       projectValue: '',
@@ -666,7 +667,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     const stageName = stages[dialogStageIndex]?.name;
     const statusId = stages[dialogStageIndex]?.id;
 
-    console.log('Saving dialog for stage:', stageName);
+    // console.log('Saving dialog for stage:', stageName);
 
     try {
       if (stageName?.toLowerCase().includes('demo') || stageName?.toLowerCase().includes('session')) {
@@ -929,15 +930,15 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
   }, [statusRemarks]);
 
   // Add this debug useEffect to check what's happening
-  useEffect(() => {
-    console.log('=== STATUS BAR DEBUG INFO ===');
-    console.log('Stages:', stages);
-    console.log('Current Stage Index:', currentStageIndex);
-    console.log('Lead Data:', leadData);
-    console.log('isLost:', isLost);
-    console.log('isWon:', isWon);
-    console.log('Users:', users);
-  }, [stages, currentStageIndex, leadData, isLost, isWon, users]);
+  // useEffect(() => {
+  //   console.log('=== STATUS BAR DEBUG INFO ===');
+  //   console.log('Stages:', stages);
+  //   console.log('Current Stage Index:', currentStageIndex);
+  //   console.log('Lead Data:', leadData);
+  //   console.log('isLost:', isLost);
+  //   console.log('isWon:', isWon);
+  //   console.log('Users:', users);
+  // }, [stages, currentStageIndex, leadData, isLost, isWon, users]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -954,14 +955,14 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
               const isClickable = index > currentStageIndex && !isLost && !isWon && isStageActive(stage);
               const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
 
-              console.log(`Stage ${stage.name}:`, {
-                index,
-                isCompleted,
-                isActive,
-                isClickable,
-                isStageActive: isStageActive(stage),
-                currentStageIndex
-              });
+              // console.log(`Stage ${stage.name}:`, {
+              //   index,
+              //   isCompleted,
+              //   isActive,
+              //   isClickable,
+              //   isStageActive: isStageActive(stage),
+              //   currentStageIndex
+              // });
 
               return (
                 <React.Fragment key={stage.id}>
@@ -1535,7 +1536,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
             <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
             <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
               {(() => {
-                console.log('=== DEBUG: All Remarks ===', statusRemarks);
+                // console.log('=== DEBUG: All Remarks ===', statusRemarks);
                 
                 // STRONG Deduplication - Remove exact duplicates
                 const uniqueRemarks = statusRemarks.filter((remark, index, self) => 
@@ -1547,7 +1548,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                   )
                 );
 
-                console.log('=== DEBUG: After Deduplication ===', uniqueRemarks);
+                // console.log('=== DEBUG: After Deduplication ===', uniqueRemarks);
 
                 return uniqueRemarks.map((remark, index) => (
                   <div key={`${remark.ilead_status_remarks_id}_${index}`} className="relative flex-shrink-0">

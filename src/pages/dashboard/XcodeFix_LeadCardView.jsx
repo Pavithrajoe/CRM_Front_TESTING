@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit } from 'react-icons/fa';
@@ -189,7 +193,7 @@ const Xcode_LeadCardViewPage = () => {
         selectedService
     ]);
 
-    // for potential bd colour
+    // for potential bg colour
     const getPotentialColor = (potentialName) => {
     const name = potentialName ? potentialName.toLowerCase() : '';
     
@@ -630,7 +634,7 @@ const Xcode_LeadCardViewPage = () => {
         };
         });
 
-        // ✅ Remove duplicates efficiently using Map (based on ilead_id)
+        // Remove duplicates efficiently using Map (based on ilead_id)
         const uniqueLeads = Array.from(
         new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
         );

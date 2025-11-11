@@ -28,7 +28,7 @@ const ActiveLeadTab = () => {
     const fetchDashboardData = async () => {
       try {
         const response = await fetch(
-          `${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
+          `${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,  
           {
             method: "GET",
             headers: {
@@ -63,32 +63,18 @@ const ActiveLeadTab = () => {
           <ProfileHeader />
         </div>
 
-        {/* Show Logged In User Info */}
-        {/* {user && (
-          <div className="mb-6 text-gray-800 text-lg font-medium">
-            Welcome,{user.name}
-            <span className="font-bold">{user.name || user.email}</span>!
-            <br />
-            <span className="text-sm text-gray-600">
-              Role: {user.role || "N/A"}
-            </span>
-          </div>
-        )} */}
-
         {/* Dashboard Content */}
         <div className="grid grid-cols-2 gap-6 ">
-         
+          {/* Need to change the response body so that it contains only required fields */}
           <LeadsTable data={dashboardData?.details?.leads} />
           <DealsTable data={dashboardData?.details?.deals} />
-          
         </div>
 
         {/* <div className="w-full mt6">
-                  
-                  <DealsTable data={dashboardData?.details?.deals} />
-                </div> */}
-      </main>
+        <DealsTable data={dashboardData?.details?.deals} />
+        </div> */}
 
+      </main>
     </div>
   );
 };

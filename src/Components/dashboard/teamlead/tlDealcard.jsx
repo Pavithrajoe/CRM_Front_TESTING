@@ -6,112 +6,83 @@ import { ENDPOINTS } from "../../../api/constraints";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 const ITEMS_PER_PAGE = 8;
-
-export default function DealsTable() {
+export default function DealsTable({data =[]}) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [dealsData, setDealsData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentToken, setCurrentToken] = useState(null);
+
   const [sortOrder, setSortOrder] = useState(null); // for  sort order
 
-  useEffect(() => {
-    let extractedUserId = null;
-    let tokenFromStorage = null;
+ 
 
-    try {
-      tokenFromStorage = localStorage.getItem('token');
 
-      if (tokenFromStorage) {
-        const decodedToken = jwtDecode(tokenFromStorage);
-        extractedUserId = decodedToken.user_id;
+  // This code don't have any use case in this file still I keep it here for any future references !!
+  
+  // const fetchDeals = useCallback(async () => {
+  //   if (!currentUserId || !currentToken) {
+  //     setLoading(false);
+  //     return;
+  //   }
 
-        if (!extractedUserId) {
-          throw new Error("User ID (user_id) not found in decoded token payload.");
-        }
-      } else {
-        throw new Error("Authentication token not found in local storage. Please log in.");
-      }
-    }
-    catch (e) {
-      console.error("Error retrieving or decoding token in DealsTable:", e);
-      setError(`Authentication error: ${e.message}`);
-      setLoading(false);
-      return;
-    }
+  //   setLoading(true);
+  //   setError(null);
+  //   try {
+  //     const response = await fetch(ENDPOINTS.GET_DEALS, {
+  //       method: "GET",
+  //       headers: {
+  //         'Authorization': `Bearer ${currentToken}`,
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
 
-    if (extractedUserId && tokenFromStorage) {
-      setCurrentUserId(extractedUserId);
-      setCurrentToken(tokenFromStorage);
-    } else {
-      setError("Failed to obtain valid user ID or authentication token.");
-      setLoading(false);
-    }
-  }, []);
+  //     if (!response.ok) {
+  //       const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+  //       throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
+  //     }
+  //     const result = await response.json();
 
-  const fetchDeals = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-      setLoading(false);
-      return;
-    }
+  //     setDealsData(result || []);
 
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(ENDPOINTS.GET_DEALS, {
-        method: "GET",
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  //   }
+  //   catch (err) {
+  //     console.error("Error fetching deals:", err);
+  //     setError(`Failed to fetch deals: ${err.message}. Please try again later.`);
+  //     setDealsData([]);
+  //   }
+  //   finally {
+  //     setLoading(false);
+  //   }
+  // }, [currentUserId, currentToken]);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
-      }
-      const result = await response.json();
-
-      setDealsData(result || []);
-
-    }
-    catch (err) {
-      console.error("Error fetching deals:", err);
-      setError(`Failed to fetch deals: ${err.message}. Please try again later.`);
-      setDealsData([]);
-    }
-    finally {
-      setLoading(false);
-    }
-  }, [currentUserId, currentToken]);
-
-  useEffect(() => {
-    if (currentUserId && currentToken) {
-      fetchDeals();
-    }
-  }, [currentUserId, currentToken, fetchDeals]);
 
   const deals = useMemo(() => {
-    if (!Array.isArray(dealsData)) {
-      console.warn("dealsData is not an array:", dealsData);
+    if (!Array.isArray(data)) {
+      console.warn("dealsData is not an array:", data);
       return [];
     }
+
+    if (!data) {
+      return <div>Loading ...</div>;
+    }
     return (
-      dealsData
-        .filter(item =>
-          item.bactive === true &&
-          item.bisConverted === true &&
-          (item.modified_by === currentUserId || item.clead_owner_id === currentUserId)
-        )
-        .map((item) => ({
+      // dealsData
+      //   .filter(item =>
+      //     item.bactive === true &&
+      //     item.bisConverted === true &&
+      //     (item.modified_by === currentUserId || item.clead_owner_id === currentUserId)
+      //   )
+
+      data
+        ?.map((item) => ({
           id: item.ilead_id,
           name: item.clead_name || "No Name",
           status: item.lead_status?.clead_name || "Unknown",
           assignedTo: item.clead_owner_name || "Unassigned",
-          modifiedBy: item.user_crm_lead_modified_byTouser?.cFull_name || String(item.modified_by) || "Unknown",
+          modifiedBy:
+            item.user_crm_lead_modified_byTouser?.cFull_name ||
+            String(item.modified_by) ||
+            "Unknown",
           time: (() => {
             const dateObj = new Date(item.dmodified_dt);
             const datePart = dateObj
@@ -129,9 +100,10 @@ export default function DealsTable() {
           modifiedDate: new Date(item.dmodified_dt),
           avatar: "./images/dashboard/grl.svg",
         }))
-        .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) || []
+        .sort((a, b) => b.modifiedDate.getTime() - a.modifiedDate.getTime()) ||
+      []
     );
-  }, [dealsData, currentUserId]);
+  }, [data]);
 
   const filteredDeals = useMemo(() => {
     const term = search.toLowerCase();
@@ -177,10 +149,6 @@ export default function DealsTable() {
       setSortOrder("asc");
     }
   };
-
-  if (loading) {
-    return <div className="text-center py-8 text-gray-700">Loading deals...</div>;
-  }
 
   if (error) {
     return <div className="text-center py-8 text-red-600 font-medium">{error}</div>;
@@ -279,7 +247,7 @@ export default function DealsTable() {
                   colSpan={3}
                   className="py-8 text-center text-gray-500"
                 >
-                  {dealsData.length === 0
+                  {data.length === 0
                     ? "  No active and converted Leads found for you."
                     : " No active and converted Leads found for you."}
                 </td>

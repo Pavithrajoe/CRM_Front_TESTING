@@ -7,8 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { jwtDecode } from "jwt-decode";
-import { ENDPOINTS } from "../../../api/constraints";
+
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -22,80 +21,22 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function LeadManagementCard() {
+export default function LeadManagementCard({
+  leads, team_members, childSubordinates,loading, error
+}) {
   const [showTeam, setShowTeam] = useState(false);
   const [showActiveMembers, setShowActiveMembers] = useState(false);
   const [showInactiveMembers, setShowInactiveMembers] = useState(false);
-  const [leadsData, setLeadsData] = useState([]);
-  const [teamMembersData, setTeamMembersData] = useState([]);
-  const [childSubordinates, setChildSubordinates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentToken, setCurrentToken] = useState(null);
 
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token not found.");
-      const decoded = jwtDecode(token);
-      if (!decoded.user_id) throw new Error("User ID missing in token.");
-      setCurrentUserId(decoded.user_id);
-      setCurrentToken(token);
-    } catch (e) {
-      setError(`Authentication error: ${e.message}`);
-      setLoading(false);
-    }
-  }, []);
 
-  const fetchLeadsAndTeamData = useCallback(async () => {
-    if (!currentUserId || !currentToken) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `${ENDPOINTS.MANAGER_REMINDER}/${currentUserId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${currentToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok)
-        throw new Error((await response.json()).message || "API error");
-
-      const result = await response.json();
-
-      setLeadsData(result.details?.lead || []);
-      setTeamMembersData(result.details?.subordinates || []);
-      setChildSubordinates(result.details?.childSubordinateIds || []);
-    } catch (err) {
-      setError(`Failed to fetch data: ${err.message}`);
-      setLeadsData([]);
-      setTeamMembersData([]);
-      setChildSubordinates([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUserId, currentToken]);
-
-  useEffect(() => {
-    fetchLeadsAndTeamData();
-  }, [fetchLeadsAndTeamData]);
-
-  const userLeadCountsById = leadsData.reduce((acc, lead) => {
+  const userLeadCountsById = leads.reduce((acc, lead) => {
     if (lead.bactive === true && lead.clead_owner) {
       acc[lead.clead_owner] = (acc[lead.clead_owner] || 0) + 1;
     }
     return acc;
   }, {});
 
-  const chartData = teamMembersData
+  const chartData = team_members
     .filter(
       (member) =>
         member.bactive === true && userLeadCountsById[member.iUser_id] > 0
@@ -106,7 +47,7 @@ export default function LeadManagementCard() {
     }))
     .sort((a, b) => b.leads - a.leads);
 
-  const filteredTeamList = teamMembersData
+  const filteredTeamList = team_members
     .filter((member) => {
       if (showActiveMembers) return member.bactive === true;
       if (showInactiveMembers) return member.bactive === false;

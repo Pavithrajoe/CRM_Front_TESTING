@@ -2,65 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../api/constraints";
 
-const TaskSameDay = ({ onTasksFetched }) => {
+const TaskSameDay = ({tasks, loading, error}) => {
   const [filter, setFilter] = useState("Today");
-  const [userId, setUserId] = useState();
-  const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("token");
-        const userJson = localStorage.getItem("user"); 
-        let userId = null;
-        if (userJson) {
-          const userObj = JSON.parse(userJson);
-          userId = userObj.iUser_id; 
-        }
 
-        if (!userId) {
-          throw new Error("User ID not found in local storage");
-        }
-        if (!token) throw new Error("No authentication token found");
-
-        const response = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userId}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.status === 401)
-          throw new Error("Authentication failed. Token may be invalid.");
-
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        const tasksData = data.data || (Array.isArray(data) ? data : []);
-
-        setTasks(tasksData);
-
-        if (onTasksFetched) onTasksFetched(tasksData);
-      } catch (e) {
-        console.error("Failed to fetch tasks:", e);
-        setError(e.message || "Failed to load tasks. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, [userId, onTasksFetched]);
 
   useEffect(() => {
+    console.log("The tasks are :", tasks)
     if (!tasks.length) {
       setFilteredTasks([]);
       return;
@@ -69,19 +19,19 @@ const TaskSameDay = ({ onTasksFetched }) => {
     // Get current date without time
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    
+
     // Today's range
     const todayStart = new Date(now);
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
-    
+
     // Tomorrow's range
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStart = new Date(tomorrow);
     const tomorrowEnd = new Date(tomorrow);
     tomorrowEnd.setHours(23, 59, 59, 999);
-    
+
     // Next Week range (Monday to Sunday of next week)
     const nextMonday = new Date(now);
     // Get next Monday (if today is Monday, get next Monday)
@@ -89,59 +39,58 @@ const TaskSameDay = ({ onTasksFetched }) => {
     const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
     nextMonday.setDate(nextMonday.getDate() + daysUntilNextMonday);
     nextMonday.setHours(0, 0, 0, 0);
-    
+
     const nextSunday = new Date(nextMonday);
     nextSunday.setDate(nextMonday.getDate() + 6);
     nextSunday.setHours(23, 59, 59, 999);
 
     const yesterday = new Date(now);
-yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-const thisWeekStart = new Date(now);
-const currentDow = thisWeekStart.getDay(); // Sunday = 0
-// Week starts Monday, so adjust
-const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
-thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
-thisWeekStart.setHours(0, 0, 0, 0);
+    const thisWeekStart = new Date(now);
+    const currentDow = thisWeekStart.getDay(); // Sunday = 0
+    // Week starts Monday, so adjust
+    const daysSinceMonday = currentDow === 0 ? 6 : currentDow - 1;
+    thisWeekStart.setDate(thisWeekStart.getDate() - daysSinceMonday);
+    thisWeekStart.setHours(0, 0, 0, 0);
 
-const thisWeekEnd = new Date(thisWeekStart);
-thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
-thisWeekEnd.setHours(23, 59, 59, 999);
-
+    const thisWeekEnd = new Date(thisWeekStart);
+    thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+    thisWeekEnd.setHours(23, 59, 59, 999);
 
     const filtered = tasks.filter((task) => {
       if (!task.task_date) return false;
-      
+
       const taskDate = new Date(task.task_date);
       taskDate.setHours(0, 0, 0, 0); // Normalize task date for comparison
-      
-      switch (filter) {
-  case "Today":
-    return taskDate.getTime() === now.getTime();
-  case "Yesterday":
-    return taskDate.getTime() === yesterday.getTime();
-  case "Tomorrow":
-    return taskDate.getTime() === tomorrow.getTime();
-  case "This Week":
-    return taskDate >= thisWeekStart && taskDate <= thisWeekEnd;
-  case "Next Week":
-    return taskDate >= nextMonday && taskDate <= nextSunday;
-  default:
-    return true;
-}
 
+      switch (filter) {
+        case "Today":
+          return taskDate.getTime() === now.getTime();
+        case "Yesterday":
+          return taskDate.getTime() === yesterday.getTime();
+        case "Tomorrow":
+          return taskDate.getTime() === tomorrow.getTime();
+        case "This Week":
+          return taskDate >= thisWeekStart && taskDate <= thisWeekEnd;
+        case "Next Week":
+          return taskDate >= nextMonday && taskDate <= nextSunday;
+        default:
+          return true;
+      }
     });
 
+    
     setFilteredTasks(filtered);
   }, [tasks, filter]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 

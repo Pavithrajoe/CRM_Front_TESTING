@@ -8,15 +8,15 @@ export const ENDPOINTS = {
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,
   STATUS: `${BASE_URL}/lead-status`,
-  LEAD_STATUS: `${BASE_URL}/lead-status/company-lead`, // UPDATED 20/6
+  LEAD_STATUS: `${BASE_URL}/lead-status/company-lead`, 
   LEAD_STATUS_ACTION: `${BASE_URL}/lead-status/action-logs`,
   ALL_LEADS: `${BASE_URL}/lead`,
   LEAD: `${BASE_URL}/lead/user/`,
   USERS: `${BASE_URL}/users`,
   ROLE: `${BASE_URL}/role`,
   FOLLOW_UP: `${BASE_URL}/calender-event`,
-  DASHBOARD_USER: `${BASE_URL}/lead/dashboard`,
   CREATE_EVENT: `${BASE_URL}/calender-event`,
+  DASHBOARD_USER: `${BASE_URL}/lead/dashboard`,
   DASHBOARD_MANAGER: `${BASE_URL}/lead/manager`,
   REMINDERS: `${BASE_URL}/reminder/get-reminder`,
   LEAD_STATUS_UPDATE: `${BASE_URL}/lead`,
@@ -51,7 +51,7 @@ export const ENDPOINTS = {
   LOST_REASON: `${BASE_URL}/lead-lostreason`,
   LEAD_DETAILS: `${BASE_URL}/lead/`,
   GET_SETTINGS: `${BASE_URL}/general-setting/info`,
-  GENERAL_SETTING:`${BASE_URL}/general-setting`,
+  GENERAL_SETTING: `${BASE_URL}/general-setting`,
   GET_PARAMS_TARGET: `${BASE_URL}/user-target/get-user-target`,
   GET_ASSIGN: `${BASE_URL}/assigned-to`,
   GET_METRICS_TARGET: `${BASE_URL}/user-target`,
@@ -133,7 +133,6 @@ export const ENDPOINTS = {
   BULK_MAIL:`${BASE_URL}/bulk-mail`,
   BULK_MAIL_GET_BY_USER:`${BASE_URL}/bulk-mail/user`,
 
-
   MASTER_SUB_SOURCE_GET: `${BASE_URL}/subSrc/getAllActiveSubSrc`,
   MASTER_SUB_SOURCE_PUT: `${BASE_URL}/subSrc/editSubSrc`,
   MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
@@ -153,14 +152,14 @@ export const ENDPOINTS = {
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,
   PROPOSAL: `${BASE_URL}/proposal/storeProposalDetails`,
-  DAILY_TASK : `${BASE_URL}/task/upcoming-task`,
+  DAILY_TASK: `${BASE_URL}/task/upcoming-task`,
   GET_FILTER_TASK: `${BASE_URL}/task/user`,
-  USERCALENDEREVENT:`${BASE_URL}/calender-event/user`,
+  USERCALENDEREVENT: `${BASE_URL}/calender-event/user`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
-  POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`
+  POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`,
 };

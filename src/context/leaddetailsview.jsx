@@ -1,5 +1,5 @@
-import React, { useState, useEffect , useRef , useMemo  } from "react";
-import { useParams , useLocation, useNavigate} from "react-router-dom";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Dialog,
@@ -49,12 +49,11 @@ import Confetti from "react-confetti";
 import { FaFilePdf, FaEye, FaEdit, FaDownload, FaPlus, FaCheck } from 'react-icons/fa';
 import { generateQuotationPDF } from '../Components/utils/pdfGenerator';
 import PostSalesForm from "../Industries/Marketing/XcodeFix/Components/postSales/postSalesForm";
+import { toast } from 'react-toastify';
 
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 import { useUserAccess } from "../context/UserAccessContext"
-
-
 
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
@@ -116,6 +115,62 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
   );
 };
 
+const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
+  <div className="flex gap-6 justify-end items-center my-4">
+    <div className="relative group">
+      <button
+        onClick={() => {
+          if (currentIndex > 0) {
+            const prevLeadId = leadIds[currentIndex - 1];
+            navigate(`/leaddetailview/${prevLeadId}`, {
+              state: { ...location.state },
+            });
+          }
+        }}
+        disabled={currentIndex <= 0}
+        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+          currentIndex <= 0
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
+        }`}
+      >
+        ←
+      </button>
+      {currentIndex > 0 && (
+        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Previous Lead
+        </span>
+      )}
+    </div>
+
+    <div className="relative group">
+      <button
+        onClick={() => {
+          if (currentIndex < leadIds.length - 1) {
+            const nextLeadId = leadIds[currentIndex + 1];
+            navigate(`/leaddetailview/${nextLeadId}`, {
+              state: { ...location.state },
+            });
+          }
+        }}
+        disabled={currentIndex >= leadIds.length - 1}
+        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+          currentIndex >= leadIds.length - 1
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
+        }`}
+      >
+        →
+      </button>
+      {currentIndex < leadIds.length - 1 && (
+        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Next Lead
+        </span>
+      )}
+    </div>
+  </div>
+);
+
 const LeadDetailView = () => {
   const { userModules } = useUserAccess();
   
@@ -125,6 +180,7 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
 
+  // console.log("The lead list data are:", location.state?.leadList)
   // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
@@ -163,7 +219,7 @@ const LeadDetailView = () => {
   // for post sales form
   const [showPostSalesForm, setShowPostSalesForm] = useState(false);
 
-  // New states for Quotation - FIXED: No JSX here!
+  // New states for Quotation
   const [showQuotationForm, setShowQuotationForm] = useState(false);
   const [quotations, setQuotations] = useState([]);
   const [showQuotationsList, setShowQuotationsList] = useState(false);
@@ -197,16 +253,12 @@ const LeadDetailView = () => {
     );
   }, [userModules]);
 
-
-
-
-
   // Derived state
   const isLeadActive =
     !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
   const showCreateQuotationButton = (isWon || immediateWonStatus || leadData?.bisConverted) && !showQuotationForm;
-    const showProjectValue = (isWon || immediateWonStatus || leadData?.bisConverted);
+  const showProjectValue = (isWon || immediateWonStatus || leadData?.bisConverted);
 
   // Get the latest project value from status remarks
   const latestProjectValue = statusRemarks.length > 0 
@@ -257,113 +309,108 @@ const LeadDetailView = () => {
 
   useEffect(() => {
     if (leadId) {
-      fetchLeadData();
-      fetchLostReasons();
-      fetchQuotations();
       extractAllUserInfo();
     }
   }, [leadId]);
 
-// Add this useEffect to call fetchUserProfile when component mounts
-useEffect(() => {
-  const fetchUserProfile = async () => {
-    try {
-      setLoadingProfile(true);
+  // Add this useEffect to call fetchUserProfile when component mounts
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setLoadingProfile(true);
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Authentication required!");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          toast.error("Authentication required!");
+          setLoadingProfile(false);
+          return;
+        }
+
+        // Decode JWT token to extract user ID
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = JSON.parse(atob(base64Payload));
+        const userId = decodedPayload?.id || decodedPayload?.user_id;
+
+        // If no ID in token, use fallback or show error
+        if (!userId && !urlUserId) {
+          toast.error("User ID not found!");
+          setLoadingProfile(false);
+          return;
+        }
+
+        const finalUserId = urlUserId || userId;
+
+        // Fetch user details
+        const response = await fetch(`${ENDPOINTS.USERS}/${finalUserId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Failed to fetch user");
+        setProfileSettings(data)
+        // Update settings
+        setUserSettings({
+          mail_access: data.mail_access || data.email_access || false,
+          whatsapp_access: data.whatsapp_access || false,
+          phone_access: data.phone_access || false,
+          website_access: data.website_access || false,
+        });
+
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        toast.error("Failed to load user details.");
+      } finally {
         setLoadingProfile(false);
-        return;
       }
+    };
 
-      // Decode JWT token to extract user ID
-      const base64Payload = token.split(".")[1];
-      const decodedPayload = JSON.parse(atob(base64Payload));
-      const userId = decodedPayload?.id || decodedPayload?.user_id;
-
-      // If no ID in token, use fallback or show error
-      if (!userId && !urlUserId) {
-        toast.error("User ID not found!");
-        setLoadingProfile(false);
-        return;
-      }
-
-      const finalUserId = urlUserId || userId;
-
-      // Fetch user details
-      const response = await fetch(`${ENDPOINTS.USERS}/${finalUserId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Failed to fetch user");
-      setProfileSettings(data)
-            // Update settings
-            setUserSettings({
-              mail_access: data.mail_access || data.email_access || false,
-              whatsapp_access: data.whatsapp_access || false,
-              phone_access: data.phone_access || false,
-              website_access: data.website_access || false,
-            });
-
-          } catch (err) {
-            console.error("Error fetching user:", err);
-            toast.error("Failed to load user details.");
-          } finally {
-            setLoadingProfile(false);
-          }
-        };
-
-        fetchUserProfile();
-      }, [urlUserId]);
+    fetchUserProfile();
+  }, [urlUserId]);
 
   // PDF View Handler
-const handleViewPdf = async (quotation) => {
-  try {
-    if (!companyInfo || !leadData) {
-      showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-      return;
+  const handleViewPdf = async (quotation) => {
+    try {
+      if (!companyInfo || !leadData) {
+        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+        return;
+      }
+      
+      // Show loading state immediately
+      setCurrentPdfUrl(null);
+      setCurrentQuotation(quotation);
+      setPdfViewerOpen(true);
+      
+      // Generate the PDF and get the data URL
+      const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
+      
+      // Set the PDF URL to display in viewer
+      setCurrentPdfUrl(pdfDataUrl);
+      
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+      setPdfViewerOpen(false);
     }
-    
-    // Show loading state immediately
-    setCurrentPdfUrl(null);
-    setCurrentQuotation(quotation);
-    setPdfViewerOpen(true);
-    
-    // Generate the PDF and get the data URL
-    const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
-    
-    // Set the PDF URL to display in viewer
-    setCurrentPdfUrl(pdfDataUrl);
-    
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-    setPdfViewerOpen(false);
-  }
-};
-  // PDF Download Handler
-const handleDownloadPdf = async (quotation) => {
-  try {
-    if (!companyInfo || !leadData) {
-      showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-      return;
-    }
-    const handleDownload = async () => {
-  await generateQuotationPDF(quotation, companyInfo, leadData);
-};
+  };
 
-    showPopup('Success', `PDF downloaded successfully!`, 'success');
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-  }
-};
+  // PDF Download Handler
+  const handleDownloadPdf = async (quotation) => {
+    try {
+      if (!companyInfo || !leadData) {
+        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+        return;
+      }
+      await generateQuotationPDF(quotation, companyInfo, leadData);
+      showPopup('Success', `PDF downloaded successfully!`, 'success');
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+    }
+  };
 
   // Download from PDF Viewer
   const handleDownloadFromViewer = async () => {
@@ -378,70 +425,70 @@ const handleDownloadPdf = async (quotation) => {
   };
 
   const handleRemarkSubmit = async () => {
-  if (!remarkData.remark.trim()) {
-    showPopup("Error", "Remark is required", "error");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
-    if (!userId) throw new Error("User not authenticated");
-
-    setImmediateWonStatus(true);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 5000);
-
-    const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!convertResponse.ok) {
-      setImmediateWonStatus(false);
-      setShowConfetti(false);
-      throw new Error("Failed to convert lead to deal");
+    if (!remarkData.remark.trim()) {
+      showPopup("Error", "Remark is required", "error");
+      return;
     }
 
-    const remarkPayload = {
-      remark: remarkData.remark.trim(),
-      leadId: parseInt(leadId),
-      leadStatusId: leadData?.ileadstatus_id,
-      createBy: userId,
-      ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
-      currencyId: remarkData.currencyId,
-    };
+    try {
+      const token = localStorage.getItem("token");
+      const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
+      if (!userId) throw new Error("User not authenticated");
 
-    const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(remarkPayload),
-    });
+      setImmediateWonStatus(true);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
 
-    if (!remarkResponse.ok) {
-      throw new Error("Failed to submit remark");
+      const convertResponse = await fetch(`${ENDPOINTS.CONVERT_TO_DEAL}/${leadId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!convertResponse.ok) {
+        setImmediateWonStatus(false);
+        setShowConfetti(false);
+        throw new Error("Failed to convert lead to deal");
+      }
+
+      const remarkPayload = {
+        remark: remarkData.remark.trim(),
+        leadId: parseInt(leadId),
+        leadStatusId: leadData?.ileadstatus_id,
+        createBy: userId,
+        ...(remarkData.projectValue && { projectValue: parseFloat(remarkData.projectValue) }),
+        currencyId: remarkData.currencyId,
+      };
+
+      const remarkResponse = await fetch(ENDPOINTS.STATUS_REMARKS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(remarkPayload),
+      });
+
+      if (!remarkResponse.ok) {
+        throw new Error("Failed to submit remark");
+      }
+
+      await remarkResponse.json();
+      await fetchStatusRemarks();
+
+      showPopup("Success", "Lead marked as won and remark saved!", "success");
+      setIsDeal(true);
+      setIsWon(true);
+      setIsLost(false);
+      setShowRemarkDialog(false);
+      fetchLeadData();
+    } catch (error) {
+      console.error("Error marking lead as won:", error);
+      showPopup("Error", error.message || "Failed to mark lead as won", "error");
     }
-
-    await remarkResponse.json();
-    await fetchStatusRemarks();
-
-    showPopup("Success", "Lead marked as won and remark saved!", "success");
-    setIsDeal(true);
-    setIsWon(true);
-    setIsLost(false);
-    setShowRemarkDialog(false);
-    fetchLeadData();
-  } catch (error) {
-    console.error("Error marking lead as won:", error);
-    showPopup("Error", error.message || "Failed to mark lead as won", "error");
-  }
-};
+  };
 
   const handleQuotationCreated = async (quotationData) => {
     try {
@@ -455,18 +502,18 @@ const handleDownloadPdf = async (quotation) => {
     }
   };
 
-const handleLostClick = () => {
-  if (!lostReasons || lostReasons.length === 0) {
-    showPopup(
-      "Info",
-      "No Lost Reasons available. Please set your reasons in masters or contact your admin.",
-      "info"
-    );
-    return;
-  }
+  const handleLostClick = () => {
+    if (!lostReasons || lostReasons.length === 0) {
+      showPopup(
+        "Info",
+        "No Lost Reasons available. Please set your reasons in masters or contact your admin.",
+        "info"
+      );
+      return;
+    }
 
-  setLeadLostDescriptionTrue(true);
-};
+    setLeadLostDescriptionTrue(true);
+  };
 
   const toggleQuotationExpand = (quotationId, e) => {
     if (e) {
@@ -499,8 +546,8 @@ const handleLostClick = () => {
   };
 
   const handleCloseMail = () => {
-  setIsMailOpen(false);
-};
+    setIsMailOpen(false);
+  };
 
   useEffect(() => {
     fetchCurrencies();
@@ -565,7 +612,7 @@ const handleLostClick = () => {
   const fetchStatusRemarks = async () => {
     try {
       const token = localStorage.getItem("token");
-            const endpointsToTry = [
+      const endpointsToTry = [
         `${ENDPOINTS.STATUS_REMARKS}/${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?leadId=${leadId}`,
         `${ENDPOINTS.STATUS_REMARKS}?iLead_id=${leadId}`,
@@ -593,89 +640,88 @@ const handleLostClick = () => {
             console.warn("Endpoint failed with status:", response.status);
           }
         } catch (error) {
-      lastError = error;
-      console.warn("Failed with endpoint:", endpoint, error);
-      continue;
+          lastError = error;
+          console.warn("Failed with endpoint:", endpoint, error);
+          continue;
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw lastError || new Error("All endpoint formats failed");
+      }
+
+      const data = await response.json();
+      
+      // Handle different response structures
+      const remarks = data.Response || data.data || data || [];
+      setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
+      
+    } catch (error) {
+      console.error("Error fetching status remarks:", error);
+      if (showPopup) {
+        showPopup("Error", error.message || "Failed to fetch status remarks", "error");
+      }
     }
-  }
+  };
 
-  if (!response || !response.ok) {
-    throw lastError || new Error("All endpoint formats failed");
-  }
+  // Call the function if leadId is available
+  useEffect(() => {
+    if (leadId) {
+      fetchStatusRemarks();
+    }
+  }, [leadId, showPopup]);
 
-  const data = await response.json();
-  
-  // Handle different response structures
-  const remarks = data.Response || data.data || data || [];
-  setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
-  
-}
-catch (error) {
-  console.error("Error fetching status remarks:", error);
-  if (showPopup) {
-    showPopup("Error", error.message || "Failed to fetch status remarks", "error");
-  }
-}
-};
+  const sendEmail = async () => {
+    setIsSendingMail(true);
+    try {
+      const token = localStorage.getItem("token");
+      const leadIdAsNumber = parseInt(leadId, 10);
+      
+      // Check if the conversion was successful
+      if (isNaN(leadIdAsNumber)) {
+          showPopup("Error", "Invalid lead ID. Please refresh the page.", "error");
+          setIsSendingMail(false);
+          return;
+      }
 
-// Call the function if leadId is available
-useEffect(() => {
-  if (leadId) {
-    fetchStatusRemarks();
-  }
-}, [leadId, showPopup]);
+      const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sent_to: sentTo,
+          cc: ccRecipients,
+          mailSubject,
+          mailContent,
+          leadId: leadIdAsNumber, // Use the converted number here
+        }),
+      });
 
-const sendEmail = async () => {
-  setIsSendingMail(true);
-  try {
-    const token = localStorage.getItem("token");
-    const leadIdAsNumber = parseInt(leadId, 10);
-    
-    // Check if the conversion was successful
-    if (isNaN(leadIdAsNumber)) {
-        showPopup("Error", "Invalid lead ID. Please refresh the page.", "error");
-        setIsSendingMail(false);
+      const resData = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to send mail. Backend says:", resData);
+        showPopup("Error", resData.message || "Failed to send mail", "error");
         return;
+      }
+
+      showPopup("Success", "Email sent successfully!", "success");
+      setIsMailOpen(false);
+      setSentTo("");
+      setCcRecipients("");
+      setMailSubject("");
+      setMailContent("");
+    } catch (error) {
+      console.error("Error sending mail:", error);
+      showPopup("Error", "Something went wrong while sending email", "error");
+    } finally {
+      setIsSendingMail(false);
     }
+  };
 
-    const response = await fetch(`${ENDPOINTS.SENTMAIL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        sent_to: sentTo,
-        cc: ccRecipients,
-        mailSubject,
-        mailContent,
-        leadId: leadIdAsNumber, // Use the converted number here
-      }),
-    });
-
-    const resData = await response.json();
-
-    if (!response.ok) {
-      console.error("Failed to send mail. Backend says:", resData);
-      showPopup("Error", resData.message || "Failed to send mail", "error");
-      return;
-    }
-
-    showPopup("Success", "Email sent successfully!", "success");
-    setIsMailOpen(false);
-    setSentTo("");
-    setCcRecipients("");
-    setMailSubject("");
-    setMailContent("");
-  } catch (error) {
-    console.error("Error sending mail:", error);
-    showPopup("Error", "Something went wrong while sending email", "error");
-  } finally {
-    setIsSendingMail(false);
-  }
-};
-
-useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (lostReasonDialogRef.current && 
           !lostReasonDialogRef.current.contains(event.target)) {
@@ -694,315 +740,307 @@ useEffect(() => {
     };
   }, [leadLostDescriptionTrue]);
 
-const fetchLeadData = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const fetchLeadData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${leadId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch lead data");
-    }
-
-    const data = await response.json();
-    setLeadData(data);
-    setIsDeal(data.bisConverted);
-    setIsLost(!data.bactive);
-
-    if (data.bisConverted === "true" || data.bisConverted === true || data.clead_status_name?.toLowerCase() === 'won') {
-      setIsWon(true);
-      setIsDeal(true);
-      setIsLost(false);
-      setImmediateWonStatus(true);
-    } else if (!data.bactive) {
-      setIsWon(false);
-      setIsLost(true);
-      setImmediateWonStatus(false);
-    } else {
-      setIsWon(false);
-      setIsLost(false);
-      setImmediateWonStatus(false);
-    }
-
-    setSentTo(data.cemail || "");
-  } catch (error) {
-    console.error("Error fetching lead data:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const fetchQuotations = async () => {
-  setQuotationsLoading(true);
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch quotations");
-    }
-
-    const data = await response.json();
-    setQuotations(data.data || []);
-  } catch (error) {
-    console.error("Error fetching quotations:", error);
-  } finally {
-    setQuotationsLoading(false);
-  }
-};
-
-const fetchLostReasons = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) throw new Error("Failed to fetch lost reasons");
-    const data = await response.json();
-    setLostReasons(data.data);
-  } catch (error) {
-    console.error("Error fetching lost reasons:", error);
-  }
-};
-
-const getUserInfoFromLocalStorage = () => {
-  try {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const base64Payload = token.split(".")[1];
-      const decodedPayload = atob(base64Payload);
-      const payloadObject = JSON.parse(decodedPayload);
-
-      setLoggedInUserName(
-        payloadObject.cFull_name ||
-        payloadObject.fullName ||
-        payloadObject.name ||
-        payloadObject.cUser_name ||
-        "User"
-      );
-    } else {
-      const userInfoString = localStorage.getItem("userInfo");
-      if (userInfoString) {
-        const userInfo = JSON.parse(userInfoString);
-        setLoggedInUserName(userInfo.cFull_name || userInfo.iUser_id || userInfo.name || userInfo.cUser_name || "User");
-        setLoggedInCompanyName(userInfo.company_id || userInfo.company_name || userInfo.organization || userInfo.orgName || "Your Company");
+      if (!response.ok) {
+        throw new Error("Failed to fetch lead data");
       }
+
+      const data = await response.json();
+      setLeadData(data);
+      setIsDeal(data.bisConverted);
+      setIsLost(!data.bactive);
+
+      if (data.bisConverted === "true" || data.bisConverted === true || data.clead_status_name?.toLowerCase() === 'won') {
+        setIsWon(true);
+        setIsDeal(true);
+        setIsLost(false);
+        setImmediateWonStatus(true);
+      } else if (!data.bactive) {
+        setIsWon(false);
+        setIsLost(true);
+        setImmediateWonStatus(false);
+      } else {
+        setIsWon(false);
+        setIsLost(false);
+        setImmediateWonStatus(false);
+      }
+
+      setSentTo(data.cemail || "");
+    } catch (error) {
+      console.error("Error fetching lead data:", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error extracting user info from token/localStorage:", error);
-    setLoggedInUserName("Your Name");
-    setLoggedInCompanyName("Your Company");
-  }
-};
+  };
 
-useEffect(() => {
-  if (leadId) {
-    fetchLeadData();
-    fetchLostReasons();
-    getUserInfoFromLocalStorage();
-    fetchQuotations();
-  }
-}, [leadId]);
+  const fetchQuotations = async () => {
+    setQuotationsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.QUOTATION_LEAD}/${leadId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-useEffect(() => {
-  if (isMailOpen && leadData) {
-    if (leadData.cemail && sentTo !== leadData.cemail) {
-      setSentTo(leadData.cemail);
+      if (!response.ok) {
+        throw new Error("Failed to fetch quotations");
+      }
+
+      const data = await response.json();
+      setQuotations(data.data || []);
+    } catch (error) {
+      console.error("Error fetching quotations:", error);
+    } finally {
+      setQuotationsLoading(false);
     }
+  };
 
-    const leadFirstName = leadData.cFirstName || '';
-    const leadLastName = leadData.cLastName || '';
-    const leadProjectName = leadData.cProjectName || 'our services/products';
+  const fetchLostReasons = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LOST_REASON}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch lost reasons");
+      const data = await response.json();
+      setLostReasons(data.data);
+    } catch (error) {
+      console.error("Error fetching lost reasons:", error);
+    }
+  };
 
-    const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
+  const getUserInfoFromLocalStorage = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const base64Payload = token.split(".")[1];
+        const decodedPayload = atob(base64Payload);
+        const payloadObject = JSON.parse(decodedPayload);
 
-    const defaultContent = `
-      <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
-      <p>Hope this email finds you well.</p>
-      <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
-      <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
-      <p>Best regards,</p>
-      <p>${loggedInUserName}</p>
-      <p>${loggedInCompanyName}</p>
-    `;
-    setMailSubject(defaultSubject);
-    setMailContent(defaultContent);
-  }
-}, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]);
+        setLoggedInUserName(
+          payloadObject.cFull_name ||
+          payloadObject.fullName ||
+          payloadObject.name ||
+          payloadObject.cUser_name ||
+          "User"
+        );
+      } else {
+        const userInfoString = localStorage.getItem("userInfo");
+        if (userInfoString) {
+          const userInfo = JSON.parse(userInfoString);
+          setLoggedInUserName(userInfo.cFull_name || userInfo.iUser_id || userInfo.name || userInfo.cUser_name || "User");
+          setLoggedInCompanyName(userInfo.company_id || userInfo.company_name || userInfo.organization || userInfo.orgName || "Your Company");
+        }
+      }
+    } catch (error) {
+      console.error("Error extracting user info from token/localStorage:", error);
+      setLoggedInUserName("Your Name");
+      setLoggedInCompanyName("Your Company");
+    }
+  };
 
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, false] }],
-    [{ font: [] }],
-    [{ size: ["small", false, "large", "huge"] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link"],
-    [{ color: [] }, { background: [] }],
-    ["clean"],
-  ],
-};
+  useEffect(() => {
+    if (leadId) {
+      fetchLeadData();
+      fetchLostReasons();
+      getUserInfoFromLocalStorage();
+      fetchQuotations();
+    }
+  }, [leadId]);
 
-const formats = [
-  "header",
-  "font",
-  "size",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "bullet",
-  "link",
-  "color",
-  "background",
-];
+  useEffect(() => {
+    if (isMailOpen && leadData) {
+      if (leadData.cemail && sentTo !== leadData.cemail) {
+        setSentTo(leadData.cemail);
+      }
 
-const fetchTemplates = async () => {
-  try {
-    setTemplatesLoading(true);
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const leadFirstName = leadData.cFirstName || '';
+      const leadLastName = leadData.cLastName || '';
+      const leadProjectName = leadData.cProjectName || 'our services/products';
 
-    if (!response.ok) throw new Error("Failed to fetch templates");
+      const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
 
-    const data = await response.json();
-    setTemplates(data.data || []);
-  } catch (error) {
-    console.error("Error fetching templates:", error);
-    showPopup("Error", "Failed to load email templates", "error");
-  } finally {
-    setTemplatesLoading(false);
-  }
-};
+      const defaultContent = `
+        <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
+        <p>Hope this email finds you well.</p>
+        <p>I'm following up on our recent discussion regarding your interest in ${leadProjectName}.</p>
+        <p>Please let me know if you have any questions or if there's anything else I can assist you with.</p>
+        <p>Best regards,</p>
+        <p>${loggedInUserName}</p>
+        <p>${loggedInCompanyName}</p>
+      `;
+      setMailSubject(defaultSubject);
+      setMailContent(defaultContent);
+    }
+  }, [isMailOpen, leadData, loggedInUserName, loggedInCompanyName]);
 
-useEffect(() => {
-  if (isMailOpen) {
-    fetchTemplates();
-  }
-},[isMailOpen]);
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, false] }],
+      [{ font: [] }],
+      [{ size: ["small", false, "large", "huge"] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link"],
+      [{ color: [] }, { background: [] }],
+      ["clean"],
+    ],
+  };
 
-const applyTemplate = (template) => {
-  setMailSubject(template.mailTitle);
-  setMailContent(template.mailBody);
-};
+  const formats = [
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "link",
+    "color",
+    "background",
+  ];
 
-// You'll need to fetch stages for the StatusBar component
-const [stages, setStages] = useState([]);
+  const fetchTemplates = async () => {
+    try {
+      setTemplatesLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.MAIL_TEMPLATE}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-const fetchStages = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    if (!response.ok) throw new Error('Failed to fetch stages');
-    const data = await response.json();
+      if (!response.ok) throw new Error("Failed to fetch templates");
 
-    const formattedStages = Array.isArray(data.response)
-      ? data.response
-          .map(item => ({
-            id: item.ilead_status_id,
-            name: item.clead_name,
-            order: item.orderId || 9999,
-            bactive: item.bactive,
-          }))
-          .sort((a, b) => a.order - b.order)
-      : [];
+      const data = await response.json();
+      setTemplates(data.data || []);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      showPopup("Error", "Failed to load email templates", "error");
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
 
-    setStages(formattedStages);
-  } catch (err) {
-    console.error('Error fetching stages:', err.message);
-  }
-};
+  useEffect(() => {
+    if (isMailOpen) {
+      fetchTemplates();
+    }
+  },[isMailOpen]);
 
-useEffect(() => {
-  fetchStages();
-}, []);
+  const applyTemplate = (template) => {
+    setMailSubject(template.mailTitle);
+    setMailContent(template.mailBody);
+  };
 
-const formatDate = (dateInput) => {
-  if (!dateInput) return "N/A";
-  const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return "Invalid Date";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  let hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-  return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
-};
+  // You'll need to fetch stages for the StatusBar component
+  const [stage, setStage] = useState([]);
 
-const handleOutsideClick = (event) => {
-  if (formRef.current && !formRef.current.contains(event.target)) {
-    setShowForm(false);
-    setIsListening(false);
-    setEditingComment(null);
-  }
-};
+  const fetchStages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch stages');
+      const data = await response.json();
 
-// FIXED: Correct tab configuration based on company
-const getTabLabels = () => {
-  const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
-  
-  if (isXcodeFix) {
-    // For XcodeFix - hide Comments and Reminders, show only Follow-up and Activity
-    return ["Follow-up", "Activity"];
-  } else {
-    // For other companies - show all tabs
-    return ["Task", "Comments", "Reminders", "Activity"];
-  }
-};
+      const formattedStages = Array.isArray(data.response)
+        ? data.response
+            .map(item => ({
+              id: item.ilead_status_id,
+              name: item.clead_name,
+              order: item.orderId || 9999,
+              bactive: item.bactive,
+            }))
+            .sort((a, b) => a.order - b.order)
+        : [];
 
-const renderTabContent = () => {
-  const tabLabels = getTabLabels();
-  const currentTabLabel = tabLabels[tabIndex];
-  
-  switch (currentTabLabel) {
-    case "Follow-up":
-    case "Task":
-      return <Tasks leadId={leadId} />;
-    case "Comments":
-      // This won't be reached for XcodeFix since Comments tab is hidden
-      return <Comments leadId={leadId} />;
-    case "Reminders":
-      // This won't be reached for XcodeFix since Reminders tab is hidden
-      return <RemainderPage leadId={leadId} />;
-    case "Activity":
-      return <LeadTimeline
-                leadId={leadId}
-                isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
-              />;
-    default:
-      return null;
-  }
-};
+      setStage(formattedStages);
+    } catch (err) {
+      console.error('Error fetching stages:', err.message);
+    }
+  };
 
- return (
+  useEffect(() => {
+    fetchStages();
+  }, []);
+
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "N/A";
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+  };
+
+  // Correct tab configuration based on company
+  const getTabLabels = () => {
+    const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
+    
+    if (isXcodeFix) {
+      // For XcodeFix - hide Comments and Reminders, show only Follow-up and Activity
+      return ["Follow-up", "Activity"];
+    } else {
+      // For other companies - show all tabs
+      return ["Task", "Comments", "Reminders", "Activity"];
+    }
+  };
+
+  const renderTabContent = () => {
+    const tabLabels = getTabLabels();
+    const currentTabLabel = tabLabels[tabIndex];
+    
+    switch (currentTabLabel) {
+      case "Follow-up":
+      case "Task":
+        return <Tasks leadId={leadId} />;
+      case "Comments":
+        // This won't be reached for XcodeFix since Comments tab is hidden
+        return <Comments leadId={leadId} />;
+      case "Reminders":
+        // This won't be reached for XcodeFix since Reminders tab is hidden
+        return <RemainderPage leadId={leadId} />;
+      case "Activity":
+        return <LeadTimeline
+                  leadId={leadId}
+                  isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+                />;
+      default:
+        return null;
+    }
+  };
+
+  return (
     <>
       <div className="flex flex-col lg:flex-row min-h-[100vh] bg-gray-100 relative overflow-x-hidden overflow-y-hidden">
         {showConfetti && (
@@ -1026,436 +1064,372 @@ const renderTabContent = () => {
                 immediateWonStatus ||
                 leadData?.bisConverted === true
               }
+              leadData={leadData}
+              isDeal={isDeal}
+              isLost={isLost}
             />
-            {isLeadActive && <ActionCard leadId={leadId} />}
           </div>
         </div>
 
         {/* Right Column: Status Bar, Tabs, and Content */}
         <div className="w-full lg:w-3/4 xl:w-4/5 p-2 sm:p-3 md:p-4">
-          {/* Navigation Buttons - THIS IS WHERE THE JSX BELONGS */}
-          <div className="flex gap-6 justify-end items-center my-4">
-            {/* Previous Button */}
-            <div className="relative group">
-              <button
-                onClick={() => {
-                  if (currentIndex > 0) {
-                    const prevLeadId = leadIds[currentIndex - 1];
-                    navigate(`/leaddetailview/${prevLeadId}`, {
-                      state: { ...location.state },
-                    });
-                  }
-                }}
-                disabled={currentIndex <= 0}
-                className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-                  currentIndex <= 0
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
-                }`}
-              >
-                ←
-              </button>
-
-              {/* Tooltip */}
-              {currentIndex > 0 && (
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                  Previous Lead
-                </span>
-              )}
-            </div>
-
-            {/* Next Button */}
-            <div className="relative group">
-              <button
-                onClick={() => {
-                  if (currentIndex < leadIds.length - 1) {
-                    const nextLeadId = leadIds[currentIndex + 1];
-                    navigate(`/leaddetailview/${nextLeadId}`, {
-                      state: { ...location.state },
-                    });
-                  }
-                }}
-                disabled={currentIndex >= leadIds.length - 1}
-                className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-                  currentIndex >= leadIds.length - 1
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
-                }`}
-              >
-                →
-              </button>
-
-              {/* Tooltip */}
-              {currentIndex < leadIds.length - 1 && (
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                  Next Lead
-                </span>
-              )}
-            </div>
-          </div>
-
-        {leadData?.postSalesMaster.length === 0 ? (
-          <StatusBar
-            leadId={leadId}
-            leadData={leadData}
-            isLost={isLost}
-            isWon={
-              isWon || immediateWonStatus || leadData?.bisConverted === true
-            }
+          <NavigationButtons 
+            currentIndex={currentIndex}
+            leadIds={leadIds}
+            navigate={navigate}
+            location={location}
           />
-        ) : (
-          <MilestoneStatusBar
-            leadId={leadId}
-            leadData={leadData}
-            isLost={isLost}
-            isWon={
-              isWon || immediateWonStatus || leadData?.bisConverted === true
-            }
-          />
-        )}
 
-        {(isWon || immediateWonStatus || leadData?.bisConverted) &&
-          quotations.length > 0 && (
-            <Box className="mb-4">
-              <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
-                <Typography
-                  variant="h6"
-                  className="flex text-center ms-[30px] justify-center items-center text-green-600"
-                >
-                  Quotation Available!
-                </Typography>
-              </div>
-            </Box>
+          {leadData?.postSalesMaster.length === 0 ? (
+            <StatusBar
+              leadId={leadId}
+              leadData={leadData}
+              isLost={isLost} 
+              statusRemarks={statusRemarks}
+              isWon={
+                isWon || immediateWonStatus || leadData?.bisConverted === true
+              }
+              stage={stage}
+            />
+          ) : (
+            <MilestoneStatusBar
+              leadId={leadId}
+              leadData={leadData}
+              isLost={isLost}
+              isWon={
+                isWon || immediateWonStatus || leadData?.bisConverted === true
+              }
+              stage={stage}
+            />
           )}
 
-        {/* Tab Navigation and Action Buttons */}
-        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
-          <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-            {getTabLabels().map((label, idx) => (
-              <button
-                key={label}
-                onClick={() => handleTabChange(null, idx)}
-                className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
-                  tabIndex === idx
-                    ? "bg-blue-100 shadow text-blue-900"
-                    : "text-gray-500 hover:bg-white hover:text-blue-900"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-            {/* Project Value Display - Only shown when there's a project value */}
-            {showProjectValue && projectValueDisplay && (
-              <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
-                <FaCheck className="mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm md:text-base font-semibold">
-                  Project Value: {projectValueDisplay}
-                </span>
-              </div>
+          {(isWon || immediateWonStatus || leadData?.bisConverted) &&
+            quotations.length > 0 && (
+              <Box className="mb-4">
+                <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
+                  <Typography
+                    variant="h6"
+                    className="flex text-center ms-[30px] justify-center items-center text-green-600"
+                  >
+                    Quotation Available!
+                  </Typography>
+                </div>
+              </Box>
             )}
 
-            {/* View Quotations Button  */}
-            {(isWon || immediateWonStatus || leadData?.bisConverted) &&
-              quotations.length > 0 && (
+          {/* Tab Navigation and Action Buttons */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
+            <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
+              {getTabLabels().map((label, idx) => (
                 <button
-                  onClick={() => setShowQuotationsList(true)}
-                  className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                  key={label}
+                  onClick={() => handleTabChange(null, idx)}
+                  className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
+                    tabIndex === idx
+                      ? "bg-blue-100 shadow text-blue-900"
+                      : "text-gray-500 hover:bg-white hover:text-blue-900"
+                  }`}
                 >
-                  <FaEye className="mr-1" /> View Quotations
+                  {label}
                 </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+              {/* Project Value Display - Only shown when there's a project value */}
+              {showProjectValue && projectValueDisplay && (
+                <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+                  <FaCheck className="mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm md:text-base font-semibold">
+                    Project Value: {projectValueDisplay}
+                  </span>
+                </div>
               )}
 
-            {/* Create Quotation Button */}
-            {showCreateQuotationButton && (
-              <>
-                <button
-                  className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                  onClick={() => setShowQuotationForm(true)}
-                >
-                  <FaPlus className="mr-1" /> Create Quotation
-                </button>
-
-                {/* Post Sales Button */}
-                {companyInfo?.company_id === XCODEFIX_COMPANY_ID && (
+              {/* View Quotations Button  */}
+              {(isWon || immediateWonStatus || leadData?.bisConverted) &&
+                quotations.length > 0 && (
                   <button
-                    type="button"
-                    onClick={() => setShowPostSalesForm(true)}
+                    onClick={() => setShowQuotationsList(true)}
                     className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                   >
-                    Post Sales
-                  </button>
-                )}
-              </>
-            )}
-
-            {showActionButtons && (
-              <>
-                {userSettings.mail_access && (
-                  <button
-                    onClick={() => setIsMailOpen(true)}
-                    className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
-                    title="Email"
-                  >
-                    <div className="w-px h-5 bg-gray-600"></div>
-                    <img
-                       src="../../public/images/detailview/email.svg" 
-                      className="hidden sm:block"
-                      size={16}
-                      alt="Email icon"
-                    />
-                    <div className="w-px h-5 bg-gray-600"></div>
+                    <FaEye className="mr-1" /> View Quotations
                   </button>
                 )}
 
-                {!(leadData?.bisConverted === true) && (
+              {/* Create Quotation Button */}
+              {showCreateQuotationButton && (
+                <>
                   <button
                     className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                    onClick={handleWonClick}
+                    onClick={() => setShowQuotationForm(true)}
                   >
-                    <FaPlus className="mr-1" /> Won
+                    <FaPlus className="mr-1" /> Create Quotation
                   </button>
-                )}
 
-                <button
-                  className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
-                  onClick={handleLostClick}
-                >
-                  Lost
-                </button>
-              </>
-            )}
+                  {/* Post Sales Button */}
+                  {companyInfo?.company_id === XCODEFIX_COMPANY_ID && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPostSalesForm(true)}
+                      className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    >
+                      Post Sales
+                    </button>
+                  )}
+                </>
+              )}
+
+              {showActionButtons && (
+                <>
+                  {userSettings.mail_access && (
+                    <button
+                      onClick={() => setIsMailOpen(true)}
+                      className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                      title="Email"
+                    >
+                      <div className="w-px h-5 bg-gray-600"></div>
+                      <img
+                         src="../../public/images/detailview/email.svg" 
+                        className="hidden sm:block"
+                        size={16}
+                        alt="Email icon"
+                      />
+                      <div className="w-px h-5 bg-gray-600"></div>
+                    </button>
+                  )}
+
+                  {!(leadData?.bisConverted === true) && (
+                    <button
+                      className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                      onClick={handleWonClick}
+                    >
+                      <FaPlus className="mr-1" /> Won
+                    </button>
+                  )}
+
+                  <button
+                    className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
+                    onClick={handleLostClick}
+                  >
+                    Lost
+                  </button>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Tab Content */}
+          <Box className="mt-4 relative z-0 w-full">{renderTabContent()}</Box>
         </div>
 
-        {/* Tab Content */}
-        <Box className="mt-4 relative z-0 w-full">{renderTabContent()}</Box>
-      </div>
+        {/* Quotation Form Dialog */}
+        <QuotationForm
+          open={showQuotationForm}
+          onClose={() => setShowQuotationForm(false)}
+          leadId={leadId}
+          leadData={leadData}
+          companyInfo={companyInfo}
+          quotations={quotations}
+          onQuotationCreated={handleQuotationCreated}
+        />
 
-      {/* Quotation Form Dialog */}
-      <QuotationForm
-        open={showQuotationForm}
-        onClose={() => setShowQuotationForm(false)}
-        leadId={leadId}
-        leadData={leadData}
-        companyInfo={companyInfo}
-        quotations={quotations}
-        onQuotationCreated={handleQuotationCreated}
-      />
+        {/* Remark Dialog */}
+        <Dialog
+          open={showRemarkDialog}
+          onClose={() => setShowRemarkDialog(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Enter Remark for Won Status</DialogTitle>
+          <DialogContent>
+            <TextField
+              label={
+                <span>
+                  Remark <span style={{ color: "red" }}>*</span>
+                </span>
+              }
+              fullWidth
+              multiline
+              rows={3}
+              value={remarkData.remark}
+              onChange={(e) =>
+                setRemarkData({ ...remarkData, remark: e.target.value })
+              }
+              sx={{ mt: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+            <Autocomplete
+              options={currencies}
+              getOptionLabel={(option) =>
+                `${option.country_name} - ${option.symbol}`
+              }
+              value={
+                currencies.find(
+                  (c) => c.icurrency_id === remarkData.currencyId
+                ) || null
+              }
+              onChange={(e, newValue) =>
+                setRemarkData((prev) => ({
+                  ...prev,
+                  currencyId: newValue?.icurrency_id || null,
+                }))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={
+                    <span>
+                      Currency <span style={{ color: "red" }}>*</span>
+                    </span>
+                  }
+                  sx={{ mt: 2 }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
 
-      {/* Remark Dialog */}
-      <Dialog
-        open={showRemarkDialog}
-        onClose={() => setShowRemarkDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Enter Remark for Won Status</DialogTitle>
-        <DialogContent>
-          <TextField
-            label={
-              <span>
-                Remark <span style={{ color: "red" }}>*</span>
-              </span>
-            }
-            fullWidth
-            multiline
-            rows={3}
-            value={remarkData.remark}
-            onChange={(e) =>
-              setRemarkData({ ...remarkData, remark: e.target.value })
-            }
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-      {/* Tab Content */}
-     {/* <Box className="mt-4 relative z-0 w-full">
-  {tabIndex === 0 && (
-    <LeadTimeline
-      leadId={leadId}
-      isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
-    />
-  )}
-  {tabIndex === 1 && <Tasks leadId={leadId} />}
-  {tabIndex === 2 && <Comments leadId={leadId} />}
-  {tabIndex === 3 && <RemainderPage leadId={leadId} />}
-</Box> */}
- </DialogContent>
+            <TextField
+              label="Project Value (optional)"
+              type="number"
+              fullWidth
+              value={remarkData.projectValue}
+              onChange={(e) =>
+                setRemarkData({ ...remarkData, projectValue: e.target.value })
+              }
+              sx={{ mt: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
+            <Button onClick={handleRemarkSubmit} variant="contained">
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-          <Autocomplete
-            options={currencies}
-            getOptionLabel={(option) =>
-              `${option.country_name} - ${option.symbol}`
-            }
-            value={
-              currencies.find(
-                (c) => c.icurrency_id === remarkData.currencyId
-              ) || null
-            }
-            onChange={(e, newValue) =>
-              setRemarkData((prev) => ({
-                ...prev,
-                currencyId: newValue?.icurrency_id || null,
-              }))
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={
-                  <span>
-                    Currency <span style={{ color: "red" }}>*</span>
-                  </span>
-                }
-                sx={{ mt: 2 }}
-                InputLabelProps={{ shrink: true }}
-              />
-            )}
-          />
-
-          <TextField
-            label="Project Value (optional)"
-            type="number"
-            fullWidth
-            value={remarkData.projectValue}
-            onChange={(e) =>
-              setRemarkData({ ...remarkData, projectValue: e.target.value })
-            }
-            sx={{ mt: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-        <DialogActions>
-          <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-          <Button onClick={handleRemarkSubmit} variant="contained">
-            Submit
-          </Button>
-        </DialogActions>
-                
-
-      </Dialog>
-
-      {/* Quotations List Dialog with Detailed View */}
-      <Dialog
-        open={showQuotationsList}
-        onClose={() => setShowQuotationsList(false)}
-        maxWidth="lg"
-        fullWidth
-        scroll="paper"
-      >
-        <DialogTitle className="bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-blue-700">
-              Quotation Details
+        {/* Quotations List Dialog with Detailed View */}
+        <Dialog
+          open={showQuotationsList}
+          onClose={() => setShowQuotationsList(false)}
+          maxWidth="lg"
+          fullWidth
+          scroll="paper"
+        >
+          <DialogTitle className="bg-blue-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center text-blue-700">
+                Quotation Details
+              </div>
+              <IconButton
+                onClick={() => setShowQuotationsList(false)}
+                size="small"
+              >
+                <MdExpandLess />
+              </IconButton>
             </div>
-            <IconButton
-              onClick={() => setShowQuotationsList(false)}
-              size="small"
-            >
-              <MdExpandLess />
-            </IconButton>
-          </div>
-        </DialogTitle>
-        <DialogContent dividers className="bg-gray-50">
-          {quotationsLoading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              height={200}
-            >
-              <CircularProgress />
-            </Box>
-          ) : quotations.length > 0 ? (
-            <List>
-              {quotations.map((quotation) => (
-                <Card key={quotation.iQuotation_id} className="mb-3">
-                  <ListItem
-                    className="bg-blue-50"
-                    secondaryAction={
-                      <div className="flex items-center">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewPdf(quotation);
-                          }}
-                          title="View PDF"
-                        >
-                          <Visibility />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadPdf(quotation);
-                          }}
-                          title="Download PDF"
-                        >
-                          {/* <FaDownload /> */}
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={(e) =>
-                            toggleQuotationExpand(quotation.iQuotation_id, e)
-                          }
-                        >
-                          {expandedQuotation === quotation.iQuotation_id ? (
-                            <MdExpandLess />
-                          ) : (
-                            <MdExpandMore />
-                          )}
-                        </IconButton>
-                      </div>
-                    }
-                  >
-                    <ListItemText
-                      primary={
-                        <Typography variant="h6" className="text-blue-800">
-                          {quotation.cQuote_number}
-                        </Typography>
-                      }
-                      secondary={
-                        <div className="text-sm text-gray-600">
-                          Valid until: {formatDate(quotation.dValid_until)}
-                          {quotation.fTotal_amount &&
-                            ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+          </DialogTitle>
+          <DialogContent dividers className="bg-gray-50">
+            {quotationsLoading ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                height={200}
+              >
+                <CircularProgress />
+              </Box>
+            ) : quotations.length > 0 ? (
+              <List>
+                {quotations.map((quotation) => (
+                  <Card key={quotation.iQuotation_id} className="mb-3">
+                    <ListItem
+                      className="bg-blue-50"
+                      secondaryAction={
+                        <div className="flex items-center">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewPdf(quotation);
+                            }}
+                            title="View PDF"
+                          >
+                            <Visibility />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadPdf(quotation);
+                            }}
+                            title="Download PDF"
+                          >
+                            {/* <FaDownload /> */}
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={(e) =>
+                              toggleQuotationExpand(quotation.iQuotation_id, e)
+                            }
+                          >
+                            {expandedQuotation === quotation.iQuotation_id ? (
+                              <MdExpandLess />
+                            ) : (
+                              <MdExpandMore />
+                            )}
+                          </IconButton>
                         </div>
                       }
-                    />
-                  </ListItem>
-                  <Collapse
-                    in={expandedQuotation === quotation.iQuotation_id}
-                    timeout="auto"
-                    unmountOnExit
-                  >
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="subtitle2" className="font-bold">
-                            Terms & Conditions
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography variant="h6" className="text-blue-800">
+                            {quotation.cQuote_number}
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            className="mt-2 text-gray-700"
-                          >
-                            {quotation.cTerms || "No terms specified"}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="subtitle2" className="font-bold">
-                            Financial Details
-                          </Typography>
-                          <TableContainer component={Paper} className="mt-2">
-                            <Table size="small">
-                              <TableBody>
-                                <TableRow>
-                                  <TableCell className="font-bold">
-                                    Subtotal
-                                  </TableCell>
-                                  <TableCell>
-                                    {quotation.fSub_total?.toFixed(2) || "0.00"}
-                                  </TableCell>
+                        }
+                        secondary={
+                          <div className="text-sm text-gray-600">
+                            Valid until: {formatDate(quotation.dValid_until)}
+                            {quotation.fTotal_amount &&
+                              ` | Amount: ${quotation.fTotal_amount.toFixed(2)}`}
+                          </div>
+                        }
+                      />
+                    </ListItem>
+                    <Collapse
+                      in={expandedQuotation === quotation.iQuotation_id}
+                      timeout="auto"
+                      unmountOnExit
+                    >
+                      <CardContent>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="subtitle2" className="font-bold">
+                              Terms & Conditions
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              className="mt-2 text-gray-700"
+                            >
+                              {quotation.cTerms || "No terms specified"}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant="subtitle2" className="font-bold">
+                              Financial Details
+                            </Typography>
+                            <TableContainer component={Paper} className="mt-2">
+                              <Table size="small">
+                                <TableBody>
+                                  <TableRow>
+                                    <TableCell className="font-bold">
+                                      Subtotal
+                                    </TableCell>
+                                    <TableCell>
+                                      {quotation.fSub_total?.toFixed(2) || "0.00"}
+                                    </TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell className="font-bold">
@@ -1599,14 +1573,11 @@ const renderTabContent = () => {
 
       {/* for postsales form */}
       {showPostSalesForm && (
-        <div
+        <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-          // REMOVE this onClick handler ↓
-          // onClick={() => setShowPostSalesForm(false)}
         >
-          <div
+          <div 
             className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
-            // Keep this to prevent closing when clicking inside the form
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -1626,6 +1597,7 @@ const renderTabContent = () => {
           </div>
         </div>
       )}
+
       {/* Email Compose Dialog */}
       {isMailOpen && (
         <div
@@ -1845,8 +1817,8 @@ const renderTabContent = () => {
         </div>
       )}
     </div>
-    {showUserProfile && <UserProfile settingsData={settingsData} />}
   </>
-);
+  );
 };
+
 export default LeadDetailView;

@@ -11,17 +11,17 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const formatMasterName = (name, previousValue) => {
   if (!name) return '';
-  
+
   // If user is deleting characters, don't modify
   if (name.length < (previousValue?.length || 0)) {
     return name;
   }
-  
+
   // Only auto-capitalize if:
   // 1. Field was empty and user is typing the first character
   // 2. User just typed a space and is typing the next word
-  if (!previousValue || previousValue === '' || 
-      (previousValue.length > 0 && name.length > previousValue.length && name.endsWith(' '))) {
+  if (!previousValue || previousValue === '' ||
+    (previousValue.length > 0 && name.length > previousValue.length && name.endsWith(' '))) {
     // Capitalize first letter after space or at beginning
     if (name.length === 1) {
       return name.charAt(0).toUpperCase();
@@ -32,7 +32,7 @@ const formatMasterName = (name, previousValue) => {
       return name.slice(0, -1) + name.slice(-1).toUpperCase();
     }
   }
-  
+
   // Otherwise, preserve user's typing
   return name;
 };
@@ -42,21 +42,21 @@ const getNestedObject = (obj, path) => {
 };
 
 const sortItemsAlphabetically = (items, sortKey) => {
-    if (!items || !Array.isArray(items)) return [];
-    return [...items].sort((a, b) => {
-      const aValue = a[sortKey]?.toString().toLowerCase() || '';
-      const bValue = b[sortKey]?.toString().toLowerCase() || '';
-      return aValue.localeCompare(bValue);
-    });
-  };
+  if (!items || !Array.isArray(items)) return [];
+  return [...items].sort((a, b) => {
+    const aValue = a[sortKey]?.toString().toLowerCase() || '';
+    const bValue = b[sortKey]?.toString().toLowerCase() || '';
+    return aValue.localeCompare(bValue);
+  });
+};
 
 // Improved stripHtml function
- const stripHtmlTags = (html) => {
-    if (!html) return '';
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-  };
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
 
 
 // Add this helper function for preview
@@ -86,18 +86,18 @@ export default function MasterModal({
   const [searchTerm, setSearchTerm] = useState('');
   const [openParents, setOpenParents] = useState({});
   const [showIntro, setShowIntro] = useState(() => {
-  if (!master) return false;
-  const hasSeen = localStorage.getItem(`master_intro_seen_${master.title}_${userId}`);
-  return !hasSeen;
-});
+    if (!master) return false;
+    const hasSeen = localStorage.getItem(`master_intro_seen_${master.title}_${userId}`);
+    return !hasSeen;
+  });
 
-// Add this function to handle intro close properly
-const handleIntroClose = () => {
-  if (master && userId) {
-    localStorage.setItem(`master_intro_seen_${master.title}_${userId}`, 'true');
-  }
-  setShowIntro(false);
-};
+  // Add this function to handle intro close properly
+  const handleIntroClose = () => {
+    if (master && userId) {
+      localStorage.setItem(`master_intro_seen_${master.title}_${userId}`, 'true');
+    }
+    setShowIntro(false);
+  };
 
   const isLabelMaster = useMemo(
     () => master?.title === "Label Master",
@@ -124,41 +124,41 @@ const handleIntroClose = () => {
   const subIndustryConfig = masterConfigs?.SUB_INDUSTRIES;
   const leadSourceConfig = masterConfigs?.LEAD_SOURCE;
 
-const groupSubItemsByParent = (items, config) => {
-  if (!config || !config.isHierarchical || !config.parentMasterConfig) {
-    return [];
-  }
-
-  const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
-  const parentNameKey = config.parentMasterConfig.nameKey || "name";
-  const childPayloadKey = config.payloadKey;
-
-  const grouped = items.reduce((acc, item) => {
-    const parentId = item[parentIdKey];
-    if (!acc[parentId]) {
-      acc[parentId] = {
-        parentId,
-        children: []
-      };
+  const groupSubItemsByParent = (items, config) => {
+    if (!config || !config.isHierarchical || !config.parentMasterConfig) {
+      return [];
     }
-    acc[parentId].children.push(item);
-    return acc;
-  }, {});
 
-  return Object.values(grouped).map(group => ({
-    ...group,
-    parentName: parentOptions.find(p => 
-      // Convert both to string for comparison to avoid type mismatch
-      String(p[config.parentMasterConfig.idKey]) === String(group.parentId)
-    )?.[parentNameKey] || "Unknown Parent"
-  }));
-};
+    const parentIdKey = config.parentMasterConfig.parentIdInChildResponseKey || "parentId";
+    const parentNameKey = config.parentMasterConfig.nameKey || "name";
+    const childPayloadKey = config.payloadKey;
+
+    const grouped = items.reduce((acc, item) => {
+      const parentId = item[parentIdKey];
+      if (!acc[parentId]) {
+        acc[parentId] = {
+          parentId,
+          children: []
+        };
+      }
+      acc[parentId].children.push(item);
+      return acc;
+    }, {});
+
+    return Object.values(grouped).map(group => ({
+      ...group,
+      parentName: parentOptions.find(p =>
+        // Convert both to string for comparison to avoid type mismatch
+        String(p[config.parentMasterConfig.idKey]) === String(group.parentId)
+      )?.[parentNameKey] || "Unknown Parent"
+    }));
+  };
 
   const groupedSubItems = useMemo(() => {
     if (!master?.isHierarchical) return [];
-    
+
     const grouped = groupSubItemsByParent(existingItems, master);
-    
+
     // Sort parent groups alphabetically
     const sortedGroups = grouped.sort((a, b) => {
       const aName = a.parentName?.toString().toLowerCase() || '';
@@ -168,8 +168,8 @@ const groupSubItemsByParent = (items, config) => {
 
 
 
-    
-    
+
+
     if (!searchTerm) {
       // Sort children alphabetically within each group
       return sortedGroups.map(group => ({
@@ -177,7 +177,7 @@ const groupSubItemsByParent = (items, config) => {
         children: sortItemsAlphabetically(group.children, master.payloadKey)
       }));
     }
-    
+
     return sortedGroups
       .map(group => ({
         ...group,
@@ -197,12 +197,12 @@ const groupSubItemsByParent = (items, config) => {
     if (!searchTerm || master?.isHierarchical) {
       return sortItemsAlphabetically(existingItems, master.payloadKey);
     }
-    
+
     const filtered = existingItems.filter(item => {
       const mainField = item[master.payloadKey]?.toString().toLowerCase() || '';
       return mainField.includes(searchTerm);
     });
-    
+
     return sortItemsAlphabetically(filtered, master.payloadKey);
   }, [existingItems, searchTerm, master]);
 
@@ -309,8 +309,8 @@ const groupSubItemsByParent = (items, config) => {
               children: subindustries.filter(
                 (sub) =>
                   sub[
-                    subIndustryConfig.parentMasterConfig
-                      ?.parentIdInChildResponseKey || ""
+                  subIndustryConfig.parentMasterConfig
+                    ?.parentIdInChildResponseKey || ""
                   ] === industry[industryConfig.idKey]
               ),
             };
@@ -353,7 +353,7 @@ const groupSubItemsByParent = (items, config) => {
 
   const fetchAllLeadSourceItems = useCallback(async () => {
     if (!leadSourceConfig || !leadSourceConfig.get) return;
-    
+
     setIsLoadingAllLeadSourceItems(true);
     const token = localStorage.getItem("token");
     const headers = { "Content-Type": "application/json" };
@@ -441,68 +441,66 @@ const groupSubItemsByParent = (items, config) => {
     }
   }, [master]);
 
-useEffect(() => {
-  if (!master) return;
+  useEffect(() => {
+    if (!master) return;
 
-  let newFormData = {};
+    let newFormData = {};
 
-  if (selectedItemForEdit) {
-    console.log('=== DEBUG: Editing item ===');
-    console.log('Selected item:', selectedItemForEdit);
-    
-    if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
-      const parentIdKey =
-        subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
-        "parentId";
-      const formParentKey =
-        subIndustryConfig.parentMasterConfig?.formFieldKey ||
-        "industryParent";
+    if (selectedItemForEdit) {
+      console.log('=== DEBUG: Editing item ===');
+      console.log('Selected item:', selectedItemForEdit);
 
-      console.log('Parent ID key:', parentIdKey);
-      console.log('Form parent key:', formParentKey);
-      console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
-      console.log('Parent options:', parentOptions);
+      if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
+        const parentIdKey =
+          subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
+          "parentId";
+        const formParentKey =
+          subIndustryConfig.parentMasterConfig?.formFieldKey ||
+          "industryParent";
 
-      newFormData = {
-        [subIndustryConfig.payloadKey]:
-          selectedItemForEdit[subIndustryConfig.payloadKey] || "",
-        [formParentKey]:
-          selectedItemForEdit[parentIdKey] !== undefined && selectedItemForEdit[parentIdKey] !== null
-            ? String(selectedItemForEdit[parentIdKey]) // Convert to string for consistent comparison
-            : null,
-        [subIndustryConfig.idKey]:
-          selectedItemForEdit[subIndustryConfig.idKey],
-        ...(subIndustryConfig.activeStatusPayloadKey && {
-          [subIndustryConfig.activeStatusPayloadKey]:
-            selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false,
-        }),
-      };
+        console.log('Parent ID key:', parentIdKey);
+        console.log('Form parent key:', formParentKey);
+        console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
+        console.log('Parent options:', parentOptions);
 
-      console.log('New form data:', newFormData);
+        newFormData = {
+          [subIndustryConfig.payloadKey]:
+            selectedItemForEdit[subIndustryConfig.payloadKey] || "",
+          [formParentKey]:
+            selectedItemForEdit[parentIdKey] !== undefined && selectedItemForEdit[parentIdKey] !== null
+              ? String(selectedItemForEdit[parentIdKey]) // Convert to string for consistent comparison
+              : null,
+          [subIndustryConfig.idKey]:
+            selectedItemForEdit[subIndustryConfig.idKey],
+          ...(subIndustryConfig.activeStatusPayloadKey && {
+            [subIndustryConfig.activeStatusPayloadKey]:
+              selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false,
+          }),
+        };
+
+        console.log('New form data:', newFormData);
+      } else {
+        newFormData = { ...selectedItemForEdit };
+      }
     } else {
-      newFormData = { ...selectedItemForEdit };
+      newFormData = { ...master.basePostPayload };
+
+      if (master.isHierarchical && master.parentMasterConfig) {
+        const formParentKey =
+          master.parentMasterConfig.formFieldKey || "parentId";
+        newFormData[formParentKey] = null;
+      }
     }
-  } else {
-    newFormData = { ...master.basePostPayload };
 
-    if (master.isHierarchical && master.parentMasterConfig) {
-      const formParentKey =
-        master.parentMasterConfig.formFieldKey || "parentId";
-      newFormData[formParentKey] = null;
-    }
-  }
-
-  setFormData(newFormData);
-}, [
-  selectedItemForEdit,
-  master,
-  subIndustryConfig,
-  industryConfig,
-  leadSourceConfig,
-  parentOptions, // Add parentOptions to dependencies
-]);
-
-  
+    setFormData(newFormData);
+  }, [
+    selectedItemForEdit,
+    master,
+    subIndustryConfig,
+    industryConfig,
+    leadSourceConfig,
+    parentOptions, // Add parentOptions to dependencies
+  ]);
 
 
 
@@ -616,8 +614,8 @@ const handleChange = (e) => {
     const url = isEditing
       ? typeof currentSaveMasterConfig.put === "function"
         ? currentSaveMasterConfig.put(
-            selectedItemForEdit[currentSaveMasterConfig.idKey]
-          )
+          selectedItemForEdit[currentSaveMasterConfig.idKey]
+        )
         : currentSaveMasterConfig.put
       : currentSaveMasterConfig.post;
     const method = isEditing ? "PUT" : "POST";
@@ -626,14 +624,14 @@ const handleChange = (e) => {
 
     const fieldsToMap =
       isEditing &&
-      currentSaveMasterConfig.putPayloadFields &&
-      Array.isArray(currentSaveMasterConfig.putPayloadFields)
+        currentSaveMasterConfig.putPayloadFields &&
+        Array.isArray(currentSaveMasterConfig.putPayloadFields)
         ? currentSaveMasterConfig.putPayloadFields
         : !isEditing &&
           currentSaveMasterConfig.postPayloadFields &&
           Array.isArray(currentSaveMasterConfig.postPayloadFields)
-        ? currentSaveMasterConfig.postPayloadFields
-        : Object.keys(formData);
+          ? currentSaveMasterConfig.postPayloadFields
+          : Object.keys(formData);
 
     fieldsToMap.forEach((field) => {
       if (master.title === "Label Master" && isEditing) {
@@ -666,7 +664,7 @@ const handleChange = (e) => {
       ) {
         const mappedIdKey =
           currentSaveMasterConfig.payloadMapping?.[
-            currentSaveMasterConfig.idKey
+          currentSaveMasterConfig.idKey
           ] || currentSaveMasterConfig.idKey;
         if (!Object.hasOwn(payload, mappedIdKey)) {
           payload[mappedIdKey] =
@@ -677,7 +675,7 @@ const handleChange = (e) => {
       payload = { ...currentSaveMasterConfig.basePostPayload, ...payload };
       const mappedIdKey =
         currentSaveMasterConfig.payloadMapping?.[
-          currentSaveMasterConfig.idKey
+        currentSaveMasterConfig.idKey
         ] || currentSaveMasterConfig.idKey;
       if (
         Object.hasOwn(payload, mappedIdKey) &&
@@ -742,7 +740,7 @@ const handleChange = (e) => {
         throw new Error("Unsupported HTTP method for saving.");
       }
 
-  toast.success(`${currentSaveMasterConfig.title} saved successfully!`, {
+      toast.success(`${currentSaveMasterConfig.title} saved successfully!`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -755,7 +753,7 @@ const handleChange = (e) => {
       if (
         currentSaveMasterConfig.activeStatusPayloadKey &&
         newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] ===
-          undefined
+        undefined
       ) {
         newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] = true;
       }
@@ -834,8 +832,7 @@ const handleChange = (e) => {
     }
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${
-        itemToDelete?.[master.payloadKey] || "this item"
+      `Are you sure you want to delete "${itemToDelete?.[master.payloadKey] || "this item"
       }"?`
     );
     if (!confirmDelete) {
@@ -911,7 +908,7 @@ const handleChange = (e) => {
         await axios.delete(url, { headers: headers });
       }
 
-toast.success(`${master.title} deleted successfully!`, {
+      toast.success(`${master.title} deleted successfully!`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -919,7 +916,7 @@ toast.success(`${master.title} deleted successfully!`, {
         pauseOnHover: true,
         draggable: true,
       });
-      
+
       setSelectedItemForEdit(null);
       const newEntryFormData = { ...master.basePostPayload };
       if (
@@ -1003,7 +1000,7 @@ toast.success(`${master.title} deleted successfully!`, {
             subIndustryItem[subIndustryConfig.activeStatusPayloadKey] || false,
         }),
       };
-       toast.success(`${subIndustryItem[subIndustryConfig.payloadKey]} deleted successfully!`, {
+      toast.success(`${subIndustryItem[subIndustryConfig.payloadKey]} deleted successfully!`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -1023,8 +1020,7 @@ toast.success(`${master.title} deleted successfully!`, {
     }
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${
-        subIndustryItem[subIndustryConfig.payloadKey]
+      `Are you sure you want to delete "${subIndustryItem[subIndustryConfig.payloadKey]
       }"?`
     );
     if (!confirmDelete) return;
@@ -1046,7 +1042,7 @@ toast.success(`${master.title} deleted successfully!`, {
         const deletePayload = {
           ...(subIndustryConfig.baseDeletePayload || {}),
           [subIndustryConfig.payloadMapping?.[subIndustryConfig.idKey] ||
-          subIndustryConfig.idKey]: itemId,
+            subIndustryConfig.idKey]: itemId,
         };
         const modifierKey =
           typeof subIndustryConfig.modifierIdPayloadKey === "object"
@@ -1078,9 +1074,8 @@ toast.success(`${master.title} deleted successfully!`, {
       );
       await fetchItems();
     } catch (error) {
-      let errorMessage = `Failed to delete ${
-        subIndustryItem[subIndustryConfig.payloadKey]
-      }.`;
+      let errorMessage = `Failed to delete ${subIndustryItem[subIndustryConfig.payloadKey]
+        }.`;
       if (axios.isAxiosError(error) && error.response) {
         errorMessage =
           error.response.data.message ||
@@ -1116,9 +1111,9 @@ toast.success(`${master.title} deleted successfully!`, {
       (item) =>
         item[mappedOrderIdKey] === orderIdValue &&
         item[leadSourceConfig.idKey] !==
-          (selectedItemForEdit
-            ? selectedItemForEdit[leadSourceConfig.idKey]
-            : null)
+        (selectedItemForEdit
+          ? selectedItemForEdit[leadSourceConfig.idKey]
+          : null)
     );
   }, [
     formData.orderId,
@@ -1131,7 +1126,7 @@ toast.success(`${master.title} deleted successfully!`, {
   const parentLabel =
     master.isHierarchical && master.parentMasterConfig
       ? master.parentMasterConfig.modalLabel ||
-        `Parent ${master.parentMasterConfig.title || "Item"}`
+      `Parent ${master.parentMasterConfig.title || "Item"}`
       : "";
 
   const formParentKey =
@@ -1161,22 +1156,22 @@ toast.success(`${master.title} deleted successfully!`, {
   ];
 
 
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    // If intro is showing and user clicks outside, close the intro
-    if (showIntro && !event.target.closest('.intro-modal-content')) {
-      handleIntroClose();
-    }
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // If intro is showing and user clicks outside, close the intro
+      if (showIntro && !event.target.closest('.intro-modal-content')) {
+        handleIntroClose();
+      }
+    };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [showIntro]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showIntro]);
 
 
-     if (!master) {
+  if (!master) {
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl text-center" onClick={(e) => e.stopPropagation()}>
@@ -1195,7 +1190,7 @@ useEffect(() => {
         </div>
       </div>
     );
-  } 
+  }
   return (
     <>
       <ToastContainer
@@ -1209,13 +1204,13 @@ useEffect(() => {
         draggable
         pauseOnHover
       />
-      <div 
+      <div
         className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4"
-        onClick={onClose} 
+        onClick={onClose}
       >
-        <div 
+        <div
           className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl h-[75vh] flex flex-col border border-blue-200 overflow-y-scroll"
-          onClick={(e) => e.stopPropagation()} 
+          onClick={(e) => e.stopPropagation()}
         >
           {showIntro ? (
             // Intro content
@@ -1236,13 +1231,13 @@ useEffect(() => {
                 <div className="mb-8 text-center">
                   <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 mb-6">
                     <p className="text-gray-700 mb-4 text-lg font-medium">
-                      {master.title === "Label Master" 
-                        ? "Here you can customize the names of all services and forms." 
+                      {master.title === "Label Master"
+                        ? "Here you can customize the names of all services and forms."
                         : master.title === "Industry"
-                        ? "Add or edit industry categories for your company."
-                        : master.title === "Lead Source"
-                        ? "Manage the sources from which you acquire leads."
-                        : "Here you can manage your company's master data. Add, edit or delete items as needed."}
+                          ? "Add or edit industry categories for your company."
+                          : master.title === "Lead Source"
+                            ? "Manage the sources from which you acquire leads."
+                            : "Here you can manage your company's master data. Add, edit or delete items as needed."}
                     </p>
                     <p className="text-blue-600">
                       {master.title === "Label Master"
@@ -1251,7 +1246,7 @@ useEffect(() => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="text-center">
                   <button
                     onClick={handleIntroClose}
@@ -1292,7 +1287,7 @@ useEffect(() => {
                   <h3 className="text-xl font-semibold mb-3 text-blue-700">
                     Existing {master.title}
                   </h3>
-                  
+
                   {/* Search Bar */}
                   <div className="mb-4 relative">
                     <input
@@ -1354,12 +1349,11 @@ useEffect(() => {
                                     {group.children.map(child => (
                                       <li
                                         key={child[master.idKey]}
-                                        className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
-                                          selectedItemForEdit &&
-                                          selectedItemForEdit[master.idKey] === child[master.idKey]
+                                        className={`p-3 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${selectedItemForEdit &&
+                                            selectedItemForEdit[master.idKey] === child[master.idKey]
                                             ? "bg-blue-100 border-blue-400"
                                             : "bg-white"
-                                        }`}
+                                          }`}
                                       >
                                         <div>
                                           <span className="font-medium text-gray-800">
@@ -1373,11 +1367,10 @@ useEffect(() => {
                                           {master.activeStatusPayloadKey &&
                                             child[master.activeStatusPayloadKey] !== undefined && (
                                               <span
-                                                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                                                  child[master.activeStatusPayloadKey]
+                                                className={`ml-2 text-xs px-2 py-1 rounded-full ${child[master.activeStatusPayloadKey]
                                                     ? 'bg-green-100 text-green-800'
                                                     : 'bg-red-100 text-red-800'
-                                                }`}
+                                                  }`}
                                               >
                                                 {child[master.activeStatusPayloadKey]
                                                   ? 'Active'
@@ -1420,12 +1413,11 @@ useEffect(() => {
                             filteredItems.map((item) => (
                               <li
                                 key={item[master.idKey]}
-                                className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${
-                                  selectedItemForEdit &&
-                                  selectedItemForEdit[master.idKey] === item[master.idKey]
+                                className={`p-3 border rounded-md flex justify-between items-center transition-colors duration-200 ${selectedItemForEdit &&
+                                    selectedItemForEdit[master.idKey] === item[master.idKey]
                                     ? "bg-blue-100 border-blue-400"
                                     : "bg-gray-50 hover:bg-gray-100"
-                                }`}
+                                  }`}
                               >
                                 <div className="flex flex-col">
                                   <span className="font-medium text-gray-800">
@@ -1451,8 +1443,8 @@ useEffect(() => {
                                             master.isHierarchical &&
                                             master.parentMasterConfig &&
                                             field ===
-                                              (master.parentMasterConfig.formFieldKey ||
-                                                "parentId")
+                                            (master.parentMasterConfig.formFieldKey ||
+                                              "parentId")
                                           ) {
                                             return null;
                                           }
@@ -1509,7 +1501,7 @@ useEffect(() => {
                       ? `Edit Existing ${master.modalKey || master.title}`
                       : `Add New ${master.modalKey || master.title}`}
                   </h3>
-                  
+
                   {/* Show parent name when editing hierarchical items */}
                   {selectedItemForEdit && master.isHierarchical && master.parentMasterConfig && (
                     <div className="mb-3">
@@ -1519,7 +1511,7 @@ useEffect(() => {
                             master.parentMasterConfig.parentIdInChildResponseKey || "parentId"
                           ];
                           const matchedParent = parentOptions.find(
-                            (parent) => 
+                            (parent) =>
                               String(parent[master.parentMasterConfig.idKey]) === String(parentId)
                           );
                           return matchedParent?.[master.parentMasterConfig.nameKey] || "Not Found";
@@ -1527,7 +1519,7 @@ useEffect(() => {
                       </h3>
                     </div>
                   )}
-                  
+
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -1571,7 +1563,7 @@ useEffect(() => {
                           </select>
                         </div>
                       )}
-                    
+
                     {/* Rest of your form fields */}
                     <div className="mb-4">
                       <label
@@ -1652,13 +1644,12 @@ useEffect(() => {
                           id={master.payloadKey}
                           name={master.payloadKey}
                           type="text"
-                          className={`mt-1 block w-full border ${
-                            formData[master.payloadKey]?.length > 0 &&
-                            (formData[master.payloadKey]?.length < 3 ||
-                              formData[master.payloadKey]?.length > 50)
+                          className={`mt-1 block w-full border ${formData[master.payloadKey]?.length > 0 &&
+                              (formData[master.payloadKey]?.length < 3 ||
+                                formData[master.payloadKey]?.length > 50)
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+                            } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
                           value={formData[master.payloadKey] || ""}
                           onChange={handleChange}
                           required
@@ -1671,18 +1662,17 @@ useEffect(() => {
                       {master.title !== "Email Template" &&
                         formData[master.payloadKey]?.length > 0 && (
                           <p
-                            className={`mt-1 text-xs ${
-                              formData[master.payloadKey]?.length < 3 ||
-                              formData[master.payloadKey]?.length > 50
+                            className={`mt-1 text-xs ${formData[master.payloadKey]?.length < 3 ||
+                                formData[master.payloadKey]?.length > 50
                                 ? "text-red-600"
                                 : "text-green-600"
-                            }`}
+                              }`}
                           >
                             {formData[master.payloadKey]?.length < 3
                               ? "Minimum 3 characters required"
                               : formData[master.payloadKey]?.length > 50
-                              ? "Maximum 50 characters exceeded"
-                              : "Valid length"}
+                                ? "Maximum 50 characters exceeded"
+                                : "Valid length"}
                           </p>
                         )}
                     </div>
@@ -1704,7 +1694,7 @@ useEffect(() => {
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             value={
                               formData.orderId !== undefined &&
-                              formData.orderId !== null
+                                formData.orderId !== null
                                 ? formData.orderId
                                 : ""
                             }
@@ -1720,7 +1710,7 @@ useEffect(() => {
                           master.isHierarchical &&
                           master.parentMasterConfig &&
                           field ===
-                            (master.parentMasterConfig.formFieldKey || "parentId")
+                          (master.parentMasterConfig.formFieldKey || "parentId")
                         ) {
                           return null;
                         }
@@ -1748,7 +1738,7 @@ useEffect(() => {
                                     className="mt-1 mb-4"
                                     modules={modules}
                                     formats={formats}
-                                    style={{ height: '100%' }} 
+                                    style={{ height: '100%' }}
                                   />
                                   <style>{`
                                     .ql-editor {
@@ -1790,18 +1780,18 @@ useEffect(() => {
                       )}
                       {(!isLabelMaster ||
                         (isLabelMaster && areLabelFieldsEmpty)) && (
-                        <button
-                          type="submit"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                          disabled={isSaving}
-                        >
-                          {isSaving
-                            ? "Saving..."
-                            : selectedItemForEdit
-                            ? "Update"
-                            : "Add"}
-                        </button>
-                      )}
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            disabled={isSaving}
+                          >
+                            {isSaving
+                              ? "Saving..."
+                              : selectedItemForEdit
+                                ? "Update"
+                                : "Add"}
+                          </button>
+                        )}
                     </div>
                   </form>
                 </div>

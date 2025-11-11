@@ -1,95 +1,18 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ENDPOINTS } from "../../../api/constraints";
-import { jwtDecode } from "jwt-decode";
+import { useState,  useMemo} from "react";
+
 import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
-export default function LeadsTable() {
+export default function LeadsTable({leadsData, subordinatesData, loading, error}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [leadsData, setLeadsData] = useState([]);
-  const [subordinatesData, setSubordinatesData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentToken, setCurrentToken] = useState(null);
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedTab, setSelectedTab] = useState("active"); 
   const leadsPerPage = 8;
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let extractedUserId = null;
-    let tokenFromStorage = null;
-
-    try {
-      tokenFromStorage = localStorage.getItem('token');
-      if (tokenFromStorage) {
-        const decodedToken = jwtDecode(tokenFromStorage);
-        extractedUserId = decodedToken.user_id;
-        if (!extractedUserId) {
-          throw new Error("User ID (user_id) not found in decoded token payload.");
-        }
-      } else {
-        throw new Error("Authentication token not found in local storage. Please log in.");
-      }
-    } catch (e) {
-      console.error("Error retrieving or decoding token in LeadsTable:", e);
-      setError(`Authentication error: ${e.message}`);
-      setLoading(false);
-      return;
-    }
-
-    if (extractedUserId && tokenFromStorage) {
-      setCurrentUserId(extractedUserId);
-      setCurrentToken(tokenFromStorage);
-    } else {
-      setError("Failed to obtain valid user ID or authentication token.");
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchLeadsAndSubordinates = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${ENDPOINTS.TEAM_LEAD}/${currentUserId}`, {
-        method: "GET",
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
-      }
-      const result = await response.json();
-
-      setLeadsData(result.details?.lead || []);
-      setSubordinatesData(result.details?.subordinates || []);
-
-    } catch (err) {
-      console.error("Error fetching leads and subordinates:", err);
-      setError(`Failed to fetch data: ${err.message}. Please try again later.`);
-      setLeadsData([]);
-      setSubordinatesData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUserId, currentToken]);
-
-  useEffect(() => {
-    fetchLeadsAndSubordinates();
-  }, [fetchLeadsAndSubordinates]);
 
   const activeSubordinatesMap = useMemo(() => {
     const map = new Map();

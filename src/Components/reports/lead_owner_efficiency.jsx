@@ -145,7 +145,7 @@ export default function LeadOwnerEfficiency() {
       const params = {};
       if (dateFilterFrom) params.fromDate = dateFilterFrom;
       if (dateFilterTo) params.toDate = dateFilterTo;
-
+      if(dateFilterFrom && dateFilterTo){ 
       const response = await axios.get(
         `${ENDPOINTS.LEAD_OWNER_FIRST_RES}/${company_id}`,
         {
@@ -165,6 +165,7 @@ export default function LeadOwnerEfficiency() {
 
       setChartData(formattedChartData);
       setCurrentPage(1); // Reset to first page on new data fetch
+    }
     } catch (err) {
       console.error('Error fetching first response report:', err.message);
       // Handle error state if necessary (e.g., show a message to the user)

@@ -1,44 +1,31 @@
 
-import React, { useEffect, useState } from "react";
+import  {  useEffect, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend,} from "chart.js";
 import { Pie } from "react-chartjs-2"; 
-import { ENDPOINTS } from "../../../api/constraints";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const CityLeadsAnalytics = () => {
+const CityLeadsAnalytics = (props) => {
   const [data, setData] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(ENDPOINTS.TERRITORY_LEADS, {
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch territory leads data: ${response.statusText}`);
-        }
-        const responseData = await response.json();
 
+    useEffect(()=>{
+        //log the count to check 
+        console.log("City Leads API Response:");
         const leadsByCity = {};
-        const conversionData = responseData.data.conversionPerTerritory;
+        //PASS THE PROP DATA
+        const conversionData = props.conversionPerTerritory;
+        console.log("Conversion Data:", conversionData);
         if (conversionData) {
           for (const city in conversionData) {
             leadsByCity[city] = conversionData[city].total;
           }
         }
-
+        //set the data 
         setData(leadsByCity);
-      } catch (err) {
-        console.error("Error fetching city leads data:", err);
-      }
-    };
-    fetchData();
-  }, []);
+    },[ props.conversionPerTerritory])
+
+      
 
   if (!data) {
     return (

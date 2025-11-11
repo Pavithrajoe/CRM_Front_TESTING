@@ -16,6 +16,8 @@ import { TabProvider } from "./context/TabContext";
 import { UserAccessProvider } from "./context/UserAccessContext.jsx";
 import ModuleControll from "./context/moduleControll.jsx";
 import UserAttributes from "./pages/userPage/UserAttributes.jsx";
+import { CompanyProvider } from "./context/companyContext.jsx";
+
 
 // All your other imports...
 import NotificationPage from "./pages/notification";
@@ -69,8 +71,8 @@ import GeneratePoster from "./Components/Tools/Poster/GeneratePoster.jsx";
 import SupportSettings from "./pages/settings/supportSettings";
 import SmtpSettings from "./pages/settings/smtpsettings";
 import LableMaster from './Components/settings/lableMaster';
-import BulkMailSender from "./Components/bulkMail/BulkMailSender.jsx";
-import BulkMailStatus from "./Components/bulkMail/BulkMailStatus.jsx";
+import BulkMailSender from "./Components/bulkMail/bulkMailSender.jsx";
+import BulkMailStatus from "./Components/bulkMail/bulkMailStatus.jsx";
 import UserLead from "./pages/userPage/userLead.jsx";
 import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
@@ -80,6 +82,8 @@ import RecurringClientAnalytics from "./Components/reports/RecurringClientAnalyt
 import { ModuleProvider } from "./context/ModuleContext.jsx";
 import { SettingsProvider } from "./context/companySettingsContext.jsx"
 
+import { GlobeUserProvider } from "./context/userContex.jsx";
+import { DemoSessionProvider } from "./context/demo_session_session_context.jsx";
 function App() {
   return (
     <PopupProvider>
@@ -91,6 +95,9 @@ function App() {
                     <SettingsProvider>
 
 
+            <GlobeUserProvider>
+            <CompanyProvider>
+              <DemoSessionProvider>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
@@ -169,13 +176,19 @@ function App() {
 
 
                   </Route>
+
                 </Route>
               {/* </Route> */}
             </Routes>
-            </SettingsProvider>
-                </ModuleProvider>
+            
 
-             </UserAccessProvider>
+            
+            </DemoSessionProvider>
+            </CompanyProvider>
+            </GlobeUserProvider>
+            </SettingsProvider>
+              </ModuleProvider>
+            </UserAccessProvider>
           </UserProvider>
         </TabProvider>
       </ToastProvider>

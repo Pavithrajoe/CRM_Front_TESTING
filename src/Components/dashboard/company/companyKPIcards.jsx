@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const CompanyKPICards = ({ data }) => {
     const navigate = useNavigate();
+    
     const kpiData = data || {}; 
 
     const handleTotalLeadClick = () => {
@@ -65,4 +66,3 @@ const CompanyKPICards = ({ data }) => {
 };
 
 export default CompanyKPICards;
-

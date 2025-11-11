@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo ,useContext } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom'; 
 import { ENDPOINTS } from '../../src/api/constraints';
 import ProfileHeader from '../Components/common/ProfileHeader';
@@ -12,6 +12,7 @@ import UserLead from '../pages/userPage/userLead'
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 import UserDashboard from './userPage/userOverview'; 
 import UserAttributes from './userPage/UserAttributes';
+import { GlobeUserProvider, GlobUserContext } from '../context/userContex';
 import {
   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
   FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, } from 'react-icons/fa';
@@ -90,59 +91,38 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   </div>
 );
 
-const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
-  const { userId } = useParams();
-  const location = useLocation(); 
-  const navigate = useNavigate(); 
-  const token = localStorage.getItem('token'); 
-
-  //  active tab from URL r default to 'Overview'
-  const getActiveTabFromUrl = () => {
-    const params = new URLSearchParams(location.search);
-    return params.get('tab') || 'Overview';
-  };
-
-  const [activeTab, setActiveTabState] = useState(getActiveTabFromUrl());
-
-  // Update component state when URL changes (back button clicks)
-  useEffect(() => {
-    setActiveTabState(getActiveTabFromUrl());
-  }, [location.search]);
-
-  // Handler to change tab and update URL
-  const setActiveTab = useCallback((newTab) => {
-    const params = new URLSearchParams(location.search);
-    params.set('tab', newTab);
-    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-  }, [location.search, location.pathname, navigate]);
-
-  const [email, setEmail] = useState('');
-  const [user, setUser] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    cFull_name: '',
-    cUser_name: '',
-    cEmail: '',
-    cjob_title: '',
-    cRole_name:'',
-    i_bPhone_no: '', 
-    iphone_no: '',
-    bactive: true,
-    mail_access: false,
-    phone_access: false,
-    website_access: false,
-    whatsapp_access: false
-  });
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [reportToUsers, setReportToUsers] = useState([]);
-  const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDCRMForm, setShowDCRMForm] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmModalMessage, setConfirmModalMessage] = useState('');
-  const [confirmModalAction, setConfirmModalAction] = useState(null);
-  const [phoneActive, setPhoneActive] = useState(false);
+  const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
+    const { user } = useContext (GlobUserContext);
+    const { userId } = useParams();
+    const token = localStorage.getItem('token'); 
+    const [email, setEmail] = useState('');
+  const [users, setUsers] = useState(null);
+    const [activeTab, setActiveTab] = useState('Overview');
+    const [showForm, setShowForm] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+      cFull_name: '',
+      cUser_name: '',
+      cEmail: '',
+      cjob_title: '',
+      cRole_name:'',
+      i_bPhone_no: '', 
+      iphone_no: '',
+      bactive: true,
+      mail_access: false,
+      phone_access: false,
+      website_access: false,
+      whatsapp_access: false
+    });
+    const [errorMessage, setErrorMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [reportToUsers, setReportToUsers] = useState([]);
+    const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showDCRMForm, setShowDCRMForm] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmModalMessage, setConfirmModalMessage] = useState('');
+    const [confirmModalAction, setConfirmModalAction] = useState(null);
+    const [phoneActive, setPhoneActive] = useState(false);
 
   // Define tabs conditionally based on DCRM status
   const tabs = useMemo(() => {
@@ -212,7 +192,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
         if (!response.ok) throw new Error(data.message);
        
         // Ensure that the user state is updated with the fetched data
-        setUser(data);
+        setUsers(data);
 
         setEditFormData({
           cFull_name: data.cFull_name || '',
@@ -251,35 +231,18 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
 
   // Fetch users for 'Reports To'
   useEffect(() => {
-    const fetchAllUsers = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(ENDPOINTS.USER_GET, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.message);
-        const filtered = data.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
-        setReportToUsers(filtered);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchAllUsers();
+    const filtered = user.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
+    setReportToUsers(filtered);
   }, [userId]);
 
   // Handler for the new 'User Status' toggle
   const handleToggleUserActive = useCallback(() => {
-    if (!user || typeof user.bactive === 'undefined') {
+    if (!users || typeof users.bactive === 'undefined') {
       console.warn("User data or bactive status not available for toggle.");
       return;
     }
 
-    const newStatus = !user.bactive;
+    const newStatus = !users.bactive;
     const message = newStatus
       ? "Are you sure you want to activate this user's account?"
       : "Are you sure you want to deactivate this user's account? They will no longer be able to log in.";
@@ -297,7 +260,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
           body: JSON.stringify({ bactive: newStatus }),
         });
         if (!res.ok) throw new Error('Failed to update user status');
-        setUser(prev => ({ ...prev, bactive: newStatus }));
+        setUsers(prev => ({ ...prev, bactive: newStatus }));
         showAppMessage(`User account successfully set to ${newStatus ? 'active' : 'inactive'}!`, 'success');
       } catch (err) {
         console.error(err);
@@ -307,11 +270,11 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
       }
     });
     setShowConfirmModal(true);
-  }, [user, userId]);
+  }, [users, userId]);
 
   const handleToggleDCRM = useCallback(() => {
-    if (!user) return;
-    if (user.DCRM_enabled) {
+    if (!users) return;
+    if (users.DCRM_enabled) {
       setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
       setConfirmModalAction(() => async () => {
         try {
@@ -324,7 +287,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
           });
 
           if (!response.ok) throw new Error('Failed to disable DCRM');
-          setUser(prev => ({ ...prev, DCRM_enabled: false }));
+          setUsers(prev => ({ ...prev, DCRM_enabled: false }));
           showAppMessage('DCRM disabled successfully!', 'success');
         } catch (err) {
           console.error(err);
@@ -337,10 +300,10 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
     } else {
       setShowDCRMForm(true);
     }
-  }, [user, userId]);
+  }, [users, userId]);
 
   const handleDCRMSuccess = useCallback(() => {
-    setUser(prev => ({ ...prev, DCRM_enabled: true }));
+    setUsers(prev => ({ ...prev, DCRM_enabled: true }));
     setShowDCRMForm(false);
     showAppMessage('DCRM user created and settings configured successfully!', 'success');
   }, []);
@@ -383,7 +346,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
 
       if (!res.ok) throw new Error(updated.message || "Failed to update profile");
 
-      setUser(updated);
+      setUsers(updated);
       setShowForm(false);
       showAppMessage("Profile updated successfully!", "success");
     } catch (err) {
@@ -396,18 +359,18 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
 
   const handleFormClose = () => {
     setEditFormData({
-      cFull_name: user.cFull_name || '',
-      cUser_name: user.cUser_name || '',
-      cEmail: user.cEmail || '',
-      cjob_title: user.cjob_title || '',
-      reports_to: user.reports_to || '',
-      i_bPhone_no: user.c_bPhone_no || '', 
-      irole_id: user.irole_id || '',
-      iphone_no: user.iphone_no || '',
-      mail_access: user.mail_access || false,
-      phone_access: user.phone_access || false,
-      website_access: user.website_access || false,
-      whatsapp_access: user.whatsapp_access || false
+      cFull_name: users.cFull_name || '',
+      cUser_name: users.cUser_name || '',
+      cEmail: users.cEmail || '',
+      cjob_title: users.cjob_title || '',
+      reports_to: users.reports_to || '',
+      i_bPhone_no: users.c_bPhone_no || '', 
+      irole_id: users.irole_id || '',
+      iphone_no: users.iphone_no || '',
+      mail_access: users.mail_access || false,
+      phone_access: users.phone_access || false,
+      website_access: users.website_access || false,
+      whatsapp_access: users.whatsapp_access || false
     });
     setShowForm(false);
   };
@@ -427,7 +390,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
   }, [settingsData]);
   
 
-  if (!user) {
+  if (!users) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -449,17 +412,17 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
             <div className="flex items-center gap-4">
               <FaUserCircle size={60} className="text-blue-600" />
               <div className="flex-grow">
-                <h3 className="text-lg font-semibold text-gray-800">{user.cFull_name}</h3>
-                <p className="text-sm text-gray-600">@{user.cUser_name}</p>
+                <h3 className="text-lg font-semibold text-gray-800">{users.cFull_name}</h3>
+                <p className="text-sm text-gray-600">@{users.cUser_name}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2"> 
-                  {user.bactive !== undefined && (
+                  {users.bactive !== undefined && (
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize inline-block ${
-                      user.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
+                      users.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {users.bactive ? 'Active' : 'Disabled'}{users.role?.cRole_name ? ` - ${users.role.cRole_name}` : ''}
                     </span>
                   )}
 
-                  {user.DCRM_enabled && (
+                  {users.DCRM_enabled && (
                     <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
                       DCRM Enabled
                     </span>
@@ -674,7 +637,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
                   label="User Status"
-                  isChecked={user.bactive}
+                  isChecked={users.bactive}
                   onToggle={handleToggleUserActive}
                 />
                 <p className="text-xs text-gray-500 mt-2">Toggle to activate or deactivate this user's account.</p>
@@ -683,7 +646,7 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
                   label="DCRM Enable"
-                  isChecked={user.DCRM_enabled || false}
+                  isChecked={users.DCRM_enabled || false}
                   onToggle={handleToggleDCRM}
                 />
                 <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
@@ -708,10 +671,10 @@ const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
       {showDCRMForm && (
         <DCRMSettingsForm
           userId={userId}
-          userProfile={user}
+          userProfile={users}
           onClose={() => setShowDCRMForm(false)}
           onSuccess={(createdUser) => {
-            setUser(prev => ({ ...prev, DCRM_enabled: true }));
+            setUsers(prev => ({ ...prev, DCRM_enabled: true }));
             setShowDCRMForm(false);
             showAppMessage('DCRM user created successfully!', 'success');
           }}

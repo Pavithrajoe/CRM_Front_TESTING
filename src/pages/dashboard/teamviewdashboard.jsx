@@ -1,25 +1,85 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import ProfileHeader from "@/Components/common/ProfileHeader";
 import TeamleadHeader from "@/Components/dashboard/teamlead/tlHeader";
 import RemindersCard from "@/Components/dashboard/teamlead/teamremindercard";
 import LeadsTable from "@/Components/dashboard/teamlead/teamleadcard";
 import LeadManagementCard from "@/Components/dashboard/teamlead/teamviewbarchart";
 import TeamKPIStats from "@/Components/dashboard/teamlead/teamKPIcard";
+import { ENDPOINTS } from "../../api/constraints";
+import { jwtDecode } from "jwt-decode";
 
-const TeamviewDashboard = ({
-  dashboardData,    
-  reminders,   
-  loading,           
-  error          
-}) => {
-  const leads = dashboardData?.details?.leads || [];
-  const teamMembers = dashboardData?.details?.subordinateNames || [];
-  const leadCount = leads.filter(item => item.bisConverted === false).length;
-  const leadData = leads.filter(item => item.bisConverted === false);
-  const dealCount = leads.filter(item => item.bisConverted === true).length;
-  const hotCount = leads.filter(lead => lead.lead_potential?.clead_name === "HOT").length;
-  const coldCount = leads.filter(lead => lead.lead_potential?.clead_name === "COLD").length;
-  const reminderMessage = reminders?.message || []; 
+
+const TeamviewDashboard = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentToken, setCurrentToken] = useState(null);
+  const [teamDashboardData, setTeamDashboardData] = useState();
+
+  // To fetch the current user id and token
+  useEffect(() => {
+    try {
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token not found.");
+      const decoded = jwtDecode(token);
+      if (!decoded.user_id) throw new Error("User ID missing in token.");
+      setCurrentUserId(decoded.user_id);
+      setCurrentToken(token);
+    } catch (e) {
+      setError(`Authentication error: ${e.message}`);
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchTeamDashboardData = useCallback(async () => {
+    if (!currentUserId || !currentToken) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${ENDPOINTS.MANAGER_REMINDER}/${currentUserId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok)
+        throw new Error((await response.json()).message || "API error");
+
+      const result = await response.json();
+      console.log("the response data are:", result)
+
+      setTeamDashboardData(result?.details)
+
+    } catch (err) {
+      setError(`Failed to fetch data: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId, currentToken]);
+
+  useEffect(() => {
+    fetchTeamDashboardData();
+  }, [fetchTeamDashboardData]);
+
+  console.log("The response data areeeee:", teamDashboardData);
+
+  const leads = teamDashboardData?.lead || [];
+  const teamMembers = teamDashboardData?.subordinates || [];
+  const dealData = teamDashboardData?.deal || [];
+  const childSubordinates = teamDashboardData?.childSubordinateIds || [];
+  const leadData = leads.filter((item) => item.bisConverted === false);
+  const userReminders = teamDashboardData?.usersReminder || [];
+   const activeReminders = userReminders.filter(
+        (reminder) => reminder.bactive === true
+      );
   if (loading) {
     return (
       <main className="w-full flex-1 p-6  mt-[0px] min-h-screen flex items-center justify-center">
@@ -32,7 +92,9 @@ const TeamviewDashboard = ({
     return (
       <main className="w-full flex-1 p-6 mt-[0px] min-h-screen flex items-center justify-center">
         <p className="text-lg text-red-600">Error: {error}</p>
-        <p className="text-sm text-gray-500 mt-2">Please try logging in again or contact support if the issue persists.</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Please try logging in again or contact support if the issue persists.
+        </p>
       </main>
     );
   }
@@ -45,16 +107,17 @@ const TeamviewDashboard = ({
       </div>
 
       {/* Dashboard Content */}
+
+      {console.log("The dashboard data are:", )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LeadManagementCard leads={leadData} team_members={teamMembers} />
+        <LeadManagementCard leads={leadData} team_members={teamMembers}  childSubordinates = {childSubordinates}  loading = {loading} error = {error} />
         <TeamKPIStats
-          leadCount={leadCount}
-          dealCount={dealCount}
-          hotLeadCount={hotCount}
-          coldLeadCount={coldCount}
+          leadsArray={leads}
+          subordinatesArray={teamMembers}
+          dealCountForWon={dealData}
         />
-        <LeadsTable data={leadData} />
-        <RemindersCard reminder_data={reminderMessage} />
+        <LeadsTable leadsData={leadData} subordinatesData = {teamMembers} loading = {loading} error = {error}  />
+        <RemindersCard remindersData={activeReminders} loading = {loading} error = {error} />
       </div>
     </main>
   );

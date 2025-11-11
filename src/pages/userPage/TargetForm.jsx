@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { X } from "lucide-react";
 import { ENDPOINTS} from '../../api/constraints'; // Adjust the import path as necessary
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -6,11 +6,13 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { format } from 'date-fns';
+import { GlobUserContext } from '../../context/userContex';
 
 export default function SalesForm({userId, 
   defaultFromDate, 
   defaultToDate, 
   onClose }) {
+    const { user } = useContext(GlobUserContext);
 
   const token = localStorage.getItem("token");
 
@@ -54,19 +56,19 @@ export default function SalesForm({userId,
     }
 
     try {
-      const response = await fetch(ENDPOINTS.USER_GET, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await fetch(ENDPOINTS.USER_GET, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch users.");
-      }
+      // if (!response.ok) {
+      //   throw new Error("Failed to fetch users.");
+      // }
 
-      const data = await response.json();
-      const filtered = data.filter(user =>
+      // const data = await response.json();
+      const filtered = user.filter(user =>
         user.iCompany_id === companyId && (user.bactive === true || user.bactive === 1 || user.bactive === "true")
       );
 

@@ -1,22 +1,26 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback , useRef, useContext, useMemo } from "react";
 import {
   FaCrown,
   FaEnvelope,
   FaCity,
   FaTh,
   FaBars,
-  FaSpinner, // Added for loading indicator
+  FaSpinner, 
 } from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
 import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../../context/UserAccessContext";
+import { GlobUserContext } from "../../context/userContex";
+
 
 
 const UserPage = () => {
   const { userModules } = useUserAccess();
+const { user } = useContext (GlobUserContext);
 
+  const effectRan = useRef(false)
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,48 +95,28 @@ const dynamicUserCreate = useMemo(() => {
   // Function to navigate to the user creation page
   const createUser = () => navigate('/users');
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const companyId = getCompanyId();
-    if (!companyId) {
-      console.warn("No company ID found in token. Cannot fetch users.");
-      setError("Authentication error: No company ID found.");
-      setLoading(false);
-      return;
-    }
+const fetching = useRef(false);
 
-    try {
-      const response = await fetch(ENDPOINTS.USER_GET, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to fetch users: ${response.status} ${response.statusText} - ${errorText}`
-        );
-      }
 
-      const data = await response.json();
-      const companyUsers = data.filter((user) => user.iCompany_id === companyId);
-      setUsers(companyUsers);
-    } catch (err) {
-      console.error("Error fetching users:", err);
-      setError("Failed to load users. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUsers();
-    // Set the user's role on component mount.
+ useEffect(() => { 
+  console.log('UserPage mounted or fetchUsers changed');
+  
+  if (effectRan.current === false) {
+    // fetchUsers();
+    setUsers(user);
     setUserRole(getUserRole());
-  }, [fetchUsers]);
+        setLoading(false); // ✅ <-- IMPORTANT
+
+    effectRan.current = true;  // <-- Important: Make sure this line remains
+  }
+
+  return () => {
+    effectRan.current = false; // Reset on unmount
+  }
+}, []);
+
+
 
   // Effect to filter users based on search term and active/inactive tab
   useEffect(() => {

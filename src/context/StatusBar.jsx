@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
+import { GlobUserContext } from './userContex';
 import {
   Dialog,
   DialogTitle,
@@ -30,10 +31,11 @@ const MAX_NOTES_LENGTH = 200;
 const MAX_PLACE_LENGTH = 200;
 const MAX_PROPOSAL_NOTES_LENGTH = 500;
 
-const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
+const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
+  const { user } = useContext(GlobUserContext);
   const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
-  const [statusRemarks, setStatusRemarks] = useState([]);
+  const [statusRemark, setStatusRemark] = useState([]);
   const [error, setError] = useState(null);
   const [stageStatuses, setStageStatuses] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
@@ -199,6 +201,115 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     setDebugInfo(JSON.stringify(debugData, null, 2));
   };
 
+  // FIXED: Add fetchStages call
+  const fetchStages = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch stages');
+      const data = await response.json();
+      
+      console.log('Raw stages API response:', data);
+      
+      const statusMap = {};
+      const formattedStages = Array.isArray(data.response)
+        ? data.response
+            .map(item => {
+              console.log('Processing stage item:', item);
+              // More flexible active status mapping
+              const isActive = item.bactive !== false && 
+                              item.is_active !== false && 
+                              item.active !== false;
+              
+              statusMap[item.ilead_status_id] = isActive;
+              return {
+                id: item.ilead_status_id,
+                name: item.clead_name,
+                order: item.orderId || 9999,
+                bactive: isActive, // Use the calculated active status
+                rawData: item, // Keep raw data for debugging
+              };
+            })
+            .sort((a, b) => a.order - b.order)
+        : [];
+
+      console.log('Formatted stages:', formattedStages);
+      console.log('Stage status map:', statusMap);
+
+      setStages(formattedStages);
+      setStageStatuses(statusMap);
+    } catch (err) {
+      setError(err.message || 'Unable to fetch stage data');
+    }
+  };
+
+  // FIXED: Uncommented and fixed fetchUsers
+  const fetchUsers = async () => {
+    try {
+      const companyUsersList = user.filter(user => (user.bactive === true || user.bactive === "true"));
+      setUsers(companyUsersList);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchDemoSession = async (sessions) => {
+    try {
+      await setDemoSessions(sessions);
+    } catch (error) {
+      console.error('Error fetching demo sessions:', error.message);
+    }
+  };
+
+  const fetchProposalSendModes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch proposal send modes');
+      const data = await response.json();
+      
+      const modes = data?.data?.data || [];
+      setProposalSendModes(modes);
+    } catch (err) {
+      console.error('Error fetching proposal send modes:', err.message);
+      setProposalSendModes([]);
+    }
+  };
+
+  // FIXED: Added proper useEffect for data fetching
+  useEffect(() => {
+    fetchStages(); // This was missing!
+    fetchUsers();
+    fetchProposalSendModes();
+  }, []);
+
+  // FIXED: Improved current stage index setting
+  useEffect(() => {
+    if (stages.length > 0 && leadData && leadData.ileadstatus_id) {
+      const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
+      console.log('Setting current stage index:', {
+        stagesCount: stages.length,
+        leadStatusId: leadData.ileadstatus_id,
+        foundIndex: index,
+        stages: stages.map(s => ({ id: s.id, name: s.name }))
+      });
+      if (index !== -1) {
+        setCurrentStageIndex(index);
+      }
+    }
+  }, [stages, leadData]);
+
+  // Rest of your validation functions remain the same...
   const validateDemoSession = () => {
     let isValid = true;
     const newErrors = {
@@ -320,33 +431,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     return isValid;
   };
 
-  const fetchProposalSendModes = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch proposal send modes');
-      const data = await response.json();
-      
-      const modes = data?.data?.data || [];
-      setProposalSendModes(modes);
-    } catch (err) {
-      console.error('Error fetching proposal send modes:', err.message);
-      setProposalSendModes([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchStages();
-    fetchUsers();
-    fetchDemoSessions();
-    fetchProposalSendModes(); 
-  }, []);
-
   const validateProposal = () => {
     let isValid = true;
     const newErrors = {
@@ -386,97 +470,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     return isValid;
   };
 
-  const fetchStages = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch stages');
-      const data = await response.json();
-      
-      console.log('Raw stages API response:', data);
-      
-      const statusMap = {};
-      const formattedStages = Array.isArray(data.response)
-        ? data.response
-            .map(item => {
-              console.log('Processing stage item:', item);
-              // More flexible active status mapping
-              const isActive = item.bactive !== false && 
-                              item.is_active !== false && 
-                              item.active !== false;
-              
-              statusMap[item.ilead_status_id] = isActive;
-              return {
-                id: item.ilead_status_id,
-                name: item.clead_name,
-                order: item.orderId || 9999,
-                bactive: isActive, // Use the calculated active status
-                rawData: item, // Keep raw data for debugging
-              };
-            })
-            .sort((a, b) => a.order - b.order)
-        : [];
-
-      console.log('Formatted stages:', formattedStages);
-      console.log('Stage status map:', statusMap);
-
-      setStages(formattedStages);
-      setStageStatuses(statusMap);
-    } catch (err) {
-      setError(err.message || 'Unable to fetch stage data');
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${ENDPOINTS.USERS}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
-    }
-  };
-
-  const fetchDemoSessions = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${ENDPOINTS.DEMO_SESSION}?leadId=${leadId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setDemoSessions(response.data.Message || []);
-    } catch (error) {
-      console.error('Error fetching demo sessions:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    if (stages.length && leadData) {
-      const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
-      console.log('Setting current stage index:', {
-        stagesCount: stages.length,
-        leadStatusId: leadData.ileadstatus_id,
-        foundIndex: index,
-        stages: stages.map(s => ({ id: s.id, name: s.name }))
-      });
-      if (index !== -1) setCurrentStageIndex(index);
-    }
-  }, [stages, leadData]);
-
   const formatDateOnly = dateString => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -486,7 +479,17 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     return `${day}/${month}/${year}`;
   };
 
+  // FIXED: Improved handleStageClick function
   const handleStageClick = (clickedIndex, statusId) => {
+    console.log('=== STAGE CLICKED ===', {
+      clickedIndex,
+      statusId,
+      stageName: stages[clickedIndex]?.name,
+      currentStageIndex,
+      isLost,
+      isWon
+    });
+
     logStageClickDebug(clickedIndex, statusId);
     
     const stage = stages[clickedIndex];
@@ -506,10 +509,15 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       return;
     }
 
-    const stageName = stages[clickedIndex]?.name;
+    const stageName = stages[clickedIndex]?.name?.toLowerCase() || '';
     setDialogStageIndex(clickedIndex);
+    setRemarkStageId(statusId);
 
-    if (stageName?.toLowerCase().includes('demo')) {
+    console.log('Stage name for form detection:', stageName);
+
+    // FIXED: Better stage name detection
+    if (stageName.includes('demo') || stageName.includes('session')) {
+      console.log('Opening Demo Session Dialog');
       setDialogValue({
         demoSessionType: '',
         demoSessionStartTime: new Date(),
@@ -532,7 +540,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       return;
     }
 
-    if (stageName?.toLowerCase() === 'proposal') {
+    if (stageName.includes('proposal')) {
+      console.log('Opening Proposal Dialog');
       setProposalDialogValue({
         proposalSendModeId: null,
         preparedBy: null,
@@ -551,14 +560,21 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       return;
     }
 
-    if (mandatoryInputStages.map(i => i.toLowerCase()).includes(stageName?.toLowerCase())) {
+    // FIXED: Better mandatory stages detection
+    const isMandatoryStage = mandatoryInputStages.some(mandatoryStage => 
+      stageName.includes(mandatoryStage.toLowerCase())
+    );
+
+    if (isMandatoryStage) {
+      console.log('Opening Amount Dialog for mandatory stage:', stageName);
       setDialogValue('');
       setDialogErrors({ ...dialogErrors, amount: '' });
       setOpenDialog(true);
       return;
     }
 
-    setRemarkStageId(statusId);
+    // Default: Open remark dialog for other stages
+    console.log('Opening Remark Dialog for stage:', stageName);
     setRemarkData({ 
       remark: '', 
       projectValue: '',
@@ -566,6 +582,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       assignToMe: false,
       notifiedTo: '', 
       notifyToMe: false,
+      dueDate: '',
     });
     setRemarkErrors({ remark: '', projectValue: '' });
     setShowRemarkDialog(true);
@@ -595,7 +612,8 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       });
 
       showToast('success', 'Proposal details saved!');
-      setRemarkStageId(statusId);
+      
+      // After proposal, open remark dialog
       setRemarkData({ 
         remark: '', 
         projectValue: '',
@@ -634,19 +652,24 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       }
+
+      showToast('success', `Status updated to ${stages[newIndex]?.name}`);
     } catch (e) {
       showToast('error', e.message || 'Error updating status');
     }
   };
 
+  // FIXED: Improved handleDialogSave for different dialog types
   const handleDialogSave = async () => {
     const token = localStorage.getItem('token');
     const userId = JSON.parse(localStorage.getItem('user'));
     const stageName = stages[dialogStageIndex]?.name;
     const statusId = stages[dialogStageIndex]?.id;
 
+    console.log('Saving dialog for stage:', stageName);
+
     try {
-      if (stageName?.toLowerCase().includes('demo')) {
+      if (stageName?.toLowerCase().includes('demo') || stageName?.toLowerCase().includes('session')) {
         if (!validateDemoSession()) return;
 
         const {
@@ -678,7 +701,22 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         });
 
         showToast('success', 'Demo session details saved!');
+        
+        // After demo session, open remark dialog
+        setRemarkData({ 
+          remark: '', 
+          projectValue: '',
+          assignedTo: '',
+          assignToMe: false,
+          notifiedTo: '',
+          notifyToMe: false,
+          dueDate: '',
+        });
+        setRemarkErrors({ remark: '', projectValue: '' });
+        setShowRemarkDialog(true);
+        
       } else {
+        // This is for amount-based stages (like Won)
         if (!validateAmount(dialogValue)) return;
 
         const amount = parseFloat(dialogValue);
@@ -697,19 +735,24 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         });
 
         showToast('success', `${stageName} details saved!`);
+        
+        // For amount stages, also open remark dialog
+        setRemarkData({ 
+          remark: '', 
+          projectValue: '',
+          assignedTo: '',
+          assignToMe: false,
+          notifiedTo: '',
+          notifyToMe: false,
+          dueDate: '',
+        });
+        setRemarkErrors({ remark: '', projectValue: '' });
+        setShowRemarkDialog(true);
       }
 
-      setRemarkStageId(statusId);
-      setRemarkData({ 
-        remark: '', 
-        projectValue: '',
-        assignedTo: '',
-        assignToMe: false
-      });
-      setRemarkErrors({ remark: '', projectValue: '' });
-      setShowRemarkDialog(true);
       setOpenDialog(false);
     } catch (e) {
+      console.error('Error saving dialog:', e);
       showToast('error', e?.response?.data?.message || e.message || 'Something went wrong');
     }
   };
@@ -783,12 +826,13 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
       }
   };
 
+  // FIXED: Improved handleRemarkSubmit to properly update stage
   const handleRemarkSubmit = async () => {
     if (!validateRemark()) return;
 
     const token = localStorage.getItem('token');
     const userId = JSON.parse(localStorage.getItem('user')); 
-    const leadDetails = { clead_name: 'Lead Name Example', ilead_id: parseInt(leadId) }; 
+    const leadDetails = leadData || { clead_name: 'Lead', ilead_id: parseInt(leadId) }; 
 
     const remarkPayload = {
         remark: remarkData.remark.trim(),
@@ -808,6 +852,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
         : null;
 
     try {
+        // Submit the remark
         await axios.post(ENDPOINTS.STATUS_REMARKS, remarkPayload, {
             headers: {
                 'Content-Type': 'application/json',
@@ -817,6 +862,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
 
         let assignmentSuccess = true;
 
+        // Handle assignment if needed
         if (remarkData.assignedTo) {
             try {
                 await axios.post(
@@ -841,22 +887,30 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
             }
         }
 
+        // Send notifications
         if (assignedUser || notifiedUser) {
             await sendAssignmentNotification(assignedUser, notifiedUser, leadDetails, token, userId);
         }
 
+        // Update the stage
+        const newIndex = stages.findIndex(s => s.id === remarkStageId);
+        if (newIndex !== -1) {
+            await updateStage(newIndex, remarkStageId);
+        }
+
+        // Show success message
         if (assignmentSuccess && (assignedUser || notifiedUser)) {
             showToast('success', 'Remark submitted, and lead assigned/notified!');
         } else if (assignmentSuccess) {
             showToast('success', 'Remark submitted!');
         }
 
-        const newIndex = stages.findIndex(s => s.id === remarkStageId);
-        await updateStage(newIndex, remarkStageId);
+        // Close the dialog
         setShowRemarkDialog(false);
         await getStatusRemarks();
 
     } catch (err) {
+        console.error('Error submitting remark:', err);
         const serverMsg = err.response?.data?.Message;
         const issues = Array.isArray(serverMsg?.issues)
             ? serverMsg.issues.join(', ')
@@ -866,154 +920,137 @@ const StatusBar = ({ leadId, leadData, isLost, isWon }) => {
     }
   };
 
-const getStatusRemarks = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${ENDPOINTS.STATUS_REMARKS}/${leadId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    console.log('=== DEBUG: Raw API Response ===', response.data);
-    
-    if (Array.isArray(response.data?.Response)) {
-      // Remove duplicates at the source before setting state
-      const uniqueRemarks = response.data.Response.filter((remark, index, self) => 
-        index === self.findIndex(r => 
-          r.ilead_status_remarks_id === remark.ilead_status_remarks_id
-        )
-      );
-      
-      console.log('=== DEBUG: Before setting state ===', {
-        originalCount: response.data.Response.length,
-        uniqueCount: uniqueRemarks.length,
-        duplicatesRemoved: response.data.Response.length - uniqueRemarks.length
-      });
-      
-      setStatusRemarks(uniqueRemarks);
-    }
-  } catch (e) {
-    console.error('Error fetching remarks:', e.message);
-  }
-};
+  const getStatusRemarks = async () => {
+    setStatusRemark(statusRemarks);
+  };
 
   useEffect(() => {
     getStatusRemarks();
-  }, []);
+  }, [statusRemarks]);
+
+  // Add this debug useEffect to check what's happening
+  useEffect(() => {
+    console.log('=== STATUS BAR DEBUG INFO ===');
+    console.log('Stages:', stages);
+    console.log('Current Stage Index:', currentStageIndex);
+    console.log('Lead Data:', leadData);
+    console.log('isLost:', isLost);
+    console.log('isWon:', isWon);
+    console.log('Users:', users);
+  }, [stages, currentStageIndex, leadData, isLost, isWon, users]);
 
   return (
-    <>
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <div className="w-11/12 md:w-5/6 lg:w-4/5 xl:w-[90%] mx-auto px-4 py-6">
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
-        {/* Debug Info Panel - Remove after fixing */}
-        {/* <div className="bg-yellow-50 border border-yellow-200 p-4 mb-4 rounded-lg">
-          <h4 className="font-bold text-yellow-800 mb-2">Debug Information:</h4>
-          <pre className="text-xs bg-white p-2 rounded border max-h-32 overflow-auto">
-            {debugInfo || 'Click on a stage to see debug info...'}
-          </pre>
-        </div> */}
+        {stages.length === 0 ? (
+          <div className="text-center text-gray-500">Loading stages...</div>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            {stages.map((stage, index) => {
+              const isCompleted = index < currentStageIndex;
+              const isActive = index === currentStageIndex;
+              const isClickable = index > currentStageIndex && !isLost && !isWon && isStageActive(stage);
+              const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
 
-        <div className="flex items-center justify-between w-full">
-          {stages.map((stage, index) => {
-            const isCompleted = index < currentStageIndex;
-            const isActive = index === currentStageIndex;
-            const isClickable = index > currentStageIndex && !isLost && !isWon && isStageActive(stage);
-            const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
+              console.log(`Stage ${stage.name}:`, {
+                index,
+                isCompleted,
+                isActive,
+                isClickable,
+                isStageActive: isStageActive(stage),
+                currentStageIndex
+              });
 
-            console.log(`Stage ${stage.name}:`, {
-              index,
-              isCompleted,
-              isActive,
-              isClickable,
-              isStageActive: isStageActive(stage),
-              currentStageIndex
-            });
-
-            return (
-              <React.Fragment key={stage.id}>
-                <div className="flex flex-col items-center flex-1">
-                  <div
-                    onClick={() => (isClickable ? handleStageClick(index, stage.id) : null)}
-                    className={`relative flex items-center justify-center w-8 h-8 rounded-full
-                      ${
-                        isCompleted
-                          ? 'bg-green-600 text-white'
+              return (
+                <React.Fragment key={stage.id}>
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      onClick={() => (isClickable ? handleStageClick(index, stage.id) : null)}
+                      className={`relative flex items-center justify-center w-8 h-8 rounded-full
+                        ${
+                          isCompleted
+                            ? 'bg-green-600 text-white cursor-default'
+                            : isActive
+                            ? 'bg-blue-600 text-white cursor-default'
+                            : isClickable
+                            ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
+                            : !isStageActive(stage)
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }
+                        transition-colors duration-200`}
+                      title={
+                        !isStageActive(stage)
+                          ? 'This status is inactive'
+                          : isClickable 
+                          ? `Click to move to ${stage.name}`
+                          : isCompleted
+                          ? `Completed: ${stage.name}`
                           : isActive
-                          ? 'bg-blue-600 text-white'
-                          : isClickable
-                          ? 'bg-gray-300 hover:bg-gray-400 cursor-pointer'
-                          : !isStageActive(stage)
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          ? `Current: ${stage.name}`
+                          : 'Cannot select this stage'
                       }
-                      transition-colors duration-200`}
-                    title={
-                      !isStageActive(stage)
-                        ? 'This status is inactive'
-                        : matchedRemark
-                        ? matchedRemark.lead_status_remarks
-                        : isClickable 
-                        ? `Click to move to ${stage.name}`
-                        : 'Cannot select this stage'
-                    }
-                  >
-                    {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
-                  </div>
-                  <span
-                    className={`mt-2 text-sm text-center ${
-                      !isStageActive(stage) ? 'text-gray-400' : ''
-                    }`}
-                  >
-                    {stage.name}
-                    {!isStageActive(stage) && (
-                      <span className="block text-xs text-red-500">(Inactive)</span>
-                    )}
-                  </span>
-                </div>
-                {index < stages.length - 1 && (
-                  <div
-                    className={`flex-1 h-1 mx-2 -mt-12 z-0
-                      ${
-                        isCompleted
-                          ? 'border-t-2 border-dotted border-green-600'
-                          : 'border-t-2 border-dotted border-gray-300'
+                    >
+                      {isCompleted ? <CheckCircle size={20} /> : <Circle size={20} />}
+                    </div>
+                    <span
+                      className={`mt-2 text-sm text-center max-w-[100px] break-words ${
+                        !isStageActive(stage) ? 'text-gray-400' : ''
                       }`}
-                  ></div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-
-        {isWon && (
-        <div className="flex justify-center mt-4">
-          <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5" 
-              viewBox="0 0 20 20" 
-              fill="currentColor"
-            >
-              <path 
-                fillRule="evenodd" 
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                clipRule="evenodd" 
-              />
-            </svg>
-            <span className="font-bold tracking-wide uppercase text-sm">Lead Won</span>
+                    >
+                      {stage.name}
+                      {!isStageActive(stage) && (
+                        <span className="block text-xs text-red-500">(Inactive)</span>
+                      )}
+                    </span>
+                  </div>
+                  {index < stages.length - 1 && (
+                    <div
+                      className={`flex-1 h-1 mx-2 -mt-12 z-0
+                        ${
+                          isCompleted
+                            ? 'border-t-2 border-dotted border-green-600'
+                            : 'border-t-2 border-dotted border-gray-300'
+                        }`}
+                    ></div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
-        </div>
         )}
 
-        {/* Rest of your dialogs remain the same */}
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Enter Details</DialogTitle>
+        {isWon && (
+          <div className="flex justify-center mt-4">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path 
+                  fillRule="evenodd" 
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                  clipRule="evenodd" 
+                />
+              </svg>
+              <span className="font-bold tracking-wide uppercase text-sm">Lead Won</span>
+            </div>
+          </div>
+        )}
+
+        {/* Demo Session Dialog */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo') || stages[dialogStageIndex]?.name?.toLowerCase().includes('session') 
+              ? 'Demo Session Details' 
+              : `Enter ${stages[dialogStageIndex]?.name} Details`}
+          </DialogTitle>
           <DialogContent>
-            {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo') ? (
+            {stages[dialogStageIndex]?.name?.toLowerCase().includes('demo') || stages[dialogStageIndex]?.name?.toLowerCase().includes('session') ? (
               <>
                 <Autocomplete
                   fullWidth
@@ -1026,68 +1063,66 @@ const getStatusRemarks = async () => {
                     <TextField
                       {...params}
                       label="Session Type *"
-                      sx={{ mt: 5 }}
+                      sx={{ mt: 2 }}
                       error={!!dialogErrors.demoSessionType}
                       helperText={dialogErrors.demoSessionType}
                       InputLabelProps={{ shrink: true }}
                     />
                   )}
                 />
-                <DateTimePicker
-                  label="Start Time *"
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock,
-                  }}
-                  value={dialogValue.demoSessionStartTime}
-                  onChange={newValue =>
-                    setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
-                  }
-                  format="dd/MM/yyyy hh:mm a"
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                        sx: { mt: 2 },
-                       textField: {
-                        className:
-                          "pr-10 py-5 p-5 mt-[10px] text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
-                      },
-                      error: !!dialogErrors.demoSessionStartTime,
-                      helperText: dialogErrors.demoSessionStartTime,
-                      InputLabelProps: { shrink: true },
-                    },
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper,
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
-                
-                <DateTimePicker
-                  label="End Time *"
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock,
-                  }}
-                  value={dialogValue.demoSessionEndTime}
-                  onChange={newValue =>
-                    setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
-                  }
-                  format="dd/MM/yyyy hh:mm a"
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      sx: { mt: 2 },
-                      error: !!dialogErrors.demoSessionEndTime,
-                      helperText: dialogErrors.demoSessionEndTime,
-                      InputLabelProps: { shrink: true },
-                    },
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper,
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
+                {/* First DateTimePicker - Fix the slotProps structure */}
+<DateTimePicker
+  label="Start Time *"
+  viewRenderers={{
+    hours: renderTimeViewClock,
+    minutes: renderTimeViewClock,
+    seconds: renderTimeViewClock,
+  }}
+  value={dialogValue.demoSessionStartTime}
+  onChange={newValue =>
+    setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
+  }
+  format="dd/MM/yyyy hh:mm a"
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      sx: { mt: 2 },
+      error: !!dialogErrors.demoSessionStartTime,
+      helperText: dialogErrors.demoSessionStartTime,
+      InputLabelProps: { shrink: true },
+    }, // ADDED MISSING COMMA HERE
+    popper: timeSlotProps.popper,
+    desktopPaper: timeSlotProps.desktopPaper,
+  }}
+  desktopModeMediaQuery="@media (min-width: 0px)"
+/>
+
+{/* Second DateTimePicker - Fix the slotProps structure */}
+<DateTimePicker
+  label="End Time *"
+  viewRenderers={{
+    hours: renderTimeViewClock,
+    minutes: renderTimeViewClock,
+    seconds: renderTimeViewClock,
+  }}
+  value={dialogValue.demoSessionEndTime}
+  onChange={newValue =>
+    setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
+  }
+  format="dd/MM/yyyy hh:mm a"
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      sx: { mt: 2 },
+      error: !!dialogErrors.demoSessionEndTime,
+      helperText: dialogErrors.demoSessionEndTime,
+      InputLabelProps: { shrink: true },
+    }, // ADDED MISSING COMMA HERE
+    popper: timeSlotProps.popper,
+    desktopPaper: timeSlotProps.desktopPaper,
+  }}
+  desktopModeMediaQuery="@media (min-width: 0px)"
+/>
                 <TextField
                   label="Notes *"
                   fullWidth
@@ -1165,7 +1200,7 @@ const getStatusRemarks = async () => {
               </>
             ) : (
               <TextField
-                label="Enter Value *"
+                label={`Enter ${stages[dialogStageIndex]?.name} Value *`}
                 fullWidth
                 type="number"
                 value={dialogValue}
@@ -1190,13 +1225,14 @@ const getStatusRemarks = async () => {
           </DialogActions>
         </Dialog>
 
+        {/* Remark Dialog */}
         <Dialog 
           open={showRemarkDialog} 
           onClose={() => setShowRemarkDialog(false)}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Enter Remark</DialogTitle>
+          <DialogTitle>Enter Remark for {stages.find(s => s.id === remarkStageId)?.name}</DialogTitle>
           <DialogContent>
             <TextField
               label="Remark *"
@@ -1321,52 +1357,49 @@ const getStatusRemarks = async () => {
               value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
               inputFormat="DD/MM/YYYY hh:mm a"
               onChange={newValue => {
-                
                 setRemarkData(prev => ({
                   ...prev,
-          dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      }));
+                  dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      
+                }));
               }}
-                
-            viewRenderers={{
-              hours: renderTimeViewClock,
-              minutes: renderTimeViewClock,
-              seconds: renderTimeViewClock,
-            }}
-            slotProps={{
-              textField: {
-                
-                fullWidth: true,
-                
-                sx: { mt: 2 },
-                InputLabelProps: { shrink: true },
-              },
-              popper: {
-              placement: 'top-start', 
-              modifiers: [
-                {
-                  name: 'preventOverflow',
-                  options: {
-                    mainAxis: false,
-                  },
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  sx: { mt: 2 },
+                  InputLabelProps: { shrink: true },
                 },
-              ],
-              sx: { 
-                zIndex: 9999, 
-                '& .MuiPickersPopper-paper': {
-                  marginBottom: '60px', 
+                popper: {
+                placement: 'top-start', 
+                modifiers: [
+                  {
+                    name: 'preventOverflow',
+                    options: {
+                      mainAxis: false,
+                    },
+                  },
+                ],
+                sx: { 
+                  zIndex: 9999, 
+                  '& .MuiPickersPopper-paper': {
+                    marginBottom: '60px', 
+                  }
+                }
+              },
+                desktopPaper: {
+                sx: { 
+                  zIndex: 9999,
+                  position: 'relative' 
                 }
               }
-            },
-              desktopPaper: {
-              sx: { 
-                zIndex: 9999,
-                position: 'relative' 
-              }
-            }
-            }}
-            desktopModeMediaQuery="@media (min-width: 0px)"
-            minDateTime={dayjs()} 
-          />
+              }}
+              desktopModeMediaQuery="@media (min-width: 0px)"
+              minDateTime={dayjs()} 
+            />
         </LocalizationProvider>
 
           </DialogContent>
@@ -1378,6 +1411,7 @@ const getStatusRemarks = async () => {
           </DialogActions>
         </Dialog>
 
+        {/* Proposal Dialog */}
         <Dialog 
           open={openProposalDialog} 
           onClose={() => setOpenProposalDialog(false)}
@@ -1495,72 +1529,73 @@ const getStatusRemarks = async () => {
           </DialogActions>
         </Dialog>
 
-{statusRemarks.length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-    <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-      {(() => {
-        console.log('=== DEBUG: All Remarks ===', statusRemarks);
-        
-        // STRONG Deduplication - Remove exact duplicates
-        const uniqueRemarks = statusRemarks.filter((remark, index, self) => 
-          index === self.findIndex(r => 
-            r.ilead_status_remarks_id === remark.ilead_status_remarks_id &&
-            r.lead_status_remarks === remark.lead_status_remarks &&
-            r.dcreated_dt === remark.dcreated_dt &&
-            r.due_date === remark.due_date
-          )
-        );
+        {/* Rest of your components (remarks timeline, etc.) remain the same */}
+        {statusRemarks.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+            <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
+              {(() => {
+                console.log('=== DEBUG: All Remarks ===', statusRemarks);
+                
+                // STRONG Deduplication - Remove exact duplicates
+                const uniqueRemarks = statusRemarks.filter((remark, index, self) => 
+                  index === self.findIndex(r => 
+                    r.ilead_status_remarks_id === remark.ilead_status_remarks_id &&
+                    r.lead_status_remarks === remark.lead_status_remarks &&
+                    r.dcreated_dt === remark.dcreated_dt &&
+                    r.due_date === remark.due_date
+                  )
+                );
 
-        console.log('=== DEBUG: After Deduplication ===', uniqueRemarks);
+                console.log('=== DEBUG: After Deduplication ===', uniqueRemarks);
 
-        return uniqueRemarks.map((remark, index) => (
-          <div key={`${remark.ilead_status_remarks_id}_${index}`} className="relative flex-shrink-0">
-            {index !== uniqueRemarks.length - 1 && (
-              <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
-            )}
-            <div
-              className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
-              style={{ minWidth: "250px", maxWidth: "250px" }} 
-              onClick={() => setSelectedRemark(remark)}
-            >
-              <div className="space-y-2 text-sm">
-                <p
-                  className="text-sm break-words line-clamp-3"
-                  title={remark.lead_status_remarks}
-                >
-                  <strong>Remark:</strong> {remark.lead_status_remarks}
-                </p>
-                <p className="text-sm">
-                  <strong>Created By:</strong> {remark.createdBy || '-'}
-                </p>
-                <p className="text-sm">
-                  <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
-                </p>
-                <p className="text-sm">
-                  <strong>Status:</strong> {remark.status_name}
-                </p>
-                <p className="text-sm">
-                  <strong>Due Date:</strong>{" "}
-                  {remark.due_date ? new Date(remark.due_date)
-                    .toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })
-                    .replace(/(am|pm)/, (match) => match.toUpperCase()) : 'Not set'}
-                </p>
-              </div>
+                return uniqueRemarks.map((remark, index) => (
+                  <div key={`${remark.ilead_status_remarks_id}_${index}`} className="relative flex-shrink-0">
+                    {index !== uniqueRemarks.length - 1 && (
+                      <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
+                    )}
+                    <div
+                      className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
+                      style={{ minWidth: "250px", maxWidth: "250px" }} 
+                      onClick={() => setSelectedRemark(remark)}
+                    >
+                      <div className="space-y-2 text-sm">
+                        <p
+                          className="text-sm break-words line-clamp-3"
+                          title={remark.lead_status_remarks}
+                        >
+                          <strong>Remark:</strong> {remark.lead_status_remarks}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Created By:</strong> {remark.createdBy || '-'}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Status:</strong> {remark.status_name}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Due Date:</strong>{" "}
+                          {remark.due_date ? new Date(remark.due_date)
+                            .toLocaleString("en-GB", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })
+                            .replace(/(am|pm)/, (match) => match.toUpperCase()) : 'Not set'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
-        ));
-      })()}
-    </div>
-  </div>
-)}
+        )}
 
         <Dialog
           open={!!selectedRemark}
@@ -1659,8 +1694,6 @@ const getStatusRemarks = async () => {
         {showConfetti && <Confetti />}
       </div>
     </LocalizationProvider>
-    
-    </>
   );
 };
 

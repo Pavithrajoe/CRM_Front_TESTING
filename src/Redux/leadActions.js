@@ -27,6 +27,9 @@ export const fetchLeads = () => async (dispatch) => {
             (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
         );
 
+        console.log("sortedLeads",data)
+
+
         dispatch({
             type: 'FETCH_LEADS_SUCCESS',
             payload: {
@@ -39,6 +42,7 @@ export const fetchLeads = () => async (dispatch) => {
         dispatch({ type: 'FETCH_LEADS_FAIL', payload: error.message });
     }
 };
+
 
 // If your API requires pagination but you want all data, use a large limit
 export const fetchLeadsWithLargeLimit = () => async (dispatch) => {

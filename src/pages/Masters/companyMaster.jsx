@@ -579,8 +579,8 @@ useEffect(() => {
   value: 'Email Template Masters',
   modalKey: 'Email Template',
   masterKey:'EmailTemplateMaster',
-  idKey: 'mailTemplateId',
-  payloadKey: 'mailTitle', // Used for list view display
+  idKey: 'mail_template_id',
+  payloadKey: 'mail_template_title', // Used for list view display
   responseKey: 'data',
   isRichText: true, // Add this flag to indicate mailBody uses ReactQuill
   richTextField: 'mailBody', // Explicitly specify which field is rich text
@@ -590,7 +590,7 @@ useEffect(() => {
     get: ENDPOINTS.MAIL_TEMPLATE,
     post: ENDPOINTS.MAIL_TEMPLATE,
     put: ENDPOINTS.MAIL_TEMPLATE,
- delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mailTemplateId=${id}&status=false`,
+ delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mail_template_id=${id}&status=false`,
     idLocation: 'query',
     // Payload configuration    
     basePostPayload: {
@@ -616,7 +616,7 @@ useEffect(() => {
 
     // Field mappings between frontend and backend
     payloadMapping: {
-        mailTemplateId: 'mailTemplateId',
+        mail_template_id: 'mailTemplateId',
         mailTitle: 'mailTitle',
         mailBody: 'mailBody',
         icompany_id: 'icompany_id',

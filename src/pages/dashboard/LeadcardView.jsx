@@ -289,18 +289,17 @@ const LeadCardViewPage = () => {
           headers,
         });
         const potentialsData = await potentialsRes.json();
-        if (potentialsData?.data) {
-          setPotentials(potentialsData.data.filter((p) => p.bactive));
-        }
+        // if (potentialsData?.data) {
+          setPotentials(potentialsData);
+        // }
 
         // Fetch sources
         const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, {
           headers,
         });
         const sourcesData = await sourcesRes.json();
-        if (sourcesData?.data) {
-          setSources(sourcesData.data.filter((s) => s.is_active));
-        }
+
+          setSources(sourcesData);
 
         // Fetch statuses
         const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, {
@@ -310,7 +309,6 @@ const LeadCardViewPage = () => {
         if (statusesData?.response) {
           setStatuses(
             statusesData.response
-              .filter((s) => s.bactive)
               .sort((a, b) => (a.orderId || 0) - (b.orderId || 0))
           );
         }
@@ -320,20 +318,36 @@ const LeadCardViewPage = () => {
           headers,
         });
         const industriesData = await industriesRes.json();
-        if (industriesData?.response?.industry) {
-          setIndustries(
-            industriesData.response.industry.filter((i) => i.bactive)
-          );
-        }
+        // if (industriesData?.response?.industry) {
+          setIndustries(industriesData);
+          // );
+  
 
-        // Fetch services
+        // Fetch services - FIXED: Check the correct response structure
         const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, {
           headers,
         });
         const servicesData = await servicesRes.json();
+
+
+        // Check different possible response structures
         if (servicesData?.data) {
-          setServices(servicesData.data.filter((s) => s.bactive));
+          // If data is directly in data property
+          setServices(servicesData);
+        } else if (servicesData?.response) {
+          // If data is in response property
+          const servicesArray = Array.isArray(servicesData.response) 
+            ? servicesData.response 
+            : servicesData.response?.service || [];
+          setServices(servicesArray);
+        } else if (Array.isArray(servicesData)) {
+          // If the response is directly an array
+          setServices(servicesData);
+        } else {
+          console.warn("Unexpected services response structure:", servicesData);
+          setServices([]);
         }
+
       } catch (err) {
         console.error("Failed to fetch master data:", err);
       }

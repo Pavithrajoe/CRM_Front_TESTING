@@ -290,7 +290,7 @@ const handleOutsideClick = (event) => {
                 className="border border-gray-200 rounded-2xl shadow-xl sm:rounded-3xl p-6 sm:p-5 bg-white hover:shadow-lg transition-shadow duration-300 ease-in-out"
               >
                 <div className="flex justify-between items-start">
-                  <span className="font-extrabold text-gray-600 text-xl sm:text-md">{comment.name}</span>
+                  <span className="font-extrabold text-gray-900 text-xl sm:text-md ">{comment.name}</span>
                   {userId && userId === comment.iuser_id && (
                     <button
                       onClick={() => handleEditClick(comment)}
@@ -302,8 +302,8 @@ const handleOutsideClick = (event) => {
                     </button>
                   )}
                 </div>
-                <p className="text-gray-700 text-sm mt-2 leading-normal sm:leading-relaxed">{comment.ccomment_content}</p>
-                <p className="text-md text-gray-400 mt-2 italic">
+                <p className="text-gray-700 text-xl mt-2 leading-normal sm:leading-relaxed">{comment.ccomment_content}</p>
+                <p className="text-md text-gray-600 mt-2 italic font-extrabold">
                   {comment.imodify_dt
                     ? `Edited by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.imodify_dt)}`
                     : `Posted by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.icreate_dt)}`}

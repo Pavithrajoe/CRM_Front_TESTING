@@ -306,6 +306,7 @@ const ReminderForm = () => {
 
     return matchesSearch && matchesDate;
   });
+  
 
   const formatDisplayDateTime = (dateString) => {
     if (!dateString) return "N/A";
@@ -408,51 +409,53 @@ const ReminderForm = () => {
         </div>
       )}
 
-      {/* Reminder List */}
-      <div className="relative bg-white mt-5 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto shadow">
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-          {filteredReminders.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm sm:text-base py-8">No reminders found.</p>
-          ) : (
-            filteredReminders.map((reminder) => (
-              <div
-                key={reminder.iremainder_id}
-                className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
-              >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                  <div className="mb-3 sm:mb-0">
-                    <h3 className="text-md font-semibold text-gray-900">
-                      📌 {reminder.cremainder_title}
-                    </h3>
-                    <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                      {reminder.cremainder_content}
-                    </p>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Created by:{" "}
-                      <span className="font-semibold">{reminder.created_by}</span>
-                    </div>
-                    <div className="text-xs mt-1 text-gray-600">
-                      Priority:{" "}
-                      <span className="font-semibold">
-                        {reminder.priority || "Normal"}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      Assigned to:{" "}
-                      <span className="font-semibold">{reminder.assigned_to}</span>
-                    </div>
-                  </div>
-                  <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
-                    <p className="font-medium text-blue-700">
-                      {formatDisplayDateTime(reminder.dremainder_dt)}
-                    </p>
-                  </div>
+     {/* Reminder List */}
+<div className="relative bg-white mt-5 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto shadow">
+  <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+    {filteredReminders.length === 0 ? (
+      <p className="text-center text-gray-400 text-sm sm:text-base py-8">No reminders found.</p>
+    ) : (
+      filteredReminders
+        .sort((a, b) => new Date(b.dremainder_dt) - new Date(a.dremainder_dt))
+        .map((reminder) => (
+          <div
+            key={reminder.iremainder_id}
+            className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
+          >
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <div className="mb-3 sm:mb-0">
+                <h3 className="text-md font-semibold text-gray-900">
+                  📌 {reminder.cremainder_title}
+                </h3>
+                <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+                  {reminder.cremainder_content}
+                </p>
+                <div className="text-xs text-gray-500 mt-2">
+                  Created by:{" "}
+                  <span className="font-semibold">{reminder.created_by}</span>
+                </div>
+                <div className="text-xs mt-1 text-gray-600">
+                  Priority:{" "}
+                  <span className="font-semibold">
+                    {reminder.priority || "Normal"}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  Assigned to:{" "}
+                  <span className="font-semibold">{reminder.assigned_to}</span>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+              <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
+                <p className="font-medium text-blue-700">
+                  {formatDisplayDateTime(reminder.dremainder_dt)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))
+    )}
+  </div>
+</div>
 
       {/* Reminder Form Drawer */}
       {showForm && (

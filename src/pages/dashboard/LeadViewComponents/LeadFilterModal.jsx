@@ -28,7 +28,6 @@ const LeadFilterModal = ({
     if (!showModal) {
         return null;
     }
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-4xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -61,21 +60,22 @@ const LeadFilterModal = ({
 
                     {/* Column 2: Lead Properties */}
                     <div className="space-y-4">
-                        <label className="block text-sm text-gray-700">
-                            Potential
-                            <select
-                                value={selectedPotential}
-                                onChange={(e) => setSelectedPotential(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
-                            >
-                                <option value="">All Potentials</option>
-                                {potentials.map(p => (
-                                    <option key={p.ileadpoten_id} value={p.clead_name}>
-                                        {p.clead_name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
+                       <label className="block text-sm text-gray-700">
+  Potential
+  <select
+    value={selectedPotential}
+    onChange={(e) => setSelectedPotential(e.target.value)}
+    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
+  >
+    <option value="">All Potentials</option>
+{Array.isArray(potentials?.data) && potentials.data.map(p => (
+      <option key={p.ileadpoten_id} value={p.clead_name}>
+        {p.clead_name}
+      </option>
+    ))}
+  </select>
+</label>
+
                         <label className="block text-sm text-gray-700">
                             Status
                             <select
@@ -84,7 +84,7 @@ const LeadFilterModal = ({
                                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
                             >
                                 <option value="">All Statuses</option>
-                                {statuses.map(s => (
+                                {Array.isArray(statuses) && statuses.map(s => (
                                     <option key={s.ilead_status_id} value={s.clead_name}>
                                         {s.clead_name}
                                     </option>
@@ -103,7 +103,7 @@ const LeadFilterModal = ({
                                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
                             >
                                 <option value="">All Sources</option>
-                                {sources.map(s => (
+                                {Array.isArray(sources?.data) && sources.data.map(s => (
                                     <option key={s.source_id} value={s.source_id}>
                                         {s.source_name}
                                     </option>
@@ -118,7 +118,7 @@ const LeadFilterModal = ({
                                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
                             >
                                 <option value="">All Industries</option>
-                                {industries.map(i => (
+                                {Array.isArray (industries?.response?.industry ) && industries.response.industry.map(i => (
                                     <option key={i.iindustry_id} value={i.iindustry_id}>
                                         {i.cindustry_name}
                                     </option>
@@ -133,7 +133,7 @@ const LeadFilterModal = ({
                                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
                             >
                                 <option value="">All Services</option>
-                                {services.map(s => (
+                                { Array.isArray (services?.data) && services.data.map(s => (
                                     <option key={s.iservice_id} value={s.iservice_id}>
                                         {s.cservice_name}
                                     </option>

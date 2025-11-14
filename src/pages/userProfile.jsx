@@ -478,12 +478,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
             <UserDashboard userId={userId} />
           </div>
         )}
-
-        {activeTab === 'Target' && (
-          <div className="p-4 bg-white rounded-xl shadow-md">
-            <TargetDashboard userId={userId} />
-          </div>
-        )}
+{activeTab === 'Target' && (
+  <div className="p-4 bg-white rounded-xl shadow-md">
+    <TargetDashboard userId={userId} userEmail={email} />
+  </div>
+)}
         {activeTab === 'History' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
             <HistoryDashboard userId={userId} />

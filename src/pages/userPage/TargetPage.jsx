@@ -5,7 +5,6 @@ import goalIcon from '../../../public/images/nav/target.svg';
 import SalesForm from '../userPage/TargetForm';
 import Select from "react-select";
 
-
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid
 } from 'recharts';
@@ -38,7 +37,8 @@ const formatDateForAPI = (date, isEndOfDay = false) => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-const TargetDashboard = ({ userId }) => {
+// Update the component to accept userEmail prop
+const TargetDashboard = ({ userId, userEmail }) => {
   const [summaryData, setSummaryData] = useState({
     salesTarget: 0,
     achievedValue: 0,
@@ -67,115 +67,113 @@ const TargetDashboard = ({ userId }) => {
     return lastDayOfMonth;
   });
 
-  // const [selectedTargetId] = useState(4); 
+  const fetchTargetMetrics = useCallback(async () => {
+    setLoadingTable(true);
+    setLoadingSummary(true);
 
-const fetchTargetMetrics = useCallback(async () => {
-  setLoadingTable(true);
-  setLoadingSummary(true);
-
-  const token = localStorage.getItem("token");
-  if (!userId || !token) {
-    setOverallError("Authentication error. Please log in again.");
-    setLoadingSummary(false);
-    setLoadingTable(false);
-    return;
-  }
-
-  const fromDateAPI = formatDateForAPI(selectedFromDate);
-  const toDateAPI = formatDateForAPI(selectedToDate, true);
-
-  try {
-    const response = await axios.get(`${ENDPOINTS.GET_METRICS_TARGET}/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      params: {
-        fromDate: fromDateAPI,
-        toDate: toDateAPI,
-      }
-    });
-
-    // Handle the response structure with userTargets array
-    const metricsArray = response.data.userTargets || [];
-    const totalTargets = response.data.totalTarget || 0;
-
-    const formattedMetrics = metricsArray.map((metric, index) => {
-      const target = parseFloat(metric.bsales_value || 0);
-      const achieved = parseFloat(metric.achievedAmount || 0);
-      const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
-
-      const fromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
-      const toDate = metric.dto_date ? new Date(metric.dto_date) : null;
-
-      // Define options for DD/MM/YYYY format
-      const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-
-      return {
-        id: metric.isalesId || `metric-${index}`,
-        metricName: "Sales Target", // Default name since not in response
-        targetValue: target,
-        achieved: achieved,
-        completed: completedPercentage,
-        status: metric.bactive ? "Active" : "Inactive",
-        fromDate: fromDate ? fromDate.toLocaleDateString('en-GB', dateOptions) : "-",
-        toDate: toDate ? toDate.toLocaleDateString('en-GB', dateOptions) : "-",
-        rawFromDate: fromDate,
-        rawToDate: toDate,
-        assignedTo: metric.AssignedTo || "-",
-        assignedBy: metric.AssignedBy || "-",
-        createdBy: metric.createdBy || "-",
-      };
-    });
-
-    setTableMetrics(formattedMetrics);
-
-    // Calculate summary data
-    let totalSalesTarget = 0;
-    let totalAchievedValue = 0;
-    let totalCompletionRate = 0;
-
-    metricsArray.forEach(metric => {
-      const target = parseFloat(metric.bsales_value || 0);
-      const achieved = parseFloat(metric.achievedAmount || 0);
-      totalSalesTarget += target;
-      totalAchievedValue += achieved;
-    });
-
-    if (totalSalesTarget > 0) {
-      totalCompletionRate = ((totalAchievedValue / totalSalesTarget) * 100).toFixed(2);
+    const token = localStorage.getItem("token");
+    if (!userId || !token) {
+      setOverallError("Authentication error. Please log in again.");
+      setLoadingSummary(false);
+      setLoadingTable(false);
+      return;
     }
 
-    setSummaryData({
-      salesTarget: totalSalesTarget,
-      achievedValue: totalAchievedValue,
-      completionRate: parseFloat(totalCompletionRate),
-      targetsAssigned: totalTargets, // Using the totalTarget from response
-    });
+    const fromDateAPI = formatDateForAPI(selectedFromDate);
+    const toDateAPI = formatDateForAPI(selectedToDate, true);
 
-    // Prepare chart data
-    const chartData = [{
-      name: "Target Overview",
-      targetValue: totalSalesTarget,
-      achievedValue: totalAchievedValue,
-      completion: parseFloat(totalCompletionRate),
-    }];
+    try {
+      const response = await axios.get(`${ENDPOINTS.GET_METRICS_TARGET}/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          fromDate: fromDateAPI,
+          toDate: toDateAPI,
+        }
+      });
 
-    setTargetTrendsData(chartData);
+      // Handle the response structure with userTargets array
+      const metricsArray = response.data.userTargets || [];
+      const totalTargets = response.data.totalTarget || 0;
 
-  } catch (error) {
-    console.error("Error fetching target metrics:", error);
-    setTableMetrics([]);
-    setSummaryData({
-      salesTarget: 0,
-      achievedValue: 0,
-      completionRate: 0,
-      targetsAssigned: 0,
-    });
-    setTargetTrendsData([]);
-    setOverallError("Failed to load dashboard data. Please try again.");
-  } finally {
-    setLoadingSummary(false);
-    setLoadingTable(false);
-  }
-}, [userId, selectedFromDate, selectedToDate]);
+      const formattedMetrics = metricsArray.map((metric, index) => {
+        const target = parseFloat(metric.bsales_value || 0);
+        const achieved = parseFloat(metric.achievedAmount || 0);
+        const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
+
+        const fromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
+        const toDate = metric.dto_date ? new Date(metric.dto_date) : null;
+
+        // Define options for DD/MM/YYYY format
+        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+
+        return {
+          id: metric.isalesId || `metric-${index}`,
+          metricName: "Sales Target", // Default name since not in response
+          targetValue: target,
+          achieved: achieved,
+          completed: completedPercentage,
+          status: metric.bactive ? "Active" : "Inactive",
+          fromDate: fromDate ? fromDate.toLocaleDateString('en-GB', dateOptions) : "-",
+          toDate: toDate ? toDate.toLocaleDateString('en-GB', dateOptions) : "-",
+          rawFromDate: fromDate,
+          rawToDate: toDate,
+          assignedTo: metric.AssignedTo || "-",
+          assignedBy: metric.AssignedBy || "-",
+          createdBy: metric.createdBy || "-",
+        };
+      });
+
+      setTableMetrics(formattedMetrics);
+
+      // Calculate summary data
+      let totalSalesTarget = 0;
+      let totalAchievedValue = 0;
+      let totalCompletionRate = 0;
+
+      metricsArray.forEach(metric => {
+        const target = parseFloat(metric.bsales_value || 0);
+        const achieved = parseFloat(metric.achievedAmount || 0);
+        totalSalesTarget += target;
+        totalAchievedValue += achieved;
+      });
+
+      if (totalSalesTarget > 0) {
+        totalCompletionRate = ((totalAchievedValue / totalSalesTarget) * 100).toFixed(2);
+      }
+
+      setSummaryData({
+        salesTarget: totalSalesTarget,
+        achievedValue: totalAchievedValue,
+        completionRate: parseFloat(totalCompletionRate),
+        targetsAssigned: totalTargets, // Using the totalTarget from response
+      });
+
+      // Prepare chart data
+      const chartData = [{
+        name: "Target Overview",
+        targetValue: totalSalesTarget,
+        achievedValue: totalAchievedValue,
+        completion: parseFloat(totalCompletionRate),
+      }];
+
+      setTargetTrendsData(chartData);
+
+    } catch (error) {
+      console.error("Error fetching target metrics:", error);
+      setTableMetrics([]);
+      setSummaryData({
+        salesTarget: 0,
+        achievedValue: 0,
+        completionRate: 0,
+        targetsAssigned: 0,
+      });
+      setTargetTrendsData([]);
+      setOverallError("Failed to load dashboard data. Please try again.");
+    } finally {
+      setLoadingSummary(false);
+      setLoadingTable(false);
+    }
+  }, [userId, selectedFromDate, selectedToDate]);
 
   useEffect(() => {
     if (!userId) {
@@ -208,21 +206,21 @@ const fetchTargetMetrics = useCallback(async () => {
   }
 
   return (
-     <div className="   p-4 md:p-6">
-            <div className="dashboard-container">
-  <div className="flex justify-between items-center mb-8 border-b-4 border-blue-400 pb-3 animate-fade-in-down">
-    <h2 className="text-3xl md:text-4xl w-full font-extrabold text-blue-900 text-center items-center ">
-      Sales Target Dashboard
-    </h2>
-    <button
-      onClick={() => setShowAddTargetModal(true)}
-      className="p-2 rounded-full text-white shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none "
-      title="Set New Target"
-    >
-      <img src={goalIcon} alt="Set Target" className="w-8 h-8" />
-    </button>
-  </div>
-</div>
+    <div className="p-4 md:p-6">
+      <div className="dashboard-container">
+        <div className="flex justify-between items-center mb-8 border-b-4 border-blue-400 pb-3 animate-fade-in-down">
+          <h2 className="text-3xl md:text-4xl w-full font-extrabold text-blue-900 text-center items-center">
+            Sales Target Dashboard
+          </h2>
+          <button
+            onClick={() => setShowAddTargetModal(true)}
+            className="p-2 rounded-full text-white shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none"
+            title="Set New Target"
+          >
+            <img src={goalIcon} alt="Set Target" className="w-8 h-8" />
+          </button>
+        </div>
+      </div>
 
       {/* Date Filters and Target ID Selector section removed */}
 
@@ -333,11 +331,9 @@ const fetchTargetMetrics = useCallback(async () => {
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned To</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Assigned By</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">Target</th>
-                  {/* <th className="p-3 sm:p-4 border-b border-gray-200">Achieved</th> */}
                   <th className="p-3 sm:p-4 border-b border-gray-200">Completed (%)</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">From</th>
                   <th className="p-3 sm:p-4 border-b border-gray-200">To</th>
-                  {/* <th className="p-3 sm:p-4 border-b border-gray-200">Status</th> */}
                 </tr>
               </thead>
               <tbody className="text-gray-700 text-sm font-light divide-y divide-gray-200">
@@ -364,16 +360,17 @@ const fetchTargetMetrics = useCallback(async () => {
       </div>
 
       {showAddTargetModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
-    <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
-      <SalesForm
-        userId={userId}
-        defaultFromDate={selectedFromDate}
-        defaultToDate={selectedToDate}
-        onClose={() => {
-          closeTargetModal();
-          handleTargetAdded();
-        }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 backdrop-blur-sm overflow-auto p-4">
+          <div className="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl">
+            <SalesForm
+              userId={userId}
+              userEmail={userEmail} 
+              defaultFromDate={selectedFromDate}
+              defaultToDate={selectedToDate}
+              onClose={() => {
+                closeTargetModal();
+                handleTargetAdded();
+              }}
             />
           </div>
         </div>

@@ -441,66 +441,82 @@ export default function MasterModal({
     }
   }, [master]);
 
-  useEffect(() => {
-    if (!master) return;
+useEffect(() => {
+  if (!master) return;
 
-    let newFormData = {};
+  let newFormData = {};
 
-    if (selectedItemForEdit) {
-      console.log('=== DEBUG: Editing item ===');
-      console.log('Selected item:', selectedItemForEdit);
+  if (selectedItemForEdit) {
+    console.log('=== DEBUG: Editing item ===');
+    console.log('Selected item:', selectedItemForEdit);
 
-      if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
-        const parentIdKey =
-          subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
-          "parentId";
-        const formParentKey =
-          subIndustryConfig.parentMasterConfig?.formFieldKey ||
-          "industryParent";
+    if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
+      const parentIdKey =
+        subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
+        "parentId";
+      const formParentKey =
+        subIndustryConfig.parentMasterConfig?.formFieldKey ||
+        "industryParent";
 
-        console.log('Parent ID key:', parentIdKey);
-        console.log('Form parent key:', formParentKey);
-        console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
-        console.log('Parent options:', parentOptions);
+      console.log('Parent ID key:', parentIdKey);
+      console.log('Form parent key:', formParentKey);
+      console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
+      console.log('Parent options:', parentOptions);
 
-        newFormData = {
-          [subIndustryConfig.payloadKey]:
-            selectedItemForEdit[subIndustryConfig.payloadKey] || "",
-          [formParentKey]:
-            selectedItemForEdit[parentIdKey] !== undefined && selectedItemForEdit[parentIdKey] !== null
-              ? String(selectedItemForEdit[parentIdKey]) // Convert to string for consistent comparison
-              : null,
-          [subIndustryConfig.idKey]:
-            selectedItemForEdit[subIndustryConfig.idKey],
-          ...(subIndustryConfig.activeStatusPayloadKey && {
-            [subIndustryConfig.activeStatusPayloadKey]:
-              selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false,
-          }),
-        };
+      newFormData = {
+        [subIndustryConfig.payloadKey]:
+          selectedItemForEdit[subIndustryConfig.payloadKey] || "",
+        [formParentKey]:
+          selectedItemForEdit[parentIdKey] !== undefined && selectedItemForEdit[parentIdKey] !== null
+            ? String(selectedItemForEdit[parentIdKey]) // Convert to string for consistent comparison
+            : null,
+        [subIndustryConfig.idKey]:
+          selectedItemForEdit[subIndustryConfig.idKey],
+        ...(subIndustryConfig.activeStatusPayloadKey && {
+          [subIndustryConfig.activeStatusPayloadKey]:
+            selectedItemForEdit[subIndustryConfig.activeStatusPayloadKey] || false,
+        }),
+      };
 
-        console.log('New form data:', newFormData);
-      } else {
-        newFormData = { ...selectedItemForEdit };
-      }
+      console.log('New form data:', newFormData);
+    } else if (master.title === "Email Template") {
+      // SPECIAL HANDLING FOR EMAIL TEMPLATE
+      console.log('Editing Email Template');
+      console.log('API response fields:', selectedItemForEdit);
+      
+      // Map API response fields to form fields
+      newFormData = {
+        mailTitle: selectedItemForEdit.mail_template_title || "",
+        mailBody: selectedItemForEdit.mail_template_body || "",
+        mail_template_id: selectedItemForEdit.mail_template_id,
+        // Include any other fields that might be needed
+      };
+      
+      console.log('Mapped form data for email template:', newFormData);
     } else {
-      newFormData = { ...master.basePostPayload };
-
-      if (master.isHierarchical && master.parentMasterConfig) {
-        const formParentKey =
-          master.parentMasterConfig.formFieldKey || "parentId";
-        newFormData[formParentKey] = null;
-      }
+      // Regular items
+      newFormData = { ...selectedItemForEdit };
     }
+  } else {
+    // New item - start with base payload
+    newFormData = { ...master.basePostPayload };
 
-    setFormData(newFormData);
-  }, [
-    selectedItemForEdit,
-    master,
-    subIndustryConfig,
-    industryConfig,
-    leadSourceConfig,
-    parentOptions, // Add parentOptions to dependencies
-  ]);
+    if (master.isHierarchical && master.parentMasterConfig) {
+      const formParentKey =
+        master.parentMasterConfig.formFieldKey || "parentId";
+      newFormData[formParentKey] = null;
+    }
+  }
+
+  setFormData(newFormData);
+}, [
+  selectedItemForEdit,
+  master,
+  subIndustryConfig,
+  industryConfig,
+  leadSourceConfig,
+  parentOptions,
+]);
 
 
 
@@ -550,33 +566,35 @@ const handleChange = (e) => {
       return `${masterType} name cannot exceed 100 characters`;
     return null;
   };
+const handleSave = async () => {
+  if (!master) {
+    toast.error("Master configuration is missing. Cannot save.");
+    return;
+  }
 
-  const handleSave = async () => {
-    if (!master) {
-      toast.error("Master configuration is missing. Cannot save.");
+  // SPECIAL HANDLING FOR EMAIL TEMPLATE
+  if (master.title === "Email Template") {
+    // Email template specific validation
+    if (!formData.mailTitle || formData.mailTitle.trim().length === 0) {
+      setApiError("Email template subject is required");
       return;
     }
-
+    if (!formData.mailBody || formData.mailBody.trim().length === 0) {
+      setApiError("Email template content is required");
+      return;
+    }
+    if (formData.mailTitle.length < 2 || formData.mailTitle.length > 100) {
+      setApiError("Email template subject must be between 2-100 characters");
+      return;
+    }
+  } else {
+    // Regular validation for other masters
     const nameField = master.payloadKey;
     const nameValue = formData[nameField];
     const validationError = validateMasterName(nameValue, master.title);
 
     if (validationError) {
       setApiError(validationError);
-      return;
-    }
-
-    // Check for duplicate entry
-    const isDuplicate = existingItems.some(item => {
-      if (selectedItemForEdit && item[master.idKey] === selectedItemForEdit[master.idKey]) {
-        return false;
-      }
-      return item[master.payloadKey].toLowerCase() === formData[master.payloadKey].toLowerCase();
-    });
-
-    if (isDuplicate) {
-      // setApiError(`${master.title} with this name already exists`);
-      toast.error(`${master.title} with this name already exists`);
       return;
     }
 
@@ -589,228 +607,279 @@ const handleChange = (e) => {
       );
       return;
     }
+  }
 
-    setIsSaving(true);
-    setApiError(null);
+  // Check for duplicate entry - SPECIAL HANDLING FOR EMAIL TEMPLATE
+  const isDuplicate = existingItems.some(item => {
+    if (selectedItemForEdit && item[master.idKey] === selectedItemForEdit[master.idKey]) {
+      return false;
+    }
+    
+    if (master.title === "Email Template") {
+      // For email template, check mail_template_title (display field) against mailTitle (form field)
+      return item.mail_template_title?.toLowerCase() === formData.mailTitle?.toLowerCase();
+    } else {
+      return item[master.payloadKey]?.toLowerCase() === formData[master.payloadKey]?.toLowerCase();
+    }
+  });
 
-    if (
-      master.title === leadSourceConfig?.title &&
-      formData.orderId !== undefined &&
-      master.orderIdMustBeOne &&
-      formData.orderId !== 1
-    ) {
-      setApiError("Order ID for Lead Source must be 1.");
-      toast.error("Order ID for Lead Source must be 1.");
-      setIsSaving(false);
-      return;
+  if (isDuplicate) {
+    toast.error(`${master.title} with this name already exists`);
+    return;
+  }
+
+  setIsSaving(true);
+  setApiError(null);
+
+  if (
+    master.title === leadSourceConfig?.title &&
+    formData.orderId !== undefined &&
+    master.orderIdMustBeOne &&
+    formData.orderId !== 1
+  ) {
+    setApiError("Order ID for Lead Source must be 1.");
+    toast.error("Order ID for Lead Source must be 1.");
+    setIsSaving(false);
+    return;
+  }
+
+  const isEditing = selectedItemForEdit && selectedItemForEdit[master.idKey];
+  const currentSaveMasterConfig =
+    selectedItemForEdit?.isSubIndustry && subIndustryConfig
+      ? subIndustryConfig
+      : master;
+
+  const url = isEditing
+    ? typeof currentSaveMasterConfig.put === "function"
+      ? currentSaveMasterConfig.put(
+        selectedItemForEdit[currentSaveMasterConfig.idKey]
+      )
+      : currentSaveMasterConfig.put
+    : currentSaveMasterConfig.post;
+  const method = isEditing ? "PUT" : "POST";
+
+  let payload = {};
+
+  const fieldsToMap =
+    isEditing &&
+      currentSaveMasterConfig.putPayloadFields &&
+      Array.isArray(currentSaveMasterConfig.putPayloadFields)
+      ? currentSaveMasterConfig.putPayloadFields
+      : !isEditing &&
+        currentSaveMasterConfig.postPayloadFields &&
+        Array.isArray(currentSaveMasterConfig.postPayloadFields)
+        ? currentSaveMasterConfig.postPayloadFields
+        : Object.keys(formData);
+
+  fieldsToMap.forEach((field) => {
+    if (master.title === "Label Master" && isEditing) {
+      if (field === "iformLabelMasterId") {
+        payload["formLabelMastersId"] = formData.iformLabelMasterId;
+        return;
+      } else if (
+        field === "icompany_id" &&
+        formData.icompany_id !== undefined
+      ) {
+        payload["icompany_id"] = formData.icompany_id;
+        return;
+      }
     }
 
-    const isEditing = selectedItemForEdit && selectedItemForEdit[master.idKey];
-    const currentSaveMasterConfig =
-      selectedItemForEdit?.isSubIndustry && subIndustryConfig
-        ? subIndustryConfig
-        : master;
-
-    const url = isEditing
-      ? typeof currentSaveMasterConfig.put === "function"
-        ? currentSaveMasterConfig.put(
-          selectedItemForEdit[currentSaveMasterConfig.idKey]
-        )
-        : currentSaveMasterConfig.put
-      : currentSaveMasterConfig.post;
-    const method = isEditing ? "PUT" : "POST";
-
-    let payload = {};
-
-    const fieldsToMap =
-      isEditing &&
-        currentSaveMasterConfig.putPayloadFields &&
-        Array.isArray(currentSaveMasterConfig.putPayloadFields)
-        ? currentSaveMasterConfig.putPayloadFields
-        : !isEditing &&
-          currentSaveMasterConfig.postPayloadFields &&
-          Array.isArray(currentSaveMasterConfig.postPayloadFields)
-          ? currentSaveMasterConfig.postPayloadFields
-          : Object.keys(formData);
-
-    fieldsToMap.forEach((field) => {
-      if (master.title === "Label Master" && isEditing) {
-        if (field === "iformLabelMasterId") {
-          payload["formLabelMastersId"] = formData.iformLabelMasterId;
-          return;
-        } else if (
-          field === "icompany_id" &&
-          formData.icompany_id !== undefined
-        ) {
-          payload["icompany_id"] = formData.icompany_id;
-          return;
-        }
+    // Skip empty fields for email template to avoid validation issues
+    if (master.title === "Email Template") {
+      if (formData[field] === undefined || formData[field] === null || formData[field] === '') {
+        return;
       }
+    }
 
-      if (Object.hasOwn(formData, field) && formData[field] !== undefined) {
-        const apiPayloadKey =
-          currentSaveMasterConfig.payloadMapping?.[field] || field;
-        payload[apiPayloadKey] = formData[field];
-      }
-    });
+    if (Object.hasOwn(formData, field) && formData[field] !== undefined) {
+      const apiPayloadKey =
+        currentSaveMasterConfig.payloadMapping?.[field] || field;
+      payload[apiPayloadKey] = formData[field];
+    }
+  });
 
-    if (isEditing) {
-      payload = { ...currentSaveMasterConfig.basePutPayload, ...payload };
-      if (
-        currentSaveMasterConfig.idLocation === "body" &&
-        currentSaveMasterConfig.idKey &&
-        selectedItemForEdit &&
-        master.title !== "Label Master"
-      ) {
-        const mappedIdKey =
-          currentSaveMasterConfig.payloadMapping?.[
-          currentSaveMasterConfig.idKey
-          ] || currentSaveMasterConfig.idKey;
-        if (!Object.hasOwn(payload, mappedIdKey)) {
-          payload[mappedIdKey] =
-            selectedItemForEdit[currentSaveMasterConfig.idKey];
-        }
-      }
-    } else {
-      payload = { ...currentSaveMasterConfig.basePostPayload, ...payload };
+  // SPECIAL HANDLING: Ensure email template has required fields
+  if (master.title === "Email Template") {
+    if (formData.mailTitle) {
+      payload.mailTitle = formData.mailTitle;
+    }
+    if (formData.mailBody) {
+      payload.mailBody = formData.mailBody;
+    }
+  }
+
+  if (isEditing) {
+    payload = { ...currentSaveMasterConfig.basePutPayload, ...payload };
+    if (
+      currentSaveMasterConfig.idLocation === "body" &&
+      currentSaveMasterConfig.idKey &&
+      selectedItemForEdit &&
+      master.title !== "Label Master"
+    ) {
       const mappedIdKey =
         currentSaveMasterConfig.payloadMapping?.[
         currentSaveMasterConfig.idKey
         ] || currentSaveMasterConfig.idKey;
-      if (
-        Object.hasOwn(payload, mappedIdKey) &&
-        !currentSaveMasterConfig.sendIdForPost &&
-        master.title !== "Label Master"
-      ) {
-        delete payload[mappedIdKey];
+      if (!Object.hasOwn(payload, mappedIdKey)) {
+        payload[mappedIdKey] =
+          selectedItemForEdit[currentSaveMasterConfig.idKey];
       }
     }
-
+  } else {
+    payload = { ...currentSaveMasterConfig.basePostPayload, ...payload };
+    const mappedIdKey =
+      currentSaveMasterConfig.payloadMapping?.[
+      currentSaveMasterConfig.idKey
+      ] || currentSaveMasterConfig.idKey;
     if (
-      !currentSaveMasterConfig.skipCompanyIdInjection &&
-      companyId !== null &&
-      companyId !== undefined &&
+      Object.hasOwn(payload, mappedIdKey) &&
+      !currentSaveMasterConfig.sendIdForPost &&
       master.title !== "Label Master"
     ) {
-      const companyIdApiField =
-        currentSaveMasterConfig.payloadMapping?.icompany_id || "icompany_id";
-      if (companyIdApiField) {
-        payload[companyIdApiField] = companyId;
-      }
+      delete payload[mappedIdKey];
+    }
+  }
+
+  if (
+    !currentSaveMasterConfig.skipCompanyIdInjection &&
+    companyId !== null &&
+    companyId !== undefined &&
+    master.title !== "Label Master"
+  ) {
+    const companyIdApiField =
+      currentSaveMasterConfig.payloadMapping?.icompany_id || "icompany_id";
+    if (companyIdApiField) {
+      payload[companyIdApiField] = companyId;
+    }
+  }
+
+  const modifierKey =
+    typeof currentSaveMasterConfig.modifierIdPayloadKey === "object"
+      ? isEditing
+        ? currentSaveMasterConfig.modifierIdPayloadKey.put
+        : currentSaveMasterConfig.modifierIdPayloadKey.post
+      : currentSaveMasterConfig.modifierIdPayloadKey;
+  if (modifierKey && userId !== null && userId !== undefined) {
+    const mappedModifierKey =
+      currentSaveMasterConfig.payloadMapping?.[modifierKey] || modifierKey;
+    if (mappedModifierKey) {
+      payload[mappedModifierKey] = userId;
+    }
+  }
+
+  const updatedDtKey =
+    typeof currentSaveMasterConfig.updatedDtPayloadKey === "object"
+      ? isEditing
+        ? currentSaveMasterConfig.updatedDtPayloadKey.put
+        : currentSaveMasterConfig.updatedDtPayloadKey.post
+      : currentSaveMasterConfig.updatedDtPayloadKey;
+  if (updatedDtKey) {
+    const mappedUpdatedDtKey =
+      currentSaveMasterConfig.payloadMapping?.[updatedDtKey] || updatedDtKey;
+    if (mappedUpdatedDtKey) {
+      payload[mappedUpdatedDtKey] = new Date().toISOString();
+    }
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    console.log('Saving payload:', payload); // Debug log
+    console.log('URL:', url); // Debug log
+
+    if (method === "POST") {
+      await axios.post(url, payload, { headers });
+    } else if (method === "PUT") {
+      await axios.put(url, payload, { headers });
+    } else {
+      throw new Error("Unsupported HTTP method for saving.");
     }
 
-    const modifierKey =
-      typeof currentSaveMasterConfig.modifierIdPayloadKey === "object"
-        ? isEditing
-          ? currentSaveMasterConfig.modifierIdPayloadKey.put
-          : currentSaveMasterConfig.modifierIdPayloadKey.post
-        : currentSaveMasterConfig.modifierIdPayloadKey;
-    if (modifierKey && userId !== null && userId !== undefined) {
-      const mappedModifierKey =
-        currentSaveMasterConfig.payloadMapping?.[modifierKey] || modifierKey;
-      if (mappedModifierKey) {
-        payload[mappedModifierKey] = userId;
-      }
+    toast.success(`${currentSaveMasterConfig.title} saved successfully!`, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+    setSelectedItemForEdit(null);
+    
+    // Reset form data - SPECIAL HANDLING FOR EMAIL TEMPLATE
+    let newEntryFormData = { ...currentSaveMasterConfig.basePostPayload };
+    
+    if (master.title === "Email Template") {
+      // For email template, reset both fields
+      newEntryFormData = {
+        mailTitle: '',
+        mailBody: ''
+      };
     }
-
-    const updatedDtKey =
-      typeof currentSaveMasterConfig.updatedDtPayloadKey === "object"
-        ? isEditing
-          ? currentSaveMasterConfig.updatedDtPayloadKey.put
-          : currentSaveMasterConfig.updatedDtPayloadKey.post
-        : currentSaveMasterConfig.updatedDtPayloadKey;
-    if (updatedDtKey) {
-      const mappedUpdatedDtKey =
-        currentSaveMasterConfig.payloadMapping?.[updatedDtKey] || updatedDtKey;
-      if (mappedUpdatedDtKey) {
-        payload[mappedUpdatedDtKey] = new Date().toISOString();
-      }
+    
+    if (
+      currentSaveMasterConfig.activeStatusPayloadKey &&
+      newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] ===
+      undefined
+    ) {
+      newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] = true;
     }
+    if (
+      currentSaveMasterConfig.isHierarchical &&
+      currentSaveMasterConfig.parentMasterConfig
+    ) {
+      const formParentKey =
+        currentSaveMasterConfig.parentMasterConfig.formFieldKey || "parentId";
+      newEntryFormData[formParentKey] = null;
+    }
+    if (
+      (master.title === "Lead Status" || master.title === "Potential") &&
+      newEntryFormData.orderId !== undefined
+    ) {
+      newEntryFormData.orderId = "";
+    }
+    if (master.title === leadSourceConfig?.title) {
+      newEntryFormData.parentLeadSourceId = null;
+    }
+    setFormData(newEntryFormData);
 
-    try {
-      const token = localStorage.getItem("token");
-      const headers = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      if (method === "POST") {
-        await axios.post(url, payload, { headers });
-      } else if (method === "PUT") {
-        await axios.put(url, payload, { headers });
+    await fetchItems();
+    if (master.title === leadSourceConfig?.title) {
+      fetchAllLeadSourceItems();
+    }
+  } catch (error) {
+    let errorMessage = `Failed to save ${currentSaveMasterConfig.title}.`;
+    if (axios.isAxiosError(error) && error.response) {
+      if (
+        error.response.data &&
+        Array.isArray(error.response.data.issues) &&
+        error.response.data.issues.length > 0
+      ) {
+        errorMessage = `Validation Error: ${error.response.data.issues
+          .map(
+            (issue) => issue.message || issue.field || JSON.stringify(issue)
+          )
+          .join("; ")}`;
       } else {
-        throw new Error("Unsupported HTTP method for saving.");
-      }
-
-      toast.success(`${currentSaveMasterConfig.title} saved successfully!`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setSelectedItemForEdit(null);
-      const newEntryFormData = { ...currentSaveMasterConfig.basePostPayload };
-      if (
-        currentSaveMasterConfig.activeStatusPayloadKey &&
-        newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] ===
-        undefined
-      ) {
-        newEntryFormData[currentSaveMasterConfig.activeStatusPayloadKey] = true;
-      }
-      if (
-        currentSaveMasterConfig.isHierarchical &&
-        currentSaveMasterConfig.parentMasterConfig
-      ) {
-        const formParentKey =
-          currentSaveMasterConfig.parentMasterConfig.formFieldKey || "parentId";
-        newEntryFormData[formParentKey] = null;
-      }
-      if (
-        (master.title === "Lead Status" || master.title === "Potential") &&
-        newEntryFormData.orderId !== undefined
-      ) {
-        newEntryFormData.orderId = "";
-      }
-      if (master.title === leadSourceConfig?.title) {
-        newEntryFormData.parentLeadSourceId = null;
-      }
-      setFormData(newEntryFormData);
-
-      await fetchItems();
-      if (master.title === leadSourceConfig?.title) {
-        fetchAllLeadSourceItems();
-      }
-    } catch (error) {
-      let errorMessage = `Failed to save ${currentSaveMasterConfig.title}.`;
-      if (axios.isAxiosError(error) && error.response) {
-        if (
-          error.response.data &&
-          Array.isArray(error.response.data.issues) &&
-          error.response.data.issues.length > 0
-        ) {
-          errorMessage = `Validation Error: ${error.response.data.issues
-            .map(
-              (issue) => issue.message || issue.field || JSON.stringify(issue)
-            )
-            .join("; ")}`;
-        } else {
-          errorMessage =
-            error.response.data.message ||
-            error.response.data.error ||
-            `Server Error: ${error.response.status}`;
-        }
-      } else if (axios.isAxiosError(error) && error.request) {
         errorMessage =
-          "No response from server. Please check your network connection.";
-      } else {
-        errorMessage = error.message;
+          error.response.data.message ||
+          error.response.data.error ||
+          `Server Error: ${error.response.status}`;
       }
-      setApiError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsSaving(false);
+    } else if (axios.isAxiosError(error) && error.request) {
+      errorMessage =
+        "No response from server. Please check your network connection.";
+    } else {
+      errorMessage = error.message;
     }
-  };
+    setApiError(errorMessage);
+    toast.error(errorMessage);
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const handleDelete = async (itemId) => {
     if (!master) {
@@ -1209,7 +1278,7 @@ const handleChange = (e) => {
         onClick={onClose}
       >
         <div
-          className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl h-[75vh] flex flex-col border border-blue-200 overflow-y-scroll"
+          className="bg-white p-6 rounded-lg shadow-xl w-full max-w-5xl h-[75vh] flex flex-col border border-blue-200"
           onClick={(e) => e.stopPropagation()}
         >
           {showIntro ? (
@@ -1495,7 +1564,7 @@ const handleChange = (e) => {
                 </div>
 
                 {/* Your existing right side content */}
-                <div className="w-1/2 pl-4 flex flex-col">
+                <div className="w-1/2 pl-4 flex flex-col h-60vh overflow-y-scroll">
                   <h3 className="text-xl font-semibold mb-3 text-blue-700">
                     {selectedItemForEdit
                       ? `Edit Existing ${master.modalKey || master.title}`
@@ -1578,87 +1647,145 @@ const handleChange = (e) => {
                         )}
                       </label>
 
-                      {master.title === "Email Template" && master.payloadKey === "mailBody" ? (
-                        <>
-                          {/* Email Subject Field */}
-                          <div className="mb-4">
-                            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                              Subject:
-                            </label>
-                            <input
-                              id="subject"
-                              name="subject"
-                              type="text"
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                              value={formData.subject || ""}
-                              onChange={handleChange}
-                              required
-                              disabled={isSaving}
-                            />
-                          </div>
+    
+{master.title === "Email Template" ? (
+  <>
+    {/* Email Subject Field */}
+    <div className="mb-4">
+      <label htmlFor="mailTitle" className="block text-sm font-medium text-gray-700 mb-1">
+        Subject:
+        <span className="ml-2 text-xs text-green-500">
+          {formData.mailTitle?.length || 0}/100
+        </span>
+      </label>
+      <input
+        id="mailTitle"
+        name="mailTitle"
+        type="text"
+        className={`mt-1 block w-full border ${
+          formData.mailTitle?.length > 0 &&
+          (formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100)
+            ? "border-red-500"
+            : "border-gray-300"
+        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+        value={formData.mailTitle || ""}
+        onChange={handleChange}
+        required
+        minLength={2}
+        maxLength={100}
+        disabled={isSaving}
+      />
+      {formData.mailTitle?.length > 0 && (
+        <p
+          className={`mt-1 text-xs ${
+            formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100
+              ? "text-red-600"
+              : "text-green-600"
+          }`}
+        >
+          {formData.mailTitle?.length < 2
+            ? "Minimum 2 characters required"
+            : formData.mailTitle?.length > 100
+            ? "Maximum 100 characters exceeded"
+            : "Valid length"}
+        </p>
+      )}
+    </div>
 
-                          {/* Email Body Editor */}
-                          <div className="mb-2 h-[150px] overflow-y-scroll">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Content:
-                            </label>
-                            <ReactQuill
-                              theme="snow"
-                              value={formData["mailBody"] || ""}
-                              onChange={(value) =>
-                                handleChange({
-                                  target: { name: "mailBody", value },
-                                })
-                              }
-                              readOnly={isSaving}
-                              className="bg-white rounded-md border border-gray-300 h-[150px] overflow-y-auto"
-                              modules={{
-                                toolbar: [
-                                  ['bold', 'italic', 'underline', 'strike'],
-                                  ['link'],
-                                  ['clean']
-                                ],
-                                clipboard: { matchVisual: false }
-                              }}
-                            />
-                          </div>
+    {/* Email Body Editor */}
+    <div className="mb-2 h-[40vh]">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Content:
+        {formData.mailBody && (
+          <span className="ml-2 text-xs text-green-500">
+            {stripHtmlTags(formData.mailBody).length} characters
+          </span>
+        )}
+      </label>
+      <ReactQuill
+        theme="snow"
+        value={formData["mailBody"] || ""}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "mailBody", value },
+          })
+        }
+        readOnly={isSaving}
+        className={`bg-white h-[40vh] rounded-md border ${
+          formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10
+            ? "border-red-500"
+            : "border-gray-300"
+        } h-[150px] overflow-y-auto`}
+        modules={{
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['link'],
+            ['clean']
+          ],
+          clipboard: { matchVisual: false }
+        }}
+      />
+      {formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10 && (
+        <p className="mt-1 text-xs text-red-600">
+          Email content is too short (minimum 10 characters recommended)
+        </p>
+      )}
+    </div>
 
-                          {/* Plain Text Preview */}
-                          {(formData.subject || formData.mailBody) && (
-                            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                              <div className="mb-2">
-                                <span className="font-semibold text-gray-700">Title:</span>
-                                <span className="ml-2">{formData.subject || ''}</span>
-                              </div>
-                              <div>
-                                <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
-                                <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
-                                  {stripHtmlTags(formData["mailBody"])}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <input
-                          id={master.payloadKey}
-                          name={master.payloadKey}
-                          type="text"
-                          className={`mt-1 block w-full border ${formData[master.payloadKey]?.length > 0 &&
-                              (formData[master.payloadKey]?.length < 3 ||
-                                formData[master.payloadKey]?.length > 50)
-                              ? "border-red-500"
-                              : "border-gray-300"
-                            } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-                          value={formData[master.payloadKey] || ""}
-                          onChange={handleChange}
-                          required
-                          minLength={3}
-                          maxLength={50}
-                          disabled={isSaving}
-                        />
-                      )}
-
+    {/* Plain Text Preview */}
+    {/* {(formData.mailTitle || formData.mailBody) && (
+      <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+        <div className="mb-2">
+          <span className="font-semibold text-gray-700">Title:</span>
+          <span className="ml-2">{formData.mailTitle || ''}</span>
+        </div>
+        <div>
+          <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
+          <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+            {stripHtmlTags(formData["mailBody"])}
+          </div>
+        </div>
+      </div>
+    )} */}
+  </>
+) : (
+  // Regular input for other masters
+  <>
+    <input
+      id={master.payloadKey}
+      name={master.payloadKey}
+      type="text"
+      className={`mt-1 block w-full border ${formData[master.payloadKey]?.length > 0 &&
+          (formData[master.payloadKey]?.length < 3 ||
+            formData[master.payloadKey]?.length > 50)
+          ? "border-red-500"
+          : "border-gray-300"
+        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+      value={formData[master.payloadKey] || ""}
+      onChange={handleChange}
+      required
+      minLength={3}
+      maxLength={50}
+      disabled={isSaving}
+    />
+    {formData[master.payloadKey]?.length > 0 && (
+      <p
+        className={`mt-1 text-xs ${
+          formData[master.payloadKey]?.length < 3 ||
+          formData[master.payloadKey]?.length > 50
+            ? "text-red-600"
+            : "text-green-600"
+        }`}
+      >
+        {formData[master.payloadKey]?.length < 3
+          ? "Minimum 3 characters required"
+          : formData[master.payloadKey]?.length > 50
+          ? "Maximum 50 characters exceeded"
+          : "Valid length"}
+      </p>
+    )}
+  </>
+)}
                       {master.title !== "Email Template" &&
                         formData[master.payloadKey]?.length > 0 && (
                           <p

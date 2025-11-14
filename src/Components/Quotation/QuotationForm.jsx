@@ -45,70 +45,68 @@ const QuotationForm = ({
   };
 
   // Custom fetch for currencies with try-catch
-const fetchCurrencies = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(ENDPOINTS.CURRENCY, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const json = await response.json();
+  const fetchCurrencies = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(ENDPOINTS.CURRENCY, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await response.json();
 
-    if (!response.ok) {
-      throw new Error(json.message || 'Failed to fetch currencies');
-    }
-
-    let currenciesData = [];
-
-    if (Array.isArray(json)) {
-      currenciesData = json;
-    } else if (json.data) {
-      if (Array.isArray(json.data)) {
-        currenciesData = json.data;
-      } else if (json.data.data && Array.isArray(json.data.data)) {
-        currenciesData = json.data.data;
-      } else if (typeof json.data === 'object' && json.data !== null) {
-        currenciesData = [json.data];
+      if (!response.ok) {
+        throw new Error(json.message || 'Failed to fetch currencies');
       }
-    } else {
-      console.error('API response format invalid:', json);
-      throw new Error('Currency data format invalid');
-    }
 
-    // ✅ Filter only active currencies (bactive: true)
-    const activeCurrencies = currenciesData.filter(
-      entry => entry.bactive === true
-    );
+      let currenciesData = [];
 
-    // Validate that the retrieved array contains required keys
-    const validData = activeCurrencies.filter(
-      entry =>
+      if (Array.isArray(json)) {
+        currenciesData = json;
+      }
+      else if (json.data) {
+        // json.data might be an object that contains 'data' which is an array
+        if (Array.isArray(json.data)) {
+          currenciesData = json.data;
+        }
+        else if (json.data.data && Array.isArray(json.data.data)) {
+          currenciesData = json.data.data;
+        }
+        else if (typeof json.data === 'object' && json.data !== null) {
+          currenciesData = [json.data];
+        }
+      }
+      else {
+        console.error("API response format invalid:", json);
+        throw new Error('Currency data format invalid');
+      }
+
+      // Validate that the retrieved array contains required keys
+      const validData = currenciesData.filter(entry =>
         Object.prototype.hasOwnProperty.call(entry, 'icurrency_id') &&
         Object.prototype.hasOwnProperty.call(entry, 'currency_code') &&
         Object.prototype.hasOwnProperty.call(entry, 'symbol')
-    );
-
-    if (validData.length > 0) {
-      setCurrencies(validData);
-      // Set default currency to the first available currency
-      setFormData(prev => ({
-        ...prev,
-        icurrency_id: validData[0].icurrency_id,
-      }));
-    } else {
-      console.warn(
-        'Currency data list is empty, inactive, or contains no valid entries.'
       );
+
+      if (validData.length > 0) {
+        setCurrencies(validData);
+        // Set default currency to the first available currency
+        setFormData(prev => ({
+          ...prev,
+          icurrency_id: validData[0].icurrency_id
+        }));
+      } else {
+        console.warn('Currency data list is empty or contains no valid entries.');
+        setCurrencies([]);
+      }
+
+    } catch (error) {
+      showPopup('Error', `Failed to load currencies: ${error.message}`, 'error');
       setCurrencies([]);
     }
-  } catch (error) {
-    showPopup('Error', `Failed to load currencies: ${error.message}`, 'error');
-    setCurrencies([]);
-  }
-};
+  };
 
   // General fetch helper for other lists
   const fetchAPIData = async (endpoint) => {

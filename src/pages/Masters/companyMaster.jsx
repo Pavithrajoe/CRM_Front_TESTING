@@ -574,73 +574,81 @@ useEffect(() => {
     skipCompanyIdInjection: true,
     conditionalFields: []
 },
+
 {
   title: 'Email Template',
   value: 'Email Template Masters',
   modalKey: 'Email Template',
-  masterKey:'EmailTemplateMaster',
+  masterKey: 'EmailTemplateMaster',
   idKey: 'mail_template_id',
-  payloadKey: 'mail_template_title', // Used for list view display
+  payloadKey: 'mail_template_title',
   responseKey: 'data',
-  isRichText: true, // Add this flag to indicate mailBody uses ReactQuill
-  richTextField: 'mailBody', // Explicitly specify which field is rich text
-    // idLocation: 'query',
-
-    // API Endpoints
-    get: ENDPOINTS.MAIL_TEMPLATE,
-    post: ENDPOINTS.MAIL_TEMPLATE,
-    put: ENDPOINTS.MAIL_TEMPLATE,
- delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mail_template_id=${id}&status=false`,
-    idLocation: 'query',
-    // Payload configuration    
-    basePostPayload: {
-        mailTitle: '',
-        mailBody: ''
-    },
-    basePutPayload: {},
-
-    // Fields to include in POST/PUT requests
-    postPayloadFields: [
-        "mailTitle",
-        "mailBody",
-        "icompany_id",
-        "createdBy"
-    ],
-    putPayloadFields: [
-        "mailTemplateId",
-        "mailTitle",
-        "mailBody",
-        "icompany_id",
-        "updatedBy"
-    ],
-
-    // Field mappings between frontend and backend
-    payloadMapping: {
-        mail_template_id: 'mailTemplateId',
-        mailTitle: 'mailTitle',
-        mailBody: 'mailBody',
-        icompany_id: 'icompany_id',
-        createdBy: 'createdBy',
-        updatedBy: 'updatedBy'
-    },
-
-    // User and timestamp configuration
-    modifierIdPayloadKey: {
-        post: 'createdBy',
-        put: 'updatedBy'
-    },
-    updatedDtPayloadKey: {
-        post: null, // Handled by backend
-        put: null   // Handled by backend
-    },
-
-    // No active status field for email templates
-    activeStatusPayloadKey: null,
-
-    // Additional configuration
-    skipCompanyIdInjection: false,
-    additionalFields: ['mailBody'] // Indicates there's an additional textarea field
+  isRichText: true,
+  richTextField: 'mailBody',
+  
+  // API Endpoints
+  get: ENDPOINTS.MAIL_TEMPLATE,
+  post: ENDPOINTS.MAIL_TEMPLATE,
+  put: (id) => `${ENDPOINTS.MAIL_TEMPLATE}/${id}`,
+  
+  // DELETE: Use mailTemplateId as parameter name (only for delete)
+  delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mailTemplateId=${id}&status=false`,
+  idLocation: 'query',
+  
+  // Payload configuration - keep existing naming for other methods
+  basePostPayload: {
+    mailTitle: '',
+    mailBody: ''
+  },
+  basePutPayload: {},
+  baseDeletePayload: {},
+  
+  // Fields for API requests - keep existing naming
+  postPayloadFields: [
+    "mailTitle",
+    "mailBody", 
+    "icompany_id",
+    "createdBy"
+  ],
+  putPayloadFields: [
+    "mail_template_id", // Keep as mail_template_id for PUT
+    "mailTitle",
+    "mailBody",
+    "icompany_id", 
+    "updatedBy"
+  ],
+  
+  // Field mappings - keep existing naming for all methods except delete
+  payloadMapping: {
+    // For GET, POST, PUT - use existing naming
+    mail_template_id: 'mail_template_id',
+    mail_template_title: 'mailTitle',
+    mail_template_body: 'mailBody',
+    mailTitle: 'mailTitle',
+    mailBody: 'mailBody',
+    icompany_id: 'icompany_id',
+    createdBy: 'createdBy',
+    updatedBy: 'updatedBy'
+    
+    // Note: The delete mapping is handled separately in the delete function
+    // and doesn't need to be in payloadMapping since it's in the URL
+  },
+  
+  modifierIdPayloadKey: {
+    post: 'createdBy',
+    put: 'updatedBy',
+    delete: null
+  },
+  updatedDtPayloadKey: {
+    post: null,
+    put: null,
+    delete: null
+  },
+  activeStatusPayloadKey: null,
+  skipCompanyIdInjection: false,
+  additionalFields: []
 },
+
         // { // Corrected Label Master configuration
         //     title: 'Label ',
         //     value: 'Lead Form Labels',

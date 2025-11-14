@@ -206,7 +206,7 @@ const LeadCardViewPage = () => {
         item.website_lead === 1;
 
       if (selectedFilter === "all") {
-        return matchesSearch && matchesDate && matchesModalFilters && isActive;
+        return matchesSearch && matchesDate && matchesModalFilters;
       } else if (selectedFilter === "leads") {
         return (
           matchesSearch &&

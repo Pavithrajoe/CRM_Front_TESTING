@@ -1,238 +1,259 @@
-import { User } from "lucide-react";
+import { User, Phone, Mail, Building2, } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../../api/constraints";
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-  const decodeJwt = (token) => {
+//  decode JWT token from local storage
+const decodeJwt = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("JWT decoding failed:", e);
+    return null;
+  }
+};
+
+const StatusKanbanTab = () => {
+  // State variables for the Kanban board logic
+  const [statuses, setStatuses] = useState([]); 
+  const [leads, setLeads] = useState({});       
+  const [allLeads, setAllLeads] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);    
+  
+  // State variables for authentication and filtering
+  const [token, setToken] = useState(null);     
+  const [companyId, setCompanyId] = useState(null); 
+  const [userId, setUserId] = useState(null);       
+  const [searchQuery, setSearchQuery] = useState(""); 
+  
+  const navigate = useNavigate(); 
+
+  //  Get Token, Company ID, and User ID
+  useEffect(() => {
     try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map(function (c) {
-            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-          })
-          .join("")
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error("JWT decoding failed:", e);
-      return null;
+      const tokenFromStorage = localStorage.getItem("token") || null;
+      if (!tokenFromStorage) throw new Error("Authentication token not found.");
+
+      const decoded = decodeJwt(tokenFromStorage);
+      if (!decoded || !decoded.company_id)
+        throw new Error("Company ID not found in token or token invalid.");
+
+      setToken(tokenFromStorage);
+      setCompanyId(decoded.company_id);
+      setUserId(decoded.user_id);
+    } catch (err) {
+      console.error("Token decoding error:", err);
+      setError(err.message);
+      setLoading(false);
     }
-  };
+  }, []); 
 
-  const StatusKanbanTab = () => {
-    const [statuses, setStatuses] = useState([]);
-    const [leads, setLeads] = useState({});
-    const [allLeads, setAllLeads] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [token, setToken] = useState(null);
-    const [companyId, setCompanyId] = useState(null);
-    const [userId, setUserId] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const navigate = useNavigate();
+  //  Get Statuses and Leads
+  useEffect(() => {
+    // Only proceed if we have the necessary IDs and token
+    if (!token || !companyId || !userId) return;
 
-    useEffect(() => {
+    const fetchStatusesAndLeads = async () => {
       try {
-        const tokenFromStorage = localStorage.getItem("token") || null;
-        if (!tokenFromStorage) throw new Error("Authentication token not found.");
+        // --- FETCH STATUSES ---
+        const statusRes = await fetch(ENDPOINTS.STATUS, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const statusJson = await statusRes.json();
+        const statusData = statusJson.response || statusJson;
 
-        const decoded = decodeJwt(tokenFromStorage);
-        if (!decoded || !decoded.company_id)
-          throw new Error("Company ID not found in token or token invalid.");
-
-        setToken(tokenFromStorage);
-        setCompanyId(decoded.company_id);
-        setUserId(decoded.user_id);
-      } catch (err) {
-        console.error("Token decoding error:", err);
-        setError(err.message);
-        setLoading(false);
-      }
-    }, []);
-
-    useEffect(() => {
-      if (!token || !companyId || !userId) return;
-
-      const fetchStatusesAndLeads = async () => {
-        try {
-          const statusRes = await fetch(ENDPOINTS.STATUS, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const statusJson = await statusRes.json();
-          const statusData = statusJson.response || statusJson;
-          const filteredStatuses = Array.isArray(statusData)
-            ? statusData
-                .filter(
-                  (status) =>
-                    String(status.icompany_id) === String(companyId) &&
-                    status.bactive === true
-                )
-                .sort((a, b) => a.orderId - b.orderId)
-            : [];
-
-          const nullStatus = {
-            ilead_status_id: "null",
-            clead_name: "No Status",
-            orderId: -1,
-            icompany_id: companyId,
-            bactive: true,
-          };
-
-          setStatuses([ ...filteredStatuses, nullStatus]);
-
-          // Fetch leads
-          const leadRes = await fetch(
-            `${ENDPOINTS.CONVERT_TO_LOST}?limit=10000&page=1`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const leadJson = await leadRes.json();
-          const leadData = leadJson.response || leadJson;
-          const filteredLeads = Array.isArray(leadData)
-            ? leadData.filter(
-                (lead) =>
-                  String(lead.icompany_id) === String(companyId) &&
-                  String(lead.clead_owner) === String(userId) &&
-                  lead.bactive === true &&
-                  lead.bisConverted === false
+        // Filter statuses by company ID and active flag, then sort by orderId
+        const filteredStatuses = Array.isArray(statusData)
+          ? statusData
+              .filter(
+                (status) =>
+                  String(status.icompany_id) === String(companyId) &&
+                  status.bactive === true
               )
-            : [];
+              .sort((a, b) => a.orderId - b.orderId)
+          : [];
 
-          setAllLeads(filteredLeads);
-          groupLeads(filteredLeads);
-          setLoading(false);
-        } catch (err) {
-          console.error("Error fetching statuses or leads:", err);
-          setError(err.message);
-          setLoading(false);
-        }
-      };
+        // Manually create a 'No Status' column for leads without an assigned status ID
+        const nullStatus = {
+          ilead_status_id: "null", // Use string "null" to match grouping logic
+          clead_name: "No Status",
+          orderId: -1,
+          icompany_id: companyId,
+          bactive: true,
+        };
 
-      fetchStatusesAndLeads();
-    }, [token, companyId, userId]);
+        setStatuses([...filteredStatuses, nullStatus]);
 
-    const groupLeads = (leadsToGroup) => {
-      const groupedLeads = leadsToGroup.reduce((acc, lead) => {
-        const statusId =
-          lead.ileadstatus_id === null || lead.ileadstatus_id === undefined
-            ? "null"
-            : String(lead.ileadstatus_id);
-
-        if (!acc[statusId]) acc[statusId] = [];
-        acc[statusId].push(lead);
-        return acc;
-      }, {});
-      setLeads(groupedLeads);
-    };
-
-    useEffect(() => {
-      const filteredLeads = allLeads.filter((lead) => {
-        const query = searchQuery.toLowerCase();
-        return (
-          (lead.clead_name && lead.clead_name.toLowerCase().includes(query)) ||
-          (lead.corganization &&
-            lead.corganization.toLowerCase().includes(query)) ||
-          (lead.cemail && lead.cemail.toLowerCase().includes(query)) ||
-          (lead.iphone_no && lead.iphone_no.includes(query))
-        );
-      });
-      groupLeads(filteredLeads);
-    }, [searchQuery, allLeads]);
-
-    const goToDetail = (id) => {
-      navigate(`/leaddetailview/${id}`);
-    };
-
-    // Drag & Drop 
-    const onDragEnd = async (result) => {
-      const { source, destination } = result;
-      if (!destination) return;
-      if (
-        source.droppableId === destination.droppableId &&
-        source.index === destination.index
-      )
-        return;
-
-      const sourceStatusId = source.droppableId;
-      const destStatusId = destination.droppableId;
-      const updatedLeads = { ...leads };
-      const movedLead = updatedLeads[sourceStatusId]?.[source.index];
-
-      if (!movedLead) return;
-
-      updatedLeads[sourceStatusId].splice(source.index, 1);
-      if (!updatedLeads[destStatusId]) updatedLeads[destStatusId] = [];
-      updatedLeads[destStatusId].splice(destination.index, 0, {
-        ...movedLead,
-        ileadstatus_id: destStatusId === "null" ? null : parseInt(destStatusId),
-      });
-
-      setLeads(updatedLeads);
-
-      try {
-        const newStatusId =
-          destStatusId === "null" ? null : parseInt(destStatusId);
-        const response = await fetch(
-          `${ENDPOINTS.CONVERT_TO_LOST}/${movedLead.ilead_id}`,
+        // --- FETCH LEADS ---
+        const leadRes = await fetch(`${ENDPOINTS.LEAD}${userId}`,
           {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              ...movedLead,
-              ileadstatus_id: newStatusId, 
-            }),
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to update lead status");
-        }
+        const leadJson = await leadRes.json();
+        const leadData = leadJson.details || [];
+
+        // Filter leads by company ID, active flag, and exclude converted leads
+        const filteredLeads = leadData.filter(
+          (lead) =>
+            String(lead.icompany_id) === String(companyId) &&
+            lead.bactive === true &&
+            lead.bisConverted === false
+        );
+
+        setAllLeads(filteredLeads); // Save all leads for searching
+        groupLeads(filteredLeads);  // Group them into the Kanban columns
+        setLoading(false);          // Stop loading indicator
       } catch (err) {
-        console.error("Error updating lead status:", err);
-        setLeads(leads);
+        console.error("Error fetching statuses or leads:", err);
+        setError(err.message);
+        setLoading(false);
       }
     };
 
-    if (loading)
-      return <p className="text-gray-600 text-lg p-4">Loading Kanban Board...</p>;
-    if (error)
-      return <p className="text-red-500 font-bold text-lg p-4">Error: {error}</p>;
+    fetchStatusesAndLeads();
+  }, [token, companyId, userId]); 
+
+  // Function to group the leads array into the 'leads' object
+  const groupLeads = (leadsToGroup) => {
+    const groupedLeads = leadsToGroup.reduce((acc, lead) => {
+      const statusId =
+        lead.ileadstatus_id === null || lead.ileadstatus_id === undefined
+          ? "null"
+          : String(lead.ileadstatus_id);
+
+      if (!acc[statusId]) acc[statusId] = [];
+      acc[statusId].push(lead);
+      return acc;
+    }, {});
+    setLeads(groupedLeads);
+  };
+
+  // Filter leads based on searchQuery
+  useEffect(() => {
+    const filteredLeads = allLeads.filter((lead) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        (lead.clead_name && lead.clead_name.toLowerCase().includes(query)) ||
+        (lead.corganization &&
+          lead.corganization.toLowerCase().includes(query)) ||
+        (lead.cemail && lead.cemail.toLowerCase().includes(query)) ||
+        (lead.iphone_no && lead.iphone_no.includes(query))
+      );
+    });
+    groupLeads(filteredLeads); 
+  }, [searchQuery, allLeads]); // Reruns when search query changes or allLeads updates
+
+  // Navigation function for clicking on a lead card
+  const goToDetail = (id) => navigate(`/leaddetailview/${id}`);
+
+  // Drag and Drop Handler
+  const onDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (!destination) return; 
+
+    const sourceStatusId = source.droppableId;
+    const destStatusId = destination.droppableId;
+
+    const updatedLeads = { ...leads };
+    const movedLead = updatedLeads[sourceStatusId]?.[source.index];
+
+    if (!movedLead) return;
+
+    // Optimistic UI Update (Change local state immediately)
+    updatedLeads[sourceStatusId].splice(source.index, 1); 
+    if (!updatedLeads[destStatusId]) updatedLeads[destStatusId] = [];
+    
+    // Determine the new status ID (null if dropped into 'No Status' column)
+    const newStatusIdValue = destStatusId === "null" ? null : parseInt(destStatusId);
+
+    const movedLeadWithNewStatus = {
+        ...movedLead,
+        ileadstatus_id: newStatusIdValue, // Update the lead's status ID
+    };
+    updatedLeads[destStatusId].splice(destination.index, 0, movedLeadWithNewStatus); 
+
+    setLeads(updatedLeads); // Update the state immediately
+
+    // API Call to update the backend 
+    try {
+      const {
+        lead_potential,
+        lead_status,
+        user,
+        user_crm_lead_modified_byTouser,
+        sub_src_lead,
+        ...restOfLeadData 
+      } = movedLead; 
+
+      // Construct the clean API payload
+      const updateBody = {
+        ...restOfLeadData,          
+        ileadstatus_id: newStatusIdValue, 
+        dmodified_dt: new Date().toISOString(),
+        isUpdated: true, 
+      };
+      
+      const response = await fetch(`${ENDPOINTS.CONVERT_TO_LOST}/${movedLead.ilead_id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updateBody), 
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update lead status: ${response.statusText}`);
+      }
+      
+    } catch (err) {
+      console.error("Error updating lead status:", err);
+      alert("Failed to update lead status on server. Please try again or refresh.");
+    }
+  };
+
+  //  Render Status
+  if (loading)
+    return <p className="text-gray-600 text-lg p-4">Loading Kanban...</p>;
+  if (error)
+    return <p className="text-red-500 font-bold text-lg p-4">Error: {error}</p>;
 
   return (
     <>
+      {/* Search Input Section */}
       <div className="p-4 bg-white border-b border-gray-200">
         <input
           type="text"
-          placeholder="Search leads by name, organization, email, or phone..."
+          placeholder="Search leads..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-xl p-2 pl-10 text-sm text-gray-700 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-          style={{
-            backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>')`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "8px 50%",
-            backgroundSize: "18px",
-          }}
+          className="w-full max-w-xl p-2 pl-10 text-sm bg-gray-100 rounded-lg"
         />
       </div>
 
+      {/* Kanban Board Container */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="overflow-x-auto w-full h-[80vh] p-6 bg-gray-100 font-inter">
+        <div className="overflow-x-auto w-full h-[80vh] p-6 bg-gray-100">
           <div className="flex gap-6 min-w-max pb-4">
             {statuses.map((status) => {
-              // const leadsForStatus = leads[String(status.ilead_status_id)] || [];
-              const leadsForStatus = (leads[String(status.ilead_status_id)] || []).sort(
+              const leadsForStatus = (leads[String(status.ilead_status_id)] ||
+                []).sort(
                 (a, b) => new Date(b.dcreated_dt) - new Date(a.dcreated_dt)
               );
-
 
               return (
                 <Droppable
@@ -243,24 +264,18 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="w-80 flex-shrink-0 border border-gray-200 rounded-xl p-4 bg-gray-200 shadow-md min-h-[200px]"
+                      className="w-80 p-4 bg-gray-200 rounded-xl shadow-md"
                     >
-                      <div className="border-b-2 border-indigo-600 pb-3 mb-4 font-semibold text-lg text-gray-800 flex justify-between items-center">
-                        <span className="flex-1 text-center">
-                          {status.clead_name || "Untitled Status"}
-                        </span>
-                        <span className="text-sm text-white bg-indigo-600 px-3 py-1 rounded-full">
-                          {leadsForStatus.length}
+                      {/* Column Header */}
+                      <div className="border-b-2 border-indigo-600 pb-3 mb-4 text-lg font-semibold text-center">
+                        {status.clead_name}
+                        <span className="ml-2 bg-indigo-600 text-white px-3 py-1 rounded-full text-sm">
+                          {leadsForStatus.length} {/* Lead count */}
                         </span>
                       </div>
 
+                      {/* Leads Container (Scrollable) */}
                       <div className="space-y-4 max-h-[calc(70vh-80px)] overflow-y-auto pr-2">
-                        {leadsForStatus.length === 0 && (
-                          <p className="text-gray-500 italic text-sm p-4 text-center">
-                            No active leads in this status
-                          </p>
-                        )}
-
                         {leadsForStatus.map((lead, index) => (
                           <Draggable
                             key={lead.ilead_id}
@@ -271,33 +286,46 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                {...provided.dragHandleProps}
+                                {...provided.dragHandleProps} // Allows the card to be dragged
                                 onClick={() => goToDetail(lead.ilead_id)}
-                                className="p-4 bg-white hover:bg-gray-50 rounded-lg shadow-sm cursor-pointer transition-all duration-200 ease-in-out border border-gray-300"
+                                className="p-4 bg-white rounded-lg shadow-sm border hover:bg-gray-50 cursor-pointer"
                               >
-                                <h3 className="font-semibold text-gray-900 text-base">
+                                
+                                {/* LEAD NAME  */}
+                                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                  <User size={16} /> 
                                   {lead.clead_name || "Unnamed Lead"}
                                 </h3>
+
+                                {/* ORG */}
                                 {lead.corganization && (
-                                  <p className="text-sm text-gray-600 mt-1">
+                                  <p className="flex items-center gap-2 text-sm text-gray-700 mt-1">
+                                    <Building2 size={16} />
                                     {lead.corganization}
                                   </p>
                                 )}
+
+                                {/* EMAIL */}
                                 {lead.cemail && (
-                                  <p className="text-sm text-gray-600 mt-0.5 truncate">
+                                  <p className="flex items-center gap-2 text-sm text-gray-700 mt-1 truncate">
+                                    <Mail size={16} />
                                     {lead.cemail}
                                   </p>
                                 )}
+
+                                {/* PHONE */}
                                 {lead.iphone_no && (
-                                  <p className="text-sm text-gray-600 mt-0.5 truncate">
+                                  <p className="flex items-center gap-2 text-sm text-gray-700 mt-1 truncate">
+                                    <Phone size={16} />
                                     {lead.iphone_no}
                                   </p>
                                 )}
+                                
                               </div>
                             )}
                           </Draggable>
                         ))}
-                        {provided.placeholder}
+                        {provided.placeholder} 
                       </div>
                     </div>
                   )}
@@ -309,6 +337,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
       </DragDropContext>
     </>
   );
-  };;
+};
 
 export default StatusKanbanTab;

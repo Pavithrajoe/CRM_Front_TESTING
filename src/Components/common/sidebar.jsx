@@ -71,6 +71,8 @@ useEffect(() => {
       .map(access => access.module_id)
   );
 
+  console.log("latest",allowedModuleIds)
+
   const isTargetCompany = companyId === TARGET_COMPANY_ID;
 
   const filteredModules = modules

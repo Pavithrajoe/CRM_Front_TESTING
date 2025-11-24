@@ -79,7 +79,7 @@ useEffect(() => {
             title: 'Status',
             value: 'Status Masters',
             modalKey: 'Status', 
-            masterKey:'statusMaster',
+            masterKey:'StatusMaster',
             idKey: 'ilead_status_id',
             payloadKey: 'clead_name',
             responseKey: 'response',
@@ -114,7 +114,7 @@ useEffect(() => {
             title: 'Potential',
             value: 'Potential Masters',
             modalKey: 'Potential',
-            masterKey:'potentialMaster',
+            masterKey:'PotentialMaster',
             idKey: 'ileadpoten_id', 
             payloadKey: 'clead_name', 
             responseKey: 'data', 
@@ -160,7 +160,7 @@ useEffect(() => {
             title: 'Industries',
             value: 'Industry Masters',
             modalKey: 'Industry',
-            masterKey:'industryMaster',
+            masterKey:'IndustryMaster',
             idKey: 'iindustry_id', // ID key from GET response
             payloadKey: 'cindustry_name', // Main content key from GET response/form field name
             responseKey: 'response.industry', // Path to the array of items in GET response (VERIFY THIS!)
@@ -281,7 +281,7 @@ useEffect(() => {
             payloadKey: 'source_name',
             responseKey: 'data',
             idLocation: 'params',
-            masterKey:'sourceMaster', // ID in URL for PUT/DELETE
+            masterKey:'SourceMaster', // ID in URL for PUT/DELETE
             
             // --- API Endpoints ---
             get: ENDPOINTS.MASTER_SOURCE_GET,
@@ -392,7 +392,7 @@ useEffect(() => {
   title: 'Service',
   value: 'Service Masters',
   modalKey: 'Service',
-  masterKey:'serviceMaster',
+  masterKey:'ServiceMaster',
   idKey: 'iservice_id',
   payloadKey: 'cservice_name',
   responseKey: 'data',
@@ -523,7 +523,7 @@ useEffect(() => {
     modalKey: 'ProposalSendMode',
     idKey: 'proposal_send_mode_id', 
     payloadKey: 'name', 
-    masterKey:'proposalSentModeMaster',
+    masterKey:'ProposalModeMaster',
     
     // Updated response handling for nested structure
     responseKey: 'data.data', // Now points to the actual array of items
@@ -727,7 +727,7 @@ useEffect(() => {
             title: 'Lead Lost Reason',
             value: 'Lead Lost Reasons',
             modalKey: 'Lost Reason', 
-            masterKey:'leadLostReasonsMaster',
+            masterKey:'LeasLostReasonMaster',
 
             idKey: 'ilead_lost_reason_id', // ID field name in GET response and for operations
             payloadKey: 'cLeadLostReason', // Main input field's key for formData

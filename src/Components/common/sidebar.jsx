@@ -24,7 +24,7 @@ const Sidebar = ({ data }) => {
   const MODULE_ROUTES = {
     Home: { route: "/leaddashboard", iconPath: "/images/nav/home.svg" },
     Lead: { route: "/leadcardview", iconPath: "/images/nav/group.svg" },
-    Customer: { route: "/customers", iconPath: "/images/nav/customers.svg" },
+    Customers: { route: "/customers", iconPath: "/images/nav/customers.svg" },
     Calendar: { route: "/calenderpage", iconPath: "/images/nav/Calender.svg" },
     Users: { route: "/userpage", iconPath: "/images/nav/user.svg" },
     Reports: { route: "/reportpage", iconPath: "/images/nav/reports.svg" },

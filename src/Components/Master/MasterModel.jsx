@@ -1,4 +1,4 @@
-
+//Company master Functionalities 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -17,23 +17,20 @@ const formatMasterName = (name, previousValue) => {
     return name;
   }
 
-  // Only auto-capitalize if:
-  // 1. Field was empty and user is typing the first character
-  // 2. User just typed a space and is typing the next word
+
   if (!previousValue || previousValue === '' ||
     (previousValue.length > 0 && name.length > previousValue.length && name.endsWith(' '))) {
     // Capitalize first letter after space or at beginning
     if (name.length === 1) {
       return name.charAt(0).toUpperCase();
     } else if (name.endsWith(' ') && name.length > 1) {
-      return name; // Don't capitalize space, wait for next character
+      return name; 
     } else if (name.length > 1 && name.charAt(name.length - 2) === ' ') {
       // Capitalize first letter after space
       return name.slice(0, -1) + name.slice(-1).toUpperCase();
     }
   }
 
-  // Otherwise, preserve user's typing
   return name;
 };
 

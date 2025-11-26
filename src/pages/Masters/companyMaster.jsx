@@ -6,7 +6,7 @@ import { FaTimesCircle } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useSettingsAccess } from '../../context/companySettingsContext';
 
-export default function CompanyMaster() {
+export default function CompanyMaster() { 
 
     const { settingsAccess } = useSettingsAccess();
     const [selectedMaster, setSelectedMaster] = useState(null);
@@ -160,7 +160,7 @@ useEffect(() => {
             title: 'Industries',
             value: 'Industry Masters',
             modalKey: 'Industry',
-            masterKey:'IndustryMaster',
+            masterKey:'IndustryMaster',//access 
             idKey: 'iindustry_id', // ID key from GET response
             payloadKey: 'cindustry_name', // Main content key from GET response/form field name
             responseKey: 'response.industry', // Path to the array of items in GET response (VERIFY THIS!)

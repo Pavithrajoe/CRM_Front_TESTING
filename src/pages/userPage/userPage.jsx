@@ -367,7 +367,7 @@ const UserPage = () => {
                       {user.role.cRole_name}
                     </span>
                   ) : (
-                    <span className="text-gray-400">N/A</span>
+                    <span className="text-gray-400">-</span>
                   )}
                 </div>
                 <div className="truncate">{user.cEmail}</div>

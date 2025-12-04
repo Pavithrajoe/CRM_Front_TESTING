@@ -263,7 +263,7 @@ useEffect(() => {
         // console.log("Selected Source:", selectedSource);
 
         const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
-        if (selectedService) setSearchService(selectedService.cservice_name);
+        if (selectedService) setSearchService(selectedService.serviceName);
         // console.log("Selected Service:", selectedService);
 
         const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
@@ -959,10 +959,10 @@ useEffect(() => {
     if (name === "icity" && !value) {
       error = "Mandatory";
     }
-    if (name === "iLeadpoten_id" && !value) {
+    if (name === "LeadpotenId" && !value) {
       error = "Mandatory";
     }
-    if (name === "iservice_id" && !value) {
+    if (name === "serviceId" && !value) {
       error = "Mandatory";
     }
     if (name === "ileadstatus_id" && !value) {
@@ -1268,7 +1268,7 @@ const handleChange = (e) => {
     else if (name === "searchService") {
       const selectedService = Array.isArray(service) ? service.find(service => service.iservice_id === form.iservice_id) : null;
       if (!selectedService || selectedService.source_name !== value) {
-        setSearchService(selectedService ? selectedService.cservice_name : "");
+        setSearchService(selectedService ? selectedService.serviceName : "");
         setForm((prev) => ({ ...prev, iservice_id: selectedService ? selectedService.iservice_id : "" }));
       }
       setIsServiceDropdownOpen(false);
@@ -1500,7 +1500,7 @@ const handleSubmit = async (e) => {
     : [];
   const filterService = Array.isArray(service)
     ? service.filter((item) =>
-      item.cservice_name?.toLowerCase().includes(searchService.toLowerCase())
+      item.serviceName?.toLowerCase().includes(searchService.toLowerCase())
     )
     : [];
 
@@ -1894,7 +1894,7 @@ const handleSubmit = async (e) => {
             setOpen: setIsServiceDropdownOpen,
             list: filterService,
             keyField: "iservice_id",
-            displayField: "cservice_name",
+            displayField: "serviceName",
             formField: "iservice_id",
             error: errors.iservice_id,
             required: true,

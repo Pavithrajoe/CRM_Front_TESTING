@@ -29,11 +29,13 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     }
   } else {
     console.error("Invalid or missing JWT token");
+
   }
 
   const [form, setForm] = useState({
     iLeadpoten_id: profile?.iLeadpoten_id || "",
-    iservice_id: profile?.iservice_id || "",
+    // iservice_id: profile?.serviceId || "",
+    iservice_id: profile?.iservice_id || profile?.serviceId || "",
     isubservice_id: profile?.isubservice_id || "",
     ilead_status_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
@@ -154,8 +156,6 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
         if (res.data?.data?.data) {
           const fetchedCurrencies = res.data.data.data;
           setCurrencies(fetchedCurrencies);
-          // console.log("Fetched currencies successfully:", fetchedCurrencies);
-          
           const initialCurrency = fetchedCurrencies.find(c => c.icurrency_id === profile?.icurrency_id) || { currency_code: "INR", symbol: "₹" };
           setSelectedCurrency(initialCurrency);
         } else {
@@ -280,9 +280,6 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
           headers: { Authorization: `Bearer ${token}` },
           params: { icompany_id: company_id },
         });
-        // console.log("Lead status fetched:", res.data);
-        // console.log("Lead status response:", res);
-        // setStatus(res.data);
         setStatus(res.data.data || []);  
 
       } catch (err) {
@@ -330,7 +327,6 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
       }
 
       const rawData = await response.json();
-      // console.log("Sub-service response:", rawData);
       setSubService(rawData.data || []);
     } catch (e) {
       console.error("Error in fetching sub services:", e);
@@ -382,7 +378,7 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     };
 
     setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
-    setInitialDropdownValue(service, 'iservice_id', 'cservice_name', 'iservice_id', setSearchService);
+    setInitialDropdownValue(service, 'serviceId', 'serviceName', 'iservice_id', setSearchService);
     setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ileadstatus_id', setSearchStatus);
     setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
     setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'isubindustry', setSearchSubIndustry);
@@ -427,14 +423,14 @@ const EditProfileForm = ({ profile, onClose, onSave, isReadOnly }) => {
     setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
   };
 
-   const handleServiceSelect = (iservice_id, cservice_name) => {
+   const handleServiceSelect = (serviceId, serviceName) => {
     if (isReadOnly) return;
     setForm(prev => ({ 
       ...prev, 
-      iservice_id: iservice_id,
+      iservice_id: serviceId,
       isubservice_id: "" 
     }));
-    setSearchService(cservice_name);
+    setSearchService(serviceName);
     setSearchSubService("");
     setIsServiceDropdownOpen(false);
     setErrors((prev) => ({ ...prev, iservice_id: "" }));
@@ -723,10 +719,6 @@ const updateLeadProfile = async () => {
       payload.modified_by = form.modified_by;
     }
 
-    console.log("Final payload to be sent:", payload);
-    // console.log("Frontend cpincode type:", typeof payload.cpincode);
-    // console.log("Frontend payload:", payload);
-
     const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${profile.ilead_id}`, {
       method: "PUT",
       headers: {
@@ -741,9 +733,7 @@ const updateLeadProfile = async () => {
       console.error("Failed to update lead", errorData);
       throw new Error("API update failed");
     }
-
     const data = await response.json();
-    // console.log("Lead updated successfully:", data);
   } catch (e) {
     console.error("Error updating lead:", e);
     throw e;
@@ -1123,85 +1113,85 @@ const handleSubmit = async (e) => {
 
 
             {/* Services Dropdown */}
-      <div className="relative" ref={serviceDropdownRef}>
-        <label htmlFor="iservice_id" className={labelClasses}>
-          Lead service <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={searchService}
-          onChange={(e) => {
-            if (isReadOnly) return;
-            setSearchService(e.target.value);
-            setIsServiceDropdownOpen(true);
-            setErrors((prev) => ({ ...prev, iservice_id: "" }));
-          }}
-          onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
-          className={getInputClasses(errors.iservice_id)}
-          placeholder="Select Services"
-          readOnly={isReadOnly || service.length === 0}
-          disabled={isReadOnly || service.length === 0}
-        />
-        {isServiceDropdownOpen && service.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-            {service.filter(serviceItem =>
-              serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
-            ).map((serviceItem) => (
-              <div
-                key={serviceItem.iservice_id}
-                className={dropdownItemClasses}
-                onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
-              >
-                {serviceItem.cservice_name}
-              </div>
-            ))}
-          </div>
-        )}
-        {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
-      </div>
-
-      {/* Sub-Services Dropdown */}
-      <div className="relative" ref={subServiceDropdownRef}>
-        <label htmlFor="isubservice_id" className={labelClasses}>
-          Sub Service {form.iservice_id && filteredSubServices.length > 0 }
-        </label>
-        <input
-          type="text"
-          value={searchSubService}
-          onChange={(e) => {
-            if (isReadOnly) return;
-            setSearchSubService(e.target.value);
-            setIsSubServiceDropdownOpen(true);
-            setErrors((prev) => ({ ...prev, isubservice_id: "" }));
-          }}
-          onClick={() => !isReadOnly && setIsSubServiceDropdownOpen(true)}
-          className={getInputClasses(errors.isubservice_id)}
-          placeholder="Select Sub-Services"
-          readOnly={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
-          disabled={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
-        />
-        {isSubServiceDropdownOpen && form.iservice_id && filteredSubServices.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-            {filteredSubServices
-              .filter(subServiceItem =>
-                subServiceItem.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
-              )
-              .map((subServiceItem) => (
-                <div
-                  key={subServiceItem.isubservice_id}
-                  className={dropdownItemClasses}
-                  onClick={() => handleSubServiceSelect(subServiceItem.isubservice_id, subServiceItem.subservice_name)}
-                >
-                  {subServiceItem.subservice_name}
+            <div className="relative" ref={serviceDropdownRef}>
+              <label htmlFor="iservice_id" className={labelClasses}>
+                Lead service <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchService}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchService(e.target.value);
+                  setIsServiceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, iservice_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
+                className={getInputClasses(errors.iservice_id)}
+                placeholder="Select Services"
+                readOnly={isReadOnly || service.length === 0}
+                disabled={isReadOnly || service.length === 0}
+              />
+              {isServiceDropdownOpen && service.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {service.filter(serviceItem =>
+                    serviceItem.serviceName.toLowerCase().includes(searchService.toLowerCase())
+                  ).map((serviceItem) => (
+                    <div
+                      key={serviceItem.serviceId}
+                      className={dropdownItemClasses}
+                      onClick={() => handleServiceSelect(serviceItem.serviceId, serviceItem.serviceName)}
+                    >
+                      {serviceItem.serviceName}
+                    </div>
+                  ))}
                 </div>
-              ))}
-          </div>
-        )}
-        {errors.isubservice_id && <p className={errorTextClasses}>{errors.isubservice_id}</p>}
-      </div>
+              )}
+              {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
+            </div>
+
+            {/* Sub-Services Dropdown */}
+            <div className="relative" ref={subServiceDropdownRef}>
+              <label htmlFor="isubservice_id" className={labelClasses}>
+                Sub Service {form.iservice_id && filteredSubServices.length > 0 }
+              </label>
+              <input
+                type="text"
+                value={searchSubService}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchSubService(e.target.value);
+                  setIsSubServiceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, isubservice_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsSubServiceDropdownOpen(true)}
+                className={getInputClasses(errors.isubservice_id)}
+                placeholder="Select Sub-Services"
+                readOnly={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+                disabled={isReadOnly || !form.iservice_id || filteredSubServices.length === 0}
+              />
+              {isSubServiceDropdownOpen && form.iservice_id && filteredSubServices.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredSubServices
+                    .filter(subServiceItem =>
+                      subServiceItem.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+                    )
+                    .map((subServiceItem) => (
+                      <div
+                        key={subServiceItem.isubservice_id}
+                        className={dropdownItemClasses}
+                        onClick={() => handleSubServiceSelect(subServiceItem.isubservice_id, subServiceItem.subservice_name)}
+                      >
+                        {subServiceItem.subservice_name}
+                      </div>
+                    ))}
+                </div>
+              )}
+              {errors.isubservice_id && <p className={errorTextClasses}>{errors.isubservice_id}</p>}
+            </div>
 
 
-      {/* Number of Employees Field */}
+           {/* Number of Employees Field */}
             <div>
               <label htmlFor="ino_employee" className={labelClasses}>
                 Number of Employees
@@ -1223,78 +1213,78 @@ const handleSubmit = async (e) => {
               {errors.ino_employee && <p className={errorTextClasses}>{errors.ino_employee}</p>}
             </div>
 
-          {/* Project Value with Currency */}
-          <div>
-            <label htmlFor="iproject_value" className={labelClasses}>
-              Project Value
-            </label>
-            <div className="flex mt-1">
-              {/* Currency Dropdown */}
-              <div className="relative" ref={currencyDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => !isReadOnly && setIsCurrencyDropdownOpen(prev => !prev)}
-                  className={`border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1 ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                  disabled={isReadOnly}
-                >
-                  {selectedCurrency.currency_code} ({selectedCurrency.symbol})
-                  {!isReadOnly && (
-                    <svg
-                      className="w-3 h-3 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  )}
-                </button>
-                {isCurrencyDropdownOpen && (
-                  <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
-                    {currencies.map((cur) => (
-                      <div
-                        key={cur.icurrency_id}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                        onClick={() => handleCurrencySelect(cur)}
+            {/* Project Value with Currency */}
+            <div>
+              <label htmlFor="iproject_value" className={labelClasses}>
+                Project Value
+              </label>
+              <div className="flex mt-1">
+                {/* Currency Dropdown */}
+                <div className="relative" ref={currencyDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => !isReadOnly && setIsCurrencyDropdownOpen(prev => !prev)}
+                    className={`border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1 ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    disabled={isReadOnly}
+                  >
+                    {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+                    {!isReadOnly && (
+                      <svg
+                        className="w-3 h-3 ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {cur.currency_code} ({cur.symbol})
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </button>
+                  {isCurrencyDropdownOpen && (
+                    <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
+                      {currencies.map((cur) => (
+                        <div
+                          key={cur.icurrency_id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => handleCurrencySelect(cur)}
+                        >
+                          {cur.currency_code} ({cur.symbol})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+            {/* Project Value Input
+
+              <input
+                type="number"
+                id="iproject_value"
+                name="iproject_value"
+                value={form.iproject_value || ""}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    iproject_value: e.target.value ? parseInt(e.target.value, 10) : ""
+                  }))
+                }
+                className={getInputClasses(errors.iproject_value)}
+                readOnly={isReadOnly}
+                disabled={isReadOnly}
+              /> */}
+
+                  <input
+                    type="number"
+                    id="iproject_value"
+                    name="iproject_value"
+                    value={form.iproject_value === 0 ? "" : form.iproject_value}
+                    onChange={handleFieldChange} 
+                    className={`flex-1 ${getInputClasses(errors.iproject_value)} rounded-r-md`}
+                    readOnly={isReadOnly}
+                    disabled={isReadOnly}
+                  />
+                </div>
+                {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
               </div>
-
-           {/* Project Value Input
-
-            <input
-              type="number"
-              id="iproject_value"
-              name="iproject_value"
-              value={form.iproject_value || ""}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  iproject_value: e.target.value ? parseInt(e.target.value, 10) : ""
-                }))
-              }
-              className={getInputClasses(errors.iproject_value)}
-              readOnly={isReadOnly}
-              disabled={isReadOnly}
-            /> */}
-
-                <input
-                  type="number"
-                  id="iproject_value"
-                  name="iproject_value"
-                  value={form.iproject_value === 0 ? "" : form.iproject_value}
-                  onChange={handleFieldChange} 
-                  className={`flex-1 ${getInputClasses(errors.iproject_value)} rounded-r-md`}
-                  readOnly={isReadOnly}
-                  disabled={isReadOnly}
-                />
-              </div>
-              {errors.iproject_value && <p className={errorTextClasses}>{errors.iproject_value}</p>}
-            </div>
 
             {/* Email Field */}
             <div>
@@ -1561,3 +1551,4 @@ const handleSubmit = async (e) => {
 };
 
 export default EditProfileForm;
+

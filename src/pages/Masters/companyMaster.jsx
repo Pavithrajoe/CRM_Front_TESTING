@@ -181,94 +181,87 @@ useEffect(() => {
             },
             skipCompanyIdInjection: false, // Assuming companyId is relevant for Industry
         },
-{
-    title: 'Sub-Industries',
-    value: 'Sub-Industry Masters',
-    modalKey: 'Sub Industry',
-    masterKey:'subIndustryMaster',
-    idKey: 'isubindustry',
-    payloadKey: 'subindustry_name',
-    responseKey: 'response.subindustries',
-        parentIdInChildResponseKey: 'iindustry_parent',
+        {
+            title: 'Sub-Industries',
+            value: 'Sub-Industry Masters',
+            modalKey: 'Sub Industry',
+            masterKey:'subIndustryMaster',
+            idKey: 'isubindustry',
+            payloadKey: 'subindustry_name',
+            responseKey: 'response.subindustries',
+            parentIdInChildResponseKey: 'iindustry_parent',
+            get: ENDPOINTS.MASTER_INDUSTRY_GET,
+            // responseKey: 'response.subindustries',
+            post: ENDPOINTS.MASTER_SUB_INDUSTRY,
+            put: ENDPOINTS.MASTER_SUB_INDUSTRY,
 
+            delete: (id, item) => {
+                const backendIdKey = 'subindustryId';
+                const backendActiveKey = 'isActive';
+                const statusForDelete = false;
+                return `${ENDPOINTS.MASTER_SUB_INDUSTRY_DELETE}?${backendIdKey}=${id}&${backendActiveKey}=${statusForDelete}`;
+            },
 
-    get: ENDPOINTS.MASTER_INDUSTRY_GET,
-    // responseKey: 'response.subindustries',
+            payloadMapping: {
+                isubindustry: 'subIndustryId',
+                subindustry_name: 'subindustryName',
+                industryParent: 'industryParent',
+                bactive: 'isActive',
+                created_by: 'createdBy',
+                icompany_id: 'icompany_id',
+            },
 
-    post: ENDPOINTS.MASTER_SUB_INDUSTRY,
-    put: ENDPOINTS.MASTER_SUB_INDUSTRY,
+            skipCompanyIdInjection: true,
 
-    delete: (id, item) => {
-        const backendIdKey = 'subindustryId';
-        const backendActiveKey = 'isActive';
-        const statusForDelete = false;
-        return `${ENDPOINTS.MASTER_SUB_INDUSTRY_DELETE}?${backendIdKey}=${id}&${backendActiveKey}=${statusForDelete}`;
-    },
+            modifierIdPayloadKey: {
+                post: 'createdBy',
+                put: 'updated_by',
+            },
 
-    payloadMapping: {
-        isubindustry: 'subIndustryId',
-        subindustry_name: 'subindustryName',
-        industryParent: 'industryParent',
-        bactive: 'isActive',
-        created_by: 'createdBy',
-        icompany_id: 'icompany_id',
-    },
+            updatedDtPayloadKey: {
+                post: null,
+                put: null,
+                delete: null,
+            },
 
-    skipCompanyIdInjection: true,
+            activeStatusPayloadKey: 'bactive',
 
-    modifierIdPayloadKey: {
-        post: 'createdBy',
-        put: 'updated_by',
-    },
+            basePostPayload: {
+                subindustryName: '',
+                industryParent: null,
+                bactive: true
+            },
 
-    updatedDtPayloadKey: {
-        post: null,
-        put: null,
-        delete: null,
-    },
+            baseDeletePayload: {
+                isActive: false
+            },
 
-    activeStatusPayloadKey: 'bactive',
+            isHierarchical: true,
 
-    basePostPayload: {
-        subindustryName: '',
-        industryParent: null,
-        bactive: true
-    },
+        parentMasterConfig: {
+        masterName: "INDUSTRY",
+        getEndpoint: ENDPOINTS.MASTER_INDUSTRY_GET,
+        responseKey: 'response.industry',
+        idKey: 'iindustry_id',
+        nameKey: 'cindustry_name',
+        parentIdInChildResponseKey: 'iindustry_parent', // Must match API response field
+        formFieldKey: 'industryParent', // Must match form field name
+        modalLabel: 'Parent Industry',
+        required: true
+        },
 
-    baseDeletePayload: {
-        isActive: false
-    },
+            postPayloadFields: [
+                "subindustry_name",
+                "industryParent",
+                "created_by"
+            ],
 
-    isHierarchical: true,
-
- parentMasterConfig: {
-  masterName: "INDUSTRY",
-  getEndpoint: ENDPOINTS.MASTER_INDUSTRY_GET,
-  responseKey: 'response.industry',
-  idKey: 'iindustry_id',
-  nameKey: 'cindustry_name',
-  parentIdInChildResponseKey: 'iindustry_parent', // Must match API response field
-  formFieldKey: 'industryParent', // Must match form field name
-  modalLabel: 'Parent Industry',
-  required: true
-},
-
-    postPayloadFields: [
-        "subindustry_name",
-        "industryParent",
-        "created_by"
-    ],
-
-    putPayloadFields: [  // ✅ Fixed to use frontend keys
-        "subindustry_name",
-        "updated_by",
-        "isubindustry"
-    ]
-},
-
-
-
-
+            putPayloadFields: [  
+                "subindustry_name",
+                "updated_by",
+                "isubindustry"
+            ]
+        },
 
         { 
             title: 'Lead Source',
@@ -291,7 +284,7 @@ useEffect(() => {
             // DELETE: Pass ID in URL path for deletions
             delete: (id) => `${ENDPOINTS.MASTER_SOURCE_DELETE}/${id}`, 
             
-             activeStatusPayloadKey: 'is_active',
+            activeStatusPayloadKey: 'is_active',
             updatedDtPayloadKey: { post: null, put: null }, 
             modifierIdPayloadKey: { post: null, put: null }, 
             // additionalFields: ['description'],

@@ -31,7 +31,7 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
 
   const [form, setForm] = useState({
     iLeadpoten_id: profile?.iLeadpoten_id || "",
-    iservice_id: profile?.iservice_id || "",
+    iservice_id: profile?.serviceId || "",
     isubservice_id: profile?.isubservice_id || "",
     ilead_status_id: profile?.ileadstatus_id || 0,
     cindustry_id: profile?.cindustry_id || "",
@@ -138,7 +138,6 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
         if (res.data?.data?.data) {
           const fetchedCurrencies = res.data.data.data;
           setCurrencies(fetchedCurrencies);
-          // console.log("Fetched currencies successfully:", fetchedCurrencies);
           
           const initialCurrency = fetchedCurrencies.find(c => c.icurrency_id === profile?.icurrency_id) || { currency_code: "INR", symbol: "₹" };
           setSelectedCurrency(initialCurrency);
@@ -283,8 +282,7 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
           headers: { Authorization: `Bearer ${token}` },
           params: { icompany_id: company_id },
         });
-        // console.log("Lead status fetched:", res.data);
-        // console.log("Lead status response:", res);
+        
         // setStatus(res.data);
         setStatus(res.data.data || []);  
 
@@ -387,7 +385,7 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
     };
 
     setInitialDropdownValue(Potential, 'ileadpoten_id', 'clead_name', 'iLeadpoten_id', setSearchPotential);
-    setInitialDropdownValue(service, 'iservice_id', 'cservice_name', 'iservice_id', setSearchService);
+    setInitialDropdownValue(service, 'serviceId', 'serviceName', 'iservice_id', setSearchService);
     setInitialDropdownValue(status, 'ilead_status_id', 'clead_name', 'ileadstatus_id', setSearchStatus);
     setInitialDropdownValue(leadIndustry, 'iindustry_id', 'cindustry_name', 'cindustry_id', setSearchIndustry);
     setInitialDropdownValue(leadSubIndustry, 'isubindustry', 'subindustry_name', 'isubindustry', setSearchSubIndustry);
@@ -432,14 +430,15 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
     setErrors((prev) => ({ ...prev, iLeadpoten_id: "" }));
   };
 
-   const handleServiceSelect = (iservice_id, cservice_name) => {
+   const handleServiceSelect = (serviceId, serviceName) => {
     if (isReadOnly) return;
     setForm(prev => ({ 
       ...prev, 
-      iservice_id: iservice_id,
+      iservice_id: serviceId,
+      
       isubservice_id: "" 
     }));
-    setSearchService(cservice_name);
+    setSearchService(serviceName);
     setSearchSubService("");
     setIsServiceDropdownOpen(false);
     setErrors((prev) => ({ ...prev, iservice_id: "" }));
@@ -727,10 +726,6 @@ const updateLeadProfile = async () => {
       payload.modified_by = form.modified_by;
     }
 
-    // console.log("Final payload to be sent:", payload);
-    // console.log("Frontend cpincode type:", typeof payload.cpincode);
-    // console.log("Frontend payload:", payload);
-
     const response = await fetch(`${ENDPOINTS.LEAD_DETAILS}${profile.ilead_id}`, {
       method: "PUT",
       headers: {
@@ -747,7 +742,6 @@ const updateLeadProfile = async () => {
     }
 
     const data = await response.json();
-    // console.log("Lead updated successfully:", data);
   } catch (e) {
     console.error("Error updating lead:", e);
     throw e;
@@ -757,7 +751,6 @@ const updateLeadProfile = async () => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
-  // console.log("Form data on submit:", form);  
   if (validateForm()) {
     try {
       await updateLeadProfile(form); 
@@ -1127,42 +1120,43 @@ const handleSubmit = async (e) => {
 
 
             {/* Services Dropdown */}
-      <div className="relative" ref={serviceDropdownRef}>
-        <label htmlFor="iservice_id" className={labelClasses}>
-          Lead service <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={searchService}
-          onChange={(e) => {
-            if (isReadOnly) return;
-            setSearchService(e.target.value);
-            setIsServiceDropdownOpen(true);
-            setErrors((prev) => ({ ...prev, iservice_id: "" }));
-          }}
-          onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
-          className={getInputClasses(errors.iservice_id)}
-          placeholder="Select Services"
-          readOnly={isReadOnly || service.length === 0}
-          disabled={isReadOnly || service.length === 0}
-        />
-        {isServiceDropdownOpen && service.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
-            {service.filter(serviceItem =>
-              serviceItem.cservice_name.toLowerCase().includes(searchService.toLowerCase())
-            ).map((serviceItem) => (
-              <div
-                key={serviceItem.iservice_id}
-                className={dropdownItemClasses}
-                onClick={() => handleServiceSelect(serviceItem.iservice_id, serviceItem.cservice_name)}
-              >
-                {serviceItem.cservice_name}
-              </div>
-            ))}
-          </div>
-        )}
-        {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
-      </div>
+            <div className="relative" ref={serviceDropdownRef}>
+              <label htmlFor="iservice_id" className={labelClasses}>
+                Lead service <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={searchService}
+                onChange={(e) => {
+                  if (isReadOnly) return;
+                  setSearchService(e.target.value);
+                  setIsServiceDropdownOpen(true);
+                  setErrors((prev) => ({ ...prev, iservice_id: "" }));
+                }}
+                onClick={() => !isReadOnly && setIsServiceDropdownOpen(true)}
+                className={getInputClasses(errors.iservice_id)}
+                placeholder="Select Services"
+                readOnly={isReadOnly || service.length === 0}
+                disabled={isReadOnly || service.length === 0}
+              />
+              {isServiceDropdownOpen && service.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-blue-500 ring-opacity-50 overflow-auto focus:outline-none sm:text-sm">
+                  {service.filter(serviceItem =>(
+                    serviceItem.serviceName || "").toLowerCase().includes((searchService || "").toLowerCase())
+                    // serviceItem.serviceName.toLowerCase().includes(searchService.toLowerCase())
+                  ).map((serviceItem) => (
+                    <div
+                      key={serviceItem.serviceId}
+                      className={dropdownItemClasses}
+                      onClick={() => handleServiceSelect(serviceItem.serviceId, serviceItem.serviceName)}
+                    >
+                      {serviceItem.serviceName}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.iservice_id && <p className={errorTextClasses}>{errors.iservice_id}</p>}
+            </div>
 
       {/* Sub-Services Dropdown */}
       <div className="relative" ref={subServiceDropdownRef}>

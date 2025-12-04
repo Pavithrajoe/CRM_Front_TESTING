@@ -274,7 +274,7 @@ useEffect(() => {
             cdistrict: existingClientData.cdistrict || "",
             cpincode: existingClientData.cpincode || "",
             ccountry: existingClientData.ccountry || "",
-            iservice_id: existingClientData.iservice_id || "",
+            iservice_id: existingClientData.serviceId || "",
             isubservice_id: existingClientData.isubservice_id || "",
         }));
 
@@ -302,8 +302,8 @@ useEffect(() => {
         const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
         if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
 
-        const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
-        if (selectedService) setSearchService(selectedService.cservice_name);
+        const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
+        if (selectedService) setSearchService(selectedService.serviceName);
         // console.log("Selected Service:", selectedService);
 
         const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
@@ -997,7 +997,7 @@ useEffect(() => {
     if (name === "iLeadpoten_id" && !value) {
       error = "Mandatory";
     }
-    if (name === "iservice_id" && !value) {
+    if (name === "serviceId" && !value) {
       error = "Mandatory";
     }
     if (name === "ileadstatus_id" && !value) {
@@ -1181,7 +1181,7 @@ const handleChange = (e) => {
             setSearchSubIndustry("");
         }
 
-        if (name === "iservice_id" && prev.iservice_id !== value) {
+        if (name === "iservice_id" && prev.serviceId !== value) {
             updated.isubservice_id = "";
             setSearchSubService("");
         }
@@ -1554,7 +1554,7 @@ const handleSubmit = async (e) => {
     : [];
   const filterService = Array.isArray(service)
     ? service.filter((item) =>
-      item.cservice_name?.toLowerCase().includes(searchService.toLowerCase())
+      item.serviceName?.toLowerCase().includes(searchService.toLowerCase())
     )
     : [];
 
@@ -1974,7 +1974,7 @@ const handleSubmit = async (e) => {
                   setOpen: setIsServiceDropdownOpen,
                   list: filterService,
                   keyField: "iservice_id",
-                  displayField: "cservice_name",
+                  displayField: "serviceName",
                   formField: "iservice_id",
                   error: errors.iservice_id,
                   required: true,

@@ -640,7 +640,19 @@ const handleSave = async () => {
     return;
   }
 
-  const isEditing = selectedItemForEdit && selectedItemForEdit[master.idKey];
+ // -------------------- pavi changed-------------------
+  const isEditing =
+  selectedItemForEdit &&
+  (
+    selectedItemForEdit[master.idKey] ??
+    selectedItemForEdit[master.payloadMapping?.[master.idKey]]
+  );
+
+
+  // const isEditing = selectedItemForEdit && selectedItemForEdit[master.idKey];
+  
+  // -------------------- pavi changed-------------------
+
   const currentSaveMasterConfig =
     selectedItemForEdit?.isSubIndustry && subIndustryConfig
       ? subIndustryConfig
@@ -970,7 +982,8 @@ const handleSave = async () => {
           );
         }
         await axios.delete(url, { data: deletePayload, headers: headers });
-      } else {
+      } 
+      else {
         await axios.delete(url, { headers: headers });
       }
 

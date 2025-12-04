@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit } from 'react-icons/fa';

@@ -274,10 +274,8 @@ useEffect(() => {
             title: 'Lead Source',
             value: 'Lead Source Masters',
             modalKey: 'Source',
-            
             // --- CRITICAL: idKey must match API response's ID field name ---
             idKey: 'source_id', // Make sure this is correct based on your GET API response
-            
             payloadKey: 'source_name',
             responseKey: 'data',
             idLocation: 'params',
@@ -330,105 +328,115 @@ useEffect(() => {
             
             skipCompanyIdInjection: false, 
         },
-{
-  title: 'Sub Source',
-  value: 'Sub Source Masters',
-  modalKey: 'Sub Source',
-  masterKey:'subSourceMaster',
+        {
+        title: 'Sub Source',
+        value: 'Sub Source Masters',
+        modalKey: 'Sub Source',
+        masterKey:'subSourceMaster',
 
-  idKey: 'isub_src_id',
-  payloadKey: 'ssub_src_name',
-  responseKey: 'data',
-  parentIdInChildResponseKey: 'isrc_id',
+        idKey: 'isub_src_id',
+        payloadKey: 'ssub_src_name',
+        responseKey: 'data',
+        parentIdInChildResponseKey: 'isrc_id',
 
-  get: ENDPOINTS.MASTER_SUB_SOURCE_GET,
-  post: ENDPOINTS.MASTER_SUB_SOURCE_POST,
-  put: ENDPOINTS.MASTER_SUB_SOURCE_PUT,
+        get: ENDPOINTS.MASTER_SUB_SOURCE_GET,
+        post: ENDPOINTS.MASTER_SUB_SOURCE_POST,
+        put: ENDPOINTS.MASTER_SUB_SOURCE_PUT,
 
-  // 👇 delete endpoint now uses id in URL
-  delete: (id) => `${ENDPOINTS.MASTER_SUB_SOURCE_CHANGE}/${id}`,
+        //  delete endpoint now uses id in URL
+        delete: (id) => `${ENDPOINTS.MASTER_SUB_SOURCE_CHANGE}/${id}`,
 
-  payloadMapping: {
-    isub_src_id: 'subSrcId',
-    ssub_src_name: 'subSrcName',
-    isrc_id: 'srcId'
-  },
+        payloadMapping: {
+            isub_src_id: 'subSrcId',
+            ssub_src_name: 'subSrcName',
+            isrc_id: 'srcId'
+        },
 
-  basePostPayload: {
-    ssub_src_name: "",
-    srcId: null
-  },
+        basePostPayload: {
+            ssub_src_name: "",
+            srcId: null
+        },
 
-  basePutPayload: { 
-    ssub_src_name: '',
-    srcId: null
-  },
+        basePutPayload: { 
+            ssub_src_name: '',
+            srcId: null
+        },
 
-  postPayloadFields: ["ssub_src_name", "srcId"],
-  putPayloadFields: ["isub_src_id", "ssub_src_name", "srcId"],
+        postPayloadFields: ["ssub_src_name", "srcId"],
+        putPayloadFields: ["isub_src_id", "ssub_src_name", "srcId"],
 
-  skipCompanyIdInjection: true,
-  modifierIdPayloadKey: { post: null, put: null, delete: null },
-  updatedDtPayloadKey: { post: null, put: null, delete: null },
-  activeStatusPayloadKey: 'status',
-  isHierarchical: true,
+        skipCompanyIdInjection: true,
+        modifierIdPayloadKey: { post: null, put: null, delete: null },
+        updatedDtPayloadKey: { post: null, put: null, delete: null },
+        activeStatusPayloadKey: 'status',
+        isHierarchical: true,
 
-  parentMasterConfig: {
-    masterName: "LEAD_SOURCE",
-    getEndpoint: ENDPOINTS.MASTER_SOURCE_GET,
-    responseKey: 'data',
-    idKey: 'source_id',
-    nameKey: 'source_name',
-    parentIdInChildResponseKey: 'isrc_id',
-    formFieldKey: 'srcId',
-    modalLabel: 'Parent Source',
-    required: true
-  }
-},
+        parentMasterConfig: {
+            masterName: "LEAD_SOURCE",
+            getEndpoint: ENDPOINTS.MASTER_SOURCE_GET,
+            responseKey: 'data',
+            idKey: 'source_id',
+            nameKey: 'source_name',
+            parentIdInChildResponseKey: 'isrc_id',
+            formFieldKey: 'srcId',
+            modalLabel: 'Parent Source',
+            required: true
+        }
+        },
 
 
         
     {
-  title: 'Service',
-  value: 'Service Masters',
-  modalKey: 'Service',
-  masterKey:'ServiceMaster',
-  idKey: 'iservice_id',
-  payloadKey: 'cservice_name',
-  responseKey: 'data',
-  idLocation: 'body',
-  modifierIdPayloadKey: {
-      post: 'icreated_by',
-      put: 'iupdated_by'
-  },
-  updatedDtPayloadKey: {
-      post: 'dcreated_at',
-      put: 'dupdated_at'
-  },
-  activeStatusPayloadKey: 'bactive',
-  get: ENDPOINTS.MASTER_SERVICE_GET,
-  post: ENDPOINTS.MASTER_SERVICE_POST,
-  put: ENDPOINTS.MASTER_SERVICE_PUT,
-  
-  // ✅ FIX: Change `delete` to a function that takes `id`
-  delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
-  
-  basePostPayload: { cservice_name: '' },
-  basePutPayload: {},
-  putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
-  postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
-  payloadMapping: {
-      iservice_id: 'serviceId',
-      cservice_name: 'serviceName',
-      bactive: 'bactive',
-      icompany_id: 'icompany_id',
-      icreated_by: 'icreated_by',
-      iupdated_by: 'iupdated_by',
-      dcreated_at: 'dcreated_at',
-      dupdated_at: 'dupdated_at'
-  },
-  skipCompanyIdInjection: false
-},
+        title: 'Service',
+        value: 'Service Masters',
+        modalKey: 'Service',
+        masterKey:'ServiceMaster',
+        idKey: "serviceId",
+        // idKey: 'iservice_id',
+        // payloadKey: 'cservice_name',
+        payloadKey: 'serviceName',
+        responseKey: 'data',
+        idLocation: 'body',
+        modifierIdPayloadKey: {
+            post: 'icreated_by',
+            put: 'iupdated_by'
+        },
+        updatedDtPayloadKey: {
+            post: 'dcreated_at',
+            put: 'dupdated_at'
+        },
+        activeStatusPayloadKey: 'bactive',
+        get: ENDPOINTS.MASTER_SERVICE_GET,
+        post: ENDPOINTS.MASTER_SERVICE_POST,
+        put: ENDPOINTS.MASTER_SERVICE_PUT,
+        //  FIX: Change `delete` to a function that takes `id`
+        // delete: ENDPOINTS.MASTER_SERVICE_DELETE,
+        // delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+        delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+
+        
+        // basePostPayload: { cservice_name: '' },
+        basePostPayload: { serviceName: "" },
+
+        basePutPayload: {},
+        putPayloadFields: ["serviceId", "serviceName"],
+        // putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
+        // postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
+        postPayloadFields: ["serviceName", "icreated_by", "dcreated_at", "icompany_id"],
+
+        payloadMapping: {
+            iservice_id: 'serviceId',
+            cservice_name: 'serviceName',
+            bactive: 'bactive',
+            icompany_id: 'icompany_id',
+            icreated_by: 'icreated_by',
+            iupdated_by: 'iupdated_by',
+            dcreated_at: 'dcreated_at',
+            dupdated_at: 'dupdated_at'
+        },
+        skipCompanyIdInjection: false
+    },
+
 {
     title: 'Sub-Service',
     value: 'Sub-Service Masters',

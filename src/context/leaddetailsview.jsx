@@ -1303,7 +1303,7 @@ const renderTabContent = () => {
             <Autocomplete
               options={currencies}
               getOptionLabel={(option) =>
-                `${option.country_name} - ${option.symbol}`
+                `${option.currency_code} - ${option.symbol}`
               }
               value={
                 currencies.find(

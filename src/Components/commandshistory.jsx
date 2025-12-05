@@ -161,7 +161,7 @@ const Comments = () => {
         return;
       }
 
-      // showPopup("Success", "🎉 Comment added successfully!", "success");
+      // showPopup("Success", "Comment added successfully!", "success");
       setFormData((prev) => ({ ...prev, comments: "" }));
       setIsListening(false);
       setShowForm(false);
@@ -222,8 +222,6 @@ const handleOutsideClick = (event) => {
   }
 };
 
-
-
   // Focus the search input when it opens
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -235,6 +233,7 @@ const handleOutsideClick = (event) => {
   const filteredComments = activeComments.filter((comment) =>
     comment.ccomment_content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = filteredComments.slice(indexOfFirstComment, indexOfLastComment);
@@ -294,7 +293,7 @@ const handleOutsideClick = (event) => {
                   {userId && userId === comment.iuser_id && (
                     <button
                       onClick={() => handleEditClick(comment)}
-                      className="text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                      className="text-gray-700 hover:text-blue-500 transition-colors duration-200"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -302,12 +301,15 @@ const handleOutsideClick = (event) => {
                     </button>
                   )}
                 </div>
-                <p className="text-gray-700 text-xl mt-2 leading-normal sm:leading-relaxed">{comment.ccomment_content}</p>
-                <p className="text-md text-gray-600 mt-2 italic font-extrabold">
-                  {comment.imodify_dt
-                    ? `Edited by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.imodify_dt)}`
-                    : `Posted by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.icreate_dt)}`}
-                </p>
+
+                <div className="flex flex-col gap-1 text-gray-800 text-sm leading-relaxed">
+                  <p>{comment.ccomment_content}</p>
+                  <p className="italic font-semibold text-gray-700">
+                    {comment.imodify_dt
+                      ? `Edited by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.imodify_dt)}`
+                      : `Posted by ${comment.user?.cFull_name || "Unknown"} • ${formatDateTime(comment.icreate_dt)}`}
+                  </p>
+                </div>
               </div>
             ))
           )}
@@ -336,12 +338,12 @@ const handleOutsideClick = (event) => {
 {showForm && (
   <div
     className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity flex justify-center items-center"
-    onClick={handleOutsideClick} // ✅ Use function
+    onClick={handleOutsideClick} //  Use function
   >
     <div
       ref={formRef}
       className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-md sm:max-w-lg md:max-w-xl p-6 transition-all duration-300"
-      onClick={(e) => e.stopPropagation()} // ✅ Prevent click inside from closing
+      onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-medium text-xl text-gray-800">
@@ -397,9 +399,6 @@ const handleOutsideClick = (event) => {
     </div>
   </div>
 )}
-
-
-
       </div>
     </div>
   );

@@ -173,22 +173,17 @@ const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
 
 const LeadDetailView = () => {
   const { userModules } = useUserAccess();
-  
   const { leadId } = useParams();
   const { showPopup } = usePopup();
   const navigate = useNavigate();
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
-  const formRef = useRef(null); // Added missing formRef
-
+  const formRef = useRef(null); 
   // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
   const currentIndex = leadIds.indexOf(Number(leadId));
-
   const theme = useTheme();
-  
-  // State declarations - FIXED: Removed JSX from useState
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
@@ -230,10 +225,10 @@ const LeadDetailView = () => {
   const [showRemarkDialog, setShowRemarkDialog] = useState(false);
   const [remarkData, setRemarkData] = useState({ remark: '', projectValue: '', currencyId: null });
   const [profileSettings, setProfileSettings] = useState(null);
-  const [stages, setStages] = useState([]); // Fixed variable name consistency
-  const [isListening, setIsListening] = useState(false); // Added missing state
-  const [editingComment, setEditingComment] = useState(null); // Added missing state
-  const [showForm, setShowForm] = useState(false); // Added missing state
+  const [stages, setStages] = useState([]); 
+  const [isListening, setIsListening] = useState(false); 
+  const [editingComment, setEditingComment] = useState(null); 
+  const [showForm, setShowForm] = useState(false); 
 
   const [userSettings, setUserSettings] = useState({
     mail_access: false,
@@ -254,7 +249,7 @@ const LeadDetailView = () => {
 
   // Derived state
   const isLeadActive =
-    !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
+  !isLost && !isWon && !immediateWonStatus && !(leadData?.bisConverted === true);
   const showActionButtons = !loading && isLeadActive;
   const showCreateQuotationButton = (isWon || immediateWonStatus || leadData?.bisConverted) && !showQuotationForm;
   const showProjectValue = (isWon || immediateWonStatus || leadData?.bisConverted);
@@ -263,9 +258,9 @@ const LeadDetailView = () => {
   const latestProjectValue = statusRemarks.length > 0 
     ? statusRemarks[statusRemarks.length - 1] 
     : null;
-  
+
   const projectValueDisplay = latestProjectValue 
-    ? `${latestProjectValue.currency_details?.symbol || '₹'} ${latestProjectValue.project_value || 0}` 
+    ? `${latestProjectValue.currency_details?.symbol} ${latestProjectValue.project_value || 0}` 
     : null;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
@@ -498,6 +493,7 @@ const LeadDetailView = () => {
     } catch (error) {
       console.error("Error creating quotation:", error);
       showPopup("Error", error.message || "Failed to create quotation", "error");
+      
     }
   };
 
@@ -1009,7 +1005,6 @@ const LeadDetailView = () => {
     }
   };
 
-  // Correct tab configuration based on company
 // Correct tab configuration based on module_id 5 permissions
 const getTabLabels = () => {
   const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
@@ -1131,7 +1126,7 @@ const renderTabContent = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              stages={stages} // Fixed prop name
+              stages={stages} 
             />
           ) : (
             <MilestoneStatusBar
@@ -1141,7 +1136,7 @@ const renderTabContent = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              stages={stages} // Fixed prop name
+              stages={stages} 
             />
           )}
 
@@ -1204,7 +1199,7 @@ const renderTabContent = () => {
                 <>
                   <button
                     className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
-                    onClick={() => setShowQuotationForm(true)}
+                    onClick={() => setShowQuotationForm(true)} 
                   >
                     <FaPlus className="mr-1" /> Create Quotation
                   </button>

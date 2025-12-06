@@ -39,7 +39,6 @@ const QuotationForm = ({
   });
   // console.log("checking",leadData);
 
-  // Generate a default valid-until date (30 days from today)
   const getDefaultValidUntil = () => {
     return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   };
@@ -92,7 +91,6 @@ const QuotationForm = ({
 
       if (validData.length > 0) {
         setCurrencies(validData);
-        // Set default currency to the first available currency
         setFormData(prev => ({
           ...prev,
           icurrency_id: validData[0].icurrency_id
@@ -108,104 +106,113 @@ const QuotationForm = ({
     }
   };
 
-  // General fetch helper for other lists
-  const fetchAPIData = async (endpoint) => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch data');
-    }
-    if (data.data && Array.isArray(data.data)) {
-      return data.data;
-    } else if (Array.isArray(data)) {
-      return data;
-    } else {
-      return [];
-    }
-  };
 
-  useEffect(() => {
-    if (!open) {
-      hasInitialized.current = false;
-      return;
-    }
-
-    if (!hasInitialized.current) {
-      try {
-        const token = localStorage.getItem("token");
-        let userData = null;
-        if (token) {
-          const base64Payload = token.split(".")[1];
-          const decodedPayload = atob(base64Payload);
-          userData = JSON.parse(decodedPayload);
+    // General fetch helper for other lists
+    const fetchAPIData = async (endpoint) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            const error = new Error(data.message || 'Failed to fetch data');
+            error.status = response.status;
+            error.responseData = data; 
+            throw error;
+        }
+        if (data.data && Array.isArray(data.data)) {
+          return data.data;
+        } else if (Array.isArray(data)) {
+          return data;
         } else {
-          const storedUserData = localStorage.getItem("user");
-          if (storedUserData) userData = JSON.parse(storedUserData);
+          return [];
         }
-        if (userData) {
-          setCompanyInfo({
-            iCompany_id: userData.iCompany_id || userData.company_id,
-            icurrency_id: userData.icurrency_id,
-            iCreated_by: userData.iUser_id || userData.user_id,
-            company_name: userData.company_name,
-            company_address: userData.company_address,
-            company_gst_no: userData.company_gst_no || '',
-            website: userData.website,
-            company_phone: userData.company_phone,
-          });
+    };
+
+
+    useEffect(() => {
+        if (!open) {
+          hasInitialized.current = false;
+          return;
         }
-      } catch (error) {
-        showPopup("Error", "Failed to load user information", "error");
-      }
 
-      setFormData(prev => ({
-        ...prev,
-        dValid_until: getDefaultValidUntil(),
-      }));
+        if (!hasInitialized.current) {
+          try {
+            const token = localStorage.getItem("token");
+            let userData = null;
+            if (token) {
+              const base64Payload = token.split(".")[1];
+              const decodedPayload = atob(base64Payload);
+              userData = JSON.parse(decodedPayload);
+            } else {
+              const storedUserData = localStorage.getItem("user");
+              if (storedUserData) userData = JSON.parse(storedUserData);
+            }
+            if (userData) {
+              setCompanyInfo({
+                iCompany_id: userData.iCompany_id || userData.company_id,
+                icurrency_id: userData.icurrency_id,
+                iCreated_by: userData.iUser_id || userData.user_id,
+                company_name: userData.company_name,
+                company_address: userData.company_address,
+                company_gst_no: userData.company_gst_no || '',
+                website: userData.website,
+                company_phone: userData.company_phone,
+              });
+            }
+          } catch (error) {
+            showPopup("Error", "Failed to load user information", "error");
+          }
 
-      const user = JSON.parse(localStorage.getItem("user"));
-      const companyId = user?.iCompany_id || user?.company_id;
+          setFormData(prev => ({
+            ...prev,
+            dValid_until: getDefaultValidUntil(),
+          }));
 
-      // Fetch currencies using custom method
-      fetchCurrencies();
+          const user = JSON.parse(localStorage.getItem("user"));
+          const companyId = user?.iCompany_id || user?.company_id;
+          fetchCurrencies();
 
-      // Fetch other lists
-      const fetchList = async (endpoint, setter, errorMessage) => {
-        try {
-          const data = await fetchAPIData(endpoint);
-          setter(data);
-        } catch (error) {
-          showPopup('Error', `Failed to load ${errorMessage}`, 'error');
-          setter([]);
+          const fetchList = async (endpoint, setter, errorMessage) => {
+            try {
+              const data = await fetchAPIData(endpoint);
+              setter(data);
+            } catch (error) {
+              if (errorMessage === 'taxes' && (error.status === 404 || error.responseData?.message.includes('No active tax records found'))) {
+                const customMessage = "No active tax records detected. Please create a tax entry in Settings.";
+                const DURATION_MS = 12000;
+                showPopup('Instruction', customMessage, 'warning', DURATION_MS); // 7 sec 
+              } else {
+                showPopup('Error', `Failed to load ${errorMessage}: ${error.message}`, 'error');
+              }
+              setter([]);
+            }
+          };
+
+          fetchList(ENDPOINTS.MASTER_SERVICE_GET, setServicesList, 'services');
+
+          if (companyId) {
+            fetchList(`${ENDPOINTS.TAX}/company/${companyId}`, setTaxList, 'taxes');
+            fetchList(`${ENDPOINTS.TERMS}/company/${companyId}`, setTermsList, 'terms');
+          }
+
+          hasInitialized.current = true;
         }
-      };
+    }, [open, leadId, showPopup]);
 
-      fetchList(ENDPOINTS.MASTER_SERVICE_GET, setServicesList, 'services');
-
-      if (companyId) {
-        fetchList(`${ENDPOINTS.TAX}/company/${companyId}`, setTaxList, 'taxes');
-        fetchList(`${ENDPOINTS.TERMS}/company/${companyId}`, setTermsList, 'terms');
-      }
-
-      hasInitialized.current = true;
-    }
-  }, [open, leadId, showPopup]);
 
   // Handlers for dynamic services
   const handleServiceChange = (index, field, value) => {
     const newServices = [...formData.services];
-    if (field === 'iservice_id') {
-      const selectedService = servicesList.find(s => s.iservice_id === parseInt(value));
+    if (field === 'serviceId') {
+      const selectedService = servicesList.find(s => s.serviceId === parseInt(value));
       if (selectedService) {
-        newServices[index].cService_name = selectedService.cservice_name || '';
-        newServices[index].cDescription = selectedService.cservice_name || '';
+        newServices[index].cService_name = selectedService.serviceName || '';
+        newServices[index].cDescription = selectedService.serviceName || '';
       }
     }
     newServices[index][field] = value;
@@ -266,6 +273,8 @@ const QuotationForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log("Submitting services:", formData.services);
+
     if (!companyInfo || !companyInfo.iCompany_id || !companyInfo.iCreated_by) {
       showPopup('Error', 'Company info missing.', 'error');
       return;
@@ -278,6 +287,27 @@ const QuotationForm = ({
     }
 
     // Validate all service fields filled
+//     for (const service of formData.services) {
+//       const hasQtyPrice =
+//         Number(service.iQuantity) > 0 &&
+//         Number(service.fPrice) > 0;
+
+//       const hasHoursRate =
+//         Number(service.iHours) > 0 &&
+//         Number(service.fHourly_rate) > 0;
+
+//       // if (!service.cService_name || !service.cDescription) {
+//       //   showPopup('Error', 'Please fill all service fields.', 'error');
+//       //   return;
+//       // }
+
+//       // At least one billing method must be filled
+//       if (!hasQtyPrice && !hasHoursRate) {
+//         showPopup('Error', 'Enter either (Quantity & Price) OR (Hours & Hourly Rate)', 'error');
+//         return;
+//       }
+// }
+
     for (const service of formData.services) {
       if (!service.cService_name || !service.cDescription ||
         ((!service.iQuantity || !service.fPrice) &&
@@ -344,7 +374,7 @@ const QuotationForm = ({
           cTerms: '',
           termIds: [],
           services: [{
-            iservice_id: '',
+            cservice_id: '',
             cService_name: '',
             cDescription: '',
             iQuantity: 1,
@@ -509,18 +539,28 @@ const QuotationForm = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="lg:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Service *</label>
+                        
                         <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                          value={service.iservice_id || ''}
-                          onChange={e => handleServiceChange(idx, 'iservice_id', e.target.value)}
+                          // Keep the value as is (it will be an integer or empty string)
+                          value={service.serviceId || ''} 
+                          // Change the field name to 'iservice_id'
+                          onChange={e => handleServiceChange(idx, 'serviceId', e.target.value)}
                           required
                         >
                           <option value="">Select Service</option>
-                          {servicesList.map(s => (
-                            <option key={s.iservice_id} value={s.iservice_id}>
-                              {s.cservice_name.trim()}
-                            </option>
-                          ))}
+                          {servicesList.map(s => {
+                              if (!s || !s.serviceId) return null; 
+                              
+                              // Safely access cservice_name, defaulting to a placeholder or empty string
+                              const serviceName = s.serviceName ? s.serviceName.trim() : `(ID: ${s.serviceId} - Name Missing)`;
+
+                              return (
+                                  <option key={s.serviceId} value={s.serviceId}>
+                                      {serviceName}
+                                  </option>
+                              );
+                          })}
                         </select>
                       </div>
                       <div>
@@ -628,23 +668,23 @@ const QuotationForm = ({
                 <div>
                   <label htmlFor="termIds" className="block text-sm font-medium text-gray-700 mb-1">Standard Terms</label>
                   <select
-  id="termIds"
-  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32"
-  value={formData.termIds || []}
-  multiple
-  onChange={e => {
-    const selected = Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value, 10));
-    setFormData({ ...formData, termIds: selected });
-  }}
->
-  {termsList
-    .filter(term => term.bActive) // only active terms
-    .map(term => (
-      <option key={term.iTerm_id} value={term.iTerm_id}>
-        {term.cTerm_text}
-      </option>
-    ))}
-</select>
+                    id="termIds"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32"
+                    value={formData.termIds || []}
+                    multiple
+                    onChange={e => {
+                      const selected = Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value, 10));
+                      setFormData({ ...formData, termIds: selected });
+                    }}
+                  >
+                    {termsList
+                      .filter(term => term.bActive) 
+                      .map(term => (
+                        <option key={term.iTerm_id} value={term.iTerm_id}>
+                          {term.cTerm_text}
+                        </option>
+                      ))}
+                  </select>
 
                   {/* <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple terms</p> */}
                 </div>

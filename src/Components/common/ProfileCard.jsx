@@ -30,7 +30,6 @@ import { ENDPOINTS } from "../../api/constraints";
 import { usePopup } from "../../context/PopupContext";
 import LeadMailStorage from "./ProfileCardComponents/MailStorage/LeadMailStorage.jsx";
 import { useUserAccess } from "../../context/UserAccessContext";
-
 import { GlobUserContext } from "../../context/userContex.jsx";
 import { useDemoSession } from "../../context/demo_session_session_context.jsx";
 

@@ -17,9 +17,6 @@ import { UserAccessProvider } from "./context/UserAccessContext.jsx";
 import ModuleControll from "./context/moduleControll.jsx";
 import UserAttributes from "./pages/userPage/UserAttributes.jsx";
 import { CompanyProvider } from "./context/companyContext.jsx";
-
-
-// All your other imports...
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
 import UserProfile from "./pages/userProfile";

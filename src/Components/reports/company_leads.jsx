@@ -42,7 +42,7 @@ const CompanyLeads = () => {
 
     setDateFilterFrom(formattedFirstDay);
     setDateFilterTo(formattedLastDay);
-    setShowDefaultMonthNotification(true); // Show notification on default load
+    setShowDefaultMonthNotification(true); 
   }, []); // Run only once on mount
 
   // Effect to fetch data based on filters
@@ -308,7 +308,7 @@ const CompanyLeads = () => {
             value={dateFilterFrom}
             onChange={(e) => {
               setDateFilterFrom(e.target.value);
-              setShowDefaultMonthNotification(false); // Hide notification if user changes date
+              setShowDefaultMonthNotification(false);
             }}
             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
           />
@@ -318,7 +318,7 @@ const CompanyLeads = () => {
             value={dateFilterTo}
             onChange={(e) => {
               setDateFilterTo(e.target.value);
-              setShowDefaultMonthNotification(false); // Hide notification if user changes date
+              setShowDefaultMonthNotification(false); 
             }}
             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
           />
@@ -330,7 +330,7 @@ const CompanyLeads = () => {
               // Reset date filters to empty and trigger re-fetch for all data
               setDateFilterFrom('');
               setDateFilterTo('');
-              setShowDefaultMonthNotification(false); // Ensure notification is off
+              setShowDefaultMonthNotification(false);
             }}
           >
             Reset All Filters

@@ -102,7 +102,7 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
       startY: 30,
       margin: { left: 120 },
       theme: "grid",
-      styles: { fontSize: 9, font: "NotoSans" },
+      styles: { fontSize: 10, font: "NotoSans", textColor: [0, 0, 0] },
       body: [
         ["Quotation No:", quoteNumber],
         ["Date:", quoteDate],
@@ -110,52 +110,120 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
         ["Currency:", currencySymbol]
       ],
       columnStyles: {
-        0: { fontStyle: "bold", cellWidth: 40 },
+        0: { fontStyle: "bold", cellWidth: 28 },
         1: { halign: "right" }
       }
     });
 
     // =========================================
-    //           CLIENT DETAILS
+    //         CLIENT DETAILS
     // =========================================
-
-    yPos = doc.lastAutoTable.finalY + 12;
+    
+    // yPos calculation
+    yPos = doc.lastAutoTable.finalY + 18; 
+    
+    // Draw the gray background rectangle for the header
     doc.setFillColor(220, 220, 220);
     doc.rect(margin, yPos - 6, 180, 8, "F");
 
+    // Draw the bold header title
     doc.setFontSize(11).setFont("NotoSans", "bold");
     doc.text("CLIENT DETAILS", margin + 2, yPos - 1);
 
     yPos += 6;
-    doc.setFontSize(10);
+    doc.setFontSize(10); // Set base font size
 
-    const clientBlock = [
-      safeField(quotation.lead_name) && `Name: ${quotation.lead_name}`,
-      safeField(quotation.lead_organization || quotation.cOrganization_name) &&
-        `Company: ${quotation.lead_organization || quotation.cOrganization_name}`,
-      [quotation.clead_address1, quotation.clead_address2, quotation.clead_address3, quotation.cpincode]
-        .filter(Boolean).length > 0
-        ? `Address: ${[
-            quotation.clead_address1,
-            quotation.clead_address2,
-            quotation.clead_address3,
-            quotation.cpincode
-          ]
-            .filter(Boolean)
-            .join(", ")}`
-        : null,
-      safeField(quotation.iphone_num) && `Phone: ${quotation.iphone_num}`,
-      safeField(quotation.whatsapp_number) &&
-        `WhatsApp: ${quotation.whatsapp_number}`,
-      safeField(quotation.cemail) && `Email: ${quotation.cemail}`,
-      safeField(quotation.cwebsite) && `Website: ${quotation.cwebsite}`,
-      safeField(quotation.cGst) && `GST: ${quotation.cGst}`
-    ].filter(Boolean);
+    //  Prepare data separating title and value
+    const clientBlockData = [
+      { title: "Name:", value: safeField(quotation.lead_name) },
+      { title: "Company:", value: safeField(quotation.lead_organization || quotation.cOrganization_name) },
+      { 
+        title: "Address:", 
+        value: ([quotation.clead_address1, quotation.clead_address2, quotation.clead_address3, quotation.cpincode]
+          .filter(Boolean).length > 0) 
+            ? [
+                quotation.clead_address1,
+                quotation.clead_address2,
+                quotation.clead_address3,
+                quotation.cpincode
+              ]
+              .filter(Boolean)
+              .join(", ")
+            : null
+      },
+      { title: "Phone:", value: safeField(quotation.iphone_num) },
+      { title: "WhatsApp:", value: safeField(quotation.whatsapp_number) },
+      { title: "Email:", value: safeField(quotation.cemail) },
+      { title: "Website:", value: safeField(quotation.cwebsite) },
+      { title: "GST:", value: safeField(quotation.cGst) }
+    ].filter(item => item.value); // Filter out lines with no value
 
-    clientBlock.forEach((line) => {
-      doc.text(line, margin, yPos);
-      yPos += 6;
+    // horizontal position of the vertical split line
+    const titleWidth = 20; 
+    const valueStartX = margin + titleWidth + 3; 
+
+    //  Loop and draw the text
+    clientBlockData.forEach((item) => {
+      // Draw the Title (Bold)
+      doc.setFont("NotoSans", "bold");
+      doc.text(item.title, margin, yPos);
+      // Draw the Value (Normal) - Check for text wrapping on long address lines
+      doc.setFont("NotoSans", "normal");
+      const lines = doc.splitTextToSize(item.value, 180 - valueStartX + margin); // Max width calculation
+      
+      lines.forEach((line, index) => {
+          doc.text(line, valueStartX, yPos);
+          if (index < lines.length - 1) {
+              yPos += 5; // Use 5 for standard line spacing inside a wrapped block
+          }
+      });
+      
+      yPos += 6; // Use 6 for spacing between different fields
     });
+
+    
+
+    // // =========================================
+    // //           CLIENT DETAILS
+    // // =========================================
+
+    // yPos = doc.lastAutoTable.finalY + 18;
+    // doc.setFillColor(220, 220, 220);
+    // doc.rect(margin, yPos - 6, 180, 8, "F");
+
+    // doc.setFontSize(11).setFont("NotoSans", "bold");
+    // doc.text("CLIENT DETAILS", margin + 2, yPos - 1);
+
+    // yPos += 6;
+    // doc.setFontSize(10).setFont("NotoSans", "normal");
+
+    // const clientBlock = [
+    //   safeField(quotation.lead_name) && `Name: ${quotation.lead_name}`,
+    //   safeField(quotation.lead_organization || quotation.cOrganization_name) &&
+    //     `Company: ${quotation.lead_organization || quotation.cOrganization_name}`,
+    //   [quotation.clead_address1, quotation.clead_address2, quotation.clead_address3, quotation.cpincode]
+    //     .filter(Boolean).length > 0
+    //     ? `Address: ${[
+    //         quotation.clead_address1,
+    //         quotation.clead_address2,
+    //         quotation.clead_address3,
+    //         quotation.cpincode
+    //       ]
+    //         .filter(Boolean)
+    //         .join(", ")}`
+    //     : null,
+    //   safeField(quotation.iphone_num) && `Phone: ${quotation.iphone_num}`,
+    //   safeField(quotation.whatsapp_number) &&
+    //     `WhatsApp: ${quotation.whatsapp_number}`,
+    //   safeField(quotation.cemail) && `Email: ${quotation.cemail}`,
+    //   safeField(quotation.cwebsite) && `Website: ${quotation.cwebsite}`,
+    //   safeField(quotation.cGst) && `GST: ${quotation.cGst}`
+    // ].filter(Boolean);
+
+    // clientBlock.forEach((line) => {
+    //   doc.text(line, margin, yPos);
+    //   yPos += 6;
+    // });
 
     // =========================================
     //             SERVICES TABLE
@@ -168,14 +236,14 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
       body: quotation.services.map((s) => [
         s.cService_name,
         s.iQuantity?.toString() || "1",
-        `${currencySymbol}${s.fPrice || 0}`,
+        `${currencySymbol} ${s.fPrice || 0}`,
         s.fDiscount ? `${s.fDiscount}%` : "-",
-        s.fTax ? `${currencySymbol}${s.fTax}` : "-",
-        `${currencySymbol}${s.fTotal_price || 0}`
+        s.fTax ? `${currencySymbol} ${s.fTax}` : "-",
+        `${currencySymbol} ${s.fTotal_price || 0}`
       ]),
       theme: "grid",
       headStyles: { fillColor: [255, 204, 0], textColor: 0 },
-      styles: { font: "NotoSans", fontSize: 8, cellPadding: 2 }
+      styles: { font: "NotoSans", fontSize: 10, cellPadding: 2, textColor: [0, 0, 0] }
     });
 
     // =========================================
@@ -185,12 +253,12 @@ export const generateQuotationPDF = async (quotation, returnDataUrl = false) => 
     let totalsY = doc.lastAutoTable.finalY + 10;
 
     const totals = [
-      ["Sub Total", `${currencySymbol}${q.fSubtotal}`],
+      ["Sub Total", `${currencySymbol} ${q.fSubtotal}`],
       q.fDiscount && q.fDiscount > 0
-        ? [`Discount (${q.fDiscount}%)`, `${currencySymbol}${q.fDiscount}`]
+        ? [`Discount (${q.fDiscount}%)`, `${currencySymbol} ${q.fDiscount}`]
         : null,
-      ["Total Tax", `${currencySymbol}${q.fTax_amount}`],
-      ["Total Amount", `${currencySymbol}${q.fTotal_amount}`]
+      ["Total Tax", `${currencySymbol} ${q.fTax_amount}`],
+      ["Total Amount", `${currencySymbol} ${q.fTotal_amount}`]
     ].filter(Boolean);
 
     autoTable(doc, {

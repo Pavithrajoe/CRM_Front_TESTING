@@ -6,12 +6,22 @@ import LeadFormB2C from "../LeadFormB2C";
 import { companyContext } from "../../context/companyContext";
 import { useUserAccess } from "../../context/UserAccessContext";
 
-const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
+// const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
+const LAST_SEEN_TS_KEY = "notifications_last_seen";
+
+const getLastSeen = () => {
+  const last = localStorage.getItem(LAST_SEEN_TS_KEY);
+  return last ? new Date(last) : null;
+};
+
+const setLastSeen = () => {
+  localStorage.setItem(LAST_SEEN_TS_KEY, new Date().toISOString());
+};
+
 
 const ProfileHeader = () => {
   const { userModules } = useUserAccess();
   const { company } = useContext(companyContext);
-
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -48,6 +58,18 @@ const ProfileHeader = () => {
 
   // Track if LeadForm has already been auto-opened for current business type
   const leadFormOpenedRef = useRef(false);
+
+  useEffect(() => {
+    const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+    const lastSeen = getLastSeen();
+    const unreadCount = notifications.filter(
+      (n) => !lastSeen || new Date(n.created_at) > lastSeen
+    ).length;
+
+    setBellNotificationCount(unreadCount);
+  }, []);
+
 
   // Load user & set profile on mount
   useEffect(() => {
@@ -129,6 +151,30 @@ const ProfileHeader = () => {
     setShowAppMenu(false);
   };
 
+  // const handleOpenNotifications = () => {
+  //   navigate("/notifications");
+  // };
+
+  const handleOpenNotifications = () => {
+  setLastSeen();           // update last seen timestamp
+  setBellNotificationCount(0);  // clear bell
+  navigate("/notifications");
+};
+
+
+
+  // const handleOpenNotifications = () => {
+  //   // Clear the bell count
+  //   setBellNotificationCount(0);
+
+  //   // Optionally store the timestamp in localStorage
+  //   localStorage.setItem(LAST_SEEN_TS_KEY, new Date().toISOString());
+
+  //   // Navigate to the notifications page
+  //   navigate("/notifications");
+  // };
+
+
   // Close dropdowns/notifications/apps menu on outside click
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -181,7 +227,8 @@ const ProfileHeader = () => {
       {/* Notification Bell */}
       <div className="relative" ref={notificationRef}>
         <Bell
-          onClick={() => setShowNotifications((prev) => !prev)}
+          onClick={handleOpenNotifications}
+          // onClick={() => setShowNotifications((prev) => !prev)}
           className="w-10 h-10 border border-grey-600 rounded-full p-2 text-blue-600 cursor-pointer bg-white shadow-md hover:bg-blue-50 transition"
         />
         {bellNotificationCount > 0 && (

@@ -16,15 +16,12 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
 
 // Speech recognition setup
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // We will instantiate this inside the component to avoid issues
 let mic = null;
-
 const ReminderForm = () => {
-    const { user } = useContext(GlobUserContext)
-  
+  const { user } = useContext(GlobUserContext)
   const { leadId } = useParams();
   const { showPopup } = usePopup();
   const [showForm, setShowForm] = useState(false);
@@ -216,8 +213,10 @@ const ReminderForm = () => {
         return;
       }
       
-      // FIX: Uncommented this line to show the success popup
-      // showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+      showPopup("Success", "🎉 Reminder submitted successfully!", "success");
+      if (result?.data?.error) {
+        showPopup("Warning", result.data.error, "warning");
+      }
 
       setForm({
         title: "",
@@ -300,13 +299,9 @@ const ReminderForm = () => {
     const reminderDate = new Date(reminder.dremainder_dt);
     const from = fromDate ? new Date(fromDate) : null;
     const to = toDate ? new Date(`${toDate}T23:59:59`) : null;
-
-    const matchesDate =
-      (!from || reminderDate >= from) && (!to || reminderDate <= to);
-
+    const matchesDate = (!from || reminderDate >= from) && (!to || reminderDate <= to);
     return matchesSearch && matchesDate;
   });
-  
 
   const formatDisplayDateTime = (dateString) => {
     if (!dateString) return "N/A";
@@ -323,7 +318,7 @@ const ReminderForm = () => {
 
   return (
     <div className="relative min-h-screen bg-[#f8f8f8] p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 w-full text-base leading-relaxed text-gray-900 mx-auto">
-      <ToastContainer position="top-right" autoClose={5000} />
+      <ToastContainer position="top-right" autoClose={10000} />
 
       {/* Header with Search and New Reminder Button */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -340,11 +335,9 @@ const ReminderForm = () => {
               ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0'}
             `}
           />
-          <button
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+          <button onClick={() => setIsSearchOpen(!isSearchOpen)}
             className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors
-              ${isSearchOpen ? 'text-blue-900' : ''}
-            `}
+              ${isSearchOpen ? 'text-blue-900' : ''} `}
             aria-label="Toggle search bar"
           >
             <Search size={18} />
@@ -410,52 +403,52 @@ const ReminderForm = () => {
       )}
 
      {/* Reminder List */}
-<div className="relative bg-white mt-5 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto shadow">
-  <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-    {filteredReminders.length === 0 ? (
-      <p className="text-center text-gray-400 text-sm sm:text-base py-8">No reminders found.</p>
-    ) : (
-      filteredReminders
-        .sort((a, b) => new Date(b.dremainder_dt) - new Date(a.dremainder_dt))
-        .map((reminder) => (
-          <div
-            key={reminder.iremainder_id}
-            className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
-          >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <div className="mb-3 sm:mb-0">
-                <h3 className="text-md font-semibold text-gray-900">
-                  📌 {reminder.cremainder_title}
-                </h3>
-                <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                  {reminder.cremainder_content}
-                </p>
-                <div className="text-xs text-gray-500 mt-2">
-                  Created by:{" "}
-                  <span className="font-semibold">{reminder.created_by}</span>
-                </div>
-                <div className="text-xs mt-1 text-gray-600">
-                  Priority:{" "}
-                  <span className="font-semibold">
-                    {reminder.priority || "Normal"}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600">
-                  Assigned to:{" "}
-                  <span className="font-semibold">{reminder.assigned_to}</span>
+    <div className="relative bg-white mt-5 border rounded-2xl overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto shadow">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+        {filteredReminders.length === 0 ? (
+          <p className="text-center text-gray-400 text-sm sm:text-base py-8">No reminders found.</p>
+        ) : (
+          filteredReminders
+            .sort((a, b) => new Date(b.dremainder_dt) - new Date(a.dremainder_dt))
+            .map((reminder) => (
+              <div
+                key={reminder.iremainder_id}
+                className="border border-gray-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <div className="mb-3 sm:mb-0">
+                    <h3 className="text-md font-semibold text-gray-900">
+                      📌 {reminder.cremainder_title}
+                    </h3>
+                    <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+                      {reminder.cremainder_content}
+                    </p>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Created by:{" "}
+                      <span className="font-semibold">{reminder.created_by}</span>
+                    </div>
+                    <div className="text-xs mt-1 text-gray-600">
+                      Priority:{" "}
+                      <span className="font-semibold">
+                        {reminder.priority || "Normal"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Assigned to:{" "}
+                      <span className="font-semibold">{reminder.assigned_to}</span>
+                    </div>
+                  </div>
+                  <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
+                    <p className="font-medium text-blue-700">
+                      {formatDisplayDateTime(reminder.dremainder_dt)}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="text-left sm:text-right text-sm text-gray-600 whitespace-nowrap">
-                <p className="font-medium text-blue-700">
-                  {formatDisplayDateTime(reminder.dremainder_dt)}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))
-    )}
-  </div>
-</div>
+            ))
+        )}
+      </div>
+    </div>
 
       {/* Reminder Form Drawer */}
       {showForm && (

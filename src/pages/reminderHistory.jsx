@@ -3,7 +3,6 @@ import ProgressBar from "../Components/common/ProgressBar";
 import TabsBar from "../Components/common/TabsBar";
 import ProfileHeader from "../Components/common/ProfileHeader";
 import AllReminders from "../Components/AllReminders";
-
 import ProfileWithHistoryCard from "../Components/common/ProfileWithHistoryCard"; 
 
 

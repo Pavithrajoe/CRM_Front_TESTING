@@ -664,7 +664,9 @@ const LeadDetailView = () => {
     if (leadId) {
       fetchStatusRemarks();
     }
-  }, [leadId, showPopup]);
+  // }, [leadId, showPopup]);
+    }, [leadId]);
+
 
   const sendEmail = async () => {
     setIsSendingMail(true);

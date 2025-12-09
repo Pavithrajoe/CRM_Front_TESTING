@@ -146,8 +146,6 @@ export const ENDPOINTS = {
 
   USER_ACCESS: `${BASE_URL}/user-attribute/user`,
   USERACCESS_CHANGE: `${BASE_URL}/user-attribute`,
-  
-
 
   SUB_SERVICE: `${BASE_URL}/sub-service`,
   TASK: `${BASE_URL}/task`,

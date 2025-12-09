@@ -36,14 +36,13 @@ const CompanyLeads = () => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
     const formattedFirstDay = formatDateForInput(firstDayOfMonth);
     const formattedLastDay = formatDateForInput(lastDayOfMonth);
 
     setDateFilterFrom(formattedFirstDay);
     setDateFilterTo(formattedLastDay);
     setShowDefaultMonthNotification(true); 
-  }, []); // Run only once on mount
+  }, []);
 
   // Effect to fetch data based on filters
   useEffect(() => {

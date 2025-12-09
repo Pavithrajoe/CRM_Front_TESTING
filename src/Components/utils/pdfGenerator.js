@@ -9,7 +9,9 @@ const safeField = (value) => {
   return str === "" || str.toLowerCase() === "null" ? null : str;
 };
 
-export const generateQuotationPDF = async (quotation, returnDataUrl = false) => {
+// export const generateQuotationPDF = async (quotation, returnDataUrl = false) => {
+  
+export const generateQuotationPDF = async (quotation, companyInfo, leadData, returnDataUrl = false) => {
   const leadId = quotation.iLead_id;
 
   try {

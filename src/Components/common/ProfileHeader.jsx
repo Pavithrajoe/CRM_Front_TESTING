@@ -156,8 +156,8 @@ const ProfileHeader = () => {
   // };
 
   const handleOpenNotifications = () => {
-  setLastSeen();           // update last seen timestamp
-  setBellNotificationCount(0);  // clear bell
+  setLastSeen();          
+  setBellNotificationCount(0); 
   navigate("/notifications");
 };
 

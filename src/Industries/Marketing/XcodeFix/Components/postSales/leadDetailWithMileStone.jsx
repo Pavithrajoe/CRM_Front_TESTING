@@ -188,10 +188,14 @@ const LeadDetailView = () => {
   const latestProjectValue = statusRemarks.length > 0 
     ? statusRemarks[statusRemarks.length - 1] 
     : null;
-  
+
   const projectValueDisplay = latestProjectValue 
-    ? `${latestProjectValue.currency_details?.symbol || '₹'} ${latestProjectValue.project_value || 0}` 
+    ? `${latestProjectValue.currency_details?.symbol} ${latestProjectValue.project_value || 0}` 
     : null;
+  
+  // const projectValueDisplay = latestProjectValue 
+  //   ? `${latestProjectValue.currency_details?.symbol || '₹'} ${latestProjectValue.project_value || 0}` 
+  //   : null;
 
   const handleTabChange = (event, newValue) => setTabIndex(newValue);
   const handleReasonChange = (e) => setSelectedLostReasonId(e.target.value);

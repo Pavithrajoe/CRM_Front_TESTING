@@ -24,6 +24,12 @@ export const SettingsProvider = ({ children }) => {
         }
       }
 
+      if (!company_id) {
+        setError("Company ID not found in token");
+        setLoading(false);
+        return;
+      } 
+
       try {
         const response = await axios.get(`${ENDPOINTS.COMPANY_SETTINGS}/${company_id}`, {
           headers: { Authorization: `Bearer ${token}` },

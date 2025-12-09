@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import MasterModal from '../../Components/Master/MasterModel';
 import { Sparkles } from 'lucide-react';
-import { ENDPOINTS, BASE_URL } from '../../api/constraints'; // Assuming this path is correct and BASE_URL is needed
+import { ENDPOINTS, BASE_URL } from '../../api/constraints';
 import { FaTimesCircle } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useSettingsAccess } from '../../context/companySettingsContext';
@@ -12,15 +12,10 @@ export default function CompanyMaster() {
     const [selectedMaster, setSelectedMaster] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [settings, setSettings] = useState({})
-
-    // State to store decoded user and company IDs
     const [userId, setUserId] = useState(null);
     const [companyId, setCompanyId] = useState(null);
-    const [isLoading, setIsLoading] = useState(true); // Loading state for decoding
+    const [isLoading, setIsLoading] = useState(true); 
     const [authError, setAuthError] = useState(''); // To store authentication errors
-
-
-      console.log ("settings data received",settingsAccess)
 
     // useEffect to decode JWT token on component mount
     useEffect(() => {
@@ -46,33 +41,32 @@ export default function CompanyMaster() {
             setIsLoading(false); // Stop loading
         }
     }, []); 
-useEffect(() => {
-  const fetchSettings = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(ENDPOINTS.GET_SETTINGS, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
 
-      if (!res.ok) {
-        throw new Error("Network response was not ok");
-      }
+    useEffect(() => {
+    const fetchSettings = async () => {
+        try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(ENDPOINTS.GET_SETTINGS, {
+            headers: {
+            "Authorization": `Bearer ${token}`,
+            },
+        });
 
-      const data = await res.json();
-      setSettings(data.result); // set the nested object, not the whole response
-    } catch (error) {
-      console.error("Fetch error:", error);
+        if (!res.ok) {
+            throw new Error("Network response was not ok");
+        }
+
+        const data = await res.json();
+        setSettings(data.result); // set the nested object, not the whole response
+        } catch (error) {
+        console.error("Fetch error:", error);
+        }
+    };
+
+    if (!isLoading && !authError) {
+        fetchSettings();
     }
-  };
-
-  if (!isLoading && !authError) {
-    fetchSettings();
-  }
-}, [isLoading, authError]);
-
-    
+    }, [isLoading, authError]);
 
     const MASTER_CONFIG = useMemo(() => ([
        {
@@ -153,7 +147,6 @@ useEffect(() => {
             put: (id) => `${ENDPOINTS.MASTER_POTENTIAL_PUT}/${id}`,
             delete: (id) => `${ENDPOINTS.MASTER_POTENTIAL_DELETE}/${id}`,
             skipCompanyIdInjection: false, // Keep false if companyId is auto-injected by default
-            
             conditionalFields: [], // No conditional rendering for orderId for Potential
         },
         {
@@ -185,7 +178,7 @@ useEffect(() => {
             title: 'Sub-Industries',
             value: 'Sub-Industry Masters',
             modalKey: 'Sub Industry',
-            masterKey:'subIndustryMaster',
+            masterKey:'SubIndustryMaster',
             idKey: 'isubindustry',
             payloadKey: 'subindustry_name',
             responseKey: 'response.subindustries',
@@ -325,7 +318,7 @@ useEffect(() => {
         title: 'Sub Source',
         value: 'Sub Source Masters',
         modalKey: 'Sub Source',
-        masterKey:'subSourceMaster',
+        masterKey:'SubSourceMaster',
 
         idKey: 'isub_src_id',
         payloadKey: 'ssub_src_name',
@@ -402,14 +395,9 @@ useEffect(() => {
         get: ENDPOINTS.MASTER_SERVICE_GET,
         post: ENDPOINTS.MASTER_SERVICE_POST,
         put: ENDPOINTS.MASTER_SERVICE_PUT,
-        //  FIX: Change `delete` to a function that takes `id`
-        // delete: ENDPOINTS.MASTER_SERVICE_DELETE,
         // delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
         delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
-
-        
-        // basePostPayload: { cservice_name: '' },
-        basePostPayload: { serviceName: "" },
+        basePostPayload: { serviceName: "" }, // basePostPayload: { cservice_name: '' },
 
         basePutPayload: {},
         putPayloadFields: ["serviceId", "serviceName"],
@@ -437,7 +425,7 @@ useEffect(() => {
     idKey: 'isubservice_id',
     payloadKey: 'subservice_name',
     responseKey: 'data',
-    masterKey:'subServiceMaster',
+    masterKey:'SubServiceMaster',
     parentIdInChildResponseKey: 'iservice_parent',
     parentNameInChildResponseKey: 'service.cservice_name', 
 
@@ -445,7 +433,6 @@ useEffect(() => {
     get: ENDPOINTS.SUB_SERVICE,
     post: ENDPOINTS.SUB_SERVICE,
     put: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
-    
     delete: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
 
     payloadMapping: {
@@ -489,8 +476,8 @@ useEffect(() => {
         masterName: "SERVICE",
         getEndpoint: ENDPOINTS.MASTER_SERVICE_GET,
         responseKey: 'data',
-        idKey: 'iservice_id',
-        nameKey: 'cservice_name',
+        idKey: 'serviceId',          
+        nameKey: 'serviceName',
         parentIdInChildResponseKey: 'iservice_parent',
         formFieldKey: 'serviceParent',
         modalLabel: 'Parent Service',
@@ -498,10 +485,10 @@ useEffect(() => {
     },
 
     postPayloadFields: [
-        "subservice_name", // Must match API expectation exactly
+        "subservice_name", 
         "serviceParent",
         "createdBy",
-        "cost" // Must match API expectation exactly
+        "cost" 
     ],
 
     putPayloadFields: [
@@ -511,12 +498,8 @@ useEffect(() => {
     ],
         
     additionalFields: ['cost'],
-
-
     deletePayloadFields: []
 },
-
-
 
 {
     title: 'Proposal Send Mode',
@@ -525,12 +508,10 @@ useEffect(() => {
     idKey: 'proposal_send_mode_id', 
     payloadKey: 'name', 
     masterKey:'ProposalModeMaster',
-    
-    // Updated response handling for nested structure
-    responseKey: 'data.data', // Now points to the actual array of items
+    responseKey: 'data.data', 
     dropdownOptions: {
-        labelKey: 'name',                  // Display text in dropdown
-        valueKey: 'proposal_send_mode_id'  // Value to store
+        labelKey: 'name',                 
+        valueKey: 'proposal_send_mode_id'  
     },
     
     // Filter only active items for dropdown (optional)
@@ -847,46 +828,46 @@ useEffect(() => {
             <h1 className="text-3xl font-extrabold mb-10 text-center">Company Master Settings</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-    {MASTER_CONFIG
-  .filter(master => {
-    if (!settingsAccess || !settingsAccess.companySettings || !settingsAccess.companySettings.Masters) {
-      // If settings or Masters are not loaded yet, skip showing any masters
-      return false;
-    }
-    // Safe to check masterKey now
-    return (
-      master.masterKey &&
-      settingsAccess.companySettings.Masters[master.masterKey] === true
-    );
-  })
-    .map((master, index) => (
-    <div
-      key={index}
-      onClick={() => handleTileClick(master)}
-      className="relative min-h-[220px] cursor-pointer bg-white border border-blue-100 shadow-xl rounded-2xl p-6 hover:shadow-blue-200 transition-transform duration-300 hover:scale-[1.03] group"
-    >
-      <div className="absolute top-3 right-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <Sparkles className="w-5 h-5" />
-      </div>
-      <div className="flex flex-col justify-between h-full">
-        <div>
-          <h3 className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">
-            {master.title}
-          </h3>
-          <p className="text-xl font-extrabold text-gray-900 leading-snug">
-            {master.value}
-          </p>
-        </div>
-        <div className="mt-6 h-2 w-10 bg-blue-500 rounded-full mx-auto group-hover:w-full transition-all duration-300" />
-      </div>
-    </div>
-  ))}
+                {MASTER_CONFIG
+            .filter(master => {
+                if (!settingsAccess || !settingsAccess.companySettings || !settingsAccess.companySettings.Masters) {
+                // If settings or Masters are not loaded yet, skip showing any masters
+                return false;
+                }
+                // Safe to check masterKey now
+                return (
+                master.masterKey &&
+                settingsAccess.companySettings.Masters[master.masterKey] === true
+                );
+            })
+                .map((master, index) => (
+                <div
+                key={index}
+                onClick={() => handleTileClick(master)}
+                className="relative min-h-[220px] cursor-pointer bg-white border border-blue-100 shadow-xl rounded-2xl p-6 hover:shadow-blue-200 transition-transform duration-300 hover:scale-[1.03] group"
+                >
+                <div className="absolute top-3 right-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Sparkles className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col justify-between h-full">
+                    <div>
+                    <h3 className="text-xs font-semibold text-blue-700 mb-1 uppercase tracking-wide">
+                        {master.title}
+                    </h3>
+                    <p className="text-xl font-extrabold text-gray-900 leading-snug">
+                        {master.value}
+                    </p>
+                    </div>
+                    <div className="mt-6 h-2 w-10 bg-blue-500 rounded-full mx-auto group-hover:w-full transition-all duration-300" />
+                </div>
+                </div>
+            ))}
             </div>
 
             {selectedMaster && isModalOpen && (
                 <MasterModal
                     master={selectedMaster}
-                    onClose={handleCloseModal} // <--- onClose prop is passed here
+                    onClose={handleCloseModal} 
                     companyId={companyId}
                     userId={userId}
                     masterConfigs={MASTER_CONFIG.reduce((acc, config) => {

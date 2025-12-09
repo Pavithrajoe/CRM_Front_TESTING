@@ -17,17 +17,14 @@ import {
   Card,
   CardContent,
   Grid,
-  Chip,
   Collapse,
   IconButton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Paper,
-  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import ProfileCard from "../Components/common/ProfileCard";
@@ -398,7 +395,8 @@ const LeadDetailView = () => {
         showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
         return;
       }
-      await generateQuotationPDF(quotation, companyInfo, leadData);
+      const doc = await generateQuotationPDF(quotation, companyInfo, leadData);
+      doc.save(`${quotation.cQuote_number}.pdf`);
       showPopup('Success', `PDF downloaded successfully!`, 'success');
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -1229,7 +1227,8 @@ const renderTabContent = () => {
                     >
                       <div className="w-px h-5 bg-gray-600"></div>
                       <img
-                        src="/images/detailview/email.svg" // Fixed path
+                         src="/images/detailview/email.svg" // Fixed path
+                        //src="../../public/images/detailview/email.svg"
                         className="hidden sm:block w-4 h-4"
                         alt="Email icon"
                       />
@@ -1398,10 +1397,9 @@ const renderTabContent = () => {
                           </IconButton>
                           <IconButton
                             size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownloadPdf(quotation);
-                            }}
+                            onClick={(e) => {e.stopPropagation(); 
+                                              handleDownloadPdf(quotation);
+                                            }}
                             title="Download PDF"
                           >
                             <FaDownload />

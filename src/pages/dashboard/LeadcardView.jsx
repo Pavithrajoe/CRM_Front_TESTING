@@ -1,10 +1,5 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useContext,
-} from "react";
+import React, {useEffect, useState, useCallback, useMemo,
+  useContext} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaEnvelope,
@@ -558,8 +553,7 @@ const LeadCardViewPage = () => {
     if (!currentUserId || !currentToken) return;
 
     try {
-      const response = await fetch(
-        `${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`,
+      const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`,
         {
           method: "GET",
           headers: {
@@ -581,18 +575,31 @@ const LeadCardViewPage = () => {
 
       const assignedEntries = resJson?.data?.assignedEntries || [];
       const leadsAssigned = resJson?.data?.leadsAssigned || [];
+      const mergedLeads = assignedEntries.map((entry, index) => {
+        const leadDetails = leadsAssigned[index] || {}; 
+        const statusName = leadDetails?.lead_status?.clead_name || "Assigned";
+        const statusColor = getStatusColor(statusName); 
 
-      // Flatten assignedEntries with lead details for frontend
-      const mergedLeads = assignedEntries.map((entry) => {
-        const leadDetails =
-          leadsAssigned.find((lead) => lead.ilead_id === entry.ilead_id) || {};
         return {
-          ...entry,
-          ...leadDetails, // merge lead details to top level
-          statusDisplay: leadDetails?.lead_status?.clead_name || "Unknown",
-          potentialDisplay:
-            leadDetails?.lead_potential?.clead_name || "Unknown",
+          ...leadDetails, 
+          ...entry, 
+          iassigned_by_name: entry.user_assigned_to_iassigned_byTouser?.cFull_name || '-', 
+          dcreate_dt: entry.dcreate_dt, 
+          dupdate_dt: entry.dupdate_dt,
+          dmodified_dt: leadDetails.dmodified_dt || entry.dupdate_dt, 
+          statusDisplay: statusName,
+          statusColor: statusColor, 
+          clead_name: leadDetails.clead_name || '-',
+          corganization: leadDetails.corganization || leadDetails.c_organization || '-',
+          cemail: leadDetails.cemail || leadDetails.c_email || '-',
+          iphone_no: leadDetails.iphone_no || leadDetails.c_phone || '-',
         };
+      });
+
+      const sortedLeads = mergedLeads.sort((a, b) => {
+        const dateA = new Date(a.dcreate_dt);
+        const dateB = new Date(b.dcreate_dt);
+        return dateB.getTime() - dateA.getTime();
       });
 
       setAssignedLeads(mergedLeads);
@@ -600,20 +607,17 @@ const LeadCardViewPage = () => {
       console.error("Failed to fetch assigned leads:", err);
       setAssignedLeads([]);
     }
-  }, [currentUserId, currentToken]);
+  }, [currentUserId, currentToken]); 
 
-  // FIXED: Fetch data based on selected filter - USING REDUX FOR MAIN LEADS
+  // Fetch data based on selected filter - USING REDUX FOR MAIN LEADS
   useEffect(() => {
     if (!currentUserId || !currentToken) return;
-
-    setCurrentPage(1); // Reset to first page when filter changes
-
+    setCurrentPage(1); 
     if (selectedFilter === "assignedToMe") {
       fetchAssignedLeads();
     } else if (selectedFilter === "lost") {
       fetchLostLeads();
     } else {
-      // USE REDUX INSTEAD OF LOCAL fetchLeads
       dispatch(fetchLeads());
     }
   }, [

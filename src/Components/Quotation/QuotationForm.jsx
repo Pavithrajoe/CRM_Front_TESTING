@@ -551,10 +551,7 @@ const QuotationForm = ({
                           <option value="">Select Service</option>
                           {servicesList.map(s => {
                               if (!s || !s.serviceId) return null; 
-                              
-                              // Safely access cservice_name, defaulting to a placeholder or empty string
                               const serviceName = s.serviceName ? s.serviceName.trim() : `(ID: ${s.serviceId} - Name Missing)`;
-
                               return (
                                   <option key={s.serviceId} value={s.serviceId}>
                                       {serviceName}

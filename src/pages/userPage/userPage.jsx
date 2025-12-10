@@ -12,11 +12,14 @@ import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
 import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../../context/UserAccessContext";
+import { companyContext } from "../../context/companyContext";
 import { GlobUserContext } from "../../context/userContex";
 
 const UserPage = () => {
   const { userModules, userAccess } = useUserAccess();
   const { user } = useContext(GlobUserContext);
+  const { company } = useContext(companyContext);
+  const companyUserLimit = company?.result?.iUser_no || 0;
 
   const effectRan = useRef(false);
   const [users, setUsers] = useState([]);
@@ -29,11 +32,12 @@ const UserPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [showLimitPopup, setShowLimitPopup] = useState(false);
 
   const usersPerPage = 6;
   const navigate = useNavigate();
 
-  // ✅ Render "User Create" button only when bactive = true for module_id = 6
+  //  Render "User Create" button only when bactive = true for module_id = 6
   const dynamicUserCreate = useMemo(() => {
     const filtered = userModules.filter(
       (attr) =>
@@ -86,7 +90,15 @@ const UserPage = () => {
   };
 
   // Function to navigate to the user creation page
-  const createUser = () => navigate("/users");
+  // const createUser = () => navigate("/users");
+  const createUser = () => {
+    if (users.length >= companyUserLimit) {
+      setShowLimitPopup(true);
+      return;
+    }
+    navigate("/users");
+  };
+
 
   const fetching = useRef(false);
 
@@ -173,7 +185,7 @@ const UserPage = () => {
           className="w-full sm:w-1/2 md:w-1/3 px-5 py-2.5 text-sm bg-white rounded-2xl border border-gray-300 shadow focus:ring-2 focus:ring-blue-300 outline-none transition-all"
         />
         <div className="flex gap-3 items-center">
-          {/* ✅ Conditional rendering for the "+ User" button */}
+          {/* Conditional rendering for the "+ User" button */}
           {dynamicUserCreate.length > 0 &&
             dynamicUserCreate.map((i) => (
               <button
@@ -416,6 +428,27 @@ const UserPage = () => {
           </button>
         </div>
       )}
+
+      {showLimitPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <h2 className="text-lg font-semibold text-red-600 mb-2">
+              User limit reached
+            </h2>
+            <p className="text-gray-700 mb-4">
+              User creation access is over. You’ve reached the limit.
+              Please contact <span className="font-semibold">Inklidox</span>.
+            </p>
+            <button
+              onClick={() => setShowLimitPopup(false)}
+              className="px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

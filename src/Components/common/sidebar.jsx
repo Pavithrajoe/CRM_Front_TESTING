@@ -33,7 +33,7 @@ const Sidebar = ({ data }) => {
     Settings: { route: "/settingspage/account", iconPath: "/images/nav/settings.svg" },
   };
 
-  // ✅ Load user data + token info
+  //  Load user data + token info
   useEffect(() => {
     let parsedData = null;
 
@@ -65,7 +65,7 @@ const Sidebar = ({ data }) => {
     }
   }, [data]);
 
-  // ✅ Build menu once ALL data is ready (no refresh needed)
+  //  Build menu once ALL data is ready (no refresh needed)
   useEffect(() => {
     if (!modules?.length) return;
     if (!Array.isArray(userModule)) return;

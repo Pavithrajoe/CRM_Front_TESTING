@@ -261,7 +261,6 @@ export default Sidebar;
 // import { ModuleContext } from "../../context/ModuleContext";
 
 // const TARGET_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-
 // const Sidebar = ({ data }) => {
 //   const [isCollapsed, setIsCollapsed] = useState(true);
 //   const [companyId, setCompanyId] = useState(null);

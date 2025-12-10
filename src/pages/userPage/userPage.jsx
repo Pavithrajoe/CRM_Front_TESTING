@@ -436,9 +436,10 @@ const UserPage = () => {
               User limit reached
             </h2>
             <p className="text-gray-700 mb-4">
-              User creation access is over. You’ve reached the limit.
-              Please contact <span className="font-semibold">Inklidox</span>.
+              You have reached the limit for user creation. To add more users, please contact{" "}
+              <span className="font-semibold">Inklidox Technologies</span>.
             </p>
+
             <button
               onClick={() => setShowLimitPopup(false)}
               className="px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800"

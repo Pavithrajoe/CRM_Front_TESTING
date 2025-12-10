@@ -176,7 +176,6 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
   const formRef = useRef(null); 
-  // Receive data from navigation
   const leadsList = location.state?.leadList || [];
   const leadIds = leadsList.map((lead) => lead.ilead_id);
   const currentIndex = leadIds.indexOf(Number(leadId));
@@ -1722,10 +1721,9 @@ const renderTabContent = () => {
                                 {template.mailTitle}
                               </h4>
                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                {template.mailBody
-                                  .replace(/<[^>]*>/g, "")
-                                  .substring(0, 100)}
+                                {template.mailBody?.replace(/<[^>]*>/g, "").substring(0, 100) || ""}
                               </p>
+                              
                             </div>
                           </div>
                         </div>

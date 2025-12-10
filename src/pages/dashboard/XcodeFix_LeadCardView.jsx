@@ -597,10 +597,8 @@ const Xcode_LeadCardViewPage = () => {
 
     const fetchAssignedLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) return [];
-
-        console.log("Called the assigned to api function");
+        // console.log("Called the assigned to api function");
         setError(null);
-
         try {
             const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
                 method: "GET",
@@ -608,9 +606,7 @@ const Xcode_LeadCardViewPage = () => {
                     Authorization: `Bearer ${currentToken}`,
                 },
             });
-
-            console.log("Function is also called when clicking active leads");
-
+            // console.log("Function is also called when clicking active leads");
             if (!response.ok) {
                 const errorData = await response.text();
                 throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
@@ -639,12 +635,17 @@ const Xcode_LeadCardViewPage = () => {
                 };
             });
 
+            const sortedLeads = mergedLeads.sort((a, b) => {
+                const dateA = new Date(a.dcreate_dt);
+                const dateB = new Date(b.dcreate_dt);
+                return dateB.getTime() - dateA.getTime();
+            });
+
             const uniqueLeads = Array.from(
-                new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+                new Map(sortedLeads.map((lead) => [lead.ilead_id, lead])).values()
             );
 
             // console.log("Unique merged data:", uniqueLeads);
-
             setAssignedLeads(uniqueLeads);
             return uniqueLeads;
         } catch (err) {
@@ -655,109 +656,54 @@ const Xcode_LeadCardViewPage = () => {
         }
     }, [currentUserId, currentToken, ENDPOINTS]);
 
-    // const fetchAssignedLeads = useCallback(async () => {
-    // if (!currentUserId || !currentToken) return [];
 
-    // console.log("Called the assigned to api function");
-    // setError(null);
-
-    // try {
-    //     const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-    //     method: "GET",
-    //     headers: {
-    //         Authorization: `Bearer ${currentToken}`,
-    //     },
-    //     });
-
-    //     console.log("Function is also called when clicking active leads");
-
-    //     if (!response.ok) {
-    //     const errorData = await response.text();
-    //     throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
-    //     }
-
-    //     const resJson = await response.json();
-    //     const assignedEntries = resJson?.data?.assignedEntries || [];
-    //     const leadsAssigned = resJson?.data?.leadsAssigned || [];
-
-    //     // Merge both data arrays
-    //     const mergedLeads = assignedEntries.map((entry) => {
-    //     const leadDetails = leadsAssigned.find((lead) => lead.ilead_id === entry.ilead_id) || {};
-    //     return {
-    //         ...entry,
-    //         ...leadDetails,
-    //         statusDisplay: leadDetails?.lead_status?.clead_name || "Unknown",
-    //         potentialDisplay: leadDetails?.lead_potential?.clead_name || "Unknown",
-    //     };
-    //     });
-
-    //     // Remove duplicates efficiently using Map (based on ilead_id)
-    //     const uniqueLeads = Array.from(
-    //     new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
-    //     );
-
-    //     console.log("Unique merged data:", uniqueLeads);
-
-    //     setAssignedLeads(uniqueLeads);
-    //     return uniqueLeads;
-    // } catch (err) {
-    //     console.error("Failed to fetch assigned leads:", err);
-    //     setError(`Failed to fetch assigned leads: ${err.message}`);
-    //     setAssignedLeads([]);
-    //     return [];
-    // }
-    // }, [currentUserId, currentToken, ENDPOINTS]);
-
-
- //fetch active leads function 
-// fetchLeads: await the assigned fetch and then merge
-const fetchLeads = useCallback(async () => {
-  if (!currentUserId || !currentToken) {
-    return;
-  }
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${currentToken}`,
-      },
-    });
-
-    if (!res.ok) {
-      const bodyText = await res.text();
-      let errorDetails = `HTTP error! status: ${res.status}`;
-      try {
-        const errorJson = JSON.parse(bodyText);
-        errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
-      } catch {
-        errorDetails += `, Message: ${bodyText || res.statusText}`;
-      }
-      throw new Error(errorDetails);
+    // fetchLeads: await the assigned fetch and then merge
+    const fetchLeads = useCallback(async () => {
+    if (!currentUserId || !currentToken) {
+        return;
     }
+    setLoading(true);
+    setError(null);
+    try {
+        const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentToken}`,
+        },
+        });
 
-    const data = await res.json();
+        if (!res.ok) {
+        const bodyText = await res.text();
+        let errorDetails = `HTTP error! status: ${res.status}`;
+        try {
+            const errorJson = JSON.parse(bodyText);
+            errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
+        } catch {
+            errorDetails += `, Message: ${bodyText || res.statusText}`;
+        }
+        throw new Error(errorDetails);
+        }
 
-    // await here so assignedData is an array, not a Promise
-    const assignedData = await fetchAssignedLeads();
+        const data = await res.json();
 
-    console.log("active leads length:", data.details?.length, "Assigned lead length:", assignedData.length);
+        // await here so assignedData is an array, not a Promise
+        const assignedData = await fetchAssignedLeads();
 
-   const mergedLeads = Array.isArray(data.details)
-  ? [...data.details, ...assignedData]
-  : [...assignedData];
+        console.log("active leads length:", data.details?.length, "Assigned lead length:", assignedData.length);
 
-//  Remove duplicates by ilead_id using a Map (fast and clean)
-const uniqueLeads = Array.from(
-  new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
-);
+    const mergedLeads = Array.isArray(data.details)
+    ? [...data.details, ...assignedData]
+    : [...assignedData];
 
-//  Sort after de-duplication
-const sorted = uniqueLeads.sort(
-  (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
-);
+    const uniqueLeads = Array.from(
+    new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+    );
+
+    //  Sort after de-duplication
+    const sorted = uniqueLeads.sort(
+    (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
+    );
 
 setAllLeads(sorted);
 

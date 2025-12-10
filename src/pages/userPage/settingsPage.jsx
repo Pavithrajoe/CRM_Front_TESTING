@@ -127,19 +127,17 @@ const SettingsPage = ({ settingsData }) => {
   const [emailError, setEmailError] = useState('');
   const [usernameError, setUsernameError] = useState('');
 
-  // 1. Fetch User Profile Details (Name, Email, initial Toggle values)
+  // Fetch User Profile Details (Name, Email, initial Toggle values)
   useEffect(() => {
     const fetchUserProfile = async () => {
-      // Logic for user without URL ID (e.g., current logged-in user from context)
       if (!urlUserId) {
         if (users && users.length > 0) {
           const user = users[0];
           setName(user.cFull_name || '');
           setUsername(user.cUser_name || '');
           setEmail(user.cEmail || '');
-          // Set initial toggle states from user profile
-          setWhatsappActive(user.whatsapp_access || false);
-          setMailActive(user.mail_access || false);
+          setWhatsappActive(user.whatsapp_access || false); 
+          setMailActive(user.mail_access || false);         
           setWebsiteActive(user.website_access || false);
           setPhoneActive(user.phone_access || false);
         }
@@ -171,10 +169,9 @@ const SettingsPage = ({ settingsData }) => {
         setName(data.cFull_name || '');
         setUsername(data.cUser_name || '');
         setEmail(data.cEmail || '');
-        // Set initial toggle states from user profilez
-        setWhatsappActive(data.whatsapp_access || false);
-        setMailActive(data.mail_access || false);
-        setWebsiteActive(data.website_access || false);
+        setWhatsappActive(data.whatsapp_access || false); 
+        setMailActive(data.mail_access || false); 
+        setWebsiteActive(data.website_access || false); 
         setPhoneActive(data.phone_access || false);
       } catch (err) {
         console.error("Error fetching user details:", err);
@@ -186,12 +183,11 @@ const SettingsPage = ({ settingsData }) => {
     fetchUserProfile();
   }, [urlUserId, users]);
 
-  // 2. Fetch General Settings (Master Channel Activation - Determines if toggle is shown)
+  // Fetch General Settings (Master Channel Activation - Determines if toggle is shown)
   const fetchGeneralSettings = async () => {
     setLoadingSettings(true);
     const authToken = localStorage.getItem("token");
     if (!authToken) {
-      // User must be logged in, handled by parent/profile fetch, but good for redundancy
       setLoadingSettings(false);
       return;
     }
@@ -207,21 +203,17 @@ const SettingsPage = ({ settingsData }) => {
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error fetching settings");
-      
       const settings = data.result && !Array.isArray(data.result) 
         ? data.result
         : (Array.isArray(data.result) && data.result.length > 0) ? data.result[0] : {};
 
       const updatedSettings = {
-        whatsapp_active: settings.whatsapp_active || false,
-        mail_active: settings.mail_active || false,
-        website_active: settings.website_active || false,
-        phone_active: settings.phone_active || false,
+        whatsapp_active: settings.whatsapp_active ?? false,
+        mail_active: settings.mail_active ?? false,
+        website_active: settings.website_active ?? false,
+        phone_active: settings.phone_active ?? false,
       };
-
-      // Set the master settings that control visibility
       setSettingsProps(updatedSettings);
-
     } catch (err) {
       console.error("Error fetching general settings:", err);
       toast.error("Failed to load general settings: " + err.message);
@@ -234,7 +226,6 @@ const SettingsPage = ({ settingsData }) => {
     fetchGeneralSettings();
   }, []);
 
-  // Use the optional prop settingsData if provided (e.g., from a parent component)
   useEffect(() => {
     if (settingsData && settingsData.result) {
       const result = settingsData.result;
@@ -245,7 +236,6 @@ const SettingsPage = ({ settingsData }) => {
         website_active: result.website_active || false,
         phone_active: result.phone_active || false,
       };
-      // Overwrite master settings if settingsData prop is provided
       setSettingsProps(updatedSettings);
     }
   }, [settingsData]);
@@ -336,7 +326,6 @@ const SettingsPage = ({ settingsData }) => {
     }
 
     try {
-      // NOTE: Removed channel access properties here, as they are handled by updateCallLogAccess
       const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
         method: 'PUT',
         headers: {
@@ -365,7 +354,6 @@ const SettingsPage = ({ settingsData }) => {
     }
   };
   
-
   // Handler for Password changes
   const handleChangePassword = async () => {
     const authToken = localStorage.getItem("token");
@@ -389,10 +377,9 @@ const SettingsPage = ({ settingsData }) => {
           'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
-          email: email, // Assuming the API uses email to identify the user for password change
-          password: newPassword, // The API seems to just take the new password for update.
-          // Ideally this should include the currentPassword for verification.
-          // current_password: currentPassword, // <-- Add this if your API supports it!
+          email: email, 
+          password: newPassword, 
+          // current_password: currentPassword, 
         }),
       });
 
@@ -408,93 +395,138 @@ const SettingsPage = ({ settingsData }) => {
     }
   };
 
+
   // Handler for Communication Channel Toggles
   const updateCallLogAccess = async (newMailActive, newPhoneActive, newWebsiteActive, newWhatsappActive) => {
+      const authToken = localStorage.getItem("token");
+      if (!authToken) {
+        toast.error("Authentication required.");
+        return false;
+      }
+      if (!urlUserId) {
+          toast.error("User ID is required for access update.");
+          return false;
+      }
+      try {
+        const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: Number(urlUserId),
+            isMailActive: newMailActive,
+            isPhoneActive: newPhoneActive,
+            isWebsiteActive: newWebsiteActive,
+            isWhatsappActive: newWhatsappActive,
+          }),
+        });
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update call log access');
+        }
+        
+        if (data.result) {
+          setMailActive(data.result.mail_access || false);
+          setPhoneActive(data.result.phone_access || false);
+          setWebsiteActive(data.result.website_access || false);
+          setWhatsappActive(data.result.whatsapp_access || false);
+        } else {
+          setMailActive(newMailActive);
+          setPhoneActive(newPhoneActive);
+          setWebsiteActive(newWebsiteActive);
+          setWhatsappActive(newWhatsappActive);
+        }
+        
+        toast.success(data.Message || "Access saved successfully.");
+        return true;
+      } catch (error) {
+        console.error('Error updating call log access:', error);
+        toast.error(`Failed to update access: ${error.message}`);
+        return false;
+      }
+    };
+
+  // --- Fetch user access for toggles ---
+const fetchUserAccess = async () => {
+  try {
     const authToken = localStorage.getItem("token");
     if (!authToken) {
       toast.error("Authentication required.");
-      return false;
-    }
-    if (!urlUserId) {
-        toast.error("User ID is required for access update.");
-        return false;
+      return;
     }
 
-    try {
-      const response = await fetch(ENDPOINTS.CALLLOG_ACCESS, {
-        method: 'POST',
+    const response = await fetch(`${ENDPOINTS.USERS}/${urlUserId}`, {
         headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: Number(urlUserId),
-          isMailActive: newMailActive,
-          isPhoneActive: newPhoneActive,
-          isWebsiteActive: newWebsiteActive,
-          isWhatsappActive: newWhatsappActive,
-        }),
+          "Authorization": `Bearer ${authToken}`
+        }
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to update call log access');
+        throw new Error(data.message || "Failed to load user access");
       }
 
-      // Update state with the confirmed values from the server response
-      if (data.result) {
-        setMailActive(data.result.isMailActive || false);
-        setPhoneActive(data.result.isPhoneActive || false);
-        setWebsiteActive(data.result.isWebsiteActive || false);
-        setWhatsappActive(data.result.isWhatsappActive || false);
-      }
+      setMailActive(data.mail_access ?? false);
+      setPhoneActive(data.phone_access ?? false);
+      setWebsiteActive(data.website_access ?? false);
+      setWhatsappActive(data.whatsapp_access ?? false);
 
-      toast.success(data.Message || "Access saved successfully.");
-      return true;
-    } catch (error) {
-      console.error('Error updating call log access:', error);
-      toast.error(`Failed to update access: ${error.message}`);
-      return false;
+      setName(data.cFull_name || "");
+      setUsername(data.cUser_name || "");
+      setEmail(data.cEmail || "");
+    } catch (err) {
+      console.error("Error fetching user access:", err);
+      toast.error(err.message);
     }
   };
+  useEffect(() => {
+    if (!urlUserId) return;
+    fetchUserAccess();
+  }, [urlUserId]);
 
-  // Unified toggle handler
   const handleToggle = async (type) => {
-    // Determine the new state for the specific toggle and prepare the full payload
-    let newState = {
-      mail: mailActive,
-      phone: phoneActive,
-      website: websiteActive,
-      whatsapp: whatsappActive
-    };
+  const oldState = {
+    mail: mailActive,
+    phone: phoneActive,
+    website: websiteActive,
+    whatsapp: whatsappActive,
+  };
 
-    const toggleSetter = {
-        'whatsapp': setWhatsappActive,
-        'mail': setMailActive,
-        'website': setWebsiteActive,
-        'phone': setPhoneActive,
-    };
+  // Map state setters
+  const toggleSetter = {
+    mail: setMailActive,
+    phone: setPhoneActive,
+    website: setWebsiteActive,
+    whatsapp: setWhatsappActive,
+  };
 
-    // Calculate the new value for the toggled item
-    const currentValue = newState[type];
-    const newValue = !currentValue;
-    newState[type] = newValue;
+  // Compute new toggled state
+  const newValue = !oldState[type];
 
-    // Optimistic UI update
-    toggleSetter[type](newValue);
+  // Optimistic UI update
+  toggleSetter[type](newValue);
 
-    // Sync with server using the calculated new states for all four
-    const success = await updateCallLogAccess(
-        newState.mail,
-        newState.phone,
-        newState.website,
-        newState.whatsapp
-    );
+  // Prepare payload for API
+  const newState = {
+    ...oldState,
+    [type]: newValue,
+  };
 
-    if (!success) {
-      // Revert state if API call failed
-      toggleSetter[type](currentValue);
+  // Send update to server
+  const success = await updateCallLogAccess(
+    newState.mail,
+    newState.phone,
+    newState.website,
+    newState.whatsapp
+  );
+
+  // Rollback UI if update failed
+  if (!success) {
+      toggleSetter[type](oldState[type]);
     }
   };
 
@@ -649,7 +681,6 @@ const SettingsPage = ({ settingsData }) => {
             </div>
           ) : (
             <>
-              {/* Communication Channel Toggles - only show if master setting is true */}
               {settingsProps.whatsapp_active && (
                 <ToggleSwitch 
                   label="WhatsApp Access" 

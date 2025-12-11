@@ -1,14 +1,6 @@
-import React, {useEffect, useState, useCallback, useMemo,
-  useContext} from "react";
+import React, {useEffect, useState, useCallback, useMemo, useContext} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  FaEnvelope,
-  FaPhone,
-  FaGlobe,
-  FaCrown,
-  FaUser,
-  FaEdit,
-} from "react-icons/fa";
+import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit, } from "react-icons/fa";
 import { LayoutGrid, List, Filter, RotateCw, Users } from "lucide-react";
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import Loader from "../../Components/common/Loader";
@@ -41,18 +33,13 @@ const LeadCardViewPage = () => {
   const [lostLeads, setLostLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("grid");
-  const [selectedFilter, setSelectedFilter] = useState(
-    location.state?.activeTab || "all"
-  );
+  const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || "all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
-  const [sortConfig, setSortConfig] = useState({
-    key: "dmodified_dt",
-    direction: "descending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: "dmodified_dt", direction: "descending", });
   const leadsPerPage = 12;
   const [showLostLeads, setShowLostLeads] = useState(true);
   const [showLostDeals, setShowLostDeals] = useState(true);
@@ -165,9 +152,7 @@ const LeadCardViewPage = () => {
       let matchesModalFilters = true;
 
       if (
-        selectedFilter === "all" ||
-        selectedFilter === "leads" ||
-        selectedFilter === "websiteLeads"
+        selectedFilter === "all" || selectedFilter === "leads" || selectedFilter === "websiteLeads"
       ) {
         if (selectedPotential) {
           const itemPotential =
@@ -192,16 +177,12 @@ const LeadCardViewPage = () => {
         }
       }
 
-      const isConverted =
-        item.bisConverted === true || item.bisConverted === "true";
+      const isConverted = item.bisConverted === true || item.bisConverted === "true";
       const isActive = item.bactive === true || item.bactive === "true";
-      const isWebsite =
-        item.website_lead === true ||
-        item.website_lead === "true" ||
-        item.website_lead === 1;
+      const isWebsite = item.website_lead === true || item.website_lead === "true" || item.website_lead === 1;
 
       if (selectedFilter === "all") {
-        return matchesSearch && matchesDate && matchesModalFilters;
+        return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
       } else if (selectedFilter === "leads") {
         return (
           matchesSearch &&
@@ -259,7 +240,7 @@ const LeadCardViewPage = () => {
     }
   }, [dataToDisplay, leadsToShow, currentPage, leadsPerPage]);
 
-  // ✅ Fixed version - single declaration
+  // single declaration
   const goToDetail = (id, leadsList) => {
     navigate(`/leaddetailview/${id}`, { 
       state: { 
@@ -270,9 +251,7 @@ const LeadCardViewPage = () => {
     });
   };
 
-  const totalPages = leadsToShow
-    ? 1
-    : Math.ceil(dataToDisplay.length / leadsPerPage);
+  const totalPages = leadsToShow ? 1  : Math.ceil(dataToDisplay.length / leadsPerPage);
 
   useEffect(() => {
     // Change this function to async
@@ -653,13 +632,10 @@ const LeadCardViewPage = () => {
     setCurrentPage(1);
   };
 
-  // FIXED: Simplified filter apply
+  //  filter apply
   const handleFilterApply = () => {
-    // Close modal
     setShowFilterModal(false);
-    // Reset to page 1 for new filter set
     setCurrentPage(1);
-    // This triggers useMemo recalculation on dataToDisplay because filtering states changed
   };
 
   const handleResetFilters = () => {
@@ -670,7 +646,7 @@ const LeadCardViewPage = () => {
     setSelectedSource("");
     setSelectedIndustry("");
     setSelectedService("");
-    setSearchTerm(""); // Also reset search
+    setSearchTerm(""); 
     setCurrentPage(1);
   };
 
@@ -748,7 +724,6 @@ const LeadCardViewPage = () => {
       }
       setImportSuccess(true);
       setTimeout(() => {
-        // USE REDUX INSTEAD OF LOCAL fetchLeads
         dispatch(fetchLeads());
         setShowImportModal(false);
         setSelectedFile(null);
@@ -974,11 +949,7 @@ const LeadCardViewPage = () => {
                   : "bg-gray-50 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              {filterKey === "all" ? (
-                "All Leads"
-              ) : filterKey === "leads" ? (
-                "Leads"
-              ) : filterKey === "websiteLeads" ? (
+              {filterKey === "all" ? ("All Leads" ) : filterKey === "leads" ? ( "Leads" ) : filterKey === "websiteLeads" ? (
                 <>
                   {" "}
                   Website Leads{" "}
@@ -995,13 +966,9 @@ const LeadCardViewPage = () => {
 
         {roleID && importPermissions.map((i) =>  (
 
-          <button
-          key={i.attributes_id}
-            onClick={() => setShowImportModal(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap"
-          >
-{i.attribute_name   }    
-    </button>
+          <button key={i.attributes_id} onClick={() => setShowImportModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap" >
+          {i.attribute_name   }    
+          </button>
         ))}
       </div>
 
@@ -1504,42 +1471,14 @@ const LeadCardViewPage = () => {
                       </div>
                       {selectedFilter === "assignedToMe" && (
                         <>
-                          <div
-                            onClick={() =>
-                              goToDetail(item.ilead_id, displayedData)
-                            }
-                          >
-                            {item.iassigned_by_name || "-"}
-                          </div>
-                          <div
-                            onClick={() =>
-                              goToDetail(item.ilead_id, displayedData)
-                            }
-                          >
-                            {formatDate(item.dcreate_dt)}
-                          </div>
-                          <div
-                            onClick={() =>
-                              goToDetail(item.ilead_id, displayedData)
-                            }
-                          >
-                            {formatDate(item.dupdate_dt || item.dmodified_dt)}
-                          </div>
+                          <div onClick={() =>  goToDetail(item.ilead_id, displayedData) } > {item.iassigned_by_name || "-"} </div>
+                          <div onClick={() => goToDetail(item.ilead_id, displayedData) }> {formatDate(item.dcreate_dt)} </div>
+                          <div onClick={() => goToDetail(item.ilead_id, displayedData) } > {formatDate(item.dupdate_dt || item.dmodified_dt)} </div>
                         </>
                       )}
-                      <div
-                        onClick={() => goToDetail(item.ilead_id, displayedData)}
-                      >
-                        {formatDate(item.dmodified_dt || item.d_modified_date)}
-                      </div>
-                      <div
-                        onClick={() => goToDetail(item.ilead_id, displayedData)}
-                      >
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs ${statusBgColor}`}
-                        >
-                          {statusText}
-                        </span>
+                      <div onClick={() => goToDetail(item.ilead_id, displayedData)} > {formatDate(item.dmodified_dt || item.d_modified_date)} </div>
+                      <div onClick={() => goToDetail(item.ilead_id, displayedData)} >
+                        <span className={`px-3 py-1 rounded-full text-xs ${statusBgColor}`} >  {statusText}  </span>
                       </div>
                     </div>
                   );
@@ -1578,9 +1517,7 @@ const LeadCardViewPage = () => {
                     if (isConverted) {
                       statusText = "Deal Lost";
                     } else {
-                      statusText = `${
-                        item.lead_status?.clead_name || "Lead"
-                      } (Lost)`;
+                      statusText = `${ item.lead_status?.clead_name || "Lead" } (Lost)`;
                     }
                     statusBgColor = getStatusColor("lost");
                   } else {
@@ -1605,12 +1542,7 @@ const LeadCardViewPage = () => {
 
                 return (
                   <div
-                    key={
-                      item.ilead_id ||
-                      `assigned-${item.cemail}-${item.iphone_no}-${
-                        item.dcreate_dt || Date.now()
-                      }`
-                    }
+                    key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
                     className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
                   >
                     {/* Checkbox for selection */}
@@ -1627,12 +1559,7 @@ const LeadCardViewPage = () => {
                     {(item.website_lead === true ||
                       item.website_lead === "true" ||
                       item.website_lead === 1) && (
-                      <div
-                        className="absolute top-3 left-10 text-blue-600"
-                        title="Website Lead"
-                      >
-                        <FaGlobe size={18} />
-                      </div>
+                      <div className="absolute top-3 left-10 text-blue-600" title="Website Lead" > <FaGlobe size={18} /> </div>
                     )}
                     <div
                       onClick={() => goToDetail(item.ilead_id, displayedData)}

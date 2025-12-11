@@ -154,7 +154,7 @@ const Xcode_LeadCardViewPage = () => {
             const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
 
             if (selectedFilter === 'all') {
-                return matchesSearch && matchesDate && matchesModalFilters;
+                return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
                 // return matchesSearch && matchesDate && matchesModalFilters && isActive;
             } else if (selectedFilter === 'leads') {
                 return matchesSearch && matchesDate && matchesModalFilters && isActive && !isConverted && !isWebsite;

@@ -244,46 +244,29 @@ useEffect(() => {
         // Update dropdown search text fields
         const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
         if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
-        // console.log("Selected Potential:", selectedPotential);
 
         const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
         if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
-        // console.log("Selected Status:", selectedStatus);
 
         const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
         if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
-        // console.log("Selected Industry:", selectedIndustry);
 
         const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
         if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
-        // console.log("Selected Sub-Industry:", selectedSubIndustry);
 
         const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
         if (selectedSource) setSearchSource(selectedSource.source_name);
-        // console.log("Selected Source:", selectedSource);
 
         const selectedService = service.find(s => s.iservice_id === existingClientData.iservice_id);
         if (selectedService) setSearchService(selectedService.serviceName);
-        // console.log("Selected Service:", selectedService);
 
         const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
         if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
-        // console.log("Selected Sub-Service:", selectedSubService);
 
         const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
         if (selectedCity) setSearchCity(selectedCity.cCity_name);
-        // console.log("Selected City:", selectedCity);
 
     } else {
-        // console.log("Guard condition failed. Form not populated.");
-        // console.log("existingClientData is present:", !!existingClientData);
-        // console.log("Potential list is populated:", Potential.length > 0);
-        // console.log("Status list is populated:", status.length > 0);
-        // console.log("Lead Industry list is populated:", leadIndustry.length > 0);
-        // console.log("Lead Sub Industry list is populated:", leadSubIndustry.length > 0);
-        // console.log("Source list is populated:", source.length > 0);
-        // console.log("Service list is populated:", service.length > 0);
-        // console.log("Sub Service list is populated:", subServiceList.length > 0);
         // console.log("City list is populated:", cities.length > 0);
       
     }
@@ -448,7 +431,6 @@ const handleSearchExistingLead = async () => {
     });
 
     const resData = await res.json();
-    console.log("Existing lead search response:", resData);
 
     if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
       setFoundLeads(resData.data);
@@ -499,7 +481,6 @@ if (resData && resData.ilead_id) {
     phone_country_code: phoneCode,
     whatsapp_country_code: whatsappCode,
   };
-  console.log("New Form Data to be set:", newFormData); 
 
   setForm(newFormData);
   setExistingClientData(resData);
@@ -569,20 +550,22 @@ useEffect(() => {
   );
 }, [fetchDropdownData]);
 
-// for sub service filtering
-useEffect(() => {
-  if (form.iservice_id) {
-    const filtered = subServiceList.filter(
-      (sub) =>
-        sub.iservice_parent === Number(form.iservice_id) &&
-        sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
-    );
-    setFilteredSubService(filtered);
-  } else {
-    setFilteredSubService([]);
-    setSearchSubService("");
-  }
-}, [form.iservice_id, searchSubService, subServiceList]);
+
+    // for sub service filtering
+    useEffect(() => {
+ 
+      if (form.iservice_id && subServiceList.length > 0) {
+        const filtered = subServiceList.filter(
+          (sub) =>
+            sub.iservice_parent === Number(form.iservice_id) &&
+            sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+        );
+        setFilteredSubService(filtered);
+      } else {
+        setFilteredSubService([]);
+        setSearchSubService("");
+      }
+    }, [form.iservice_id, searchSubService, subServiceList]);
 
 
   useEffect(() => {
@@ -619,7 +602,6 @@ useEffect(() => {
     fetchCountryCodes();
   }, []);
 
-// -- country code filter based on the search input for mobile and whatsapp numbers
 
 useEffect(() => {
     if (searchMobileCountryCode) {
@@ -1110,9 +1092,8 @@ const handleChange = (e) => {
         }
         return;
     }
-    // --- End of logic for all searchable dropdowns ---
 
-    // --- Start of Main form state update logic ---
+    // Main form state update logic 
     setForm((prev) => {
         let updated = { ...prev, [name]: value };
 
@@ -1726,7 +1707,7 @@ const handleSubmit = async (e) => {
       value={searchEmail}
       onChange={(e) => {
         setSearchEmail(e.target.value);
-        if (e.target.value) setSearchMobile(""); // clear mobile if email is entered
+        if (e.target.value) setSearchMobile(""); 
       }}
       placeholder="Enter email address"
       className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -1834,40 +1815,7 @@ const handleSubmit = async (e) => {
             required: true,
             emptyType: "status"
           },
-          // Industry and subindustry - no need to customer
-          // {
-          //   label: "Industry",
-          //   ref: industryDropdownRef,
-          //   inputName: "searchIndustry",
-          //   searchValue: searchIndustry,
-          //   setSearch: setSearchIndustry,
-          //   open: isIndustryDropdownOpen,
-          //   setOpen: setIsIndustryDropdownOpen,
-          //   list: filteredIndustry,
-          //   keyField: "iindustry_id",
-          //   displayField: "cindustry_name",
-          //   formField: "cindustry_id",
-          //   error: errors.cindustry_id,
-          //   required: true,
-          //   emptyType: "industry"
-          // },
-          // {
-          //   label: "Sub-Industry",
-          //   ref: subIndustryDropdownRef,
-          //   inputName: "searchSubIndustry",
-          //   searchValue: searchSubIndustry,
-          //   setSearch: setSearchSubIndustry,
-          //   open: isSubIndustryDropdownOpen,
-          //   setOpen: setIsSubIndustryDropdownOpen,
-          //   list: filteredSubIndustry,
-          //   keyField: "isubindustry",
-          //   displayField: "subindustry_name",
-          //   formField: "csubindustry_id",
-          //   error: errors.csubindustry_id,
-          //   disabled: !form.cindustry_id || filteredSubIndustries.length === 0,
-          //   required: false,
-          //   emptyType: "subindustry"
-          // },
+          
           {
             label: "Lead source",
             ref: sourceDropdownRef,
@@ -1893,7 +1841,7 @@ const handleSubmit = async (e) => {
             open: isServiceDropdownOpen,
             setOpen: setIsServiceDropdownOpen,
             list: filterService,
-            keyField: "iservice_id",
+            keyField: "serviceId",
             displayField: "serviceName",
             formField: "iservice_id",
             error: errors.iservice_id,
@@ -1966,100 +1914,65 @@ const handleSubmit = async (e) => {
             </div>
           )
         )}
-        {/* No. of employees - no need to customer */}
-        {/* <div>
-          <label className="text-sm font-medium">No. of employees 
-          </label>
-          <input
-            type="number"
-            name="ino_employee"
-            value={form.ino_employee === 0 ? "" : form.ino_employee}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Enter number of employees"
-            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            min="0"
-          />
-          {errors.ino_employee && (
-            <p className="text-red-600 text-sm">{errors.ino_employee}</p>
-          )}
-        </div> */}
+    
 
                  {/* for currency coode + project value */}
         <div>
-  <label className="text-sm font-medium">Project Value</label>
-  <div className="flex mt-1">
-    {/* Currency Dropdown */}
-    <div className="relative" ref={currencyDropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
-        className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
-      >
-        {selectedCurrency.currency_code} ({selectedCurrency.symbol})
-        <svg
-          className="w-3 h-3 ml-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {isCurrencyDropdownOpen && (
-        <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
-          {currencies.map((cur) => (
-            <div
-              key={cur.icurrency_id}
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-              onClick={() => {
-                setSelectedCurrency(cur);
-                setIsCurrencyDropdownOpen(false);
-              }}
-            >
-              {cur.currency_code} ({cur.symbol})
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Project Value Input */}
-    <input
-      type="number"
-      name="iproject_value"
-      value={form.iproject_value === 0 ? "" : form.iproject_value}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      placeholder="Enter project value"
-      className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
-      min="0"
-    />
-  </div>
-  {errors.iproject_value && (
-    <p className="text-red-600 text-sm">{errors.iproject_value}</p>
-  )}
-</div>
-
-
-
-        {/* <div>
           <label className="text-sm font-medium">Project Value</label>
-          <input
-            type="number"
-            name="iproject_value"
-            value={form.iproject_value === 0 ? "" : form.iproject_value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Enter project value"
-            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            min="0"
-          />
+          <div className="flex mt-1">
+            {/* Currency Dropdown */}
+            <div className="relative" ref={currencyDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
+                className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
+              >
+                {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+                <svg
+                  className="w-3 h-3 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isCurrencyDropdownOpen && (
+                <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
+                  {currencies.map((cur) => (
+                    <div
+                      key={cur.icurrency_id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      onClick={() => {
+                        setSelectedCurrency(cur);
+                        setIsCurrencyDropdownOpen(false);
+                      }}
+                    >
+                      {cur.currency_code} ({cur.symbol})
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Project Value Input */}
+            <input
+              type="number"
+              name="iproject_value"
+              value={form.iproject_value === 0 ? "" : form.iproject_value}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Enter project value"
+              className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+              min="0"
+            />
+          </div>
           {errors.iproject_value && (
             <p className="text-red-600 text-sm">{errors.iproject_value}</p>
           )}
-        </div> */}
+        </div>
+
       </div>
       <hr className="my-6 " />
       <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>

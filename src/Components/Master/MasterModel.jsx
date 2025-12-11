@@ -1658,155 +1658,138 @@ const handleSave = async () => {
                       </label>
 
     
-{master.title === "Email Template" ? (
-  <>
-    {/* Email Subject Field */}
-    <div className="mb-4">
-      <label htmlFor="mailTitle" className="block text-sm font-medium text-gray-700 mb-1">
-        Subject:
-        <span className="ml-2 text-xs text-green-500">
-          {formData.mailTitle?.length || 0}/100
-        </span>
-      </label>
-      <input
-        id="mailTitle"
-        name="mailTitle"
-        type="text"
-        className={`mt-1 block w-full border ${
-          formData.mailTitle?.length > 0 &&
-          (formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100)
-            ? "border-red-500"
-            : "border-gray-300"
-        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-        value={formData.mailTitle || ""}
-        onChange={handleChange}
-        required
-        minLength={2}
-        maxLength={100}
-        disabled={isSaving}
-      />
-      {formData.mailTitle?.length > 0 && (
-        <p
-          className={`mt-1 text-xs ${
-            formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100
-              ? "text-red-600"
-              : "text-green-600"
-          }`}
-        >
-          {formData.mailTitle?.length < 2
-            ? "Minimum 2 characters required"
-            : formData.mailTitle?.length > 100
-            ? "Maximum 100 characters exceeded"
-            : "Valid length"}
-        </p>
-      )}
-    </div>
+                {master.title === "Email Template" ? (
+                  <>
+                    {/* Email Subject Field */}
+                    <div className="mb-4">
+                      <label htmlFor="mailTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                        Subject:
+                        <span className="ml-2 text-xs text-green-500">
+                          {formData.mailTitle?.length || 0}/100
+                        </span>
+                      </label>
+                      <input
+                        id="mailTitle"
+                        name="mailTitle"
+                        type="text"
+                        className={`mt-1 block w-full border ${
+                          formData.mailTitle?.length > 0 &&
+                          (formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100)
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+                        value={formData.mailTitle || ""}
+                        onChange={handleChange}
+                        required
+                        minLength={2}
+                        maxLength={100}
+                        disabled={isSaving}
+                      />
+                      {formData.mailTitle?.length > 0 && (
+                        <p className={`mt-1 text-xs ${ formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100 ? "text-red-600" : "text-green-600" }`} >
+                          {formData.mailTitle?.length < 2 ? "Minimum 2 characters required" : formData.mailTitle?.length > 100 ? "Maximum 100 characters exceeded" : "Valid length"}
+                        </p>
+                      )}
+                    </div>
 
-    {/* Email Body Editor */}
-    <div className="mb-2 h-[40vh]">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        Content:
-        {formData.mailBody && (
-          <span className="ml-2 text-xs text-green-500">
-            {stripHtmlTags(formData.mailBody).length} characters
-          </span>
-        )}
-      </label>
-      <ReactQuill
-        theme="snow"
-        value={formData["mailBody"] || ""}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "mailBody", value },
-          })
-        }
-        readOnly={isSaving}
-        className={`bg-white h-[40vh] rounded-md border ${
-          formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10
-            ? "border-red-500"
-            : "border-gray-300"
-        } h-[150px] overflow-y-auto`}
-        modules={{
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['link'],
-            ['clean']
-          ],
-          clipboard: { matchVisual: false }
-        }}
-      />
-      {formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10 && (
-        <p className="mt-1 text-xs text-red-600">
-          Email content is too short (minimum 10 characters recommended)
-        </p>
-      )}
-    </div>
+                    {/* Email Body Editor */}
+                    <div className="mb-2 h-[40vh]">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Content:
+                        {formData.mailBody && (
+                          <span className="ml-2 text-xs text-green-500">
+                            {stripHtmlTags(formData.mailBody).length} characters
+                          </span>
+                        )}
+                      </label>
+                      <ReactQuill
+                        theme="snow"
+                        value={formData["mailBody"] || ""}
+                        onChange={(value) =>
+                          handleChange({
+                            target: { name: "mailBody", value },
+                          })
+                        }
+                        readOnly={isSaving}
+                        className={`bg-white h-[40vh] rounded-md border ${
+                          formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } h-[150px] overflow-y-auto`}
+                        modules={{
+                          toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['link'],
+                            ['clean']
+                          ],
+                          clipboard: { matchVisual: false }
+                        }}
+                      />
+                      {formData.mailBody?.length > 0 && stripHtmlTags(formData.mailBody).length < 10 && (
+                        <p className="mt-1 text-xs text-red-600">
+                          Email content is too short (minimum 10 characters recommended)
+                        </p>
+                      )}
+                    </div>
 
-    {/* Plain Text Preview */}
-    {/* {(formData.mailTitle || formData.mailBody) && (
-      <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-        <div className="mb-2">
-          <span className="font-semibold text-gray-700">Title:</span>
-          <span className="ml-2">{formData.mailTitle || ''}</span>
-        </div>
-        <div>
-          <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
-          <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
-            {stripHtmlTags(formData["mailBody"])}
-          </div>
-        </div>
-      </div>
-    )} */}
-  </>
-) : (
-  // Regular input for other masters
-  <>
-    <input
-      id={master.payloadKey}
-      name={master.payloadKey}
-      type="text"
-      className={`mt-1 block w-full border ${formData[master.payloadKey]?.length > 0 &&
-          (formData[master.payloadKey]?.length < 3 ||
-            formData[master.payloadKey]?.length > 50)
-          ? "border-red-500"
-          : "border-gray-300"
-        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
-      value={formData[master.payloadKey] || ""}
-      onChange={handleChange}
-      required
-      minLength={3}
-      maxLength={50}
-      disabled={isSaving}
-    />
-    {formData[master.payloadKey]?.length > 0 && (
-      <p
-        className={`mt-1 text-xs ${
-          formData[master.payloadKey]?.length < 3 ||
-          formData[master.payloadKey]?.length > 50
-            ? "text-red-600"
-            : "text-green-600"
-        }`}
-      >
-        {formData[master.payloadKey]?.length < 3
-          ? "Minimum 3 characters required"
-          : formData[master.payloadKey]?.length > 50
-          ? "Maximum 50 characters exceeded"
-          : "Valid length"}
-      </p>
-    )}
-  </>
-)}
+                    {/* Plain Text Preview */}
+                    {/* {(formData.mailTitle || formData.mailBody) && (
+                      <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                        <div className="mb-2">
+                          <span className="font-semibold text-gray-700">Title:</span>
+                          <span className="ml-2">{formData.mailTitle || ''}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-gray-700 h-[250px] overflow-y-scroll">Body:</span>
+                          <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+                            {stripHtmlTags(formData["mailBody"])}
+                          </div>
+                        </div>
+                      </div>
+                    )} */}
+                  </>
+                ) : (
+                  // Regular input for other masters
+                  <>
+                    <input
+                      id={master.payloadKey}
+                      name={master.payloadKey}
+                      type="text"
+                      className={`mt-1 block w-full border ${formData[master.payloadKey]?.length > 0 &&
+                          (formData[master.payloadKey]?.length < 3 ||
+                            formData[master.payloadKey]?.length > 50)
+                          ? "border-red-500"
+                          : "border-gray-300"
+                        } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
+                      value={formData[master.payloadKey] || ""}
+                      onChange={handleChange}
+                      required
+                      minLength={3}
+                      maxLength={50}
+                      disabled={isSaving}
+                    />
+                    {formData[master.payloadKey]?.length > 0 && (
+                      <p
+                        className={`mt-1 text-xs ${
+                          formData[master.payloadKey]?.length < 3 ||
+                          formData[master.payloadKey]?.length > 50
+                            ? "text-red-600"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {formData[master.payloadKey]?.length < 3
+                          ? "Minimum 3 characters required"
+                          : formData[master.payloadKey]?.length > 50
+                          ? "Maximum 50 characters exceeded"
+                          : "Valid length"}
+                      </p>
+                    )}
+                  </>
+                )}
                       {master.title !== "Email Template" &&
                         formData[master.payloadKey]?.length > 0 && (
-                          <p
-                            className={`mt-1 text-xs ${formData[master.payloadKey]?.length < 3 ||
-                                formData[master.payloadKey]?.length > 50
-                                ? "text-red-600"
-                                : "text-green-600"
-                              }`}
-                          >
-                            {formData[master.payloadKey]?.length < 3
-                              ? "Minimum 3 characters required"
+                          <p className={`mt-1 text-xs ${formData[master.payloadKey]?.length < 3 ||  formData[master.payloadKey]?.length > 50  ? "text-red-600" : "text-green-600" }`} >
+                            {formData[master.payloadKey]?.length < 3 ? "Minimum 3 characters required"
                               : formData[master.payloadKey]?.length > 50
                                 ? "Maximum 50 characters exceeded"
                                 : "Valid length"}
@@ -1906,27 +1889,15 @@ const handleSave = async () => {
 
                     <div className="flex justify-end space-x-2 mt-auto pt-4">
                       {selectedItemForEdit && (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedItemForEdit(null)}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-                          disabled={isSaving}
-                        >
+                        <button type="button" onClick={() => setSelectedItemForEdit(null)}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50" disabled={isSaving} >
                           Cancel Edit
                         </button>
                       )}
                       {(!isLabelMaster ||
                         (isLabelMaster && areLabelFieldsEmpty)) && (
-                          <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                            disabled={isSaving}
-                          >
-                            {isSaving
-                              ? "Saving..."
-                              : selectedItemForEdit
-                                ? "Update"
-                                : "Add"}
+                          <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50" disabled={isSaving} >
+                            {isSaving  ? "Saving..." : selectedItemForEdit ? "Update" : "Add"}
                           </button>
                         )}
                     </div>

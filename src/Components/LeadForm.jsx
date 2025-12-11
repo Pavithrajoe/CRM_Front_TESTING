@@ -1,4 +1,4 @@
-// last update 24/09 workinh fine
+// last update 11/12 workinh fine
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
 import { X, Search } from "lucide-react";
@@ -31,7 +31,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   // const [backendError, setBackendError] = useState("");
   const [foundLeads, setFoundLeads] = useState([]); 
   // const [isSearching, setIsSearching] = useState(false);
-// new for new/exis
+  // new for new/exis
   const [isExistingClientForm, setIsExistingClientForm] = useState(false);
   const [existingClientMobile, setExistingClientMobile] = useState("");
   const [existingClientData, setExistingClientData] = useState(null);
@@ -146,638 +146,399 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const [isSubSourceDropdownOpen, setIsSubSourceDropdownOpen] = useState(false);
   const subSourceDropdownRef = useRef(null);
 
-useEffect(() => {
-    const fetchSubSources = async () => {
-    if (!form.lead_source_id) {
-        setSubSources([]);
-        return;
-    }
-
-    try {
-        const res = await fetch(`${apiEndPoint}/subSrc/getAllActiveSubSrc`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        const resData = await res.json();
-                if (res.ok && resData.data && Array.isArray(resData.data)) {
-            const filtered = resData.data.filter(
-                (subSrc) => subSrc.isrc_id === Number(form.lead_source_id)
-            );
-            setSubSources(filtered);
-        } else {
-            setSubSources([]);
-            console.error("Failed to fetch sub-sources or data is not an array");
-        }
-    } catch (error) {
-        setSubSources([]);
-        console.error("Error fetching sub-sources:", error);
-    }
-};
-    fetchSubSources();
-}, [form.lead_source_id, token]);
-
-useEffect(() => {
-  const fetchCurrencies = async () => {
-    if (!token) {
-      console.error("Authentication token not found. Cannot fetch currencies.");
-      return;
-    }
-
-    try {
-      const res = await axios.get(`${apiEndPoint}/currency`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.data?.data?.data) {
-        setCurrencies(res.data.data.data);
-        // console.log("Fetched currencies successfully:", res.data.data.data);
-      } else {
-        // console.log("API response has no currency data:", res.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch currencies", error);
-    }
-  };
-
-  fetchCurrencies();
-}, [token, apiEndPoint]); 
-
-//outside onclose function 
-useEffect(() => {
-  function handleClickOutside(event) {
-    // Check if click is outside the modal form
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      onClose();
-    }
-  }
-
-  document.addEventListener('mousedown', handleClickOutside);
-
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [onClose]);
-
-  // --- EFFECT TO AUTO-POPULATE FORM WHEN EXISTING DATA IS FOUND ---
-useEffect(() => {
-    
-    if (existingClientData &&
-        Potential.length > 0 &&
-        status.length > 0 &&
-        leadIndustry.length > 0 &&
-        leadSubIndustry.length > 0 &&
-        source.length > 0 &&
-        service.length > 0 &&
-        subServiceList.length > 0 &&
-        cities.length > 0
-    ) {
-        // console.log("condition passed. Populating form...");
-
-        // Extract phone number parts
-        const phoneNum = existingClientData.iphone_no || "";
-        const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
-        const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
-        const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
-
-        // Extract WhatsApp number parts
-        const waNum = existingClientData.whatsapp_number || "";
-        const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
-        const waCountryCode = waMatch ? waMatch[1] : "+91";
-        const waWithoutCode = waMatch ? waMatch[2] : waNum;
-
-        setForm(prev => ({
-            ...prev,
-            iLeadpoten_id: existingClientData.iLeadpoten_id || "",
-            ileadstatus_id: existingClientData.ileadstatus_id || "",
-            cindustry_id: existingClientData.cindustry_id || "",
-            csubindustry_id: existingClientData.isubindustry || "",
-            lead_source_id: existingClientData.lead_source_id || "",
-            ino_employee: existingClientData.ino_employee || "",
-            iproject_value: existingClientData.iproject_value || "",
-            clead_name: existingClientData.clead_name || "",
-            cemail: existingClientData.cemail || "",
-            corganization: existingClientData.corganization || "",
-            cwebsite: existingClientData.cwebsite || "",
-            icity: existingClientData.clead_city || "",
-            iphone_no: phoneWithoutCode || "",
-            phone_country_code: phoneCountryCode || "+91",
-            clead_address1: existingClientData.clead_address1 || "",
-            cwhatsapp: waWithoutCode || "",
-            whatsapp_country_code: waCountryCode || "+91",
-            clead_address2: existingClientData.clead_address2 || "",
-            clead_address3: existingClientData.clead_address3 || "",
-            cstate: existingClientData.cstate || "",
-            cdistrict: existingClientData.cdistrict || "",
-            cpincode: existingClientData.cpincode || "",
-            ccountry: existingClientData.ccountry || "",
-            iservice_id: existingClientData.serviceId || "",
-            isubservice_id: existingClientData.isubservice_id || "",
-        }));
-
-        // Update dropdown search text fields
-        const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
-        if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
-        // console.log("Selected Potential:", selectedPotential);
-
-        const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
-        if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
-        // console.log("Selected Status:", selectedStatus);
-
-        const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
-        if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
-        // console.log("Selected Industry:", selectedIndustry);
-
-        const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
-        if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
-        // console.log("Selected Sub-Industry:", selectedSubIndustry);
-
-        const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
-        if (selectedSource) setSearchSource(selectedSource.source_name);
-        // console.log("Selected Source:", selectedSource);
-
-        const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
-        if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
-
-        const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
-        if (selectedService) setSearchService(selectedService.serviceName);
-        // console.log("Selected Service:", selectedService);
-
-        const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
-        if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
-        // console.log("Selected Sub-Service:", selectedSubService);
-
-        const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
-        if (selectedCity) setSearchCity(selectedCity.cCity_name);
-        // console.log("Selected City:", selectedCity);
-
-    } 
-}, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
-
-  // --- END OF NEW LOGIC ---
-
-  // for new/existing client
-  const resetForm = () => {
-    setForm({
-      iLeadpoten_id: "",
-      ileadstatus_id: "",
-      cindustry_id: "",
-      csubindustry_id: "",
-      lead_source_id: "",
-      ino_employee: 0,
-      iproject_value: 0,
-      clead_name: "",
-      cemail: "",
-      corganization: "",
-      cwebsite: "",
-      icity: "",
-      iphone_no: "",
-      phone_country_code: "+91",
-      cgender: 1,
-      clogo: "logo.png",
-      clead_address1: "",
-      cwhatsapp: "",
-      whatsapp_country_code: "+91",
-      clead_address2: "",
-      clead_address3: "",
-      cstate: "",
-      cdistrict: "",
-      cpincode: "",
-      ccountry: "",
-      clead_owner: userId,
-      clead_source: "",
-      cresponded_by: userId,
-      modified_by: userId,
-      iservice_id: "",
-      isubservice_id: "" 
-    });
-    setErrors({});
-    setSearchCity("");
-    setSearchPotential("");
-    setSearchStatus("");
-    setSearchIndustry("");
-    setSearchSubIndustry("");
-    setSearchSource("");
-    setSearchService("");
-    setSearchSubService("");
-    setSameAsPhone(false);
-  };
-
-const toggleSame = () => {
-    setSameAsPhone(prevSameAsPhone => {
-        const newSameAsPhone = !prevSameAsPhone;
-        if (newSameAsPhone) {
-            setForm(currentForm => {
-                const updatedForm = {
-                    ...currentForm,
-                    cwhatsapp: currentForm.iphone_no,
-                    whatsapp_country_code: currentForm.phone_country_code,
-                };
-                return updatedForm;
-            });
-            setSearchWhatsappCountryCode(searchMobileCountryCode);
-        } else {
-            setForm(currentForm => ({
-                ...currentForm,
-                cwhatsapp: "",
-                whatsapp_country_code: "",
-            }));
-            setSearchWhatsappCountryCode("");
-        }
-
-        return newSameAsPhone; 
-    });
-};
-  
-
-const checkExisting = async (fieldName, fieldValue) => {
-    if (!fieldValue) return;
-
-    let body = {};
-    if (fieldName === "iphone_no" || fieldName === "cwhatsapp") {
-      body = { phonenumber: `${form.phone_country_code}${fieldValue}` };
-    } else if (fieldName === "cemail") {
-      body = { email: fieldValue };
-    }
-
-    try {
-      const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      if (Array.isArray(data.data) && data.data.length > 0) {
-        setPopupMessage(`A lead with this ${fieldName} already exists`);
-        setIsPopupVisible(true);
-      }
-    } catch (err) {
-      console.error("Error checking existing lead:", err);
-    }
-  };
-
-const handleSearchExistingLead = async () => {
-  if (!searchMobile && !searchEmail) {
-    setPopupMessage("Please enter either mobile number or email to search");
-    setIsPopupVisible(true);
-    setTimeout(() => setIsPopupVisible(false), 3000);
-    return;
-  }
-
-  if (searchMobile) {
-    const mobileRegex = /^[0-9]{6,15}$/; 
-    if (!mobileRegex.test(searchMobile)) {
-      setPopupMessage("Mobile number must contain only 6 to 15 digits"); 
-      setIsPopupVisible(true);
-      setTimeout(() => setIsPopupVisible(false), 3000);
-      return;
-    }
-  }
-
-  // Validate email if entered
-  if (searchEmail) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(searchEmail)) {
-      setPopupMessage("Please enter a valid email address");
-      setIsPopupVisible(true);
-      setTimeout(() => setIsPopupVisible(false), 3000);
-      return;
-    }
-  }
-    
-  setLoading(true);
-  setFoundLeads([]);
-
-  try {
-    let body = {};
-
-    if (searchMobile) {
-      body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
-    } else if (searchEmail) {
-      body = { email: searchEmail };
-    }
-
-    const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const resData = await res.json();
-    console.log("Existing lead search response:", resData);
-
-    if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
-      setFoundLeads(resData.data);
-
-    } else {
-      setPopupMessage(resData.Message || "No existing lead found.");
-      setIsPopupVisible(true);
-      setTimeout(() => setIsPopupVisible(false), 3000);
-    }
-  } catch (error) {
-    console.error("Search error:", error);
-    setPopupMessage("Failed to search for leads. Please try again.");
-    setIsPopupVisible(true);
-    setTimeout(() => setIsPopupVisible(false), 3000);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleSelectLead = async (leadId) => {
-  setLoading(true);
-  try {
-    const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      }
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`Error fetching lead details [${res.status}]:`, text);
-      throw new Error(`Server returned ${res.status}`);
-    }
-
-    const resData = await res.json();
-
-if (resData && resData.ilead_id) {
-  const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
-  const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
-
-  const newFormData = {
-    ...form,
-    ...resData,
-    iphone_no: resData.iphone_no?.replace(phoneCode, "").trim() || "",
-    cwhatsapp: resData.whatsapp_number?.replace(whatsappCode, "").trim() || "",
-    phone_country_code: phoneCode,
-    whatsapp_country_code: whatsappCode,
-  };
-  // console.log("New Form Data to be set:", newFormData); 
-
-  setForm(newFormData);
-  setExistingClientData(resData);
-
-  const validationErrors = validateForm(newFormData);
-  setErrors(validationErrors);
-}
-
-else {
-      setPopupMessage("Lead details not found for this ID");
-      setIsPopupVisible(true);
-    }
-  } catch (error) {
-    console.error("Fetch lead details error:", error);
-    setPopupMessage("Failed to load lead details. Please try again.");
-    setIsPopupVisible(true);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const fetchDropdownData = useCallback(
-    async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {
-      try {
-        const response = await fetch(`${apiEndPoint}/${endpoint}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          setter([]);
+  useEffect(() => {
+      const fetchSubSources = async () => {
+      if (!form.lead_source_id) {
+          setSubSources([]);
           return;
-        }
-        const rawData = await response.json();
-        const processedData = transform(rawData);
-        setter(Array.isArray(processedData) ? processedData : []);
-      } catch (e) {
-        // console.log(`Error in fetching ${errorMessage}:`, e);
-        setter([]);
       }
-    },
-    [token]
-  );
 
-  useEffect(() => {
-  if (form.cindustry_id) {
-    const newFilteredSubIndustries = leadSubIndustry.filter(
-      (sub) => sub.iindustry_parent === Number(form.cindustry_id)
-    );
-    setFilteredSubIndustries(newFilteredSubIndustries);
-  } else {
-    setFilteredSubIndustries([]);
-  }
-}, [form.cindustry_id, leadSubIndustry]);
-
-// for sub service
-useEffect(() => {
-  fetchDropdownData(
-    "sub-service",
-    setSubServiceList,
-    "sub services",
-    (res) => Array.isArray(res?.data) ? res.data : []
-  );
-}, [fetchDropdownData]);
-
-// for sub service filtering
-useEffect(() => {
-  if (form.iservice_id) {
-    const filtered = subServiceList.filter(
-      (sub) =>
-        sub.iservice_parent === Number(form.iservice_id) &&
-        sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
-    );
-    setFilteredSubService(filtered);
-  } else {
-    setFilteredSubService([]);
-    setSearchSubService("");
-  }
-}, [form.iservice_id, searchSubService, subServiceList]);
-
-
-  useEffect(() => {
-    const fetchCountryCodes = async () => {
       try {
-        const response = await fetch("https://restcountries.com/v3.1/all?fields=name,idd");
-        if (!response.ok) {
-          throw new Error("Failed to fetch country codes");
-        }
-        const data = await response.json();
-        const codes = data
-          .map((country) => {
-            if (country.idd && country.idd.root && country.idd.suffixes) {
-              const fullCode = `${country.idd.root}${country.idd.suffixes[0] || ""}`;
-              return {
-                name: country.name.common,
-                code: fullCode,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setCountryCodes(codes);
-        setFilteredMobileCountryCodes(codes);
-        setFilteredWhatsappCountryCodes(codes);
+          const res = await fetch(`${apiEndPoint}/subSrc/getAllActiveSubSrc`, {
+              method: "GET",
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          });
+          const resData = await res.json();
+                  if (res.ok && resData.data && Array.isArray(resData.data)) {
+              const filtered = resData.data.filter(
+                  (subSrc) => subSrc.isrc_id === Number(form.lead_source_id)
+              );
+              setSubSources(filtered);
+          } else {
+              setSubSources([]);
+              console.error("Failed to fetch sub-sources or data is not an array");
+          }
       } catch (error) {
-        console.error("Error fetching country codes:", error);
-        setCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
-        setFilteredMobileCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
-        setFilteredWhatsappCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
+          setSubSources([]);
+          console.error("Error fetching sub-sources:", error);
+      }
+  };
+      fetchSubSources();
+  }, [form.lead_source_id, token]);
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      if (!token) {
+        console.error("Authentication token not found. Cannot fetch currencies.");
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${apiEndPoint}/currency`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (res.data?.data?.data) {
+          setCurrencies(res.data.data.data);
+        } else {
+          // console.log("API response has no currency data:", res.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch currencies", error);
       }
     };
-    fetchCountryCodes();
-  }, []);
 
-// -- country code filter based on the search input for mobile and whatsapp numbers
+    fetchCurrencies();
+  }, [token, apiEndPoint]); 
 
-useEffect(() => {
-    if (searchMobileCountryCode) {
-        const filtered = countryCodes.filter(
-            (cc) =>
-                cc.code.toLowerCase().includes(searchMobileCountryCode.toLowerCase()) ||
-                cc.name.toLowerCase().includes(searchMobileCountryCode.toLowerCase())
-        );
-        setFilteredMobileCountryCodes(filtered);
-    } else {
-        setFilteredMobileCountryCodes(countryCodes);
-    }
-}, [searchMobileCountryCode, countryCodes]);
-
-
-useEffect(() => {
-    const filtered = countryCodes.filter(
-      (cc) =>
-        cc.code.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase()) ||
-        cc.name.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase())
-    );
-    setFilteredWhatsappCountryCodes(filtered);
-}, [searchWhatsappCountryCode, countryCodes]);
-
-//-----------
+  //outside onclose function 
   useEffect(() => {
-    fetchDropdownData(
-      "lead-potential/company-potential",
-      setPotential,
-      "lead potential",
-      (res) => Array.isArray(res?.data) ? res.data : []
-    );
+    function handleClickOutside(event) {
+      // Check if click is outside the modal form
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    }
 
-    fetchDropdownData(
-      "lead-status/company-lead",
-      setStatus,
-      "lead status",
-      (res) => Array.isArray(res?.response) ? res.response : []
-    );
+    document.addEventListener('mousedown', handleClickOutside);
 
-    fetchDropdownData(
-      "lead-source/company-src",
-      setSource,
-      "lead sources",
-      (data) => Array.isArray(data?.data) ? data.data : []
-    );
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
 
-    fetchDropdownData(
-      "lead-service",
-      setService,
-      "service",
-      (res) => Array.isArray(res?.data) ? res.data : []
-    );
+  useEffect(() => {
+      
+      if (existingClientData &&
+          Potential.length > 0 &&
+          status.length > 0 &&
+          leadIndustry.length > 0 &&
+          leadSubIndustry.length > 0 &&
+          source.length > 0 &&
+          service.length > 0 &&
+          subServiceList.length > 0 &&
+          cities.length > 0
+      ) {
 
-    const fetchIndustryAndSubIndustry = async () => {
+          // Extract phone number parts
+          const phoneNum = existingClientData.iphone_no || "";
+          const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
+          const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
+          const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
+
+          // Extract WhatsApp number parts
+          const waNum = existingClientData.whatsapp_number || "";
+          const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
+          const waCountryCode = waMatch ? waMatch[1] : "+91";
+          const waWithoutCode = waMatch ? waMatch[2] : waNum;
+
+          setForm(prev => ({
+              ...prev,
+              iLeadpoten_id: existingClientData.iLeadpoten_id || "",
+              ileadstatus_id: existingClientData.ileadstatus_id || "",
+              cindustry_id: existingClientData.cindustry_id || "",
+              csubindustry_id: existingClientData.isubindustry || "",
+              lead_source_id: existingClientData.lead_source_id || "",
+              ino_employee: existingClientData.ino_employee || "",
+              iproject_value: existingClientData.iproject_value || "",
+              clead_name: existingClientData.clead_name || "",
+              cemail: existingClientData.cemail || "",
+              corganization: existingClientData.corganization || "",
+              cwebsite: existingClientData.cwebsite || "",
+              icity: existingClientData.clead_city || "",
+              iphone_no: phoneWithoutCode || "",
+              phone_country_code: phoneCountryCode || "+91",
+              clead_address1: existingClientData.clead_address1 || "",
+              cwhatsapp: waWithoutCode || "",
+              whatsapp_country_code: waCountryCode || "+91",
+              clead_address2: existingClientData.clead_address2 || "",
+              clead_address3: existingClientData.clead_address3 || "",
+              cstate: existingClientData.cstate || "",
+              cdistrict: existingClientData.cdistrict || "",
+              cpincode: existingClientData.cpincode || "",
+              ccountry: existingClientData.ccountry || "",
+              iservice_id: existingClientData.serviceId || "",
+              isubservice_id: existingClientData.isubservice_id || "",
+          }));
+
+          // Update dropdown search text fields
+          const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
+          if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+
+          const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
+          if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+
+          const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
+          if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+
+          const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
+          if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+
+          const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
+          if (selectedSource) setSearchSource(selectedSource.source_name);
+
+          const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
+          if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
+
+          const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
+          if (selectedService) setSearchService(selectedService.serviceName);
+
+          const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
+          if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
+
+          const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
+          if (selectedCity) setSearchCity(selectedCity.cCity_name);
+
+      } 
+  }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
+
+
+    // for new/existing client
+    const resetForm = () => {
+      setForm({
+        iLeadpoten_id: "",
+        ileadstatus_id: "",
+        cindustry_id: "",
+        csubindustry_id: "",
+        lead_source_id: "",
+        ino_employee: 0,
+        iproject_value: 0,
+        clead_name: "",
+        cemail: "",
+        corganization: "",
+        cwebsite: "",
+        icity: "",
+        iphone_no: "",
+        phone_country_code: "+91",
+        cgender: 1,
+        clogo: "logo.png",
+        clead_address1: "",
+        cwhatsapp: "",
+        whatsapp_country_code: "+91",
+        clead_address2: "",
+        clead_address3: "",
+        cstate: "",
+        cdistrict: "",
+        cpincode: "",
+        ccountry: "",
+        clead_owner: userId,
+        clead_source: "",
+        cresponded_by: userId,
+        modified_by: userId,
+        iservice_id: "",
+        isubservice_id: "" 
+      });
+      setErrors({});
+      setSearchCity("");
+      setSearchPotential("");
+      setSearchStatus("");
+      setSearchIndustry("");
+      setSearchSubIndustry("");
+      setSearchSource("");
+      setSearchService("");
+      setSearchSubService("");
+      setSameAsPhone(false);
+    };
+
+    const toggleSame = () => {
+        setSameAsPhone(prevSameAsPhone => {
+            const newSameAsPhone = !prevSameAsPhone;
+            if (newSameAsPhone) {
+                setForm(currentForm => {
+                    const updatedForm = {
+                        ...currentForm,
+                        cwhatsapp: currentForm.iphone_no,
+                        whatsapp_country_code: currentForm.phone_country_code,
+                    };
+                    return updatedForm;
+                });
+                setSearchWhatsappCountryCode(searchMobileCountryCode);
+            } else {
+                setForm(currentForm => ({
+                    ...currentForm,
+                    cwhatsapp: "",
+                    whatsapp_country_code: "",
+                }));
+                setSearchWhatsappCountryCode("");
+            }
+
+            return newSameAsPhone; 
+        });
+    };
+      
+
+    const checkExisting = async (fieldName, fieldValue) => {
+        if (!fieldValue) return;
+
+        let body = {};
+        if (fieldName === "iphone_no" || fieldName === "cwhatsapp") {
+          body = { phonenumber: `${form.phone_country_code}${fieldValue}` };
+        } else if (fieldName === "cemail") {
+          body = { email: fieldValue };
+        }
+
+        try {
+          const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          const data = await res.json();
+
+          if (Array.isArray(data.data) && data.data.length > 0) {
+            setPopupMessage(`A lead with this ${fieldName} already exists`);
+            setIsPopupVisible(true);
+          }
+        } catch (err) {
+          console.error("Error checking existing lead:", err);
+        }
+      };
+
+    const handleSearchExistingLead = async () => {
+      if (!searchMobile && !searchEmail) {
+        setPopupMessage("Please enter either mobile number or email to search");
+        setIsPopupVisible(true);
+        setTimeout(() => setIsPopupVisible(false), 3000);
+        return;
+      }
+
+      if (searchMobile) {
+        const mobileRegex = /^[0-9]{6,15}$/; 
+        if (!mobileRegex.test(searchMobile)) {
+          setPopupMessage("Mobile number must contain only 6 to 15 digits"); 
+          setIsPopupVisible(true);
+          setTimeout(() => setIsPopupVisible(false), 3000);
+          return;
+        }
+      }
+
+      // Validate email if entered
+      if (searchEmail) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(searchEmail)) {
+          setPopupMessage("Please enter a valid email address");
+          setIsPopupVisible(true);
+          setTimeout(() => setIsPopupVisible(false), 3000);
+          return;
+        }
+      }
+        
+      setLoading(true);
+      setFoundLeads([]);
+
       try {
-        const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
-          method: "GET",
+        let body = {};
+
+        if (searchMobile) {
+          body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
+        } else if (searchEmail) {
+          body = { email: searchEmail };
+        }
+
+        const res = await fetch(`${apiEndPoint}/lead/getExistingLeads`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify(body),
         });
 
-        if (!response.ok) {
-          console.error(`Can't fetch lead industry and sub-industry. Status: ${response.status}`);
-          setIndustry([]);
-          setSubIndustry([]);
-          return;
-        }
+        const resData = await res.json();
+        console.log("Existing lead search response:", resData);
 
-        const rawData = await response.json();
-        setIndustry(Array.isArray(rawData.response?.industry) ? rawData.response.industry : []);
-        setSubIndustry(Array.isArray(rawData.response?.subindustries) ? rawData.response.subindustries : []);
-      } catch (e) {
-        console.error(`Error in fetching lead industry and sub-industry:`, e);
-        setIndustry([]);
-        setSubIndustry([]);
+        if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
+          setFoundLeads(resData.data);
+
+        } else {
+          setPopupMessage(resData.Message || "No existing lead found.");
+          setIsPopupVisible(true);
+          setTimeout(() => setIsPopupVisible(false), 3000);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setPopupMessage("Failed to search for leads. Please try again.");
+        setIsPopupVisible(true);
+        setTimeout(() => setIsPopupVisible(false), 3000);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchIndustryAndSubIndustry();
-    fetchCitiesData();
-  }, [fetchDropdownData, token]);
+    const handleSelectLead = async (leadId) => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        });
 
-  const fetchCitiesData = async () => {
-    try {
-      const response = await fetch(`${apiEndPoint}/city`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`Error fetching lead details [${res.status}]:`, text);
+          throw new Error(`Server returned ${res.status}`);
+        }
 
-      if (!response.ok) {
-        alert("Can't fetch cities, there was an error.");
-        return;
-      }
+        const resData = await res.json();
 
-      const data = await response.json();
-      if (data && Array.isArray(data.cities)) {
-        setCities(data.cities);
-        setFilteredCities(data.cities);
-      } else {
-        alert("Invalid city data received.");
-      }
-    } catch (e) {
-      alert("Error fetching cities.");
+    if (resData && resData.ilead_id) {
+      const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
+      const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
+
+      const newFormData = {
+        ...form,
+        ...resData,
+        iphone_no: resData.iphone_no?.replace(phoneCode, "").trim() || "",
+        cwhatsapp: resData.whatsapp_number?.replace(whatsappCode, "").trim() || "",
+        phone_country_code: phoneCode,
+        whatsapp_country_code: whatsappCode,
+      };
+
+      setForm(newFormData);
+      setExistingClientData(resData);
+
+      const validationErrors = validateForm(newFormData);
+      setErrors(validationErrors);
     }
-  };
 
-  const handleSearchCity = (e) => {
-    const searchTerm = e.target.value;
-    setSearchCity(searchTerm);
-    const filtered = Array.isArray(cities) ? cities.filter((city) =>
-      city.cCity_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : [];
-    setFilteredCities(filtered);
-    setIsCityDropdownOpen(true);
+    else {
+          setPopupMessage("Lead details not found for this ID");
+          setIsPopupVisible(true);
+        }
+      } catch (error) {
+        console.error("Fetch lead details error:", error);
+        setPopupMessage("Failed to load lead details. Please try again.");
+        setIsPopupVisible(true);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!searchTerm) {
-      setForm((prev) => ({ ...prev, icity: "" }));
-      setErrors((prev) => ({ ...prev, icity: validateField("icity", "") }));
-    }
-  };
-
-  useEffect(() => {
-    const fetchCityDetails = async (cityId) => {
-      if (cityId) {
+    const fetchDropdownData = useCallback(
+      async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {
         try {
-          const response = await fetch(`${apiEndPoint}/city/${cityId}`, {
+          const response = await fetch(`${apiEndPoint}/${endpoint}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -786,28 +547,270 @@ useEffect(() => {
           });
 
           if (!response.ok) {
-            setForm((prev) => ({
-              ...prev,
-              cstate: "",
-              cdistrict: "",
-              ccountry: "",
-              cpincode: "",
-            }));
+            setter([]);
+            return;
+          }
+          const rawData = await response.json();
+          const processedData = transform(rawData);
+          setter(Array.isArray(processedData) ? processedData : []);
+        } catch (e) {
+          // console.log(`Error in fetching ${errorMessage}:`, e);
+          setter([]);
+        }
+      },
+      [token]
+    );
+
+    useEffect(() => {
+    if (form.cindustry_id) {
+      const newFilteredSubIndustries = leadSubIndustry.filter(
+        (sub) => sub.iindustry_parent === Number(form.cindustry_id)
+      );
+      setFilteredSubIndustries(newFilteredSubIndustries);
+    } else {
+      setFilteredSubIndustries([]);
+    }
+   }, [form.cindustry_id, leadSubIndustry]);
+
+    // for sub service
+    useEffect(() => {
+      fetchDropdownData(
+        "sub-service",
+        setSubServiceList,
+        "sub services",
+        (res) => Array.isArray(res?.data) ? res.data : []
+      );
+    }, [fetchDropdownData]);
+
+    // for sub service filtering
+    useEffect(() => {
+ 
+      if (form.iservice_id && subServiceList.length > 0) {
+        const filtered = subServiceList.filter(
+          (sub) =>
+            sub.iservice_parent === Number(form.iservice_id) &&
+            sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
+        );
+        setFilteredSubService(filtered);
+      } else {
+        setFilteredSubService([]);
+        setSearchSubService("");
+      }
+    }, [form.iservice_id, searchSubService, subServiceList]);
+
+
+    useEffect(() => {
+      const fetchCountryCodes = async () => {
+        try {
+          const response = await fetch("https://restcountries.com/v3.1/all?fields=name,idd");
+          if (!response.ok) {
+            throw new Error("Failed to fetch country codes");
+          }
+          const data = await response.json();
+          const codes = data
+            .map((country) => {
+              if (country.idd && country.idd.root && country.idd.suffixes) {
+                const fullCode = `${country.idd.root}${country.idd.suffixes[0] || ""}`;
+                return {
+                  name: country.name.common,
+                  code: fullCode,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.name.localeCompare(b.name));
+          setCountryCodes(codes);
+          setFilteredMobileCountryCodes(codes);
+          setFilteredWhatsappCountryCodes(codes);
+        } catch (error) {
+          console.error("Error fetching country codes:", error);
+          setCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
+          setFilteredMobileCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
+          setFilteredWhatsappCountryCodes([{ name: "India", code: "+91" }, { name: "USA", code: "+1" }]);
+        }
+      };
+      fetchCountryCodes();
+    }, []);
+
+
+    useEffect(() => {
+        if (searchMobileCountryCode) {
+            const filtered = countryCodes.filter(
+                (cc) =>
+                    cc.code.toLowerCase().includes(searchMobileCountryCode.toLowerCase()) ||
+                    cc.name.toLowerCase().includes(searchMobileCountryCode.toLowerCase())
+            );
+            setFilteredMobileCountryCodes(filtered);
+        } else {
+            setFilteredMobileCountryCodes(countryCodes);
+        }
+    }, [searchMobileCountryCode, countryCodes]);
+
+
+    useEffect(() => {
+        const filtered = countryCodes.filter(
+          (cc) =>
+            cc.code.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase()) ||
+            cc.name.toLowerCase().includes(searchWhatsappCountryCode.toLowerCase())
+        );
+        setFilteredWhatsappCountryCodes(filtered);
+    }, [searchWhatsappCountryCode, countryCodes]);
+
+    //-----------
+      useEffect(() => {
+        fetchDropdownData(
+          "lead-potential/company-potential",
+          setPotential,
+          "lead potential",
+          (res) => Array.isArray(res?.data) ? res.data : []
+        );
+
+        fetchDropdownData(
+          "lead-status/company-lead",
+          setStatus,
+          "lead status",
+          (res) => Array.isArray(res?.response) ? res.response : []
+        );
+
+        fetchDropdownData(
+          "lead-source/company-src",
+          setSource,
+          "lead sources",
+          (data) => Array.isArray(data?.data) ? data.data : []
+        );
+
+        fetchDropdownData(
+          "lead-service",
+          setService,
+          "service",
+          (res) => Array.isArray(res?.data) ? res.data : []
+        );
+
+        const fetchIndustryAndSubIndustry = async () => {
+          try {
+            const response = await fetch(`${apiEndPoint}/lead-industry/company-industry`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (!response.ok) {
+              console.error(`Can't fetch lead industry and sub-industry. Status: ${response.status}`);
+              setIndustry([]);
+              setSubIndustry([]);
+              return;
+            }
+
+            const rawData = await response.json();
+            setIndustry(Array.isArray(rawData.response?.industry) ? rawData.response.industry : []);
+            setSubIndustry(Array.isArray(rawData.response?.subindustries) ? rawData.response.subindustries : []);
+          } catch (e) {
+            console.error(`Error in fetching lead industry and sub-industry:`, e);
+            setIndustry([]);
+            setSubIndustry([]);
+          }
+        };
+
+        fetchIndustryAndSubIndustry();
+        fetchCitiesData();
+      }, [fetchDropdownData, token]);
+
+      const fetchCitiesData = async () => {
+        try {
+          const response = await fetch(`${apiEndPoint}/city`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            alert("Can't fetch cities, there was an error.");
             return;
           }
 
           const data = await response.json();
-          if (data) {
-            setForm((prev) => ({
-              ...prev,
-              cstate: data.state || "",
-              cdistrict: data.district || "",
-              ccountry: data.country || "",
-              cpincode: data.cpincode || "",
-            }));
+          if (data && Array.isArray(data.cities)) {
+            setCities(data.cities);
+            setFilteredCities(data.cities);
+          } else {
+            alert("Invalid city data received.");
           }
-        } catch (error) {
-          console.error("Error fetching city details:", error);
+        } catch (e) {
+          alert("Error fetching cities.");
+        }
+      };
+
+      const handleSearchCity = (e) => {
+        const searchTerm = e.target.value;
+        setSearchCity(searchTerm);
+        const filtered = Array.isArray(cities) ? cities.filter((city) =>
+          city.cCity_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        ) : [];
+        setFilteredCities(filtered);
+        setIsCityDropdownOpen(true);
+
+        if (!searchTerm) {
+          setForm((prev) => ({ ...prev, icity: "" }));
+          setErrors((prev) => ({ ...prev, icity: validateField("icity", "") }));
+        }
+      };
+
+      useEffect(() => {
+        const fetchCityDetails = async (cityId) => {
+          if (cityId) {
+            try {
+              const response = await fetch(`${apiEndPoint}/city/${cityId}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (!response.ok) {
+                setForm((prev) => ({
+                  ...prev,
+                  cstate: "",
+                  cdistrict: "",
+                  ccountry: "",
+                  cpincode: "",
+                }));
+                return;
+              }
+
+              const data = await response.json();
+              if (data) {
+                setForm((prev) => ({
+                  ...prev,
+                  cstate: data.state || "",
+                  cdistrict: data.district || "",
+                  ccountry: data.country || "",
+                  cpincode: data.cpincode || "",
+                }));
+              }
+            } catch (error) {
+              console.error("Error fetching city details:", error);
+              setForm((prev) => ({
+                ...prev,
+                cstate: "",
+                cdistrict: "",
+                ccountry: "",
+                cpincode: "",
+              }));
+            }
+          }
+        };
+
+        if (form.icity) {
+          fetchCityDetails(form.icity);
+          const selectedCity = Array.isArray(cities) ? cities.find((city) => city.icity_id === form.icity) : null;
+          setSearchCity(selectedCity ? selectedCity.cCity_name : "");
+        } else {
           setForm((prev) => ({
             ...prev,
             cstate: "",
@@ -815,102 +818,86 @@ useEffect(() => {
             ccountry: "",
             cpincode: "",
           }));
+          setSearchCity("");
         }
-      }
-    };
+      }, [form.icity, token, cities]);
 
-    if (form.icity) {
-      fetchCityDetails(form.icity);
-      const selectedCity = Array.isArray(cities) ? cities.find((city) => city.icity_id === form.icity) : null;
-      setSearchCity(selectedCity ? selectedCity.cCity_name : "");
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        cstate: "",
-        cdistrict: "",
-        ccountry: "",
-        cpincode: "",
-      }));
-      setSearchCity("");
-    }
-  }, [form.icity, token, cities]);
+      useEffect(() => {
+        const fetchFormLabels = async () => {
+          try {
+            const res = await fetch(`${apiEndPoint}/lead-form-label`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-  useEffect(() => {
-    const fetchFormLabels = async () => {
-      try {
-        const res = await fetch(`${apiEndPoint}/lead-form-label`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+            const data = await res.json();
 
-        const data = await res.json();
+            if (data?.Message) {
+              setFormLabels({
+                leadFormTitle: data.Message.leadFormTitle || "🚀 Let's Get Started - Create a New Lead",
+                section1Label: data.Message.section1Label || "Lead Details",
+                section2Label: data.Message.section2Label || "Contact Information",
+                section3Label: data.Message.section3Label || "Address Details",
+              });
+            }
+          } catch (err) {
+            console.error("Failed to load lead form labels", err);
+          }
+        };
 
-        if (data?.Message) {
-          setFormLabels({
-            leadFormTitle: data.Message.leadFormTitle || "🚀 Let's Get Started - Create a New Lead",
-            section1Label: data.Message.section1Label || "Lead Details",
-            section2Label: data.Message.section2Label || "Contact Information",
-            section3Label: data.Message.section3Label || "Address Details",
-          });
+        if (token && company_id) {
+          fetchFormLabels();
         }
-      } catch (err) {
-        console.error("Failed to load lead form labels", err);
-      }
-    };
+      }, [token, company_id]);
 
-    if (token && company_id) {
-      fetchFormLabels();
-    }
-  }, [token, company_id]);
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
+                setIsCurrencyDropdownOpen(false);
+            }
+            if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+                setIsCityDropdownOpen(false);
+            }
+            if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
+                setIsPotentialDropdownOpen(false);
+            }
+            if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+                setIsStatusDropdownOpen(false);
+            }
+            if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
+                setIsIndustryDropdownOpen(false);
+            }
+            if (subIndustryDropdownRef.current && !subIndustryDropdownRef.current.contains(event.target)) {
+                setIsSubIndustryDropdownOpen(false);
+            }
+            if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
+                setIsSourceDropdownOpen(false);
+            }
+            if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target)) {
+                setIsServiceDropdownOpen(false);
+            }
+            if (subServiceDropdownRef.current && !subServiceDropdownRef.current.contains(event.target)) {
+                setIsSubServiceDropdownOpen(false);
+            }
+            if (mobileCountryCodeRef.current && !mobileCountryCodeRef.current.contains(event.target)) {
+                setIsMobileCountryCodeDropdownOpen(false);
+            }
+            if (whatsappCountryCodeRef.current && !whatsappCountryCodeRef.current.contains(event.target)) {
+                setIsWhatsappCountryCodeDropdownOpen(false);
+            }
+            if (subSourceDropdownRef.current && !subSourceDropdownRef.current.contains(event.target)) {
+                setIsSubSourceDropdownOpen(false);
+            }
+        };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
-            setIsCurrencyDropdownOpen(false);
-        }
-        if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
-            setIsCityDropdownOpen(false);
-        }
-        if (potentialDropdownRef.current && !potentialDropdownRef.current.contains(event.target)) {
-            setIsPotentialDropdownOpen(false);
-        }
-        if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
-            setIsStatusDropdownOpen(false);
-        }
-        if (industryDropdownRef.current && !industryDropdownRef.current.contains(event.target)) {
-            setIsIndustryDropdownOpen(false);
-        }
-        if (subIndustryDropdownRef.current && !subIndustryDropdownRef.current.contains(event.target)) {
-            setIsSubIndustryDropdownOpen(false);
-        }
-        if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
-            setIsSourceDropdownOpen(false);
-        }
-        if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(event.target)) {
-            setIsServiceDropdownOpen(false);
-        }
-        if (subServiceDropdownRef.current && !subServiceDropdownRef.current.contains(event.target)) {
-            setIsSubServiceDropdownOpen(false);
-        }
-        if (mobileCountryCodeRef.current && !mobileCountryCodeRef.current.contains(event.target)) {
-            setIsMobileCountryCodeDropdownOpen(false);
-        }
-        if (whatsappCountryCodeRef.current && !whatsappCountryCodeRef.current.contains(event.target)) {
-            setIsWhatsappCountryCodeDropdownOpen(false);
-        }
-        if (subSourceDropdownRef.current && !subSourceDropdownRef.current.contains(event.target)) {
-            setIsSubSourceDropdownOpen(false);
-        }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-    };
-}, []);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
   const validateField = (name, value) => {
     let error = "";
@@ -1111,7 +1098,7 @@ const handleChange = (e) => {
         return;
     }
 
-    // --- Start of logic for all searchable dropdowns ---
+    // logic for all searchable dropdowns
     if (name.startsWith("search")) {
         if (name === "searchMobileCountryCode") {
             setSearchMobileCountryCode(value);
@@ -1145,7 +1132,6 @@ const handleChange = (e) => {
         }
         return;
     }
-    // --- End of logic for all searchable dropdowns ---
 
     // --- Start of Main form state update logic ---
     setForm((prev) => {
@@ -1207,7 +1193,8 @@ const handleChange = (e) => {
     setSearchTerm,
     setIsDropdownOpen
   ) => {
-    setForm((prev) => ({ ...prev, [fieldName]: itemId }));
+    setForm((prev) => ({ ...prev, [fieldName]: Number(itemId) }));
+    // setForm((prev) => ({ ...prev, [fieldName]: itemId }));
     setSearchTerm(itemName);
     setIsDropdownOpen(false);
     setErrors((prev) => ({ ...prev, [fieldName]: undefined }));
@@ -1838,28 +1825,27 @@ const handleSubmit = async (e) => {
           <>
             <h3 className="text-lg font-semibold mt-6">{formLabels.section1Label}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
 
             {basicLeadFields.map(({ label, name, required, value, readOnly }) => (
-        <div key={name}>
-          <label className="text-sm font-medium">
-            {label} {required && <span className="text-red-500">*</span>}
-          </label>
-          <input
-            type="text"
-            name={name}
-            value={value !== undefined ? value : form[name]}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder={`Enter ${label.toLowerCase()}`}
-            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-            readOnly={readOnly}
-          />
-          {errors[name] && (
-            <p className="text-red-600 text-sm">{errors[name]}</p>
-          )}
-        </div>
-      ))}
+              <div key={name}>
+                <label className="text-sm font-medium">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  name={name}
+                  value={value !== undefined ? value : form[name]}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder={`Enter ${label.toLowerCase()}`}
+                  className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  readOnly={readOnly}
+                />
+                {errors[name] && (
+                  <p className="text-red-600 text-sm">{errors[name]}</p>
+                )}
+              </div>
+            ))}
               {[
                 {
                   label: "Lead potential",
@@ -1943,27 +1929,27 @@ const handleSubmit = async (e) => {
                   emptyType: "source"
                 },
                 {
-            label: "Sub-source",
-            ref: subSourceDropdownRef,
-            inputName: "searchSubSource",
-            searchValue: searchSubSource,
-            setSearch: setSearchSubSource,
-            open: isSubSourceDropdownOpen,
-            setOpen: setIsSubSourceDropdownOpen,
-            list: subSources.filter(
-              (item) =>
-                item.ssub_src_name
-                  ?.toLowerCase()
-                  .includes(searchSubSource.toLowerCase())
-            ),
-            keyField: "isub_src_id",
-            displayField: "ssub_src_name",
-            formField: "subSrcId",
-            error: errors.subSrcId,
-            disabled: !form.lead_source_id || subSources.length === 0,
-            required: false,
-            emptyType: "subsource",
-          },
+                  label: "Sub-source",
+                  ref: subSourceDropdownRef,
+                  inputName: "searchSubSource",
+                  searchValue: searchSubSource,
+                  setSearch: setSearchSubSource,
+                  open: isSubSourceDropdownOpen,
+                  setOpen: setIsSubSourceDropdownOpen,
+                  list: subSources.filter(
+                    (item) =>
+                      item.ssub_src_name
+                        ?.toLowerCase()
+                        .includes(searchSubSource.toLowerCase())
+                  ),
+                  keyField: "isub_src_id",
+                  displayField: "ssub_src_name",
+                  formField: "subSrcId",
+                  error: errors.subSrcId,
+                  disabled: !form.lead_source_id || subSources.length === 0,
+                  required: false,
+                  emptyType: "subsource",
+                },
                 {
                   label: "Lead service",
                   ref: serviceDropdownRef,
@@ -1973,7 +1959,7 @@ const handleSubmit = async (e) => {
                   open: isServiceDropdownOpen,
                   setOpen: setIsServiceDropdownOpen,
                   list: filterService,
-                  keyField: "iservice_id",
+                  keyField: "serviceId", 
                   displayField: "serviceName",
                   formField: "iservice_id",
                   error: errors.iservice_id,
@@ -2067,60 +2053,60 @@ const handleSubmit = async (e) => {
 
               {/* for currency coode + project value */}
               <div>
-        <label className="text-sm font-medium">Project Value</label>
-        <div className="flex mt-1">
-          {/* Currency Dropdown */}
-          <div className="relative" ref={currencyDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
-              className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
-            >
-              {selectedCurrency.currency_code} ({selectedCurrency.symbol})
-              <svg
-                className="w-3 h-3 ml-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {isCurrencyDropdownOpen && (
-              <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
-                {currencies.map((cur) => (
-                  <div
-                    key={cur.icurrency_id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => {
-                      setSelectedCurrency(cur);
-                      setIsCurrencyDropdownOpen(false);
-                    }}
+              <label className="text-sm font-medium">Project Value</label>
+              <div className="flex mt-1">
+                {/* Currency Dropdown */}
+                <div className="relative" ref={currencyDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
+                    className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
                   >
-                    {cur.currency_code} ({cur.symbol})
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+                    <svg
+                      className="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
 
-          {/* Project Value Input */}
-          <input
-            type="number"
-            name="iproject_value"
-            value={form.iproject_value === 0 ? "" : form.iproject_value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="Enter project value"
-            className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
-            min="0"
-          />
-        </div>
-        {errors.iproject_value && (
-          <p className="text-red-600 text-sm">{errors.iproject_value}</p>
-        )}
-      </div>
+                  {isCurrencyDropdownOpen && (
+                    <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
+                      {currencies.map((cur) => (
+                        <div
+                          key={cur.icurrency_id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => {
+                            setSelectedCurrency(cur);
+                            setIsCurrencyDropdownOpen(false);
+                          }}
+                        >
+                          {cur.currency_code} ({cur.symbol})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Project Value Input */}
+                <input
+                  type="number"
+                  name="iproject_value"
+                  value={form.iproject_value === 0 ? "" : form.iproject_value}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Enter project value"
+                  className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
+                  min="0"
+                />
+              </div>
+              {errors.iproject_value && (
+                <p className="text-red-600 text-sm">{errors.iproject_value}</p>
+              )}
+            </div>
             </div>
             <hr className="my-6 " />
             <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>
@@ -2331,11 +2317,7 @@ const handleSubmit = async (e) => {
                 stroke="currentColor"
                 strokeWidth="4"
             />
-            <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            />
+            <path className="opacity-75"  fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
     ) : (
         "Create Lead"

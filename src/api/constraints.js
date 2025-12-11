@@ -140,9 +140,7 @@ export const ENDPOINTS = {
   MASTER_SUB_SOURCE_CHANGE: `${BASE_URL}/subSrc/changeSubSrcSts`,
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
   MODULE: `${BASE_URL}/module`,
-    MODULE_COMPANY: `${BASE_URL}/module/company`,
-
-
+  MODULE_COMPANY: `${BASE_URL}/module/company`,
 
   USER_ACCESS: `${BASE_URL}/user-attribute/user`,
   USERACCESS_CHANGE: `${BASE_URL}/user-attribute`,

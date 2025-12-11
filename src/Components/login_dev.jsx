@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showTopCard, setShowTopCard] = useState(false);
   const navigate = useNavigate();
-const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);
   useEffect(() => {
   const handleResize = () => {
     setShowTopCard(window.innerWidth <= 767);
@@ -71,15 +71,14 @@ const [count, setCount] = useState(0);
       setData(data)
 
       if (response.ok && data.jwtToken) {
-            localStorage.setItem('loginResponse', JSON.stringify(data));
-
+        localStorage.setItem('loginResponse', JSON.stringify(data));
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
-        setCount(prevCount => prevCount + 1);
+        // setCount(prevCount => prevCount + 1);
+        window.dispatchEvent(new Event("token-set"));
         navigate('/leaddashboard');
-        // Log the render count on successful login
-                      //  console.log("Login rerender count ",count);
+        //  console.log("Login rerender count ",count);
 
       } else {
         setLoginError(data.message || 'Login failed, please enter correct details');
@@ -90,11 +89,7 @@ const [count, setCount] = useState(0);
 
     setLoading(false);
   };
-
-
-                        //  console.log("Login rerender count ",count);
-
-
+      //  console.log("Login rerender count ",count);
                          
   const LoginFailedAlert = ({ message }) => (
     <div className="flex items-center gap-3 bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl mt-4 shadow-sm animate-shake">

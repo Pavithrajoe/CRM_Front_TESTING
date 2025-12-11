@@ -8,7 +8,6 @@ const ModuleControll = () => {
   const [loading, setLoading] = useState(false);
   const [selectedModuleId, setSelectedModuleId] = useState(null);
 
-  // --- CORRECTED: attributes now from module_table.attribute ---
   const groupedModules = useMemo(() => {
     if (!modulesData.length) return [];
     return modulesData.map((dataItem) => ({

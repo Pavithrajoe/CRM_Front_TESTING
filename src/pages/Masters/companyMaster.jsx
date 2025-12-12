@@ -15,7 +15,7 @@ export default function CompanyMaster() {
     const [userId, setUserId] = useState(null);
     const [companyId, setCompanyId] = useState(null);
     const [isLoading, setIsLoading] = useState(true); 
-    const [authError, setAuthError] = useState(''); // To store authentication errors
+    const [authError, setAuthError] = useState(''); 
 
     // useEffect to decode JWT token on component mount
     useEffect(() => {

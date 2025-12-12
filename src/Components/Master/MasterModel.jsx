@@ -17,7 +17,6 @@ const formatMasterName = (name, previousValue) => {
     return name;
   }
 
-
   if (!previousValue || previousValue === '' ||
     (previousValue.length > 0 && name.length > previousValue.length && name.endsWith(' '))) {
     // Capitalize first letter after space or at beginning
@@ -30,7 +29,6 @@ const formatMasterName = (name, previousValue) => {
       return name.slice(0, -1) + name.slice(-1).toUpperCase();
     }
   }
-
   return name;
 };
 
@@ -162,10 +160,6 @@ export default function MasterModal({
       const bName = b.parentName?.toString().toLowerCase() || '';
       return aName.localeCompare(bName);
     });
-
-
-
-
 
     if (!searchTerm) {
       // Sort children alphabetically within each group
@@ -569,7 +563,7 @@ const handleSave = async () => {
     return;
   }
 
-  // SPECIAL HANDLING FOR EMAIL TEMPLATE
+  //  HANDLING FOR EMAIL TEMPLATE
   if (master.title === "Email Template") {
     // Email template specific validation
     if (!formData.mailTitle || formData.mailTitle.trim().length === 0) {
@@ -1662,11 +1656,8 @@ const handleSave = async () => {
                   <>
                     {/* Email Subject Field */}
                     <div className="mb-4">
-                      <label htmlFor="mailTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                        Subject:
-                        <span className="ml-2 text-xs text-green-500">
-                          {formData.mailTitle?.length || 0}/100
-                        </span>
+                      <label htmlFor="mailTitle" className="block text-sm font-medium text-gray-700 mb-1">  Subject:
+                        <span className="ml-2 text-xs text-green-500">  {formData.mailTitle?.length || 0}/100 </span>
                       </label>
                       <input
                         id="mailTitle"
@@ -1674,9 +1665,7 @@ const handleSave = async () => {
                         type="text"
                         className={`mt-1 block w-full border ${
                           formData.mailTitle?.length > 0 &&
-                          (formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100)
-                            ? "border-red-500"
-                            : "border-gray-300"
+                          (formData.mailTitle?.length < 2 || formData.mailTitle?.length > 100) ? "border-red-500" : "border-gray-300"
                         } rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500`}
                         value={formData.mailTitle || ""}
                         onChange={handleChange}
@@ -1786,15 +1775,7 @@ const handleSave = async () => {
                     )}
                   </>
                 )}
-                      {master.title !== "Email Template" &&
-                        formData[master.payloadKey]?.length > 0 && (
-                          <p className={`mt-1 text-xs ${formData[master.payloadKey]?.length < 3 ||  formData[master.payloadKey]?.length > 50  ? "text-red-600" : "text-green-600" }`} >
-                            {formData[master.payloadKey]?.length < 3 ? "Minimum 3 characters required"
-                              : formData[master.payloadKey]?.length > 50
-                                ? "Maximum 50 characters exceeded"
-                                : "Valid length"}
-                          </p>
-                        )}
+                    
                     </div>
 
                     {/* Rest of your form fields */}

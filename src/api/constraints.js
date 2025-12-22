@@ -80,7 +80,7 @@ export const ENDPOINTS = {
   MILESTONE_STATUS_PATCH : `${BASE_URL}/post-sales`,
   LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
   RECURRING_CLIENT_REPORT: `${BASE_URL}/reports/recurring-client`,
-   
+  SMTP_SETTINGS: `${BASE_URL}/smtp-settings`,
   COMPANY_SETTINGS:`${BASE_URL}/company`,
 
   // Master endpoints

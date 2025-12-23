@@ -974,6 +974,9 @@ const LeadDetailView = () => {
         <div className="w-full lg:w-1/3 xl:w-1/4 p-2 sm:p-3 md:p-4 ">
           <div className="sticky top-4 z-10 space-y-4">
             <ProfileCard
+              leadData={leadData}
+              isDeal={false}
+              isLost={isLost}
               leadId={leadId}
               settingsData={profileSettings}
               isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
@@ -994,9 +997,7 @@ const LeadDetailView = () => {
           {(isWon || immediateWonStatus || leadData?.bisConverted) && quotations.length > 0 && (
             <Box className="mb-4">
               <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
-                <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">
-                  Quotation Available!
-                </Typography>
+                <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600">  Quotation Available! </Typography>
               </div>
             </Box>
           )}

@@ -1021,7 +1021,7 @@ const getTabLabels = () => {
   
   if (isXcodeFix) {
     // For XcodeFix - fixed tabs
-    return ["Follow-up", "Activity"];
+    return ["Follow-up", "Comments", "Activity"];
   } else {
     // For other companies - dynamic tabs based on module_id 5 permissions
     const availableTabs = [];

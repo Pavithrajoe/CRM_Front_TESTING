@@ -247,7 +247,24 @@ const handleOutsideClick = (event) => {
       <div className="relative mt-10 overflow-hidden transition-all duration-300 w-[100%] lg:w-[90%] xl:w-[95%] mx-auto">
         {/* Header with Search and New Comment Button */}
         <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 sm:px-6 sm:py-4 gap-4">
-          <div className="relative flex items-center w-full sm:w-auto">
+          <div className="relative flex items-center w-full sm:w-72">
+            {/* LEFT ICON  */}
+            <button
+              onClick={() => {
+                if (isSearchOpen) {
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
+                } else {
+                  setIsSearchOpen(true);
+                }
+              }}
+              className="absolute left-2 z-10 p-2 rounded-full bg-gray-500 text-white hover:bg-gray-700 transition"
+              aria-label="Search / Clear"
+            >
+              {isSearchOpen ? <X size={14} /> : <Search size={14} />}
+            </button>
+
+            {/* SEARCH INPUT */}
             <input
               ref={searchInputRef}
               type="text"
@@ -255,21 +272,15 @@ const handleOutsideClick = (event) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`
-                transition-all duration-300 ease-in-out
-                bg-transparent outline-none text-sm font-medium
-                ${isSearchOpen ? 'w-full px-4 py-2 opacity-100' : 'w-0 px-0 py-0 opacity-0'}
+                w-full pl-12 pr-4 py-2
+                rounded-full border border-gray-300
+                bg-white text-sm font-medium
+                outline-none transition-all duration-300
+                ${isSearchOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
               `}
             />
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors
-                ${isSearchOpen ? 'text-blue-900' : ''}
-              `}
-              aria-label="Toggle search bar"
-            >
-              <Search size={18} />
-            </button>
           </div>
+
           <button
             onClick={handleNewCommentClick}
             className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out flex-shrink-0 text-sm sm:text-base"
@@ -334,71 +345,71 @@ const handleOutsideClick = (event) => {
           )}
         </div>
 
-        {/* Add Comment Form Overlay (Modal) */}
-{showForm && (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity flex justify-center items-center"
-    onClick={handleOutsideClick} //  Use function
-  >
-    <div
-      ref={formRef}
-      className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-md sm:max-w-lg md:max-w-xl p-6 transition-all duration-300"
-      onClick={(e) => e.stopPropagation()} // Prevent click inside from closing
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium text-xl text-gray-800">
-          {editingComment ? "Edit Comment" : "Add Comment"}
-        </h3>
-        <button
-          onClick={() => {
-            setShowForm(false);
-            setIsListening(false);
-            setEditingComment(null);
-          }}
-          className="text-2xl text-gray-500 hover:text-red-500"
-        >
-          ×
-        </button>
-      </div>
-
-      <form
-        onSubmit={editingComment ? handleEditSubmission : handleFormSubmission}
-        className="flex flex-col gap-4"
-      >
-        <textarea
-          name="comments"
-          onChange={handleChange}
-          value={formData.comments}
-          className="w-full border rounded-xl p-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
-          placeholder="Write your comment..."
-        />
-
-        <div className="flex justify-between items-center">
-          {mic && (
-            <button
-              type="button"
-              onClick={() => setIsListening((prev) => !prev)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                isListening
-                  ? "bg-red-500 text-white animate-pulse"
-                  : "bg-gray-300 text-black"
-              }`}
-            >
-              {isListening ? "🎙️ Stop" : "🎤 Start"}
-            </button>
-          )}
-
-          <button
-            type="submit"
-            className="bg-indigo-700 text-white px-5 py-2 rounded-full hover:bg-indigo-800 text-base"
+        {/* Add Comment Form Overlay */}
+        {showForm && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity flex justify-center items-center"
+            onClick={handleOutsideClick} 
           >
-            {editingComment ? "Update" : "Submit"}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+            <div
+              ref={formRef}
+              className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-md sm:max-w-lg md:max-w-xl p-6 transition-all duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium text-xl text-gray-800">
+                  {editingComment ? "Edit Comment" : "Add Comment"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowForm(false);
+                    setIsListening(false);
+                    setEditingComment(null);
+                  }}
+                  className="text-2xl text-gray-500 hover:text-red-500"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form
+                onSubmit={editingComment ? handleEditSubmission : handleFormSubmission}
+                className="flex flex-col gap-4"
+              >
+                <textarea
+                  name="comments"
+                  onChange={handleChange}
+                  value={formData.comments}
+                  className="w-full border rounded-xl p-3 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
+                  placeholder="Write your comment..."
+                />
+
+                <div className="flex justify-between items-center">
+                  {mic && (
+                    <button
+                      type="button"
+                      onClick={() => setIsListening((prev) => !prev)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        isListening
+                          ? "bg-red-500 text-white animate-pulse"
+                          : "bg-gray-300 text-black"
+                      }`}
+                    >
+                      {isListening ? "🎙️ Stop" : "🎤 Start"}
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="bg-indigo-700 text-white px-5 py-2 rounded-full hover:bg-indigo-800 text-base"
+                  >
+                    {editingComment ? "Update" : "Submit"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

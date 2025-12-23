@@ -30,14 +30,13 @@ export default function CompanyDashboard() {
     };
 
     const fetchDashboardData = useCallback(async () => {
-        if (apiCallInitModuleFlag) {
-            setLoading(false); 
-            // console.log("Prevented duplicate API call via module flag.");
-            return; 
-        }
+        // if (apiCallInitModuleFlag) {
+        //     setLoading(false); 
+        //     // console.log("Prevented duplicate API call via module flag.");
+        //     return; 
+        // }
 
-        // Set the flag to true right before starting the fetch.
-        apiCallInitModuleFlag = true; 
+        // apiCallInitModuleFlag = true; 
         
         setLoading(true);
         setError(null);
@@ -101,7 +100,7 @@ export default function CompanyDashboard() {
         groupedByPotentialNamePercentage = {},
         stageCounts = {},
         ...kpiData 
-    } = dashboardData || {};
+    } = dashboardData ?? {};
 
 
     return (

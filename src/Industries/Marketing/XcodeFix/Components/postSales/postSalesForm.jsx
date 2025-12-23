@@ -476,7 +476,6 @@ const PostSalesForm = (passedData, isRecurring) => {
   }
 
 
-
  return (
   <div ref={formContainerRef} className="p-4 sm:p-6 bg-transparent min-h-full">
       {viewMode === 'history' ? (
@@ -495,12 +494,7 @@ const PostSalesForm = (passedData, isRecurring) => {
                 Back to Form
               </button>
               {/* Close button - closes entire modal */}
-              <button
-                onClick={passedData.onClose}
-                className="text-red-700 font-bold hover:text-red-900"
-              >
-                Close
-              </button>
+              <button onClick={passedData.onClose} className="text-red-700 font-bold hover:text-red-800" > Close </button>
             </div>
           </div>
 
@@ -540,9 +534,12 @@ const PostSalesForm = (passedData, isRecurring) => {
                       View
                     </button>
                   </td>
-                  <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}>
-                    {item.bactive ? 'Not Completed' : 'Completed'}
+                   <td style={{ color: item.bactive ? 'green' : 'red', fontWeight: 'bold' }}>
+                    {item.bactive ? 'Completed' : 'Not Completed'}
                   </td>
+                  {/* <td style={{ color: item.bactive ? 'red' : 'green', fontWeight: 'bold' }}>
+                    {item.bactive ? 'Not Completed' : 'Completed'}
+                  </td> */}
                 </tr>
               ))}
             </tbody>
@@ -684,8 +681,8 @@ const PostSalesForm = (passedData, isRecurring) => {
                           >
                             <option value="" disabled>Select Service</option>
                             {masterServices.map((service) => (
-                              <option key={service.iservice_id} value={service.iservice_id}>
-                                {service.cservice_name}
+                              <option key={service.iservice_id} value={service.serviceId}>
+                                {service.serviceName}
                               </option>
                             ))}
                           </select>

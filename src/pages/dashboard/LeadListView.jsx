@@ -67,7 +67,7 @@ const LeadListViewPage = () => {
   const filteredLeads = leads
     .filter((lead) => {
       if (activeTab === 'All Leads') return true;
-      if (activeTab === 'My Leads') return lead.assignedTo === 'Shivakumar'; // TODO: Replace with dynamic name
+      if (activeTab === 'My Leads') return lead.assignedTo === 'Shivakumar'; 
       if (activeTab === 'Converted Leads') return lead.status === 'Converted';
       return true;
     })

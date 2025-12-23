@@ -29,7 +29,6 @@ const LeadsManagePage = () => {
                   </div>
                 </div>
           
-        
       </main>
     </div>
   );

@@ -29,8 +29,6 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, disabled }) =>
           .join(", ")
       : "Select Subservices...";
 
-      
-
   return (
     <div className="relative w-full">
       <button
@@ -178,9 +176,14 @@ const PostSalesForm = (passedData, isRecurring) => {
         const currencyData = await currencyRes.json();
 
         //  Services
-        const sortedServices = servicesData.data.sort((a, b) =>
-          a.cservice_name.localeCompare(b.cservice_name)
+        // const sortedServices = servicesData.data.sort((a, b) =>
+        //   a.cservice_name.localeCompare(b.cservice_name)
+        // );
+
+        const sortedServices = (servicesData.data || []).sort((a, b) =>
+          (a?.cservice_name ?? "").localeCompare(b?.cservice_name ?? "")
         );
+
         setMasterServices(sortedServices);
 
         //  Subservices
@@ -624,7 +627,7 @@ const PostSalesForm = (passedData, isRecurring) => {
                   <option value="" disabled>Select Currency</option>
                   {masterCurrencies.map((c) => (
                     <option key={c.icurrency_id} value={c.currency_code}>
-                      {c.currency_code} - {c.symbol} ({c.currency_name})
+                      {c.currency_code} - {c.symbol} 
                     </option>
                   ))}
                 </>

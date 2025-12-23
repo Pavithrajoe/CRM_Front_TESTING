@@ -50,9 +50,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-          Something went wrong loading this section.
-        </div>
+        <div className="p-4 bg-red-50 text-red-700 rounded-lg"> Something went wrong loading this section. </div>
       );
     }
     return this.props.children;
@@ -134,9 +132,7 @@ const ProfileCard = ({
   const dynamicFileUpload = useMemo(() => {
     return userModules.filter(
       (attr) =>
-        attr.module_id === 5 &&
-        attr.bactive &&
-        (attr.attributes_id === 10 || attr.attribute_name === "File attachment")
+        attr.module_id === 5 && attr.bactive && (attr.attributes_id === 10 || attr.attribute_name === "File attachment")
     );
   }, [userModules]);
 
@@ -344,11 +340,8 @@ const ProfileCard = ({
         }
       );
 
-      const isConverted =
-        profile?.bisConverted === true || profile?.bisConverted === "true";
-      const successMessage = isConverted
-        ? "Won Lead assigned successfully."
-        : "Lead assigned successfully.";
+      const isConverted = profile?.bisConverted === true || profile?.bisConverted === "true";
+      const successMessage = isConverted   ? "Won Lead assigned successfully." : "Lead assigned successfully.";
       alert(successMessage);
 
       // refresh assigned list
@@ -393,11 +386,7 @@ const ProfileCard = ({
 
   // Dropzone for attachments
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "application/pdf": [".pdf"],
-      "image/png": [".png"],
-      "image/jpeg": [".jpg", ".jpeg"],
-    },
+    accept: { "application/pdf": [".pdf"], "image/png": [".png"], "image/jpeg": [".jpg", ".jpeg"], },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
       if (acceptedFiles && acceptedFiles.length > 0) {
@@ -798,18 +787,14 @@ const ProfileCard = ({
         {/* Assigned to list */}
         <div className="p-4 sm:p-6 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-medium text-gray-700">
-              Lead Assigned to
-            </h3>
+            <h3 className="text-sm font-medium text-gray-700"> Lead Assigned to </h3>
             {Array.isArray(assignedToList) && assignedToList.length > 2 && (
-              <button
-                onClick={() => setIsAssignedToModalOpen(true)}
-                className="text-blue-600 hover:underline text-sm font-medium"
-              >
+              <button onClick={() => setIsAssignedToModalOpen(true)} className="text-blue-600 hover:underline text-sm font-medium" >
                 View All
               </button>
             )}
           </div>
+
 
           {latestAssignments.length === 0 ? (
             <p className="text-sm text-gray-500 italic">
@@ -857,9 +842,7 @@ const ProfileCard = ({
 
           <div className="mt-5 space-y-3">
             {(!Array.isArray(attachments) || attachments.length === 0) && (
-              <p className="text-sm text-gray-500 italic">
-                No attachments uploaded yet.
-              </p>
+              <p className="text-sm text-gray-500 italic"> No attachments uploaded yet. </p>
             )}
 
             {Array.isArray(attachments) &&
@@ -893,15 +876,8 @@ const ProfileCard = ({
         </div>
 
         {/* Attachment Upload Modal */}
-        <Dialog
-          open={isAttachmentModalOpen}
-          onClose={() => setIsAttachmentModalOpen(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
+        <Dialog open={isAttachmentModalOpen} onClose={() => setIsAttachmentModalOpen(false)} className="relative z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg">
               <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
@@ -929,9 +905,7 @@ const ProfileCard = ({
                         click to select
                       </span>
                     </p>
-                    <p className="text-xs text-gray-400">
-                      Only PDF, PNG and JPEG files can be uploaded
-                    </p>
+                    <p className="text-xs text-gray-400">  Only PDF, PNG and JPEG files can be uploaded </p>
                   </>
                 )}
               </div>
@@ -964,15 +938,8 @@ const ProfileCard = ({
         </Dialog>
 
         {/* Assigned To History Modal */}
-        <Dialog
-          open={isAssignedToModalOpen}
-          onClose={() => setIsAssignedToModalOpen(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
+        <Dialog open={isAssignedToModalOpen}  onClose={() => setIsAssignedToModalOpen(false)} className="relative z-50" >
+          <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-hidden">
               <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">

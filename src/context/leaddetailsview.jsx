@@ -959,17 +959,28 @@ const LeadDetailView = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
+      console.log("MASTER DATA BEFORE SORT:", data);
 
-      const formattedStages = Array.isArray(data.response)
-        ? data.response
-            .map(item => ({
-              id: item.ilead_status_id,
-              name: item.clead_name,
-              order: item.orderId || 9999,
-              bactive: item.bactive,
-            }))
-            .sort((a, b) => a.order - b.order)
-        : [];
+      const formattedStages = data.response
+        .map(item => ({
+          id: item.ilead_status_id,
+          name: item.clead_name,
+          order: Number(item.orderId) || 9999,
+        }))
+        .sort((a, b) => a.order - b.order);
+
+
+
+      // const formattedStages = Array.isArray(data.response)
+      //   ? data.response
+      //       .map(item => ({
+      //         id: item.ilead_status_id,
+      //         name: item.clead_name,
+      //         order: item.orderId || 9999,
+      //         bactive: item.bactive,
+      //       }))
+      //       .sort((a, b) => a.order - b.order)
+      //   : [];
 
       setStages(formattedStages);
     } catch (err) {

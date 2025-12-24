@@ -611,8 +611,6 @@ export default function CompanyMaster() {
             createdBy: 'createdBy',
             updatedBy: 'updatedBy'
             
-            // Note: The delete mapping is handled separately in the delete function
-            // and doesn't need to be in payloadMapping since it's in the URL
         },
         
         modifierIdPayloadKey: {

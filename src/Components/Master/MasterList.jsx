@@ -1,4 +1,3 @@
-// MasterList.jsx (No changes needed from previous version)
 
 export default function MasterList({ items, onEdit, onDelete }) {
   // console.log("[MasterList] Rendering with items:", items);

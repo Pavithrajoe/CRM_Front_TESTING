@@ -58,7 +58,6 @@ export default function MasterForm({
         if (parentContext?.name) {
           setParentIndustryName(parentContext.name);
         } 
-        // Otherwise, try to get it from editingItem if available
         else if (editingItem.parentIndustryName) {
           setParentIndustryName(editingItem.parentIndustryName);
         }
@@ -73,7 +72,7 @@ export default function MasterForm({
       setFormData(resetState);
       setFormError(null);
       setFormLoading(false);
-      setParentIndustryName(''); // Reset parent industry name for new items
+      setParentIndustryName(''); 
     }
   }, [editingItem, payloadKey, modalKey, additionalFieldsString, master.title, parentContext]);
 

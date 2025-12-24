@@ -29,16 +29,16 @@ export default function CompanyMaster() {
 
                 setUserId(payload.user_id);
                 setCompanyId(payload.company_id);
-                setAuthError(''); // Clear any previous errors
+                setAuthError(''); 
             } catch (error) {
                 console.error("Token decode error:", error);
                 setAuthError("Failed to decode authentication token. Please log in again.");
             } finally {
-                setIsLoading(false); // Stop loading regardless of success or failure
+                setIsLoading(false); 
             }
         } else {
             setAuthError("Authentication token not found. Please log in to access this page.");
-            setIsLoading(false); // Stop loading
+            setIsLoading(false); 
         }
     }, []); 
 
@@ -57,7 +57,7 @@ export default function CompanyMaster() {
         }
 
         const data = await res.json();
-        setSettings(data.result); // set the nested object, not the whole response
+        setSettings(data.result); 
         } catch (error) {
         console.error("Fetch error:", error);
         }
@@ -102,7 +102,7 @@ export default function CompanyMaster() {
                 orderId: "orderId", 
             },
             skipCompanyIdInjection: false, 
-            conditionalFields: [], // This is key: empty to always show orderId for Status
+            conditionalFields: [], 
         },
         {
             title: 'Potential',
@@ -112,7 +112,7 @@ export default function CompanyMaster() {
             idKey: 'ileadpoten_id', 
             payloadKey: 'clead_name', 
             responseKey: 'data', 
-            idLocation: 'params', // ID in URL path for PUT/DELETE
+            idLocation: 'params', 
 
             // Explicitly define fields for payload if they differ from default formData keys
             postPayloadFields: ["clead_name", "icompany_id"], 
@@ -260,14 +260,13 @@ export default function CompanyMaster() {
             title: 'Lead Source',
             value: 'Lead Source Masters',
             modalKey: 'Source',
-            // --- CRITICAL: idKey must match API response's ID field name ---
-            idKey: 'source_id', // Make sure this is correct based on your GET API response
+            idKey: 'source_id', 
             payloadKey: 'source_name',
             responseKey: 'data',
             idLocation: 'params',
-            masterKey:'SourceMaster', // ID in URL for PUT/DELETE
+            masterKey:'SourceMaster', 
             
-            // --- API Endpoints ---
+            // API Endpoints 
             get: ENDPOINTS.MASTER_SOURCE_GET,
             post: ENDPOINTS.MASTER_SOURCE_POST,
             
@@ -293,13 +292,13 @@ export default function CompanyMaster() {
                 'source_name',
                 'description',
                 'is_active',
-                'icompany_id' // Ensure company_id is included for PUT
+                'icompany_id' 
             ],
-            postPayloadFields: [ // Add postPayloadFields for consistency
+            postPayloadFields: [ 
                 'source_name',
                 'description',
                 'is_active',
-                'icompany_id' // Ensure company_id is included for POST
+                'icompany_id' 
             ],
             
             payloadMapping: {
@@ -372,264 +371,264 @@ export default function CompanyMaster() {
 
 
         
-    {
-        title: 'Service',
-        value: 'Service Masters',
-        modalKey: 'Service',
-        masterKey:'ServiceMaster',
-        idKey: "serviceId",
-        // idKey: 'iservice_id',
-        // payloadKey: 'cservice_name',
-        payloadKey: 'serviceName',
+        {
+            title: 'Service',
+            value: 'Service Masters',
+            modalKey: 'Service',
+            masterKey:'ServiceMaster',
+            idKey: "serviceId",
+            // idKey: 'iservice_id',
+            // payloadKey: 'cservice_name',
+            payloadKey: 'serviceName',
+            responseKey: 'data',
+            idLocation: 'body',
+            modifierIdPayloadKey: {
+                post: 'icreated_by',
+                put: 'iupdated_by'
+            },
+            updatedDtPayloadKey: {
+                post: 'dcreated_at',
+                put: 'dupdated_at'
+            },
+            activeStatusPayloadKey: 'bactive',
+            get: ENDPOINTS.MASTER_SERVICE_GET,
+            post: ENDPOINTS.MASTER_SERVICE_POST,
+            put: ENDPOINTS.MASTER_SERVICE_PUT,
+            // delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+            delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
+            basePostPayload: { serviceName: "" }, // basePostPayload: { cservice_name: '' },
+
+            basePutPayload: {},
+            putPayloadFields: ["serviceId", "serviceName"],
+            // putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
+            // postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
+            postPayloadFields: ["serviceName", "icreated_by", "dcreated_at", "icompany_id"],
+
+            payloadMapping: {
+                iservice_id: 'serviceId',
+                cservice_name: 'serviceName',
+                bactive: 'bactive',
+                icompany_id: 'icompany_id',
+                icreated_by: 'icreated_by',
+                iupdated_by: 'iupdated_by',
+                dcreated_at: 'dcreated_at',
+                dupdated_at: 'dupdated_at'
+            },
+            skipCompanyIdInjection: false
+        },
+
+        {
+            title: 'Sub-Service',
+            value: 'Sub-Service Masters',
+            modalKey: 'Sub Service',
+            idKey: 'isubservice_id',
+            payloadKey: 'subservice_name',
+            responseKey: 'data',
+            masterKey:'SubServiceMaster',
+            parentIdInChildResponseKey: 'iservice_parent',
+            parentNameInChildResponseKey: 'service.cservice_name', 
+
+
+            get: ENDPOINTS.SUB_SERVICE,
+            post: ENDPOINTS.SUB_SERVICE,
+            put: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
+            delete: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
+
+            payloadMapping: {
+                isubservice_id: 'isubservice_id',
+                subservice_name: 'subservice_name', 
+                iservice_parent: 'serviceParent',
+                bactive: 'bactive',
+                created_by: 'createdBy', 
+                updated_by: 'updated_by',
+                cost: 'cost', 
+            },
+
+            skipCompanyIdInjection: true,
+
+            modifierIdPayloadKey: {
+                post: 'createdBy',
+                put: 'updated_by',
+            },
+
+            updatedDtPayloadKey: {
+                post: null,
+                put: null,
+                delete: null,
+            },
+
+            activeStatusPayloadKey: 'bactive',
+
+            basePostPayload: {
+                subservice_name: '', // Must match exactly what API expects
+                serviceParent: null,
+                createdBy: null, // Will be populated with user ID
+                bactive: true,
+                cost: '',
+            },
+
+            baseDeletePayload: {},
+
+            isHierarchical: true,
+
+            parentMasterConfig: {
+                masterName: "SERVICE",
+                getEndpoint: ENDPOINTS.MASTER_SERVICE_GET,
+                responseKey: 'data',
+                idKey: 'serviceId',          
+                nameKey: 'serviceName',
+                parentIdInChildResponseKey: 'iservice_parent',
+                formFieldKey: 'serviceParent',
+                modalLabel: 'Parent Service',
+                required: true
+            },
+
+            postPayloadFields: [
+                "subservice_name", 
+                "serviceParent",
+                "createdBy",
+                "cost" 
+            ],
+
+            putPayloadFields: [
+                "subservice_name",
+                "updated_by",
+                "cost"
+            ],
+                
+            additionalFields: ['cost'],
+            deletePayloadFields: []
+        },
+
+        {
+            title: 'Proposal Send Mode',
+            value: 'Proposal Send Modes',
+            modalKey: 'ProposalSendMode',
+            idKey: 'proposal_send_mode_id', 
+            payloadKey: 'name', 
+            masterKey:'ProposalModeMaster',
+            responseKey: 'data.data', 
+            dropdownOptions: {
+                labelKey: 'name',                 
+                valueKey: 'proposal_send_mode_id'  
+            },
+            
+            // Filter only active items for dropdown (optional)
+            filterDropdownItems: (items) => items.filter(item => item.bactive === true),
+
+            idLocation: 'params',
+            postPayloadFields: ["name", "bactive"],
+            putPayloadFields: ["name", "bactive"],
+            payloadMapping: {
+                name: "name",
+                bactive: "bactive"
+            },
+            
+            // Status and modifier keys
+            activeStatusPayloadKey: 'bactive',
+            modifierIdPayloadKey: {
+                post: 'created_by',
+                put: 'updated_by'
+            },
+            updatedDtPayloadKey: {
+                post: 'created_dt',
+                put: 'updated_dt'
+            },
+
+            // Base payload structures
+            basePostPayload: { 
+                name: '', 
+                bactive: true,
+                created_by: userId,  // Ensure this is injected
+                created_dt: new Date().toISOString() 
+            },
+            basePutPayload: { 
+                updated_by: userId,   // Ensure this is injected
+                updated_dt: new Date().toISOString() 
+            },
+
+            // API endpoints
+            get: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
+            post: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
+            put: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
+            delete: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
+            skipCompanyIdInjection: true,
+            conditionalFields: []
+        },
+
+        {
+        title: 'Email Template',
+        value: 'Email Template Masters',
+        modalKey: 'Email Template',
+        masterKey: 'EmailTemplateMaster',
+        idKey: 'mail_template_id',
+        payloadKey: 'mail_template_title',
         responseKey: 'data',
-        idLocation: 'body',
+        isRichText: true,
+        richTextField: 'mailBody',
+        
+        // API Endpoints
+        get: ENDPOINTS.MAIL_TEMPLATE,
+        post: ENDPOINTS.MAIL_TEMPLATE,
+        put: (id) => `${ENDPOINTS.MAIL_TEMPLATE}/${id}`,
+        
+        // DELETE: Use mailTemplateId as parameter name (only for delete)
+        delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mailTemplateId=${id}&status=false`,
+        idLocation: 'query',
+        
+        // Payload configuration - keep existing naming for other methods
+        basePostPayload: {
+            mailTitle: '',
+            mailBody: ''
+        },
+        basePutPayload: {},
+        baseDeletePayload: {},
+        
+        // Fields for API requests - keep existing naming
+        postPayloadFields: [
+            "mailTitle",
+            "mailBody", 
+            "icompany_id",
+            "createdBy"
+        ],
+        putPayloadFields: [
+            "mail_template_id", // Keep as mail_template_id for PUT
+            "mailTitle",
+            "mailBody",
+            "icompany_id", 
+            "updatedBy"
+        ],
+        
+        // Field mappings - keep existing naming for all methods except delete
+        payloadMapping: {
+            // For GET, POST, PUT - use existing naming
+            mail_template_id: 'mail_template_id',
+            mail_template_title: 'mailTitle',
+            mail_template_body: 'mailBody',
+            mailTitle: 'mailTitle',
+            mailBody: 'mailBody',
+            icompany_id: 'icompany_id',
+            createdBy: 'createdBy',
+            updatedBy: 'updatedBy'
+            
+            // Note: The delete mapping is handled separately in the delete function
+            // and doesn't need to be in payloadMapping since it's in the URL
+        },
+        
         modifierIdPayloadKey: {
-            post: 'icreated_by',
-            put: 'iupdated_by'
+            post: 'createdBy',
+            put: 'updatedBy',
+            delete: null
         },
         updatedDtPayloadKey: {
-            post: 'dcreated_at',
-            put: 'dupdated_at'
+            post: null,
+            put: null,
+            delete: null
         },
-        activeStatusPayloadKey: 'bactive',
-        get: ENDPOINTS.MASTER_SERVICE_GET,
-        post: ENDPOINTS.MASTER_SERVICE_POST,
-        put: ENDPOINTS.MASTER_SERVICE_PUT,
-        // delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
-        delete: (id) => `${ENDPOINTS.MASTER_SERVICE_DELETE}?serviceId=${id}`,
-        basePostPayload: { serviceName: "" }, // basePostPayload: { cservice_name: '' },
-
-        basePutPayload: {},
-        putPayloadFields: ["serviceId", "serviceName"],
-        // putPayloadFields: ["iservice_id", "cservice_name", "iupdated_by", "dupdated_at", "icompany_id"],
-        // postPayloadFields: ["cservice_name", "icreated_by", "dcreated_at", "icompany_id"],
-        postPayloadFields: ["serviceName", "icreated_by", "dcreated_at", "icompany_id"],
-
-        payloadMapping: {
-            iservice_id: 'serviceId',
-            cservice_name: 'serviceName',
-            bactive: 'bactive',
-            icompany_id: 'icompany_id',
-            icreated_by: 'icreated_by',
-            iupdated_by: 'iupdated_by',
-            dcreated_at: 'dcreated_at',
-            dupdated_at: 'dupdated_at'
+        activeStatusPayloadKey: null,
+        skipCompanyIdInjection: false,
+        additionalFields: []
         },
-        skipCompanyIdInjection: false
-    },
-
-{
-    title: 'Sub-Service',
-    value: 'Sub-Service Masters',
-    modalKey: 'Sub Service',
-    idKey: 'isubservice_id',
-    payloadKey: 'subservice_name',
-    responseKey: 'data',
-    masterKey:'SubServiceMaster',
-    parentIdInChildResponseKey: 'iservice_parent',
-    parentNameInChildResponseKey: 'service.cservice_name', 
-
-
-    get: ENDPOINTS.SUB_SERVICE,
-    post: ENDPOINTS.SUB_SERVICE,
-    put: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
-    delete: (id) => `${ENDPOINTS.SUB_SERVICE}/${id}`,
-
-    payloadMapping: {
-        isubservice_id: 'isubservice_id',
-        subservice_name: 'subservice_name', 
-        iservice_parent: 'serviceParent',
-        bactive: 'bactive',
-        created_by: 'createdBy', 
-        updated_by: 'updated_by',
-        cost: 'cost', 
-    },
-
-    skipCompanyIdInjection: true,
-
-    modifierIdPayloadKey: {
-        post: 'createdBy',
-        put: 'updated_by',
-    },
-
-    updatedDtPayloadKey: {
-        post: null,
-        put: null,
-        delete: null,
-    },
-
-    activeStatusPayloadKey: 'bactive',
-
-    basePostPayload: {
-        subservice_name: '', // Must match exactly what API expects
-        serviceParent: null,
-        createdBy: null, // Will be populated with user ID
-        bactive: true,
-           cost: '',
-    },
-
-    baseDeletePayload: {},
-
-    isHierarchical: true,
-
-    parentMasterConfig: {
-        masterName: "SERVICE",
-        getEndpoint: ENDPOINTS.MASTER_SERVICE_GET,
-        responseKey: 'data',
-        idKey: 'serviceId',          
-        nameKey: 'serviceName',
-        parentIdInChildResponseKey: 'iservice_parent',
-        formFieldKey: 'serviceParent',
-        modalLabel: 'Parent Service',
-        required: true
-    },
-
-    postPayloadFields: [
-        "subservice_name", 
-        "serviceParent",
-        "createdBy",
-        "cost" 
-    ],
-
-    putPayloadFields: [
-        "subservice_name",
-        "updated_by",
-        "cost"
-    ],
-        
-    additionalFields: ['cost'],
-    deletePayloadFields: []
-},
-
-{
-    title: 'Proposal Send Mode',
-    value: 'Proposal Send Modes',
-    modalKey: 'ProposalSendMode',
-    idKey: 'proposal_send_mode_id', 
-    payloadKey: 'name', 
-    masterKey:'ProposalModeMaster',
-    responseKey: 'data.data', 
-    dropdownOptions: {
-        labelKey: 'name',                 
-        valueKey: 'proposal_send_mode_id'  
-    },
-    
-    // Filter only active items for dropdown (optional)
-    filterDropdownItems: (items) => items.filter(item => item.bactive === true),
-
-    idLocation: 'params',
-    postPayloadFields: ["name", "bactive"],
-    putPayloadFields: ["name", "bactive"],
-    payloadMapping: {
-        name: "name",
-        bactive: "bactive"
-    },
-    
-    // Status and modifier keys
-    activeStatusPayloadKey: 'bactive',
-    modifierIdPayloadKey: {
-        post: 'created_by',
-        put: 'updated_by'
-    },
-    updatedDtPayloadKey: {
-        post: 'created_dt',
-        put: 'updated_dt'
-    },
-
-    // Base payload structures
-    basePostPayload: { 
-        name: '', 
-        bactive: true,
-        created_by: userId,  // Ensure this is injected
-        created_dt: new Date().toISOString() 
-    },
-    basePutPayload: { 
-        updated_by: userId,   // Ensure this is injected
-        updated_dt: new Date().toISOString() 
-    },
-
-    // API endpoints
-    get: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
-    post: ENDPOINTS.MASTER_PROPOSAL_SEND_MODE,
-    put: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
-    delete: (id) => `${ENDPOINTS.MASTER_PROPOSAL_SEND_MODE}/${id}`,
-    skipCompanyIdInjection: true,
-    conditionalFields: []
-},
-
-{
-  title: 'Email Template',
-  value: 'Email Template Masters',
-  modalKey: 'Email Template',
-  masterKey: 'EmailTemplateMaster',
-  idKey: 'mail_template_id',
-  payloadKey: 'mail_template_title',
-  responseKey: 'data',
-  isRichText: true,
-  richTextField: 'mailBody',
-  
-  // API Endpoints
-  get: ENDPOINTS.MAIL_TEMPLATE,
-  post: ENDPOINTS.MAIL_TEMPLATE,
-  put: (id) => `${ENDPOINTS.MAIL_TEMPLATE}/${id}`,
-  
-  // DELETE: Use mailTemplateId as parameter name (only for delete)
-  delete: (id) => `${ENDPOINTS.MAIL_TEMPLATE}?mailTemplateId=${id}&status=false`,
-  idLocation: 'query',
-  
-  // Payload configuration - keep existing naming for other methods
-  basePostPayload: {
-    mailTitle: '',
-    mailBody: ''
-  },
-  basePutPayload: {},
-  baseDeletePayload: {},
-  
-  // Fields for API requests - keep existing naming
-  postPayloadFields: [
-    "mailTitle",
-    "mailBody", 
-    "icompany_id",
-    "createdBy"
-  ],
-  putPayloadFields: [
-    "mail_template_id", // Keep as mail_template_id for PUT
-    "mailTitle",
-    "mailBody",
-    "icompany_id", 
-    "updatedBy"
-  ],
-  
-  // Field mappings - keep existing naming for all methods except delete
-  payloadMapping: {
-    // For GET, POST, PUT - use existing naming
-    mail_template_id: 'mail_template_id',
-    mail_template_title: 'mailTitle',
-    mail_template_body: 'mailBody',
-    mailTitle: 'mailTitle',
-    mailBody: 'mailBody',
-    icompany_id: 'icompany_id',
-    createdBy: 'createdBy',
-    updatedBy: 'updatedBy'
-    
-    // Note: The delete mapping is handled separately in the delete function
-    // and doesn't need to be in payloadMapping since it's in the URL
-  },
-  
-  modifierIdPayloadKey: {
-    post: 'createdBy',
-    put: 'updatedBy',
-    delete: null
-  },
-  updatedDtPayloadKey: {
-    post: null,
-    put: null,
-    delete: null
-  },
-  activeStatusPayloadKey: null,
-  skipCompanyIdInjection: false,
-  additionalFields: []
-},
 
         // { // Corrected Label Master configuration
         //     title: 'Label ',
@@ -711,29 +710,29 @@ export default function CompanyMaster() {
             modalKey: 'Lost Reason', 
             masterKey:'LeasLostReasonMaster',
 
-            idKey: 'ilead_lost_reason_id', // ID field name in GET response and for operations
-            payloadKey: 'cLeadLostReason', // Main input field's key for formData
-            responseKey: 'data',          // Path to the data array/object in the GET response
-
-            idLocation: 'query', // Signals ID is in query string for DELETE
-
+            idKey: 'ilead_lost_reason_id',
+            payloadKey: 'cLeadLostReason',
+            responseKey: 'data',      
+            
+            idLocation: 'url', 
             get: ENDPOINTS.MASTER_LOST_REASON_GET,
             post: ENDPOINTS.MASTER_LOST_REASON_POST,
-            put: ENDPOINTS.MASTER_LOST_REASON_PUT, // PUT still sends ID in body based on `putPayloadFields`
+            put: (id) => `${ENDPOINTS.MASTER_LOST_REASON_PUT}/${id}`,
+
 
             delete: (id, 
               item) => {
-                const backendIdKey = 'lostReasonId'; // Backend's expected ID key in query
-                const backendActiveKey = 'isActive'; // Backend's expected active status key in query
-                const statusForDelete = false;         // Always set to false for soft delete
+                const backendIdKey = 'lostReasonId'; 
+                const backendActiveKey = 'isActive'; 
+                const statusForDelete = false;         
                 return `${ENDPOINTS.MASTER_LOST_REASON_DELETE}?${backendIdKey}=${id}&${backendActiveKey}=${statusForDelete}`;
             },
 
             payloadMapping: {
-                ilead_lost_reason_id: 'lostReasonId', // Map frontend ID to backend ID name for payloads
-                cLeadLostReason: 'lostReason',        // Map frontend name to backend name for payloads
-                bactive: 'isActive',                  // Map frontend active status to backend active status for payloads
-                icompany_id: 'icompany_id', // Add company ID mapping
+                ilead_lost_reason_id: 'lostReasonId', 
+                cLeadLostReason: 'lostReason',        
+                bactive: 'isActive',                 
+                icompany_id: 'icompany_id', 
             },
 
             modifierIdPayloadKey: {
@@ -747,7 +746,7 @@ export default function CompanyMaster() {
                 delete: 'dmodified_at'
             },
 
-            activeStatusPayloadKey: 'bactive', // Used for GET display and POST checkbox
+            activeStatusPayloadKey: 'bactive',
 
             basePostPayload: {
                 cLeadLostReason: '',
@@ -758,33 +757,26 @@ export default function CompanyMaster() {
                 isActive: false, 
             },
 
-            // putPayloadFields: Explicitly list fields for the PUT request body.
             putPayloadFields: ['cLeadLostReason', 'ilead_lost_reason_id', 'icompany_id'], 
             postPayloadFields: ['cLeadLostReason', 'bactive', 'icreated_by', 'dcreated_at', 'icompany_id'],
             
-            skipCompanyIdInjection: false, // Set to false if company_id is explicitly needed in payload
+            skipCompanyIdInjection: false, 
         },
 
-    ]), []); // Empty dependency array means MASTER_CONFIG is created only once
+    ]), []); 
 
     const handleTileClick = (masterItem) => {
-        // Check if decoded companyId or userId are missing
-        // Skip this check for masters explicitly configured to not need companyId (like Sub-Industries in your config)
         if (!masterItem.skipCompanyIdInjection && (companyId === null || companyId === undefined)) {
-            // console.warn("Cannot open master modal: Company ID missing after token decode.");
             setAuthError("Missing company ID. Please ensure your token is valid.");
             return;
         }
         if (userId === null || userId === undefined) {
-            // console.warn("Cannot open master modal: User ID missing after token decode.");
             setAuthError("Missing user ID. Please ensure your token is valid.");
             return;
         }
 
-        // Create a mutable copy of the master item to pass to the modal
         const currentMaster = { ...masterItem };
 
-        // Pass the state variables directly, MasterModal will use them for injection.
         currentMaster.companyId = companyId;
         currentMaster.userId = userId;
 
@@ -797,7 +789,7 @@ export default function CompanyMaster() {
         setIsModalOpen(false);
     };
 
-    // --- Conditional Rendering for Loading and Error States ---
+    // Conditional Rendering for Loading and Error States 
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -822,7 +814,7 @@ export default function CompanyMaster() {
         );
     }
 
-    // --- Main Content (renders only if authentication is successful and IDs are available) ---
+    // Main Content
     return (
         <div className="px-6 py-10 min-h-screen">
             <h1 className="text-3xl font-extrabold mb-10 text-center">Company Master Settings</h1>
@@ -831,10 +823,8 @@ export default function CompanyMaster() {
                 {MASTER_CONFIG
             .filter(master => {
                 if (!settingsAccess || !settingsAccess.companySettings || !settingsAccess.companySettings.Masters) {
-                // If settings or Masters are not loaded yet, skip showing any masters
                 return false;
                 }
-                // Safe to check masterKey now
                 return (
                 master.masterKey &&
                 settingsAccess.companySettings.Masters[master.masterKey] === true

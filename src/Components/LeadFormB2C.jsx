@@ -416,7 +416,11 @@ const handleSearchExistingLead = async () => {
     let body = {};
 
     if (searchMobile) {
-      body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
+      body = { 
+            phonenumber: searchMobile,
+            phone_country_code: searchMobileCountryCode,
+            // phonenumber: `${searchMobileCountryCode}${searchMobile}`
+           };
     } else if (searchEmail) {
       body = { email: searchEmail };
     }

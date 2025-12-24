@@ -448,7 +448,11 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
         let body = {};
 
         if (searchMobile) {
-          body = { phonenumber: `${searchMobileCountryCode}${searchMobile}` };
+          body = { 
+            phonenumber: searchMobile,
+            phone_country_code: searchMobileCountryCode,
+            // phonenumber: `${searchMobileCountryCode}${searchMobile}`
+           };
         } else if (searchEmail) {
           body = { email: searchEmail };
         }

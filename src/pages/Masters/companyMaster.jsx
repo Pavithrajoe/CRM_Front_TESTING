@@ -513,7 +513,7 @@ export default function CompanyMaster() {
                 valueKey: 'proposal_send_mode_id'  
             },
             
-            // Filter only active items for dropdown (optional)
+            // Filter only active items for dropdown
             filterDropdownItems: (items) => items.filter(item => item.bactive === true),
 
             idLocation: 'params',

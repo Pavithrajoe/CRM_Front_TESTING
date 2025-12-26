@@ -1,4 +1,3 @@
-// src/context/UserAccessContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const UserAccessContext = createContext();
@@ -13,7 +12,7 @@ export const UserAccessProvider = ({ children, data }) => {
       setUserAccess(data);
       const moduleData = data.user_attributes || [];
       setUserModules(moduleData);
-      localStorage.setItem("loginResponse", JSON.stringify(data)); // keep synced
+      localStorage.setItem("loginResponse", JSON.stringify(data)); 
     } else {
       const stored = localStorage.getItem("loginResponse");
       if (stored) {
@@ -22,8 +21,8 @@ export const UserAccessProvider = ({ children, data }) => {
         const moduleData = parsed.user_attributes || [];
         setUserModules(moduleData);
 
-        console.log("Loaded user data from localStorage:", parsed);
-        console.log("Sidebar Module List:", moduleData);
+        // console.log("Loaded user data from localStorage:", parsed);
+        // console.log("Sidebar Module List:", moduleData);
       } else {
         console.warn("No login data found in localStorage or props.");
       }

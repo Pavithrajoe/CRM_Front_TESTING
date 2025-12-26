@@ -1,5 +1,4 @@
 import { useState,  useMemo} from "react";
-
 import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
@@ -8,12 +7,9 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedTab, setSelectedTab] = useState("active"); 
-  
   const leadsPerPage = 8;
 
   const navigate = useNavigate();
-
-
   const activeSubordinatesMap = useMemo(() => {
     const map = new Map();
     if (Array.isArray(subordinatesData)) {
@@ -61,11 +57,6 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
                  item.bisConverted === false &&
                   isOwnerActive ;
         }
-
-
-
-
-
         // if (selectedTab === "active") {
         //   // active leads
         //   return item.bactive === true && isOwnerActive ;

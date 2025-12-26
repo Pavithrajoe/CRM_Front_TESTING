@@ -13,6 +13,9 @@ import Slide from '@mui/material/Slide';
 import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../context/UserAccessContext"
 
+const XCODEFIX_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
+// console.log("calender xcode id check", XCODEFIX_ID)
+
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
 }
@@ -484,6 +487,10 @@ const CalendarView = () => {
   const availableCardTabs = useMemo(() => {
     const tabs = [];
     if (isCalendarEventAllowed) tabs.push("calendarEvents");
+    // if (isTaskAllowed) {
+    //   const taskLabel = company_id === XCODEFIX_ID ? "Follow Up" : "Task";
+    //   tabs.push({ id: "tasks", label: taskLabel });
+    // }
     if (isTaskAllowed) tabs.push("tasks");
     if (isReminderAllowed && company_id !== 15) tabs.push("reminders");
     return tabs;
@@ -1026,7 +1033,29 @@ const CalendarView = () => {
           <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px] flex flex-col">
             {/* Tabs - DYNAMIC BASED ON PERMISSIONS */}
             <div className="flex border-b border-gray-300 mb-4 select-none">
+
               {availableCardTabs.map(tab => (
+              <button
+                key={tab}
+                className={`flex-1 py-2 font-semibold text-center transition-colors ${
+                  activeTab === tab
+                    ? "border-b-4 border-blue-600 text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
+                onClick={() => setActiveTab(tab)}
+                type="button"
+              >
+                {tab === "reminders" && "Reminder"}
+                {tab === "calendarEvents" && "Calendar Event"}
+                {tab === "tasks" && (
+                  /* If company_id matches the ID from env, show "Follow Up", otherwise show "Task" */
+                  company_id === Number(import.meta.env.VITE_XCODEFIX_FLOW) 
+                    ? "Follow Up" 
+                    : "Task"
+                )}
+              </button>
+            ))}
+              {/* {availableCardTabs.map(tab => (
                 <button
                   key={tab}
                   className={`flex-1 py-2 font-semibold text-center transition-colors ${
@@ -1041,7 +1070,7 @@ const CalendarView = () => {
                   {tab === "calendarEvents" && "Calendar Event"}
                   {tab === "tasks" && "Task"}
                 </button>
-              ))}
+              ))} */}
             </div>
             {/* Cards container */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
@@ -1216,7 +1245,12 @@ const CalendarView = () => {
               >
                 {tab === "reminders" && "📅 All Reminders"}
                 {tab === "calendarEvents" && "🗓️ All Calendar Events"}
-                {tab === "tasks" && "✅ All Tasks"}
+                {tab === "tasks" && (
+                  company_id === Number(import.meta.env.VITE_XCODEFIX_FLOW) 
+                    ? "✅ All Follow Ups" 
+                    : "✅ All Tasks"
+                )}
+                {/* {tab === "tasks" && "✅ All Tasks"} */}
               </button>
             ))}
           </div>

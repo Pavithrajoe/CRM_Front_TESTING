@@ -61,11 +61,6 @@ export default function KPIStats() {
     if (!currentToken || !currentUserId) return;
 
     const fetchKPIStats = async () => {
-      console.log("Calling KPI API with:");
-      console.log("User ID:", currentUserId);
-      console.log("Token:", currentToken);
-      console.log("URL:", `${ENDPOINTS.LEADS_COUNT_BY_USER_ID}${currentUserId}`);
-
       setLoading(true);
       setError(null);
       try {

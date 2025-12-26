@@ -23,7 +23,7 @@ const Sidebar = ({ data }) => {
     Home: { route: "/leaddashboard", iconPath: "/images/nav/home.svg" },
     Lead: { route: "/leadcardview", iconPath: "/images/nav/group.svg" },
     Customers: { route: "/customers", iconPath: "/images/nav/customers.svg" },
-    Calendar: { route: "/calenderpage", iconPath: "/images/nav/Calender.svg" },
+    Calendars: { route: "/calenderpage", iconPath: "/images/nav/Calender.svg" },
     Users: { route: "/userpage", iconPath: "/images/nav/user.svg" },
     Reports: { route: "/reportpage", iconPath: "/images/nav/reports.svg" },
     Organisation: { route: "/companydashboard", iconPath: "/images/nav/org.svg" },
@@ -69,7 +69,7 @@ const Sidebar = ({ data }) => {
         .map(access => access.module_id)
     );
 
-    // console.log("latest",allowedModuleIds)
+    //  console.log("latest  - calender check",allowedModuleIds)
 
     const isTargetCompany = companyId === TARGET_COMPANY_ID;
 

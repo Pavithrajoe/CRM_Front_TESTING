@@ -18,7 +18,8 @@ const Xcode_LeadCardViewPage = () => {
     const [lostLeads, setLostLeads] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('grid');
-    const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || 'all');
+    const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || 'leads');
+    // const [selectedFilter, setSelectedFilter] = useState(location.state?.activeTab || 'all');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [showFilterModal, setShowFilterModal] = useState(false);

@@ -179,7 +179,7 @@ const getDateRangeInfo = () => {
         {filter === "Tomorrow" && `Showing tasks for: ${dateRanges.tomorrow}`}
         {filter === "Next Week" && `Showing tasks from: ${dateRanges.nextWeekStart} to ${dateRanges.nextWeekEnd}`}
         {filter === "Yesterday" && `Showing tasks for: ${dateRanges.yesterday}`}
-{filter === "This Week" && `Showing tasks from: ${dateRanges.thisWeekStart} to ${dateRanges.thisWeekEnd}`}
+        {filter === "This Week" && `Showing tasks from: ${dateRanges.thisWeekStart} to ${dateRanges.thisWeekEnd}`}
 
       </div>
 

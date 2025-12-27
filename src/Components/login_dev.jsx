@@ -74,6 +74,7 @@ const LoginPage = () => {
         localStorage.setItem('loginResponse', JSON.stringify(data));
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('user_attributes', JSON.stringify(data.user_attributes));
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
         // setCount(prevCount => prevCount + 1);
         window.dispatchEvent(new Event("token-set"));

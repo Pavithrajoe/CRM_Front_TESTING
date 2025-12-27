@@ -75,6 +75,15 @@ const Xcode_LeadCardViewPage = () => {
     });
     const token = localStorage.getItem("token"); 
 
+    //fot attribute access for import and website lead
+    const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
+    const hasImportAccess = user_attributes.some(
+        (attr) => attr.attribute_name === "Import" && attr.bactive === true
+    );
+    const hasWebsiteLeadAccess = user_attributes.some(
+        (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
+    );
+
     const dataToDisplay = useMemo(() => {
         let data = [];
         if (selectedFilter === 'assignedToMe') {
@@ -1045,7 +1054,8 @@ setAllLeads(sorted);
                     {[
                         'all',
                         'leads',
-                        ...(websiteActive ? ['websiteLeads'] : []),
+                        // ...(websiteActive ? ['websiteLeads'] : []),
+                        ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
                         'assignedToMe',
                         'lost'
                     ].map((filterKey) => (
@@ -1084,13 +1094,18 @@ setAllLeads(sorted);
                     ))}
                 </div>
 
-                {roleID && (
-                    <button onClick={() => setShowImportModal(true)}
-    className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap'
+                {hasImportAccess && (
+                  <button onClick={() => setShowImportModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition">
+                        Import Leads
+                  </button>
+                )}
+
+                {/* {roleID && ( <button onClick={() => setShowImportModal(true)}
+                className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap'
                     >
                         Import Leads
                     </button>  
-                )}
+                )} */}
             </div>
 
             {selectedFilter === 'lost' && (

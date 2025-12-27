@@ -1,20 +1,5 @@
 import React, { useEffect, useState, useRef, useContext, useMemo } from "react";
-import {
-  FiEdit,
-  FiPhone,
-  FiMail,
-  FiMapPin,
-  FiUpload,
-  FiEye,
-  FiCheckCircle,
-  FiX,
-  FiMove,
-  FiCodesandbox,
-  FiDollarSign,
-  FiUser,
-  FiTag,
-  FiCamera,
-} from "react-icons/fi";
+import { FiEdit, FiPhone, FiMail, FiMapPin, FiUpload, FiEye, FiCheckCircle, FiX, FiMove, FiCodesandbox, FiTag,} from "react-icons/fi";
 import { TbWorld } from "react-icons/tb";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -57,16 +42,9 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const ProfileCard = ({ 
-  settingsData, 
-  isLoadingSettings = false, 
-  leadData, 
-  isDeal, 
-  isLost 
-}) => {
+const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isDeal,  isLost }) => {
   const { user } = useContext(GlobUserContext);
   const { userModules } = useUserAccess();
-
   const { leadId } = useParams();
   const [history, setHistory] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -86,17 +64,14 @@ const ProfileCard = ({
   const [isAssignedToModalOpen, setIsAssignedToModalOpen] = useState(false);
   const [showAssignConfirmation, setShowAssignConfirmation] = useState(false);
   const [isMailHistoryModalOpen, setIsMailHistoryModalOpen] = useState(false);
-
   // EDIT FORM STATES
   const [editingLead, setEditingLead] = useState(null);
   const [editFormType, setEditFormType] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const popup = usePopup?.();
-  
   const editFormRef = useRef(null);
-
   const getUserIdFromToken = () => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
     if (!token) return null;
     try {
       const base64Payload = token.split(".")[1];
@@ -880,8 +855,7 @@ const ProfileCard = ({
           <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg">
-              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
-                Upload File
+              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4"> Upload File
               </Dialog.Title>
 
               <div
@@ -899,12 +873,7 @@ const ProfileCard = ({
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-500">
-                      Drag & drop a file here, or{" "}
-                      <span className="text-blue-900 font-medium">
-                        click to select
-                      </span>
-                    </p>
+                    <p className="text-sm text-gray-500"> Drag & drop a file here, or{" "} <span className="text-blue-900 font-medium"> click to select </span> </p>
                     <p className="text-xs text-gray-400">  Only PDF, PNG and JPEG files can be uploaded </p>
                   </>
                 )}
@@ -944,30 +913,18 @@ const ProfileCard = ({
             <Dialog.Panel className="w-full max-w-sm sm:max-w-md bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-hidden">
               <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
                 All Assigned To History
-                <button
-                  onClick={() => setIsAssignedToModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
+                <button onClick={() => setIsAssignedToModalOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors" >
                   <FiX size={20} />
                 </button>
               </Dialog.Title>
 
               {!Array.isArray(assignedToList) || assignedToList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No assignment history available.
-                </p>
+                <p className="text-sm text-gray-500 italic"> No assignment history available. </p>
               ) : (
                 <div className="space-y-3">
                   {assignedToList.map((assignment) => (
-                    <div
-                      key={assignment?.iassigned_id ?? Math.random()}
-                      className="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm"
-                    >
-                      <p>
-                        <span className="font-medium">Assigned To:</span>{" "}
-                        {assignment?.user_assigned_to_iassigned_toTouser
-                          ?.cFull_name ?? "-"}
-                      </p>
+                    <div key={assignment?.iassigned_id ?? Math.random()} className="text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm" >
+                      <p> <span className="font-medium">Assigned To:</span>{" "} {assignment?.user_assigned_to_iassigned_toTouser ?.cFull_name ?? "-"}  </p>
                       <p className="text-xs text-gray-500 mt-1">
                         <span className="font-medium">Assigned By:</span>{" "}
                         {assignment?.user_assigned_to_iassigned_byTouser
@@ -986,28 +943,14 @@ const ProfileCard = ({
         </Dialog>
 
         {/* Assignment Confirmation Modal */}
-        <Dialog
-          open={showAssignConfirmation}
-          onClose={() => setShowAssignConfirmation(false)}
-          className="relative z-50"
-        >
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm"
-            aria-hidden="true"
-          />
+        <Dialog open={showAssignConfirmation} onClose={() => setShowAssignConfirmation(false)} className="relative z-50" >
+          <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-xs bg-white p-6 rounded-2xl shadow-lg text-center">
-              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4">
-                Confirm Assignment
-              </Dialog.Title>
-              <p className="text-sm text-gray-600 mb-6">
-                Are you sure you want to assign this lead?
-              </p>
+              <Dialog.Title className="text-lg font-semibold text-gray-800 mb-4"> Confirm Assignment </Dialog.Title>
+              <p className="text-sm text-gray-600 mb-6"> Are you sure you want to assign this lead? </p>
               <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setShowAssignConfirmation(false)}
-                  className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
-                >
+                <button onClick={() => setShowAssignConfirmation(false)} className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors" >
                   Cancel
                 </button>
                 <button
@@ -1040,10 +983,7 @@ const ProfileCard = ({
         {/* Edit Profile Modal */}
         {showEditForm && (
           <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
-            <div
-              ref={editFormRef}
-              className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-hidden"
-            >
+            <div ref={editFormRef} className="bg-white p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-hidden" >
               {editFormType === 1 && (
                 <EditProfileForm
                   profile={editingLead}
@@ -1060,16 +1000,9 @@ const ProfileCard = ({
               )}
               {editFormType === null && (
                 <div className="p-6">
-                  <p className="text-sm text-gray-500">
-                    Unable to determine which edit form to show.
-                  </p>
+                  <p className="text-sm text-gray-500"> Unable to determine which edit form to show. </p>
                   <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={() => setShowEditForm(false)}
-                      className="px-4 py-2 bg-gray-200 rounded-lg"
-                    >
-                      Close
-                    </button>
+                    <button onClick={() => setShowEditForm(false)} className="px-4 py-2 bg-gray-200 rounded-lg"> Close </button>
                   </div>
                 </div>
               )}

@@ -1015,48 +1015,79 @@ const LeadDetailView = () => {
     }
   };
 
-// Correct tab configuration based on module_id 5 permissions
+//  tab configuration based on module_id 5 permissions
 const getTabLabels = () => {
   const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
+  const availableTabs = [];
   
-  if (isXcodeFix) {
-    // For XcodeFix - fixed tabs
-    return ["Follow-up", "Comments", "Activity"];
-  } else {
-    // For other companies - dynamic tabs based on module_id 5 permissions
-    const availableTabs = [];
-    
-    // Check each tab type and add if user has permission
-    if (userModules.some(module => 
-      module.module_id === 5 && 
-      module.bactive && 
-      (module.attribute_name === 'Task' || module.attributes_id === 12)
-    )) {
-      availableTabs.push("Task");
-    }
-    
-    if (userModules.some(module => 
-      module.module_id === 5 && 
-      module.bactive && 
-      (module.attribute_name === 'Comments' || module.attributes_id === 11)
-    )) {
-      availableTabs.push("Comments");
-    }
-    
-    if (userModules.some(module => 
-      module.module_id === 5 && 
-      module.bactive && 
-      (module.attribute_name === 'Reminder' || module.attributes_id === 13)
-    )) {
-      availableTabs.push("Reminders");
-    }
-    
-    // Activity tab is always available
-    availableTabs.push("Activity");
-    
-    return availableTabs;
+  // 1. Check for Task / Follow-up Permission (ID 12)
+  if (userModules.some(module => module.module_id === 5 &&  module.bactive && 
+    (module.attributes_id === 12 || module.attribute_name?.toLowerCase().includes('task'))
+  )) {
+    // If it's XcodeFix, call it "Follow-up", otherwise call it "Task"
+    availableTabs.push(isXcodeFix ? "Follow-up" : "Task");
   }
+  
+  // 2. Check for Comments Permission (ID 11)
+  if (userModules.some(module => module.module_id === 5 && module.bactive && 
+    (module.attributes_id === 11 || module.attribute_name?.toLowerCase().includes('comment'))
+  )) {
+    availableTabs.push("Comments");
+  }
+  
+  // 3. Check for Reminder Permission (ID 13)
+  if (userModules.some(module => module.module_id === 5 && module.bactive && 
+    (module.attributes_id === 13 || module.attribute_name?.toLowerCase().includes('reminder'))
+  )) {
+    availableTabs.push("Reminders");
+  }
+  
+  // 4. Activity tab is always available as the default/last tab
+  availableTabs.push("Activity");
+  
+  return availableTabs;
 };
+// const getTabLabels = () => {
+//   const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
+  
+//   if (isXcodeFix) {
+//     // For XcodeFix - fixed tabs
+//     return ["Follow-up", "Comments", "Activity"];
+//   } else {
+//     // For other companies - dynamic tabs based on module_id 5 permissions
+//     const availableTabs = [];
+    
+//     // Check each tab type and add if user has permission
+//     if (userModules.some(module => 
+//       module.module_id === 5 && 
+//       module.bactive && 
+//       (module.attribute_name === 'Task' || module.attributes_id === 12)
+//     )) {
+//       availableTabs.push("Task");
+//     }
+    
+//     if (userModules.some(module => 
+//       module.module_id === 5 && 
+//       module.bactive && 
+//       (module.attribute_name === 'Comments' || module.attributes_id === 11)
+//     )) {
+//       availableTabs.push("Comments");
+//     }
+    
+//     if (userModules.some(module => 
+//       module.module_id === 5 && 
+//       module.bactive && 
+//       (module.attribute_name === 'Reminder' || module.attributes_id === 13)
+//     )) {
+//       availableTabs.push("Reminders");
+//     }
+    
+//     // Activity tab is always available
+//     availableTabs.push("Activity");
+    
+//     return availableTabs;
+//   }
+// };
 
 const renderTabContent = () => {
   const tabLabels = getTabLabels();

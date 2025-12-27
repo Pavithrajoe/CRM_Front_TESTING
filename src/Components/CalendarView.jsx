@@ -492,7 +492,8 @@ const CalendarView = () => {
     //   tabs.push({ id: "tasks", label: taskLabel });
     // }
     if (isTaskAllowed) tabs.push("tasks");
-    if (isReminderAllowed && company_id !== 15) tabs.push("reminders");
+    if (isReminderAllowed) tabs.push("reminders");
+    // if (isReminderAllowed && company_id !== 15) tabs.push("reminders");
     return tabs;
   }, [isCalendarEventAllowed, isTaskAllowed, isReminderAllowed, company_id]);
 
@@ -501,7 +502,8 @@ const CalendarView = () => {
     const tabs = [];
     if (isCalendarEventAllowed) tabs.push("calendarEvents");
     if (isTaskAllowed) tabs.push("tasks");
-    if (isReminderAllowed && company_id !== 15) tabs.push("reminders");
+    if (isReminderAllowed ) tabs.push("reminders");
+    // if (isReminderAllowed && company_id !== 15) tabs.push("reminders");
     return tabs;
   }, [isCalendarEventAllowed, isTaskAllowed, isReminderAllowed, company_id]);
 
@@ -1074,7 +1076,8 @@ const CalendarView = () => {
             </div>
             {/* Cards container */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
-              {activeTab === "reminders" && isReminderAllowed && company_id !== 15 && (
+              {/* {activeTab === "reminders" && isReminderAllowed && company_id !== 15 && ( */}
+             {activeTab === "reminders" && isReminderAllowed && (
                 reminders.length > 0 ? (
                   reminders.map(reminder => (
                     <div 
@@ -1339,7 +1342,8 @@ const CalendarView = () => {
           </>
         )}
 
-        {tableActiveTab === "reminders" && isReminderAllowed && company_id !== 15 && (
+        {/* {tableActiveTab === "reminders" && isReminderAllowed && company_id !== 15 && ( */}
+        {tableActiveTab === "reminders" && isReminderAllowed && (
           <>
             {filteredTableData.length === 0 ? (
               <div className="min-h-[180px] flex items-center justify-center text-gray-400 text-base font-medium">

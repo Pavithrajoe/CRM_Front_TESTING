@@ -151,10 +151,6 @@ const ProfileHeader = () => {
     setShowAppMenu(false);
   };
 
-  // const handleOpenNotifications = () => {
-  //   navigate("/notifications");
-  // };
-
   const handleOpenNotifications = () => {
   setLastSeen();          
   setBellNotificationCount(0); 

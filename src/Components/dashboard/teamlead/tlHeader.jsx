@@ -48,7 +48,7 @@ const homeAttributes = (userModules || [])
     return path && currentPath === path;
   };
 
-  // Handle phone access (unchanged)
+  // Handle phone access
   useEffect(() => {
     const storedUserData = localStorage.getItem("user");
     if (storedUserData) {
@@ -88,8 +88,8 @@ const homeAttributes = (userModules || [])
           </React.Fragment>
         ))}
 
-        {/* Keep Call Logs same */}
-        {phoneActive && (
+        {/* Keep Call Logs same chat */}
+        {phoneActive && userModules.some(attr => attr.attribute_name === "Call Logs" && attr.bactive === true) && (
           <>
             <div className="w-px h-5 bg-gray-300"></div>
             <button
@@ -104,6 +104,23 @@ const homeAttributes = (userModules || [])
             </button>
           </>
         )}
+        
+
+        {/* {phoneActive && (
+          <>
+            <div className="w-px h-5 bg-gray-300"></div>
+            <button
+              onClick={() => navigate("/logusercalllogs")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                currentPath === "/logusercalllogs"
+                  ? "bg-black text-white"
+                  : "text-black hover:bg-gray-100"
+              }`}
+            >
+              Call Logs
+            </button>
+          </>
+        )} */}
       </div>
     </div>
   );

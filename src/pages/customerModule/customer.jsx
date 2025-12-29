@@ -231,6 +231,7 @@ const WonList = () => {
           <table className="w-full text-left text-sm text-gray-700 bg-white">
             <thead className="bg-gray-50 text-gray-800 font-bold border-b">
               <tr>
+                <th className="px-4 py-3 w-16">S.No</th>
                 <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('name')}>Name {getSortIndicator('name')}</th>
                 <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('organization')}>Organization {getSortIndicator('organization')}</th>
                 <th className="px-4 py-3">Phone</th>
@@ -241,16 +242,17 @@ const WonList = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedData.map((item) => (
+              {displayedData.map((item, index) => (
                 <tr key={item.id} onClick={() => window.location.href=`/leaddetailview/${item.id}`} className="border-t hover:bg-gray-50 cursor-pointer transition">
-                  <td className="px-4 py-3 font-semibold text-gray-900 ">{item.name || '-'}</td>
-                  <td className="px-4 py-3">{item.organization || '-'}</td>
-                  <td className="px-4 py-3 text-green-600 font-semibold">{item.phone || '-'}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.owner_name}</td>
-                  <td className="px-4 py-3">{formatDate(item.modified_date)}</td>
-                  <td className="px-4 py-3 text-blue-600 font-bold text-[11px] uppercase">{item.potential_name}</td>
+                  <td className="px-4 py-3 font-normal text-gray-800">{(currentPage - 1) * dealsPerPage + (index + 1)} </td>
+                  <td className="px-4 py-3 font-normal text-gray-800 ">{item.name || '-'}</td>
+                  <td className="px-4 py-3 font-normal text-gray-800">{item.organization || '-'}</td>
+                  <td className="px-4 py-3 font-normal text-gray-800">{item.phone || '-'}</td>
+                  <td className="px-4 py-3 font-normal text-gray-800">{item.owner_name}</td>
+                  <td className="px-4 py-3 font-normal text-gray-800">{formatDate(item.modified_date)}</td>
+                  <td className="px-4 py-3 font-medium text-gray-800 text-[11px] uppercase">{item.potential_name}</td>
                   <td className="px-4 py-3">
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">WON</span>
+                    <span className="px-3 py-1 bg-green-300 text-gray-700 text-[10px] font-bold rounded-full">WON</span>
                   </td>
                 </tr>
               ))}
@@ -259,7 +261,7 @@ const WonList = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {displayedData.map((item) => (
+          {displayedData.map((item,) => (
             <div 
               key={item.id} 
               onClick={() => window.location.href=`/leaddetailview/${item.id}`} 

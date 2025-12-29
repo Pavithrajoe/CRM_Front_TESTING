@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { FaEnvelope, FaPhone, FaGlobe, FaEdit } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaEdit, FaUser, FaCheckCircle } from 'react-icons/fa';
 import { LayoutGrid, List, Filter, RotateCw } from 'lucide-react';
 import ProfileHeader from '../../Components/common/ProfileHeader';
 import Loader from '../../Components/common/Loader';
@@ -12,6 +12,7 @@ const WonList = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [viewScope, setViewScope] = useState('mine'); 
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,19 +21,16 @@ const WonList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: 'modified_date', direction: 'descending' });
   const [companyIdFromToken, setCompanyIdFromToken] = useState(null);
-  const [roleID, setRoleID] = useState();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const dealsPerPage = 12;
 
-  // Auth logic
   useEffect(() => {
     try {
       const tokenFromStorage = localStorage.getItem('token');
       if (tokenFromStorage) {
         const decodedToken = jwtDecode(tokenFromStorage);
-        setCurrentUserId(decodedToken.user_id);
-        setRoleID(decodedToken.role_id);
+        setCurrentUserId(Number(decodedToken.user_id));
         setCompanyIdFromToken(decodedToken.company_id);
         setCurrentToken(tokenFromStorage);
       } else {
@@ -45,7 +43,6 @@ const WonList = () => {
     }
   }, []);
 
-  // Helper function for date formatting
   const formatDate = (dateStr) =>
     dateStr
       ? new Date(dateStr).toLocaleDateString('en-GB', {
@@ -64,10 +61,7 @@ const WonList = () => {
   };
 
   const fetchDeals = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-      setLoading(false);
-      return;
-    }
+    if (!currentUserId || !currentToken) return;
     setLoading(true);
     setError(null);
     try {
@@ -79,21 +73,17 @@ const WonList = () => {
         },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`HTTP error! status: ${response.status}, Details: ${errorData.message || response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
       const rawFetchedDeals = Array.isArray(result) ? result : result.data || [];
 
       const processedDeals = rawFetchedDeals
         .filter((item) => {
-          const isOwned = item.clead_owner === currentUserId;
           const isConverted = item.bisConverted === true || item.bisConverted === 'true';
           const isActive = item.bactive === true || item.bactive === 'true';
           const matchesCompany = parseInt(item.icompany_id, 10) === companyIdFromToken;
-          return isOwned && isConverted && isActive && matchesCompany;
+          return isConverted && isActive && matchesCompany;
         })
         .map((item) => ({
           ...item,
@@ -102,16 +92,15 @@ const WonList = () => {
           organization: item.c_organization || item.corganization,
           email: item.c_email || item.cemail,
           phone: item.c_phone || item.iphone_no,
+          owner_name: item.user?.cFull_name || 'Unknown', 
+          status_name: item.lead_status?.clead_name || 'Converted',
+          potential_name: item.lead_potential?.clead_name || item.lead_potential || 'General',
           modified_date: item.dmodified_dt || item.d_modified_date,
         }));
 
-      const sortedDeals = processedDeals.sort(
-        (a, b) => new Date(b.modified_date || 0) - new Date(a.modified_date || 0)
-      );
-      setDeals(sortedDeals);
+      setDeals(processedDeals);
     } catch (err) {
-      setError('Failed to fetch deals: ' + err.message);
-      setDeals([]);
+      setError('Failed to fetch: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -124,13 +113,18 @@ const WonList = () => {
   const applyFilters = useCallback(
     (data) =>
       data.filter((item) => {
+        const matchesScope = viewScope === 'mine' 
+            ? Number(item.clead_owner) === currentUserId 
+            : Number(item.clead_owner) !== currentUserId;
+
         const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesSearch =
           match(item.name) || match(item.organization) || match(item.email) || match(item.phone);
         const matchesDate = isWithinDateRange(item.modified_date);
-        return matchesSearch && matchesDate;
+        
+        return matchesScope && matchesSearch && matchesDate;
       }),
-    [searchTerm, fromDate, toDate]
+    [searchTerm, fromDate, toDate, viewScope, currentUserId]
   );
 
   const sortedData = useMemo(() => {
@@ -140,10 +134,9 @@ const WonList = () => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
         if (sortConfig.key === 'modified_date') {
-          const dateA = new Date(aValue);
-          const dateB = new Date(bValue);
-          const comparison = dateA - dateB;
-          return sortConfig.direction === 'ascending' ? comparison : -comparison;
+          return sortConfig.direction === 'ascending' 
+            ? new Date(aValue) - new Date(bValue) 
+            : new Date(bValue) - new Date(aValue);
         }
         const stringA = String(aValue || '').toLowerCase();
         const stringB = String(bValue || '').toLowerCase();
@@ -155,28 +148,17 @@ const WonList = () => {
     return sortableItems;
   }, [deals, applyFilters, sortConfig]);
 
-  const totalPages = Math.ceil(sortedData.length / dealsPerPage);
-  const displayedData = sortedData.slice((currentPage - 1) * dealsPerPage, currentPage * dealsPerPage);
+  const displayedData = useMemo(() => {
+    return sortedData.slice((currentPage - 1) * dealsPerPage, currentPage * dealsPerPage);
+  }, [sortedData, currentPage]);
 
-  const handleSort = useCallback((key) => {
+  const totalPages = Math.ceil(sortedData.length / dealsPerPage);
+
+  const handleSort = (key) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending',
     }));
-  }, []);
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleFilterApply = () => {
-    if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
-      alert("The 'To' date cannot be earlier than the 'From' date.");
-      return;
-    }
-    setCurrentPage(1);
-    setShowFilterModal(false);
   };
 
   const handleResetFilters = () => {
@@ -185,12 +167,7 @@ const WonList = () => {
     setSearchTerm('');
     setCurrentPage(1);
     setShowFilterModal(false);
-    setSortConfig({ key: 'modified_date', direction: 'descending' });
     setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const goToDetail = (id) => {
-    window.location.href = `/leaddetailview/${id}`;
   };
 
   const getSortIndicator = (key) => {
@@ -205,120 +182,127 @@ const WonList = () => {
     <div className="max-w-full mx-auto p-4 space-y-6 min-h-screen">
       <ProfileHeader />
 
-      {/* Search and view toggle */}
+      {/* Search Toolbar */}
       <div className="flex flex-col sm:flex-row flex-wrap justify-between items-center gap-3">
         <input
           type="text"
           value={searchTerm}
-          onChange={handleSearchChange}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           placeholder="Search customers..."
           className="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 bg-gray-50 rounded-full shadow-inner placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setRefreshTrigger((p) => p + 1)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+          <button onClick={() => setRefreshTrigger((p) => p + 1)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
             <RotateCw size={18} />
           </button>
-          <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+          <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full transition ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
             <LayoutGrid size={18} />
           </button>
-          <button onClick={() => setViewMode('list')} className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+          <button onClick={() => setViewMode('list')} className={`p-2 rounded-full transition ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
             <List size={18} />
           </button>
-          <button onClick={() => setShowFilterModal(true)} className={`p-2 rounded-full ${showFilterModal ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>
+          <button onClick={() => setShowFilterModal(true)} className={`p-2 rounded-full transition ${showFilterModal ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>
             <Filter size={18} />
           </button>
         </div>
       </div>
 
-      {/* Title */}
-      <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
-        <div className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium">Our Customers</div>
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 mt-4">
+        <button 
+            onClick={() => { setViewScope('mine'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-full text-base font-medium transition-all ${viewScope === 'mine' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        >
+          My Customers
+        </button>
+        <button 
+            onClick={() => { setViewScope('others'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-full text-base font-medium transition-all ${viewScope === 'others' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        >
+          All Other Customers
+        </button>
       </div>
 
-      {/* Filter Modal */}
-      {showFilterModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-medium text-gray-800">Filter by Date</h2>
-            <label className="block text-sm text-gray-700">
-              From
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-              />
-            </label>
-            <label className="block text-sm text-gray-700">
-              To
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-              />
-            </label>
-            <div className="flex justify-end gap-2">
-              <button onClick={handleResetFilters} className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600">
-                Reset
-              </button>
-              <button onClick={() => setShowFilterModal(false)} className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300">
-                Cancel
-              </button>
-              <button onClick={handleFilterApply} className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Display */}
+      {/* Content Area */}
       {displayedData.length === 0 ? (
-        <div className="text-center text-gray-500 text-sm sm:text-base py-8">No Customers found.</div>
+        <div className="text-center text-gray-500 text-sm py-12">No records found.</div>
       ) : viewMode === 'list' ? (
         <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200">
-          <div className="min-w-[600px] grid gap-4 px-4 py-3 bg-gray-50 text-gray-800 text-sm font-medium grid-cols-6">
-            <div className="cursor-pointer flex items-center" onClick={() => handleSort('name')}>Name {getSortIndicator('name')}</div>
-            <div className="cursor-pointer flex items-center" onClick={() => handleSort('organization')}>Org {getSortIndicator('organization')}</div>
-            <div className="min-w-[120px] cursor-pointer flex items-center" onClick={() => handleSort('email')}>Email {getSortIndicator('email')}</div>
-            <div className="cursor-pointer flex items-center" onClick={() => handleSort('phone')}>Phone {getSortIndicator('phone')}</div>
-            <div className="cursor-pointer flex items-center" onClick={() => handleSort('modified_date')}>Modified {getSortIndicator('modified_date')}</div>
-            <div className="flex items-center">Status</div>
-          </div>
-          {displayedData.map((item) => (
-            <div key={item.id} onClick={() => goToDetail(item.id)} className="min-w-[600px] grid gap-4 px-4 py-3 border-t bg-white hover:bg-gray-100 cursor-pointer text-sm text-gray-700 grid-cols-6">
-              <div>{item.name || '-'}</div>
-              <div>{item.organization || '-'}</div>
-              <div>{item.email || '-'}</div>
-              <div>{item.phone || '-'}</div>
-              <div>{formatDate(item.modified_date)}</div>
-              <div><span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">Won</span></div>
-            </div>
-          ))}
+          <table className="w-full text-left text-sm text-gray-700 bg-white">
+            <thead className="bg-gray-50 text-gray-800 font-bold border-b">
+              <tr>
+                <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('name')}>Name {getSortIndicator('name')}</th>
+                <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('organization')}>Organization {getSortIndicator('organization')}</th>
+                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Owner</th>
+                <th className="px-4 py-3 cursor-pointer" onClick={() => handleSort('modified_date')}>Modified {getSortIndicator('modified_date')}</th>
+                <th className="px-4 py-3">Potential</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayedData.map((item) => (
+                <tr key={item.id} onClick={() => window.location.href=`/leaddetailview/${item.id}`} className="border-t hover:bg-gray-50 cursor-pointer transition">
+                  <td className="px-4 py-3 font-semibold text-gray-900 ">{item.name || '-'}</td>
+                  <td className="px-4 py-3">{item.organization || '-'}</td>
+                  <td className="px-4 py-3 text-green-600 font-semibold">{item.phone || '-'}</td>
+                  <td className="px-4 py-3 text-gray-600">{item.owner_name}</td>
+                  <td className="px-4 py-3">{formatDate(item.modified_date)}</td>
+                  <td className="px-4 py-3 text-blue-600 font-bold text-[11px] uppercase">{item.potential_name}</td>
+                  <td className="px-4 py-3">
+                    <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">WON</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {displayedData.map((item) => (
-            <div key={item.id} onClick={() => goToDetail(item.id)} className="relative bg-white rounded-xl shadow-lg p-5 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between">
-              {(item.website_lead === true || item.website_lead === 'true') && (
-                <div className="absolute top-3 right-3 text-blue-600" title="Website Lead">
-                  <FaGlobe size={18} />
-                </div>
-              )}
+            <div 
+              key={item.id} 
+              onClick={() => window.location.href=`/leaddetailview/${item.id}`} 
+              className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
+            >
               <div>
-                <h3 className="font-semibold text-lg truncate">{item.name || '-'}</h3>
-                <p className="text-sm font-semibold mb-2 truncate">{item.organization || '-'}</p>
-                <div className="text-xs space-y-1 mb-3">
-                  {item.email && <p className="flex items-center"><FaEnvelope className="mr-2 text-blue-500" /> {item.email}</p>}
-                  {item.phone && <p className="flex items-center"><FaPhone className="mr-2 text-green-500" /> {item.phone}</p>}
-                  {item.modified_date && <p className="flex items-center"><FaEdit className="mr-2 text-orange-500" /> Modified: {formatDate(item.modified_date)}</p>}
+                <h3 className="font-bold text-gray-900 text-lg truncate group-hover:text-blue-600 transition-colors mb-0.5">
+                  {item.name || '-'}
+                </h3>
+                <p className="text-[11px] text-gray-800 uppercase font-bold tracking-wider truncate border-b pb-3 mb-4 text-medium">
+                  {item.organization || '-'}
+                </p>
+                
+                <div className="space-y-2.5 mb-5">
+                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                    <FaEnvelope className="text-blue-600 flex-shrink-0" /> 
+                    <span className="truncate">{item.email || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                    <FaPhone className="text-green-600 flex-shrink-0" /> 
+                    <span>{item.phone || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                    <FaUser className="text-purple-600 flex-shrink-0" /> 
+                    <span className="truncate">{item.owner_name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                    <FaEdit className="text-orange-600 flex-shrink-0" /> 
+                    <span>{formatDate(item.modified_date)}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-between items-center border-t pt-3 mt-3">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-600 text-white">Won</span>
-                <span className="inline-block text-xs bg-blue-300 text-black px-2 py-1 rounded-full truncate max-w-full">
-                  {item.lead_potential?.clead_name || item.lead_potential || '-'}
+
+              {/* Card Footer - Badges */}
+              <div className="flex justify-between items-center border-t pt-4 mt-2">
+                {/* Won Badge (Bottom Left) */}
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 text-white text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm text-xs ">
+                  <FaCheckCircle size={10} /> WON
+                </span>
+                
+                {/* Potential Badge (Bottom Right) */}
+                <span className="px-3 py-1.5 bg-blue-500 text-white border border-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wider text-xs">
+                  {item.potential_name}
                 </span>
               </div>
             </div>
@@ -328,14 +312,50 @@ const WonList = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 mt-6">
-          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50">
-            Previous
+        <div className="flex justify-center items-center gap-4 mt-8 pb-10">
+          <button 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(p => p - 1)} 
+            className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
+          >
+            PREV
           </button>
-          <span>Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50">
-            Next
+          <div className="text-xs font-bold text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
+            {currentPage} / {totalPages}
+          </div>
+          <button 
+            disabled={currentPage === totalPages} 
+            onClick={() => setCurrentPage(p => p + 1)} 
+            className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
+          >
+            NEXT
           </button>
+        </div>
+      )}
+
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 border border-gray-100">
+            <h2 className="text-lg font-bold text-gray-800">Filter by Date</h2>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">From Date</label>
+                <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">To Date</label>
+                <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-4">
+              <button onClick={handleResetFilters} className="text-xs text-red-500 font-bold uppercase tracking-wider">Reset</button>
+              <div className="flex gap-2">
+                <button onClick={() => setShowFilterModal(false)} className="px-4 py-2 rounded-full bg-gray-100 text-gray-600 text-xs font-bold">Cancel</button>
+                <button onClick={() => setShowFilterModal(false)} className="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold hover:bg-blue-700">Apply</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

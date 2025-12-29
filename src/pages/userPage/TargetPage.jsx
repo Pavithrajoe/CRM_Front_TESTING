@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../api/constraints';
-import goalIcon from '../../../public/images/nav/target.svg';
+// import goalIcon from '../../../public/images/nav/target.svg';
 import SalesForm from '../userPage/TargetForm';
 import Select from "react-select";
 
@@ -217,7 +217,8 @@ const TargetDashboard = ({ userId, userEmail }) => {
             className="p-2 rounded-full text-white shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none"
             title="Set New Target"
           >
-            <img src={goalIcon} alt="Set Target" className="w-8 h-8" />
+            <img src="/images/nav/target.svg" alt="Set Target" className="w-8 h-8" />
+            {/* <img src={goalIcon} alt="Set Target" className="w-8 h-8" /> */}
           </button>
         </div>
       </div>

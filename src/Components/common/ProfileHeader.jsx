@@ -244,62 +244,27 @@ const ProfileHeader = () => {
           <div className="absolute right-0 mt-2 w-60 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-50 grid grid-cols-2 gap-3">
             {/* PDF Generation Button - Only show if permission is active */}
             {hasPdfPermission && pdfPermissions.map((item, index) => (
-              <div
-                key={item.attributes_id || index}
-                onClick={handleGeneratePoster}
+              <div key={item.attributes_id || index} onClick={handleGeneratePoster}
                 className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
               >
-                <img
-                  src="/illustrations/crop.png"
-                  alt="poster"
-                  className="w-8 h-8 mb-1 opacity-90"
-                />
-                <span className="text-sm font-semibold text-blue-700">
-                  {item.attribute_name}
-                </span>
+                <img src="/illustrations/crop.png" alt="poster" className="w-8 h-8 mb-1 opacity-90" />
+                <span className="text-sm font-semibold text-blue-700"> {item.attribute_name} </span>
               </div>
             ))}
 
-            <div
-              onClick={handleGSTVerification}
-              className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition"
-            >
-              <img
-                src="/illustrations/courthouse.png"
-                alt="gst"
-                className="w-8 h-8 mb-1 opacity-90"
-              />
-              <span className="text-sm font-semibold text-green-700">
-                GST Verification
-              </span>
+            <div onClick={handleGSTVerification} className="flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border border-green-200 rounded-xl p-3 cursor-pointer transition" >
+              <img src="/illustrations/courthouse.png" alt="gst" className="w-8 h-8 mb-1 opacity-90" />
+              <span className="text-sm font-semibold text-green-700"> GST Verification </span>
             </div>
 
-            <div
-              onClick={handleMaps}
-              className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition"
-            >
-              <img
-                src="/illustrations/map_dist.png"
-                alt="maps"
-                className="w-8 h-8 mb-1 opacity-90"
-              />
-              <span className="text-sm font-semibold text-red-700">
-                Find Location
-              </span>
+            <div onClick={handleMaps} className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border border-red-200 rounded-xl p-3 cursor-pointer transition" >
+              <img src="/illustrations/map_dist.png" alt="maps" className="w-8 h-8 mb-1 opacity-90" />
+              <span className="text-sm font-semibold text-red-700"> Find Location </span>
             </div>
 
-            <div
-              onClick={handleBulkMail}
-              className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:to-yellow-200 border border-yellow-200 rounded-xl p-3 cursor-pointer transition"
-            >
-              <img
-                src="/illustrations/bulkMail.png"
-                alt="bulk mail"
-                className="w-15 h-8 mb-1 opacity-90"
-              />
-              <span className="text-sm font-semibold text-yellow-700">
-                Bulk Mail
-              </span>
+            <div onClick={handleBulkMail} className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:to-yellow-200 border border-yellow-200 rounded-xl p-3 cursor-pointer transition" >
+              <img src="/illustrations/bulkMail.png" alt="bulk mail" className="w-15 h-8 mb-1 opacity-90" />
+              <span className="text-sm font-semibold text-yellow-700"> Bulk Mail </span>
             </div>
           </div>
         )}
@@ -327,30 +292,16 @@ const ProfileHeader = () => {
           <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <div className="font-semibold text-gray-900">
-                  {profile.name}
-                </div>
+                <div className="font-semibold text-gray-900"> {profile.name} </div>
                 <div className="text-gray-500">{profile.email}</div>
                 <div className="text-gray-500">Role: {profile.role}</div>
-                <div className="text-gray-500">
-                  System Role: {profile.roleType}
-                </div>
-                {profile.company_name && (
-                  <div className="text-gray-500">
-                    Company: {profile.company_name}
-                  </div>
-                )}
+                <div className="text-gray-500"> System Role: {profile.roleType} </div>
+                {profile.company_name && ( <div className="text-gray-500">  Company: {profile.company_name} </div> )}
               </div>
-              <X
-                className="w-5 h-5 cursor-pointer text-gray-400 hover:text-gray-600"
-                onClick={() => setShowDropdown(false)}
-              />
+              <X className="w-5 h-5 cursor-pointer text-gray-400 hover:text-gray-600" onClick={() => setShowDropdown(false)} />
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition"
-            >
+            <button onClick={handleLogout} className="w-full text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-xl transition" >
               Logout
             </button>
           </div>

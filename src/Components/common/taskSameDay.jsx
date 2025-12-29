@@ -108,13 +108,13 @@ const TaskSameDay = ({ tasks, loading, isMissed }) => {
                   <div className="flex justify-between items-start mb-1">
                     <h2 className="text-md font-bold text-gray-800">{task.ctitle}</h2>
                     <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                      Lead: {task.crm_lead?.clead_name || "N/A"}
+                      Lead: {task.crm_lead?.clead_name || "-"}
                     </span>
                   </div>
-                  <p className="text-gray-500 text-xs mb-3 line-clamp-1">{task.ctask_content}</p>
+                  <p className="text-gray-500 text-sm mb-3 line-clamp-1">{task.ctask_content}</p>
                   <div className="flex justify-between items-center text-[11px] pt-2 border-t border-dashed">
-                    <p className="text-gray-400">By: {task.user_task_icreated_byTouser?.cFull_name || "N/A"}</p>
-                    <p className={`${expired ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+                    <p className="text-gray-700">By: {task.user_task_icreated_byTouser?.cFull_name || "N/A"}</p>
+                    <p className={`${expired ? 'text-red-600 font-bold' : 'text-gray-700'}`}>
                       Due: {formatDateTime(task.task_date)} {expired && "(Expired)"}
                     </p>
                   </div>

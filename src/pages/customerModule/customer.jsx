@@ -274,19 +274,19 @@ const WonList = () => {
                 </p>
                 
                 <div className="space-y-2.5 mb-5">
-                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                  <div className="flex items-center gap-3 text-sm text-gray-700 font-semibold">
                     <FaEnvelope className="text-blue-600 flex-shrink-0" /> 
                     <span className="truncate">{item.email || '-'}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                  <div className="flex items-center gap-3 text-sm text-gray-700 font-semibold">
                     <FaPhone className="text-green-600 flex-shrink-0" /> 
                     <span>{item.phone || '-'}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                  <div className="flex items-center gap-3 text-sm text-gray-700 font-semibold">
                     <FaUser className="text-purple-600 flex-shrink-0" /> 
                     <span className="truncate">{item.owner_name}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-900 font-bold">
+                  <div className="flex items-center gap-3 text-sm text-gray-700 font-semibold">
                     <FaEdit className="text-orange-600 flex-shrink-0" /> 
                     <span>{formatDate(item.modified_date)}</span>
                   </div>

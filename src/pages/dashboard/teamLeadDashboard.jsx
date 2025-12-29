@@ -10,7 +10,7 @@ import TaskSameDay from "@/Components/common/taskSameDay";
 const LeadsDashboard = () => {
   const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
-  const [allTasks, setAllTasks] = useState([]); // Single source of truth
+  const [allTasks, setAllTasks] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [activeTab, setActiveTab] = useState("");

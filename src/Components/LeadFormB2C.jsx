@@ -3,10 +3,20 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
 import { X, Search } from "lucide-react";
+import { useUserAccess } from "../context/UserAccessContext";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
 // const LeadForm = ({ onClose, onSuccess }) => {
   const LeadFormB2C = ({ onClose, onSuccess, clientType }) => {
+  const { userModules } = useUserAccess();
+  const canSeeExistingLeads = React.useMemo(() => {
+    if (!userModules || !Array.isArray(userModules)) {
+      console.log("userModules is missing or not an array:", userModules);
+      return false;
+    }
+    return userModules.some(
+      (module) => module.attribute_name === "Reccuring-Client" && module.bactive === true);
+    }, [userModules]);    
   const token = localStorage.getItem("token");
   let userId = "";
   let company_id = "";
@@ -1624,7 +1634,23 @@ const handleSubmit = async (e) => {
               />
               <span className="ml-2">New Lead</span>
             </label>
-            <label className="flex items-center text-gray-700">
+
+            {canSeeExistingLeads && (
+              <label className="flex items-center text-gray-700">
+                <input
+                  type="checkbox"
+                  className="form-checkbox"
+                  checked={isExistingClientForm}
+                  onChange={() => {
+                    setIsExistingClientForm(true);
+                    setExistingClientData(null);
+                    resetForm();
+                  }}
+                />
+                <span className="ml-2">Existing Lead</span>
+              </label>
+            )}
+            {/* <label className="flex items-center text-gray-700">
               <input
                 type="checkbox"
                 className="form-checkbox"
@@ -1638,7 +1664,7 @@ const handleSubmit = async (e) => {
                 }}
               />
               <span className="ml-2">Existing Lead</span>
-            </label>
+            </label> */}
           </div>
         </div>
 

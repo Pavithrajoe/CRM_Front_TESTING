@@ -65,11 +65,24 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
                         : "text-gray-700"
                     }`}
                   >
-                    Due: {dueDate.toLocaleString()}
+                    Due:{" "}
+                    {dueDate.toLocaleString("en-IN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true
+                    })}
                     {isExpired && " (Expired)"}
                   </p>
 
-                  <p className="text-gray-900 text-medium font-medium"> By: <span className="font-normal text-base">{userName}</span> </p>
+                  <p className="text-gray-900 font-medium">
+                    By:{" "}
+                    <span className="font-normal text-base">
+                      {userName}
+                    </span>
+                  </p>
                 </div>
               </div>
             );
@@ -85,6 +98,7 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
 };
 
 export default TaskSameDay;
+
 
 
 

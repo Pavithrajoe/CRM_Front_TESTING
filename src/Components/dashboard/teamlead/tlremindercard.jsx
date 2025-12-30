@@ -1,46 +1,195 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { ENDPOINTS } from "../../../api/constraints";
 
-export default function RemindersCard({ reminder_data, filter, setFilter }) {
+export default function RemindersCard({ reminder_data }) {
+  const [remindersTomorrow, setRemindersTomorrow] = useState([]);
+  const [remindersNextWeek, setRemindersNextWeek] = useState([]);
+  const [remindersYesterday, setRemindersYesterday] = useState([]);
+  const [remindersThisWeek, setRemindersThisWeek] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState("Today");
+
+  useEffect(() => {
+    if (filter !== "Today") {
+      const fetchReminders = async () => {
+        setIsLoading(true);
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) return;
+
+          const response = await fetch(ENDPOINTS.ALLREMINDER, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const result = await response.json();
+          const allReminders = result.data || [];
+
+          const now = new Date();
+          const todayStart = new Date(now);
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date(now);
+          todayEnd.setHours(23, 59, 59, 999);
+
+          // Tomorrow
+          const tomorrowStart = new Date(todayStart);
+          tomorrowStart.setDate(todayStart.getDate() + 1);
+          const tomorrowEnd = new Date(todayEnd);
+          tomorrowEnd.setDate(todayEnd.getDate() + 1);
+
+          // Yesterday
+          const yesterdayStart = new Date(todayStart);
+          yesterdayStart.setDate(todayStart.getDate() - 1);
+          const yesterdayEnd = new Date(todayEnd);
+          yesterdayEnd.setDate(todayEnd.getDate() - 1);
+
+          // This Week (Monday-Sunday)
+          const thisWeekStart = new Date(todayStart);
+          const day = thisWeekStart.getDay() || 7; // Sunday=0
+          thisWeekStart.setDate(thisWeekStart.getDate() - day + 1);
+          const thisWeekEnd = new Date(thisWeekStart);
+          thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+          thisWeekEnd.setHours(23, 59, 59, 999);
+
+          // Next Week (Monday-Sunday)
+          const nextWeekStart = new Date(thisWeekEnd);
+          nextWeekStart.setDate(thisWeekEnd.getDate() + 1);
+          nextWeekStart.setHours(0, 0, 0, 0);
+          const nextWeekEnd = new Date(nextWeekStart);
+          nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
+          nextWeekEnd.setHours(23, 59, 59, 999);
+
+          // Filter reminders based on ranges
+          const filterByRange = (start, end) =>
+            allReminders.filter(
+              (r) =>
+                r.dremainder_dt &&
+                new Date(r.dremainder_dt) >= start &&
+                new Date(r.dremainder_dt) <= end
+            );
+
+          setRemindersTomorrow(filterByRange(tomorrowStart, tomorrowEnd));
+          setRemindersYesterday(filterByRange(yesterdayStart, yesterdayEnd));
+          setRemindersThisWeek(filterByRange(thisWeekStart, thisWeekEnd));
+          setRemindersNextWeek(filterByRange(nextWeekStart, nextWeekEnd));
+        } catch (err) {
+          console.error("Failed to fetch reminders:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchReminders();
+    }
+  }, [filter]);
+
+  // Select reminders based on filter
+  let currentReminders = [];
+  if (filter === "Today") {
+    currentReminders = reminder_data || [];
+  } else if (filter === "Yesterday") {
+    currentReminders = remindersYesterday;
+  } else if (filter === "Tomorrow") {
+    currentReminders = remindersTomorrow;
+  } else if (filter === "This Week") {
+    currentReminders = remindersThisWeek;
+  } else if (filter === "Next Week") {
+    currentReminders = remindersNextWeek;
+  }
+
+  // Sort latest first
+  currentReminders.sort(
+    (a, b) => new Date(b.dremainder_dt) - new Date(a.dremainder_dt)
+  );
+
   const now = new Date();
 
   return (
-    <div className="bg-white rounded-3xl p-6">
-      <div className="flex justify-between mb-4">
+    <div className="bg-white rounded-3xl p-6 w-full">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Reminders</h2>
-        <select value={filter} onChange={e=>setFilter(e.target.value)} className="border p-1 text-sm">
-          <option>Today</option>
-          <option>Yesterday</option>
-          <option>Tomorrow</option>
-          <option>This Week</option>
-          <option>Next Week</option>
-          <option>All</option>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border rounded-md p-1 text-sm"
+        >
+          <option value="Today">Today</option>
+          <option value="Yesterday">Yesterday</option>
+          <option value="Tomorrow">Tomorrow</option>
+          <option value="This Week">This Week</option>
+          <option value="Next Week">Next Week</option>
         </select>
       </div>
 
-      {reminder_data.length ? reminder_data.map(r => {
-        const diff = new Date(r.dremainder_dt) - now;
-        return (
-          <Link key={r.iremainder_id} to={`/leaddetailview/${r.ilead_id}`}>
-            <div className="p-3 bg-gray-50 rounded mb-2">
-              <p className="font-medium">{r.cremainder_title}</p>
-              <p className="text-sm text-gray-500">
-                {new Date(r.dremainder_dt).toLocaleString()}
-              </p>
-              <p className="text-sm">
-                {diff > 0 ? `⏳ ${Math.floor(diff/3600000)}h left` : "Expired"}
-              </p>
-            </div>
-          </Link>
-        );
-      }) : (
-        <p className="text-center text-gray-400 py-10">
-          No reminders for {filter}
-        </p>
+      {isLoading ? (
+        <div className="py-8 text-center text-gray-500">
+          Loading reminders...
+        </div>
+      ) : currentReminders.length > 0 ? (
+        <div className="space-y-4 max-h-[calc(5*5rem+3*1rem)] overflow-y-auto">
+          {currentReminders.map((r) => {
+            const dueDate = new Date(r.dremainder_dt);
+            const isExpired = dueDate < now;
+            const remainingMs = dueDate - now;
+            const hours = Math.floor(remainingMs / 3600000);
+            const minutes = Math.floor((remainingMs % 3600000) / 60000);
+            const timeText = isExpired
+              ? "Expired"
+              : `Time left: ${hours}h ${minutes}m`;
+
+            return (
+              <Link
+                key={r.iremainder_id}
+                to={`/leaddetailview/${r.ilead_id}`}
+                className="block transition"
+              >
+                <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center bg-gray-50 hover:bg-gray-100 p-4 rounded-lg space-y-2 sm:space-y-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+                    {/* /<img
+                      src="/images/dashboard/grl.png"
+                      alt="avatar"
+                      className="w-10 h-10 rounded-full object-cover"
+                    /> */}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-800 truncate max-w-xs"> {r.cremainder_title} </span>
+                      <p className="text-sm text-gray-900 truncate max-w-xs"> {r.cremainder_description || "No description"} </p>
+                      <p className="text-sm text-gray-900 font-semibold"> Priority: <span className="font-normal">{r.priority || "Normal"}</span> </p>
+                      <p className="text-sm text-gray-900 font-semibold"> Assigned To: <span className="font-normal">{r.assigned_to || "Unassigned"}</span> </p>
+                      <p className="text-sm text-gray-900 font-semibold"> Date & Time: {dueDate.toLocaleDateString()}{" "}
+                        {dueDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full font-medium text-sm flex-shrink-0 ${
+                      isExpired ? "bg-red-100 text-red-700 font-bold" : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    <span role="img" aria-label="hourglass">
+                      ⏳
+                    </span>
+                    {timeText}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="py-8 text-center text-gray-500">
+          No reminders for the selected period.
+        </div>
       )}
     </div>
   );
 }
+
+
+
 
 
 

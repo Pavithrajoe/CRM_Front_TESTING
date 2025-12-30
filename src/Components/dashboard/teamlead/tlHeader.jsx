@@ -31,7 +31,6 @@ export default function TeamleadHeader() {
     "Call Logs": "/logusercalllogs"
   };
 
-  // 1. Filter and Sort logic
   const homeAttributes = (userModules || [])
     .filter(
       (item) =>
@@ -55,11 +54,8 @@ export default function TeamleadHeader() {
     if (path) navigate(path);
   };
 
-  // --- UPDATED SELECTED LOGIC ---
   const isActive = (attributeName) => {
     const path = routeMap[attributeName];
-    // This ensures Dashboard is selected if path is exactly /leads 
-    // or if you are at the default landing page
     if (attributeName === "Dashboard") {
       return currentPath === path || currentPath === "/leaddashboard";
     }

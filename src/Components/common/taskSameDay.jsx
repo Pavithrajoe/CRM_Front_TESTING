@@ -1,136 +1,94 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-const TaskSameDay = ({ tasks, loading, isMissed }) => {
-  const [filter, setFilter] = useState("Today");
-  const [filteredTasks, setFilteredTasks] = useState([]);
+const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
   const navigate = useNavigate();
+  const now = new Date();
 
-  const XCODEFIX_FLOW = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const isSpecialCompany = storedUser?.iCompany_id === XCODEFIX_FLOW;
-
-  useEffect(() => {
-    if (!tasks || !tasks.length) {
-      setFilteredTasks([]);
-      return;
-    }
-
-    // Missed tab shows all provided tasks (status 1) latest first
-    if (isMissed) {
-      setFilteredTasks(tasks);
-      return;
-    }
-
-    // Regular task filtering based on date
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const thisWeekStart = new Date(now);
-    thisWeekStart.setDate(thisWeekStart.getDate() - (thisWeekStart.getDay() === 0 ? 6 : thisWeekStart.getDay() - 1));
-    const thisWeekEnd = new Date(thisWeekStart);
-    thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
-    thisWeekEnd.setHours(23, 59, 59, 999);
-
-    const nextWeekStart = new Date(thisWeekEnd);
-    nextWeekStart.setDate(nextWeekStart.getDate() + 1);
-    nextWeekStart.setHours(0, 0, 0, 0);
-    const nextWeekEnd = new Date(nextWeekStart);
-    nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
-
-    const filtered = tasks.filter((task) => {
-      if (!task.task_date) return false;
-      const tDate = new Date(task.task_date);
-      tDate.setHours(0, 0, 0, 0);
-
-      switch (filter) {
-        case "Today": return tDate.getTime() === now.getTime();
-        case "Yesterday": return tDate.getTime() === yesterday.getTime();
-        case "Tomorrow": return tDate.getTime() === tomorrow.getTime();
-        case "This Week": return tDate >= thisWeekStart && tDate <= thisWeekEnd;
-        case "Next Week": return tDate >= nextWeekStart && tDate <= nextWeekEnd;
-        case "All": return true;
-        default: return true;
-      }
-    });
-
-    setFilteredTasks(filtered);
-  }, [tasks, filter, isMissed]);
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString('en-IN', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: true
-    });
-  };
-
-  const isExpired = (dateString) => {
-    if (!dateString) return false;
-    return new Date(dateString) < new Date();
-  };
+  // Logged-in user name
+  const userName = useMemo(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    return user?.cUser_name || user?.username || "User";
+  }, []);
 
   return (
-    <div className="p-2">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold text-gray-800">
-          {isMissed 
-            ? (isSpecialCompany ? "Missed Follow ups" : "Missed Tasks") 
-            : (isSpecialCompany ? "Follow ups" : "Tasks")}
+    <div>
+      {/* HEADER */}
+      <div className="flex justify-between mb-4">
+        <h1 className="text-xl font-bold">
+          {isMissed ? "Missed Follow up" : "Follow up"}
         </h1>
-        
+
         {!isMissed && (
-          <select value={filter} onChange={e => setFilter(e.target.value)} className="border rounded px-2 py-1 text-xs outline-none">
-            <option value="Today">Today</option>
-            <option value="Yesterday">Yesterday</option>
-            <option value="Tomorrow">Tomorrow</option>
-            <option value="This Week">This Week</option>
-            <option value="Next Week">Next Week</option>
-            <option value="All">All</option>
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="border px-2 py-1 text-sm rounded"
+          >
+            <option>Today</option>
+            <option>Yesterday</option>
+            <option>Tomorrow</option>
+            <option>This Week</option>
+            <option>Next Week</option>
+            <option>All</option>
           </select>
         )}
       </div>
 
+      {/* BODY */}
       {!loading && (
-        <div className="grid gap-3">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => {
-              const expired = isExpired(task.task_date);
-              return (
-                <div key={task.itask_id} onClick={() => task.ilead_id && navigate(`/leaddetailview/${task.ilead_id}`)}
-                  className="bg-white rounded-lg border border-gray-100 p-3 cursor-pointer hover:shadow-md transition">
-                  <div className="flex justify-between items-start mb-1">
-                    <h2 className="text-md font-bold text-gray-800">{task.ctitle}</h2>
-                    <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                      Lead: {task.crm_lead?.clead_name || "-"}
-                    </span>
-                  </div>
-                  <p className="text-gray-500 text-sm mb-3 line-clamp-1">{task.ctask_content}</p>
-                  <div className="flex justify-between items-center text-[11px] pt-2 border-t border-dashed">
-                    <p className="text-gray-700">By: {task.user_task_icreated_byTouser?.cFull_name || "N/A"}</p>
-                    <p className={`${expired ? 'text-red-600 font-bold' : 'text-gray-700'}`}>
-                      Due: {formatDateTime(task.task_date)} {expired && "(Expired)"}
-                    </p>
-                  </div>
+        tasks.length ? (
+          tasks.map(t => {
+            const dueDate = new Date(t.task_date);
+            const isExpired = dueDate < now;
+
+            return (
+              <div
+                key={t.itask_id}
+                onClick={() => navigate(`/leaddetailview/${t.ilead_id}`)}
+                className="p-3 border rounded mb-2 cursor-pointer hover:bg-gray-50"
+              >
+                {/* TITLE */}
+                <h2 className="font-semibold">{t.ctitle}</h2>
+
+                {/* CONTENT */}
+                <p className="text-sm text-gray-500 mt-1">
+                  {t.ctask_content}
+                </p>
+
+                {/* DUE DATE + BY (SAME LINE) */}
+                <div className="flex justify-between items-center mt-2 text-sm">
+                  <p
+                    className={`${
+                      isExpired
+                        ? "text-red-600 font-semibold"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    Due: {dueDate.toLocaleString()}
+                    {isExpired && " (Expired)"}
+                  </p>
+
+                  <p className="text-gray-900 text-medium font-medium"> By: <span className="font-normal text-base">{userName}</span> </p>
                 </div>
-              );
-            })
-          ) : (
-            <p className="text-center text-gray-400 py-10 text-sm">No items found.</p>
-          )}
-        </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-center text-gray-400 py-10">
+            No item for {filter}
+          </p>
+        )
       )}
     </div>
   );
 };
 
 export default TaskSameDay;
+
+
+
+
 
 
 

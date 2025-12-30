@@ -525,9 +525,12 @@ const Tasks = () => {
     <div
       ref={formRef}
       className={`${
-        isSpecialCompany
-          ? 'bg-white rounded-2xl shadow-2xl max-h-[85vh] p-6'
-          : 'fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300'
+        isSpecialCompany 
+          ? 'w-full bg-white rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[85vh]'
+          : 'relative w-full max-w-lg animate-in slide-in-from-bottom duration-300 bg-white rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[90vh]'
+        // isSpecialCompany
+        //   ? 'bg-white rounded-2xl shadow-2xl max-h-[85vh] p-6'
+        //   : 'fixed top-1/2 left-1/2 transform -translate-x-[35%] -translate-y-1/2 w-[95vw] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl p-6 xl:max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto z-50 transition-all duration-300'
       }`}
       style={isSpecialCompany ? {} : { zIndex: 1001 }}
       onClick={isSpecialCompany ? undefined : (e) => e.stopPropagation()}

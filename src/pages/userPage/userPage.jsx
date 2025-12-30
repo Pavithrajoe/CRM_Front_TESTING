@@ -325,7 +325,7 @@ const UserPage = () => {
                   </p>
                   <p className="flex items-center gap-2">
                     <FaCity className="text-gray-500" />{" "}
-                    {user.company?.cCompany_name || "N/A"}
+                    {user.company?.cCompany_name || "-"}
                   </p>
                   <div className="pt-2">
                     <span
@@ -432,18 +432,12 @@ const UserPage = () => {
       {showLimitPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
-            <h2 className="text-lg font-semibold text-red-600 mb-2">
-              User limit reached
-            </h2>
-            <p className="text-gray-700 mb-4">
-              You have reached the limit for user creation. To add more users, please contact{" "}
+            <h2 className="text-lg font-semibold text-red-600 mb-2"> User limit reached </h2>
+            <p className="text-gray-700 mb-4">  You have reached the limit for user creation. To add more users, please contact{" "}
               <span className="font-semibold">Inklidox Technologies</span>.
             </p>
 
-            <button
-              onClick={() => setShowLimitPopup(false)}
-              className="px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800"
-            >
+            <button onClick={() => setShowLimitPopup(false)} className="px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800">
               OK
             </button>
           </div>

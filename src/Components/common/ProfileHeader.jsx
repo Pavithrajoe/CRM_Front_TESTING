@@ -60,15 +60,42 @@ const ProfileHeader = () => {
   const leadFormOpenedRef = useRef(false);
 
   useEffect(() => {
-    const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+    const calculateUnread = () => {
+      const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+      const lastSeen = getLastSeen();
+      
+      // Filter notifications created after the lastSeen timestamp
+      const unreadCount = notifications.filter(
+        (n) => !lastSeen || new Date(n.created_at) > lastSeen
+      ).length;
 
-    const lastSeen = getLastSeen();
-    const unreadCount = notifications.filter(
-      (n) => !lastSeen || new Date(n.created_at) > lastSeen
-    ).length;
+      setBellNotificationCount(unreadCount);
+    };
 
-    setBellNotificationCount(unreadCount);
+    // Run once on mount
+    calculateUnread();
+
+    // Listen for storage changes (from other tabs or same-tab logic triggers)
+    window.addEventListener("storage", calculateUnread);
+    // Custom event listener if you update storage manually in the same tab
+    window.addEventListener("notificationsUpdated", calculateUnread);
+
+    return () => {
+      window.removeEventListener("storage", calculateUnread);
+      window.removeEventListener("notificationsUpdated", calculateUnread);
+    };
   }, []);
+
+  // useEffect(() => {
+  //   const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+  //   const lastSeen = getLastSeen();
+  //   const unreadCount = notifications.filter(
+  //     (n) => !lastSeen || new Date(n.created_at) > lastSeen
+  //   ).length;
+
+  //   setBellNotificationCount(unreadCount);
+  // }, []);
 
 
   // Load user & set profile on mount

@@ -28,7 +28,6 @@ import HistoryIcon from "@mui/icons-material/History";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 
-// Helper functions (unchanged)
 const validateEmail = (email) =>
   /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
 
@@ -73,7 +72,6 @@ const BulkMailSender = () => {
     selectedLeadIds.length === leadOptions.length && 
     selectedLeadIds.every(id => leadOptions.some(lead => lead.id === id));
 
-  // Fetch leads (unchanged)
 
   const getWordCount = (str) => str.trim().split(/\s+/).filter(Boolean).length;
   const handleSubjectChange = (e) => {
@@ -209,12 +207,6 @@ const BulkMailSender = () => {
       leadIds: !isAllLeadsSelected ? selectedLeadIds : [],
      ccOnly: ccList.length > 0 && selectedLeadIds.length === 0 && !isAllLeadsSelected  
     };
-    
-  // console.log("🚀 SEND PAYLOAD:", {
-  //   leads: payload.leadIds.length || 'ALL',
-  //   cc: payload.cc,
-  //   ccOnly: payload.ccOnly
-  // });
 
     try {
       setIsSending(true);
@@ -371,7 +363,7 @@ const BulkMailSender = () => {
           </Typography>
         </Box>
 
-              {/* ✅ CC Section */}
+              {/*  CC Section */}
               <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: "#1976D2" }}>
               👥 CC Recipients (Optional)
             </Typography>
@@ -450,191 +442,3 @@ const BulkMailSender = () => {
 
 export default BulkMailSender;
 
-
-
-// import React, { useState } from "react";
-// import axios from "axios";
-// import ReactQuill from "react-quill";
-// import "react-quill/dist/quill.snow.css";
-// import {
-//   Card,
-//   CardContent,
-//   Typography,
-//   TextField,
-//   Button,
-//   Chip,
-//   Divider,
-//   Stack,
-//   Alert,
-//   Box,
-//   CircularProgress,
-// } from "@mui/material";
-// import { ENDPOINTS } from "../../api/constraints";
-// import SendIcon from "@mui/icons-material/Send";
-// import HistoryIcon from "@mui/icons-material/History";
-// import { useNavigate } from "react-router-dom";
-
-// // Helper: Email Validation
-// const validateEmail = (email) =>
-//   /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email);
-
-// // Helper: Quill Empty Check
-// const isQuillContentEmpty = (html) => {
-//   const div = document.createElement("div");
-//   div.innerHTML = html;
-//   return !div.textContent.trim() && !div.querySelector("img,video");
-// };
-
-// // Helper: ID Extraction
-// const getIdsFromStorage = () => {
-//   const token = localStorage.getItem("token");
-//   if (token) {
-//     try {
-//       const decoded = JSON.parse(atob(token.split(".")[1]));
-//       const companyId = decoded.company_id || decoded.iCompany_id || decoded.companyId;
-//       const userId = decoded.user_id || decoded.iUser_id || decoded.userId;
-//       if (companyId && userId) return { companyId, userId };
-//     } catch (e) { console.error("Token Error", e); }
-//   }
-//   return { companyId: undefined, userId: undefined };
-// };
-
-// const BulkMailSender = () => {
-//   const [subject, setSubject] = useState("");
-//   const [content, setContent] = useState("");
-//   const [ccEmail, setCCEmail] = useState("");
-//   const [ccList, setCCList] = useState([]);
-//   const [alert, setAlert] = useState("");
-//   const [isSending, setIsSending] = useState(false); // Loading State
-
-//   const navigate = useNavigate();
-//   const { companyId, userId } = getIdsFromStorage();
-//   const token = localStorage.getItem("token");
-
-//   const addCC = () => {
-//     if (!validateEmail(ccEmail)) {
-//       setAlert("❌ Enter a valid CC Email address");
-//       return;
-//     }
-//     if (!ccList.includes(ccEmail)) {
-//       setCCList([...ccList, ccEmail]);
-//       setCCEmail("");
-//     }
-//     setAlert("");
-//   };
-
-//   const removeCC = (email) => {
-//     setCCList(ccList.filter((c) => c !== email));
-//   };
-
-//   const handleSendMail = async () => {
-//     if (!subject.trim()) { setAlert("❌ Subject is required"); return; }
-//     if (isQuillContentEmpty(content)) { setAlert("❌ Content is required"); return; }
-//     if (!companyId) { setAlert("❌ Company ID missing"); return; }
-
-//     const payload = {
-//       companyId: Number(companyId),
-//       userId: Number(userId),
-//       mailSubject: subject,
-//       mailContent: content,
-//       cc: ccList,
-//     };
-
-//     try {
-//       setIsSending(true);
-//       setAlert("");
-//       await axios.post(ENDPOINTS.BULK_MAIL, payload, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setAlert("✅ Bulk Email Broadcast Started Successfully!");
-//       setSubject("");
-//       setContent("");
-//       setCCList([]);
-//     } catch (err) {
-//       const errorMsg = err.response?.data?.message || "Sending Failed";
-//       setAlert(`❌ ${errorMsg}`);
-//       console.error(err);
-//     } finally {
-//       setIsSending(false);
-//     }
-//   };
-
-//   return (
-//     <Card sx={{ p: 3, borderRadius: 4, boxShadow: "0px 4px 20px rgba(0,0,0,0.1)" }}>
-//       <CardContent>
-//         <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ color: "#1976D2" }}>
-//           ✉ Bulk Email Broadcast
-//         </Typography>
-
-//         {alert && (
-//           <Alert severity={alert.includes("✅") ? "success" : "error"} sx={{ mb: 2, borderRadius: 2 }}>
-//             {alert}
-//           </Alert>
-//         )}
-
-//         <TextField
-//           fullWidth
-//           label="Email Subject"
-//           variant="outlined"
-//           value={subject}
-//           onChange={(e) => setSubject(e.target.value)}
-//           disabled={isSending}
-//           sx={{ mb: 3, mt: 1 }}
-//         />
-
-//         <Typography variant="body2" sx={{ mb: 1, color: "gray" }}>Email Body Content:</Typography>
-//         <Box sx={{ mb: 8 }}>
-//           <ReactQuill
-//             theme="snow"
-//             value={content}
-//             onChange={setContent}
-//             style={{ height: "250px" }}
-//             readOnly={isSending}
-//           />
-//         </Box>
-
-//         <Divider sx={{ my: 3 }} />
-
-//         <Stack direction="row" spacing={2} alignItems="center">
-//           <TextField
-//             label="Add CC Email"
-//             size="small"
-//             value={ccEmail}
-//             onChange={(e) => setCCEmail(e.target.value)}
-//             disabled={isSending}
-//             sx={{ flex: 1 }}
-//           />
-//           <Button variant="outlined" onClick={addCC} disabled={isSending}>Add CC</Button>
-//         </Stack>
-
-//         <Stack direction="row" flexWrap="wrap" spacing={1} mt={2}>
-//           {ccList.map((email) => (
-//             <Chip key={email} label={email} onDelete={() => removeCC(email)} disabled={isSending} />
-//           ))}
-//         </Stack>
-
-//         <Box display="flex" justifyContent="space-between" mt={4}>
-//           <Button
-//             startIcon={<HistoryIcon />}
-//             onClick={() => navigate("/mailstatus")}
-//             disabled={isSending}
-//           >
-//             View Sent History
-//           </Button>
-
-//           <Button
-//             variant="contained"
-//             onClick={handleSendMail}
-//             disabled={isSending}
-//             sx={{ minWidth: 180, py: 1.2 }}
-//             endIcon={!isSending && <SendIcon />}
-//           >
-//             {isSending ? <CircularProgress size={24} color="inherit" /> : "Send Broadcast"}
-//           </Button>
-//         </Box>
-//       </CardContent>
-//     </Card>
-//   );
-// };
-
-// export default BulkMailSender;

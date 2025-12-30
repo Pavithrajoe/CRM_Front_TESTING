@@ -355,7 +355,7 @@ const BulkMailSender = () => {
             onChange={handleContentChange} 
             style={{ height: "250px" }} 
             readOnly={isSending}
-            placeholder="Max 100 words allowed..." 
+            placeholder="Max 1000 words allowed..."
           />
           
           <Typography 

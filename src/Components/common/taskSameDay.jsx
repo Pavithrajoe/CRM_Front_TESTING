@@ -5,25 +5,40 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
   const navigate = useNavigate();
   const now = new Date();
 
-  // Logged-in user name
-  const userName = useMemo(() => {
+  // 1. Get User Data and check for Special Company
+  const { userName, isSpecialCompany } = useMemo(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    return user?.cUser_name || user?.username || "User";
+    const XCODEFIX_FLOW = Number(import.meta.env.VITE_XCODEFIX_FLOW);
+    
+    return {
+      userName: user?.cUser_name || user?.username || "User",
+      // If user's company matches the Env ID, it's a special company
+      isSpecialCompany: user?.iCompany_id === XCODEFIX_FLOW
+    };
   }, []);
+
+  // 2. Determine Labels based on Company ID
+  const displayLabel = useMemo(() => {
+    if (isMissed) {
+      return isSpecialCompany ? "Missed Follow up" : "Missed Tasks";
+    } else {
+      return isSpecialCompany ? "Follow up" : "Tasks";
+    }
+  }, [isMissed, isSpecialCompany]);
 
   return (
     <div>
       {/* HEADER */}
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">
-          {isMissed ? "Missed Follow up" : "Follow up"}
+          {displayLabel}
         </h1>
 
         {!isMissed && (
           <select
             value={filter}
             onChange={e => setFilter(e.target.value)}
-            className="border px-2 py-1 text-sm rounded"
+            className="border px-2 py-1 text-sm rounded outline-none bg-white"
           >
             <option>Today</option>
             <option>Yesterday</option>
@@ -37,7 +52,7 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
 
       {/* BODY */}
       {!loading && (
-        tasks.length ? (
+        tasks && tasks.length ? (
           tasks.map(t => {
             const dueDate = new Date(t.task_date);
             const isExpired = dueDate < now;
@@ -46,17 +61,17 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
               <div
                 key={t.itask_id}
                 onClick={() => navigate(`/leaddetailview/${t.ilead_id}`)}
-                className="p-3 border rounded mb-2 cursor-pointer hover:bg-gray-50"
+                className="p-3 border rounded mb-2 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
               >
                 {/* TITLE */}
-                <h2 className="font-semibold">{t.ctitle}</h2>
+                <h2 className="font-semibold text-gray-800">{t.ctitle}</h2>
 
                 {/* CONTENT */}
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                   {t.ctask_content}
                 </p>
 
-                {/* DUE DATE + BY (SAME LINE) */}
+                {/* DUE DATE + BY */}
                 <div className="flex justify-between items-center mt-2 text-sm">
                   <p
                     className={`${
@@ -79,7 +94,7 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
 
                   <p className="text-gray-900 font-medium">
                     By:{" "}
-                    <span className="font-normal text-base">
+                    <span className="font-normal text-gray-600">
                       {userName}
                     </span>
                   </p>
@@ -88,9 +103,11 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
             );
           })
         ) : (
-          <p className="text-center text-gray-400 py-10">
-            No item for {filter}
-          </p>
+          <div className="flex flex-col items-center justify-center py-10">
+             <p className="text-gray-400">
+                No items found for {filter}
+             </p>
+          </div>
         )
       )}
     </div>

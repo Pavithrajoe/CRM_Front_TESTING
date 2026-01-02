@@ -12,7 +12,9 @@ const LeadsDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [allTasks, setAllTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("");
+  // const [activeTab, setActiveTab] = useState("");
+  const [activeTab, setActiveTab] = useState("TASKS");
+
 
   // SINGLE SOURCE FILTER STATE
   const [reminderFilter, setReminderFilter] = useState("Today");
@@ -160,24 +162,39 @@ const LeadsDashboard = () => {
   return (
     <div className="flex mt-[-80px]">
       <main className="w-full flex-1 p-6 mt-[80px]">
-        <div className="flex justify-between mb-6">
+        <div className="flex justify-between items-center mb-6 w-full overflow-hidden">
+          <div className="flex-1"> <TeamleadHeader /> </div>
+          <div className="shrink-0 ml-4"> <ProfileHeader /> </div>
+        </div>
+        {/* <div className="flex justify-between mb-6">
           <TeamleadHeader />
           <ProfileHeader />
-        </div>
+        </div> */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
           <Box sx={{ bgcolor: "white", p: 2, borderRadius: 2 }}>
             <KPIStats data={dashboardData?.details} />
           </Box>
 
           <Box sx={{ bgcolor: "white", borderRadius: 4 }}>
             <Tabs 
+              value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="fullWidth" 
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiTabs-flexContainer': {
+                  minHeight: '48px', 
+                }
+              }}
+            >
+            {/* <Tabs 
               value={activeTab}  onChange={(e, v) => setActiveTab(v)}  variant="fullWidth" 
               sx={{
                 borderBottom: 1,
                 borderColor: 'divider',
               }}
-            >
+            > */}
               {allowedTabs.map((t) => {
                 const ui = getTabUI(t.attribute_name);
                 return (

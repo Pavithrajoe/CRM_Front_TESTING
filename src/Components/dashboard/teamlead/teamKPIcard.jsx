@@ -23,7 +23,7 @@ export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountFo
       setError(null);
       setNoData(false);
 
-      console.log('The KPI card data are:', leadsArray, subordinatesArray, dealCountForWon);
+      // console.log('The KPI card data are:', leadsArray, subordinatesArray, dealCountForWon);
       
 
       if (Array.isArray(leadsArray) && Array.isArray(subordinatesArray)) {
@@ -131,7 +131,7 @@ export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountFo
   }
 
   if (noData) {
-    return <div className="text-center p-4 text-gray-500 bg-white p-5 rounded-xl">No data available.</div>;
+    return <div className="text-center p-4 text-gray-500 bg-white rounded-xl">No data available.</div>;
   }
 
   return (

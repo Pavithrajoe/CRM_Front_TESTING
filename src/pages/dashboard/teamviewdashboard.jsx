@@ -107,7 +107,7 @@ const TeamviewDashboard = () => {
 
       {/* Dashboard Content */}
 
-      {console.log("The dashboard data are:", )}
+      {/* {console.log("The dashboard data are:", )} */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <LeadManagementCard leads={leadData} team_members={teamMembers}  childSubordinates = {childSubordinates}  loading = {loading} error = {error} />
         <TeamKPIStats

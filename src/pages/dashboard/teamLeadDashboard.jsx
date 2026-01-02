@@ -171,17 +171,27 @@ const LeadsDashboard = () => {
           </Box>
 
           <Box sx={{ bgcolor: "white", borderRadius: 4 }}>
-            <Tabs value={activeTab} onChange={(e,v)=>setActiveTab(v)} fullWidth>
-              {allowedTabs.map(t => {
+            <Tabs 
+              value={activeTab}  onChange={(e, v) => setActiveTab(v)}  variant="fullWidth" 
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+              }}
+            >
+              {allowedTabs.map((t) => {
                 const ui = getTabUI(t.attribute_name);
                 return (
-                  <Tab key={t.attribute_name} value={t.attribute_name}
+                  <Tab
+                    key={t.attribute_name} value={t.attribute_name}
                     label={`${ui.label} (${ui.count || 0})`}
                     sx={{
                       fontWeight: 700,
                       textTransform: "none",
-                      fontSize: "16px"
-                    }} 
+                      fontSize: "16px",
+                      maxWidth: "none", 
+                      flex: 1,
+                      px: { xs: 1, sm: 2 } 
+                    }}
                   />
                 );
               })}

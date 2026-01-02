@@ -81,11 +81,52 @@ export default function TeamleadHeader() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-2 bg-white rounded-lg px-4 py-2 shadow-sm">
+    <div className="flex items-center bg-white rounded-lg px-4 py-2 shadow-sm min-h-[52px]">
+    {/*  <div className="flex flex-col gap-2 bg-white rounded-lg px-4 py-2 shadow-sm"> */}
       <div className="flex gap-4 items-center flex-wrap">
-        {homeAttributes.map((attr, index) => (
+        {homeAttributes.map((attr, index) => {
+          const active = isActive(attr.attribute_name);
+          return (
+            <React.Fragment key={attr.iua_id || index}>
+              <button
+                onClick={() => handleDynamicClick(attr.attribute_name)}
+                className={`px-4 py-2 rounded-md text-sm transition-all duration-200 ${
+                  active
+                    ? "bg-black text-white"
+                    : "text-black hover:bg-gray-100"
+                }`}
+              >
+                <span className="inline-grid grid-cols-1 grid-rows-1 items-center justify-items-center">
+                  <span className="invisible font-bold row-start-1 col-start-1 px-1">
+                    {attr.attribute_name}
+                  </span>
+                  {/* 2. This is the text you actually see */}
+                  <span className={`${active ? "font-bold" : "font-normal"} row-start-1 col-start-1`}>
+                    {attr.attribute_name}
+                  </span>
+                </span>
+              </button>
+
+              {/* Separator */}
+              {index < homeAttributes.length - 1 && (
+                <div className="w-px h-5 bg-gray-300 shrink-0 mx-1"></div>
+              )}
+            </React.Fragment>
+          );
+        })}
+        {/* {homeAttributes.map((attr, index) => (
           <React.Fragment key={attr.iua_id || index}>
             <button
+              onClick={() => handleDynamicClick(attr.attribute_name)}
+              className={`px-4 py-2 rounded-md text-sm transition-all duration-200 min-w-[100px] text-center ${
+                isActive(attr.attribute_name)
+                  ? "bg-black text-white font-bold" 
+                  : "text-black hover:bg-gray-100 font-normal"
+              }`}
+            >
+              {attr.attribute_name}
+            </button>
+            {/* <button
               onClick={() => handleDynamicClick(attr.attribute_name)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition ${
                 isActive(attr.attribute_name)
@@ -94,14 +135,14 @@ export default function TeamleadHeader() {
               }`}
             >
               {attr.attribute_name}
-            </button>
+            </button> */}
 
             {/* Render separator logic */}
-            {(index < homeAttributes.length - 1 || (phoneActive && userModules?.some(m => m.attribute_name === "Call Logs" && m.bactive))) && (
+            {/* {(index < homeAttributes.length - 1 || (phoneActive && userModules?.some(m => m.attribute_name === "Call Logs" && m.bactive))) && (
               <div className="w-px h-5 bg-gray-300"></div>
             )}
           </React.Fragment>
-        ))}
+        ))}  */}
 
         {/* Call Logs button */}
         {phoneActive && 

@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Users } from "lucide-react";
-import { ENDPOINTS } from "../../../api/constraints";
-import { jwtDecode } from "jwt-decode";
 
 export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountForWon }) {
   const [leadCount, setLeadCount] = useState(0); // Active Leads
@@ -12,19 +10,11 @@ export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountFo
   const [error, setError] = useState(null);
   const [noData, setNoData] = useState(false);
 
-
-
-
-  
-
   const fetchTeamKPIs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      setNoData(false);
-
-      // console.log('The KPI card data are:', leadsArray, subordinatesArray, dealCountForWon);
-      
+      setNoData(false);      
 
       if (Array.isArray(leadsArray) && Array.isArray(subordinatesArray)) {
         if (leadsArray.length === 0 && subordinatesArray.length === 0) {

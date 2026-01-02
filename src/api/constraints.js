@@ -5,6 +5,7 @@ export const BASE_URL_DCRM = import.meta.env.VITE_DCRM_API_URL;
 export const ENDPOINTS = {
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
+  SIGNUP: `${BASE_URL}/CreateAnAccount`,
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,
   STATUS: `${BASE_URL}/lead-status`,
@@ -31,6 +32,7 @@ export const ENDPOINTS = {
   COMPANY_GET: `${BASE_URL}/lead/company-dashboard/`,
   USER_GET: `${BASE_URL}/users`,
   NOTIFICATIONS: `${BASE_URL}/notifications/user`,
+  NOTIFICATION_READ:`${BASE_URL}/notifications/mark-all-read`,
   // NOTIFICATIONS: `${BASE_URL}/notifications`,
   TERRITORY_LEADS: `${BASE_URL}/reports/territory-leads`,
   FEEDBACK: `${BASE_URL}/reports/feedback`,

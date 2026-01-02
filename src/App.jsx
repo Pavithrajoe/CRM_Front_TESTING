@@ -8,6 +8,7 @@ import Login from "./pages/credential/login";
 import { PopupProvider } from "./context/PopupContext";
 import SignupRes from "./pages/credential/signup_res";
 import RequestDemo from "./Components/request_demo.jsx";
+import CreateAnAccount from "./Components/CreateAnAccount.jsx";
 import UpdatePassword from "./Components/UpdatePassword";
 import AppLayout from "./Components/AppLayout";
 import PrivateRoute from "./Components/PrivateRoute.jsx";
@@ -97,6 +98,7 @@ function App() {
                         {/* Public Routes */}
                         <Route path="/" element={<Login />} />
                         <Route path="/request-demo" element={<RequestDemo />} />
+                        <Route path="/CreateAnAccount" element={<CreateAnAccount />} />
                         <Route path="/forgetpassword" element={<ForgetPassword />} />
                         <Route path="/success" element={<SuccessMessage />} />
                         <Route path="/verify" element={<VerifyCodePage />} />
@@ -152,7 +154,7 @@ function App() {
                             <Route path="userdeals/:userId" element={<UserDeals />} />
                             <Route path="/reports/:userId" element={<UserReportPage />} />
                             <Route path="/first-response" element={<FirstResponseTimeReport />} />
-                          <Route path="/generate-poster" element={<GeneratePoster />} />
+                            <Route path="/generate-poster" element={<GeneratePoster />} />
                             <Route path="/gst-compliance" element={<GSTCompliancePage />} />
                             <Route path="/calculator" element={<QuickCalculator />} />
                             <Route path="/maps" element={<DistanceToClient/>}/>

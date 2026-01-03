@@ -222,36 +222,20 @@ const handleOpenNotifications = async () => {
   const token = localStorage.getItem("token");
   
   try {
-    // 1st Image-la irukura POST API call
-    await axios.post(`http://localhost:3000/api/notifications/mark-all-read`, {}, {
+    await axios.post(ENDPOINTS.NOTIFICATION_READ, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // Success aana udane count-ah clear pannittu navigate pannuvom
     setBellNotificationCount(0);
     navigate("/notifications");
   } catch (err) {
     console.error("Error marking as read:", err);
-    // Error vanthalum navigation stop aaga koodathu
     navigate("/notifications"); 
   }
 };
 
 
-
-  // const handleOpenNotifications = () => {
-  //   // Clear the bell count
-  //   setBellNotificationCount(0);
-
-  //   // Optionally store the timestamp in localStorage
-  //   localStorage.setItem(LAST_SEEN_TS_KEY, new Date().toISOString());
-
-  //   // Navigate to the notifications page
-  //   navigate("/notifications");
-  // };
-
-
-  // Close dropdowns/notifications/apps menu on outside click
+  // Close dropdowns/notifications menu on outside click
   useEffect(() => {
     const onClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target))
@@ -321,7 +305,7 @@ const handleOpenNotifications = async () => {
           className="w-10 h-10 p-2 text-indigo-600 cursor-pointer bg-white border border-indigo-300 rounded-full shadow-md hover:bg-indigo-50 transition"
         />
         {showAppMenu && (
-          <div className="absolute right-0 mt-2 w-60 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-50 grid grid-cols-2 gap-3">
+           <div className="fixed right-4 mt-2 w-60 bg-white border border-indigo-200 rounded-2xl shadow-2xl p-4 z-[9999] grid grid-cols-2 gap-3"> 
             {/* PDF Generation Button - Only show if permission is active */}
             {hasPdfPermission && pdfPermissions.map((item, index) => (
               <div key={item.attributes_id || index} onClick={handleGeneratePoster}
@@ -369,7 +353,7 @@ const handleOpenNotifications = async () => {
         </div>
 
         {showDropdown && (
-          <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm z-50 transition-all duration-300">
+          <div className="fixed right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 text-sm  transition-all duration-300 z-[9999]">
             <div className="flex justify-between items-start mb-2">
               <div>
                 <div className="font-semibold text-gray-900"> {profile.name} </div>

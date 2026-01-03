@@ -120,11 +120,11 @@ const CreateAnAccount = () => {
 
     setVerifyingEmail(true);
     try {
-      // LINKED TO THE NEW SIGNUP-OTP ENDPOINT
-      const response = await fetch("http://192.168.29.236:3000/api/signup-otp", {
+      // const response = await fetch("http://192.168.29.236:3000/api/signup-otp", {
+      const response = await fetch(ENDPOINTS.SIGNUP_OTP, {    
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.work_email }), // Matches signupVerifyService reqBody.email
+        body: JSON.stringify({ email: formData.work_email }),
       });
       const result = await response.json();
       
@@ -230,7 +230,7 @@ const CreateAnAccount = () => {
             </ul>
           </div>
           <div className="hidden md:flex justify-center"> 
-             <img src="/illustrations/Demo-bro.svg" alt="Signup" className="max-h-52 object-contain" /> 
+             <img src="/illustrations/CreateAnAccount.svg" alt="Signup" className="max-h-52 object-contain" /> 
           </div>
           <div className="text-center mt-6">
             <div className="flex justify-center gap-6 text-gray-400 text-[20px]">

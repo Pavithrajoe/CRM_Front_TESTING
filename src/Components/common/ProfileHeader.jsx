@@ -291,7 +291,7 @@ const handleOpenNotifications = async () => {
           // onClick={() => setShowNotifications((prev) => !prev)}
           className="w-10 h-10 border border-grey-600 rounded-full p-2 text-blue-600 cursor-pointer bg-white shadow-md hover:bg-blue-50 transition"
         />
-        {bellNotificationCount >= 0 && (
+        {bellNotificationCount > 0 && (
           <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-lg">
             {bellNotificationCount}
           </span>

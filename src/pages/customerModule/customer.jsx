@@ -119,7 +119,7 @@ const WonList = () => {
 
         const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesSearch =
-          match(item.name) || match(item.organization) || match(item.email) || match(item.phone);
+          match(item.name) || match(item.organization) || match(item.email) || match(item.phone) || match(item.owner_name);
         const matchesDate = isWithinDateRange(item.modified_date);
         
         return matchesScope && matchesSearch && matchesDate;

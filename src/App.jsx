@@ -76,7 +76,7 @@ import GSTCompliancePage from "./Components/Tools/GST/GSTCompliancePage.jsx";
 import QuickCalculator from "./Components/Tools/calculator/QuickCalculator.jsx";
 import DistanceToClient from "./Components/Tools/Maps/DistanceToClient.jsx";
 import RecurringClientAnalytics from "./Components/reports/RecurringClientAnalytics/RecurringClientAnalytics.jsx";
-
+import { BusinessProvider } from "./context/BusinessTypeContext.jsx";
 import { ModuleProvider } from "./context/ModuleContext.jsx";
 import { SettingsProvider } from "./context/companySettingsContext.jsx"
 
@@ -92,6 +92,7 @@ function App() {
                   <ModuleProvider>
                     <SettingsProvider>
                       <GlobeUserProvider>
+                        <BusinessProvider>
                       <CompanyProvider>
                         <DemoSessionProvider>
                       <Routes>
@@ -170,18 +171,13 @@ function App() {
                               <Route path="smtpsettings" element={<SmtpSettings />} />
                               <Route path="controll" element={<ModuleControll/>} />
                               <Route path="userattributes" element= {<UserAttributes />} />
-
-
                             </Route>
-
                           </Route>
                         {/* </Route> */}
                       </Routes>
-                      
-
-                      
                       </DemoSessionProvider>
                       </CompanyProvider>
+                      </BusinessProvider>
                       </GlobeUserProvider>
                     </SettingsProvider>
                   </ModuleProvider>

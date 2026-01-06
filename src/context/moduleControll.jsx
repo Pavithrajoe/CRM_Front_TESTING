@@ -107,7 +107,7 @@ const ModuleControll = () => {
   // Get the attributes for the currently selected module
   const selectedModule = groupedModules.find(mod => mod.imodule_id === selectedModuleId);
 
-  // 🌀 Loading and Error States
+  // Loading and Error States
   if (loading) return <p className="p-4 text-gray-600">Loading Modules...</p>;
   if (error) return <p className="p-4 text-red-500">Error: {error}</p>;
 

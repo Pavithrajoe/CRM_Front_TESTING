@@ -1062,7 +1062,6 @@ setAllLeads(sorted);
                         <button
                             key={filterKey}
                             onClick={() => {
-                            // console.log('Tab clicked:', filterKey, 'User role:', roleType);
                             setSelectedFilter(filterKey);
                             setSearchTerm('');
                             setFromDate('');

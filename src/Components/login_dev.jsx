@@ -65,6 +65,7 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
+      console.log("lodin deatils", data)
 
       setData(data);
 
@@ -182,17 +183,17 @@ const LoginPage = () => {
                   )}
                 </button>
 
-                {/* <button type="button" onClick={() => window.open('/CreateAnAccount', '_blank')} className="mt-4 text-sm text-blue-600 hover:underline" >
+                <button type="button" onClick={() => window.open('/CreateAnAccount', '_blank')} className="mt-4 text-sm text-blue-600 hover:underline" >
                   Create an Account
-                </button>  */}
+                </button> 
 
-                <button
+                {/* <button
                   type="button"
                   onClick={() => window.open('/request-demo', '_blank')}
                   className="mt-4 text-sm text-blue-600 hover:underline"
                 >
                   Request a Demo
-                </button>
+                </button> */}
 
                 {loginError && <LoginFailedAlert message={loginError} />}
               </div>

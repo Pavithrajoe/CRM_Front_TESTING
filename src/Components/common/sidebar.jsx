@@ -268,7 +268,6 @@ const Sidebar = ({ data }) => {
   const { tabs, activeTab, openTab, closeTab } = useTabs();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [menuItems, setMenuItems] = useState([]);
   const [userModule, setUserModule] = useState([]);
   const [userRoleId, setUserRoleId] = useState(null);

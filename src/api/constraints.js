@@ -161,6 +161,7 @@ export const ENDPOINTS = {
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
+  DCRM_USER_ACCESS_CHECKING: `${BASE_URL_DCRM}/users`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
   POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`,
 };

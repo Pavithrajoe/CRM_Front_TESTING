@@ -34,7 +34,7 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
     <div
       onClick={onToggle}
       className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
-        isChecked ? 'bg-green-600' : 'bg-red-400'
+        isChecked ? 'bg-green-600' : 'bg-yellow-400'
       }`}
     >
       <div
@@ -691,6 +691,9 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 };
 
 export default UserProfile;
+
+
+// ====== below is old code ====
 
 // import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // import { useParams } from 'react-router-dom';

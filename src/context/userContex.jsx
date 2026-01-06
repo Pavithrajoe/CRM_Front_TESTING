@@ -39,7 +39,6 @@ export const GlobeUserProvider = ({ children }) => {
         const json = await res.json();
         if (res.ok) {
   setUser(json.data || json); 
-  // console.log("User fetched successfully", json.data || json);
 }
  else {
           console.error("Can't get users", json);

@@ -926,7 +926,7 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Currency:</span>
               <span className="font-semibold">
-                {historyData.currency?.code || 'N/A'} - {historyData.currency?.currency_name || 'N/A'}
+                {historyData.currency?.code || '-'} - {historyData.currency?.currency_name || '-'}
               </span>
             </div>
           </div>
@@ -984,7 +984,7 @@ const ServiceHistoryView = ({ historyData, onBack, onEdit }) => {
                     Service #{service.serviceId}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    Subservice #{service.subServiceId || 'N/A'}
+                    Subservice #{service.subServiceId || '-'}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     {formatCurrency(service.unitPrice, historyData.currency)}

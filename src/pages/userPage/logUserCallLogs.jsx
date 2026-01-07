@@ -64,7 +64,7 @@ function LogUserCallLogs() {
     }, []);
 
     const formatTime = useCallback((isoString) => {
-        if (!isoString) return 'N/A';
+        if (!isoString) return '-';
         try {
             const date = new Date(isoString);
             if (isNaN(date.getTime())) return 'Invalid Time';
@@ -80,7 +80,7 @@ function LogUserCallLogs() {
     }, []);
 
     const formatDuration = useCallback((seconds) => {
-        if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) return 'N/A';
+        if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) return '-';
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
@@ -538,7 +538,7 @@ function LogUserCallLogs() {
                                                 <tr key={`${log.id || index}-${log.call_time}`} className="hover:bg-blue-50 transition-all duration-150">
                                                     <td className="px-4 py-3 font-medium">{indexOfFirstLog + index + 1}</td>
                                                     <td className="px-4 py-3">{userName}</td>
-                                                    <td className="px-4 py-3">{log.call_log_number || 'N/A'}</td>
+                                                    <td className="px-4 py-3">{log.call_log_number || '-'}</td>
                                                     <td className="px-4 py-3">
                                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                                             log.call_type_id === 1 ? 'bg-green-100 text-green-800' :

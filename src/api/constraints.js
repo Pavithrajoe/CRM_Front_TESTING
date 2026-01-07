@@ -85,7 +85,7 @@ export const ENDPOINTS = {
   RECURRING_CLIENT_REPORT: `${BASE_URL}/reports/recurring-client`,
   SMTP_SETTINGS: `${BASE_URL}/smtp-settings`,
   COMPANY_SETTINGS:`${BASE_URL}/company`,
-  BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`{BASE_URL}/lead/company/${companyId}/leads`,
+  BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,
 
   // Master endpoints
   MASTER_STATUS_GET: `${BASE_URL}/lead-status/company-lead`,
@@ -143,12 +143,13 @@ export const ENDPOINTS = {
   MASTER_SUB_SOURCE_POST: `${BASE_URL}/subSrc/createSubSrc`,
   MASTER_SUB_SOURCE_CHANGE: `${BASE_URL}/subSrc/changeSubSrcSts`,
   MAIL_TEMPLATE: `${BASE_URL}/mailTemplate`,
+
   MODULE: `${BASE_URL}/module`,
   MODULE_COMPANY: `${BASE_URL}/module/company`,
 
   USER_ACCESS: `${BASE_URL}/user-attribute/user`,
   USERACCESS_CHANGE: `${BASE_URL}/user-attribute`,
-
+  
   SUB_SERVICE: `${BASE_URL}/sub-service`,
   TASK: `${BASE_URL}/task`,
   TASK_LEAD: `${BASE_URL}/task/lead`,
@@ -158,6 +159,8 @@ export const ENDPOINTS = {
   USERCALENDEREVENT: `${BASE_URL}/calender-event/user`,
 
   MASTER_PROPOSAL_SEND_MODE: `${BASE_URL}/proposal-send-mode`,
+  
+  
   //DCRM Integration API
 
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,

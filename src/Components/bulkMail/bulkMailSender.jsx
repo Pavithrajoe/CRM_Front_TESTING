@@ -61,18 +61,13 @@ const BulkMailSender = () => {
   const [alert, setAlert] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoadingLeads, setIsLoadingLeads] = useState(true);
-
   const navigate = useNavigate();
   const { companyId, userId } = getIdsFromStorage();
   const token = localStorage.getItem("token");
-
-  // Safe array check
   const isLeadOptionsArray = Array.isArray(leadOptions) && leadOptions.length > 0;
   const isAllLeadsSelected = leadOptions.length > 0 && 
     selectedLeadIds.length === leadOptions.length && 
     selectedLeadIds.every(id => leadOptions.some(lead => lead.id === id));
-
-
   const getWordCount = (str) => str.trim().split(/\s+/).filter(Boolean).length;
   const handleSubjectChange = (e) => {
   const newValue = e.target.value;
@@ -114,11 +109,16 @@ const BulkMailSender = () => {
       try {
         setIsLoadingLeads(true);
         const leadsUrl = ENDPOINTS.BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID(companyId);
+        console.log("bulk mail API checking", leadsUrl)
         const res = await axios.get(leadsUrl, {
           headers: { Authorization: `Bearer ${token}` }
         });
+                console.log("res", res)
+
         
        const rawLeads = Array.isArray(res.data) ? res.data : [];
+               console.log("lawleads", rawLeads)
+
 
         //  A to Z Alphabetical Sorting Logic
         const sortedLeads = [...rawLeads].sort((a, b) => {

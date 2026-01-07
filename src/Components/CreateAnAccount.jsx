@@ -51,7 +51,7 @@ const CreateAnAccount = () => {
             name: country.name?.common || "Unknown Country",
             dialingCode: country.idd?.root && country.idd.suffixes?.[0] ? `${country.idd.root}${country.idd.suffixes[0]}` : '-',
           }))
-          .filter(country => country.dialingCode !== 'N/A')
+          .filter(country => country.dialingCode !== '-')
           .sort((a, b) => a.name.localeCompare(b.name));
 
         setCountriesData(processedCountries);

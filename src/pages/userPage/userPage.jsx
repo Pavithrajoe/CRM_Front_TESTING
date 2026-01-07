@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useContext, useMemo } from "react";
-import {
-  FaCrown,
-  FaEnvelope,
-  FaCity,
-  FaTh,
-  FaBars,
-  FaSpinner,
-} from "react-icons/fa";
+import { FaCrown, FaEnvelope, FaCity, FaTh, FaBars, FaSpinner,} from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
 import { ENDPOINTS } from "../../api/constraints";
 import CreateUserForm from "../../Components/registerUser";
@@ -20,7 +13,6 @@ const UserPage = () => {
   const { user } = useContext(GlobUserContext);
   const { company } = useContext(companyContext);
   const companyUserLimit = company?.result?.iUser_no || 0;
-
   const effectRan = useRef(false);
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -33,7 +25,6 @@ const UserPage = () => {
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
-
   const usersPerPage = 6;
   const navigate = useNavigate();
 
@@ -90,7 +81,6 @@ const UserPage = () => {
   };
 
   // Function to navigate to the user creation page
-  // const createUser = () => navigate("/users");
   const createUser = () => {
     if (users.length >= companyUserLimit) {
       setShowLimitPopup(true);
@@ -321,7 +311,7 @@ const UserPage = () => {
                   </p>
                   <p className="flex items-center gap-2">
                     <FaCrown className="text-purple-500" />{" "}
-                    {user.cjob_title || "N/A"}
+                    {user.cjob_title || "-"}
                   </p>
                   <p className="flex items-center gap-2">
                     <FaCity className="text-gray-500" />{" "}

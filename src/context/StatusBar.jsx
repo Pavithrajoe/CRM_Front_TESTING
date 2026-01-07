@@ -159,11 +159,22 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
   // Enhanced stage active check
   const isStageActive = (stage) => {
     if (!stage) return false;
+    
+    // Check multiple possible active properties
     const isActive = stage.bactive !== false && 
                     stage.is_active !== false && 
                     stage.active !== false &&
                     stage.status !== 'inactive';
-  
+    
+  //   console.log('Stage active check:', { 
+  //     stage: stage.name, 
+  //     bactive: stage.bactive, 
+  //     is_active: stage.is_active,
+  //     active: stage.active,
+  //     result: isActive 
+  //   }
+  // );
+    
     return isActive;
   };
 
@@ -187,9 +198,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
       }
     };
     
+    // console.log('=== STAGE CLICK DEBUG ===', debugData);
     setDebugInfo(JSON.stringify(debugData, null, 2));
   };
 
+  // FIXED: Add fetchStages call
   const fetchStages = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -200,11 +213,16 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
         },
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
-      const data = await response.json();      
+      const data = await response.json();
+      
+      // console.log('Raw stages API response:', data);
+      
       const statusMap = {};
       const formattedStages = Array.isArray(data.response)
         ? data.response
             .map(item => {
+              // console.log('Processing stage item:', item);
+              // More flexible active status mapping
               const isActive = item.bactive !== false && 
                               item.is_active !== false && 
                               item.active !== false;
@@ -214,12 +232,15 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                 id: item.ilead_status_id,
                 name: item.clead_name,
                 order: item.orderId || 9999,
-                bactive: isActive, 
-                rawData: item, 
+                bactive: isActive, // Use the calculated active status
+                rawData: item, // Keep raw data for debugging
               };
             })
             .sort((a, b) => a.order - b.order)
         : [];
+
+      // console.log('Formatted stages:', formattedStages);
+      // console.log('Stage status map:', statusMap);
 
       setStages(formattedStages);
       setStageStatuses(statusMap);
@@ -228,6 +249,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
   };
 
+  // FIXED: Uncommented and fixed fetchUsers
   const fetchUsers = async () => {
     try {
       const companyUsersList = user.filter(user => (user.bactive === true || user.bactive === "true"));
@@ -265,25 +287,30 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
   };
 
-  //proper useEffect for data fetching
+  // FIXED: Added proper useEffect for data fetching
   useEffect(() => {
-    fetchStages(); 
+    fetchStages(); // This was missing!
     fetchUsers();
     fetchProposalSendModes();
   }, []);
 
-  // current stage index setting
+  // FIXED: Improved current stage index setting
   useEffect(() => {
     if (stages.length > 0 && leadData && leadData.ileadstatus_id) {
       const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
-      
+      // console.log('Setting current stage index:', {
+      //   stagesCount: stages.length,
+      //   leadStatusId: leadData.ileadstatus_id,
+      //   foundIndex: index,
+      //   stages: stages.map(s => ({ id: s.id, name: s.name }))
+      // });
       if (index !== -1) {
         setCurrentStageIndex(index);
       }
     }
   }, [stages, leadData]);
 
-  //  validation functions
+  // Rest of your validation functions remain the same...
   const validateDemoSession = () => {
     let isValid = true;
     const newErrors = {
@@ -453,9 +480,16 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     return `${day}/${month}/${year}`;
   };
 
-  //  handleStageClick function
+  // FIXED: Improved handleStageClick function
   const handleStageClick = (clickedIndex, statusId) => {
-    
+    // console.log('=== STAGE CLICKED ===', {
+    //   clickedIndex,
+    //   statusId,
+    //   stageName: stages[clickedIndex]?.name,
+    //   currentStageIndex,
+    //   isLost,
+    //   isWon
+    // });
 
     logStageClickDebug(clickedIndex, statusId);
     
@@ -480,8 +514,11 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     setDialogStageIndex(clickedIndex);
     setRemarkStageId(statusId);
 
+    // console.log('Stage name for form detection:', stageName);
 
+    // FIXED: Better stage name detection
     if (stageName.includes('demo') || stageName.includes('session')) {
+      // console.log('Opening Demo Session Dialog');
       setDialogValue({
         demoSessionType: '',
         demoSessionStartTime: new Date(),
@@ -505,6 +542,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
 
     if (stageName.includes('proposal')) {
+      // console.log('Opening Proposal Dialog');
       setProposalDialogValue({
         proposalSendModeId: null,
         preparedBy: null,
@@ -523,18 +561,21 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
       return;
     }
 
-    //  mandatory stages detection
+    // FIXED: Better mandatory stages detection
     const isMandatoryStage = mandatoryInputStages.some(mandatoryStage => 
       stageName.includes(mandatoryStage.toLowerCase())
     );
 
     if (isMandatoryStage) {
+      // console.log('Opening Amount Dialog for mandatory stage:', stageName);
       setDialogValue('');
       setDialogErrors({ ...dialogErrors, amount: '' });
       setOpenDialog(true);
       return;
     }
 
+    // Default: Open remark dialog for other stages
+    // console.log('Opening Remark Dialog for stage:', stageName);
     setRemarkData({ 
       remark: '', 
       projectValue: '',
@@ -573,6 +614,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
       showToast('success', 'Proposal details saved!');
       
+      // After proposal, open remark dialog
       setRemarkData({ 
         remark: '', 
         projectValue: '',
@@ -618,12 +660,14 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     }
   };
 
-  // handleDialogSave for different dialog types
+  // FIXED: Improved handleDialogSave for different dialog types
   const handleDialogSave = async () => {
     const token = localStorage.getItem('token');
     const userId = JSON.parse(localStorage.getItem('user'));
     const stageName = stages[dialogStageIndex]?.name;
     const statusId = stages[dialogStageIndex]?.id;
+
+    // console.log('Saving dialog for stage:', stageName);
 
     try {
       if (stageName?.toLowerCase().includes('demo') || stageName?.toLowerCase().includes('session')) {
@@ -659,6 +703,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
         showToast('success', 'Demo session details saved!');
         
+        // After demo session, open remark dialog
         setRemarkData({ 
           remark: '', 
           projectValue: '',
@@ -672,6 +717,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
         setShowRemarkDialog(true);
         
       } else {
+        // This is for amount-based stages (like Won)
         if (!validateAmount(dialogValue)) return;
 
         const amount = parseFloat(dialogValue);
@@ -691,6 +737,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
         showToast('success', `${stageName} details saved!`);
         
+        // For amount stages, also open remark dialog
         setRemarkData({ 
           remark: '', 
           projectValue: '',
@@ -780,7 +827,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
       }
   };
 
-  //  handleRemarkSubmit to properly update stage
+  // FIXED: Improved handleRemarkSubmit to properly update stage
   const handleRemarkSubmit = async () => {
     if (!validateRemark()) return;
 
@@ -882,6 +929,16 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
     getStatusRemarks();
   }, [statusRemarks]);
 
+  // Add this debug useEffect to check what's happening
+  // useEffect(() => {
+  //   console.log('=== STATUS BAR DEBUG INFO ===');
+  //   console.log('Stages:', stages);
+  //   console.log('Current Stage Index:', currentStageIndex);
+  //   console.log('Lead Data:', leadData);
+  //   console.log('isLost:', isLost);
+  //   console.log('isWon:', isWon);
+  //   console.log('Users:', users);
+  // }, [stages, currentStageIndex, leadData, isLost, isWon, users]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -891,12 +948,26 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
         {stages.length === 0 ? (
           <div className="text-center text-gray-500">Loading stages...</div>
         ) : (
-          <div className="flex items-center justify-between w-full">
+          <div className=" flex w-full
+        md:items-center md:justify-between
+        overflow-x-auto md:overflow-visible
+        space-x-4 md:space-x-0
+        snap-x snap-mandatory
+        scrollbar-thin scrollbar-thumb-gray-300">
             {stages.map((stage, index) => {
               const isCompleted = index < currentStageIndex;
               const isActive = index === currentStageIndex;
               const isClickable = index > currentStageIndex && !isLost && !isWon && isStageActive(stage);
               const matchedRemark = statusRemarks.find(r => r.lead_status_id === stage.id);
+
+              // console.log(`Stage ${stage.name}:`, {
+              //   index,
+              //   isCompleted,
+              //   isActive,
+              //   isClickable,
+              //   isStageActive: isStageActive(stage),
+              //   currentStageIndex
+              // });
 
               return (
                 <React.Fragment key={stage.id}>
@@ -1005,59 +1076,59 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                     />
                   )}
                 />
-                {/* First DateTimePicker*/}
-                <DateTimePicker
-                  label="Start Time *"
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock,
-                  }}
-                  value={dialogValue.demoSessionStartTime}
-                  onChange={newValue =>
-                    setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
-                  }
-                  format="dd/MM/yyyy hh:mm a"
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      sx: { mt: 2 },
-                      error: !!dialogErrors.demoSessionStartTime,
-                      helperText: dialogErrors.demoSessionStartTime,
-                      InputLabelProps: { shrink: true },
-                    }, 
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper,
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
+                {/* First DateTimePicker - Fix the slotProps structure */}
+<DateTimePicker
+  label="Start Time *"
+  viewRenderers={{
+    hours: renderTimeViewClock,
+    minutes: renderTimeViewClock,
+    seconds: renderTimeViewClock,
+  }}
+  value={dialogValue.demoSessionStartTime}
+  onChange={newValue =>
+    setDialogValue(prev => ({ ...prev, demoSessionStartTime: newValue }))
+  }
+  format="dd/MM/yyyy hh:mm a"
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      sx: { mt: 2 },
+      error: !!dialogErrors.demoSessionStartTime,
+      helperText: dialogErrors.demoSessionStartTime,
+      InputLabelProps: { shrink: true },
+    }, // ADDED MISSING COMMA HERE
+    popper: timeSlotProps.popper,
+    desktopPaper: timeSlotProps.desktopPaper,
+  }}
+  desktopModeMediaQuery="@media (min-width: 0px)"
+/>
 
-                {/* Second DateTimePicker */}
-                <DateTimePicker
-                  label="End Time *"
-                  viewRenderers={{
-                    hours: renderTimeViewClock,
-                    minutes: renderTimeViewClock,
-                    seconds: renderTimeViewClock,
-                  }}
-                  value={dialogValue.demoSessionEndTime}
-                  onChange={newValue =>
-                    setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
-                  }
-                  format="dd/MM/yyyy hh:mm a"
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      sx: { mt: 2 },
-                      error: !!dialogErrors.demoSessionEndTime,
-                      helperText: dialogErrors.demoSessionEndTime,
-                      InputLabelProps: { shrink: true },
-                    }, 
-                    popper: timeSlotProps.popper,
-                    desktopPaper: timeSlotProps.desktopPaper,
-                  }}
-                  desktopModeMediaQuery="@media (min-width: 0px)"
-                />
+{/* Second DateTimePicker - Fix the slotProps structure */}
+<DateTimePicker
+  label="End Time *"
+  viewRenderers={{
+    hours: renderTimeViewClock,
+    minutes: renderTimeViewClock,
+    seconds: renderTimeViewClock,
+  }}
+  value={dialogValue.demoSessionEndTime}
+  onChange={newValue =>
+    setDialogValue(prev => ({ ...prev, demoSessionEndTime: newValue }))
+  }
+  format="dd/MM/yyyy hh:mm a"
+  slotProps={{
+    textField: {
+      fullWidth: true,
+      sx: { mt: 2 },
+      error: !!dialogErrors.demoSessionEndTime,
+      helperText: dialogErrors.demoSessionEndTime,
+      InputLabelProps: { shrink: true },
+    }, // ADDED MISSING COMMA HERE
+    popper: timeSlotProps.popper,
+    desktopPaper: timeSlotProps.desktopPaper,
+  }}
+  desktopModeMediaQuery="@media (min-width: 0px)"
+/>
                 <TextField
                   label="Notes *"
                   fullWidth
@@ -1286,56 +1357,58 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
               </p>
             </div>
 
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateTimePicker
-              label="Due Date & Time"
-              value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
-              inputFormat="DD/MM/YYYY hh:mm a"
-              onChange={newValue => {
-                setRemarkData(prev => ({
-                  ...prev,
-                  dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''      
-                }));
-              }}
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  sx: { mt: 2 },
-                  InputLabelProps: { shrink: true },
-                },
-                popper: {
-                placement: 'top-start', 
-                modifiers: [
-                  {
-                    name: 'preventOverflow',
-                    options: {
-                      mainAxis: false,
-                    },
-                  },
-                ],
-                sx: { 
-                  zIndex: 9999, 
-                  '& .MuiPickersPopper-paper': {
-                    marginBottom: '60px', 
-                  }
-                }
-              },
-                desktopPaper: {
-                sx: { 
-                  zIndex: 9999,
-                  position: 'relative' 
-                }
-              }
-              }}
-              desktopModeMediaQuery="@media (min-width: 0px)"
-              minDateTime={dayjs()} 
-            />
-        </LocalizationProvider>
+           <LocalizationProvider dateAdapter={AdapterDayjs}>
+  <DateTimePicker
+    label="Due Date And Time"
+    value={remarkData.dueDate ? dayjs(remarkData.dueDate) : null}
+    inputFormat="DD/MM/YYYY hh:mm a"
+    onChange={newValue => {
+      setRemarkData(prev => ({
+        ...prev,
+        dueDate: newValue ? newValue.format('YYYY-MM-DDTHH:mm:ss') : ''
+      }));
+    }}
+    viewRenderers={{
+      hours: renderTimeViewClock,
+      minutes: renderTimeViewClock,
+      seconds: renderTimeViewClock,
+    }}
+    slotProps={{
+      textField: {
+        fullWidth: true,
+        sx: { mt: 2 },
+        InputLabelProps: { shrink: true },
+      },
+      popper: {
+        placement: 'top-start',
+        modifiers: [
+          {
+            name: 'preventOverflow',
+            options: {
+              mainAxis: false,
+            },
+          },
+        ],
+        sx: { 
+          zIndex: 9999, 
+          '& .MuiPickersPopper-paper': {
+            marginBottom: '60px', 
+          }
+        }
+      },
+      desktopPaper: {
+        sx: { 
+          zIndex: 9999,
+          position: 'relative' 
+        }
+      }
+    }}
+    // Key change for mobile responsiveness
+    desktopModeMediaQuery="@media (min-width: 768px)"
+    minDateTime={dayjs()} 
+  />
+</LocalizationProvider>
+
 
           </DialogContent>
           <DialogActions>
@@ -1464,6 +1537,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
           </DialogActions>
         </Dialog>
 
+        {/* Rest of your components (remarks timeline, etc.) remain the same */}
        {(() => {
   
           const validRemarks = statusRemarks?.filter(remark => 
@@ -1638,9 +1712,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 export default StatusBar;
 
 
-
-
-
 // import React, { useState, useEffect, useContext } from 'react';
 // import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
 // import { GlobUserContext } from './userContex';
@@ -1802,14 +1873,11 @@ export default StatusBar;
 //   // Enhanced stage active check
 //   const isStageActive = (stage) => {
 //     if (!stage) return false;
-    
-//     // Check multiple possible active properties
 //     const isActive = stage.bactive !== false && 
 //                     stage.is_active !== false && 
 //                     stage.active !== false &&
 //                     stage.status !== 'inactive';
-    
-    
+  
 //     return isActive;
 //   };
 
@@ -1836,7 +1904,6 @@ export default StatusBar;
 //     setDebugInfo(JSON.stringify(debugData, null, 2));
 //   };
 
-//   //  fetchStages call
 //   const fetchStages = async () => {
 //     try {
 //       const token = localStorage.getItem('token');
@@ -1847,9 +1914,7 @@ export default StatusBar;
 //         },
 //       });
 //       if (!response.ok) throw new Error('Failed to fetch stages');
-//       const data = await response.json();
-      
-      
+//       const data = await response.json();      
 //       const statusMap = {};
 //       const formattedStages = Array.isArray(data.response)
 //         ? data.response
@@ -1877,7 +1942,6 @@ export default StatusBar;
 //     }
 //   };
 
-//   // Uncommented and fixed fetchUsers
 //   const fetchUsers = async () => {
 //     try {
 //       const companyUsersList = user.filter(user => (user.bactive === true || user.bactive === "true"));
@@ -1915,7 +1979,7 @@ export default StatusBar;
 //     }
 //   };
 
-//   // proper useEffect for data fetching
+//   //proper useEffect for data fetching
 //   useEffect(() => {
 //     fetchStages(); 
 //     fetchUsers();
@@ -1926,14 +1990,14 @@ export default StatusBar;
 //   useEffect(() => {
 //     if (stages.length > 0 && leadData && leadData.ileadstatus_id) {
 //       const index = stages.findIndex(stage => stage.id === leadData.ileadstatus_id);
-     
+      
 //       if (index !== -1) {
 //         setCurrentStageIndex(index);
 //       }
 //     }
 //   }, [stages, leadData]);
 
-//   // Rest of your validation functions remain the same
+//   //  validation functions
 //   const validateDemoSession = () => {
 //     let isValid = true;
 //     const newErrors = {
@@ -2103,9 +2167,12 @@ export default StatusBar;
 //     return `${day}/${month}/${year}`;
 //   };
 
-//   // handleStageClick function
+//   //  handleStageClick function
 //   const handleStageClick = (clickedIndex, statusId) => {
+    
+
 //     logStageClickDebug(clickedIndex, statusId);
+    
 //     const stage = stages[clickedIndex];
     
 //     if (!isStageActive(stage)) {
@@ -2127,7 +2194,7 @@ export default StatusBar;
 //     setDialogStageIndex(clickedIndex);
 //     setRemarkStageId(statusId);
 
-//     //  Better stage name detection
+
 //     if (stageName.includes('demo') || stageName.includes('session')) {
 //       setDialogValue({
 //         demoSessionType: '',
@@ -2170,6 +2237,7 @@ export default StatusBar;
 //       return;
 //     }
 
+//     //  mandatory stages detection
 //     const isMandatoryStage = mandatoryInputStages.some(mandatoryStage => 
 //       stageName.includes(mandatoryStage.toLowerCase())
 //     );
@@ -2264,6 +2332,7 @@ export default StatusBar;
 //     }
 //   };
 
+//   // handleDialogSave for different dialog types
 //   const handleDialogSave = async () => {
 //     const token = localStorage.getItem('token');
 //     const userId = JSON.parse(localStorage.getItem('user'));
@@ -2336,7 +2405,6 @@ export default StatusBar;
 
 //         showToast('success', `${stageName} details saved!`);
         
-//         // For amount stages, also open remark dialog
 //         setRemarkData({ 
 //           remark: '', 
 //           projectValue: '',
@@ -2426,7 +2494,7 @@ export default StatusBar;
 //       }
 //   };
 
-//   // handleRemarkSubmit to properly update stage
+//   //  handleRemarkSubmit to properly update stage
 //   const handleRemarkSubmit = async () => {
 //     if (!validateRemark()) return;
 
@@ -2452,6 +2520,7 @@ export default StatusBar;
 //         : null;
 
 //     try {
+//         // Submit the remark
 //         await axios.post(ENDPOINTS.STATUS_REMARKS, remarkPayload, {
 //             headers: {
 //                 'Content-Type': 'application/json',
@@ -2526,6 +2595,7 @@ export default StatusBar;
 //   useEffect(() => {
 //     getStatusRemarks();
 //   }, [statusRemarks]);
+
 
 //   return (
 //     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -2649,7 +2719,7 @@ export default StatusBar;
 //                     />
 //                   )}
 //                 />
-//                 {/* First DateTimePicker  */}
+//                 {/* First DateTimePicker*/}
 //                 <DateTimePicker
 //                   label="Start Time *"
 //                   viewRenderers={{
@@ -2669,14 +2739,14 @@ export default StatusBar;
 //                       error: !!dialogErrors.demoSessionStartTime,
 //                       helperText: dialogErrors.demoSessionStartTime,
 //                       InputLabelProps: { shrink: true },
-//                     }, // ADDED MISSING COMMA HERE
+//                     }, 
 //                     popper: timeSlotProps.popper,
 //                     desktopPaper: timeSlotProps.desktopPaper,
 //                   }}
 //                   desktopModeMediaQuery="@media (min-width: 0px)"
 //                 />
 
-//                 {/* Second DateTimePicker  */}
+//                 {/* Second DateTimePicker */}
 //                 <DateTimePicker
 //                   label="End Time *"
 //                   viewRenderers={{
@@ -2696,7 +2766,7 @@ export default StatusBar;
 //                       error: !!dialogErrors.demoSessionEndTime,
 //                       helperText: dialogErrors.demoSessionEndTime,
 //                       InputLabelProps: { shrink: true },
-//                     }, // ADDED MISSING COMMA HERE
+//                     }, 
 //                     popper: timeSlotProps.popper,
 //                     desktopPaper: timeSlotProps.desktopPaper,
 //                   }}
@@ -2925,7 +2995,9 @@ export default StatusBar;
 //                     </option>
 //                   ))}
 //               </select>
-//               <p className="text-xs text-gray-500 mt-1"> Optionally notify this lead to someone when submitting the remark </p>
+//               <p className="text-xs text-gray-500 mt-1">
+//                 Optionally notify this lead to someone when submitting the remark
+//               </p>
 //             </div>
 
 //             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -3106,68 +3178,72 @@ export default StatusBar;
 //           </DialogActions>
 //         </Dialog>
 
-//         {/* Rest of your components (remarks timeline, etc.) remain the same */}
-//         {statusRemarks.length > 0 && (
-//           <div className="mt-6">
-//             <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-//             <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-//               {(() => {
-//                 const uniqueRemarks = statusRemarks.filter((remark, index, self) => 
-//                   index === self.findIndex(r => 
-//                     r.ilead_status_remarks_id === remark.ilead_status_remarks_id &&
-//                     r.lead_status_remarks === remark.lead_status_remarks &&
-//                     r.dcreated_dt === remark.dcreated_dt &&
-//                     r.due_date === remark.due_date
-//                   )
-//                 );
+//        {(() => {
+  
+//           const validRemarks = statusRemarks?.filter(remark => 
+//             remark && 
+//             remark.lead_status_remarks?.trim() &&  
+//             remark.ilead_status_remarks_id          
+//           ) || [];
 
-//                 return uniqueRemarks.map((remark, index) => (
-//                   <div key={`${remark.ilead_status_remarks_id}_${index}`} className="relative flex-shrink-0">
+
+//           const uniqueRemarks = validRemarks.filter((remark, index, self) => 
+//             index === self.findIndex(r => 
+//               r.ilead_status_remarks_id === remark.ilead_status_remarks_id &&
+//               r.lead_status_remarks === remark.lead_status_remarks &&
+//               r.dcreated_dt === remark.dcreated_dt &&
+//               r.due_date === remark.due_date
+//             )
+//           );
+        
+//           if (uniqueRemarks.length === 0) {
+//             return null;
+//           }
+
+//           return (
+//             <div className="mt-6">
+//               <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+//               <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
+//                 {uniqueRemarks.map((remark, index) => (
+//                   <div key={`${remark.ilead_status_remarks_id}-${index}`} className="relative flex-shrink-0">
 //                     {index !== uniqueRemarks.length - 1 && (
 //                       <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
 //                     )}
 //                     <div
-//                       className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition z-10"
-//                       style={{ minWidth: "250px", maxWidth: "250px" }} 
+//                       className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:scale-[1.02] z-10"
+//                       style={{ minWidth: "250px", maxWidth: "250px" }}
 //                       onClick={() => setSelectedRemark(remark)}
 //                     >
 //                       <div className="space-y-2 text-sm">
-//                         <p
-//                           className="text-sm break-words line-clamp-3"
-//                           title={remark.lead_status_remarks}
-//                         >
+//                         <p className="text-sm break-words line-clamp-3 font-medium text-gray-800" title={remark.lead_status_remarks}>
 //                           <strong>Remark:</strong> {remark.lead_status_remarks}
 //                         </p>
-//                         <p className="text-sm">
+//                         <p className="text-sm text-gray-700">
 //                           <strong>Created By:</strong> {remark.createdBy || '-'}
 //                         </p>
-//                         <p className="text-sm">
+//                         <p className="text-sm text-gray-700">
 //                           <strong>Date:</strong> {formatDateOnly(remark.dcreated_dt)}
 //                         </p>
-//                         <p className="text-sm">
-//                           <strong>Status:</strong> {remark.status_name}
+//                         <p className="text-sm text-gray-700">
+//                           <strong>Status:</strong> <span className="font-semibold text-blue-600">{remark.status_name}</span>
 //                         </p>
-//                         <p className="text-sm">
-//                           <strong>Due Date:</strong>{" "}
-//                           {remark.due_date ? new Date(remark.due_date)
-//                             .toLocaleString("en-GB", {
-//                               day: "2-digit",
-//                               month: "2-digit",
-//                               year: "numeric",
-//                               hour: "2-digit",
-//                               minute: "2-digit",
-//                               hour12: true,
-//                             })
-//                             .replace(/(am|pm)/, (match) => match.toUpperCase()) : 'Not set'}
+//                         <p className="text-sm text-gray-700">
+//                           <strong>Due Date:</strong> {remark.due_date ? 
+//                             new Date(remark.due_date).toLocaleString("en-GB", {
+//                               day: "2-digit", month: "2-digit", year: "numeric",
+//                               hour: "2-digit", minute: "2-digit", hour12: true
+//                             }).replace(/(am|pm)/i, m => m.toUpperCase()) : 'Not set'
+//                           }
 //                         </p>
 //                       </div>
 //                     </div>
 //                   </div>
-//                 ));
-//               })()}
+//                 ))}
+//               </div>
 //             </div>
-//           </div>
-//         )}
+//           );
+//         })()}
+
 
 //         <Dialog
 //           open={!!selectedRemark}
@@ -3270,3 +3346,7 @@ export default StatusBar;
 // };
 
 // export default StatusBar;
+
+
+
+

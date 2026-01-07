@@ -23,7 +23,7 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
   }, [subordinatesData]);
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "-";
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "Invalid Date";
 
@@ -346,7 +346,7 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //   }, [subordinatesData]);
 
 //   const formatDateTime = (dateString) => {
-//     if (!dateString) return "N/A";
+//     if (!dateString) return "-";
 //     const date = new Date(dateString);
 //     if (isNaN(date.getTime())) return "Invalid Date";
 

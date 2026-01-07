@@ -68,7 +68,7 @@
 //             <span className="font-bold">{user.name || user.email}</span>!
 //             <br />
 //             <span className="text-sm text-gray-600">
-//               Role: {user.role || "N/A"}
+//               Role: {user.role || "-"}
 //             </span>
 //           </div>
 //         )} */}

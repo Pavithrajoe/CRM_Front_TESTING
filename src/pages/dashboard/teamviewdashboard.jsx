@@ -108,8 +108,10 @@ const TeamviewDashboard = () => {
       {/* Dashboard Content */}
 
       {/* {console.log("The dashboard data are:", )} */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <LeadManagementCard leads={leadData} team_members={teamMembers}  childSubordinates = {childSubordinates}  loading = {loading} error = {error} />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
+        <div className="hidden md:block md:col-span-2 lg:col-span-1">
+    <LeadManagementCard leads={leadData} team_members={teamMembers} childSubordinates={childSubordinates} loading={loading} error={error} />
+  </div>
         <TeamKPIStats
           leadsArray={leads}
           subordinatesArray={teamMembers}
@@ -233,7 +235,7 @@ export default TeamviewDashboard;
 
 //       {/* Dashboard Content */}
 
-//       {console.log("The dashboard data are:", )}
+//       {/* {console.log("The dashboard data are:", )} */}
 //       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 //         <LeadManagementCard leads={leadData} team_members={teamMembers}  childSubordinates = {childSubordinates}  loading = {loading} error = {error} />
 //         <TeamKPIStats
@@ -241,7 +243,7 @@ export default TeamviewDashboard;
 //           subordinatesArray={teamMembers}
 //           dealCountForWon={dealData}
 //         />
-//         <LeadsTable leadsData={leadData} subordinatesData = {teamMembers} loading = {loading} error = {error}  />
+//         <LeadsTable leadsData={leads} subordinatesData = {teamMembers} loading = {loading} error = {error}  />
 //         <RemindersCard remindersData={activeReminders} loading = {loading} error = {error} />
 //       </div>
 //     </main>

@@ -79,7 +79,7 @@ import RecurringClientAnalytics from "./Components/reports/RecurringClientAnalyt
 import { BusinessProvider } from "./context/BusinessTypeContext.jsx";
 import { ModuleProvider } from "./context/ModuleContext.jsx";
 import { SettingsProvider } from "./context/companySettingsContext.jsx"
-
+import { LeadFormProvider } from "./context/LeadFormContext.jsx";
 import { GlobeUserProvider } from "./context/userContex.jsx";
 import { DemoSessionProvider } from "./context/demo_session_session_context.jsx";
 function App() {
@@ -95,87 +95,91 @@ function App() {
                         <BusinessProvider>
                       <CompanyProvider>
                         <DemoSessionProvider>
-                      <Routes>
-                        {/* Public Routes */}
-                        <Route path="/" element={<Login />} />
-                        <Route path="/request-demo" element={<RequestDemo />} />
-                        <Route path="/CreateAnAccount" element={<CreateAnAccount />} />
-                        <Route path="/forgetpassword" element={<ForgetPassword />} />
-                        <Route path="/success" element={<SuccessMessage />} />
-                        <Route path="/verify" element={<VerifyCodePage />} />
-                        <Route path="/signupres" element={<SignupRes />} />
-                        <Route path="/UpdatePassword" element={<UpdatePassword />} />
+                          <LeadFormProvider>
+                            <Routes>
+                              {/* Public Routes */}
+                              <Route path="/" element={<Login />} />
+                              <Route path="/request-demo" element={<RequestDemo />} />
+                              <Route path="/CreateAnAccount" element={<CreateAnAccount />} />
+                              <Route path="/forgetpassword" element={<ForgetPassword />} />
+                              <Route path="/success" element={<SuccessMessage />} />
+                              <Route path="/verify" element={<VerifyCodePage />} />
+                              <Route path="/signupres" element={<SignupRes />} />
+                              <Route path="/UpdatePassword" element={<UpdatePassword />} />
 
-                        {/* Protected Routes */}
-                        {/* <Route element={<PrivateRoute />}> */}
-                          <Route element={<AppLayout />}>
-                            <Route path="/notifications" element={<NotificationPage />} />
-                            <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
-                            <Route path="userprofile/:userId" element={<UserProfile />} />
-                            <Route path="calenderpage" element={<CalendarPage />} />
-                            <Route path="/reportpage" element={<CardsPage />} />
-                            <Route path="/recurring-client-analytics" element={<RecurringClientAnalytics />} />
-                            <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
-                            <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
-                            <Route path="/companydashboard" element={<CompanyDashboard />} />
-                            <Route path="userpage" element={<UserPage />} />
-                            <Route path="commandpage" element={<Commandpage />} />
-                            <Route path="task" element={<Tasks />} />
-                            <Route path="/users" element={<CreateUserForm />} />
-                            <Route path="/leaddashboard" element={<LeadsDashboard/>} />
-                            <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
-                            <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
-                            <Route path="/lead-conversion" element={<LeadConversionPage />} />
-                            <Route path="/company-leads" element={<CompanyLeads />} />
-                            <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
-                            <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis />} />
-                            <Route path='userleads' element={<UserLead />} />
-                            <Route path="/leads" element={<LeadsDashboard />} />
-                            <Route path="leadlistview" element={<LeadListViewPage />} />
-                            <Route path="leadcardview" element={<LeadCardViewPage />} />
-                            <Route path="xcodefix_leadcardview" element={<Xcode_LeadCardViewPage />} />
-                            <Route path="leadmanage" element={<LeadManagePage />} />
-                            <Route path="leadtimeline" element={<LeadTimeline />} />
-                            <Route path="allleadpage" element={<AllLeadsPage />} />
-                            <Route path="history" element={<HistoryPage />} />
-                            <Route path="usercalllogs" element={<UserCallLogs />} />
-                            <Route path="logusercalllogs" element={<LogUserCallLogs />} />
-                            <Route path="companymaster" element={<CompanyMaster />} />
-                            <Route path="active-leads" element={<ActiveLeadTab />} />
-                            <Route path="status-kanban" element={<StatusKanbanPage />} />
-                            <Route path="customers" element={<WonList />} /> 
-                            <Route path="companylist" element={<CompanyList />} />
-                            <Route path="companypage" element={<CompanyPage />} />
-                            <Route path="analytics" element={<UserAnalyticsPage />} />
-                            <Route path="teamview" element={<TeamviewDashboard />} />
-                            <Route path="/mailsender" element={<BulkMailSender />} />
-                            <Route path="/mailstatus" element={<BulkMailStatus />} />
-                            <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
-                            <Route path="xcodefix_leaddetailview_milestone/:leadId" element={<LeadDetailWithMileStone />} />
-                            <Route path="userdeals/:userId" element={<UserDeals />} />
-                            <Route path="/reports/:userId" element={<UserReportPage />} />
-                            <Route path="/first-response" element={<FirstResponseTimeReport />} />
-                            <Route path="/generate-poster" element={<GeneratePoster />} />
-                            <Route path="/gst-compliance" element={<GSTCompliancePage />} />
-                            <Route path="/calculator" element={<QuickCalculator />} />
-                            <Route path="/maps" element={<DistanceToClient/>}/>
-                            <Route path="settingspage" element={<SettingsPage />}>
-                              <Route path="account" element={<AccountSettings />} />
-                              <Route path="lable" element={<LableMaster />} />
-                              <Route path="terms" element={<TermsAndConditions />} />
-                              <Route path="tax" element={<Tax />} />
-                              <Route path="notification" element={<NotificationSettings />} />
-                              <Route path="billing" element={<BillingSettings />} />
-                              <Route path="members" element={<MembersSettings />} />
-                              <Route path="support" element={<SupportSettings />} />
-                              <Route path="smtpsettings" element={<SmtpSettings />} />
-                              <Route path="controll" element={<ModuleControll/>} />
-                              <Route path="userattributes" element= {<UserAttributes />} />
-                            </Route>
-                          </Route>
-                        {/* </Route> */}
-                      </Routes>
-                      </DemoSessionProvider>
+                              {/* Protected Routes */}
+                              {/* <Route element={<PrivateRoute />}> */}
+                                <Route element={<AppLayout />}>
+                                  <Route path="/notifications" element={<NotificationPage />} />
+                                  <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
+                                  <Route path="userprofile/:userId" element={<UserProfile />} />
+                                  <Route path="calenderpage" element={<CalendarPage />} />
+                                  <Route path="/reportpage" element={<CardsPage />} />
+                                  <Route path="/recurring-client-analytics" element={<RecurringClientAnalytics />} />
+                                  <Route path="/sales-by-stage-analytics" element={<SalesByStageReportPage />} />
+                                  <Route path="/lead-lost-analytics" element={<LostLeadReportPage />} />
+                                  <Route path="/companydashboard" element={<CompanyDashboard />} />
+                                  <Route path="userpage" element={<UserPage />} />
+                                  <Route path="commandpage" element={<Commandpage />} />
+                                  <Route path="task" element={<Tasks />} />
+                                  <Route path="/users" element={<CreateUserForm />} />
+                                  <Route path="/leaddashboard" element={<LeadsDashboard/>} />
+                                  <Route path="/prospects-not-converted" element={<ProspectsEngagedReport />} />
+                                  <Route path="/First-Response-Time-for-Opportunity" element={<FirstResponseTimeReport />} />
+                                  <Route path="/lead-conversion" element={<LeadConversionPage />} />
+                                  <Route path="/company-leads" element={<CompanyLeads />} />
+                                  <Route path="/lead-owner-efficiency" element={<LeadOwnerEfficency />} />
+                                  <Route path='/Sales-pipeline' element={<SalesPipelineAnalysis />} />
+                                  <Route path='userleads' element={<UserLead />} />
+                                  <Route path="/leads" element={<LeadsDashboard />} />
+                                  <Route path="leadlistview" element={<LeadListViewPage />} />
+                                  <Route path="leadcardview" element={<LeadCardViewPage />} />
+                                  <Route path="xcodefix_leadcardview" element={<Xcode_LeadCardViewPage />} />
+                                  <Route path="leadmanage" element={<LeadManagePage />} />
+                                  <Route path="leadtimeline" element={<LeadTimeline />} />
+                                  <Route path="allleadpage" element={<AllLeadsPage />} />
+                                  <Route path="history" element={<HistoryPage />} />
+                                  <Route path="usercalllogs" element={<UserCallLogs />} />
+                                  <Route path="logusercalllogs" element={<LogUserCallLogs />} />
+                                  <Route path="companymaster" element={<CompanyMaster />} />
+                                  <Route path="active-leads" element={<ActiveLeadTab />} />
+                                  <Route path="status-kanban" element={<StatusKanbanPage />} />
+                                  <Route path="customers" element={<WonList />} /> 
+                                  <Route path="companylist" element={<CompanyList />} />
+                                  <Route path="companypage" element={<CompanyPage />} />
+                                  <Route path="analytics" element={<UserAnalyticsPage />} />
+                                  <Route path="teamview" element={<TeamviewDashboard />} />
+                                  <Route path="/mailsender" element={<BulkMailSender />} />
+                                  <Route path="/mailstatus" element={<BulkMailStatus />} />
+                                  <Route path="leaddetailview/:leadId" element={<LeadDetailView />} />
+                                  <Route path="xcodefix_leaddetailview_milestone/:leadId" element={<LeadDetailWithMileStone />} />
+                                  <Route path="userdeals/:userId" element={<UserDeals />} />
+                                  <Route path="/reports/:userId" element={<UserReportPage />} />
+                                  <Route path="/first-response" element={<FirstResponseTimeReport />} />
+                                  <Route path="/generate-poster" element={<GeneratePoster />} />
+                                  <Route path="/gst-compliance" element={<GSTCompliancePage />} />
+                                  <Route path="/calculator" element={<QuickCalculator />} />
+                                  <Route path="/maps" element={<DistanceToClient/>}/>
+                                  <Route path="settingspage" element={<SettingsPage />}>
+                                    <Route path="account" element={<AccountSettings />} />
+                                    <Route path="lable" element={<LableMaster />} />
+                                    <Route path="terms" element={<TermsAndConditions />} />
+                                    <Route path="tax" element={<Tax />} />
+                                    <Route path="notification" element={<NotificationSettings />} />
+                                    <Route path="billing" element={<BillingSettings />} />
+                                    <Route path="members" element={<MembersSettings />} />
+                                    <Route path="support" element={<SupportSettings />} />
+                                    <Route path="smtpsettings" element={<SmtpSettings />} />
+                                    <Route path="controll" element={<ModuleControll/>} />
+                                    <Route path="userattributes" element= {<UserAttributes />} />
+                                  </Route>
+                                </Route>
+                              {/* </Route> */}
+                            </Routes>
+
+                           </LeadFormProvider>
+                      
+                        </DemoSessionProvider>
                       </CompanyProvider>
                       </BusinessProvider>
                       </GlobeUserProvider>

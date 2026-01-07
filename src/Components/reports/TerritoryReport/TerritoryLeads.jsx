@@ -364,7 +364,7 @@ const TerritoryLeadsAnalytics = () => {
                     <td className="px-6 py-3">{lead.phone || "-"}</td>
                     <td className="px-6 py-3">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold select-none ${getStatusColor(lead.lead_status)}`}>
-                        {lead.lead_status || "N/A"}
+                        {lead.lead_status || "-"}
                       </span>
                     </td>
                     <td className="px-6 py-3">₹{lead.project_value?.toLocaleString() || 0}</td>

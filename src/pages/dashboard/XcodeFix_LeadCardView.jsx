@@ -289,52 +289,127 @@ const Xcode_LeadCardViewPage = () => {
 
     useEffect(() => {
         const fetchMasterData = async () => {
-            const headers = { Authorization: `Bearer ${token}` };
-            try {
-                // Fetch potentials
-                const potentialsRes = await fetch(ENDPOINTS.MASTER_POTENTIAL_GET, { headers });
-                const potentialsData = await potentialsRes.json();
-                if (potentialsData?.data) {
-                    setPotentials(potentialsData.data.filter(p => p.bactive));
-                }
+        const headers = { Authorization: `Bearer ${token}` };
+        try {
+            // Fetch potentials
+            const potentialsRes = await fetch(ENDPOINTS.MASTER_POTENTIAL_GET, {
+            headers,
+            });
+            const potentialsData = await potentialsRes.json();
+            // if (potentialsData?.data) {
+            setPotentials(potentialsData);
+            // }
 
-                // Fetch sources
-                const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, { headers });
-                const sourcesData = await sourcesRes.json();
-                if (sourcesData?.data) {
-                    setSources(sourcesData.data.filter(s => s.is_active));
-                }
+            // Fetch sources
+            const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, {
+            headers,
+            });
+            const sourcesData = await sourcesRes.json();
 
-                // Fetch statuses
-                const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, { headers });
-                const statusesData = await statusesRes.json();
-                if (statusesData?.response) {
-                    setStatuses(statusesData.response.filter(s => s.bactive).sort((a, b) => (a.orderId || 0) - (b.orderId || 0)));
-                }
+            setSources(sourcesData);
 
-                // Fetch industries
-                const industriesRes = await fetch(ENDPOINTS.MASTER_INDUSTRY_GET, { headers });
-                const industriesData = await industriesRes.json();
-                if (industriesData?.response?.industry) {
-                    setIndustries(industriesData.response.industry.filter(i => i.bactive));
-                }
-
-                // Fetch services
-                const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, { headers });
-                const servicesData = await servicesRes.json();
-                if (servicesData?.data) {
-                    setServices(servicesData.data.filter(s => s.bactive));
-                }
-
-            } catch (err) {
-                console.error("Failed to fetch master data:", err);
+            // Fetch statuses
+            const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, {
+            headers,
+            });
+            const statusesData = await statusesRes.json();
+            if (statusesData?.response) {
+            setStatuses(
+                statusesData.response
+                .sort((a, b) => (a.orderId || 0) - (b.orderId || 0))
+            );
             }
+
+            // Fetch industries
+            const industriesRes = await fetch(ENDPOINTS.MASTER_INDUSTRY_GET, {
+            headers,
+            });
+            const industriesData = await industriesRes.json();
+            // if (industriesData?.response?.industry) {
+            setIndustries(industriesData);
+            // );
+
+            // Fetch services 
+            const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, {
+            headers,
+            });
+            const servicesData = await servicesRes.json();
+
+            // Check different possible response structures
+            if (servicesData?.data) {
+            setServices(servicesData);
+            } else if (servicesData?.response) {
+            const servicesArray = Array.isArray(servicesData.response) 
+                ? servicesData.response 
+                : servicesData.response?.service || [];
+            setServices(servicesArray);
+            } else if (Array.isArray(servicesData)) {
+            setServices(servicesData);
+            } else {
+            console.warn("Unexpected services response structure:", servicesData);
+            setServices([]);
+            }
+
+        } catch (err) {
+            console.error("Failed to fetch master data:", err);
+        }
         };
 
         if (token) {
-            fetchMasterData();
+        fetchMasterData();
         }
     }, [token]);
+
+    // useEffect(() => {
+    //     const fetchMasterData = async () => {
+    //         const headers = { Authorization: `Bearer ${token}` };
+    //         try {
+    //             // Fetch potentials
+    //             const potentialsRes = await fetch(ENDPOINTS.MASTER_POTENTIAL_GET, { headers });
+    //             const potentialsData = await potentialsRes.json();
+    //             if (potentialsData?.data) {
+    //                 setPotentials(potentialsData.data.filter(p => p.bactive));
+    //             }
+
+    //             // Fetch sources
+    //             const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, { headers });
+    //             const sourcesData = await sourcesRes.json();
+    //             if (sourcesData?.data) {
+    //                 setSources(sourcesData.data.filter(s => s.is_active));
+    //             }
+
+    //             // Fetch statuses
+    //             const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, { headers });
+    //             const statusesData = await statusesRes.json();
+    //             if (statusesData?.response) {
+    //                 setStatuses(statusesData.response.sort((a, b) => (a.orderId || 0) - (b.orderId || 0)));
+    //             } else {
+    //                 setStatuses(Array.isArray(statusesData) ? statusesData : []);
+    //             }
+
+    //             // Fetch industries
+    //             const industriesRes = await fetch(ENDPOINTS.MASTER_INDUSTRY_GET, { headers });
+    //             const industriesData = await industriesRes.json();
+    //             if (industriesData?.response?.industry) {
+    //                 setIndustries(industriesData.response.industry.filter(i => i.bactive));
+    //             }
+
+    //             // Fetch services
+    //             const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, { headers });
+    //             const servicesData = await servicesRes.json();
+    //             if (servicesData?.data) {
+    //                 setServices(servicesData.data.filter(s => s.bactive));
+    //             }
+
+    //         } catch (err) {
+    //             console.error("Failed to fetch master data:", err);
+    //         }
+    //     };
+
+    //     if (token) {
+    //         fetchMasterData();
+    //     }
+    // }, [token]);
 
     const handleSelectCount = (count) => {
         setLeadsToShow(count);

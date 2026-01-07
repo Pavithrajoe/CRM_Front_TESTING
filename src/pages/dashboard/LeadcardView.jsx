@@ -12,7 +12,7 @@ import { useUserAccess } from "../../context/UserAccessContext";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchLeads } from "../../Redux/leadActions";
 import { GlobUserContext } from "../../context/userContex";
-
+import { Menu, ChevronDown } from 'lucide-react';
 const LeadCardViewPage = () => {
   const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
   const hasImportAccess = user_attributes.some(
@@ -63,6 +63,7 @@ const LeadCardViewPage = () => {
   const [statuses, setStatuses] = useState([]);
   const [sources, setSources] = useState([]);
   const [displayedData, setDisplayedData] = useState([]);
+  
 
   // Bulk assignment states
   const [selectedLeads, setSelectedLeads] = useState([]);
@@ -82,16 +83,8 @@ const LeadCardViewPage = () => {
   const [selectedSource, setSelectedSource] = useState("");
   const [leadsToShow, setLeadsToShow] = useState(null);
   const [showPagination, setShowPagination] = useState(true);
-
-  // const importPermissions = useMemo(() => {
-  //   return userModules.filter(
-  //     (attr) => 
-  //       attr.module_id === 5 && 
-  //       attr.bactive && 
-  //       attr.attribute_name === "Import"
-  //   );
-  // }, [userModules]);
-
+  const [showMenu, setShowMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Get page from URL or state
   const params = new URLSearchParams(location.search);
@@ -157,7 +150,6 @@ const LeadCardViewPage = () => {
 
       const matchesDate = isWithinDateRange(dateToFilter);
 
-      // Apply modal filters only for specified tabs
       let matchesModalFilters = true;
 
       if (
@@ -304,27 +296,22 @@ const LeadCardViewPage = () => {
         // if (industriesData?.response?.industry) {
           setIndustries(industriesData);
           // );
-  
 
-        // Fetch services - FIXED: Check the correct response structure
+        // Fetch services 
         const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, {
           headers,
         });
         const servicesData = await servicesRes.json();
 
-
         // Check different possible response structures
         if (servicesData?.data) {
-          // If data is directly in data property
           setServices(servicesData);
         } else if (servicesData?.response) {
-          // If data is in response property
           const servicesArray = Array.isArray(servicesData.response) 
             ? servicesData.response 
             : servicesData.response?.service || [];
           setServices(servicesArray);
         } else if (Array.isArray(servicesData)) {
-          // If the response is directly an array
           setServices(servicesData);
         } else {
           console.warn("Unexpected services response structure:", servicesData);
@@ -393,7 +380,6 @@ const LeadCardViewPage = () => {
   useEffect(() => {
     if (location.state?.returnPage) {
       setCurrentPage(location.state.returnPage);
-      // Clear the state after using it to prevent infinite loop
       navigate(location.pathname + location.search, {
         replace: true,
         state: {},
@@ -441,7 +427,6 @@ const LeadCardViewPage = () => {
   useEffect(() => {
     if (!user || user.length === 0) return;
 
-    // Filter out any invalid users
     const validUsers = user.filter(
       (user) => user.bactive === true || user.bactive === "true"
     );
@@ -465,7 +450,6 @@ const LeadCardViewPage = () => {
 
     const name = potentialName.toString().toLowerCase().trim();
 
-    // Your existing logic here...
     if (name.includes("hot") || name.includes("high")) {
       return "bg-red-400 text-white";
     }
@@ -475,7 +459,6 @@ const LeadCardViewPage = () => {
     if (name.includes("cold") || name.includes("low")) {
       return "bg-blue-300 text-black";
     }
-    //if not matched for anything refault
     return "bg-gray-200 text-yellow-700";
   };
 
@@ -506,6 +489,8 @@ const LeadCardViewPage = () => {
         return "bg-gray-300 text-gray-700";
     }
   };
+
+  const menuFilters = ['all', 'leads', ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
 
   const fetchLostLeads = useCallback(async () => {
     if (!currentUserId || !currentToken) return;
@@ -659,7 +644,6 @@ const LeadCardViewPage = () => {
     setCurrentPage(1);
   };
 
-  // Add this useEffect to clear modal filters when switching to assignedToMe or lost
   useEffect(() => {
     if (selectedFilter === "assignedToMe" || selectedFilter === "lost") {
       setSelectedPotential("");
@@ -885,7 +869,7 @@ const LeadCardViewPage = () => {
           placeholder="Search leads..."
           className="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 bg-gray-50 rounded-full shadow-inner placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
-        <div className="flex gap-2 flex-wrap">
+        <div className="hidden sm:flex gap-2 flex-wrap">
           <button
             onClick={() => {
               if (selectedFilter === "assignedToMe") fetchAssignedLeads();
@@ -926,71 +910,114 @@ const LeadCardViewPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
-        <div className="flex flex-wrap gap-2">
-          {[
-            "all",
-            "leads",
-            // ...(websiteActive ? ["websiteLeads"] : []),
-            ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
-            "assignedToMe",
-            "lost",
-          ].map((filterKey) => (
-            <button
-              key={filterKey}
-              onClick={() => {
-                setSelectedFilter(filterKey);
-                setSearchTerm("");
-                setFromDate("");
-                setToDate("");
-                setCurrentPage(1);
-                setSelectedPotential("");
-                setSelectedStatus("");
-                setSelectedSource("");
-                setSelectedIndustry("");
-                setSelectedService("");
-
-                navigate(location.pathname, { replace: true });
-              }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                selectedFilter === filterKey
-                  ? filterKey === "lost"
-                    ? "bg-red-600 text-white"
-                    : "bg-blue-600 text-white"
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {filterKey === "all" ? ("All Leads" ) : filterKey === "leads" ? ( "Leads" ) : filterKey === "websiteLeads" ? (
-                <>
-                  {" "}
-                  Website Leads{" "}
-                  <FaCrown className="inline ml-1 text-yellow-600" size={18} />
-                </>
-              ) : filterKey === "lost" ? (
-                "Lost"
-              ) : (
-                "Assigned to Me"
-              )}
-            </button>
-          ))}
+  {/* COMPLETE FILTERS - Mobile/Tablet/Desktop Perfect */}
+  <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-4 mb-6">
+    {/* Mobile: Menu Dropdown */}
+    <div className="lg:hidden relative z-50 ml-2">
+      <button
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition-all border border-gray-200 shadow-sm hover:shadow-md w-full lg:w-auto"
+      >
+        Menu
+        <Menu size={18} className={`transition-transform ${showMobileMenu ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {showMobileMenu && (
+        <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-hidden">
+          {menuFilters.map((filterKey) => {
+            const labels = { all: "All Leads", leads: "Leads",  websiteLeads: "Website Leads", assignedToMe: "Assigned to Me", lost: "Lost" };
+            const label = labels[filterKey];
+            const isWebsiteLeads = filterKey === 'websiteLeads';
+            
+            return (
+              <button
+                key={filterKey}
+                onClick={() => {
+                  setSelectedFilter(filterKey);
+                  setSearchTerm("");
+                  setFromDate("");
+                  setToDate("");
+                  setCurrentPage(1);
+                  setSelectedPotential("");
+                  setSelectedStatus("");
+                  setSelectedSource("");
+                  setSelectedIndustry("");
+                  setSelectedService("");
+                  setShowMobileMenu(false);
+                  navigate(location.pathname, { replace: true });
+                }}
+                className={`w-full flex items-center justify-between px-5 py-4 text-left first:rounded-t-2xl last:rounded-b-2xl transition-all hover:bg-blue-50 border-b border-gray-50 last:border-b-0 ${
+                  selectedFilter === filterKey
+                    ? filterKey === "lost"
+                      ? "bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-800 border-red-100 font-semibold"
+                      : "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-800 border-blue-100 font-semibold"
+                    : "text-gray-700 hover:text-blue-800"
+                }`}
+              >
+                <span className="flex items-center gap-3">{label}{isWebsiteLeads && <FaCrown className="text-yellow-500" size={16} />}</span>
+                <ChevronDown size={16} className={`transition-transform ${selectedFilter === filterKey ? 'rotate-180' : ''}`} />
+              </button>
+            );
+          })}
         </div>
-        {hasImportAccess && (
-          <button 
-            onClick={() => setShowImportModal(true)} 
-            className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition"
+      )}
+    </div>
+
+    {/* Tablet+: Compact Buttons (All/Leads/Website/Lost) */}
+    <div className="hidden md:flex flex-wrap gap-2 flex-1 lg:ml-4">
+      {menuFilters.map((filterKey) => {  {/* Use your full menuFilters */}
+        const labels = { 
+          all: "All Leads", 
+          leads: "Leads", 
+          websiteLeads: "Website Leads", 
+          assignedToMe: "Assigned to Me", 
+          lost: "Lost" 
+        };
+        
+        return (
+          <button
+            key={filterKey}
+            onClick={() => {
+              setSelectedFilter(filterKey);
+              setSearchTerm("");
+              setFromDate("");
+              setToDate("");
+              setCurrentPage(1);
+              setSelectedPotential("");
+              setSelectedStatus("");
+              setSelectedSource("");
+              setSelectedIndustry("");
+              setSelectedService("");
+              navigate(location.pathname, { replace: true });
+            }}
+            className={`px-3 py-2 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all flex items-center gap-1 ${
+              selectedFilter === filterKey
+                ? filterKey === "lost"
+                  ? "bg-red-600 text-white shadow-md hover:shadow-lg"
+                  : "bg-blue-600 text-white shadow-md hover:shadow-lg"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 border hover:border-gray-300"
+            }`}
           >
-            Import Leads
+            {labels[filterKey]}
+            {filterKey === "websiteLeads" && <FaCrown className="text-yellow-500" size={14} />}
           </button>
-        )}
+        );
+      })}
+    </div>
 
-        {/* {roleID && importPermissions.map((i) =>  (
 
-          <button key={i.attributes_id} onClick={() => setShowImportModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap" >
-          {i.attribute_name   }    
-          </button>
-        ))} */}
-      </div>
+    {/* Import Button */}
+    {hasImportAccess && (
+      <button 
+        onClick={() => setShowImportModal(true)} 
+        className=" hidden md:block bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition ml-auto lg:ml-0 whitespace-nowrap"
+      >
+        Import Leads
+      </button>
+    )}
+  </div>
 
+      {/* Lost Checkboxes (unchanged) */}
       {selectedFilter === "lost" && (
         <div className="flex flex-wrap gap-4 mt-5 mb-5 items-center">
           <label className="flex items-center space-x-2 text-gray-700">
@@ -1013,6 +1040,7 @@ const LeadCardViewPage = () => {
           </label>
         </div>
       )}
+
 
       <LeadFilterModal
         showModal={showFilterModal}
@@ -1141,10 +1169,7 @@ const LeadCardViewPage = () => {
       )}
 
       {showImportModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 "
-          onClick={() => setShowImportModal(false)}
-        >
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 " onClick={() => setShowImportModal(false)} >
           <div
             className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 h-[50vh] overflow-y-scroll "
             onClick={(e) => e.stopPropagation()}
@@ -1668,7 +1693,6 @@ export default LeadCardViewPage;
 
 
 
-
 // import React, {useEffect, useState, useCallback, useMemo, useContext} from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit, } from "react-icons/fa";
@@ -1685,6 +1709,14 @@ export default LeadCardViewPage;
 // import { GlobUserContext } from "../../context/userContex";
 
 // const LeadCardViewPage = () => {
+//   const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
+//   const hasImportAccess = user_attributes.some(
+//     (attr) => attr.attribute_name === "Import" && attr.bactive === true
+//   );
+//   const hasWebsiteLeadAccess = user_attributes.some(
+//     (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
+//   );
+
 //   const { user } = useContext(GlobUserContext);
 //   const location = useLocation();
 //   const navigate = useNavigate();
@@ -1746,14 +1778,15 @@ export default LeadCardViewPage;
 //   const [leadsToShow, setLeadsToShow] = useState(null);
 //   const [showPagination, setShowPagination] = useState(true);
 
-//   const importPermissions = useMemo(() => {
-//     return userModules.filter(
-//       (attr) => 
-//         attr.module_id === 5 && 
-//         attr.bactive && 
-//         attr.attribute_name === "Import"
-//     );
-//   }, [userModules]);
+//   // const importPermissions = useMemo(() => {
+//   //   return userModules.filter(
+//   //     (attr) => 
+//   //       attr.module_id === 5 && 
+//   //       attr.bactive && 
+//   //       attr.attribute_name === "Import"
+//   //   );
+//   // }, [userModules]);
+
 
 //   // Get page from URL or state
 //   const params = new URLSearchParams(location.search);
@@ -2489,6 +2522,7 @@ export default LeadCardViewPage;
 //     }
 //   };
 
+
 //   useEffect(() => {
 //     setSelectedLeads([]);
 //     setShowBulkActions(false);
@@ -2592,7 +2626,8 @@ export default LeadCardViewPage;
 //           {[
 //             "all",
 //             "leads",
-//             ...(websiteActive ? ["websiteLeads"] : []),
+//             // ...(websiteActive ? ["websiteLeads"] : []),
+//             ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
 //             "assignedToMe",
 //             "lost",
 //           ].map((filterKey) => (
@@ -2634,13 +2669,21 @@ export default LeadCardViewPage;
 //             </button>
 //           ))}
 //         </div>
+//         {hasImportAccess && (
+//           <button 
+//             onClick={() => setShowImportModal(true)} 
+//             className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition"
+//           >
+//             Import Leads
+//           </button>
+//         )}
 
-//         {roleID && importPermissions.map((i) =>  (
+//         {/* {roleID && importPermissions.map((i) =>  (
 
 //           <button key={i.attributes_id} onClick={() => setShowImportModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap" >
 //           {i.attribute_name   }    
 //           </button>
-//         ))}
+//         ))} */}
 //       </div>
 
 //       {selectedFilter === "lost" && (
@@ -3089,12 +3132,7 @@ export default LeadCardViewPage;
 
 //                   return (
 //                     <div
-//                       key={
-//                         item.ilead_id ||
-//                         `assigned-${item.cemail}-${item.iphone_no}-${
-//                           item.dcreate_dt || Date.now()
-//                         }`
-//                       }
+//                       key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
 //                       className={`min-w-[600px] grid gap-4 px-4 py-3 border-t hover:bg-gray-100 cursor-pointer text-sm text-gray-700 ${
 //                         selectedFilter === "assignedToMe"
 //                           ? "grid-cols-10"
@@ -3112,34 +3150,17 @@ export default LeadCardViewPage;
 //                         />
 //                       </div>
 
-//                       <div
-//                         onClick={() => goToDetail(item.ilead_id, displayedData)}
-//                       >
-//                         {item.clead_name || "-"}
-//                       </div>
-//                       <div
-//                         onClick={() => goToDetail(item.ilead_id, displayedData)}
-//                       >
-//                         {item.corganization || item.c_organization || "-"}
-//                       </div>
-//                       <div
-//                         className="relative group overflow-visible"
-//                         onClick={() => goToDetail(item.ilead_id, displayedData)}
-//                       >
-//                         <span className="block truncate">
-//                           {item.cemail || item.c_email || "-"}
-//                         </span>
+//                       <div onClick={() => goToDetail(item.ilead_id, displayedData)} > {item.clead_name || "-"} </div>
+//                       <div onClick={() => goToDetail(item.ilead_id, displayedData)} > {item.corganization || item.c_organization || "-"} </div>
+//                       <div className="relative group overflow-visible" onClick={() => goToDetail(item.ilead_id, displayedData)} >
+//                         <span className="block truncate"> {item.cemail || item.c_email || "-"} </span>
 //                         {(item.cemail || item.c_email) && (
 //                           <div className="absolute left-0 top-full mt-1 bg-white border border-gray-300 shadow-lg p-2 rounded-md text-xs z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-max pointer-events-none group-hover:pointer-events-auto">
 //                             {item.cemail || item.c_email}
 //                           </div>
 //                         )}
 //                       </div>
-//                       <div
-//                         onClick={() => goToDetail(item.ilead_id, displayedData)}
-//                       >
-//                         {item.iphone_no || item.c_phone || "-"}
-//                       </div>
+//                       <div onClick={() => goToDetail(item.ilead_id, displayedData)} > {item.iphone_no || item.c_phone || "-"} </div>
 //                       {selectedFilter === "assignedToMe" && (
 //                         <>
 //                           <div onClick={() =>  goToDetail(item.ilead_id, displayedData) } > {item.iassigned_by_name || "-"} </div>
@@ -3267,12 +3288,7 @@ export default LeadCardViewPage;
 //                         )}
 
 //                         <p className="flex items-center">
-//                           <FaEdit
-//                             className="mr-2"
-//                             style={{ color: "#ff5733" }}
-//                             size={12}
-//                           />{" "}
-//                           {/* Using size={12} to make the icon smaller */}
+//                           <FaEdit className="mr-2" style={{ color: "#ff5733" }} size={12}/>{" "}
 //                           <span className="text-gray-900 text-xs">
 //                             Modified:{" "}
 //                             {formatDate(
@@ -3344,3 +3360,5 @@ export default LeadCardViewPage;
 // };
 
 // export default LeadCardViewPage;
+
+

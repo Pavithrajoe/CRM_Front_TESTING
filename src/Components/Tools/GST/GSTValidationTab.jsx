@@ -193,7 +193,7 @@ const GSTValidationTab = ({ onCheckUsed, limitReached }) => {
                 variant="body1"
                 sx={{ fontWeight: 600, fontSize: "1.1rem" }}
               >
-                {data.legal_name || "N/A"}
+                {data.legal_name || "-"}
               </Typography>
               <Typography
                 sx={{
@@ -202,7 +202,7 @@ const GSTValidationTab = ({ onCheckUsed, limitReached }) => {
                   mb: 1,
                 }}
               >
-                {data.trade_name || "N/A"}
+                {data.trade_name || "-"}
               </Typography>
 
               <Chip
@@ -266,7 +266,7 @@ const GSTValidationTab = ({ onCheckUsed, limitReached }) => {
                           borderBottom: "1px solid rgba(0,0,0,0.05)",
                         }}
                       >
-                        {value || "N/A"}
+                        {value || "-"}
                       </TableCell>
                     </TableRow>
                   ))}

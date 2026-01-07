@@ -8,24 +8,16 @@ import RemindersCard from "@/Components/dashboard/teamlead/tlremindercard";
 import TaskSameDay from "@/Components/common/taskSameDay";
 
 const LeadsDashboard = () => {
+  const XCODEFIX_FLOW = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [allTasks, setAllTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   // const [activeTab, setActiveTab] = useState("");
   const [activeTab, setActiveTab] = useState("TASKS");
-
-
-  // SINGLE SOURCE FILTER STATE
   const [reminderFilter, setReminderFilter] = useState("Today");
   const [taskFilter, setTaskFilter] = useState("Today");
-
-  const XCODEFIX_FLOW = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-
-  const user_attributes = useMemo(
-    () => JSON.parse(localStorage.getItem("user_attributes")) || [],
-    []
-  );
+  const user_attributes = useMemo( () => JSON.parse(localStorage.getItem("user_attributes")) || [], []);
 
   const allowedTabs = useMemo(() => {
     const required = ["REMINDERS", "TASKS", "Missed task"];
@@ -158,15 +150,13 @@ const LeadsDashboard = () => {
   return (
     <div className="flex mt-[-80px]">
       <main className="w-full flex-1 p-6 mt-[80px]">
-        <div className="flex justify-between items-center mb-6 w-full overflow-hidden">
+        <div className="flex justify-between items-center mb-6 w-full relative z-50">
           <div className=""> <TeamleadHeader /> </div>
           <div className="shrink-0 ml-4"> <ProfileHeader /> </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <Box sx={{ bgcolor: "white", p: 2, borderRadius: 2 }}>
-            <KPIStats data={dashboardData?.details} />
-          </Box>
+          <Box sx={{ bgcolor: "white", p: 2, borderRadius: 2 }}> <KPIStats data={dashboardData?.details} /> </Box>
 
           <Box sx={{ 
             bgcolor: "white", 
@@ -206,10 +196,7 @@ const LeadsDashboard = () => {
               })}
             </Tabs>
 
-            <Box p={2} sx={{ 
-              flexGrow: 1,      
-              overflowY: 'auto' 
-            }}>
+            <Box p={2} sx={{  flexGrow: 1, overflowY: 'auto' }}>
               {activeTab === "REMINDERS" && (
                 <RemindersCard
                   reminder_data={filteredReminders}

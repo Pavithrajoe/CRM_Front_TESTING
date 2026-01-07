@@ -250,8 +250,8 @@ const CompanyDetails = () => {
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">{company.cCompany_name}</h3>
                   
                   <p className="text-base text-gray-600 mb-1">Status: {company.bactive ? <span className="text-green-600 font-medium">Active</span> : <span className="text-red-600 font-medium">Inactive</span>}</p>
-                  <p className="text-base text-gray-600 mb-1">Email: {company.cemail_address || 'N/A'}</p>
-                  <p className="text-base text-gray-600 mb-1">Phone: {company.iPhone_no || 'N/A'}</p>
+                  <p className="text-base text-gray-600 mb-1">Email: {company.cemail_address || '-'}</p>
+                  <p className="text-base text-gray-600 mb-1">Phone: {company.iPhone_no || '-'}</p>
                   <p className="text-base text-gray-600 mb-1">Website: <a href={company.cWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{company.cWebsite}</a></p>
                   <p className="text-sm text-gray-500 mt-2">Created: {new Date(company.dCreated_dt).toLocaleDateString()}</p>
                 </div>
@@ -292,14 +292,14 @@ const CompanyDetails = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-base text-blue-500 hover:underline">
                         <a href={company.cWebsite} target="_blank" rel="noopener noreferrer">
-                          {company.cWebsite || 'N/A'}
+                          {company.cWebsite || '-'}
                         </a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
-                        {company.cemail_address || 'N/A'}
+                        {company.cemail_address || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
-                        {company.iPhone_no || 'N/A'}
+                        {company.iPhone_no || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-base">
                         {company.bactive ? (

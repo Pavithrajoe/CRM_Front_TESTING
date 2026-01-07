@@ -333,7 +333,7 @@ const PaymentAndDomainDetailsCombined = ({ serviceData, onBack, totalBalance,cur
                     >
                         <FaArrowLeft className="mr-2" /> Back to Service Details
                     </button>
-                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details (Lead ID: {leadId || 'N/A'})</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-blue-700">Payment & Domain Details (Lead ID: {leadId || '-'})</h2>
                 </div>
                 
                 {/* Total Amount Display */}

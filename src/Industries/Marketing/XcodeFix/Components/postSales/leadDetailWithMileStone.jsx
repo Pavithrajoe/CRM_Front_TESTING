@@ -922,7 +922,7 @@ const LeadDetailView = () => {
   }, []);
 
   const formatDate = (dateInput) => {
-    if (!dateInput) return "N/A";
+    if (!dateInput) return "-";
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return "Invalid Date";
     const day = String(date.getDate()).padStart(2, "0");

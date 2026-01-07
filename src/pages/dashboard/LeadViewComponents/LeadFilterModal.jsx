@@ -1,5 +1,3 @@
-import React from 'react';
-
 const LeadFilterModal = ({
     showModal,
     onClose,
@@ -60,21 +58,20 @@ const LeadFilterModal = ({
 
                     {/* Column 2: Lead Properties */}
                     <div className="space-y-4">
-                       <label className="block text-sm text-gray-700">
-  Potential
-  <select
-    value={selectedPotential}
-    onChange={(e) => setSelectedPotential(e.target.value)}
-    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
-  >
-    <option value="">All Potentials</option>
-{Array.isArray(potentials?.data) && potentials.data.map(p => (
-      <option key={p.ileadpoten_id} value={p.clead_name}>
-        {p.clead_name}
-      </option>
-    ))}
-  </select>
-</label>
+                       <label className="block text-sm text-gray-700"> Potential
+                        <select
+                            value={selectedPotential}
+                            onChange={(e) => setSelectedPotential(e.target.value)}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 text-sm"
+                        >
+                            <option value="">All Potentials</option>
+                        {Array.isArray(potentials?.data) && potentials.data.map(p => (
+                            <option key={p.ileadpoten_id} value={p.clead_name}>
+                                {p.clead_name}
+                            </option>
+                            ))}
+                        </select>
+                        </label>
 
                         <label className="block text-sm text-gray-700">
                             Status
@@ -134,8 +131,8 @@ const LeadFilterModal = ({
                             >
                                 <option value="">All Services</option>
                                 { Array.isArray (services?.data) && services.data.map(s => (
-                                    <option key={s.iservice_id} value={s.iservice_id}>
-                                        {s.cservice_name}
+                                    <option key={s.serviceId} value={s.serviceId}>
+                                        {s.serviceName}
                                     </option>
                                 ))}
                             </select>

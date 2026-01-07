@@ -188,7 +188,7 @@ export default function SalesByStageReport() {
       'Total Value (INR)': row.totalValue,
       'Avg. Deal Size (INR)': row.avgDealSize,
       'Avg Days in Stage': row.avgDays,
-      'Conversion Rate (%)': row.conversionRate !== null ? parseFloat(row.conversionRate) : '-', // Handle null
+      'Conversion Rate (%)': row.conversionRate !== null ? parseFloat(row.conversionRate) : '-', 
     }));
 
     // Add totals row
@@ -198,7 +198,7 @@ export default function SalesByStageReport() {
       'Total Value (INR)': stats.totalValue,
       'Avg. Deal Size (INR)': stats.avgDealSize,
       'Avg Days in Stage': stats.avgDays,
-      'Conversion Rate (%)': '-', // N/A for total row
+      'Conversion Rate (%)': '-', 
     });
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);

@@ -659,14 +659,9 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
                   value={selectedAssignToUser ?? ""}
                   disabled={profile?.bactive === false || isLost || isDeal}
                 >
-                  <option value="" disabled>
-                    Select User
-                  </option>
+                  <option value="" disabled> Select User </option>
                   {activeUsers.map((user) => (
-                    <option
-                      key={String(user?.iUser_id ?? user?.id ?? Math.random())}
-                      value={user?.iUser_id ?? user?.id}
-                    >
+                    <option key={String(user?.iUser_id ?? user?.id ?? Math.random())} value={user?.iUser_id ?? user?.id} >
                       {user?.cUser_name ?? user?.cFull_name ?? "Unnamed"}
                     </option>
                   ))}
@@ -692,12 +687,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
 
             {/* Notify To */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              <label
-                htmlFor="notifyUser"
-                className="text-sm font-semibold text-gray-700 min-w-[90px]"
-              >
-                Notify to:
-              </label>
+              <label htmlFor="notifyUser" className="text-sm font-semibold text-gray-700 min-w-[90px]" > Notify to: </label>
               <div className="relative w-full sm:w-64">
                 <select
                   id="notifyUser"
@@ -750,8 +740,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
             <div className="flex justify-center mt-4">
               <button
                 className="inline-flex items-center px-4 py-2 bg-blue-900 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                disabled={!selectedAssignToUser}
-                onClick={handleAssignButtonClick}
+                disabled={!selectedAssignToUser} onClick={handleAssignButtonClick}
               >
                 Assign Lead
               </button>
@@ -764,9 +753,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-gray-700"> Lead Assigned to </h3>
             {Array.isArray(assignedToList) && assignedToList.length > 2 && (
-              <button onClick={() => setIsAssignedToModalOpen(true)} className="text-blue-600 hover:underline text-sm font-medium" >
-                View All
-              </button>
+              <button onClick={() => setIsAssignedToModalOpen(true)} className="text-blue-600 hover:underline text-sm font-medium" > View All </button>
             )}
           </div>
 
@@ -868,9 +855,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
               >
                 <input {...getInputProps()} />
                 {selectedFile ? (
-                  <p className="text-sm text-gray-700 font-medium">
-                    {selectedFile.name}
-                  </p>
+                  <p className="text-sm text-gray-700 font-medium"> {selectedFile.name} </p>
                 ) : (
                   <>
                     <p className="text-sm text-gray-500"> Drag & drop a file here, or{" "} <span className="text-blue-900 font-medium"> click to select </span> </p>
@@ -953,10 +938,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
                 <button onClick={() => setShowAssignConfirmation(false)} className="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors" >
                   Cancel
                 </button>
-                <button
-                  onClick={confirmAssignment}
-                  className="px-5 py-2 text-sm font-semibold rounded-lg text-white bg-blue-700 hover:bg-blue-600 transition-colors"
-                >
+                <button onClick={confirmAssignment} className="px-5 py-2 text-sm font-semibold rounded-lg text-white bg-blue-700 hover:bg-blue-600 transition-colors">
                   Confirm
                 </button>
               </div>

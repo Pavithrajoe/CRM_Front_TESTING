@@ -1069,7 +1069,8 @@ const LeadDetailView = () => {
                   {userSettings.mail_access && (
                     <button
                       onClick={() => setIsMailOpen(true)}
-                      className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                      className="hidden sm:flex bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                      // className="bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition flex items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
                       title="Email"
                     >
                       <div className="w-px h-5 bg-gray-600"></div>

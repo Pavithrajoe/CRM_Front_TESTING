@@ -72,10 +72,12 @@ const TaskItem = React.memo(({
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
         <p className="break-words">
-          <span className="font-medium text-gray-700">Assigned to:</span>{" "} {task.user_task_iassigned_toTouser?.cFull_name || "-"}
+          <span className="font-medium text-gray-700">Assigned to:</span>{" "}
+          {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
         </p>
-        <p className="break-words"> <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-          {task.user_task_inotify_toTouser?.cFull_name || "-"}
+        <p className="break-words">
+          <span className="font-semibold text-gray-700">Notified to:</span>{" "}
+          {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
         </p>
       </div>
       
@@ -113,9 +115,7 @@ const Tasks = () => {
   const formRef = useRef(null);
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showFormMobile, setShowFormMobile] = useState(false);
-  const [isSpecialCompanyState, setIsSpecialCompanyState] = useState(false);
+
   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",
@@ -164,10 +164,10 @@ const Tasks = () => {
       const tokenPayload = decodeToken(token);
       const userId = tokenPayload?.user_id || tokenPayload?.iUser_id || null;
       const userName = tokenPayload?.cFull_name || "Current Login User";
+      
       setUserId(userId);
       setUserName(userName);
       setCompanyId(tokenPayload?.company_id || tokenPayload?.iCompany_id || null);
-      setIsSpecialCompanyState(Number(tokenPayload?.company_id || tokenPayload?.iCompany_id) === COMPANY_ID);
       
       // Set the current user as the default assignee
       if (userId) {
@@ -220,7 +220,7 @@ const Tasks = () => {
       await fetchTasks();
     };
     loadData();
-  }, []); 
+  }, []); // Empty dependency array
 
   // Speech recognition effect
   useEffect(() => {
@@ -293,14 +293,8 @@ const Tasks = () => {
     });
     setAssignToMe(true);
     setEditingTask(null);
-   
-
-    if (isMobile && isSpecialCompany) {
-    setShowFormMobile(true);
-  } else {
     setShowForm(true);
-  }
-  }, [userId, isMobile, isSpecialCompany]);
+  }, [userId]);
 
   const handleEditClick = useCallback((task) => {
     setEditingTask(task);
@@ -314,14 +308,7 @@ const Tasks = () => {
       inotify_to: task.inotify_to,
       task_date: new Date(task.task_date),
     });
-
-      if (isMobile && isSpecialCompany) {
-    setShowFormMobile(true);
-  } else {
     setShowForm(true);
-  }
-    
-   
   }, [userId]);
 
   const handleChange = useCallback((e) => {
@@ -425,8 +412,11 @@ const Tasks = () => {
       if (response.data.success || response.data.message === "Task Added Successfully") {
         if (mic && isListening) mic.stop();
         setIsListening(false);
+
         showPopup("Success", "🎉 Task saved successfully!", "success");
+
         await fetchTasks();
+
         setFormData({
           ctitle: "",
           ctask_content: "",
@@ -438,8 +428,6 @@ const Tasks = () => {
         setEditingTask(null);
         setAssignToMe(true);
         setCurrentPage(1);
-        setShowFormMobile(false); 
-
       } else {
         showPopup("Error", response.data.message || "Failed to save task.", "error");
       }
@@ -480,7 +468,7 @@ const Tasks = () => {
   }, [token, showPopup, fetchTasks]);
 
   const formatDateTime = useCallback((dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -532,29 +520,6 @@ const Tasks = () => {
     }
   }, [isSearchOpen]);
 
-  useEffect(() => {
-  const mediaQuery = window.matchMedia('(max-width: 1023px)'); 
-  
-  const handleResize = (e) => {
-    setIsMobile(e.matches);
-    if (e.matches) {
-      setShowFormMobile(false); 
-    }
-  };
-  
-  mediaQuery.addEventListener('change', handleResize);
-   handleResize(mediaQuery);
-  setIsMobile(mediaQuery.matches); 
-  
-  return () => mediaQuery.removeEventListener('change', handleResize);
-}, []);
-
-useEffect(() => {
-  console.log('Mobile check:', { isMobile, isSpecialCompanyState, companyId, screenWidth: window.innerWidth });
-}, [isMobile, isSpecialCompanyState]);
-
-
-
   // Render form (as modal or side panel)
   const renderTaskForm = useCallback(() => (
     <div
@@ -565,7 +530,7 @@ useEffect(() => {
           // : 'relative w-full max-w-lg animate-in slide-in-from-bottom duration-300 bg-white rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[90vh]'
         // isSpecialCompany
            ? 'w-full min-h-[520px] lg:min-h-[600] bg-gradient-to-b from-white via-blue-50/30 to-indigo-50/20 border-0 shadow-2xl backdrop-blur-sm rounded-none p-3 sm:p-4 md:p-5  pb-28 overflow-y-auto flex flex-col'
-          : "fixed top-1/2 left-[calc(40%-1px)] -translate-x-[35%] -translate-y-1/2 w-[92vw] max-w-[340px] sm:w-[85vw] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl p-3 sm:p-4 md:p-5 lg:p-6 bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto z-[999] transition-all duration-300 "
+          : "fixed top-1/2 left-[calc(50%-1px)] -translate-x-[35%] -translate-y-1/2 w-[92vw] max-w-[340px] sm:w-[85vw] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl p-3 sm:p-4 md:p-5 lg:p-6 bg-white rounded-xl sm:rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto z-[999] transition-all duration-300"
       }`}
       style={isSpecialCompany ? {} : { zIndex: 1001 }}
       onClick={isSpecialCompany ? undefined : (e) => e.stopPropagation()}
@@ -584,7 +549,6 @@ useEffect(() => {
           <button
             onClick={() => {
               setShowForm(false);
-              setShowFormMobile(false); 
               setIsListening(false);
               setEditingTask(null);
             }}
@@ -758,7 +722,7 @@ useEffect(() => {
   ), [
     isSpecialCompany, editingTask, formData, assignToMe, loadingUsers, companyUsers, 
     userName, saving, handleFormSubmission, handleChange, handleAssignToMeChange, 
-    handleDateChange, canEditTask,isMobile
+    handleDateChange, canEditTask
   ]);
 
   // Render task list component (chat style)
@@ -818,18 +782,15 @@ useEffect(() => {
     canEditTask, canDeleteTask, handleEditClick, handleDeleteTask, formatDateTime
   ]);
 
-  const triggerButtonClass = "w-full bg-[#223a8e] hover:bg-[#1a2d6e] text-white px-6 py-3.5 rounded-full shadow-lg shadow-blue-900/40 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]";
-
   return (
-    <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6 relative">
+    <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
       <div className={`${isSpecialCompany ? 'grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 p-1 sm:p-3 md:gap-6 md:p-6 h-screen bg-transparent border-0 overflow-hidden'
-        : "relative bg-white border rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-7xl mx-auto shadow-sm"}`}>
-        
+ : "relative bg-white border rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-7xl mx-auto shadow-sm"}`}>
         {isSpecialCompany ? (
           <>
-            {/* SPECIAL COMPANY LAYOUT */}
-            <div className="col-span-1 flex flex-col lg:pb-20">
-              {/* 1. Search Bar */}
+            {/* Left: Chat/History */}
+            <div className="col-span-1 flex flex-col">
+              {/* Search Bar */}
               <div className="flex items-center gap-2 mb-4">
                 <input
                   ref={searchInputRef}
@@ -840,116 +801,81 @@ useEffect(() => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="transition-all duration-300 ease-in-out bg-white border border-gray-200 outline-none text-sm font-medium rounded-full w-full px-4 py-2 shadow-sm"
+                  className="transition-all duration-300 ease-in-out bg-white border border-gray-200 outline-none text-sm font-medium rounded-full w-full px-4 py-2"
                 />
               </div>
-
-              {/* Mobile Button: Only shows on mobile, specifically labeled "Add Follow-up" */}
-              {isMobile && (
-                <div className="flex-none mb-4 lg:hidden">
-                  <button
-                    onClick={() => setShowFormMobile(true)}
-                    className=" bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out
-          flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center "
-                  >
-                    <span>➕</span> Add Follow-up
-                  </button>
-                </div>
-              )}
-
-              {/*  History List */}
-              <div className="flex-1 overflow-y-auto">
-                  {renderTaskHistory()}
-              </div>
+              {/* Task history */}
+              {renderTaskHistory()}
             </div>
-            
-            {/* Desktop Right Side Form */}
-            {!isMobile && (
-              <div className="hidden lg:flex lg:col-span-1 flex-col border-l border-gray-200 bg-white rounded-r-2xl">
-                {renderTaskForm()}
-              </div>
-            )}
+            {/* Right: Form always visible */}
+            <div className="col-span-1 flex flex-col">{renderTaskForm()}</div>
           </>
         ) : (
           <>
-            {/* STANDARD (BALANCE) COMPANY LAYOUT  */}
+            {/* Header Section */}
             <div className="flex flex-col sm:flex-row justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-b bg-gray-50 rounded-t-2xl gap-4">
-              <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-72">
-                <input 
-                    type="text" 
-                    placeholder="Search tasks..." 
-                    className="w-full px-4 py-2 rounded-full outline-none text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              {/* Standard Label: "Add Task" */}
-              <button 
-                onClick={handleNewTaskClick} 
-                className=" bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out
-                flex-shrink-0 text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center " >
-                + Add Task
-              </button>
-            </div>
+  {/* Search Bar */}
+  <div className="relative flex items-center bg-white border border-gray-200 rounded-full w-full sm:w-72">
+    <input
+      ref={searchInputRef}
+      type="text"
+      placeholder="Search tasks..."
+      value={searchQuery}
+      onChange={(e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+      }}
+      className={`
+        w-full
+        transition-all duration-300 ease-in-out
+        bg-transparent outline-none text-sm font-medium
+        ${isSearchOpen ? 'px-4 py-2 opacity-100' : 'px-0 py-0 opacity-0'}
+      `}
+    />
+    <button
+      onClick={() => setIsSearchOpen(!isSearchOpen)}
+      className={`
+        p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors
+        sm:hidden
+        ${isSearchOpen ? 'text-blue-900' : ''}
+      `}
+      aria-label="Toggle search bar"
+    >
+      <Search size={18} />
+    </button>
+  </div>
 
-            <div className="p-4">
-              {renderTaskHistory()}
-            </div>
+  {/* New Task Button */}
+  <button
+    onClick={handleNewTaskClick}
+    className="
+      bg-blue-900 shadow-md shadow-blue-900 text-white
+      px-4 py-2 sm:px-5 sm:py-2
+      rounded-full hover:bg-blue-700
+      transition duration-150 ease-in-out
+      flex-shrink-0 text-sm sm:text-base whitespace-nowrap
+      w-full sm:w-auto text-center
+    "
+  >
+    {!isSpecialCompany ? ' + New Task ' : '+ New Follow-up '}
+  </button>
+</div>
 
-            {/* Standard Form Modal */}
+            {/* Tasks Container with Scroll (history) */}
+            {renderTaskHistory()}
+            {/* Modal Form */}
             {showForm && (
               <>
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={handleClickOutside}></div>
-                <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative">
-                      {/* Close button for standard modal */}
-                      <button 
-                        onClick={() => setShowForm(false)} 
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                      >
-                        ✕
-                      </button>
-                      {renderTaskForm()}
-                  </div>
-                </div>
+                <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40 transition-opacity" onClick={handleClickOutside}></div>
+                {renderTaskForm()}
               </>
             )}
           </>
         )}
       </div>
-
-      {/* MOBILE OVERLAY */}
-      {isSpecialCompany && isMobile && showFormMobile && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999]" 
-            onClick={() => setShowFormMobile(false)}
-          />
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-[1001]">
-            <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
-              
-              {/* Essential Close Button for Mobile */}
-              <button
-                onClick={() => setShowFormMobile(false)}
-                className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors z-[1010]"
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-
-              <div className="overflow-y-auto">
-                {renderTaskForm()}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
-
-  };
+};
 
 export default Tasks;
 

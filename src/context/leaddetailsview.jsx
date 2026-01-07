@@ -1128,7 +1128,9 @@ const renderTabContent = () => {
       
       {/* DESKTOP: Always Full ProfileCard */}
       <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
-        <div className="sticky top-4 h-screen overflow-y-auto space-y-4 pr-2">
+      <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
+      {/* <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
+        <div className="sticky top-4 h-screen overflow-y-auto space-y-4 pr-2"> */}
           <ProfileCard
             leadId={leadId}
             settingsData={profileSettings}
@@ -1315,7 +1317,8 @@ const renderTabContent = () => {
                 <>
                   {userSettings.mail_access && (
                     <button onClick={() => setIsMailOpen(true)}
-                      className="hidden md:block bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base "
+                    className="hidden sm:flex bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                      // className="hidden md:block bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base "
                       title="Email"
                     >
                       <div className="w-px h-5 bg-gray-600"></div>

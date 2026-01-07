@@ -65,6 +65,7 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password })
       });
       const data = await response.json();
+      console.log("login data", data)
 
       setData(data);
 

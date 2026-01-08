@@ -351,7 +351,7 @@ export default function CreateUserForm({ onClose }) {
                 >
                   <option value="">-- Select Role --</option>
                   {roleOptions
-                    .filter((r) => r.cRole_name.toLowerCase() !== 'reseller')
+                    .filter((r) => r.cRole_name.toLowerCase() !== 'reseller' &&  r.cRole_name.toLowerCase() !== 'adminaccount' &&  r.cRole_name.toLowerCase() !== 'cmaster_reseller' &&  r.cRole_name.toLowerCase() !== 'creseller' )
                     .map((role) => (
                       <option key={role.irole_id} value={role.cRole_name}>
                         {role.cRole_name}

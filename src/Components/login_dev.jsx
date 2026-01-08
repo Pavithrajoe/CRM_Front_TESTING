@@ -180,14 +180,14 @@ const LoginPage = () => {
                     'Login'
                   )}
                 </button>
-
+{/* 
                  <button
                   type="button"
                   onClick={() => window.open('/CreateAnAccount', '_blank')}
                   className="mt-4 text-sm text-blue-600 hover:underline"
                 >
                   Create an Account
-                </button> 
+                </button>  */}
 
                 <button
                   type="button"

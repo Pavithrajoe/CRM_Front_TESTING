@@ -999,7 +999,7 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
   }, []);
 
   const formatDate = (dateInput) => {
-    if (!dateInput) return "-";
+    if (!dateInput) return "N/A";
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return "Invalid Date";
     const day = String(date.getDate()).padStart(2, "0");
@@ -1128,9 +1128,7 @@ const renderTabContent = () => {
       
       {/* DESKTOP: Always Full ProfileCard */}
       <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
-      <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
-      {/* <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
-        <div className="sticky top-4 h-screen overflow-y-auto space-y-4 pr-2"> */}
+     <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
           <ProfileCard
             leadId={leadId}
             settingsData={profileSettings}
@@ -1196,7 +1194,7 @@ const renderTabContent = () => {
 
 
         {/* Right Column: Status Bar, Tabs, and Content */}
-       <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-y-auto">
+       <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-y-auto lg:overflow-y-visible">
         {showConfetti && (
           <Confetti
             width={window.innerWidth}
@@ -1316,26 +1314,33 @@ const renderTabContent = () => {
               {showActionButtons && (
                 <>
                   {userSettings.mail_access && (
-                    <button onClick={() => setIsMailOpen(true)}
-                    className="hidden sm:flex bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
-                      // className="hidden md:block bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base "
+                    <button
+                      onClick={() => setIsMailOpen(true)}
+                      className="hidden sm:flex bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
                       title="Email"
                     >
                       <div className="w-px h-5 bg-gray-600"></div>
-                      <img src="/images/detailview/email.svg"  className=" w-4 h-4" alt="Email icon" />
+                      <img
+                         src="/images/detailview/email.svg" // Fixed path
+                        //src="../../public/images/detailview/email.svg"
+                        className=" w-4 h-4"
+                        alt="Email icon"
+                      />
                       <div className="w-px h-5 bg-gray-600"></div>
                     </button>
                   )}
 
                   {!(leadData?.bisConverted === true) && (
-                    <button className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    <button
+                      className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                       onClick={handleWonClick}
                     >
                       <FaPlus className="mr-1" /> Won
                     </button>
                   )}
 
-                  <button className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
+                  <button
+                    className="bg-red-300 text-red-600 shadow-md shadow-red-900 hover:bg-red-400 font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base"
                     onClick={handleLostClick}
                   >
                     Lost
@@ -1371,7 +1376,9 @@ const renderTabContent = () => {
           <DialogContent>
             <TextField
               label={
-                <span> Remark <span style={{ color: "red" }}>*</span> </span>
+                <span>
+                  Remark <span style={{ color: "red" }}>*</span>
+                </span>
               }
               fullWidth
               multiline
@@ -1619,12 +1626,21 @@ const renderTabContent = () => {
         {/* Lead Lost Reason Dialog */}
         {leadLostDescriptionTrue && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-            <div ref={lostReasonDialogRef} className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl" >
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4"> Why mark this lead as Lost? </h2>
+            <div
+              ref={lostReasonDialogRef}
+              className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
+            >
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
+                Why mark this lead as Lost?
+              </h2>
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
-                  <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base" > 
-                    Pick the reason for marking this lead as Lost <span className="text-red-500">*</span>
+                  <label
+                    htmlFor="lostReason"
+                    className="block font-medium mb-1 text-sm sm:text-base"
+                  >
+                    Pick the reason for marking this lead as Lost
+                    <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="lostReason"
@@ -1636,7 +1652,10 @@ const renderTabContent = () => {
                   >
                     <option value="">Select a reason</option>
                     {lostReasons.map((reason) => (
-                      <option key={reason.ilead_lost_reason_id} value={reason.ilead_lost_reason_id} >
+                      <option
+                        key={reason.ilead_lost_reason_id}
+                        value={reason.ilead_lost_reason_id}
+                      >
                         {reason.cLeadLostReason}
                       </option>
                     ))}
@@ -1644,7 +1663,12 @@ const renderTabContent = () => {
                 </div>
 
                 <div>
-                  <label  htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base" >  Remarks </label>
+                  <label
+                    htmlFor="lostDescription"
+                    className="block font-medium mb-1 text-sm sm:text-base"
+                  >
+                    Remarks
+                  </label>
                   <textarea
                     id="lostDescription"
                     name="lostDescription"
@@ -1656,10 +1680,17 @@ const renderTabContent = () => {
                   ></textarea>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <button type="button" onClick={() => setLeadLostDescriptionTrue(false)} className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base" >
+                  <button
+                    type="button"
+                    onClick={() => setLeadLostDescriptionTrue(false)}
+                    className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
+                  >
                     Cancel
                   </button>
-                  <button  type="submit" className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base" >
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-blue-600 text-sm sm:text-base"
+                  >
                     Submit
                   </button>
                 </div>
@@ -1670,10 +1701,19 @@ const renderTabContent = () => {
 
         {/* for postsales form */}
         {showPostSalesForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4" >
-            <div  className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative" onClick={(e) => e.stopPropagation()} >
-              <button type="button" onClick={() => setShowPostSalesForm(false)}
-              className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10" title="Close Form">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+          >
+            <div 
+              className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowPostSalesForm(false)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+                title="Close Form"
+              >
                 ✕
               </button>
 
@@ -1699,11 +1739,24 @@ const renderTabContent = () => {
               {/* Header */}
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <img src="/images/detailview/email.svg" className="w-6 h-6" alt="Email icon" />
+                  <img
+                    src="/images/detailview/email.svg" // Fixed path
+                    className="w-6 h-6"
+                    alt="Email icon"
+                  />
                   Compose Email
                 </h2>
-                <button onClick={() => setIsMailOpen(false)} className="text-gray-500 hover:text-gray-700" >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" >
+                <button
+                  onClick={() => setIsMailOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -1719,7 +1772,9 @@ const renderTabContent = () => {
                 {/* Templates Section */}
                 <div className="w-full md:w-1/2 lg:w-2/5 h-[600px] p-4 rounded-xl border border-gray-200 ">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-lg text-gray-800"> Email Templates </h3>
+                    <h3 className="font-bold text-lg text-gray-800">
+                      Email Templates
+                    </h3>
                   </div>
 
                   {templatesLoading ? (
@@ -1728,8 +1783,13 @@ const renderTabContent = () => {
                     </div>
                   ) : templates.length === 0 ? (
                     <div className="text-center py-8 text-blue-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2 text-blue-300" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-12 w-12 mx-auto mb-2 text-blue-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1748,9 +1808,17 @@ const renderTabContent = () => {
                           onClick={() => applyTemplate(template)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg"> <MdEmail className="text-blue-600" size={18} /> </div>
-                            <div> <h4 className="font-semibold"> {template.mailTitle} </h4>
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2"> {template.mailBody?.replace(/<[^>]*>/g, "").substring(0, 100) || ""} </p> 
+                            <div className="p-2 rounded-lg">
+                              <MdEmail className="text-blue-600" size={18} />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">
+                                {template.mailTitle}
+                              </h4>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                {template.mailBody?.replace(/<[^>]*>/g, "").substring(0, 100) || ""}
+                              </p>
+                              
                             </div>
                           </div>
                         </div>
@@ -1770,7 +1838,10 @@ const renderTabContent = () => {
                   >
                     <div className="grid grid-cols-1 gap-4">
                       {/* To Field */}
-                      <div> <label className="block text-sm font-semibold text-gray-700 mb-1"> To </label>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          To
+                        </label>
                         <input
                           type="email"
                           className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
@@ -1783,7 +1854,9 @@ const renderTabContent = () => {
 
                       {/* CC Field */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1"> CC </label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          CC
+                        </label>
                         <input
                           type="text"
                           className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
@@ -1795,7 +1868,9 @@ const renderTabContent = () => {
 
                       {/* Subject Field */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1"> Subject </label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          Subject
+                        </label>
                         <input
                           type="text"
                           className="w-full bg-white/80 px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm placeholder-gray-400"
@@ -1809,7 +1884,9 @@ const renderTabContent = () => {
 
                     {/* Message Editor */}
                     <div className="flex-grow flex flex-col min-h-[300px]">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1"> Message </label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Message
+                      </label>
                       <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
                         <ReactQuill
                           theme="snow"
@@ -1835,11 +1912,16 @@ const renderTabContent = () => {
 
                     {/* Action Buttons (sticky) */}
                     <div className="flex justify-end space-x-3 pt-2 sticky bottom-0 bg-white/70 backdrop-blur-md pb-2">
-                      <button type="button" onClick={() => setIsMailOpen(false)}
-                        className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm" >
+                      <button
+                        type="button"
+                        onClick={() => setIsMailOpen(false)}
+                        className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100/80 hover:bg-gray-200 transition shadow-sm"
+                      >
                         Cancel
                       </button>
-                      <button type="submit" className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                      <button
+                        type="submit"
+                        className="px-5 py-2 rounded-xl text-sm text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md hover:shadow-lg transition flex items-center gap-2"
                         disabled={isSendingMail}
                       >
                         {isSendingMail ? (
@@ -1867,9 +1949,6 @@ const renderTabContent = () => {
 };
 
 export default LeadDetailView;
-
-
-
 
 
 

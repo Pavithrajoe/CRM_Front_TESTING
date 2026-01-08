@@ -329,12 +329,13 @@ const ReminderForm = () => {
             placeholder="Search reminders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`
-              w-full
-              transition-all duration-300 ease-in-out
-              bg-transparent outline-none text-sm font-medium
-              ${isSearchOpen ? 'px-4 py-2 opacity-100' : 'px-0 py-0 opacity-0'}
-            `}
+             className={` w-full transition-all duration-300 ease-in-out bg-transparent outline-none text-sm font-medium px-4 py-2 opacity-100 `}
+            // className={`
+            //   w-full
+            //   transition-all duration-300 ease-in-out
+            //   bg-transparent outline-none text-sm font-medium 
+            //    ${isSearchOpen ? 'px-4 py-2 opacity-100' : 'px-0 py-0 opacity-0'}
+            // `}
           />
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}

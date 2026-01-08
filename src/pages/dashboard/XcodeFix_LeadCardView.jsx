@@ -8,7 +8,6 @@ import LeadFilterModal from './LeadViewComponents/LeadFilterModal';
 import LeadCountSelector from './LeadViewComponents/LeadCountSelector';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
-import { isAwaitKeyword } from 'typescript';
 
 const Xcode_LeadCardViewPage = () => {
     const location = useLocation();
@@ -165,7 +164,6 @@ const Xcode_LeadCardViewPage = () => {
 
             if (selectedFilter === 'all') {
                 return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
-                // return matchesSearch && matchesDate && matchesModalFilters && isActive;
             } else if (selectedFilter === 'leads') {
                 return matchesSearch && matchesDate && matchesModalFilters && isActive && !isConverted && !isWebsite;
             } else if (selectedFilter === 'websiteLeads') {
@@ -360,57 +358,6 @@ const Xcode_LeadCardViewPage = () => {
         }
     }, [token]);
 
-    // useEffect(() => {
-    //     const fetchMasterData = async () => {
-    //         const headers = { Authorization: `Bearer ${token}` };
-    //         try {
-    //             // Fetch potentials
-    //             const potentialsRes = await fetch(ENDPOINTS.MASTER_POTENTIAL_GET, { headers });
-    //             const potentialsData = await potentialsRes.json();
-    //             if (potentialsData?.data) {
-    //                 setPotentials(potentialsData.data.filter(p => p.bactive));
-    //             }
-
-    //             // Fetch sources
-    //             const sourcesRes = await fetch(ENDPOINTS.MASTER_SOURCE_GET, { headers });
-    //             const sourcesData = await sourcesRes.json();
-    //             if (sourcesData?.data) {
-    //                 setSources(sourcesData.data.filter(s => s.is_active));
-    //             }
-
-    //             // Fetch statuses
-    //             const statusesRes = await fetch(ENDPOINTS.MASTER_STATUS_GET, { headers });
-    //             const statusesData = await statusesRes.json();
-    //             if (statusesData?.response) {
-    //                 setStatuses(statusesData.response.sort((a, b) => (a.orderId || 0) - (b.orderId || 0)));
-    //             } else {
-    //                 setStatuses(Array.isArray(statusesData) ? statusesData : []);
-    //             }
-
-    //             // Fetch industries
-    //             const industriesRes = await fetch(ENDPOINTS.MASTER_INDUSTRY_GET, { headers });
-    //             const industriesData = await industriesRes.json();
-    //             if (industriesData?.response?.industry) {
-    //                 setIndustries(industriesData.response.industry.filter(i => i.bactive));
-    //             }
-
-    //             // Fetch services
-    //             const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, { headers });
-    //             const servicesData = await servicesRes.json();
-    //             if (servicesData?.data) {
-    //                 setServices(servicesData.data.filter(s => s.bactive));
-    //             }
-
-    //         } catch (err) {
-    //             console.error("Failed to fetch master data:", err);
-    //         }
-    //     };
-
-    //     if (token) {
-    //         fetchMasterData();
-    //     }
-    // }, [token]);
-
     const handleSelectCount = (count) => {
         setLeadsToShow(count);
         setShowPagination(false);
@@ -421,7 +368,6 @@ const Xcode_LeadCardViewPage = () => {
         setShowPagination(true);
     };
 
-    // Update displayed data when calculated data changes
     useEffect(() => {
         setDisplayedData(displayedDataCalculated);
     }, [displayedDataCalculated]);
@@ -459,7 +405,6 @@ const Xcode_LeadCardViewPage = () => {
         }
     }, [location.state]);
 
-    // Handle back navigation from detail page
     useEffect(() => {
         if (location.state?.returnPage) {
             setCurrentPage(location.state.returnPage);
@@ -682,7 +627,6 @@ const Xcode_LeadCardViewPage = () => {
 
     const fetchAssignedLeads = useCallback(async () => {
         if (!currentUserId || !currentToken) return [];
-        // console.log("Called the assigned to api function");
         setError(null);
         try {
             const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
@@ -691,7 +635,6 @@ const Xcode_LeadCardViewPage = () => {
                     Authorization: `Bearer ${currentToken}`,
                 },
             });
-            // console.log("Function is also called when clicking active leads");
             if (!response.ok) {
                 const errorData = await response.text();
                 throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
@@ -730,7 +673,6 @@ const Xcode_LeadCardViewPage = () => {
                 new Map(sortedLeads.map((lead) => [lead.ilead_id, lead])).values()
             );
 
-            // console.log("Unique merged data:", uniqueLeads);
             setAssignedLeads(uniqueLeads);
             return uniqueLeads;
         } catch (err) {
@@ -742,78 +684,71 @@ const Xcode_LeadCardViewPage = () => {
     }, [currentUserId, currentToken, ENDPOINTS]);
 
 
-    // fetchLeads: await the assigned fetch and then merge
     const fetchLeads = useCallback(async () => {
-    if (!currentUserId || !currentToken) {
-        return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-        const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${currentToken}`,
-        },
-        });
-
-        if (!res.ok) {
-        const bodyText = await res.text();
-        let errorDetails = `HTTP error! status: ${res.status}`;
+        if (!currentUserId || !currentToken) {
+            return;
+        }
+        setLoading(true);
+        setError(null);
         try {
-            const errorJson = JSON.parse(bodyText);
-            errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
-        } catch {
-            errorDetails += `, Message: ${bodyText || res.statusText}`;
-        }
-        throw new Error(errorDetails);
-        }
+            const res = await fetch(`${ENDPOINTS.LEAD}${currentUserId}?page=1&limit=10000`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${currentToken}`,
+            },
+            });
 
-        const data = await res.json();
+            if (!res.ok) {
+            const bodyText = await res.text();
+            let errorDetails = `HTTP error! status: ${res.status}`;
+            try {
+                const errorJson = JSON.parse(bodyText);
+                errorDetails += `, Details: ${JSON.stringify(errorJson)}`;
+            } catch {
+                errorDetails += `, Message: ${bodyText || res.statusText}`;
+            }
+            throw new Error(errorDetails);
+            }
 
-        // await here so assignedData is an array, not a Promise
-        const assignedData = await fetchAssignedLeads();
+            const data = await res.json();
+            const assignedData = await fetchAssignedLeads();
 
-        console.log("active leads length:", data.details?.length, "Assigned lead length:", assignedData.length);
+        const mergedLeads = Array.isArray(data.details)
+        ? [...data.details, ...assignedData]
+        : [...assignedData];
 
-    const mergedLeads = Array.isArray(data.details)
-    ? [...data.details, ...assignedData]
-    : [...assignedData];
+        const uniqueLeads = Array.from(
+        new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
+        );
 
-    const uniqueLeads = Array.from(
-    new Map(mergedLeads.map((lead) => [lead.ilead_id, lead])).values()
-    );
+        //  Sort after de-duplication
+        const sorted = uniqueLeads.sort(
+        (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
+        );
 
-    //  Sort after de-duplication
-    const sorted = uniqueLeads.sort(
-    (a, b) => new Date(b.dmodified_dt || 0) - new Date(a.dmodified_dt || 0)
-    );
+    setAllLeads(sorted);
 
-setAllLeads(sorted);
-
-  } catch (err) {
-    console.error("Failed to fetch leads:", err);
-    setError(`Failed to fetch leads: ${err.message}`);
-    setAllLeads([]);
-  } finally {
-    setLoading(false);
-  }
-}, [currentUserId, currentToken, ENDPOINTS, fetchAssignedLeads]);
-
- useEffect(() => {
-    if (roleType === 'Super_admin') {
-        fetchAllLeads();
-    } else {
-        fetchLeads();
-      
+    } catch (err) {
+        console.error("Failed to fetch leads:", err);
+        setError(`Failed to fetch leads: ${err.message}`);
+        setAllLeads([]);
+    } finally {
+        setLoading(false);
     }
-    }, [roleType, fetchLeads, fetchAllLeads]);
+    }, [currentUserId, currentToken, ENDPOINTS, fetchAssignedLeads]);
 
-
-    //  Fetch data based on selected filter
     useEffect(() => {
-        // console.log('useEffect running for fetching leads', {selectedFilter, roleType});
+        if (roleType === 'Super_admin') {
+            fetchAllLeads();
+        } else {
+            fetchLeads();
+        
+        }
+        }, [roleType, fetchLeads, fetchAllLeads]);
+
+
+    useEffect(() => {
         if (!currentUserId || !currentToken || !roleType) return;
         
         setCurrentPage(1); 
@@ -1324,9 +1259,7 @@ setAllLeads(sorted);
                         </div>
 
                         <div className="flex justify-center mb-4">
-                            <a
-                                href="../../../public/files/Leads_import_Template_final.xls"
-                                download="Leads_Import_Template.xls"
+                            <a href="../../../public/files/Leads_import_Template_final.xls"download="Leads_Import_Template.xls"
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
                             >
                                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1344,9 +1277,7 @@ setAllLeads(sorted);
                         )}
 
                         {importSuccess && (
-                            <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
-                                Leads imported successfully!
-                            </div>
+                            <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md"> Leads imported successfully! </div>
                         )}
 
                         <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">

@@ -117,8 +117,6 @@ const Tasks = () => {
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
 
-  
-
   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",

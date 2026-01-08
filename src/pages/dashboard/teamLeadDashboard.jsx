@@ -30,7 +30,6 @@ const LeadsDashboard = () => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
     if (!storedUser || !token) return;
-
     const userObj = JSON.parse(storedUser);
     setUser(userObj);
 
@@ -46,15 +45,13 @@ const LeadsDashboard = () => {
           Authorization: `Bearer ${token}`,
         };
 
-        const dashRes = await fetch(
-          `${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
+        const dashRes = await fetch(`${ENDPOINTS.DASHBOARD_USER}/${userObj.iUser_id}`,
           { headers }
         );
         const dashData = await dashRes.json();
         setDashboardData(dashData);
 
-        const taskRes = await fetch(
-          `${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
+        const taskRes = await fetch(`${ENDPOINTS.GET_FILTER_TASK}/${userObj.iUser_id}`,
           { headers }
         );
         const taskData = await taskRes.json();
@@ -71,7 +68,7 @@ const LeadsDashboard = () => {
     fetchData();
   }, [allowedTabs]);
 
-  /* DATE RANGE FILTER (SAFE) */
+  /* DATE RANGE FILTER  */
   const filterByDate = (items, dateKey, filter) => {
     const startDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
     const endDay   = d => { const x = new Date(d); x.setHours(23,59,59,999); return x; };

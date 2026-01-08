@@ -51,7 +51,6 @@ import { useUserAccess } from "../context/UserAccessContext";
 import { MdAccountCircle, MdClose } from 'react-icons/md';
 
 
-
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
@@ -228,9 +227,7 @@ const LeadDetailView = () => {
   const [isListening, setIsListening] = useState(false); 
   const [editingComment, setEditingComment] = useState(null); 
   const [showForm, setShowForm] = useState(false); 
-  
-const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
-
+  const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
 
   const [userSettings, setUserSettings] = useState({
     mail_access: false,
@@ -293,7 +290,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
         iCreated_by: userData.user_id,
       };
       setCompanyInfo(userData);
-
       setLoggedInUserName(userData.cFull_name || userData.fullName || "User");
       setLoggedInCompanyName(userData.company_name || userData.organization || "Your Company");
       
@@ -309,12 +305,10 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
     }
   }, [leadId]);
 
-  // Add this useEffect to call fetchUserProfile when component mounts
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoadingProfile(true);
-
         const token = localStorage.getItem("token");
         if (!token) {
           toast.error("Authentication required!");
@@ -335,8 +329,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
         }
 
         const finalUserId = urlUserId || userId;
-
-        // Fetch user details
         const response = await fetch(`${ENDPOINTS.USERS}/${finalUserId}`, {
           method: "GET",
           headers: {
@@ -348,7 +340,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Failed to fetch user");
         setProfileSettings(data);
-        // Update settings
         setUserSettings({
           mail_access: data.mail_access || data.email_access || false,
           whatsapp_access: data.whatsapp_access || false,
@@ -375,17 +366,11 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
         return;
       }
       
-      // Show loading state immediately
       setCurrentPdfUrl(null);
       setCurrentQuotation(quotation);
       setPdfViewerOpen(true);
-      
-      // Generate the PDF and get the data URL
       const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
-      
-      // Set the PDF URL to display in viewer
       setCurrentPdfUrl(pdfDataUrl);
-      
     } catch (error) {
       console.error("Error generating PDF:", error);
       showPopup('Error', error.message || 'Failed to generate PDF', 'error');
@@ -416,7 +401,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
     }
   };
 
-  // New handler for Won button
   const handleWonClick = () => {
     setShowRemarkDialog(true);
   };
@@ -426,12 +410,10 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       showPopup("Error", "Remark is required", "error");
       return;
     }
-
     try {
       const token = localStorage.getItem("token");
       const userId = JSON.parse(localStorage.getItem("user"))?.iUser_id;
       if (!userId) throw new Error("User not authenticated");
-
       setImmediateWonStatus(true);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
@@ -621,7 +603,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       let successfulEndpoint = null;
       let lastError = null;
 
-      // Try each endpoint until one works
       for (const endpoint of endpointsToTry) {
         try {
           response = await fetch(endpoint, {
@@ -649,8 +630,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       }
 
       const data = await response.json();
-      
-      // Handle different response structures
       const remarks = data.Response || data.data || data || [];
       setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
       
@@ -662,12 +641,10 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
     }
   };
 
-  // Call the function if leadId is available
   useEffect(() => {
     if (leadId) {
       fetchStatusRemarks();
     }
-  // }, [leadId, showPopup]);
     }, [leadId]);
 
 
@@ -677,7 +654,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       const token = localStorage.getItem("token");
       const leadIdAsNumber = parseInt(leadId, 10);
       
-      // Check if the conversion was successful
       if (isNaN(leadIdAsNumber)) {
           showPopup("Error", "Invalid lead ID. Please refresh the page.", "error");
           setIsSendingMail(false);
@@ -695,7 +671,7 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
           cc: ccRecipients,
           mailSubject,
           mailContent,
-          leadId: leadIdAsNumber, // Use the converted number here
+          leadId: leadIdAsNumber, 
         }),
       });
 
@@ -729,12 +705,10 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       }
     };
 
-    // Add event listener when dialog is open
     if (leadLostDescriptionTrue) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
-    // Clean up event listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -873,9 +847,7 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
       const leadFirstName = leadData.cFirstName || '';
       const leadLastName = leadData.cLastName || '';
       const leadProjectName = leadData.cProjectName || 'our services/products';
-
       const defaultSubject = `Following up on your inquiry with ${leadFirstName} ${leadLastName}`.trim();
-
       const defaultContent = `
         <p>Dear ${leadFirstName || 'Sir/Madam'},</p>
         <p>Hope this email finds you well.</p>
@@ -974,20 +946,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
           order: Number(item.orderId) || 9999,
         }))
         .sort((a, b) => a.order - b.order);
-
-
-
-      // const formattedStages = Array.isArray(data.response)
-      //   ? data.response
-      //       .map(item => ({
-      //         id: item.ilead_status_id,
-      //         name: item.clead_name,
-      //         order: item.orderId || 9999,
-      //         bactive: item.bactive,
-      //       }))
-      //       .sort((a, b) => a.order - b.order)
-      //   : [];
-
       setStages(formattedStages);
     } catch (err) {
       console.error('Error fetching stages:', err.message);
@@ -1012,7 +970,6 @@ const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
     return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
   };
 
-  // Added missing handler
   const handleOutsideClick = (event) => {
     if (formRef.current && !formRef.current.contains(event.target)) {
       setShowForm(false);
@@ -1026,81 +983,36 @@ const getTabLabels = () => {
   const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
   const availableTabs = [];
   
-  // 1. Check for Task / Follow-up Permission (ID 12)
+  //  Check for Task / Follow-up Permission (ID 12)
   if (userModules.some(module => module.module_id === 5 &&  module.bactive && 
     (module.attributes_id === 12 || module.attribute_name?.toLowerCase().includes('task'))
   )) {
-    // If it's XcodeFix, call it "Follow-up", otherwise call it "Task"
     availableTabs.push(isXcodeFix ? "Follow-up" : "Task");
   }
   
-  // 2. Check for Comments Permission (ID 11)
+  //  Check for Comments Permission (ID 11)
   if (userModules.some(module => module.module_id === 5 && module.bactive && 
     (module.attributes_id === 11 || module.attribute_name?.toLowerCase().includes('comment'))
   )) {
     availableTabs.push("Comments");
   }
   
-  // 3. Check for Reminder Permission (ID 13)
+  //  Check for Reminder Permission (ID 13)
   if (userModules.some(module => module.module_id === 5 && module.bactive && 
     (module.attributes_id === 13 || module.attribute_name?.toLowerCase().includes('reminder'))
   )) {
     availableTabs.push("Reminders");
   }
   
-  // 4. Activity tab is always available as the default/last tab
   availableTabs.push("Activity");
   
   return availableTabs;
 };
-// const getTabLabels = () => {
-//   const isXcodeFix = companyInfo?.company_id === XCODEFIX_COMPANY_ID;
-  
-//   if (isXcodeFix) {
-//     // For XcodeFix - fixed tabs
-//     return ["Follow-up", "Comments", "Activity"];
-//   } else {
-//     // For other companies - dynamic tabs based on module_id 5 permissions
-//     const availableTabs = [];
-    
-//     // Check each tab type and add if user has permission
-//     if (userModules.some(module => 
-//       module.module_id === 5 && 
-//       module.bactive && 
-//       (module.attribute_name === 'Task' || module.attributes_id === 12)
-//     )) {
-//       availableTabs.push("Task");
-//     }
-    
-//     if (userModules.some(module => 
-//       module.module_id === 5 && 
-//       module.bactive && 
-//       (module.attribute_name === 'Comments' || module.attributes_id === 11)
-//     )) {
-//       availableTabs.push("Comments");
-//     }
-    
-//     if (userModules.some(module => 
-//       module.module_id === 5 && 
-//       module.bactive && 
-//       (module.attribute_name === 'Reminder' || module.attributes_id === 13)
-//     )) {
-//       availableTabs.push("Reminders");
-//     }
-    
-//     // Activity tab is always available
-//     availableTabs.push("Activity");
-    
-//     return availableTabs;
-//   }
-// };
+
 
 const renderTabContent = () => {
   const tabLabels = getTabLabels();
-  
-  // If no tabs available (shouldn't happen as Activity is always there)
   if (!tabLabels.length) return <div>No tabs available</div>;
-  
   const currentTabLabel = tabLabels[tabIndex];
   
   // Dynamic switch based on current tab label
@@ -1128,70 +1040,66 @@ const renderTabContent = () => {
       
       {/* DESKTOP: Always Full ProfileCard */}
       <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
-     <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
-          <ProfileCard
-            leadId={leadId}
-            settingsData={profileSettings}
-            isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
-            leadData={leadData}
-            isDeal={isDeal}
-            isLost={isLost}
-          />
-          {isLeadActive && <ActionCard leadId={leadId} />}
-        </div>
+        <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
+              <ProfileCard
+                leadId={leadId}
+                settingsData={profileSettings}
+                isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
+                leadData={leadData}
+                isDeal={isDeal}
+                isLost={isLost}
+              />
+              {isLeadActive && <ActionCard leadId={leadId} />}
+          </div>
       </div>
 
-      {/* MOBILE/TABLET: Small Profile Icon */}
-  {/* MOBILE/TABLET: Enhanced Profile Icon */}
-<div className="lg:hidden fixed top-24 left-6 z-50">
-  <button 
-    onClick={() => setShowMobileProfileDrawer(true)}
-    className="w-14 h-14 min-w-[56px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg flex flex-col items-center justify-center p-1.5 transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 touch-manipulation"
-    title="View Profile"
-  >
-    <div className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center mb-0.5 flex-shrink-0">
-      <span className="text-base font-semibold text-gray-800 leading-none">
-        {leadData?.cLeadName?.[0]?.toUpperCase() || 'U'}
-      </span>
-    </div>
-    <span className="text-xs text-white font-medium leading-tight px-px tracking-tight">Profile</span>
-  </button>
-</div>
-
-{showMobileProfileDrawer && (
-  <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm lg:hidden flex">
-    <div className="w-full sm:w-[90vw] md:w-[80vw] lg:w-96 bg-white p-4 sm:p-6 rounded-r-xl shadow-2xl max-h-[90vh] overflow-y-auto mx-auto my-auto max-w-sm">
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-        <h3 className="text-xl font-bold text-gray-900">Profile</h3>
+      {/* MOBILE/TABLET: Enhanced Profile Icon */}
+      <div className="lg:hidden fixed top-24 left-6 z-50">
         <button 
-          onClick={() => setShowMobileProfileDrawer(false)}
-          className="text-gray-500 hover:text-gray-700 p-1 -m-1 rounded-full hover:bg-gray-100 transition-colors"
+          onClick={() => setShowMobileProfileDrawer(true)}
+          className="w-14 h-14 min-w-[56px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg flex flex-col items-center justify-center p-1.5 transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 touch-manipulation"
+          title="View Profile"
         >
-          <MdClose size={24} />
+          <div className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center mb-0.5 flex-shrink-0">
+            <span className="text-base font-semibold text-gray-800 leading-none">
+              {leadData?.cLeadName?.[0]?.toUpperCase() || 'U'}
+            </span>
+          </div>
+          <span className="text-xs text-white font-medium leading-tight px-px tracking-tight">Profile</span>
         </button>
       </div>
-      
-      {loadingProfile ? (
-        <div className="flex justify-center items-center h-64">
-          <CircularProgress size={48} />
-        </div>
-      ) : profileSettings ? (
-        <ProfileCard 
-          settingsData={profileSettings} 
-          leadData={leadData}
-          
-          // Add other props as needed, but no extra user fetches
-        />
-      ) : (
-        <div className="text-center py-12 text-gray-500">
-          Profile data not available
+
+      {showMobileProfileDrawer && (
+        <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm lg:hidden flex">
+          <div className="w-full sm:w-[90vw] md:w-[80vw] lg:w-96 bg-white p-4 sm:p-6 rounded-r-xl shadow-2xl max-h-[90vh] overflow-y-auto mx-auto my-auto max-w-sm">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Profile</h3>
+              <button 
+                onClick={() => setShowMobileProfileDrawer(false)}
+                className="text-gray-500 hover:text-gray-700 p-1 -m-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <MdClose size={24} />
+              </button>
+            </div>
+            
+            {loadingProfile ? (
+              <div className="flex justify-center items-center h-64">
+                <CircularProgress size={48} />
+              </div>
+            ) : profileSettings ? (
+              <ProfileCard 
+                settingsData={profileSettings} 
+                leadData={leadData}
+                
+              />
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                Profile data not available
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
-  </div>
-)}
-
-
 
         {/* Right Column: Status Bar, Tabs, and Content */}
        <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-y-auto lg:overflow-y-visible">
@@ -1238,10 +1146,7 @@ const renderTabContent = () => {
             quotations.length > 0 && (
               <Box className="mb-4">
                 <div className="flex justify-between w-1/4 items-center bg-white p-4 rounded-[30px] shadow-sm border border-gray-200">
-                  <Typography
-                    variant="h6"
-                    className="flex text-center ms-[30px] justify-center items-center text-green-600"
-                  >
+                  <Typography variant="h6" className="flex text-center ms-[30px] justify-center items-center text-green-600" >
                     Quotation Available!
                   </Typography>
                 </div>
@@ -1267,21 +1172,17 @@ const renderTabContent = () => {
             </div>
 
             <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
-              {/* Project Value Display - Only shown when there's a project value */}
               {showProjectValue && projectValueDisplay && (
                 <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
                   <FaCheck className="mr-1 sm:mr-2" />
-                  <span className="text-xs sm:text-sm md:text-base font-semibold">
-                    Project Value: {projectValueDisplay}
-                  </span>
+                  <span className="text-xs sm:text-sm md:text-base font-semibold">Project Value: {projectValueDisplay} </span>
                 </div>
               )}
 
               {/* View Quotations Button  */}
               {(isWon || immediateWonStatus || leadData?.bisConverted) &&
                 quotations.length > 0 && (
-                  <button
-                    onClick={() => setShowQuotationsList(true)}
+                  <button onClick={() => setShowQuotationsList(true)}
                     className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                   >
                     <FaEye className="mr-1" /> View Quotations
@@ -1300,9 +1201,7 @@ const renderTabContent = () => {
 
                   {/* Post Sales Button */}
                   {companyInfo?.company_id === XCODEFIX_COMPANY_ID && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPostSalesForm(true)}
+                    <button type="button" onClick={() => setShowPostSalesForm(true)}
                       className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
                     >
                       Post Sales
@@ -1321,8 +1220,7 @@ const renderTabContent = () => {
                     >
                       <div className="w-px h-5 bg-gray-600"></div>
                       <img
-                         src="/images/detailview/email.svg" // Fixed path
-                        //src="../../public/images/detailview/email.svg"
+                         src="/images/detailview/email.svg" 
                         className=" w-4 h-4"
                         alt="Email icon"
                       />
@@ -1740,7 +1638,7 @@ const renderTabContent = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <img
-                    src="/images/detailview/email.svg" // Fixed path
+                    src="/images/detailview/email.svg" 
                     className="w-6 h-6"
                     alt="Email icon"
                   />

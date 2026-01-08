@@ -489,7 +489,43 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
           >
             <FiEye size={18} />
           </button>
+
           <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const token = localStorage.getItem("token");
+              let detectedRoleId = user?.irol_id || user?.iRole_id || user?.role;
+              if (!detectedRoleId && token) {
+                try {
+                  const base64Payload = token.split(".")[1];
+                  const payload = JSON.parse(atob(base64Payload.replace(/-/g, "+").replace(/_/g, "/")));
+                  detectedRoleId = payload.irol_id || payload.iRole_id || payload.role_id || payload.role;
+                } catch (err) {
+                  console.error("Token decode error:", err);
+                }
+              }
+
+              if (Number(detectedRoleId) === 3) {
+                if (popup?.show) {
+                  popup.show("Access Denied: As a user, you don't have access to edit. Contact your admin.", {
+                    type: "error",
+                  });
+                } else {
+                  alert("Access Denied: As a user, you don't have access to edit. Contact your admin.");
+                }
+                return; 
+              }
+              handleEditLead(profile);
+            }}
+            className="p-2 rounded-xl bg-blue-900 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-110 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+            aria-label="Edit Profile"
+            title="Edit Profile"
+          >
+            <FiEdit size={18} />
+          </button>
+
+         
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               handleEditLead(profile);
@@ -499,7 +535,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
             title="Edit Profile"
           >
             <FiEdit size={18} />
-          </button>
+          </button> */}
           {settingsData?.mail_access && (
             <button
               onClick={() => {

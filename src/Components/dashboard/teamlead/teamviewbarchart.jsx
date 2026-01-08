@@ -91,7 +91,7 @@ export default function LeadManagementCard({
         }`}
       >
         {/* FRONT VIEW */}
-        <div className="absolute w-full h-full bg-white rounded-xl p-4 backface-hidden flex flex-col">
+        <div className="absolute w-full h-full bg-white rounded-xl p-4 backface-hidden  flex-col hidden sm:block">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-semibold text-gray-700">
               Active Lead Distribution

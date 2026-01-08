@@ -60,7 +60,7 @@ export default function TeamleadHeader() {
   }, []);
 
   return (
-    <div className="w-full mb-4">
+    <div className=" mb-4">
       {/* Main Header Container */}
       <div className="flex items-center justify-between bg-white rounded-lg px-4 py-2 shadow-sm min-h-[52px]">
         

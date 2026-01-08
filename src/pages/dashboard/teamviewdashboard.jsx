@@ -16,7 +16,6 @@ const TeamviewDashboard = () => {
   const [currentToken, setCurrentToken] = useState(null);
   const [teamDashboardData, setTeamDashboardData] = useState();
 
-  // To fetch the current user id and token
   useEffect(() => {
     try {
 
@@ -91,9 +90,7 @@ const TeamviewDashboard = () => {
     return (
       <main className="w-full flex-1 p-6 mt-[0px] min-h-screen flex items-center justify-center">
         <p className="text-lg text-red-600">Error: {error}</p>
-        <p className="text-sm text-gray-500 mt-2">
-          Please try logging in again or contact support if the issue persists.
-        </p>
+        <p className="text-sm text-gray-500 mt-2">  Please try logging in again or contact support if the issue persists.  </p>
       </main>
     );
   }
@@ -107,11 +104,8 @@ const TeamviewDashboard = () => {
 
       {/* Dashboard Content */}
 
-      {/* {console.log("The dashboard data are:", )} */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
-        <div className="hidden md:block md:col-span-2 lg:col-span-1">
-    <LeadManagementCard leads={leadData} team_members={teamMembers} childSubordinates={childSubordinates} loading={loading} error={error} />
-  </div>
+        <LeadManagementCard leads={leadData} team_members={teamMembers} childSubordinates={childSubordinates} loading={loading} error={error} />
         <TeamKPIStats
           leadsArray={leads}
           subordinatesArray={teamMembers}

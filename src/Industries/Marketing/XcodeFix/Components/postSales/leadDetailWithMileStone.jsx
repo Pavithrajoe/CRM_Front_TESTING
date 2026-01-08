@@ -1105,7 +1105,6 @@ const LeadDetailView = () => {
           </Box>
         </div>
 
-        {/* Rest of your dialogs and components remain the same */}
         {/* Quotation Form Dialog */}
         <QuotationForm
           open={showQuotationForm}
@@ -1323,13 +1322,8 @@ const LeadDetailView = () => {
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
           >
-            <div 
-              ref={lostReasonDialogRef}
-              className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"
-            >
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4">
-                Why mark this lead as Lost?
-              </h2>
+            <div  ref={lostReasonDialogRef} className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl"  >
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4"> Why mark this lead as Lost? </h2>
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
                   <label htmlFor="lostReason" className="block font-medium mb-1 text-sm sm:text-base">
@@ -1345,20 +1339,13 @@ const LeadDetailView = () => {
                   >
                     <option value="">Select a reason</option>
                     {lostReasons.map((reason) => (
-                      <option
-                        key={reason.ilead_lost_reason_id}
-                        value={reason.ilead_lost_reason_id}
-                      >
-                        {reason.cLeadLostReason}
-                      </option>
+                      <option key={reason.ilead_lost_reason_id} value={reason.ilead_lost_reason_id} > {reason.cLeadLostReason} </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base">
-                    Remarks
-                  </label>
+                  <label htmlFor="lostDescription" className="block font-medium mb-1 text-sm sm:text-base"> Remarks </label>
                   <textarea
                     id="lostDescription"
                     name="lostDescription"
@@ -1370,11 +1357,7 @@ const LeadDetailView = () => {
                   ></textarea>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setLeadLostDescriptionTrue(false)}
-                    className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base"
-                  >
+                  <button type="button" onClick={() => setLeadLostDescriptionTrue(false)} className="bg-gray-300 px-3 sm:px-4 py-1 sm:py-2 rounded-md hover:bg-gray-400 text-sm sm:text-base">
                     Cancel
                   </button>
                   <button
@@ -1390,31 +1373,22 @@ const LeadDetailView = () => {
         )}
 
       {showPostSalesForm && (
-  <div 
-    className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-    onClick={() => setShowPostSalesForm(false)} // Add this back
-  >
-    <div 
-      className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative"
-      onClick={(e) => e.stopPropagation()} // This prevents closing when clicking inside
-    >
-      <button
-        type="button"
-        onClick={() => setShowPostSalesForm(false)}
-        className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
-        title="Close Form"
-      >
-        ✕
-      </button>
+        <div  className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4" onClick={() => setShowPostSalesForm(false)}  >
+          <div className="bg-transparent rounded-xl shadow-2xl p-6 w-full max-w-7xl relative" onClick={(e) => e.stopPropagation()} >
+            <button type="button" onClick={() => setShowPostSalesForm(false)} className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-3xl font-light z-10"
+              title="Close Form"
+            >
+              ✕
+            </button>
 
-      <PostSalesForm 
-        leadId={Number(leadId)} 
-        onBack={() => setShowPostSalesForm(false)}
-        onClose={() => setShowPostSalesForm(false)} // Make sure this is passed
-      /> 
-    </div>
-  </div>
-)}
+            <PostSalesForm 
+              leadId={Number(leadId)} 
+              onBack={() => setShowPostSalesForm(false)}
+              onClose={() => setShowPostSalesForm(false)} 
+            /> 
+          </div>
+        </div>
+      )}
 
         {/* Email Compose Dialog */}
         {isMailOpen && (

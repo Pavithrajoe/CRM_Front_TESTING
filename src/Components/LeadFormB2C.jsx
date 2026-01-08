@@ -958,7 +958,7 @@ useEffect(() => {
     if (name === "LeadpotenId" && !value) {
       error = "Mandatory";
     }
-    if (name === "serviceId" && !value) {
+    if (name === "iservice_id" && !value) {
       error = "Mandatory";
     }
     if (name === "ileadstatus_id" && !value) {

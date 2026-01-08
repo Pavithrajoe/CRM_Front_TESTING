@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
 import { Search, X } from "lucide-react";
 
-const apiEndPoint = import.meta.env.VITE_API_URL;
 
+const apiEndPoint = import.meta.env.VITE_API_URL;
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = SpeechRecognition ? new SpeechRecognition() : null;
 
@@ -23,11 +23,11 @@ const Comments = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isListening, setIsListening] = useState(false);
-  const [editingComment, setEditingComment] = useState(null); // New state for editing
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // State to toggle search bar
-
+  const [editingComment, setEditingComment] = useState(null); 
+  const [isSearchOpen, setIsSearchOpen] = useState(false); 
+  const [isSubmitting, setIsSubmitting] = useState(false);  
   const formRef = useRef(null);
-  const searchInputRef = useRef(null); // Ref for search input
+  const searchInputRef = useRef(null); 
   const commentsPerPage = 10;
   const token = localStorage.getItem("token");
   const { showPopup } = usePopup();
@@ -86,7 +86,6 @@ const Comments = () => {
     };
   }, [isListening]);
 
-  // Fetch comments on component mount or leadId/token change
   const fetchComments = async () => {
     if (!token || !leadId) return;
     try {
@@ -114,7 +113,7 @@ const Comments = () => {
       await fetchComments();
     }
     setFormData({ comments: "", LeadId: leadId });
-    setEditingComment(null); // Ensure editing state is null for new comment
+    setEditingComment(null);
     setShowForm(true);
   };
 
@@ -128,22 +127,31 @@ const Comments = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+ 
   const handleFormSubmission = async (e) => {
-    e.preventDefault();
-    const trimmedComment = formData.comments.trim();
+  e.preventDefault();
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+  const loadingPromise = new Promise(resolve => setTimeout(resolve, 1000));
+  const trimmedComment = formData.comments.trim();
+  
+  if (trimmedComment.length === 0) {
+    await loadingPromise;
+    showPopup("Warning", "Comment cannot be empty!", "warning");
+    setIsSubmitting(false);
+    return;
+  }
 
-    if (trimmedComment.length === 0) {
-      showPopup("Warning", "Comment cannot be empty!", "warning");
-      return;
-    }
+  if (trimmedComment.length < 5) {
+    await loadingPromise;
+    showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
+    setIsSubmitting(false);
+    return;
+  }
 
-    if (trimmedComment.length < 5) {
-      showPopup("Warning", "Comment must be at least 5 characters long.", "warning");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${apiEndPoint}/comments`, {
+  try {
+    const response = await Promise.all([
+      fetch(`${apiEndPoint}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,25 +161,36 @@ const Comments = () => {
           comments: formData.comments,
           LeadId: Number(leadId),
         }),
-      });
+      }),
+      loadingPromise 
+    ]);
 
-      const data = await response.json();
-      if (!response.ok) {
-        showPopup("Error", data.message || "Failed to add comment.", "error");
-        return;
-      }
-
-      // showPopup("Success", "Comment added successfully!", "success");
-      setFormData((prev) => ({ ...prev, comments: "" }));
-      setIsListening(false);
-      setShowForm(false);
-      fetchComments(); // Re-fetch comments to display the new one
-      return true;
-    } catch (error) {
-      showPopup("Error", "Failed to add comment due to network error.", "error");
-      console.error("Add comment error:", error);
+    const actualResponse = response[0];
+    const data = await actualResponse.json();
+    
+    if (!actualResponse.ok) {
+      showPopup("Error", data.message || "Failed to add comment.", "error");
+      setIsSubmitting(false);
+      return;
     }
-  };
+
+    //  Success after exactly 1s
+    showPopup("Success", "🎉 Comment added successfully!", "success");
+    
+    // Clean up
+    setFormData({ comments: "", LeadId: leadId });
+    setIsListening(false);
+    setShowForm(false);
+    setEditingComment(null);
+    setIsSubmitting(false);
+    fetchComments();
+    
+  } catch (error) {
+    showPopup("Error", "Failed to add comment due to network error.", "error");
+    setIsSubmitting(false);
+    console.error("Add comment error:", error);
+  }
+};
 
   const handleEditSubmission = async (e) => {
     e.preventDefault();
@@ -264,7 +283,7 @@ const handleOutsideClick = (event) => {
               bg-transparent outline-none text-sm font-medium"
             aria-label="Search / Clear"
           >
-            {isSearchOpen ? <X size={14} /> : <Search size={14} />}
+            {isSearchOpen ? <X size={18} /> : <Search size={18} />}
           </button>
 
           <input
@@ -410,12 +429,32 @@ const handleOutsideClick = (event) => {
                     </button>
                   )}
 
-                  <button
+                  {/* <button
                     type="submit"
-                    className="bg-indigo-700 text-white px-5 py-2 rounded-full hover:bg-indigo-800 text-base"
-                  >
-                    {editingComment ? "Update" : "Submit"}
-                  </button>
+                    disabled={isSubmitting}
+                   className={`bg-indigo-700 text-white px-5 py-2 rounded-full text-base transition-all ${
+                         isSubmitting 
+                          ? 'bg-indigo-500 cursor-not-waiting opacity-75' 
+                          : 'hover:bg-indigo-800'
+                         }`}
+                    
+                  >{isSubmitting 
+                 ? 'Submitting...' 
+                 : editingComment ? 'Update' : 'Submit'
+  } {editingComment ? "Update" : "Submit"}
+                  </button> */}
+                  <button
+  type="submit"
+  disabled={isSubmitting}
+  className={`px-5 py-2 rounded-full text-base font-medium transition-all ${
+    isSubmitting
+      ? 'bg-indigo-500 cursor-not-allowed opacity-75'
+      : 'bg-indigo-700 hover:bg-indigo-800 text-white'
+  }`}
+>
+  {isSubmitting ? 'Submitting...' : editingComment ? 'Update' : 'Submit'}
+</button>
+
                 </div>
               </form>
             </div>

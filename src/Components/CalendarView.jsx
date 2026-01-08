@@ -969,7 +969,7 @@ const CalendarView = () => {
   return (
     <div >
       <div >
-       <div className="flex flex-col lg:flex-row w-full h-auto min-h-[700px] p-4 gap-8">
+       <div className="flex flex-col lg:flex-row w-full h-auto p-4 gap-8">
           {/* LEFT HALF: Calendar */}
          <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6  lg:h-[450px] flex flex-col order-1 lg:order-1">
             <Calendar

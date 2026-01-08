@@ -27,8 +27,8 @@ import dayjs from 'dayjs';
 const mandatoryInputStages = ['Proposal', 'Won'];
 const MAX_PROJECT_VALUE = 10000000;  // 1 crore
 const MAX_REMARK_LENGTH = 500;
-const MAX_NOTES_LENGTH = 200;
-const MAX_PLACE_LENGTH = 200;
+const MAX_NOTES_LENGTH = 5000;
+const MAX_PLACE_LENGTH = 300;
 const MAX_PROPOSAL_NOTES_LENGTH = 500;
 
 const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {

@@ -1862,7 +1862,8 @@ const handleSubmit = async (e) => {
                     name="ilead_id"
                     value={form.ilead_id || ''}
                     onChange={(e) => handleSelectLead(e.target.value)}
-                    className="w-full border px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    className="w-full md:w-3/4 lg:w-1/2 xl:w-1/3 border px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    // className="w-full "
                 >
                     <option value="">Select an existing lead...</option>
                     {foundLeads.map((lead) => (

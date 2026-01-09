@@ -22,6 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
 import dayjs from 'dayjs';
 
 const mandatoryInputStages = ['Proposal', 'Won'];
@@ -99,6 +100,10 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [loggedInUserName, setLoggedInUserName] = useState("");
   const [dueDate, setDueDate] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  const [localStatusRemarks, setLocalStatusRemarks] = useState([]);
 
   // Debug state
   const [debugInfo, setDebugInfo] = useState('');
@@ -830,6 +835,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
   // FIXED: Improved handleRemarkSubmit to properly update stage
   const handleRemarkSubmit = async () => {
     if (!validateRemark()) return;
+     setIsSubmitting(true); 
 
     const token = localStorage.getItem('token');
     const userId = JSON.parse(localStorage.getItem('user')); 
@@ -860,8 +866,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                 Authorization: `Bearer ${token}`,
             },
         });
-
+            await getStatusRemarks();
         let assignmentSuccess = true;
+        
 
         // Handle assignment if needed
         if (remarkData.assignedTo) {
@@ -885,6 +892,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
                 console.error('Failed to assign lead:', assignErr);
                 assignmentSuccess = false;
                 showToast('error', 'Remark submitted, but assignment update failed.');
+
             }
         }
 
@@ -908,7 +916,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
         // Close the dialog
         setShowRemarkDialog(false);
-        await getStatusRemarks();
+        
 
     } catch (err) {
         console.error('Error submitting remark:', err);
@@ -919,15 +927,33 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
 
         showToast('error', issues);
     }
+    finally {
+    // FIXED: Always reset loading in finally block (not nested)
+    setTimeout(() => {
+      setIsSubmitting(false);
+    }, 1000);
+  }
   };
 
   const getStatusRemarks = async () => {
-    setStatusRemark(statusRemarks);
-  };
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${ENDPOINTS.STATUSREMARKS}/${leadId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('✅ Fresh remarks data:', response.data?.response); 
+    setStatusRemark(response.data?.response || []); // Or setLocalStatusRemarks
+    setLocalStatusRemarks(response.data?.response || []);
+  } catch (err) {
+    console.error('Error fetching remarks:', err);
+  }
+};
 
-  useEffect(() => {
+useEffect(() => {
+   if (!showRemarkDialog && !openDialog && !openProposalDialog && leadId) {
     getStatusRemarks();
-  }, [statusRemarks]);
+  }
+}, [showRemarkDialog, openDialog, openProposalDialog, leadId]);
 
   // Add this debug useEffect to check what's happening
   // useEffect(() => {
@@ -1413,8 +1439,12 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks }) => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowRemarkDialog(false)}>Cancel</Button>
-            <Button onClick={handleRemarkSubmit} variant="contained">
-              Submit
+            <Button onClick={handleRemarkSubmit} variant="contained"   disabled={isSubmitting} 
+             sx={{
+    backgroundColor: isSubmitting ? '#dbeafe' : undefined,
+    '&.Mui-disabled': { backgroundColor: '#dbeafe !important' }
+  }}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
           </DialogActions>
         </Dialog>

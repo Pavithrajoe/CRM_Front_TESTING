@@ -99,7 +99,7 @@ const Xcode_LeadCardViewPage = () => {
                 match(item.clead_name) ||
                 match(item.corganization || item.c_organization) ||
                 match(item.cemail || item.c_email) ||
-                match(item.iphone_no || item.c_phone) ||
+                match(item.iphone_no || item.c_phone) || match(item.lead_potential?.clead_name) || match(item.lead_status?.clead_name) ||  match(item.user?.cFull_name);
                 (selectedFilter === 'assignedToMe' && match(item.iassigned_by_name)) ||
                 (selectedFilter === 'assignedToMe' && match(item.statusDisplay));
 

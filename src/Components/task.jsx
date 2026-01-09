@@ -250,7 +250,6 @@ const Tasks = () => {
 
   // Close form when clicking outside logic
   const handleClickOutside = useCallback((event) => {
-    // On Special Company Desktop, form is always visible, so don't close it
     if (isSpecialCompany && !isMobile) return;
     if (!showForm) return;
 

@@ -265,7 +265,7 @@ function Tax() {
     return (
         <div className="min-h-[80vh] bg-gray-50 p-4 md:p-8">
             <ToastContainer position="top-right" autoClose={3000} />
-            <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6"> 
+        <div className="w-full max-w-7xl grid grid-cols-1 xl:grid-cols-2 gap-8">
                 
                 {/* Right Panel: Add/Edit Form (Order 1 on mobile, Order 2 on large screens) */}
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-2xl p-5 w-full lg:col-span-1 order-1 lg:order-2 lg:sticky lg:top-6"> 

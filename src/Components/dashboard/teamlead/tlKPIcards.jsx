@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { ENDPOINTS } from "../../../api/constraints";
 
-// Environment variable for the target company
 const TARGET_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
 const getPotentialColor = (index) => {
@@ -130,7 +129,7 @@ export default function KPIStats() {
                 backgroundImage: `url(${kpi.bg})`,
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "right bottom",
-                backgroundSize: "150px",
+                backgroundSize: "clamp(90px, 25vw, 150px)",
               }}
             >
               <h3 className="text-xs font-semibold text-gray-600 mb-1">{kpi.title}</h3>

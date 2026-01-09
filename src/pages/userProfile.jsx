@@ -273,34 +273,73 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   }, [users, userId]);
 
   const handleToggleDCRM = useCallback(() => {
-    if (!users) return;
-    if (users.DCRM_enabled) {
-      setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
-      setConfirmModalAction(() => async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+  if (!users) return;
+  if (users.DCRM_enabled) {
+    setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+    setConfirmModalAction(() => async () => {
+      try {
+        const token = localStorage.getItem('token');
+        // ✅ FIXED: Use correct endpoint and method
+        const response = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+          method: 'PUT',  // ✅ PUT for update
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ DCRM_enabled: false })  // ✅ Send the field to update
+        });
 
-          if (!response.ok) throw new Error('Failed to disable DCRM');
-          setUsers(prev => ({ ...prev, DCRM_enabled: false }));
-          showAppMessage('DCRM disabled successfully!', 'success');
-        } catch (err) {
-          console.error(err);
-          showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
-        } finally {
-          setShowConfirmModal(false);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to disable DCRM');
         }
-      });
-      setShowConfirmModal(true);
-    } else {
-      setShowDCRMForm(true);
-    }
-  }, [users, userId]);
+        
+        const updatedUser = await response.json();
+        setUsers(prev => ({ ...prev, DCRM_enabled: false }));
+        showAppMessage('DCRM disabled successfully!', 'success');
+      } catch (err) {
+        console.error(err);
+        showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+      } finally {
+        setShowConfirmModal(false);
+      }
+    });
+    setShowConfirmModal(true);
+  } else {
+    setShowDCRMForm(true);
+  }
+}, [users, userId]);
+
+
+  // const handleToggleDCRM = useCallback(() => {
+  //   if (!users) return;
+  //   if (users.DCRM_enabled) {
+  //     setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+  //     setConfirmModalAction(() => async () => {
+  //       try {
+  //         const token = localStorage.getItem('token');
+  //         const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
+  //           method: 'POST',
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         });
+
+  //         if (!response.ok) throw new Error('Failed to disable DCRM');
+  //         setUsers(prev => ({ ...prev, DCRM_enabled: false }));
+  //         showAppMessage('DCRM disabled successfully!', 'success');
+  //       } catch (err) {
+  //         console.error(err);
+  //         showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+  //       } finally {
+  //         setShowConfirmModal(false);
+  //       }
+  //     });
+  //     setShowConfirmModal(true);
+  //   } else {
+  //     setShowDCRMForm(true);
+  //   }
+  // }, [users, userId]);
 
   const handleDCRMSuccess = useCallback(() => {
     setUsers(prev => ({ ...prev, DCRM_enabled: true }));
@@ -645,7 +684,8 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <ToggleSwitch
                   label="DCRM Enable"
-                  isChecked={users.DCRM_enabled || false}
+                  // isChecked={users.DCRM_enabled || false}
+                  isChecked={users.DCRM_enabled === true}
                   onToggle={handleToggleDCRM}
                 />
                 <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>

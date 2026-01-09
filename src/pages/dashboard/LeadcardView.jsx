@@ -913,7 +913,7 @@ const LeadCardViewPage = () => {
   {/* COMPLETE FILTERS - Mobile/Tablet/Desktop Perfect */}
   <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-4 mb-6">
     {/* Mobile: Menu Dropdown */}
-    <div className="lg:hidden relative z-50 ml-2">
+    <div className="lg:hidden relative  ml-2">
       <button
         onClick={() => setShowMobileMenu(!showMobileMenu)}
         className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition-all border border-gray-200 shadow-sm hover:shadow-md w-full lg:w-auto"

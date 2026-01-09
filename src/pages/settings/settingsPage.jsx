@@ -15,9 +15,9 @@ const SettingsPage = () => {
       
       {/* <h1 className="text-3xl text-black font-medium mb-2 ms-[20px] mt-[-10px]">Profile</h1> */}
 
-      <div className="flex h-[100vh]">
+      <div className="flex h-[110vh]">
         {/* Dark Sidebar */}
-<aside className="w-72 m-4 p-6 bg-[#164CA1] border border-blue-900 rounded-2xl text-white space-y-6">
+       <aside className="w-72 m-4 p-6 bg-[#164CA1] border border-blue-900 rounded-2xl text-white space-y-6">
           <div>
             <h2 className="text-lg font-semibold mb-3">GENERAL SETTINGS</h2>
             <ul className="space-y-2">

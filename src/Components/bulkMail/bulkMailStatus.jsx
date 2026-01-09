@@ -165,7 +165,7 @@ const BulkMailStatus = () => {
                   <TableCell>S.No</TableCell>
                   <TableCell>Recipient</TableCell>
                   <TableCell>Subject</TableCell>
-                  <TableCell>CC</TableCell>
+                  {/* <TableCell>CC</TableCell> */}
                   <TableCell>Date & Time</TableCell>
                    <TableCell>
             {/* NEW STATUS HEADER WITH ARROWS */}
@@ -223,11 +223,7 @@ const BulkMailStatus = () => {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{mail.cemail}</TableCell>
                     <TableCell>{mail.mail_subject || "-"}</TableCell>
-                    <TableCell>
-                      {Array.isArray(mail.cc) && mail.cc.length > 0
-                        ? mail.cc.join(", ")
-                        : "-"}
-                    </TableCell>
+                    {/* <TableCell> {Array.isArray(mail.cc) && mail.cc.length > 0 ? mail.cc.join(", ") : "-"} </TableCell> */}
                     <TableCell>{formatDateTime12h(mail.dcreated_dt)}</TableCell>
                     <TableCell align="center"> 
                       <Chip 

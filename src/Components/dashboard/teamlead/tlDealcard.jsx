@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -104,6 +103,9 @@ export default function DealsTable({data =[]}) {
       []
     );
   }, [data]);
+
+  const previous = '<';
+  const next = '>';
 
   const filteredDeals = useMemo(() => {
     const term = search.toLowerCase();
@@ -268,7 +270,7 @@ export default function DealsTable({data =[]}) {
           onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1}
         >
-          Previous
+          {previous}
         </button>
 
         <span className="text-sm text-gray-600">
@@ -286,7 +288,7 @@ export default function DealsTable({data =[]}) {
           }
           disabled={currentPage === totalPages || totalPages === 0}
         >
-          Next
+          {next}
         </button>
       </div>
     </div>

@@ -211,7 +211,7 @@ function TermsAndConditions() {
     return (
         <div className="min-h-screen bg-gray-100 p-4 md:p-8 flex justify-center items-start">
             <ToastContainer position="bottom-right" autoClose={3000} />
-            <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="w-full max-w-7xl grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* Left Panel: Terms List */}
                 <div className="bg-white border border-gray-200 rounded-xl shadow-2xl p-6 h-full order-2 lg:order-1">
                     <div className="flex justify-between items-center mb-6 border-b pb-4">

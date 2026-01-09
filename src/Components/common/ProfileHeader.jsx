@@ -269,7 +269,7 @@ return (
               <div
                 key={item.attributes_id || index}
                 onClick={handleGeneratePoster}
-                className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
+                className="hidden sm:flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 rounded-xl p-3 cursor-pointer transition"
               >
                 <img
                   src="/illustrations/crop.png"

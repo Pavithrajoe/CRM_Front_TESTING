@@ -114,6 +114,7 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
   );
 };
 
+
 const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
   <div className="flex gap-6 justify-end items-center my-4">
     <div className="relative group">
@@ -229,6 +230,10 @@ const LeadDetailView = () => {
   const [showForm, setShowForm] = useState(false); 
   const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
 
+  const [dragActive, setDragActive] = useState(false);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
+
+
   const [userSettings, setUserSettings] = useState({
     mail_access: false,
     whatsapp_access: false,
@@ -245,6 +250,8 @@ const LeadDetailView = () => {
           ["Comments", "Task", "Reminder"].includes(attr.attribute_name))
     );
   }, [userModules]);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;  //hide
 
   // Derived state
   const isLeadActive =
@@ -533,6 +540,16 @@ const LeadDetailView = () => {
     fetchCurrencies();
   }, []);
 
+  useEffect(() => {
+  const handleResize = () => {
+    setIsLargeScreen(window.innerWidth > 1280);
+    
+  };
+  
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
   const lostLead = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -588,6 +605,8 @@ const LeadDetailView = () => {
     e.preventDefault();
     await lostLead();
   };
+
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth > 1280);
 
   const fetchStatusRemarks = async () => {
     try {
@@ -1004,8 +1023,9 @@ const getTabLabels = () => {
     availableTabs.push("Reminders");
   }
   
-  availableTabs.push("Activity");
-  
+ if (isLargeScreen) {
+    availableTabs.push('Activity');
+  }
   return availableTabs;
 };
 
@@ -1041,6 +1061,7 @@ const renderTabContent = () => {
       {/* DESKTOP: Always Full ProfileCard */}
       <div className="hidden lg:block lg:w-[340px] xl:w-[380px] p-4 flex-shrink-0">
         <div className="top-4 h-screen  space-y-4 pr-2 max-h-screen">
+          
               <ProfileCard
                 leadId={leadId}
                 settingsData={profileSettings}
@@ -1054,7 +1075,7 @@ const renderTabContent = () => {
       </div>
 
       {/* MOBILE/TABLET: Enhanced Profile Icon */}
-      <div className="lg:hidden fixed top-24 left-6 z-50">
+      <div className="lg:hidden fixed top-24 left-6 z-10 ">
         <button 
           onClick={() => setShowMobileProfileDrawer(true)}
           className="w-14 h-14 min-w-[56px] bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl shadow-lg flex flex-col items-center justify-center p-1.5 transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 touch-manipulation"
@@ -1183,7 +1204,8 @@ const renderTabContent = () => {
               {(isWon || immediateWonStatus || leadData?.bisConverted) &&
                 quotations.length > 0 && (
                   <button onClick={() => setShowQuotationsList(true)}
-                    className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    // className="bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                          className="hidden xl:flex bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-2 px-6 rounded-xl transition text-base items-center"
                   >
                     <FaEye className="mr-1" /> View Quotations
                   </button>
@@ -1193,7 +1215,8 @@ const renderTabContent = () => {
               {showCreateQuotationButton && (
                 <>
                   <button
-                    className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                    // className="bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-1 sm:py-2 px-4 sm:px-6 rounded-xl transition text-xs sm:text-sm md:text-base flex items-center"
+                     className="hidden xl:flex bg-green-600 shadow-md shadow-green-900 hover:bg-green-900 text-white font-semibold py-2 px-6 rounded-xl transition text-base items-center"
                     onClick={() => setShowQuotationForm(true)} 
                   >
                     <FaPlus className="mr-1" /> Create Quotation
@@ -1847,6 +1870,7 @@ const renderTabContent = () => {
 };
 
 export default LeadDetailView;
+
 
 
 

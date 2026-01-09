@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
@@ -37,7 +36,10 @@ export default function LeadsTable({ data }) {
       }));
   }, [data]);
 
-  const filteredLeads = useMemo(() => {
+   const previous = '<';
+   const next = '>';
+
+   const filteredLeads = useMemo(() => {
     const term = search.toLowerCase();
     let leads = activeUnconvertedLeads
       .filter(
@@ -192,7 +194,7 @@ export default function LeadsTable({ data }) {
                   : "text-blue-600 border border-blue-400 hover:bg-blue-50"
               }`}
           >
-            Previous
+          {previous}
           </button>
           <span className="text-sm text-gray-600">
             Page {currentPage} of {totalPages}
@@ -207,7 +209,7 @@ export default function LeadsTable({ data }) {
                   : "text-blue-600 border border-blue-400 hover:bg-blue-50"
               }`}
           >
-            Next
+            {next}
           </button>
         </div>
       )}

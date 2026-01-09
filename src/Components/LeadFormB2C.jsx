@@ -1,9 +1,9 @@
-// last update 26/08 workinh fine
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
 import { X, Search } from "lucide-react";
 import { useUserAccess } from "../context/UserAccessContext";
+import Swal from 'sweetalert2'; 
+import withReactContent from 'sweetalert2-react-content'
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
 // const LeadForm = ({ onClose, onSuccess }) => {
@@ -51,6 +51,8 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     const [selectedCurrency, setSelectedCurrency] = useState({ currency_code: "INR", symbol: "₹" });
     const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
     const currencyDropdownRef = useRef(null);
+
+    const MySwal = withReactContent(Swal);
 
 
     useEffect(() => {
@@ -1424,18 +1426,29 @@ const handleSubmit = async (e) => {
     const resData = await res.json();
 
     if (res.ok) {
-      setPopupMessage("Lead created successfully!");
-      setIsPopupVisible(true);
+      // setPopupMessage("Lead created successfully!");
+      // setIsPopupVisible(true);
 
-      setTimeout(() => {
-        setIsPopupVisible(false);
-        onClose();
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          window.location.reload();
-        }
-      }, 3000);
+      // setTimeout(() => {
+      //   setIsPopupVisible(false);
+      //   onClose();
+      //   if (onSuccess) {
+      //     onSuccess();
+      //   } else {
+      //     window.location.reload();
+      //   }
+      // }, 3000);
+      MySwal.fire({
+  icon: 'success',
+  title: 'Lead Created!',
+  text: 'Lead created successfully.',
+  timer: 1000,
+  showConfirmButton: false
+}).then(() => {
+  onClose();
+  if (onSuccess) onSuccess();
+ 
+});
     } 
     else {
       const errorMessage =
@@ -1669,110 +1682,112 @@ const handleSubmit = async (e) => {
         </div>
 
         {/* --- EXISTING LEAD SEARCH SECTION --- */}
-{isExistingClientForm && (
+       {isExistingClientForm && (
     <div className="space-y-6 mb-6">
         <h3 className="text-lg font-semibold mt-6">Search Existing Lead</h3>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-  {/* Mobile Search */}
-  <div>
-    <label className="block text-sm font-medium mb-1">Mobile Number</label>
-    <div className="flex items-center">
-      {/* Country code input and dropdown */}
-      <div className="relative" ref={mobileCountryCodeRef}>
-        <input
-          type="text"
-          name="searchMobileCountryCode" 
-          value={searchMobileCountryCode}  
-          onChange={handleChange}
-          onFocus={() => setIsMobileCountryCodeDropdownOpen(true)}
-          onBlur={handleBlur}
-          placeholder="+XXX"
-          className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[100px] flex-none"
-        />
-        {isMobileCountryCodeDropdownOpen && (
-          <div className="absolute z-10 top-full mt-1 bg-white border rounded shadow-md max-h-40 overflow-y-auto min-w-[250px] w-max">
-            {Array.isArray(filteredMobileCountryCodes) &&
-            filteredMobileCountryCodes.length > 0 ? (
-              filteredMobileCountryCodes.map((cc) => (
-                <div
-                  key={cc.code}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    handleSelectCountryCode("phone", cc.code, cc.code);
-                  }}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                >
-                  {cc.code} ({cc.name})
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Mobile Search - Full width on mobile */}
+            <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-1">Mobile Number</label>
+                <div className="flex items-center flex-wrap gap-2">
+                    {/* Country code input - Fixed width but responsive */}
+                    <div className="relative flex-shrink-0" ref={mobileCountryCodeRef}>
+                        <input
+                            type="text"
+                            name="searchMobileCountryCode" 
+                            value={searchMobileCountryCode}  
+                            onChange={handleChange}
+                            onFocus={() => setIsMobileCountryCodeDropdownOpen(true)}
+                            onBlur={handleBlur}
+                            placeholder="+XXX"
+                            className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-24 md:w-28 flex-none text-sm"
+                        />
+                        {isMobileCountryCodeDropdownOpen && (
+                            <div className="absolute z-50 top-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto min-w-[220px] w-max sm:left-0">
+                                {Array.isArray(filteredMobileCountryCodes) &&
+                                filteredMobileCountryCodes.length > 0 ? (
+                                    filteredMobileCountryCodes.map((cc) => (
+                                        <div
+                                            key={cc.code}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => {
+                                                handleSelectCountryCode("phone", cc.code, cc.code);
+                                            }}
+                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                        >
+                                            {cc.code} ({cc.name})
+                                        </div>
+                                    ))
+                                ) : (
+                                    <EmptyDropdownMessage type="country" />
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Phone number input - Flexible width */}
+                    <input
+                        type="text"
+                        name="searchMobile"
+                        value={searchMobile}
+                        onChange={(e) => {
+                            setSearchMobile(e.target.value);
+                            if (e.target.value) setSearchEmail(""); 
+                        }}
+                        placeholder="Enter mobile number"
+                        className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none min-w-[200px] text-sm"
+                    />
                 </div>
-              ))
-            ) : (
-              <EmptyDropdownMessage type="country" />
-            )}
-          </div>
-        )}
-      </div>
+            </div>
 
-      {/* Phone number input */}
-      <input
-        type="text"
-        name="searchMobile"
-        value={searchMobile}
-        onChange={(e) => {
-          setSearchMobile(e.target.value);
-          if (e.target.value) setSearchEmail(""); 
-        }}
-        placeholder="Enter mobile number"
-        className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
-      />
-    </div>
-  </div>
+            {/* Email Search - Full width on mobile */}
+            <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-1">Email Address</label>
+                <input
+                    type="text"
+                    name="searchEmail"
+                    value={searchEmail}
+                    onChange={(e) => {
+                        setSearchEmail(e.target.value);
+                        if (e.target.value) setSearchMobile(""); 
+                    }}
+                    placeholder="Enter email address"
+                    className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                />
+            </div>
 
-  {/* Email Search */}
-  <div>
-    <label className="text-sm font-medium">Email Address</label>
-    <input
-      // type="email"
-      type="text"
-      name="searchEmail"
-      value={searchEmail}
-      onChange={(e) => {
-        setSearchEmail(e.target.value);
-        if (e.target.value) setSearchMobile(""); 
-      }}
-      placeholder="Enter email address"
-      className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-    />
-  </div>
+            {/* Search Button - Full width on mobile */}
+            <div className="col-span-1 md:col-span-2">
+                <button
+                    onClick={handleSearchExistingLead}
+                    disabled={loading}
+                    className={`w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium ${
+                        loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                >
+                    {loading ? "Searching..." : "Search"}
+                </button>
+            </div>
+        </div>
 
-  {/* Search Button */}
-  <div className="col-span-2">
-    <button
-      onClick={handleSearchExistingLead}
-      disabled={loading}
-      className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 ${
-        loading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    >
-      {loading ? "Searching..." : "Search"}
-    </button>
-  </div>
-</div>
-
-        {/* Loading and results display below */}
+        {/* Loading and results display - Fully responsive */}
         {loading && (
-            <p className="text-blue-600 text-sm">Searching for leads...</p>
+            <div className="flex items-center gap-2 text-blue-600 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                Searching for leads...
+            </div>
         )}
 
         {foundLeads.length > 0 && (
-            <div className="flex flex-col relative w-full md:w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lead Name <span className="text-red-500">*</span>
+            <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lead Name <span className="text-red-500">*</span>
                 </label>
                 <select
                     name="ilead_id"
                     value={form.ilead_id || ''}
                     onChange={(e) => handleSelectLead(e.target.value)}
-                    className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                 >
                     <option value="">Select an existing lead...</option>
                     {foundLeads.map((lead) => (
@@ -1947,66 +1962,63 @@ const handleSubmit = async (e) => {
     
 
                  {/* for currency coode + project value */}
-        <div>
-          <label className="text-sm font-medium">Project Value</label>
-          <div className="flex mt-1">
-            {/* Currency Dropdown */}
-            <div className="relative" ref={currencyDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
-                className="border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1"
-              >
-                {selectedCurrency.currency_code} ({selectedCurrency.symbol})
-                <svg
-                  className="w-3 h-3 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+         <div>
+  <label className="text-sm font-medium mb-2 block">Project Value</label>
+  <div className="flex w-full">
+    {/* Currency Dropdown Container */}
+    <div className="relative flex-none" ref={currencyDropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsCurrencyDropdownOpen(prev => !prev)}
+        className="w-20 sm:w-28 border border-r-0 px-2 py-2.5 rounded-l-md h-11 focus:ring-2 focus:ring-blue-500 bg-gray-50 outline-none flex items-center justify-between gap-1 text-[11px] sm:text-xs"
+      >
+        <span className="truncate">
+          {selectedCurrency.currency_code} ({selectedCurrency.symbol})
+        </span>
+        <svg className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
-              {isCurrencyDropdownOpen && (
-                <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
-                  {currencies.map((cur) => (
-                    <div
-                      key={cur.icurrency_id}
-                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                      onClick={() => {
-                        setSelectedCurrency(cur);
-                        setIsCurrencyDropdownOpen(false);
-                      }}
-                    >
-                      {cur.currency_code} ({cur.symbol})
-                    </div>
-                  ))}
-                </div>
-              )}
+      {isCurrencyDropdownOpen && (
+        <div className="absolute z-[60] top-full left-0 mt-1 w-36 sm:w-40 bg-white border rounded-md shadow-2xl max-h-60 overflow-y-auto">
+          {currencies.map((cur) => (
+            <div
+              key={cur.icurrency_id}
+              className="px-4 py-3 sm:py-2 hover:bg-blue-50 cursor-pointer text-xs border-b last:border-0"
+              onClick={() => {
+                setSelectedCurrency(cur);
+                setIsCurrencyDropdownOpen(false);
+              }}
+            >
+              <span className="font-semibold">{cur.currency_code}</span> ({cur.symbol})
             </div>
-
-            {/* Project Value Input */}
-            <input
-              type="number"
-              name="iproject_value"
-              value={form.iproject_value === 0 ? "" : form.iproject_value}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter project value"
-              className="flex-1 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none"
-              min="0"
-            />
-          </div>
-          {errors.iproject_value && (
-            <p className="text-red-600 text-sm">{errors.iproject_value}</p>
-          )}
+          ))}
         </div>
+      )}
+    </div>
+
+    {/* Input Field */}
+    <input
+      type="number"
+      name="iproject_value"
+      value={form.iproject_value === 0 ? "" : form.iproject_value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder="Project value"
+      className="flex-1 border px-3 py-2.5 rounded-r-md h-11 focus:ring-2 focus:ring-blue-500 outline-none text-sm min-w-0"
+      min="0"
+    />
+  </div>
+  {errors.iproject_value && (
+    <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.iproject_value}</p>
+  )}
+</div>
 
       </div>
       <hr className="my-6 " />
       <h3 className="text-lg font-semibold mt-6">{formLabels.section2Label}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {contactInfoFields.map(({ label, name, required, type, value, readOnly }) => {
           if (type === "phone" || type === "whatsapp") {
             const numberFieldName = type === "phone" ? "iphone_no" : "cwhatsapp";
@@ -2105,7 +2117,113 @@ const handleSubmit = async (e) => {
             );
           }
         })}
-      </div>
+      </div> */}
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  {contactInfoFields.map(({ label, name, required, type, value, readOnly }) => {
+    if (type === "phone" || type === "whatsapp") {
+      const numberFieldName = type === "phone" ? "iphone_no" : "cwhatsapp";
+      const searchCountryCodeState = type === "phone" ? searchMobileCountryCode : searchWhatsappCountryCode;
+      const isDropdownOpen = type === "phone" ? isMobileCountryCodeDropdownOpen : isWhatsappCountryCodeDropdownOpen;
+      const setIsDropdownOpen = type === "phone" ? setIsMobileCountryCodeDropdownOpen : setIsWhatsappCountryCodeDropdownOpen;
+      const filteredCodes = type === "phone" ? filteredMobileCountryCodes : filteredWhatsappCountryCodes;
+      const dropdownRef = type === "phone" ? mobileCountryCodeRef : whatsappCountryCodeRef;
+      const searchInputName = type === "phone" ? "searchMobileCountryCode" : "searchWhatsappCountryCode";
+
+      return (
+        <div key={name} className="flex flex-col">
+          <label className="text-sm font-medium mb-1">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+          
+          <div className="flex w-full">
+            <div className="relative" ref={dropdownRef}>
+              <input
+                type="text"
+                name={searchInputName}
+                value={searchCountryCodeState}
+                onChange={handleChange}
+                onFocus={() => setIsDropdownOpen(true)}
+                onBlur={handleBlur}
+                placeholder="+XXX"
+                className="border px-2 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none w-[75px] sm:w-[90px] flex-none text-sm sm:text-base"
+                disabled={name === "cwhatsapp" && sameAsPhone}
+              />
+              
+              {isDropdownOpen && (
+                <div className="absolute z-50 top-full mt-1 bg-white border rounded shadow-xl max-h-60 overflow-y-auto w-[250px] left-0">
+                  {Array.isArray(filteredCodes) && filteredCodes.length > 0 ? (
+                    filteredCodes.map((cc) => (
+                      <div
+                        key={cc.code}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSelectCountryCode(type, cc.code, cc.code)}
+                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm border-b last:border-0"
+                      >
+                        <span className="font-bold">{cc.code}</span> ({cc.name})
+                      </div>
+                    ))
+                  ) : (
+                    <EmptyDropdownMessage type="country" />
+                  )}
+                </div>
+              )}
+            </div>
+
+            <input
+              type="text"
+              name={numberFieldName}
+              value={form[numberFieldName]}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={`Enter ${label.toLowerCase()}`}
+              className="flex-1 min-w-0 border px-3 py-2 rounded-r-md focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
+              disabled={name === "cwhatsapp" && sameAsPhone}
+            />
+          </div>
+
+          {errors[numberFieldName] && (
+            <p className="text-red-600 text-xs mt-1">{errors[numberFieldName]}</p>
+          )}
+
+          {name === "iphone_no" && (
+            <label className="inline-flex items-center mt-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sameAsPhone}
+                onChange={toggleSame}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-xs sm:text-sm text-gray-700">
+                WhatsApp same as phone
+              </span>
+            </label>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div key={name}>
+          <label className="text-sm font-medium">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+          <input
+            type="text"
+            name={name}
+            value={value !== undefined ? value : form[name]}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm sm:text-base"
+            readOnly={readOnly}
+          />
+          {errors[name] && (
+            <p className="text-red-600 text-xs mt-1">{errors[name]}</p>
+          )}
+        </div>
+      );
+    }
+  })}
+</div>
       <hr className="my-6 " />
       <h3 className="text-lg font-semibold mt-6">{formLabels.section3Label}</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

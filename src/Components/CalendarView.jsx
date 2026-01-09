@@ -872,6 +872,13 @@ const CalendarView = () => {
   }, [selectedDate, activeTab]);
 
   useEffect(() => {
+  if (selectedDate && isTaskAllowed) {
+    fetchTasks(selectedDate); // Pre-fetch tasks for day 9 on load
+  }
+}, []); // Empty deps: runs once after first render
+
+
+  useEffect(() => {
     const user_data = localStorage.getItem("user");
     if (user_data) {
       try {

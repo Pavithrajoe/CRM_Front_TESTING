@@ -199,7 +199,8 @@ export default function SmtpSettings() {
         onSubmit={handleSubmit}
         className="mx-auto mt-10 bg-white/60 backdrop-blur-lg border border-gray-200 shadow-xl rounded-3xl p-8 space-y-6"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
           {[
             { label: 'Name', name: 'name', type: 'text', placeholder: 'Enter Name', req: true },
             { label: 'E-mail', name: 'email', type: 'email', placeholder: 'Enter Email', req: true },
@@ -220,6 +221,7 @@ export default function SmtpSettings() {
                   value={form[name]}
                   onChange={handleChange}
                   placeholder={placeholder}
+                  autoComplete={name === 'password' ? "new-password" : "off"}
                   className={`mt-1 w-full rounded-lg border p-2 focus:ring-2 focus:ring-black focus:border-black transition outline-none ${
                     errors[name] ? 'border-red-500' : 'border-gray-300'
                   } ${name === 'password' ? 'pr-10' : ''}`}
@@ -273,4 +275,3 @@ export default function SmtpSettings() {
     </>
   );
 }
-

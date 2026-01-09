@@ -53,7 +53,7 @@ export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountFo
           ).length;
 
           setLeadCount(activeLeadsCount);
-          setWonLeadCount(dealCountForWon);
+           setWonLeadCount(Number(dealCountForWon) || 0);
           setLostLeadCount(lostLeadsCount);
           setWebsiteLeadCount(websiteLeadsCount);
         }
@@ -84,28 +84,28 @@ export default function TeamKPIStats({leadsArray, subordinatesArray, dealCountFo
   const kpiData = [
     {
       title: "Active Leads",
-      value: leadCount,
+      value: leadCount || 0,
       colorStart: "#6CCF00",
       colorEnd: "#3CB043",
       iconBg: "bg-green-500",
     },
     {
       title: "Won Leads",
-      value: wonLeadCount,
+      value: wonLeadCount || 0,
       colorStart: "#8E24AA",
       colorEnd: "#9C27B0",
       iconBg: "bg-purple-500",
     },
     {
       title: "Lost Leads",
-      value: lostLeadCount,
+      value: lostLeadCount || 0,
       colorStart: "#F44336",
       colorEnd: "#E53935",
       iconBg: "bg-red-500",
     },
     {
       title: "Website Leads",
-      value: websiteLeadCount,
+      value: websiteLeadCount || 0,
       colorStart: "#1E88E5",
       colorEnd: "#2196F3",
       iconBg: "bg-sky-500",

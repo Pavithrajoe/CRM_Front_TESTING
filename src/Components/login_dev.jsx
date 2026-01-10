@@ -6,20 +6,16 @@ import { ENDPOINTS } from '../api/constraints';
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
-  const [data, setData] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTopCard, setShowTopCard] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleResize = () => {
-      setShowTopCard(false);
-    };
-
+    const handleResize = () => setShowTopCard(false);
     handleResize();
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -39,19 +35,16 @@ const LoginPage = () => {
       setLoading(false);
       return;
     }
-
     if (!emailRegex.test(email) && !phoneRegex.test(email)) {
       setLoginError('Please enter a valid email address');
       setLoading(false);
       return;
     }
-
     if (!password.trim()) {
       setLoginError('Please enter your password.');
       setLoading(false);
       return;
     }
-
     if (password.length < 6) {
       setLoginError('Password must be at least 6 characters long.');
       setLoading(false);
@@ -64,10 +57,9 @@ const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await response.json();
-      console.log("login data", data)
 
-      setData(data);
+      const data = await response.json();
+      // console.log("login data", data);
 
       if (response.ok && data.jwtToken) {
         localStorage.clear();
@@ -78,9 +70,13 @@ const LoginPage = () => {
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
         window.dispatchEvent(new Event("token-set"));
         window.location.href = '/leaddashboard';
-
-      } else {
-        setLoginError(data.message || 'Login failed, please enter correct details');
+      } 
+      else if (response.status === 403 || data.error === "FREE_TRIAL_EXPIRED") {
+        //  Show modal for trial expired
+        setShowTrialModal(true);
+      } 
+      else {
+        setLoginError(data.message || data.error || 'Login failed, please enter correct details');
       }
     } catch (error) {
       setLoginError('Something went wrong. Please try again.');
@@ -96,10 +92,27 @@ const LoginPage = () => {
     </div>
   );
 
+  //  Modal component
+  const TrialExpiredModal = ({ onClose }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-xl p-6 w-11/12 max-w-md shadow-lg text-center">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Trial Expired</h2>
+        <p className="text-gray-600 mb-6">
+          Your 1-month free CRM access has ended. Please contact <strong>Inklidox Technologies</strong>.
+        </p>
+        <button
+          onClick={onClose}
+          className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 relative">
-        {/* Top Card - Shown Initially */}
         {showTopCard && (
           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-white border border-blue-300 text-blue-800 px-5 py-4 rounded-xl shadow-md text-sm font-medium z-50">
             <p className="mb-2"> Login from your desktop or laptop for a better experience.</p>
@@ -167,35 +180,23 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-36 bg-blue-600 text-white py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:bg-blue-700 ${
-                    loading ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-36 bg-blue-600 text-white py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:bg-blue-700 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
                     <svg className="animate-spin h-5 w-5 mx-auto" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
-                  ) : (
-                    'Login'
-                  )}
+                  ) : 'Login'}
                 </button>
-{/* 
-                 <button
+
+                <button
                   type="button"
                   onClick={() => window.open('/CreateAnAccount', '_blank')}
                   className="mt-4 text-sm text-blue-600 hover:underline"
                 >
                   Create an Account
-                </button>  */}
-
-                <button
-                  type="button"
-                  onClick={() => window.open('/request-demo', '_blank')}
-                  className="mt-4 text-sm text-blue-600 hover:underline"
-                >
-                  Request a Demo
-                </button>
+                </button>  
 
                 {loginError && <LoginFailedAlert message={loginError} />}
               </div>
@@ -203,47 +204,49 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Animations */}
-        <style>{`
-          @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            50% { transform: translateX(4px); }
-            75% { transform: translateX(-4px); }
-            100% { transform: translateX(0); }
-          }
-
-          .animate-shake {
-            animation: shake 0.4s ease-in-out;
-          }
-
-          @keyframes wave {
-            0% { transform: rotate(0.0deg); }
-            10% { transform: rotate(14.0deg); }
-            20% { transform: rotate(-8.0deg); }
-            30% { transform: rotate(14.0deg); }
-            40% { transform: rotate(-4.0deg); }
-            50% { transform: rotate(10.0deg); }
-            60% { transform: rotate(0.0deg); }
-            100% { transform: rotate(0.0deg); }
-          }
-
-          .animate-waving-hand {
-            display: inline-block;
-            transform-origin: 70% 70%;
-            animation: wave 2s infinite;
-          }
-        `}</style>
+        {/* Show Trial Expired Modal */}
+        {showTrialModal && <TrialExpiredModal onClose={() => setShowTrialModal(false)} />}
 
         <footer className="absolute bottom-4 text-center w-full text-gray-400 text-sm">
           © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 4.1
         </footer>
       </div>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          50% { transform: translateX(4px); }
+          75% { transform: translateX(-4px); }
+          100% { transform: translateX(0); }
+        }
+
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes wave {
+          0% { transform: rotate(0.0deg); }
+          10% { transform: rotate(14.0deg); }
+          20% { transform: rotate(-8.0deg); }
+          30% { transform: rotate(14.0deg); }
+          40% { transform: rotate(-4.0deg); }
+          50% { transform: rotate(10.0deg); }
+          60% { transform: rotate(0.0deg); }
+          100% { transform: rotate(0.0deg); }
+        }
+
+        .animate-waving-hand {
+          display: inline-block;
+          transform-origin: 70% 70%;
+          animation: wave 2s infinite;
+        }
+      `}</style>
     </>
   );
 };
 
 export default LoginPage;
+
 
 
 

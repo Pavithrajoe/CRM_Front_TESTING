@@ -272,74 +272,62 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
     setShowConfirmModal(true);
   }, [users, userId]);
 
+  const isDCRMAlreadyCreated = useMemo(() => { return Boolean(users?.DCRM_enabled || users?.dcrm_user_id); }, [users]);
+
   const handleToggleDCRM = useCallback(() => {
-  if (!users) return;
-  if (users.DCRM_enabled) {
-    setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+    if (!users) return;
+
+    // 🔴 FIRST TIME → OPEN FORM
+    if (!isDCRMAlreadyCreated) {
+      setShowDCRMForm(true);
+      return;
+    }
+
+    // 🔴 AFTER FIRST TIME → ONLY TOGGLE TRUE / FALSE
+    const newStatus = !users.DCRM_enabled;
+
+    setConfirmModalMessage(
+      newStatus
+        ? "Are you sure you want to enable DCRM for this user?"
+        : "Are you sure you want to disable DCRM for this user?"
+    );
+
     setConfirmModalAction(() => async () => {
       try {
-        const token = localStorage.getItem('token');
-        // ✅ FIXED: Use correct endpoint and method
+        const token = localStorage.getItem("token");
+
         const response = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-          method: 'PUT',  // ✅ PUT for update
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ DCRM_enabled: false })  // ✅ Send the field to update
+          body: JSON.stringify({ DCRM_enabled: newStatus }),
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to disable DCRM');
+          const err = await response.json();
+          throw new Error(err.message || "Failed to update DCRM status");
         }
-        
-        const updatedUser = await response.json();
-        setUsers(prev => ({ ...prev, DCRM_enabled: false }));
-        showAppMessage('DCRM disabled successfully!', 'success');
+
+        setUsers((prev) => ({
+          ...prev,
+          DCRM_enabled: newStatus,
+        }));
+
+        showAppMessage(
+          `DCRM ${newStatus ? "enabled" : "disabled"} successfully`,
+          "success"
+        );
       } catch (err) {
-        console.error(err);
-        showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+        showAppMessage(err.message, "error");
       } finally {
         setShowConfirmModal(false);
       }
     });
+
     setShowConfirmModal(true);
-  } else {
-    setShowDCRMForm(true);
-  }
-}, [users, userId]);
-
-
-  // const handleToggleDCRM = useCallback(() => {
-  //   if (!users) return;
-  //   if (users.DCRM_enabled) {
-  //     setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
-  //     setConfirmModalAction(() => async () => {
-  //       try {
-  //         const token = localStorage.getItem('token');
-  //         const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
-  //           method: 'POST',
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         });
-
-  //         if (!response.ok) throw new Error('Failed to disable DCRM');
-  //         setUsers(prev => ({ ...prev, DCRM_enabled: false }));
-  //         showAppMessage('DCRM disabled successfully!', 'success');
-  //       } catch (err) {
-  //         console.error(err);
-  //         showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
-  //       } finally {
-  //         setShowConfirmModal(false);
-  //       }
-  //     });
-  //     setShowConfirmModal(true);
-  //   } else {
-  //     setShowDCRMForm(true);
-  //   }
-  // }, [users, userId]);
+  }, [users, userId, isDCRMAlreadyCreated]);
 
   const handleDCRMSuccess = useCallback(() => {
     setUsers(prev => ({ ...prev, DCRM_enabled: true }));
@@ -362,39 +350,31 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  e.preventDefault();
 
-    try {
-      const token = localStorage.getItem("token");
-      const payload = {
-        ...editFormData,
-        reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
-      };
+  try {
+    const token = localStorage.getItem("token");
 
-      const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+      method: "PUT", // ✅ UPDATE
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(editFormData),
+    });
 
-      const updated = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) throw new Error(updated.message || "Failed to update profile");
+    if (!res.ok) throw new Error(data.message);
 
-      setUsers(updated);
-      setShowForm(false);
-      showAppMessage("Profile updated successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showAppMessage(`Failed to update profile: ${err.message}`, "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setUsers(data);
+    setShowForm(false);
+    alert("User updated successfully");
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   const handleFormClose = () => {
     setEditFormData({
@@ -517,11 +497,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
             <UserDashboard userId={userId} />
           </div>
         )}
-{activeTab === 'Target' && (
-  <div className="p-4 bg-white rounded-xl shadow-md">
-    <TargetDashboard userId={userId} userEmail={email} />
-  </div>
-)}
+        {activeTab === 'Target' && (
+          <div className="p-4 bg-white rounded-xl shadow-md">
+            <TargetDashboard userId={userId} userEmail={email} />
+          </div>
+        )}
         {activeTab === 'History' && (
           <div className="p-4 bg-white rounded-xl shadow-md">
             <HistoryDashboard userId={userId} />
@@ -712,11 +692,20 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
           userId={userId}
           userProfile={users}
           onClose={() => setShowDCRMForm(false)}
-          onSuccess={(createdUser) => {
-            setUsers(prev => ({ ...prev, DCRM_enabled: true }));
+          onSuccess={() => {
+            setUsers(prev => ({
+              ...prev,
+              DCRM_enabled: true
+            }));
             setShowDCRMForm(false);
-            showAppMessage('DCRM user created successfully!', 'success');
+            showAppMessage("DCRM user created successfully!", "success");
           }}
+
+          // onSuccess={(createdUser) => {
+          //   setUsers(prev => ({ ...prev, DCRM_enabled: true }));
+          //   setShowDCRMForm(false);
+          //   showAppMessage('DCRM user created successfully!', 'success');
+          // }}
         />
       )}
       {showConfirmModal && (
@@ -733,10 +722,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 export default UserProfile;
 
 
-// ====== below is old code ====
 
-// import React, { useState, useEffect, useCallback, useMemo } from 'react';
-// import { useParams } from 'react-router-dom';
+
+
+// import React, { useState, useEffect, useCallback, useMemo ,useContext } from 'react';
+// import { useParams, useLocation, useNavigate } from 'react-router-dom'; 
 // import { ENDPOINTS } from '../../src/api/constraints';
 // import ProfileHeader from '../Components/common/ProfileHeader';
 // import SettingsPage from './userPage/settingsPage';
@@ -747,10 +737,11 @@ export default UserProfile;
 // import UserLead from '../pages/userPage/userLead'
 // import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 // import UserDashboard from './userPage/userOverview'; 
+// import UserAttributes from './userPage/UserAttributes';
+// import { GlobeUserProvider, GlobUserContext } from '../context/userContex';
 // import {
 //   FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
-//   FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, 
-// } from 'react-icons/fa';
+//   FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, } from 'react-icons/fa';
 
 // const OverviewDashboard = ({ userId }) => (
 //     <div className="text-center p-10">
@@ -769,7 +760,7 @@ export default UserProfile;
 //     <div
 //       onClick={onToggle}
 //       className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
-//         isChecked ? 'bg-green-600' : 'bg-red-400'
+//         isChecked ? 'bg-green-600' : 'bg-yellow-400'
 //       }`}
 //     >
 //       <div
@@ -826,41 +817,42 @@ export default UserProfile;
 //   </div>
 // );
 
-// const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
-//   const { userId } = useParams();
-//   const token = localStorage.getItem('token'); 
-//   const [email, setEmail] = useState('');
-//   const [user, setUser] = useState(null);
-//   const [activeTab, setActiveTab] = useState('Overview');
-//   const [showForm, setShowForm] = useState(false);
-//   const [editFormData, setEditFormData] = useState({
-//     cFull_name: '',
-//     cUser_name: '',
-//     cEmail: '',
-//     cjob_title: '',
-//     cRole_name:'',
-//     i_bPhone_no: '', 
-//     iphone_no: '',
-//     bactive: true,
-//     mail_access: false,
-//     phone_access: false,
-//     website_access: false,
-//     whatsapp_access: false
-//   });
-//   const [errorMessage, setErrorMessage] = useState('');
-//   const [successMessage, setSuccessMessage] = useState('');
-//   const [reportToUsers, setReportToUsers] = useState([]);
-//   const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [showDCRMForm, setShowDCRMForm] = useState(false);
-//   const [showConfirmModal, setShowConfirmModal] = useState(false);
-//   const [confirmModalMessage, setConfirmModalMessage] = useState('');
-//   const [confirmModalAction, setConfirmModalAction] = useState(null);
-//   const [phoneActive, setPhoneActive] = useState(false);
+//   const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
+//     const { user } = useContext (GlobUserContext);
+//     const { userId } = useParams();
+//     const token = localStorage.getItem('token'); 
+//     const [email, setEmail] = useState('');
+//   const [users, setUsers] = useState(null);
+//     const [activeTab, setActiveTab] = useState('Overview');
+//     const [showForm, setShowForm] = useState(false);
+//     const [editFormData, setEditFormData] = useState({
+//       cFull_name: '',
+//       cUser_name: '',
+//       cEmail: '',
+//       cjob_title: '',
+//       cRole_name:'',
+//       i_bPhone_no: '', 
+//       iphone_no: '',
+//       bactive: true,
+//       mail_access: false,
+//       phone_access: false,
+//       website_access: false,
+//       whatsapp_access: false
+//     });
+//     const [errorMessage, setErrorMessage] = useState('');
+//     const [successMessage, setSuccessMessage] = useState('');
+//     const [reportToUsers, setReportToUsers] = useState([]);
+//     const [isProfileCardVisible, setIsProfileCardVisible] = useState(true);
+//     const [isSubmitting, setIsSubmitting] = useState(false);
+//     const [showDCRMForm, setShowDCRMForm] = useState(false);
+//     const [showConfirmModal, setShowConfirmModal] = useState(false);
+//     const [confirmModalMessage, setConfirmModalMessage] = useState('');
+//     const [confirmModalAction, setConfirmModalAction] = useState(null);
+//     const [phoneActive, setPhoneActive] = useState(false);
 
 //   // Define tabs conditionally based on DCRM status
 //   const tabs = useMemo(() => {
-//     const baseTabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'User Leads'];
+//     const baseTabs = ['Overview', 'Target', 'History', 'Settings', 'Achievement', 'User Leads', 'User Access'];
     
 //     // Add 'Call Logs' only if DCRM is enabled
 //     if (phoneActive) {
@@ -897,7 +889,7 @@ export default UserProfile;
 //         const phoneAccess = parsedData?.DCRM_enabled === true;
 //         setPhoneActive(phoneAccess);
 
-//         // Optional: Keep it in flat localStorage for legacy use
+//         //  Keep it in flat localStorage for legacy use
 //         localStorage.setItem('phone_access', phoneAccess);
 //       } catch (error) {
 //         console.error('Error parsing user_data:', error);
@@ -926,7 +918,7 @@ export default UserProfile;
 //         if (!response.ok) throw new Error(data.message);
        
 //         // Ensure that the user state is updated with the fetched data
-//         setUser(data);
+//         setUsers(data);
 
 //         setEditFormData({
 //           cFull_name: data.cFull_name || '',
@@ -965,35 +957,18 @@ export default UserProfile;
 
 //   // Fetch users for 'Reports To'
 //   useEffect(() => {
-//     const fetchAllUsers = async () => {
-//       try {
-//         const token = localStorage.getItem('token');
-//         const response = await fetch(ENDPOINTS.USER_GET, {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             'Content-Type': 'application/json',
-//           },
-//         });
-//         const data = await response.json();
-
-//         if (!response.ok) throw new Error(data.message);
-//         const filtered = data.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
-//         setReportToUsers(filtered);
-//       } catch (err) {
-//         console.error(err);
-//       }
-//     };
-//     fetchAllUsers();
+//     const filtered = user.filter(u => u.iUser_id !== parseInt(userId) && u.bactive === true);
+//     setReportToUsers(filtered);
 //   }, [userId]);
 
 //   // Handler for the new 'User Status' toggle
 //   const handleToggleUserActive = useCallback(() => {
-//     if (!user || typeof user.bactive === 'undefined') {
+//     if (!users || typeof users.bactive === 'undefined') {
 //       console.warn("User data or bactive status not available for toggle.");
 //       return;
 //     }
 
-//     const newStatus = !user.bactive;
+//     const newStatus = !users.bactive;
 //     const message = newStatus
 //       ? "Are you sure you want to activate this user's account?"
 //       : "Are you sure you want to deactivate this user's account? They will no longer be able to log in.";
@@ -1011,7 +986,7 @@ export default UserProfile;
 //           body: JSON.stringify({ bactive: newStatus }),
 //         });
 //         if (!res.ok) throw new Error('Failed to update user status');
-//         setUser(prev => ({ ...prev, bactive: newStatus }));
+//         setUsers(prev => ({ ...prev, bactive: newStatus }));
 //         showAppMessage(`User account successfully set to ${newStatus ? 'active' : 'inactive'}!`, 'success');
 //       } catch (err) {
 //         console.error(err);
@@ -1021,40 +996,79 @@ export default UserProfile;
 //       }
 //     });
 //     setShowConfirmModal(true);
-//   }, [user, userId]);
+//   }, [users, userId]);
 
 //   const handleToggleDCRM = useCallback(() => {
-//     if (!user) return;
-//     if (user.DCRM_enabled) {
-//       setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
-//       setConfirmModalAction(() => async () => {
-//         try {
-//           const token = localStorage.getItem('token');
-//           const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
-//             method: 'POST',
-//             headers: {
-//               Authorization: `Bearer ${token}`,
-//             },
-//           });
+//   if (!users) return;
+//   if (users.DCRM_enabled) {
+//     setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+//     setConfirmModalAction(() => async () => {
+//       try {
+//         const token = localStorage.getItem('token');
+//         // ✅ FIXED: Use correct endpoint and method
+//         const response = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+//           method: 'PUT',  // ✅ PUT for update
+//           headers: {
+//             'Content-Type': 'application/json',
+//             Authorization: `Bearer ${token}`,
+//           },
+//           body: JSON.stringify({ DCRM_enabled: false })  // ✅ Send the field to update
+//         });
 
-//           if (!response.ok) throw new Error('Failed to disable DCRM');
-//           setUser(prev => ({ ...prev, DCRM_enabled: false }));
-//           showAppMessage('DCRM disabled successfully!', 'success');
-//         } catch (err) {
-//           console.error(err);
-//           showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
-//         } finally {
-//           setShowConfirmModal(false);
+//         if (!response.ok) {
+//           const errorData = await response.json();
+//           throw new Error(errorData.message || 'Failed to disable DCRM');
 //         }
-//       });
-//       setShowConfirmModal(true);
-//     } else {
-//       setShowDCRMForm(true);
-//     }
-//   }, [user, userId]);
+        
+//         const updatedUser = await response.json();
+//         setUsers(prev => ({ ...prev, DCRM_enabled: false }));
+//         showAppMessage('DCRM disabled successfully!', 'success');
+//       } catch (err) {
+//         console.error(err);
+//         showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+//       } finally {
+//         setShowConfirmModal(false);
+//       }
+//     });
+//     setShowConfirmModal(true);
+//   } else {
+//     setShowDCRMForm(true);
+//   }
+// }, [users, userId]);
+
+
+//   // const handleToggleDCRM = useCallback(() => {
+//   //   if (!users) return;
+//   //   if (users.DCRM_enabled) {
+//   //     setConfirmModalMessage("Are you sure you want to disable DCRM for this user?");
+//   //     setConfirmModalAction(() => async () => {
+//   //       try {
+//   //         const token = localStorage.getItem('token');
+//   //         const response = await fetch(`${ENDPOINTS.DCRM_DISABLE}/${userId}`, {
+//   //           method: 'POST',
+//   //           headers: {
+//   //             Authorization: `Bearer ${token}`,
+//   //           },
+//   //         });
+
+//   //         if (!response.ok) throw new Error('Failed to disable DCRM');
+//   //         setUsers(prev => ({ ...prev, DCRM_enabled: false }));
+//   //         showAppMessage('DCRM disabled successfully!', 'success');
+//   //       } catch (err) {
+//   //         console.error(err);
+//   //         showAppMessage(`Error disabling DCRM: ${err.message}`, 'error');
+//   //       } finally {
+//   //         setShowConfirmModal(false);
+//   //       }
+//   //     });
+//   //     setShowConfirmModal(true);
+//   //   } else {
+//   //     setShowDCRMForm(true);
+//   //   }
+//   // }, [users, userId]);
 
 //   const handleDCRMSuccess = useCallback(() => {
-//     setUser(prev => ({ ...prev, DCRM_enabled: true }));
+//     setUsers(prev => ({ ...prev, DCRM_enabled: true }));
 //     setShowDCRMForm(false);
 //     showAppMessage('DCRM user created and settings configured successfully!', 'success');
 //   }, []);
@@ -1074,54 +1088,82 @@ export default UserProfile;
 //   };
 
 //   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
+//   e.preventDefault();
 
-//     try {
-//       const token = localStorage.getItem("token");
-//       const payload = {
-//         ...editFormData,
-//         reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
-//       };
+//   try {
+//     const token = localStorage.getItem("token");
 
-//       const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-//         method: "PUT",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify(payload),
-//       });
+//     const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+//       method: "PUT", // ✅ UPDATE
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(editFormData),
+//     });
 
-//       const updated = await res.json();
+//     const data = await res.json();
 
-//       if (!res.ok) throw new Error(updated.message || "Failed to update profile");
+//     if (!res.ok) throw new Error(data.message);
 
-//       setUser(updated);
-//       setShowForm(false);
-//       showAppMessage("Profile updated successfully!", "success");
-//     } catch (err) {
-//       console.error(err);
-//       showAppMessage(`Failed to update profile: ${err.message}`, "error");
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
+//     setUsers(data);
+//     setShowForm(false);
+//     alert("User updated successfully");
+//   } catch (err) {
+//     alert(err.message);
+//   }
+// };
+
+
+//   // const handleSubmit = async (e) => {
+//   //   e.preventDefault();
+//   //   setIsSubmitting(true);
+
+//   //   try {
+//   //     const token = localStorage.getItem("token");
+//   //     const payload = {
+//   //       ...editFormData,
+//   //       reports_to: editFormData.reports_to === "" ? null : editFormData.reports_to,
+//   //     };
+
+//   //     const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+//   //       method: "PUT",
+//   //       headers: {
+//   //         "Content-Type": "application/json",
+//   //         Authorization: `Bearer ${token}`,
+//   //       },
+//   //       body: JSON.stringify(payload),
+//   //     });
+
+//   //     const updated = await res.json();
+
+//   //     if (!res.ok) throw new Error(updated.message || "Failed to update profile");
+
+//   //     setUsers(updated);
+//   //     setShowForm(false);
+//   //     showAppMessage("Profile updated successfully!", "success");
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //     showAppMessage(`Failed to update profile: ${err.message}`, "error");
+//   //   } finally {
+//   //     setIsSubmitting(false);
+//   //   }
+//   // };
 
 //   const handleFormClose = () => {
 //     setEditFormData({
-//       cFull_name: user.cFull_name || '',
-//       cUser_name: user.cUser_name || '',
-//       cEmail: user.cEmail || '',
-//       cjob_title: user.cjob_title || '',
-//       reports_to: user.reports_to || '',
-//       i_bPhone_no: user.c_bPhone_no || '', 
-//       irole_id: user.irole_id || '',
-//       iphone_no: user.iphone_no || '',
-//       mail_access: user.mail_access || false,
-//       phone_access: user.phone_access || false,
-//       website_access: user.website_access || false,
-//       whatsapp_access: user.whatsapp_access || false
+//       cFull_name: users.cFull_name || '',
+//       cUser_name: users.cUser_name || '',
+//       cEmail: users.cEmail || '',
+//       cjob_title: users.cjob_title || '',
+//       reports_to: users.reports_to || '',
+//       i_bPhone_no: users.c_bPhone_no || '', 
+//       irole_id: users.irole_id || '',
+//       iphone_no: users.iphone_no || '',
+//       mail_access: users.mail_access || false,
+//       phone_access: users.phone_access || false,
+//       website_access: users.website_access || false,
+//       whatsapp_access: users.whatsapp_access || false
 //     });
 //     setShowForm(false);
 //   };
@@ -1141,7 +1183,7 @@ export default UserProfile;
 //   }, [settingsData]);
   
 
-//   if (!user) {
+//   if (!users) {
 //     return (
 //       <div className="flex justify-center items-center min-h-screen">
 //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -1163,17 +1205,17 @@ export default UserProfile;
 //             <div className="flex items-center gap-4">
 //               <FaUserCircle size={60} className="text-blue-600" />
 //               <div className="flex-grow">
-//                 <h3 className="text-lg font-semibold text-gray-800">{user.cFull_name}</h3>
-//                 <p className="text-sm text-gray-600">@{user.cUser_name}</p>
+//                 <h3 className="text-lg font-semibold text-gray-800">{users.cFull_name}</h3>
+//                 <p className="text-sm text-gray-600">@{users.cUser_name}</p>
 //                 <div className="mt-1 flex flex-wrap items-center gap-2"> 
-//                   {user.bactive !== undefined && (
+//                   {users.bactive !== undefined && (
 //                     <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize inline-block ${
-//                       user.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-//                       {user.bactive ? 'Active' : 'Disabled'}{user.role?.cRole_name ? ` - ${user.role.cRole_name}` : ''}
+//                       users.bactive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+//                       {users.bactive ? 'Active' : 'Disabled'}{users.role?.cRole_name ? ` - ${users.role.cRole_name}` : ''}
 //                     </span>
 //                   )}
 
-//                   {user.DCRM_enabled && (
+//                   {users.DCRM_enabled && (
 //                     <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
 //                       DCRM Enabled
 //                     </span>
@@ -1211,7 +1253,7 @@ export default UserProfile;
 //           {tabs.map((tab) => (
 //             <button
 //               key={tab}
-//               onClick={() => setActiveTab(tab)}
+//               onClick={() => setActiveTab(tab)} 
 //               className={`px-5 py-2 rounded-lg text-sm font-medium border border-gray-300 transition-colors duration-200 shadow-sm ${
 //                 activeTab === tab ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
 //               }`}
@@ -1229,12 +1271,11 @@ export default UserProfile;
 //             <UserDashboard userId={userId} />
 //           </div>
 //         )}
-
-//         {activeTab === 'Target' && (
-//           <div className="p-4 bg-white rounded-xl shadow-md">
-//             <TargetDashboard userId={userId} />
-//           </div>
-//         )}
+// {activeTab === 'Target' && (
+//   <div className="p-4 bg-white rounded-xl shadow-md">
+//     <TargetDashboard userId={userId} userEmail={email} />
+//   </div>
+// )}
 //         {activeTab === 'History' && (
 //           <div className="p-4 bg-white rounded-xl shadow-md">
 //             <HistoryDashboard userId={userId} />
@@ -1259,6 +1300,13 @@ export default UserProfile;
 //        {activeTab === 'User Leads' && (
 //         <div className="p-4 bg-white rounded-xl shadow-md">
 //           <UserLead userId={userId} token={token} />
+//         </div>
+//       )}
+
+      
+//        {activeTab === 'User Access' && (
+//         <div className="p-4 bg-white rounded-xl shadow-md">
+//           <UserAttributes userId={userId} token={token} />
 //         </div>
 //       )}
 //     </div>
@@ -1381,7 +1429,7 @@ export default UserProfile;
 //               <div className="mt-4 pt-4 border-t border-gray-200">
 //                 <ToggleSwitch
 //                   label="User Status"
-//                   isChecked={user.bactive}
+//                   isChecked={users.bactive}
 //                   onToggle={handleToggleUserActive}
 //                 />
 //                 <p className="text-xs text-gray-500 mt-2">Toggle to activate or deactivate this user's account.</p>
@@ -1390,7 +1438,8 @@ export default UserProfile;
 //               <div className="mt-4 pt-4 border-t border-gray-200">
 //                 <ToggleSwitch
 //                   label="DCRM Enable"
-//                   isChecked={user.DCRM_enabled || false}
+//                   // isChecked={users.DCRM_enabled || false}
+//                   isChecked={users.DCRM_enabled === true}
 //                   onToggle={handleToggleDCRM}
 //                 />
 //                 <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
@@ -1415,10 +1464,10 @@ export default UserProfile;
 //       {showDCRMForm && (
 //         <DCRMSettingsForm
 //           userId={userId}
-//           userProfile={user}
+//           userProfile={users}
 //           onClose={() => setShowDCRMForm(false)}
 //           onSuccess={(createdUser) => {
-//             setUser(prev => ({ ...prev, DCRM_enabled: true }));
+//             setUsers(prev => ({ ...prev, DCRM_enabled: true }));
 //             setShowDCRMForm(false);
 //             showAppMessage('DCRM user created successfully!', 'success');
 //           }}
@@ -1436,3 +1485,4 @@ export default UserProfile;
 // };
 
 // export default UserProfile;
+

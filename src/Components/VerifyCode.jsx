@@ -60,7 +60,7 @@ const VerifyCode = () => {
         </div>
 
         <div className="w-full md:w-[500px] p-6 sm:p-10 flex flex-col justify-center items-center text-center">
-          <h2 className="text-xl font-semibold mb-4 mb-10">Verify the code</h2>
+          <h2 className="text-xl font-semibold mb-10">Verify the code</h2>
           <div className="flex justify-center gap-2 mb-6">
             {Array(4).fill(0).map((_, i) => (
               <input

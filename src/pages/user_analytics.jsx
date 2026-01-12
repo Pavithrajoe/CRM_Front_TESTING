@@ -11,26 +11,18 @@ const UserAnalyticsPage = () => {
       <ProfileHeader />
 
       {/* Progress Bar */}
-      <div className="ms-[-670px]">
-        <ProgressBar />
-      </div>
+      <div className="ms-[-670px]"> <ProgressBar /> </div>
 
       {/* Tabs Bar */}
-      <div className="ms-[30px]">
-        <TabsBar />
-      </div>
+      <div className="ms-[30px]"> <TabsBar /> </div>
 
       {/* Main Content Section */}
       <div className="flex px-2 gap-4">
         {/* LEFT: Profile + History */}
-        <div className="w-[550px] min-h-screen mt-[20px]">
-          <ProfileWithHistoryCard />
-        </div>
+        <div className="w-[550px] min-h-screen mt-[20px]"> <ProfileWithHistoryCard />  </div>
 
         {/* RIGHT: Sales Funnel */}
-        <div className=" w-full h-64  rounded mt-0 mx-0 ">
-          <SalesFunnel />
-        </div>
+        <div className=" w-full h-64  rounded mt-0 mx-0 "> <SalesFunnel /> </div>
       </div>
       
     </>

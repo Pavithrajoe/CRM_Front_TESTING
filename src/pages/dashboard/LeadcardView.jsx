@@ -1188,7 +1188,8 @@ const LeadCardViewPage = () => {
 
             <div className="flex justify-center mb-4">
               <a
-                href="../../../public/files/Leads_import_Template_final.xls"
+                // href="../../../public/files/Leads_import_Template_final.xls"
+                href="../../../public/files/Leads_Import_Template.xls"
                 download="Leads_Import_Template.xls"
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
               >
@@ -1216,11 +1217,7 @@ const LeadCardViewPage = () => {
               </div>
             )}
 
-            {importSuccess && (
-              <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
-                Leads imported successfully!
-              </div>
-            )}
+            {importSuccess && ( <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md"> Leads imported successfully! </div> )}
 
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
               <input
@@ -1346,72 +1343,22 @@ const LeadCardViewPage = () => {
                       className="h-4 w-4 text-blue-600 rounded"
                     />
                   </div>
-                  <div
-                    className="cursor-pointer flex items-center"
-                    onClick={() => handleSort("clead_name")}
-                  >
-                    Name {getSortIndicator("clead_name")}
-                  </div>
-                  <div
-                    className="cursor-pointer flex items-center"
-                    onClick={() => handleSort("corganization")}
-                  >
-                    Org {getSortIndicator("corganization")}
-                  </div>
-                  <div
-                    className="min-w-[120px] cursor-pointer flex items-center"
-                    onClick={() => handleSort("cemail")}
-                  >
-                    Email {getSortIndicator("cemail")}
-                  </div>
-                  <div
-                    className="cursor-pointer flex items-center"
-                    onClick={() => handleSort("iphone_no")}
-                  >
-                    Phone {getSortIndicator("iphone_no")}
-                  </div>
+                  <div className="cursor-pointer flex items-center" onClick={() => handleSort("clead_name")} > Name {getSortIndicator("clead_name")} </div>
+                  <div className="cursor-pointer flex items-center" onClick={() => handleSort("corganization")} >  Org {getSortIndicator("corganization")} </div>
+                  <div className="min-w-[120px] cursor-pointer flex items-center" onClick={() => handleSort("cemail")} > Email {getSortIndicator("cemail")} </div>
+                  <div className="cursor-pointer flex items-center" onClick={() => handleSort("iphone_no")} > Phone {getSortIndicator("iphone_no")} </div>
                   {selectedFilter === "assignedToMe" && (
                     <>
-                      <div
-                        className="cursor-pointer flex items-center"
-                        onClick={() => handleSort("iassigned_by_name")}
-                      >
-                        Assigned by {getSortIndicator("iassigned_by_name")}
-                      </div>
-                      <div
-                        className="cursor-pointer flex items-center"
-                        onClick={() => handleSort("dcreate_dt")}
-                      >
-                        Created at {getSortIndicator("dcreate_dt")}
-                      </div>
-                      <div
-                        className="cursor-pointer flex items-center"
-                        onClick={() => handleSort("dupdate_dt")}
-                      >
-                        Updated at {getSortIndicator("dupdate_dt")}
-                      </div>
+                      <div className="cursor-pointer flex items-center" onClick={() => handleSort("iassigned_by_name")} > Assigned by {getSortIndicator("iassigned_by_name")} </div>
+                      <div className="cursor-pointer flex items-center" onClick={() => handleSort("dcreate_dt")} > Created at {getSortIndicator("dcreate_dt")} </div>
+                      <div className="cursor-pointer flex items-center" onClick={() => handleSort("dupdate_dt")} > Updated at {getSortIndicator("dupdate_dt")} </div>
                     </>
                   )}
-                  <div
-                    className="cursor-pointer flex items-center"
-                    onClick={() => handleSort("dmodified_dt")}
-                  >
-                    Modified {getSortIndicator("dmodified_dt")}
-                  </div>
+                  <div className="cursor-pointer flex items-center" onClick={() => handleSort("dmodified_dt")} > Modified {getSortIndicator("dmodified_dt")} </div>
                   {selectedFilter === "assignedToMe" ? (
-                    <div
-                      className="cursor-pointer flex items-center"
-                      onClick={() => handleSort("statusDisplay")}
-                    >
-                      Status {getSortIndicator("statusDisplay")}
-                    </div>
+                    <div className="cursor-pointer flex items-center" onClick={() => handleSort("statusDisplay")} > Status {getSortIndicator("statusDisplay")} </div>
                   ) : (
-                    <div
-                      className="cursor-pointer flex items-center"
-                      onClick={() => handleSort("lead_status")}
-                    >
-                      Status {getSortIndicator("lead_status")}
-                    </div>
+                    <div className="cursor-pointer flex items-center" onClick={() => handleSort("lead_status")} > Status {getSortIndicator("lead_status")} </div>
                   )}
                 </div>
                 {displayedData.map((item, index) => {
@@ -1583,44 +1530,26 @@ const LeadCardViewPage = () => {
                       item.website_lead === 1) && (
                       <div className="absolute top-3 left-10 text-blue-600" title="Website Lead" > <FaGlobe size={18} /> </div>
                     )}
-                    <div
-                      onClick={() => goToDetail(item.ilead_id, displayedData)}
-                    >
+                    <div onClick={() => goToDetail(item.ilead_id, displayedData)} >
                       <div className="flex w-full justify-between items-center space-x-10">
-                        <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
-                          {item.clead_name || "-"}
-                        </h3>
-                        {/* <h3 className="font-semibold text-sm text-black bg-yellow-200 px-3 py-1 rounded-full truncate">
-                          {item.lead_potential?.clead_name || item.lead_potential || '-'}
-                        </h3> */}
+                        <h3 className="font-semibold text-lg text-gray-1000 truncate mb-1"> {item.clead_name || "-"} </h3>
+                     
                       </div>
-                      <p className="text-gray-600 text-sm mb-2 truncate">
-                        {item.corganization || item.c_organization || "-"}
-                      </p>
-                      <div className="text-gray-500 text-xs space-y-1 mb-3">
+                      <p className="text-gray-900 text-base font-medium mb-2 truncate"> {item.corganization || item.c_organization || "-"} </p>
+                      <div className="text-gray-000 text-sm font-medium space-y-1 mb-3">
                         {(item.cemail || item.c_email) && (
-                          <p className="flex items-center">
-                            <FaEnvelope className="mr-2 text-blue-500" />{" "}
-                            {item.cemail || item.c_email}
-                          </p>
+                          <p className="flex items-center"> <FaEnvelope className="mr-2 text-blue-500" />{" "} {item.cemail || item.c_email} </p>
                         )}
                         {(item.iphone_no || item.c_phone) && (
-                          <p className="flex items-center">
-                            <FaPhone className="mr-2 text-green-500" />{" "}
-                            {item.iphone_no || item.c_phone}
-                          </p>
+                          <p className="flex items-center"> <FaPhone className="mr-2 text-green-500" />{" "} {item.iphone_no || item.c_phone} </p>
                         )}
                         {item.user && item.user.cFull_name && (
-                          <p className="flex items-center text-gray-900 text-xs ">
-                            <FaUser className="mr-2 text-indigo-500" /> Lead
-                            Owner: {item.user.cFull_name}
-                          </p>
+                          <p className="flex items-center text-gray-900 text-sm font-medium"> <FaUser className="mr-2 text-indigo-500" /> Lead Owner: {item.user.cFull_name} </p>
                         )}
 
                         <p className="flex items-center">
                           <FaEdit className="mr-2" style={{ color: "#ff5733" }} size={12}/>{" "}
-                          <span className="text-gray-900 text-xs">
-                            Modified:{" "}
+                          <span className="text-gray-900 text-sm font-medium"> Modified:{" "}
                             {formatDate(
                               item.dmodified_dt || item.d_modified_date
                             )}
@@ -1629,28 +1558,14 @@ const LeadCardViewPage = () => {
 
                         {selectedFilter === "assignedToMe" &&
                           item.iassigned_by_name && (
-                            <p className="flex items-center">
-                              <FaGlobe className="mr-2 text-purple-500" />{" "}
-                              Assigned by: {item.iassigned_by_name}
-                            </p>
+                             <p className="flex items-center"> <FaGlobe className="mr-2 text-purple-500" />{" "} Assigned by: {item.iassigned_by_name} </p>
                           )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBgColor}`}
-                      >
-                        {statusText}
-                      </span>
-                      <span
-                        className={`text-sm px-3 py-1 rounded-full truncate inline-block ${potentialColorClass}`}
-                      >
-                        {item.lead_potential?.clead_name || item.lead_potential
-                          ? `${
-                              item.lead_potential?.clead_name ||
-                              item.lead_potential
-                            }`
-                          : "-"}
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusBgColor}`} > {statusText}  </span>
+                      <span className={`text-sm px-3 py-1 font-semibold rounded-full truncate inline-block ${potentialColorClass}`} >
+                        {item.lead_potential?.clead_name || item.lead_potential ? `${ item.lead_potential?.clead_name ||  item.lead_potential }` : "-"}
                       </span>
                     </div>
                   </div>
@@ -1664,22 +1579,12 @@ const LeadCardViewPage = () => {
       {/* PAGINATION - Using Local State */}
       {showPagination && (
         <div className="flex justify-center items-center space-x-2 mt-6">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" >
             Previous
           </button>
-          <span className="text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          <span className="text-gray-700"> Page {currentPage} of {totalPages} </span>
+          <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages)) } disabled={currentPage === totalPages}
+           className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

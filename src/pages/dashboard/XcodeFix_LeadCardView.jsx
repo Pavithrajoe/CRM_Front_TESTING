@@ -1259,8 +1259,11 @@ const Xcode_LeadCardViewPage = () => {
                         </div>
 
                         <div className="flex justify-center mb-4">
-                            <a href="../../../public/files/Leads_import_Template_final.xls"download="Leads_Import_Template.xls"
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                            <a 
+                            // href="../../../public/files/Leads_import_Template_final.xls"
+                            href="../../../public/files/Leads_Import_Template.xls"
+                            download="Leads_Import_Template.xls"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
                             >
                                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -1540,8 +1543,7 @@ const Xcode_LeadCardViewPage = () => {
                                 }
 
                                 return (
-                                    <div
-                                        key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
+                                    <div key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                         className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
                                     >
                                         {/* Checkbox for selection */}
@@ -1562,14 +1564,14 @@ const Xcode_LeadCardViewPage = () => {
                                         )}
                                         <div onClick={() => goToDetail(item.ilead_id, displayedData)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
-                                                <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
+                                                <h3 className="font-bold text-lg text-gray-900 truncate mb-1">
                                                     {item.clead_name || '-'}
                                                 </h3>
                                             </div>
-                                            <p className="text-gray-900 text-sm mb-2 truncate">
+                                            <p className="text-gray-900 text-sm mb-2 truncate font-semibold">
                                                 {item.corganization || item.c_organization || '-'}
                                             </p>
-                                            <div className="text-gray-900 text-xs space-y-1 mb-3">
+                                            <div className="text-gray-900 text-sm space-y-1 mb-3 font-medium">
                                                 {(item.cemail || item.c_email) && (
                                                     <p className="flex items-center">
                                                         <FaEnvelope className="mr-2 text-blue-500" /> {item.cemail || item.c_email}
@@ -1582,14 +1584,14 @@ const Xcode_LeadCardViewPage = () => {
                                                 )}
 
                                                 {item.user && item.user.cFull_name && (
-                                                    <p className="flex items-center text-gray-900 text-xs ">
+                                                    <p className="flex items-center text-gray-900 text-sm ">
                                                         <FaUser className="mr-2 text-indigo-500" /> Lead Owner: {item.user.cFull_name}
                                                     </p>
                                                 )}
 
                                                  <p className="flex items-center">
-                                                    <FaEdit className="mr-2" style={{ color: '#ff5733' }} size={12} /> {/* Using size={12} to make the icon smaller */}
-                                                    <span className="text-gray-900 text-xs">
+                                                    <FaEdit className="mr-2" style={{ color: '#ff5733' }} size={12} />
+                                                    <span className="text-gray-900 text-sm">
                                                         Modified: {formatDate(item.dmodified_dt || item.d_modified_date)}
                                                     </span>
                                                 </p>
@@ -1602,11 +1604,11 @@ const Xcode_LeadCardViewPage = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBgColor}`}>
+                                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusBgColor}`}>
                                                 {statusText}
                                             </span>
 
-                                            <span  className={`text-sm px-3 py-1 rounded-full truncate inline-block ${potentialColorClass}`} >
+                                            <span  className={`text-sm px-3 py-1 rounded-full font-semibold truncate inline-block ${potentialColorClass}`} >
                                                 {(item.lead_potential?.clead_name || item.lead_potential) ? `${item.lead_potential?.clead_name || item.lead_potential}` : '-'}
                                              </span>
                                           

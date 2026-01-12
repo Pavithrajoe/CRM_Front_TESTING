@@ -28,7 +28,6 @@ const UserPage = () => {
   const usersPerPage = 6;
   const navigate = useNavigate();
 
-  //  Render "User Create" button only when bactive = true for module_id = 6
   const dynamicUserCreate = useMemo(() => {
     const filtered = userModules.filter(
       (attr) =>

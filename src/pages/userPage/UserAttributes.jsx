@@ -21,8 +21,6 @@ export default function UserAttributes({ userId }) {
         });
 
         const attributes = response.data?.attributes || [];
-
-        // Group attributes by moduleName, trim spaces in module names
         const grouped = attributes.reduce((acc, attr) => {
           const moduleName = attr.moduleName?.trim() || "Unknown";
           if (!acc[moduleName]) acc[moduleName] = [];

@@ -5,16 +5,7 @@ import { CaseUpper } from 'lucide-react';
 
 
 function HistoryDashboard({ userId }) {
-    //console.log("HistoryDashboard: Received userId prop:", userId);
-
-    // State for the dynamic Activity History table
     const [activityData, setActivityData] = useState([]);
-    // State for the remainder history table (static, as per your code)
-    // REMOVED: As per the comment in your original code, this table was commented out.
-    // Keeping it out for the sharpened UI, assuming it's not currently in use.
-    // If you need it, we can add it back with the new styles.
-
-    // State for the numerical summaries (Total Act. Logged, etc.)
     const [summaryMetrics, setSummaryMetrics] = useState({
         totalLogsByUser: 0,
         totalActivityByUser: 0,
@@ -37,15 +28,10 @@ function HistoryDashboard({ userId }) {
                 return;
             }
 
-            // console.log(`HistoryDashboard: Initiating API call to ${ENDPOINTS.ACTIVITY_HISTORY}/${userId}`);
-
             try {
                 const response = await axios.get(`${ENDPOINTS.ACTIVITY_HISTORY}/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
-                // console.log("HistoryDashboard: Raw API Response for Activity History:", response.data);
-
                 setSummaryMetrics({
                     totalLogsByUser: response.data.totalLogsByUser || 0,
                     totalActivityByUser: response.data.totalActivityByUser || 0,
@@ -58,11 +44,10 @@ function HistoryDashboard({ userId }) {
                         id: remainder.iremainder_id,
                         activitytype: remainder.cremainder_title || 'Remainder',
                         lead_name: remainder.lead ?.clead_name || '-',
-                        priority: remainder.priority || '-' , // Use cFull_name if available
+                        priority: remainder.priority || '-' , 
                         activitytimestamp: remainder.dremainder_dt,
                     }));
                     setActivityData(mappedActivityData);
-                    // console.log("HistoryDashboard: Mapped Remainder data to Activity History table:", mappedActivityData);
                 } else {
                     console.warn("HistoryDashboard: 'fetchAllRemainderByUser' array not found or not an array in API response for Activity History. Setting activityData to empty.");
                     setActivityData([]);
@@ -90,9 +75,8 @@ function HistoryDashboard({ userId }) {
             setLoading(false);
             setError("User ID not provided. Cannot fetch history.");
         }
-    }, [userId]); // Dependency array: Re-run when userId prop changes
+    }, [userId]); 
 
-    // Helper for formatting date and time
     const formatDateTime = (isoString) => {
         if (!isoString) return '-';
         try {

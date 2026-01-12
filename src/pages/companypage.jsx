@@ -8,9 +8,7 @@ const CompanyPage = () => {
     <>
       <ProfileHeader />
       
-        <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[100%] mx-auto mt-[40px]">
-          <CompanyList />
-        </div>
+        <div className="w-full md:w-[80%] lg:w-[80%] xl:w-[100%] mx-auto mt-[40px]"> <CompanyList />  </div>
    
     </>
   );

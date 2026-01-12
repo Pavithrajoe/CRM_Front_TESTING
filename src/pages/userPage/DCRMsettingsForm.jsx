@@ -50,7 +50,6 @@ const InputField = ({ name, label, value, onChange, error, type = 'text', requir
 
 
 const DCRMSettingsForm = ({ userId, userProfile, onClose, onSuccess }) => {
-  // Initialize formData with safe access to nested properties
   const [formData, setFormData] = useState({
     user_name: userProfile?.cUser_name || '',
     user_email: userProfile?.cEmail || '',

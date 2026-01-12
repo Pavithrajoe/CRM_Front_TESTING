@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../../api/constraints"; 
 
-// 1. New Utility Function to assign colors based on POSITION/INDEX
+// New Utility Function to assign colors based on POSITION/INDEX
 const getPotentialColor = (index) => {
   switch (index) {
     case 0: // 1st dynamic potential
@@ -59,15 +59,12 @@ export default function User_Overview_KPIStats({ userId }) {
 
         // BINDING DATA TO STATE
         const data = jsonRes.details;
-        // console.log("Binding data: ", data)
-        
         setTotalLeadCount(data.totalLeads || 0);
         setWonCount(data.totalWon || 0);
         setLostCount(data.totalLost || 0);
         setActiveCount(data.totalActiveLeads || 0); 
         setWebsiteLeadCount(data.totalWebsiteLeads || 0);
         
-        // Extract and set dynamic potentials
         const potentials = [
           data.dynamic_poten_1,
           data.dynamic_poten_2,
@@ -98,7 +95,7 @@ export default function User_Overview_KPIStats({ userId }) {
 
   // Dynamic Potential KPI data 
   const potentialKpiData = dynamicPotentials.map((p, index) => {
-    const colorStyle = getPotentialColor(index);     // Assign colors based on the index 
+    const colorStyle = getPotentialColor(index);    
     
     return {
       title: p.name,
@@ -129,9 +126,7 @@ export default function User_Overview_KPIStats({ userId }) {
   }
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8 text-lg font-medium">
-        Error fetching KPI data: {error}
-      </div>
+      <div className="text-center text-red-500 py-8 text-lg font-medium"> Error fetching KPI data: {error} </div>
     );
   }
 
@@ -140,45 +135,29 @@ export default function User_Overview_KPIStats({ userId }) {
       <div className="max-w-5xl mx-auto space-y-6"> 
         
         {/* Title for the First Row */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight border-b pb-2">
-            Core Lead Metrics
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight border-b pb-2"> Core Lead Metrics </h2>
 
         {/* First row: 4 Core KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6"> 
           {kpiData.slice(0, 4).map((kpi, index) => (
-            <div
-              key={index}
-              className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`}
-            >
-              <h3 className="text-lg text-center font-bold text-gray-900 mb-1 tracking-tight">
-                {kpi.title}
-              </h3>
+            <div key={index} className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`} >
+              <h3 className="text-lg text-center font-bold text-gray-900 mb-1 tracking-tight"> {kpi.title} </h3>
               <p className="text-2xl font-bold text-center text-gray-900">{kpi.value}</p>
             </div>
           ))}
         </div>
 
         {/* Title for the Second Row */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight border-b pb-2 pt-6">
-            Lead Potential & Outcomes
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 tracking-tight border-b pb-2 pt-6"> Lead Potential & Outcomes </h2>
 
         {/* Second row: Potentials + WON card */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6"> 
           {kpiData.slice(4).map((kpi, index) => (
-            <div
-              key={index + 4} 
-              className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`}
-            >
+            <div key={index + 4}  className={`border border-white/30 rounded-xl p-4 shadow-sm cursor-pointer ${kpi.bgColor}`} >
               <div className="flex flex-col justify-between h-full">
                 <div>
-                  <h3 className="text-lg text-center font-bold text-gray-900 mb-1 tracking-tight">
-                    {kpi.title}
-                  </h3>
-                  <p className="text-3xl font-bold text-center text-gray-900">
-                    {kpi.value}
-                  </p>
+                  <h3 className="text-lg text-center font-bold text-gray-900 mb-1 tracking-tight"> {kpi.title} </h3>
+                  <p className="text-3xl font-bold text-center text-gray-900"> {kpi.value} </p>
                 </div>
               </div>
             </div>

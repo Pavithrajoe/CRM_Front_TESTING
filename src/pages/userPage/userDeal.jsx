@@ -6,26 +6,22 @@ import { useLocation, useParams } from 'react-router-dom';
 
 const UserDeals = () => {
     const { userId } = useParams();
-    // Initialize deals and filteredDeals as empty arrays to prevent .slice() errors
     const [deals, setDeals] = useState([]);
     const [filteredDeals, setFilteredDeals] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState(null); // 'open', 'lost', 'deal' (won)
+    const [filterType, setFilterType] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [loading, setLoading] = useState(false); // Add loading state
-    const [error, setError] = useState(null); // Add error state
-
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null); 
     const dealsPerPage = 10;
-
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const initialFrom = queryParams.get('startDate') || '';
     const initialTo = queryParams.get('endDate') || '';
-
     const [dateFilterFrom, setDateFilterFrom] = useState(initialFrom);
     const [dateFilterTo, setDateFilterTo] = useState(initialTo);
 
-    // Helper to format date for input (already correct)
+    // Helper to format date for input
     const formatDateForInput = (date) => {
         if (!date) return '';
         const d = new Date(date);
@@ -38,8 +34,8 @@ const UserDeals = () => {
     // Effect to fetch deals from the API
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true); // Set loading to true before API call
-            setError(null); // Clear previous errors
+            setLoading(true); 
+            setError(null); 
 
             try {
                 const token = localStorage.getItem('token');
@@ -53,8 +49,6 @@ const UserDeals = () => {
                 }
 
                 if (!userId) {
-                    // This can happen on initial render before params are fully resolved,
-                    // or if the route isn't configured correctly.
                     console.warn('User ID not provided from URL parameters. Skipping API call.');
                     setDeals([]);
                     setFilteredDeals([]);
@@ -70,41 +64,36 @@ const UserDeals = () => {
                     url.searchParams.append('endDate', dateFilterTo);
                 }
 
-                // console.log(`Fetching deals from: ${url.toString()}`);
-
-                const response = await axios.get(url.toString(), { // Use url.toString() for axios
+                const response = await axios.get(url.toString(), { 
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // Ensure data is an array, defaulting to empty array if not
                 const data = Array.isArray(response.data?.Response) ? response.data.Response : [];
                 // console.log("Response data for user deals:", data);
-
                 setDeals(data);
-                setFilteredDeals(data); // Initially, filteredDeals is the same as deals
+                setFilteredDeals(data); 
             } catch (err) {
                 console.error('Error fetching customers:', err);
                 setError('Failed to load customers. Please try again.');
                 setDeals([]);
                 setFilteredDeals([]);
             } finally {
-                setLoading(false); // Set loading to false after API call (success or error)
+                setLoading(false); 
             }
         };
 
         fetchData();
-    }, [userId, dateFilterFrom, dateFilterTo]); // Dependencies for re-fetching
+    }, [userId, dateFilterFrom, dateFilterTo]); 
 
     // Effect for client-side filtering (search term and status)
     useEffect(() => {
-        let updatedDeals = [...deals]; // Start with the full list of deals (already date-filtered by API)
+        let updatedDeals = [...deals]; 
 
-        // Apply status filter
         if (filterType === 'open') {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === true && deal.bisConverted === false);
         } else if (filterType === 'lost') {
             updatedDeals = updatedDeals.filter((deal) => deal.bactive === false);
-        } else if (filterType === 'Customers') { // 'deal' typically means 'Won'
+        } else if (filterType === 'Customers') { 
             updatedDeals = updatedDeals.filter((deal) => deal.bisConverted === true);
         }
 
@@ -122,7 +111,7 @@ const UserDeals = () => {
                     deal.iphone_no,
                     deal.whatsapp_number,
                 ]
-                    .filter(Boolean) // Remove any null/undefined values before joining
+                    .filter(Boolean) 
                     .join(' ')
                     .toLowerCase()
                     .includes(lowerCaseSearchTerm)
@@ -130,30 +119,28 @@ const UserDeals = () => {
         }
 
         setFilteredDeals(updatedDeals);
-        setCurrentPage(1); // Reset to the first page when filters change
-    }, [searchTerm, filterType, deals]); // Depend on `deals` to re-filter when API data changes
+        setCurrentPage(1); 
+    }, [searchTerm, filterType, deals]); 
 
     // Pagination calculations
     const indexOfLastDeal = currentPage * dealsPerPage;
     const indexOfFirstDeal = indexOfLastDeal - dealsPerPage;
-    const currentDeals = filteredDeals.slice(indexOfFirstDeal, indexOfLastDeal); // .slice() is safe here
+    const currentDeals = filteredDeals.slice(indexOfFirstDeal, indexOfLastDeal); 
     const totalPages = Math.ceil(filteredDeals.length / dealsPerPage);
 
     // Pagination handler
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
-        window.scrollTo(0, 0); // Scroll to top on page change
+        window.scrollTo(0, 0); 
     };
 
     // Render pagination buttons
     const renderPagination = () => {
         const pageNumbers = [];
-        const maxVisiblePages = 8; // Number of page buttons to show
-
+        const maxVisiblePages = 8; 
         let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-        // Adjust startPage if not enough pages to fill maxVisiblePages from the end
         if (endPage - startPage + 1 < maxVisiblePages) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
@@ -164,27 +151,18 @@ const UserDeals = () => {
 
         return (
             <div className="flex justify-center items-center mt-4 space-x-2">
-                <button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                >
+                <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-50" >
                     Prev
                 </button>
                 {pageNumbers.map((number) => (
-                    <button
-                        key={number}
-                        onClick={() => paginate(number)}
-                        className={`px-3 py-1 border rounded-lg ${
+                    <button key={number} onClick={() => paginate(number)} className={`px-3 py-1 border rounded-lg ${
                             currentPage === number ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
                         }`}
                     >
                         {number}
                     </button>
                 ))}
-                <button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0} // Disable if no pages
+                <button onClick={() => paginate(currentPage + 1)}  disabled={currentPage === totalPages || totalPages === 0} 
                     className="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                 >
                     Next
@@ -203,7 +181,6 @@ const UserDeals = () => {
         setFilterType(null);
         setDateFilterFrom('');
         setDateFilterTo('');
-        // No need to call fetchData explicitly here as useEffect will react to dateFilterFrom/To changes
     };
 
     return (
@@ -213,11 +190,7 @@ const UserDeals = () => {
                     <div className="relative flex items-center space-x-2 flex-wrap gap-2">
                         {/* Search Input */}
                         <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search deals"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                            <input type="text" placeholder="Search deals" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                             <svg className="w-5 h-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20">
@@ -225,68 +198,42 @@ const UserDeals = () => {
                             </svg>
                         </div>
                         {/* Filter Buttons */}
-                        <button
-                            className={`px-4 py-2 rounded-full ${filterType === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
-                            onClick={() => setFilterType('open')}
-                        >
+                        <button className={`px-4 py-2 rounded-full ${filterType === 'open' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setFilterType('open')}>
                             Open
                         </button>
-                        <button
-                            className={`px-4 py-2 rounded-full ${filterType === 'lost' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-800'}`}
-                            onClick={() => setFilterType('lost')}
-                        >
+                        <button className={`px-4 py-2 rounded-full ${filterType === 'lost' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setFilterType('lost')}>
                             Lost
                         </button>
-                        <button
-                            className={`px-4 py-2 rounded-full ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-800'}`}
-                            onClick={() => setFilterType('Customers')}
-                        >
+                        <button className={`px-4 py-2 rounded-full ${filterType === 'deal' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setFilterType('Customers')} >
                             Won
                         </button>
                         {/* Date Filters */}
                         <label htmlFor="dateFrom" className="text-gray-700 font-medium text-sm">From:</label>
-                        <input
-                            id="dateFrom"
-                            type="date"
-                            value={dateFilterFrom}
-                            onChange={(e) => setDateFilterFrom(e.target.value)}
+                        <input id="dateFrom" type="date" value={dateFilterFrom} onChange={(e) => setDateFilterFrom(e.target.value)}
                             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
                         />
                         <label htmlFor="dateTo" className="text-gray-700 font-medium text-sm">To:</label>
-                        <input
-                            id="dateTo"
-                            type="date"
-                            value={dateFilterTo}
-                            onChange={(e) => setDateFilterTo(e.target.value)}
+                        <input id="dateTo" type="date" value={dateFilterTo} onChange={(e) => setDateFilterTo(e.target.value)}
                             className="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
                         />
                         {/* Reset Filters Button */}
-                        <button
-                            className="px-4 py-2 bg-gray-300 text-black rounded-full hover:bg-gray-400"
-                            onClick={handleResetFilters}
-                        >
+                        <button className="px-4 py-2 bg-gray-300 text-black rounded-full hover:bg-gray-400" onClick={handleResetFilters} >
                             Reset
                         </button>
                     </div>
                 </div>
 
                 {/* Conditional notifications */}
-                {error && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-800 rounded-lg text-sm">
-                        Error: {error}
-                    </div>
-                )}
+                {error && ( <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-800 rounded-lg text-sm"> Error: {error} </div> )}
                 {loading ? (
                     <div className="mb-4 p-3 text-center text-blue-600 text-lg">Loading Customers...</div>
                 ) : (
                     <>
-                        {dateFilterFrom && dateFilterTo && (
-                            <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
+                        {dateFilterFrom && dateFilterTo && ( <div className="mb-4 p-3 bg-blue-100 border border-blue-200 text-blue-800 rounded-lg text-sm">
                                 Filtering Customers from <strong>{new Date(dateFilterFrom).toLocaleDateString('en-GB')}</strong> to <strong>{new Date(dateFilterTo).toLocaleDateString('en-GB')}</strong>.
                             </div>
                         )}
-                        {!dateFilterFrom && !dateFilterTo && (
-                            <div className="mb-4 p-3 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
+                        {!dateFilterFrom && !dateFilterTo && ( <div className="mb-4 p-3 bg-orange-100 border border-gray-200 text-gray-700 rounded-lg text-sm">
                                 Showing all Customers.
                             </div>
                         )}

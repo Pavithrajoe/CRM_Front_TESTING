@@ -94,21 +94,17 @@ const TargetDashboard = ({ userId, userEmail }) => {
       // Handle the response structure with userTargets array
       const metricsArray = response.data.userTargets || [];
       const totalTargets = response.data.totalTarget || 0;
-
       const formattedMetrics = metricsArray.map((metric, index) => {
         const target = parseFloat(metric.bsales_value || 0);
         const achieved = parseFloat(metric.achievedAmount || 0);
         const completedPercentage = target !== 0 ? ((achieved / target) * 100).toFixed(2) : "0.00";
-
         const fromDate = metric.dfrom_date ? new Date(metric.dfrom_date) : null;
         const toDate = metric.dto_date ? new Date(metric.dto_date) : null;
-
-        // Define options for DD/MM/YYYY format
         const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
 
         return {
           id: metric.isalesId || `metric-${index}`,
-          metricName: "Sales Target", // Default name since not in response
+          metricName: "Sales Target", 
           targetValue: target,
           achieved: achieved,
           completed: completedPercentage,
@@ -145,7 +141,7 @@ const TargetDashboard = ({ userId, userEmail }) => {
         salesTarget: totalSalesTarget,
         achievedValue: totalAchievedValue,
         completionRate: parseFloat(totalCompletionRate),
-        targetsAssigned: totalTargets, // Using the totalTarget from response
+        targetsAssigned: totalTargets, 
       });
 
       // Prepare chart data
@@ -222,8 +218,6 @@ const TargetDashboard = ({ userId, userEmail }) => {
           </button>
         </div>
       </div>
-
-      {/* Date Filters and Target ID Selector section removed */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {loadingSummary ? (

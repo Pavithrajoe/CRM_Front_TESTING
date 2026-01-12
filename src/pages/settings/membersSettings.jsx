@@ -42,7 +42,6 @@ const MembersSettings = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    // Here, you’d send `role` and `permissions` to your backend or state management
     setMessage({ type: 'success', text: `Permissions updated for role "${role}".` });
   };
 

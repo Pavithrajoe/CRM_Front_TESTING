@@ -6,7 +6,6 @@ import { ENDPOINTS } from '../../api/constraints';
 import { UserContext } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
-// Reusable ToggleSwitch component (keeping it as is, not directly related to the error)
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
     <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
         <span className="text-gray-700 font-medium">{label}</span>
@@ -38,7 +37,7 @@ function AcheivementDashboard({ userId }) {
         totalLeads: 0,
         highestValueLead: { iproject_value: 0, dcreated_dt: null, convertToDealTime: null },
         highestAchievedMonth: { month: '', count: 0 },
-        historicalRevenueData: [], // Ensure this is initialized as an array
+        historicalRevenueData: [], 
     });
 
     const [loading, setLoading] = useState(true);
@@ -88,7 +87,7 @@ function AcheivementDashboard({ userId }) {
             setError("Authentication token missing. Please log in.");
             setLoading(false);
             toast.error("Please login to view achievements.");
-            navigate('/login'); // Redirect to login if no token
+            navigate('/login'); 
             return;
         }
         if (!userId) {
@@ -100,7 +99,6 @@ function AcheivementDashboard({ userId }) {
         if (start && end && new Date(start) > new Date(end)) {
             toast.error("Start date cannot be after end date.");
             setLoading(false);
-            // Ensure historicalRevenueData is cleared or set to empty array on validation error
             setAchievements(prev => ({ ...prev, historicalRevenueData: [] })); 
             return;
         }
@@ -114,8 +112,6 @@ function AcheivementDashboard({ userId }) {
             if (end) {
                 url.searchParams.append('endDate', end);
             }
-
-            // console.log(`Fetching achievements from: ${url.toString()}`);
 
             const response = await fetch(url.toString(), {
                 method: 'GET',
@@ -131,7 +127,6 @@ function AcheivementDashboard({ userId }) {
             }
 
             const data = await response.json();
-            // console.log("Fetched achievement data:", data);
 
             setAchievements({
                 totalLeadClosed: data.totalLeadClosed || 0,
@@ -140,7 +135,6 @@ function AcheivementDashboard({ userId }) {
                 totalRevenueAmount: data.totalRevenueAmount || 0,
                 highestValueLead: data.highestValueLead || { iproject_value: 0, dcreated_dt: null, convertToDealTime: null },
                 highestAchievedMonth: data.highestAchievedMonth || { month: '', count: 0 },
-                // Crucial: Ensure historicalRevenueData is always an array
                 historicalRevenueData: Array.isArray(data.totalRevenue) ? data.totalRevenue : [], 
             });
 
@@ -148,14 +142,12 @@ function AcheivementDashboard({ userId }) {
             console.error("Error fetching achievements:", err);
             setError(err.message);
             toast.error(`Error loading achievements: ${err.message}`);
-            // Also ensure historicalRevenueData is reset on fetch error
             setAchievements(prev => ({ ...prev, historicalRevenueData: [] }));
         } finally {
             setLoading(false);
         }
-    }, [userId, navigate]); // Added navigate to dependency array for useCallback
+    }, [userId, navigate]);
 
-    // --- useEffect for Fetching and Initial Load ---
     useEffect(() => {
         const setInitialDates = () => {
             const today = new Date();
@@ -193,9 +185,8 @@ function AcheivementDashboard({ userId }) {
             setLoading(false);
         }
         
-    }, [userId, fetchAchievements, filterTrigger, isInitialLoad, startDate, endDate]); // Added startDate, endDate to dependencies
+    }, [userId, fetchAchievements, filterTrigger, isInitialLoad, startDate, endDate]); 
 
-    // Handler for triggering the filter when the apply icon is clicked
     const handleFilterIconClick = () => {
         if (!startDate && !endDate) {
             toast.warn("Please select at least a start or end date to filter.");
@@ -209,7 +200,6 @@ function AcheivementDashboard({ userId }) {
         toast.info(`Applying filter...`);
     };
 
-    // Handler for clearing the date filter when the clear icon is clicked
     const handleClearFilterIconClick = () => {
         if (!startDate && !endDate) {
             toast.info("Filter is already clear.");
@@ -221,7 +211,6 @@ function AcheivementDashboard({ userId }) {
         toast.info("Date filter cleared. Showing all-time data.");
     };
 
-    // Navigate to the user deals page when clicking "Total Deals Closed"
     const handleTotalDealsClosedClick = () => {
         navigate(`/userdeals/${userId}`); 
     };
@@ -240,7 +229,7 @@ function AcheivementDashboard({ userId }) {
             <div className="min-h-screen p-5 sans text-gray-800 flex flex-col justify-center items-center">
                 <p className="text-xl font-semibold text-red-600 mb-4">Error: {error}</p>
                 <button
-                    onClick={() => navigate('/dashboard')} // Example: navigate to a safe page
+                    onClick={() => navigate('/dashboard')} 
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                     Go to Dashboard
@@ -259,9 +248,8 @@ function AcheivementDashboard({ userId }) {
                 </h2>
 
                 <div className="achievement-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                    {/* Achievement Cards (UI structure remains the same) */}
                     
-                    {/* Card 1: Total Deals Closed */}
+                    {/*  Total Deals Closed */}
                     <div 
                         className="achievement-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102 cursor-pointer" 
                         onClick={handleTotalDealsClosedClick} 
@@ -274,7 +262,7 @@ function AcheivementDashboard({ userId }) {
                         </div>
                     </div>
 
-                    {/* Card 2: Revenue Generated */}
+                    {/* Revenue Generated */}
                     <div className="achievement-card bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="achievement-card-title text-base text-green-800 font-medium mb-2">Revenue Generated</div>
                         <div className="achievement-card-metric text-2xl font-bold text-green-900 mb-2">
@@ -286,7 +274,7 @@ function AcheivementDashboard({ userId }) {
                         </div>
                     </div>
 
-                    {/* Card 3: Lead Conversion Ratio */}
+                    {/*  Lead Conversion Ratio */}
                     <div className="achievement-card bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg border border-purple-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="achievement-card-title text-base text-purple-800 font-medium mb-2">Lead Conversion Ratio</div>
                         <div className="achievement-card-metric text-2xl font-bold text-purple-900 mb-2">{achievements.dealCovertioRatio}%</div>
@@ -296,7 +284,7 @@ function AcheivementDashboard({ userId }) {
                         </div>
                     </div>
 
-                    {/* Card 4: Highest Value Deal Closed */}
+                    {/* Highest Value Deal Closed */}
                     <div className="achievement-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-lg border border-red-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="achievement-card-title text-base text-red-800 font-medium mb-2">Highest Value Deal Closed</div>
                         <div className="achievement-card-metric text-2xl font-bold text-red-900 mb-2">
@@ -307,7 +295,7 @@ function AcheivementDashboard({ userId }) {
                         </div>
                     </div>
 
-                    {/* Card 5: Most Active Month */}
+                    {/* Most Active Month */}
                     <div className="achievement-card bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-lg border border-yellow-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="achievement-card-title text-base text-yellow-800 font-medium mb-2">Most Active Month</div>
                         <div className="achievement-card-metric text-2xl font-bold text-yellow-900 mb-2">
@@ -318,7 +306,7 @@ function AcheivementDashboard({ userId }) {
                         </div>
                     </div>
 
-                    {/* Card 6: Total Leads */}
+                    {/* Total Leads */}
                     <div className="achievement-card bg-gradient-to-br from-teal-50 to-teal-100 p-6 rounded-xl shadow-lg border border-teal-200 flex flex-col justify-between transform transition-transform duration-300 hover:scale-102">
                         <div className="achievement-card-title text-base text-teal-800 font-medium mb-2">Total Leads</div>
                         <div className="achievement-card-metric text-2xl font-bold text-teal-900 mb-2">{achievements.totalLeads}</div>
@@ -332,7 +320,6 @@ function AcheivementDashboard({ userId }) {
                 <div className="historical-section-header flex flex-col sm:flex-row justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Historical Revenue Details</h2>
                     <div className="date-filter-inputs flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                        {/* Re-added date inputs */}
                         <input
                             type="date"
                             value={startDate}

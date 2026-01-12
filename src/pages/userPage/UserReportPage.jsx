@@ -10,14 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 const UserReportPage = () => {
     const { userId: urlUserId } = useParams();
     const { users } = useContext(UserContext);
-
     const parsedUserId = urlUserId ? parseInt(urlUserId, 10) : null;
 
-    // console.log("UserReportPage DEBUG: URL userId param:", urlUserId);
-    // console.log("UserReportPage DEBUG: Parsed userId being passed to children:", parsedUserId);
-
-    // This block should prevent rendering AcheivementDashboard or UserDeals
-    // if the userId is initially invalid.
     if (!parsedUserId || isNaN(parsedUserId)) {
         console.warn("UserReportPage: Initial userId is invalid/missing. User is likely navigating to an incorrect URL or parameter is malformed.");
         toast.error("Invalid User ID provided in the URL. Please check the URL.");
@@ -34,9 +28,7 @@ const UserReportPage = () => {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-                User Report for <span className="text-blue-600">{currentUserName}</span>
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center"> User Report for <span className="text-blue-600">{currentUserName}</span> </h1>
 
             {/* Both receive the SAME parsedUserId */}
             <AcheivementDashboard userId={parsedUserId} />

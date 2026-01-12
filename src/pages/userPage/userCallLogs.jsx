@@ -29,7 +29,6 @@ function UserCallLogs({ userId }) {
         rejectedCalls: 0
     });
 
-    // --- Helper functions (kept as is) ---
     const getFormattedDateForInput = (date) => {
         if (!date) return '';
         const d = new Date(date);
@@ -171,16 +170,15 @@ function UserCallLogs({ userId }) {
         return 0;
     };
 
-    // --- MOVE THIS useMemo ABOVE THE useEffect THAT USES IT ---
     // Memoized filtered and sorted logs
     const sortedAndFilteredLogs = useMemo(() => {
         let currentLogs = [...callLogs];
 
-        // 1. Apply Date Filtering
+        // Apply Date Filtering
         if (startDate && endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999); // Include the whole end day
+            end.setHours(23, 59, 59, 999); 
 
             currentLogs = currentLogs.filter(log => {
                 const logTime = new Date(log.call_time);
@@ -196,7 +194,7 @@ function UserCallLogs({ userId }) {
         }
 
 
-        // 2. Apply Sorting
+        //  Apply Sorting
         if (sortConfig.length > 0) {
             currentLogs.sort((a, b) => {
                 for (const { key, direction } of sortConfig) {
@@ -220,8 +218,7 @@ function UserCallLogs({ userId }) {
             missedCalls: sortedAndFilteredLogs.filter(c => c.call_type_id === 3).length,
             rejectedCalls: sortedAndFilteredLogs.filter(c => c.call_type_id === 4).length
         });
-    }, [sortedAndFilteredLogs]); // This useEffect now correctly follows the useMemo
-
+    }, [sortedAndFilteredLogs]);
 
     // Sorting UI and handlers
     const requestSort = (key) => {

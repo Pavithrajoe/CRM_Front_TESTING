@@ -11,8 +11,6 @@ import { format } from 'date-fns';
 export default function SalesForm({ userId, userEmail
 , defaultFromDate, defaultToDate, onClose }) {
   const token = localStorage.getItem("token");
-
-  // Decode JWT token for created/assigned by
   const decodeToken = (t) => {
     if (!t) return null;
     try {
@@ -187,14 +185,14 @@ export default function SalesForm({ userId, userEmail
             </div>
 
            <div>
-  <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
- <div className="w-full border p-2 rounded bg-gray-100">
-  {userEmail}
-</div>
-<input type="hidden" name="assignedTo" value={formData.assignedTo} />
+              <label className="block mb-1">Assigned To <span className='text-red-600'>*</span></label>
+            <div className="w-full border p-2 rounded bg-gray-100">
+              {userEmail}
+            </div>
+            <input type="hidden" name="assignedTo" value={formData.assignedTo} />
 
-  {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
-</div>
+              {errors.assignedTo && <p className="text-red-500 text-sm mt-1">{errors.assignedTo}</p>}
+            </div>
 
           </div>
 

@@ -523,15 +523,8 @@ const Tasks = () => {
                 <Search size={16} className="text-gray-400" />
                 <input ref={searchInputRef} type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full p-2 outline-none text-sm" />
               </div>
-              <button onClick={handleNewTaskClick} className="
-      bg-blue-900 shadow-md shadow-blue-900 text-white
-      px-4 py-2 sm:px-5 sm:py-2
-      rounded-full hover:bg-blue-700
-      transition duration-150 ease-in-out
-      text-sm sm:text-base whitespace-nowrap
-      w-full sm:w-auto text-center
-      flex-shrink-0
-    ">+ New Task</button>
+              <button onClick={handleNewTaskClick} className=" bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700
+               transition duration-150 ease-in-out text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center flex-shrink-0 ">+ New Task </button>
             </div>
             {renderTaskHistory()}
             {showForm && (

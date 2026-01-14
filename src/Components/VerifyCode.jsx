@@ -52,11 +52,7 @@ const VerifyCode = () => {
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden w-full max-w-5xl space-y-10 md:space-y-0 md:space-x-20">
         <div className="bg-[radial-gradient(circle,#2563eb,#164CA1)] w-full md:w-[500px] h-[540px] flex items-center justify-center rounded-3xl">
-          <img 
-            src="/images/login/verify_code.png" 
-            alt="Verification Illustration" 
-            className="max-w-[80%] h-auto" 
-          />
+          <img src="/images/login/verify_code.png"  alt="Verification Illustration"  className="max-w-[80%] h-auto"  />
         </div>
 
         <div className="w-full md:w-[500px] p-6 sm:p-10 flex flex-col justify-center items-center text-center">
@@ -80,12 +76,7 @@ const VerifyCode = () => {
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-          <button
-            onClick={handleVerify}
-            className="bg-black text-white font-semibold px-6 py-2 rounded-md hover:bg-gray-800 transition"
-          >
-            Verify OTP
-          </button>
+          <button onClick={handleVerify} className="bg-black text-white font-semibold px-6 py-2 rounded-md hover:bg-gray-800 transition" > Verify OTP </button>
         </div>
       </div>
     </div>

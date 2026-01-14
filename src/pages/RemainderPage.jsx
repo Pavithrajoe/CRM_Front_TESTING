@@ -1,8 +1,9 @@
+
 import React from "react";
 import RemainderForm from "../Components/RemainderForm";
 import { useParams } from "react-router-dom";
 
-const RemainderPage = () => {
+const RemainderPage = ({ onCountChange }) => {
     const { leadId } = useParams();
   
   return (
@@ -16,7 +17,7 @@ const RemainderPage = () => {
         </div>
 
         <div className="w-full overflow-x-hidden shadow rounded bg-[#f8f8f8]">
-      <RemainderForm  leadId={leadId}  />
+      <RemainderForm leadId={leadId} onCountChange={onCountChange} />
     </div>
     </div>
 
@@ -25,3 +26,31 @@ const RemainderPage = () => {
 };
 
 export default RemainderPage;
+
+// import React from "react";
+// import RemainderForm from "../Components/RemainderForm";
+// import { useParams } from "react-router-dom";
+
+// const RemainderPage = () => {
+//     const { leadId } = useParams();
+  
+//   return (
+//     <>  
+//      <div >
+//       </div>
+//       <div > 
+//       </div>
+//       <div className="flex ">
+//         <div >
+//         </div>
+
+//         <div className="w-full overflow-x-hidden shadow rounded bg-[#f8f8f8]">
+//       <RemainderForm  leadId={leadId}  />
+//     </div>
+//     </div>
+
+//     </>
+//   );
+// };
+
+// export default RemainderPage;

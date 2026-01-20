@@ -779,7 +779,11 @@ const LeadCardViewPage = () => {
     } else if (selectedFilter === "lost") {
       fetchLostLeads();
     } else {
-      dispatch(fetchLeads());
+      if (selectedFilter === "all" && hasAllLeadsAccess) {
+      dispatch(fetchLeads("all"));   // ✅ ALL USERS
+    } else {
+      dispatch(fetchLeads("self"));  // ✅ LOGGED-IN USER
+    }
     }
   }, [
     selectedFilter,
@@ -1784,8 +1788,6 @@ const LeadCardViewPage = () => {
 
 export default LeadCardViewPage;
 
-
-
 // import React, {useEffect, useState, useCallback, useMemo, useContext} from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit, } from "react-icons/fa";
@@ -1800,30 +1802,25 @@ export default LeadCardViewPage;
 // import { useSelector, useDispatch } from "react-redux";
 // import { fetchLeads } from "../../Redux/leadActions";
 // import { GlobUserContext } from "../../context/userContex";
-
+// import { Menu, ChevronDown } from 'lucide-react';
 // const LeadCardViewPage = () => {
-//   const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
-//   const hasImportAccess = user_attributes.some(
-//     (attr) => attr.attribute_name === "Import" && attr.bactive === true
-//   );
-//   const hasWebsiteLeadAccess = user_attributes.some(
-//     (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
-//   );
+//   // const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
+//   const user_attributes = useMemo(() => { return JSON.parse(localStorage.getItem("user_attributes")) || [];}, []);
+//   const hasImportAccess = user_attributes.some( (attr) => attr.attribute_name === "Import" && attr.bactive === true );
+//   const hasAllLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "All Leads" && attr.bactive === true), [user_attributes]);
+//   const hasActiveLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Active Leads" && attr.bactive === true), [user_attributes]);
+//   const hasWebsiteLeadAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Website Lead" && attr.bactive === true), [user_attributes]);
+
+//   // const hasAllLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "All Leads" && attr.bactive === true );
+//   // const hasActiveLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "Active Leads" && attr.bactive === true );
+//   // const hasWebsiteLeadAccess = user_attributes.some( (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true );
 
 //   const { user } = useContext(GlobUserContext);
 //   const location = useLocation();
 //   const navigate = useNavigate();
 //   const dispatch = useDispatch();
 //   const { userModules } = useUserAccess();
-  
-//   // REDUX: Get loading, error, and leads data from Redux store
-//   const {
-//     loading,
-//     error,
-//     allLeads: allLeadsFromRedux,
-//   } = useSelector((state) => state.leadState);
-
-//   // LOCAL STATE: For UI, pagination, and filtering
+//   const { loading, error, allLeads: allLeadsFromRedux,} = useSelector((state) => state.leadState);
 //   const [allLeads, setAllLeads] = useState([]);
 //   const [assignedLeads, setAssignedLeads] = useState([]);
 //   const [lostLeads, setLostLeads] = useState([]);
@@ -1870,18 +1867,9 @@ export default LeadCardViewPage;
 //   const [selectedSource, setSelectedSource] = useState("");
 //   const [leadsToShow, setLeadsToShow] = useState(null);
 //   const [showPagination, setShowPagination] = useState(true);
+//   const [showMenu, setShowMenu] = useState(false);
+//   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-//   // const importPermissions = useMemo(() => {
-//   //   return userModules.filter(
-//   //     (attr) => 
-//   //       attr.module_id === 5 && 
-//   //       attr.bactive && 
-//   //       attr.attribute_name === "Import"
-//   //   );
-//   // }, [userModules]);
-
-
-//   // Get page from URL or state
 //   const params = new URLSearchParams(location.search);
 //   const pageFromUrl = Number(params.get("page")) || 1;
 //   const pageFromState = location.state?.returnPage;
@@ -1900,20 +1888,54 @@ export default LeadCardViewPage;
 //     }
 //   }, [allLeadsFromRedux]);
 
+
+//    useEffect(() => {
+//     let nextFilter = selectedFilter;
+
+//     if (selectedFilter === "all" && !hasAllLeadsAccess) {
+//       if (hasActiveLeadsAccess) nextFilter = "leads";
+//       else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
+//     }
+
+//     if (selectedFilter === "leads" && !hasActiveLeadsAccess) {
+//       if (hasAllLeadsAccess) nextFilter = "all";
+//       else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
+//     }
+
+//     if (selectedFilter === "websiteLeads" && !hasWebsiteLeadAccess) {
+//       if (hasAllLeadsAccess) nextFilter = "all";
+//       else if (hasActiveLeadsAccess) nextFilter = "leads";
+//     }
+
+//     if (nextFilter !== selectedFilter) {
+//       setSelectedFilter(nextFilter);
+//     }
+//   }, [selectedFilter, hasAllLeadsAccess, hasActiveLeadsAccess, hasWebsiteLeadAccess]);
+
+
 //   // Proper tab filtration logic
 //   const dataToDisplay = useMemo(() => {
 //     let data = [];
 
-//     // Determine base data according to selected tab filter
+//     //BASE DATA ACCESS CHECK
 //     if (selectedFilter === "assignedToMe") {
 //       data = assignedLeads;
 //     } else if (selectedFilter === "lost") {
 //       data = lostLeads;
+//     } else if (selectedFilter === "all") {
+//       if (!hasAllLeadsAccess) return [];
+//       data = allLeads;
+//     } else if (selectedFilter === "leads") {
+//       if (!hasActiveLeadsAccess) return [];
+//       data = allLeads;
+//     } else if (selectedFilter === "websiteLeads") {
+//       if (!hasWebsiteLeadAccess) return [];
+//       data = allLeads;
 //     } else {
 //       data = allLeads;
 //     }
 
-//     // Filtering logic
+//     // FILTERING LOGIC
 //     return data.filter((item) => {
 //       const match = (text) =>
 //         String(text || "")
@@ -1945,43 +1967,64 @@ export default LeadCardViewPage;
 
 //       const matchesDate = isWithinDateRange(dateToFilter);
 
-//       // Apply modal filters only for specified tabs
 //       let matchesModalFilters = true;
 
+//       // MODAL FILTER ACCESS CHECK
 //       if (
-//         selectedFilter === "all" || selectedFilter === "leads" || selectedFilter === "websiteLeads"
+//         (selectedFilter === "all" && hasAllLeadsAccess) ||
+//         (selectedFilter === "leads" && hasActiveLeadsAccess) ||
+//         (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
 //       ) {
 //         if (selectedPotential) {
 //           const itemPotential =
 //             item.lead_potential?.clead_name || item.potentialDisplay;
-//           if (itemPotential !== selectedPotential) matchesModalFilters = false;
+//           if (itemPotential !== selectedPotential)
+//             matchesModalFilters = false;
 //         }
+
 //         if (selectedStatus) {
-//           const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
-//           if (itemStatus !== selectedStatus) matchesModalFilters = false;
+//           const itemStatus =
+//             item.lead_status?.clead_name || item.statusDisplay;
+//           if (itemStatus !== selectedStatus)
+//             matchesModalFilters = false;
 //         }
+
 //         if (selectedSource) {
 //           if (item.lead_source_id !== Number(selectedSource))
 //             matchesModalFilters = false;
 //         }
+
 //         if (selectedIndustry) {
 //           if (item.cindustry_id !== Number(selectedIndustry))
 //             matchesModalFilters = false;
 //         }
+
 //         if (selectedService) {
 //           if (item.iservice_id !== Number(selectedService))
 //             matchesModalFilters = false;
 //         }
 //       }
 
-//       const isConverted = item.bisConverted === true || item.bisConverted === "true";
-//       const isActive = item.bactive === true || item.bactive === "true";
-//       const isWebsite = item.website_lead === true || item.website_lead === "true" || item.website_lead === 1;
+//       const isConverted =
+//         item.bisConverted === true || item.bisConverted === "true";
+//       const isActive =
+//         item.bactive === true || item.bactive === "true";
+//       const isWebsite =
+//         item.website_lead === true ||
+//         item.website_lead === "true" ||
+//         item.website_lead === 1;
 
 //       if (selectedFilter === "all") {
-//         return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
+//         return (
+//           hasAllLeadsAccess &&
+//           matchesSearch &&
+//           matchesDate &&
+//           matchesModalFilters &&
+//           !isConverted
+//         );
 //       } else if (selectedFilter === "leads") {
 //         return (
+//           hasActiveLeadsAccess &&
 //           matchesSearch &&
 //           matchesDate &&
 //           matchesModalFilters &&
@@ -1991,6 +2034,7 @@ export default LeadCardViewPage;
 //         );
 //       } else if (selectedFilter === "websiteLeads") {
 //         return (
+//           hasWebsiteLeadAccess &&
 //           matchesSearch &&
 //           matchesDate &&
 //           matchesModalFilters &&
@@ -2007,6 +2051,7 @@ export default LeadCardViewPage;
 //       } else if (selectedFilter === "assignedToMe") {
 //         return matchesSearch && matchesDate && isActive;
 //       }
+
 //       return matchesSearch && matchesDate && matchesModalFilters;
 //     });
 //   }, [
@@ -2024,7 +2069,134 @@ export default LeadCardViewPage;
 //     selectedSource,
 //     selectedIndustry,
 //     selectedService,
+//     hasAllLeadsAccess,
+//     hasActiveLeadsAccess,
+//     hasWebsiteLeadAccess
 //   ]);
+
+//   // const dataToDisplay = useMemo(() => {
+//   //   let data = [];
+
+//   //   // Determine base data according to selected tab filter
+//   //   if (selectedFilter === "assignedToMe") {
+//   //     data = assignedLeads;
+//   //   } else if (selectedFilter === "lost") {
+//   //     data = lostLeads;
+//   //   } else {
+//   //     data = allLeads;
+//   //   }
+
+//   //   // Filtering logic
+//   //   return data.filter((item) => {
+//   //     const match = (text) =>
+//   //       String(text || "")
+//   //         .toLowerCase()
+//   //         .includes(searchTerm.toLowerCase());
+
+//   //     const matchesSearch =
+//   //       match(item.clead_name) ||
+//   //       match(item.corganization || item.c_organization) ||
+//   //       match(item.cemail || item.c_email) ||
+//   //       match(item.iphone_no || item.c_phone) ||
+//   //       (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
+//   //       (selectedFilter === "assignedToMe" && match(item.statusDisplay));
+
+//   //     let dateToFilter = item.dmodified_dt || item.d_modified_date;
+//   //     if (selectedFilter === "assignedToMe") {
+//   //       dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+//   //     }
+
+//   //     const isWithinDateRange = (date) => {
+//   //       if (!date) return true;
+//   //       const d = new Date(date);
+//   //       const from = fromDate ? new Date(fromDate) : null;
+//   //       const to = toDate
+//   //         ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+//   //         : null;
+//   //       return (!from || d >= from) && (!to || d <= to);
+//   //     };
+
+//   //     const matchesDate = isWithinDateRange(dateToFilter);
+
+//   //     let matchesModalFilters = true;
+
+//   //     if (
+//   //       selectedFilter === "all" || selectedFilter === "leads" || selectedFilter === "websiteLeads"
+//   //     ) {
+//   //       if (selectedPotential) {
+//   //         const itemPotential =
+//   //           item.lead_potential?.clead_name || item.potentialDisplay;
+//   //         if (itemPotential !== selectedPotential) matchesModalFilters = false;
+//   //       }
+//   //       if (selectedStatus) {
+//   //         const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
+//   //         if (itemStatus !== selectedStatus) matchesModalFilters = false;
+//   //       }
+//   //       if (selectedSource) {
+//   //         if (item.lead_source_id !== Number(selectedSource))
+//   //           matchesModalFilters = false;
+//   //       }
+//   //       if (selectedIndustry) {
+//   //         if (item.cindustry_id !== Number(selectedIndustry))
+//   //           matchesModalFilters = false;
+//   //       }
+//   //       if (selectedService) {
+//   //         if (item.iservice_id !== Number(selectedService))
+//   //           matchesModalFilters = false;
+//   //       }
+//   //     }
+
+//   //     const isConverted = item.bisConverted === true || item.bisConverted === "true";
+//   //     const isActive = item.bactive === true || item.bactive === "true";
+//   //     const isWebsite = item.website_lead === true || item.website_lead === "true" || item.website_lead === 1;
+
+//   //     if (selectedFilter === "all") {
+//   //       return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
+//   //     } else if (selectedFilter === "leads") {
+//   //       return (
+//   //         matchesSearch &&
+//   //         matchesDate &&
+//   //         matchesModalFilters &&
+//   //         isActive &&
+//   //         !isConverted &&
+//   //         !isWebsite
+//   //       );
+//   //     } else if (selectedFilter === "websiteLeads") {
+//   //       return (
+//   //         matchesSearch &&
+//   //         matchesDate &&
+//   //         matchesModalFilters &&
+//   //         isWebsite &&
+//   //         isActive
+//   //       );
+//   //     } else if (selectedFilter === "lost") {
+//   //       if (isActive === false) {
+//   //         const isLeadLost = !isConverted && showLostLeads;
+//   //         const isDealLost = isConverted && showLostDeals;
+//   //         return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+//   //       }
+//   //       return false;
+//   //     } else if (selectedFilter === "assignedToMe") {
+//   //       return matchesSearch && matchesDate && isActive;
+//   //     }
+//   //     return matchesSearch && matchesDate && matchesModalFilters;
+//   //   });
+//   // }, [
+//   //   selectedFilter,
+//   //   assignedLeads,
+//   //   lostLeads,
+//   //   allLeads,
+//   //   searchTerm,
+//   //   fromDate,
+//   //   toDate,
+//   //   showLostLeads,
+//   //   showLostDeals,
+//   //   selectedPotential,
+//   //   selectedStatus,
+//   //   selectedSource,
+//   //   selectedIndustry,
+//   //   selectedService,
+//   // ]);
 
 //   // Proper displayed data calculation
 //   const displayedDataCalculated = useMemo(() => {
@@ -2092,27 +2264,22 @@ export default LeadCardViewPage;
 //         // if (industriesData?.response?.industry) {
 //           setIndustries(industriesData);
 //           // );
-  
 
-//         // Fetch services - FIXED: Check the correct response structure
+//         // Fetch services 
 //         const servicesRes = await fetch(ENDPOINTS.MASTER_SERVICE_GET, {
 //           headers,
 //         });
 //         const servicesData = await servicesRes.json();
 
-
 //         // Check different possible response structures
 //         if (servicesData?.data) {
-//           // If data is directly in data property
 //           setServices(servicesData);
 //         } else if (servicesData?.response) {
-//           // If data is in response property
 //           const servicesArray = Array.isArray(servicesData.response) 
 //             ? servicesData.response 
 //             : servicesData.response?.service || [];
 //           setServices(servicesArray);
 //         } else if (Array.isArray(servicesData)) {
-//           // If the response is directly an array
 //           setServices(servicesData);
 //         } else {
 //           console.warn("Unexpected services response structure:", servicesData);
@@ -2181,7 +2348,6 @@ export default LeadCardViewPage;
 //   useEffect(() => {
 //     if (location.state?.returnPage) {
 //       setCurrentPage(location.state.returnPage);
-//       // Clear the state after using it to prevent infinite loop
 //       navigate(location.pathname + location.search, {
 //         replace: true,
 //         state: {},
@@ -2229,7 +2395,6 @@ export default LeadCardViewPage;
 //   useEffect(() => {
 //     if (!user || user.length === 0) return;
 
-//     // Filter out any invalid users
 //     const validUsers = user.filter(
 //       (user) => user.bactive === true || user.bactive === "true"
 //     );
@@ -2253,7 +2418,6 @@ export default LeadCardViewPage;
 
 //     const name = potentialName.toString().toLowerCase().trim();
 
-//     // Your existing logic here...
 //     if (name.includes("hot") || name.includes("high")) {
 //       return "bg-red-400 text-white";
 //     }
@@ -2263,7 +2427,6 @@ export default LeadCardViewPage;
 //     if (name.includes("cold") || name.includes("low")) {
 //       return "bg-blue-300 text-black";
 //     }
-//     //if not matched for anything refault
 //     return "bg-gray-200 text-yellow-700";
 //   };
 
@@ -2294,6 +2457,18 @@ export default LeadCardViewPage;
 //         return "bg-gray-300 text-gray-700";
 //     }
 //   };
+
+//   // const menuFilters = ['all', 'leads', ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
+//   const menuFilters = [ ...(hasAllLeadsAccess ? ['all'] : []), ...(hasActiveLeadsAccess ? ['leads'] : []), ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
+// //   const menuFilters = [
+// //   ...(hasAllLeadsAccess ? ['all'] : []),
+// //   ...(hasActiveLeadsAccess ? ['leads'] : []),
+// //   ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []),
+// //   'assignedToMe',
+// //   'lost'
+// // ];
+
+
 
 //   const fetchLostLeads = useCallback(async () => {
 //     if (!currentUserId || !currentToken) return;
@@ -2447,7 +2622,6 @@ export default LeadCardViewPage;
 //     setCurrentPage(1);
 //   };
 
-//   // Add this useEffect to clear modal filters when switching to assignedToMe or lost
 //   useEffect(() => {
 //     if (selectedFilter === "assignedToMe" || selectedFilter === "lost") {
 //       setSelectedPotential("");
@@ -2673,7 +2847,7 @@ export default LeadCardViewPage;
 //           placeholder="Search leads..."
 //           className="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 bg-gray-50 rounded-full shadow-inner placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
 //         />
-//         <div className="flex gap-2 flex-wrap">
+//         <div className="hidden sm:flex gap-2 flex-wrap">
 //           <button
 //             onClick={() => {
 //               if (selectedFilter === "assignedToMe") fetchAssignedLeads();
@@ -2714,71 +2888,114 @@ export default LeadCardViewPage;
 //         </div>
 //       </div>
 
-//       <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
-//         <div className="flex flex-wrap gap-2">
-//           {[
-//             "all",
-//             "leads",
-//             // ...(websiteActive ? ["websiteLeads"] : []),
-//             ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
-//             "assignedToMe",
-//             "lost",
-//           ].map((filterKey) => (
-//             <button
-//               key={filterKey}
-//               onClick={() => {
-//                 setSelectedFilter(filterKey);
-//                 setSearchTerm("");
-//                 setFromDate("");
-//                 setToDate("");
-//                 setCurrentPage(1);
-//                 setSelectedPotential("");
-//                 setSelectedStatus("");
-//                 setSelectedSource("");
-//                 setSelectedIndustry("");
-//                 setSelectedService("");
-
-//                 navigate(location.pathname, { replace: true });
-//               }}
-//               className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-//                 selectedFilter === filterKey
-//                   ? filterKey === "lost"
-//                     ? "bg-red-600 text-white"
-//                     : "bg-blue-600 text-white"
-//                   : "bg-gray-50 text-gray-700 hover:bg-gray-300"
-//               }`}
-//             >
-//               {filterKey === "all" ? ("All Leads" ) : filterKey === "leads" ? ( "Leads" ) : filterKey === "websiteLeads" ? (
-//                 <>
-//                   {" "}
-//                   Website Leads{" "}
-//                   <FaCrown className="inline ml-1 text-yellow-600" size={18} />
-//                 </>
-//               ) : filterKey === "lost" ? (
-//                 "Lost"
-//               ) : (
-//                 "Assigned to Me"
-//               )}
-//             </button>
-//           ))}
+//   {/* COMPLETE FILTERS - Mobile/Tablet/Desktop Perfect */}
+//   <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-4 mb-6">
+//     {/* Mobile: Menu Dropdown */}
+//     <div className="lg:hidden relative  ml-2">
+//       <button
+//         onClick={() => setShowMobileMenu(!showMobileMenu)}
+//         className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 transition-all border border-gray-200 shadow-sm hover:shadow-md w-full lg:w-auto"
+//       >
+//         Menu
+//         <Menu size={18} className={`transition-transform ${showMobileMenu ? 'rotate-180' : ''}`} />
+//       </button>
+      
+//       {showMobileMenu && (
+//         <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-96 overflow-hidden">
+//           {menuFilters.map((filterKey) => {
+//             const labels = { all: "All Leads", leads: "Leads",  websiteLeads: "Website Leads", assignedToMe: "Assigned to Me", lost: "Lost" };
+//             const label = labels[filterKey];
+//             const isWebsiteLeads = filterKey === 'websiteLeads';
+            
+//             return (
+//               <button
+//                 key={filterKey}
+//                 onClick={() => {
+//                   setSelectedFilter(filterKey);
+//                   setSearchTerm("");
+//                   setFromDate("");
+//                   setToDate("");
+//                   setCurrentPage(1);
+//                   setSelectedPotential("");
+//                   setSelectedStatus("");
+//                   setSelectedSource("");
+//                   setSelectedIndustry("");
+//                   setSelectedService("");
+//                   setShowMobileMenu(false);
+//                   navigate(location.pathname, { replace: true });
+//                 }}
+//                 className={`w-full flex items-center justify-between px-5 py-4 text-left first:rounded-t-2xl last:rounded-b-2xl transition-all hover:bg-blue-50 border-b border-gray-50 last:border-b-0 ${
+//                   selectedFilter === filterKey
+//                     ? filterKey === "lost"
+//                       ? "bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-800 border-red-100 font-semibold"
+//                       : "bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-800 border-blue-100 font-semibold"
+//                     : "text-gray-700 hover:text-blue-800"
+//                 }`}
+//               >
+//                 <span className="flex items-center gap-3">{label}{isWebsiteLeads && <FaCrown className="text-yellow-500" size={16} />}</span>
+//                 <ChevronDown size={16} className={`transition-transform ${selectedFilter === filterKey ? 'rotate-180' : ''}`} />
+//               </button>
+//             );
+//           })}
 //         </div>
-//         {hasImportAccess && (
-//           <button 
-//             onClick={() => setShowImportModal(true)} 
-//             className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition"
+//       )}
+//     </div>
+
+//     {/* Compact Buttons (All/Leads/Website/Lost) */}
+//     <div className="hidden md:flex flex-wrap gap-2 flex-1 lg:ml-4">
+//       {menuFilters.map((filterKey) => {  
+//         const labels = { 
+//           all: "All Leads", 
+//           leads: "Leads", 
+//           websiteLeads: "Website Leads", 
+//           assignedToMe: "Assigned to Me", 
+//           lost: "Lost" 
+//         };
+        
+//         return (
+//           <button
+//             key={filterKey}
+//             onClick={() => {
+//               setSelectedFilter(filterKey);
+//               setSearchTerm("");
+//               setFromDate("");
+//               setToDate("");
+//               setCurrentPage(1);
+//               setSelectedPotential("");
+//               setSelectedStatus("");
+//               setSelectedSource("");
+//               setSelectedIndustry("");
+//               setSelectedService("");
+//               navigate(location.pathname, { replace: true });
+//             }}
+//             className={`px-3 py-2 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all flex items-center gap-1 ${
+//               selectedFilter === filterKey
+//                 ? filterKey === "lost"
+//                   ? "bg-red-600 text-white shadow-md hover:shadow-lg"
+//                   : "bg-blue-600 text-white shadow-md hover:shadow-lg"
+//                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 border hover:border-gray-300"
+//             }`}
 //           >
-//             Import Leads
+//             {labels[filterKey]}
+//             {filterKey === "websiteLeads" && <FaCrown className="text-yellow-500" size={14} />}
 //           </button>
-//         )}
+//         );
+//       })}
+//     </div>
 
-//         {/* {roleID && importPermissions.map((i) =>  (
 
-//           <button key={i.attributes_id} onClick={() => setShowImportModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap" >
-//           {i.attribute_name   }    
-//           </button>
-//         ))} */}
-//       </div>
+//     {/* Import Button */}
+//     {hasImportAccess && (
+//       <button 
+//         onClick={() => setShowImportModal(true)} 
+//         className=" hidden md:block bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition ml-auto lg:ml-0 whitespace-nowrap"
+//       >
+//         Import Leads
+//       </button>
+//     )}
+//   </div>
 
+//       {/* Lost Checkboxes (unchanged) */}
 //       {selectedFilter === "lost" && (
 //         <div className="flex flex-wrap gap-4 mt-5 mb-5 items-center">
 //           <label className="flex items-center space-x-2 text-gray-700">
@@ -2801,6 +3018,7 @@ export default LeadCardViewPage;
 //           </label>
 //         </div>
 //       )}
+
 
 //       <LeadFilterModal
 //         showModal={showFilterModal}
@@ -2929,10 +3147,7 @@ export default LeadCardViewPage;
 //       )}
 
 //       {showImportModal && (
-//         <div
-//           className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 "
-//           onClick={() => setShowImportModal(false)}
-//         >
+//         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 " onClick={() => setShowImportModal(false)} >
 //           <div
 //             className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4 h-[50vh] overflow-y-scroll "
 //             onClick={(e) => e.stopPropagation()}
@@ -2951,7 +3166,8 @@ export default LeadCardViewPage;
 
 //             <div className="flex justify-center mb-4">
 //               <a
-//                 href="../../../public/files/Leads_import_Template_final.xls"
+//                 // href="../../../public/files/Leads_import_Template_final.xls"
+//                 href="../../../public/files/Leads_Import_Template.xls"
 //                 download="Leads_Import_Template.xls"
 //                 className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
 //               >
@@ -2979,11 +3195,7 @@ export default LeadCardViewPage;
 //               </div>
 //             )}
 
-//             {importSuccess && (
-//               <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
-//                 Leads imported successfully!
-//               </div>
-//             )}
+//             {importSuccess && ( <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md"> Leads imported successfully! </div> )}
 
 //             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
 //               <input
@@ -3109,72 +3321,22 @@ export default LeadCardViewPage;
 //                       className="h-4 w-4 text-blue-600 rounded"
 //                     />
 //                   </div>
-//                   <div
-//                     className="cursor-pointer flex items-center"
-//                     onClick={() => handleSort("clead_name")}
-//                   >
-//                     Name {getSortIndicator("clead_name")}
-//                   </div>
-//                   <div
-//                     className="cursor-pointer flex items-center"
-//                     onClick={() => handleSort("corganization")}
-//                   >
-//                     Org {getSortIndicator("corganization")}
-//                   </div>
-//                   <div
-//                     className="min-w-[120px] cursor-pointer flex items-center"
-//                     onClick={() => handleSort("cemail")}
-//                   >
-//                     Email {getSortIndicator("cemail")}
-//                   </div>
-//                   <div
-//                     className="cursor-pointer flex items-center"
-//                     onClick={() => handleSort("iphone_no")}
-//                   >
-//                     Phone {getSortIndicator("iphone_no")}
-//                   </div>
+//                   <div className="cursor-pointer flex items-center" onClick={() => handleSort("clead_name")} > Name {getSortIndicator("clead_name")} </div>
+//                   <div className="cursor-pointer flex items-center" onClick={() => handleSort("corganization")} >  Org {getSortIndicator("corganization")} </div>
+//                   <div className="min-w-[120px] cursor-pointer flex items-center" onClick={() => handleSort("cemail")} > Email {getSortIndicator("cemail")} </div>
+//                   <div className="cursor-pointer flex items-center" onClick={() => handleSort("iphone_no")} > Phone {getSortIndicator("iphone_no")} </div>
 //                   {selectedFilter === "assignedToMe" && (
 //                     <>
-//                       <div
-//                         className="cursor-pointer flex items-center"
-//                         onClick={() => handleSort("iassigned_by_name")}
-//                       >
-//                         Assigned by {getSortIndicator("iassigned_by_name")}
-//                       </div>
-//                       <div
-//                         className="cursor-pointer flex items-center"
-//                         onClick={() => handleSort("dcreate_dt")}
-//                       >
-//                         Created at {getSortIndicator("dcreate_dt")}
-//                       </div>
-//                       <div
-//                         className="cursor-pointer flex items-center"
-//                         onClick={() => handleSort("dupdate_dt")}
-//                       >
-//                         Updated at {getSortIndicator("dupdate_dt")}
-//                       </div>
+//                       <div className="cursor-pointer flex items-center" onClick={() => handleSort("iassigned_by_name")} > Assigned by {getSortIndicator("iassigned_by_name")} </div>
+//                       <div className="cursor-pointer flex items-center" onClick={() => handleSort("dcreate_dt")} > Created at {getSortIndicator("dcreate_dt")} </div>
+//                       <div className="cursor-pointer flex items-center" onClick={() => handleSort("dupdate_dt")} > Updated at {getSortIndicator("dupdate_dt")} </div>
 //                     </>
 //                   )}
-//                   <div
-//                     className="cursor-pointer flex items-center"
-//                     onClick={() => handleSort("dmodified_dt")}
-//                   >
-//                     Modified {getSortIndicator("dmodified_dt")}
-//                   </div>
+//                   <div className="cursor-pointer flex items-center" onClick={() => handleSort("dmodified_dt")} > Modified {getSortIndicator("dmodified_dt")} </div>
 //                   {selectedFilter === "assignedToMe" ? (
-//                     <div
-//                       className="cursor-pointer flex items-center"
-//                       onClick={() => handleSort("statusDisplay")}
-//                     >
-//                       Status {getSortIndicator("statusDisplay")}
-//                     </div>
+//                     <div className="cursor-pointer flex items-center" onClick={() => handleSort("statusDisplay")} > Status {getSortIndicator("statusDisplay")} </div>
 //                   ) : (
-//                     <div
-//                       className="cursor-pointer flex items-center"
-//                       onClick={() => handleSort("lead_status")}
-//                     >
-//                       Status {getSortIndicator("lead_status")}
-//                     </div>
+//                     <div className="cursor-pointer flex items-center" onClick={() => handleSort("lead_status")} > Status {getSortIndicator("lead_status")} </div>
 //                   )}
 //                 </div>
 //                 {displayedData.map((item, index) => {
@@ -3346,44 +3508,26 @@ export default LeadCardViewPage;
 //                       item.website_lead === 1) && (
 //                       <div className="absolute top-3 left-10 text-blue-600" title="Website Lead" > <FaGlobe size={18} /> </div>
 //                     )}
-//                     <div
-//                       onClick={() => goToDetail(item.ilead_id, displayedData)}
-//                     >
+//                     <div onClick={() => goToDetail(item.ilead_id, displayedData)} >
 //                       <div className="flex w-full justify-between items-center space-x-10">
-//                         <h3 className="font-semibold text-lg text-gray-900 truncate mb-1">
-//                           {item.clead_name || "-"}
-//                         </h3>
-//                         {/* <h3 className="font-semibold text-sm text-black bg-yellow-200 px-3 py-1 rounded-full truncate">
-//                           {item.lead_potential?.clead_name || item.lead_potential || '-'}
-//                         </h3> */}
+//                         <h3 className="font-semibold text-lg text-gray-1000 truncate mb-1"> {item.clead_name || "-"} </h3>
+                     
 //                       </div>
-//                       <p className="text-gray-600 text-sm mb-2 truncate">
-//                         {item.corganization || item.c_organization || "-"}
-//                       </p>
-//                       <div className="text-gray-500 text-xs space-y-1 mb-3">
+//                       <p className="text-gray-900 text-base font-medium mb-2 truncate"> {item.corganization || item.c_organization || "-"} </p>
+//                       <div className="text-gray-000 text-sm font-medium space-y-1 mb-3">
 //                         {(item.cemail || item.c_email) && (
-//                           <p className="flex items-center">
-//                             <FaEnvelope className="mr-2 text-blue-500" />{" "}
-//                             {item.cemail || item.c_email}
-//                           </p>
+//                           <p className="flex items-center"> <FaEnvelope className="mr-2 text-blue-500" />{" "} {item.cemail || item.c_email} </p>
 //                         )}
 //                         {(item.iphone_no || item.c_phone) && (
-//                           <p className="flex items-center">
-//                             <FaPhone className="mr-2 text-green-500" />{" "}
-//                             {item.iphone_no || item.c_phone}
-//                           </p>
+//                           <p className="flex items-center"> <FaPhone className="mr-2 text-green-500" />{" "} {item.iphone_no || item.c_phone} </p>
 //                         )}
 //                         {item.user && item.user.cFull_name && (
-//                           <p className="flex items-center text-gray-900 text-xs ">
-//                             <FaUser className="mr-2 text-indigo-500" /> Lead
-//                             Owner: {item.user.cFull_name}
-//                           </p>
+//                           <p className="flex items-center text-gray-900 text-sm font-medium"> <FaUser className="mr-2 text-indigo-500" /> Lead Owner: {item.user.cFull_name} </p>
 //                         )}
 
 //                         <p className="flex items-center">
 //                           <FaEdit className="mr-2" style={{ color: "#ff5733" }} size={12}/>{" "}
-//                           <span className="text-gray-900 text-xs">
-//                             Modified:{" "}
+//                           <span className="text-gray-900 text-sm font-medium"> Modified:{" "}
 //                             {formatDate(
 //                               item.dmodified_dt || item.d_modified_date
 //                             )}
@@ -3392,28 +3536,14 @@ export default LeadCardViewPage;
 
 //                         {selectedFilter === "assignedToMe" &&
 //                           item.iassigned_by_name && (
-//                             <p className="flex items-center">
-//                               <FaGlobe className="mr-2 text-purple-500" />{" "}
-//                               Assigned by: {item.iassigned_by_name}
-//                             </p>
+//                              <p className="flex items-center"> <FaGlobe className="mr-2 text-purple-500" />{" "} Assigned by: {item.iassigned_by_name} </p>
 //                           )}
 //                       </div>
 //                     </div>
 //                     <div className="flex flex-wrap items-center justify-between mt-3 pt-3 border-t border-gray-100">
-//                       <span
-//                         className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBgColor}`}
-//                       >
-//                         {statusText}
-//                       </span>
-//                       <span
-//                         className={`text-sm px-3 py-1 rounded-full truncate inline-block ${potentialColorClass}`}
-//                       >
-//                         {item.lead_potential?.clead_name || item.lead_potential
-//                           ? `${
-//                               item.lead_potential?.clead_name ||
-//                               item.lead_potential
-//                             }`
-//                           : "-"}
+//                       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusBgColor}`} > {statusText}  </span>
+//                       <span className={`text-sm px-3 py-1 font-semibold rounded-full truncate inline-block ${potentialColorClass}`} >
+//                         {item.lead_potential?.clead_name || item.lead_potential ? `${ item.lead_potential?.clead_name ||  item.lead_potential }` : "-"}
 //                       </span>
 //                     </div>
 //                   </div>
@@ -3427,22 +3557,12 @@ export default LeadCardViewPage;
 //       {/* PAGINATION - Using Local State */}
 //       {showPagination && (
 //         <div className="flex justify-center items-center space-x-2 mt-6">
-//           <button
-//             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-//             disabled={currentPage === 1}
-//             className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-//           >
+//           <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" >
 //             Previous
 //           </button>
-//           <span className="text-gray-700">
-//             Page {currentPage} of {totalPages}
-//           </span>
-//           <button
-//             onClick={() =>
-//               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-//             }
-//             disabled={currentPage === totalPages}
-//             className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+//           <span className="text-gray-700"> Page {currentPage} of {totalPages} </span>
+//           <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages)) } disabled={currentPage === totalPages}
+//            className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
 //           >
 //             Next
 //           </button>

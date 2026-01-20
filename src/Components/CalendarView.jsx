@@ -6,6 +6,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { format } from 'date-fns';
+
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
@@ -50,6 +51,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
   
   const recognitionRef = useRef(null);
   const descriptionRef = useRef('');
+  
 
   useEffect(() => {
     if (open && selectedDate) {
@@ -419,6 +421,7 @@ const MeetFormDrawer = ({ open, onClose, selectedDate, onCreated, setSnackbar })
 };
 
 const CalendarView = () => {
+
   const { userModules } = useUserAccess();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [msg, setMsg] = useState('');
@@ -445,6 +448,11 @@ const CalendarView = () => {
   const [taskError, setTaskError] = useState(null);
   const [userTaskError, setUserTaskError] = useState(null);
   const [userTask, setUserTask] =useState([]);
+const [gcalConnected, setGcalConnected] = useState(false);
+const [checkingGcalStatus, setCheckingGcalStatus] = useState(false);
+const userAccess = useUserAccess();
+const navigate = useNavigate();
+
 
   const token = localStorage.getItem("token");
   let company_id = null;
@@ -458,6 +466,91 @@ const CalendarView = () => {
     }
   }
 
+useEffect(() => {
+  // 1. CHECK URL PARAMS FIRST (OAuth success!)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('gcal') === 'connected') {
+    setGcalConnected(true); 
+    // Clear URL params
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+  
+  // 2. THEN check API status
+  checkGCalStatus();
+}, []);
+
+
+const checkGCalStatus = async () => {
+  setCheckingGcalStatus(true);
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/status`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    setGcalConnected(data.connected);
+  } catch (error) {
+    console.error('GCal status check failed:', error);
+  }
+  setCheckingGcalStatus(false);
+};
+
+const connectGCal = () => {
+  const userString = localStorage.getItem("user");
+  if (!userString) {
+    alert("👤 Please login first!");
+    return;
+  }
+  
+  let user_data;
+  try {
+    user_data = JSON.parse(userString);
+  } catch (error) {
+    console.error("JSON Parse Error:", error);
+    alert("Login data corrupted. Please login again.");
+    return;
+  }
+  
+  if (!user_data.iUser_id) {
+    alert("User ID missing. Please login again.");
+    return;
+  }
+  
+  const url = `${import.meta.env.VITE_API_URL}/task/google-calendar/connect?userId=${user_data.iUser_id}`;
+
+  window.location.href = url;
+};
+
+
+
+const disconnectGCal = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/disconnect`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    setGcalConnected(false);
+    setSnackbar({
+      open: true,
+      message: '✅ Google Calendar disconnected!',
+      severity: 'success'
+    });
+  } catch (error) {
+    setSnackbar({
+      open: true,
+      message: 'Disconnect failed',
+      severity: 'error'
+    });
+  }
+};
   const dynamicPermission = useMemo(() => {
     return userModules.filter(
       (attr) => 
@@ -797,7 +890,7 @@ const CalendarView = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const paginatedCurrentItems = currentTabItems.slice(indexOfFirstItem, indexOfLastItem);
-  const navigate = useNavigate();
+
   
   const totalPages = Math.ceil(currentTabItems.length / itemsPerPage);
 
@@ -978,7 +1071,49 @@ const CalendarView = () => {
       <div >
        <div className="flex flex-col lg:flex-row w-full h-auto p-4 gap-8">
           {/* LEFT HALF: Calendar */}
-         <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6  lg:h-[450px] flex flex-col order-1 lg:order-1">
+<div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6 min-h-[450px] flex flex-col order-1 lg:order-1">
+         <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          📅 Google Calendar Sync
+        </h3>
+      </div>
+      
+      {checkingGcalStatus ? (
+        <div className="flex items-center gap-2 text-blue-600 bg-blue-100 px-3 py-1.5 rounded-full">
+          <CircularProgress size={18} />
+          <span className="text-sm font-medium">Checking...</span>
+        </div>
+      ) : gcalConnected ? (
+        <div className="flex items-center gap-3">
+          <span className="text-green-600 bg-green-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1">
+            ✅ Connected
+          </span>
+          <button
+            onClick={disconnectGCal}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+          >
+            Disconnect
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={connectGCal}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+        >
+          🔗 Connect Google Calendar
+        </button>
+      )}
+    </div>
+    
+    {gcalConnected && (
+      <p className="text-xs text-gray-500 mt-2">
+        All new calendar events will sync automatically to your Google Calendar
+      </p>
+    )}
+  </div>
             <Calendar
               className="w-full border border-white [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center"
               onChange={(newDate) => {
@@ -1020,24 +1155,23 @@ const CalendarView = () => {
               )}
             />
             {/* New buttons section */}
-    <div className="flex sm:flex-row gap-3 mt-auto pt-4 pb-4 border-t border-gray-200">
-
-              <button
-                onClick={() => setOpenDrawer(true)}
-                className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md flex-1"
-              >
-                <FaPlus className="mr-2" />
-                Calendar Event
-              </button>
-              <button
-                onClick={() => window.open("https://meet.google.com/landing", "_blank")}
-                className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md "
-              >
-                <b className="text-white font-bold mr-1">G</b>
-                <span>Create Meet</span>
-              </button>
-            </div>
-          </div>
+<div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200 mt-4">
+    <button
+      onClick={() => setOpenDrawer(true)}
+      className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-xl flex items-center justify-center shadow-md h-12"
+    >
+      <FaPlus className="mr-2" />
+      Calendar Event
+    </button>
+    <button
+      onClick={() => window.open("https://meet.google.com/landing", "_blank")}
+      className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-xl flex items-center justify-center shadow-md h-12"
+    >
+      <b className="text-white font-bold mr-1">G</b>
+      <span>Create Meet</span>
+    </button>
+  </div>
+</div>
 
           {/* Tab view with cards */}
        <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6 h-96 lg:h-[450px] flex flex-col order-1 lg:order-2 mt-4 lg:mt-0">
@@ -1415,6 +1549,9 @@ const CalendarView = () => {
 };
 
 export default CalendarView;
+
+
+
 
 
 
@@ -2292,6 +2429,13 @@ export default CalendarView;
 //   }, [selectedDate, activeTab]);
 
 //   useEffect(() => {
+//   if (selectedDate && isTaskAllowed) {
+//     fetchTasks(selectedDate); // Pre-fetch tasks for day 9 on load
+//   }
+// }, []); // Empty deps: runs once after first render
+
+
+//   useEffect(() => {
 //     const user_data = localStorage.getItem("user");
 //     if (user_data) {
 //       try {
@@ -2387,11 +2531,11 @@ export default CalendarView;
 //   const filteredTableData = getFilteredTableData();
 
 //   return (
-//     <div>
-//       <div className="flex w-full p-8 rounded-3xl bg-white/80 backdrop-blur-md shadow-sm hover:scale-[1.01] transition-transform duration-300">
-//         <div className="flex w-full h-[500px] p-4 gap-4">
+//     <div >
+//       <div >
+//        <div className="flex flex-col lg:flex-row w-full h-auto p-4 gap-8">
 //           {/* LEFT HALF: Calendar */}
-//           <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px]">
+//          <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6  lg:h-[450px] flex flex-col order-1 lg:order-1">
 //             <Calendar
 //               className="w-full border border-white [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center"
 //               onChange={(newDate) => {
@@ -2433,10 +2577,11 @@ export default CalendarView;
 //               )}
 //             />
 //             {/* New buttons section */}
-//             <div className="flex gap-4 mt-6 justify-center">
+//     <div className="flex sm:flex-row gap-3 mt-auto pt-4 pb-4 border-t border-gray-200">
+
 //               <button
 //                 onClick={() => setOpenDrawer(true)}
-//                 className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md "
+//                 className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md flex-1"
 //               >
 //                 <FaPlus className="mr-2" />
 //                 Calendar Event
@@ -2452,9 +2597,9 @@ export default CalendarView;
 //           </div>
 
 //           {/* Tab view with cards */}
-//           <div className="w-1/2 bg-white rounded-2xl shadow-lg p-6 h-[450px] flex flex-col">
+//        <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6 h-96 lg:h-[450px] flex flex-col order-1 lg:order-2 mt-4 lg:mt-0">
 //             {/* Tabs - DYNAMIC BASED ON PERMISSIONS */}
-//             <div className="flex border-b border-gray-300 mb-4 select-none">
+//             <div className="flex border-b border-gray-300 mb-4 select-none flex-wrap gap-2 lg:gap-0">
 
 //               {availableCardTabs.map(tab => (
 //               <button
@@ -2467,13 +2612,13 @@ export default CalendarView;
 //                 onClick={() => setActiveTab(tab)}
 //                 type="button"
 //               >
-//                 {tab === "reminders" && "Reminder"}
-//                 {tab === "calendarEvents" && "Calendar Event"}
+//                 {tab === "reminders" && `Reminder (${reminders.length})`}
+//                 {tab === "calendarEvents" && `Calendar Event (${calendarEvents.length})`}
 //                 {tab === "tasks" && (
 //                   /* If company_id matches the ID from env, show "Follow Up", otherwise show "Task" */
 //                   company_id === Number(import.meta.env.VITE_XCODEFIX_FLOW) 
-//                     ? "Follow Up" 
-//                     : "Task"
+//                     ? `Follow Up (${tasks.length})`
+//                     : `Task (${tasks.length})`
 //                 )}
 //               </button>
 //             ))}
@@ -2495,7 +2640,7 @@ export default CalendarView;
 //               ))} */}
 //             </div>
 //             {/* Cards container */}
-//             <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-6 pr-2">
+//             <div className="flex-1 overflow-y-auto divide-y divide-gray-200 space-y-4 pr-2">
 //               {/* {activeTab === "reminders" && isReminderAllowed && company_id !== 15 && ( */}
 //              {activeTab === "reminders" && isReminderAllowed && (
 //                 reminders.length > 0 ? (
@@ -2629,7 +2774,8 @@ export default CalendarView;
 //       </div>
 
 //       {/* TABLE SECTION WITH SEARCH */}
-//       <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10">
+//       <div className="w-full rounded-xl p-5 bg-white shadow-sm border border-gray-200 mt-10 hidden lg:block">
+
 //         {/* Search Bar for TABLE */}
 //         <div className="mb-6 flex justify-between items-center">
 //           <div className="flex items-center space-x-4">
@@ -2826,3 +2972,4 @@ export default CalendarView;
 // };
 
 // export default CalendarView;
+

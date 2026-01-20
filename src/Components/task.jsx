@@ -21,6 +21,7 @@ if (mic) {
   mic.lang = "en-US";
 }
 
+
 // Memoized Task Item Component
 const TaskItem = React.memo(({ 
   task, 
@@ -30,62 +31,77 @@ const TaskItem = React.memo(({
   onDelete, 
   onStatusChange,
   formatDateTime, 
+
+  
 }) => {
+  const isExpired  = task.task_progress === "In_progress" && task.task_date && isPast(parseISO(task.task_date));
+  const statusLabelMap = {
+    Completed: {
+    label: "Completed",
+    className: "text-green-600 font-semibold",
+  },
+  On_hold: {
+    label: "On Hold",
+    className: "text-yellow-600 font-semibold",
+  },
+  In_progress: {
+    label: "In Progress",
+    className: "text-blue-600 font-semibold",
+  },
+  }
   return (
     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
       <div className="flex justify-between items-center gap-3">
-  <span className="font-semibold text-base sm:text-lg text-gray-900">
-    {task.ctitle}
-  </span>
-  <div >
-    {(canEdit || canDelete) && (
-          <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-            <button
-              onClick={() => canEdit ? onEdit(task) : null}
-              className={`
-                text-gray-400 hover:text-blue-500 transition-colors duration-200
-                ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-              `}
-              title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-              disabled={!canEdit}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-            {canDelete && ( 
-              <button
-                onClick={() => onDelete(task.itask_id)}
-                className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-                title="Delete task"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-          <select
-    value={task.task_progress || "In_progress"}
-    onChange={(e) =>
-      onStatusChange(task.itask_id, e.target.value)
-    }
-    className={`
-      text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
-      ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
-      ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
-      ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
-    `}
-  >
-    <option value="In_progress">In Progress</option>
-    <option value="On_hold">On Hold</option>
-    <option value="Completed">Completed</option>
-  </select>
-  </div>
-
-</div>
-
+        <span className="font-semibold text-base sm:text-lg text-gray-900">
+          {task.ctitle}
+        </span>
+        <div >
+          {(canEdit || canDelete) && (
+                <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+                  <button
+                    onClick={() => canEdit ? onEdit(task) : null}
+                    className={`
+                      text-gray-400 hover:text-blue-500 transition-colors duration-200
+                      ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
+                    `}
+                    title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
+                    disabled={!canEdit}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  {canDelete && ( 
+                    <button
+                      onClick={() => onDelete(task.itask_id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                      title="Delete task"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+                <select
+          value={task.task_progress || "In_progress"}
+          onChange={(e) =>
+            onStatusChange(task.itask_id, e.target.value)
+          }
+          className={`
+            text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
+            ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+            ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+            ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+          `}
+        >
+          <option value="In_progress">In Progress</option>
+          <option value="On_hold">On Hold</option>
+          <option value="Completed">Completed</option>
+        </select>
+        </div>
+      </div>
       
       <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
         {task.ctask_content}
@@ -101,10 +117,30 @@ const TaskItem = React.memo(({
           {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
         </p>
       </div>
+
       
-      <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
-        Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
-      </p>
+      
+    <p className="text-xs mt-2 italic text-gray-700 flex items-center gap-2 flex-wrap">
+      <span>
+        Due on: {formatDateTime(task.task_date)}
+      </span>
+
+      {isExpired ? (
+        <span className="text-red-600 font-bold">
+          • Expired
+        </span>
+      ) : (
+        <span
+          className={
+            statusLabelMap[task.task_progress]?.className
+          }
+        >
+          • {statusLabelMap[task.task_progress]?.label}
+        </span>
+      )}
+    </p>
+
+
       
       <p className="text-xs text-gray-900 mt-1 italic break-words">
         {task.dmodified_dt
@@ -138,6 +174,7 @@ const Tasks = ({ onCountChange }) => {
   const formRef = useRef(null);
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
+
   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",
@@ -307,7 +344,7 @@ const Tasks = ({ onCountChange }) => {
       }
     );
 
-    //  UI instant update
+    // UI instant update
     setTasks(prev =>
       prev.map(t =>
         t.itask_id === taskId
@@ -596,7 +633,6 @@ const Tasks = ({ onCountChange }) => {
 
 export default Tasks;
 
-
 // import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from "react";
 // import { useParams } from "react-router-dom";
 // import { usePopup } from "../context/PopupContext";
@@ -627,15 +663,17 @@ export default Tasks;
 //   canDelete, 
 //   onEdit, 
 //   onDelete, 
-//   formatDateTime 
+//   onStatusChange,
+//   formatDateTime, 
 // }) => {
 //   return (
 //     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
-//       <div className="flex justify-between items-start gap-2">
-//         <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
-//           {task.ctitle}
-//         </span>
-//         {(canEdit || canDelete) && (
+//       <div className="flex justify-between items-center gap-3">
+//   <span className="font-semibold text-base sm:text-lg text-gray-900">
+//     {task.ctitle}
+//   </span>
+//   <div >
+//     {(canEdit || canDelete) && (
 //           <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
 //             <button
 //               onClick={() => canEdit ? onEdit(task) : null}
@@ -663,7 +701,26 @@ export default Tasks;
 //             )}
 //           </div>
 //         )}
-//       </div>
+//           <select
+//     value={task.task_progress || "In_progress"}
+//     onChange={(e) =>
+//       onStatusChange(task.itask_id, e.target.value)
+//     }
+//     className={`
+//       text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
+//       ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+//       ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+//       ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+//     `}
+//   >
+//     <option value="In_progress">In Progress</option>
+//     <option value="On_hold">On Hold</option>
+//     <option value="Completed">Completed</option>
+//   </select>
+//   </div>
+
+// </div>
+
       
 //       <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
 //         {task.ctask_content}
@@ -689,6 +746,7 @@ export default Tasks;
 //           ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
 //           : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
 //       </p>
+     
 //     </div>
 //   );
 // });
@@ -715,7 +773,6 @@ export default Tasks;
 //   const formRef = useRef(null);
 //   const searchInputRef = useRef(null);
 //   const tasksContainerRef = useRef(null);
-
 //   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 //   const [formData, setFormData] = useState({
 //     ctitle: "",
@@ -872,6 +929,32 @@ export default Tasks;
 //       setIsListening(false);
 //     }
 //   }, [showForm, isSpecialCompany, isMobile]);
+
+//   const handleStatusChange = async (taskId, newStatus) => {
+//   try {
+//     await axios.put(
+//       `${ENDPOINTS.TASK}/${taskId}`,
+//       {task_progress: newStatus },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+
+//     //  UI instant update
+//     setTasks(prev =>
+//       prev.map(t =>
+//         t.itask_id === taskId
+//           ? { ...t, task_progress: newStatus }
+//           : t
+//       )
+//     );
+//   } catch (error) {
+//     showPopup("Error", "Status update failed", "error");
+//   }
+// };
+
 
 //   useEffect(() => {
 //     document.addEventListener('mousedown', handleClickOutside);
@@ -1072,7 +1155,7 @@ export default Tasks;
 //       {loadingTasks ? <div className="text-center py-8 animate-pulse text-gray-500">Loading...</div> : 
 //         filteredTasks.length === 0 ? <p className="text-center text-gray-400 py-8">No tasks found.</p> :
 //         currentTasks.map(task => (
-//           <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} />
+//           <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} />
 //         ))
 //       }
 //       {totalPages > 1 && (

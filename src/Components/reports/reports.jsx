@@ -80,6 +80,15 @@ const cardsData = [
     reportKey: "Reccuring-Client"
 
   },
+
+   {
+    title: "Sales Target vs Achievement",
+    description: "Monitor sales targets, achieved revenue, and performance status for individual sales users or teams",
+    route: "/sales-target-achievement",
+    image: "/illustrations/sales_target_vs_achievement.svg",
+    reportKey: "Sales-Target-Achievement"
+  },
+
 ];
 
 const CardsPage = () => {

@@ -1051,11 +1051,10 @@ const getTabLabels = () => {
 const renderTabContent = () => {
   const tabLabels = getTabLabels();
   if (!tabLabels.length) return <div>No accessible tabs for your permissions</div>;
-  
   const currentTab = tabLabels[tabIndex];
   if (!currentTab) return <div>Invalid tab selection</div>;
   
-  // ✅ Use currentTab.key instead of currentTab (object)
+  //  Use currentTab.key instead of currentTab (object)
   switch (currentTab.key) {
     case "Task":
     case "Follow-up":
@@ -1077,6 +1076,12 @@ const renderTabContent = () => {
 
   return (
     <>
+     <div style={{ display: "none" }}>
+      <Tasks leadId={leadId} onCountChange={setTaskCount} />
+      <Comments leadId={leadId} onCountChange={setCommentCount} />
+      <RemainderPage leadId={leadId} onCountChange={setReminderCount} />
+    </div>
+
     <div className="flex min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
       
       {/* DESKTOP: Always Full ProfileCard */}

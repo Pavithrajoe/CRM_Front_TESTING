@@ -75,127 +75,318 @@ const Xcode_LeadCardViewPage = () => {
     const token = localStorage.getItem("token"); 
 
     //fot attribute access for import and website lead
-    const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
-    const hasImportAccess = user_attributes.some(
-        (attr) => attr.attribute_name === "Import" && attr.bactive === true
-    );
-    const hasWebsiteLeadAccess = user_attributes.some(
-        (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
-    );
+     const user_attributes = useMemo(() => { return JSON.parse(localStorage.getItem("user_attributes")) || [];}, []);
+     const hasImportAccess = user_attributes.some( (attr) => attr.attribute_name === "Import" && attr.bactive === true );
+     const hasAllLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "All Leads" && attr.bactive === true), [user_attributes]);
+     const hasActiveLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Active Leads" && attr.bactive === true), [user_attributes]);
+     const hasWebsiteLeadAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Website Lead" && attr.bactive === true), [user_attributes]);
+    
+    // const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
+    // const hasImportAccess = user_attributes.some(
+    //     (attr) => attr.attribute_name === "Import" && attr.bactive === true
+    // );
+    // const hasWebsiteLeadAccess = user_attributes.some(
+    //     (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
+    // );
 
-    const dataToDisplay = useMemo(() => {
-        let data = [];
-        if (selectedFilter === 'assignedToMe') {
-            data = assignedLeads;
-        } else if (selectedFilter === 'lost') {
-            data = lostLeads;
-        } else {
-            data = allLeads;
+     useEffect(() => {
+        let nextFilter = selectedFilter;
+    
+        if (selectedFilter === "all" && !hasAllLeadsAccess) {
+          if (hasActiveLeadsAccess) nextFilter = "leads";
+          else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
         }
-
+    
+        if (selectedFilter === "leads" && !hasActiveLeadsAccess) {
+          if (hasAllLeadsAccess) nextFilter = "all";
+          else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
+        }
+    
+        if (selectedFilter === "websiteLeads" && !hasWebsiteLeadAccess) {
+          if (hasAllLeadsAccess) nextFilter = "all";
+          else if (hasActiveLeadsAccess) nextFilter = "leads";
+        }
+    
+        if (nextFilter !== selectedFilter) {
+          setSelectedFilter(nextFilter);
+        }
+     }, [selectedFilter, hasAllLeadsAccess, hasActiveLeadsAccess, hasWebsiteLeadAccess]);
+    
+    
+      // Proper tab filtration logic
+      const dataToDisplay = useMemo(() => {
+        let data = [];
+    
+        //BASE DATA ACCESS CHECK
+        if (selectedFilter === "assignedToMe") {
+          data = assignedLeads;
+        } else if (selectedFilter === "lost") {
+          data = lostLeads;
+        } else if (selectedFilter === "all") {
+          if (!hasAllLeadsAccess) return [];
+          data = allLeads;
+        } else if (selectedFilter === "leads") {
+          if (!hasActiveLeadsAccess) return [];
+          data = allLeads;
+        } else if (selectedFilter === "websiteLeads") {
+          if (!hasWebsiteLeadAccess) return [];
+          data = allLeads;
+        } else {
+          data = allLeads;
+        }
+    
+        // FILTERING LOGIC
         return data.filter((item) => {
-            const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesSearch =
-                match(item.clead_name) ||
-                match(item.corganization || item.c_organization) ||
-                match(item.cemail || item.c_email) ||
-                match(item.iphone_no || item.c_phone) || match(item.lead_potential?.clead_name) || match(item.lead_status?.clead_name) ||  match(item.user?.cFull_name);
-                (selectedFilter === 'assignedToMe' && match(item.iassigned_by_name)) ||
-                (selectedFilter === 'assignedToMe' && match(item.statusDisplay));
-
-            let dateToFilter = item.dmodified_dt || item.d_modified_date;
-            if (selectedFilter === 'assignedToMe') {
-                dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+          const match = (text) =>
+            String(text || "")
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase());
+    
+          const matchesSearch =
+            match(item.clead_name) ||
+            match(item.corganization || item.c_organization) ||
+            match(item.cemail || item.c_email) ||
+            match(item.iphone_no || item.c_phone) ||
+            (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
+            (selectedFilter === "assignedToMe" && match(item.statusDisplay));
+    
+          let dateToFilter = item.dmodified_dt || item.d_modified_date;
+          if (selectedFilter === "assignedToMe") {
+            dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+          }
+    
+          const isWithinDateRange = (date) => {
+            if (!date) return true;
+            const d = new Date(date);
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate
+              ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+              : null;
+            return (!from || d >= from) && (!to || d <= to);
+          };
+    
+          const matchesDate = isWithinDateRange(dateToFilter);
+    
+          let matchesModalFilters = true;
+    
+          // MODAL FILTER ACCESS CHECK
+          if (
+            (selectedFilter === "all" && hasAllLeadsAccess) ||
+            (selectedFilter === "leads" && hasActiveLeadsAccess) ||
+            (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
+          ) {
+            if (selectedPotential) {
+              const itemPotential =
+                item.lead_potential?.clead_name || item.potentialDisplay;
+              if (itemPotential !== selectedPotential)
+                matchesModalFilters = false;
             }
-            
-            const isWithinDateRange = (date) => {
-                if (!date) return true;
-                const d = new Date(date);
-                const from = fromDate ? new Date(fromDate) : null;
-                const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
-                return (!from || d >= from) && (!to || d <= to);
-            };
-            
-            const matchesDate = isWithinDateRange(dateToFilter);
-            let matchesModalFilters = true;
-            if (selectedFilter === 'all' || selectedFilter === 'leads' || selectedFilter === 'websiteLeads') {
-                // Filter by Potential
-                if (selectedPotential) {
-                    const itemPotential = item.lead_potential?.clead_name || item.potentialDisplay;
-                    if (itemPotential !== selectedPotential) {
-                        matchesModalFilters = false;
-                    }
-                }
-                
-                // Filter by Status
-                if (selectedStatus) {
-                    const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
-                    if (itemStatus !== selectedStatus) {
-                        matchesModalFilters = false;
-                    }
-                }
-                
-                // Filter by Source
-                if (selectedSource) {
-                    if (item.lead_source_id !== Number(selectedSource)) {
-                        matchesModalFilters = false;
-                    }
-                }
-                
-                // Filter by Industry
-                if (selectedIndustry) {
-                    if (item.cindustry_id !== Number(selectedIndustry)) {
-                        matchesModalFilters = false;
-                    }
-                }
-                
-                // Filter by Service
-                if (selectedService) {
-                    if (item.iservice_id !== Number(selectedService)) {
-                        matchesModalFilters = false;
-                    }
-                }
+    
+            if (selectedStatus) {
+              const itemStatus =
+                item.lead_status?.clead_name || item.statusDisplay;
+              if (itemStatus !== selectedStatus)
+                matchesModalFilters = false;
             }
-
-            // Tab-specific business logic
-            const isConverted = item.bisConverted === true || item.bisConverted === 'true';
-            const isActive = item.bactive === true || item.bactive === 'true';
-            const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
-
-            if (selectedFilter === 'all') {
-                return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
-            } else if (selectedFilter === 'leads') {
-                return matchesSearch && matchesDate && matchesModalFilters && isActive && !isConverted && !isWebsite;
-            } else if (selectedFilter === 'websiteLeads') {
-                return matchesSearch && matchesDate && matchesModalFilters && isWebsite && isActive;
-            } else if (selectedFilter === 'lost') {
-                if (isActive === false) {
-                    const isLeadLost = !isConverted && showLostLeads;
-                    const isDealLost = isConverted && showLostDeals;
-                    return matchesSearch && matchesDate && (isLeadLost || isDealLost);
-                }
-                return false;
-            } else if (selectedFilter === 'assignedToMe') {
-                return matchesSearch && matchesDate && isActive;
+    
+            if (selectedSource) {
+              if (item.lead_source_id !== Number(selectedSource))
+                matchesModalFilters = false;
             }
-            return matchesSearch && matchesDate && matchesModalFilters;
+    
+            if (selectedIndustry) {
+              if (item.cindustry_id !== Number(selectedIndustry))
+                matchesModalFilters = false;
+            }
+    
+            if (selectedService) {
+              if (item.iservice_id !== Number(selectedService))
+                matchesModalFilters = false;
+            }
+          }
+    
+          const isConverted =
+            item.bisConverted === true || item.bisConverted === "true";
+          const isActive =
+            item.bactive === true || item.bactive === "true";
+          const isWebsite =
+            item.website_lead === true ||
+            item.website_lead === "true" ||
+            item.website_lead === 1;
+    
+          if (selectedFilter === "all") {
+            return (
+              hasAllLeadsAccess &&
+              matchesSearch &&
+              matchesDate &&
+              matchesModalFilters &&
+              !isConverted
+            );
+          } else if (selectedFilter === "leads") {
+            return (
+              hasActiveLeadsAccess &&
+              matchesSearch &&
+              matchesDate &&
+              matchesModalFilters &&
+              isActive &&
+              !isConverted &&
+              !isWebsite
+            );
+          } else if (selectedFilter === "websiteLeads") {
+            return (
+              hasWebsiteLeadAccess &&
+              matchesSearch &&
+              matchesDate &&
+              matchesModalFilters &&
+              isWebsite &&
+              isActive
+            );
+          } else if (selectedFilter === "lost") {
+            if (isActive === false) {
+              const isLeadLost = !isConverted && showLostLeads;
+              const isDealLost = isConverted && showLostDeals;
+              return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+            }
+            return false;
+          } else if (selectedFilter === "assignedToMe") {
+            return matchesSearch && matchesDate && isActive;
+          }
+    
+          return matchesSearch && matchesDate && matchesModalFilters;
         });
-    }, [
-        selectedFilter, 
-        assignedLeads, 
-        lostLeads, 
-        allLeads, 
-        searchTerm, 
-        fromDate, 
-        toDate, 
-        showLostLeads, 
+      }, [
+        selectedFilter,
+        assignedLeads,
+        lostLeads,
+        allLeads,
+        searchTerm,
+        fromDate,
+        toDate,
+        showLostLeads,
         showLostDeals,
         selectedPotential,
         selectedStatus,
         selectedSource,
         selectedIndustry,
-        selectedService
-    ]);
+        selectedService,
+        hasAllLeadsAccess,
+        hasActiveLeadsAccess,
+        hasWebsiteLeadAccess
+      ]);
+
+    // const dataToDisplay = useMemo(() => {
+    //     let data = [];
+    //     if (selectedFilter === 'assignedToMe') {
+    //         data = assignedLeads;
+    //     } else if (selectedFilter === 'lost') {
+    //         data = lostLeads;
+    //     } else {
+    //         data = allLeads;
+    //     }
+
+    //     return data.filter((item) => {
+    //         const match = (text) => String(text || '').toLowerCase().includes(searchTerm.toLowerCase());
+    //         const matchesSearch =
+    //             match(item.clead_name) ||
+    //             match(item.corganization || item.c_organization) ||
+    //             match(item.cemail || item.c_email) ||
+    //             match(item.iphone_no || item.c_phone) || match(item.lead_potential?.clead_name) || match(item.lead_status?.clead_name) ||  match(item.user?.cFull_name);
+    //             (selectedFilter === 'assignedToMe' && match(item.iassigned_by_name)) ||
+    //             (selectedFilter === 'assignedToMe' && match(item.statusDisplay));
+
+    //         let dateToFilter = item.dmodified_dt || item.d_modified_date;
+    //         if (selectedFilter === 'assignedToMe') {
+    //             dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+    //         }
+            
+    //         const isWithinDateRange = (date) => {
+    //             if (!date) return true;
+    //             const d = new Date(date);
+    //             const from = fromDate ? new Date(fromDate) : null;
+    //             const to = toDate ? new Date(new Date(toDate).setHours(23, 59, 59, 999)) : null;
+    //             return (!from || d >= from) && (!to || d <= to);
+    //         };
+            
+    //         const matchesDate = isWithinDateRange(dateToFilter);
+    //         let matchesModalFilters = true;
+    //         if (selectedFilter === 'all' || selectedFilter === 'leads' || selectedFilter === 'websiteLeads') {
+    //             // Filter by Potential
+    //             if (selectedPotential) {
+    //                 const itemPotential = item.lead_potential?.clead_name || item.potentialDisplay;
+    //                 if (itemPotential !== selectedPotential) {
+    //                     matchesModalFilters = false;
+    //                 }
+    //             }
+                
+    //             // Filter by Status
+    //             if (selectedStatus) {
+    //                 const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
+    //                 if (itemStatus !== selectedStatus) {
+    //                     matchesModalFilters = false;
+    //                 }
+    //             }
+                
+    //             // Filter by Source
+    //             if (selectedSource) {
+    //                 if (item.lead_source_id !== Number(selectedSource)) {
+    //                     matchesModalFilters = false;
+    //                 }
+    //             }
+                
+    //             // Filter by Industry
+    //             if (selectedIndustry) {
+    //                 if (item.cindustry_id !== Number(selectedIndustry)) {
+    //                     matchesModalFilters = false;
+    //                 }
+    //             }
+                
+    //             // Filter by Service
+    //             if (selectedService) {
+    //                 if (item.iservice_id !== Number(selectedService)) {
+    //                     matchesModalFilters = false;
+    //                 }
+    //             }
+    //         }
+
+    //         // Tab-specific business logic
+    //         const isConverted = item.bisConverted === true || item.bisConverted === 'true';
+    //         const isActive = item.bactive === true || item.bactive === 'true';
+    //         const isWebsite = item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1;
+
+    //         if (selectedFilter === 'all') {
+    //             return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
+    //         } else if (selectedFilter === 'leads') {
+    //             return matchesSearch && matchesDate && matchesModalFilters && isActive && !isConverted && !isWebsite;
+    //         } else if (selectedFilter === 'websiteLeads') {
+    //             return matchesSearch && matchesDate && matchesModalFilters && isWebsite && isActive;
+    //         } else if (selectedFilter === 'lost') {
+    //             if (isActive === false) {
+    //                 const isLeadLost = !isConverted && showLostLeads;
+    //                 const isDealLost = isConverted && showLostDeals;
+    //                 return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+    //             }
+    //             return false;
+    //         } else if (selectedFilter === 'assignedToMe') {
+    //             return matchesSearch && matchesDate && isActive;
+    //         }
+    //         return matchesSearch && matchesDate && matchesModalFilters;
+    //     });
+    // }, [
+    //     selectedFilter, 
+    //     assignedLeads, 
+    //     lostLeads, 
+    //     allLeads, 
+    //     searchTerm, 
+    //     fromDate, 
+    //     toDate, 
+    //     showLostLeads, 
+    //     showLostDeals,
+    //     selectedPotential,
+    //     selectedStatus,
+    //     selectedSource,
+    //     selectedIndustry,
+    //     selectedService
+    // ]);
 
     // for potential bg colour
     const getPotentialColor = (potentialName) => {
@@ -992,18 +1183,12 @@ const Xcode_LeadCardViewPage = () => {
                         <span className="font-medium text-blue-800 mr-4">
                             {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} selected
                         </span>
-                        <button
-                            onClick={() => setShowAssignModal(true)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 flex items-center"
-                        >
+                        <button onClick={() => setShowAssignModal(true)} className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 flex items-center" >
                             <Users size={16} className="mr-2" />
                             Assign Selected
                         </button>
                     </div>
-                    <button
-                        onClick={() => setSelectedLeads([])}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
+                    <button onClick={() => setSelectedLeads([])} className="text-blue-600 hover:text-blue-800 text-sm font-medium" >
                         Clear Selection
                     </button>
                 </div>
@@ -1036,39 +1221,42 @@ const Xcode_LeadCardViewPage = () => {
                         <RotateCw size={18} />
                     </button>
 
-                    <button
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
-                    >
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`} >
                         <LayoutGrid size={18} />
                     </button>
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
-                    >
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`} >
                         <List size={18} />
                     </button>
-                    <button
-                        onClick={() => setShowFilterModal(true)}
-                        className={`p-2 rounded-full ${
-                            showFilterModal ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
-                    >
+                    <button onClick={() => setShowFilterModal(true)} className={`p-2 rounded-full ${ 
+                        showFilterModal ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200' }`} >
                         <Filter size={18} />
                     </button>
                 </div>
             </div>
 
+            {/*  for tab  */}
+
             <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
                 <div className="flex flex-wrap gap-2">
-                    {[
-                        'all',
-                        'leads',
-                        // ...(websiteActive ? ['websiteLeads'] : []),
+                    {
+                    // [
+                    //     'all',
+                    //     'leads',
+                    //     // ...(websiteActive ? ['websiteLeads'] : []),
+                    //     ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
+                    //     'assignedToMe',
+                    //     'lost'
+                    // ]
+                    [
+                        // 'all',
+                        // 'activeLeads',
+                        ...(hasAllLeadsAccess ? ['all'] : []),
+                        ...(hasActiveLeadsAccess ? ['activeLeads'] : []),
                         ...(hasWebsiteLeadAccess ? ['websiteLeads'] : []),
                         'assignedToMe',
                         'lost'
-                    ].map((filterKey) => (
+                    ]
+                    .map((filterKey) => (
                         <button
                             key={filterKey}
                             onClick={() => {
@@ -1090,15 +1278,23 @@ const Xcode_LeadCardViewPage = () => {
                                     : 'bg-gray-50 text-gray-700 hover:bg-gray-300'
                             }`}
                         >
-                            {filterKey === 'all'
-                                ? 'All Leads'
-                                : filterKey === 'leads'
-                                    ? 'My Active Leads'
-                                    : filterKey === 'websiteLeads'
-                                        ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
-                                        : filterKey === 'lost'
-                                            ? 'Lost'
-                                            : 'Assigned to Me'}
+
+                            {
+                                filterKey === 'all' ? 'All Leads' :
+                                filterKey === 'activeLeads' ? 'My Active Leads' :
+                                filterKey === 'websiteLeads' ? (
+                                    <>Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></>
+                                ) :
+                                filterKey === 'assignedToMe' ? 'Assigned to Me' :
+                                filterKey === 'lost' ? 'Lost' :
+                                ''
+                            }
+
+                             {/* { filterKey === 'all' ? 'All Leads' : 
+                               filterKey === 'leads' ? 'My Active Leads': 
+                               filterKey === 'websiteLeads' ? <> Website Leads <FaCrown className="inline ml-1 text-yellow-600" size={18} /></> : 
+                               filterKey === 'lost' ? 'Lost' : 'Assigned to Me'
+                             }  */}
                         </button>
                     ))}
                 </div>
@@ -1109,12 +1305,6 @@ const Xcode_LeadCardViewPage = () => {
                   </button>
                 )}
 
-                {/* {roleID && ( <button onClick={() => setShowImportModal(true)}
-                className='bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700 transition whitespace-nowrap'
-                    >
-                        Import Leads
-                    </button>  
-                )} */}
             </div>
 
             {selectedFilter === 'lost' && (
@@ -1173,36 +1363,25 @@ const Xcode_LeadCardViewPage = () => {
                     <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
                         <h2 className="text-lg font-medium text-gray-800">Assign Selected Leads</h2>
                         
-                        <p className="text-sm text-gray-600">
-                            Assign {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} to:
-                        </p>
+                        <p className="text-sm text-gray-600"> Assign {selectedLeads.length} lead{selectedLeads.length !== 1 ? 's' : ''} to: </p>
                         
                         {assignError && (
-                            <div className="text-red-600 text-sm p-3 bg-red-50 rounded-md border border-red-200">
-                                {assignError}
-                            </div>
+                            <div className="text-red-600 text-sm p-3 bg-red-50 rounded-md border border-red-200"> {assignError} </div>
                         )}
                         
                         {assignSuccess && (
-                            <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md">
-                                Leads assigned successfully!
-                            </div>
+                            <div className="text-green-600 text-sm p-2 bg-green-50 rounded-md"> Leads assigned successfully! </div>
                         )}
                         
                         <label className="block text-sm text-gray-700">
                             Select User
-                            <select
-                                value={selectedUser}
-                                onChange={(e) => setSelectedUser(e.target.value)}
-                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
+                            <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
                                 disabled={assignLoading || assignSuccess}
                             >
                                 <option value="">Select a user</option>
                                 {usersList.length > 0 ? (
                                     usersList.map(user => (
-                                        <option key={user.iUser_id} value={user.iUser_id}>
-                                            {user.cFull_name || `User ${user.iUser_id}`}
-                                        </option>
+                                        <option key={user.iUser_id} value={user.iUser_id}> {user.cFull_name || `User ${user.iUser_id}`} </option>
                                     ))
                                 ) : (
                                     <option value="" disabled>No users available</option>
@@ -1212,22 +1391,12 @@ const Xcode_LeadCardViewPage = () => {
                         
                         <div className="flex justify-end gap-2 pt-4">
                             <button
-                                onClick={() => {
-                                    setShowAssignModal(false);
-                                    setSelectedUser('');
-                                    setAssignError(null);
-                                    setAssignSuccess(false);
-                                }}
-                                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                disabled={assignLoading}
+                                onClick={() => { setShowAssignModal(false); setSelectedUser(''); setAssignError(null); setAssignSuccess(false); }}
+                                className="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300" disabled={assignLoading}
                             >
                                 Cancel
                             </button>
-                            <button 
-                                onClick={handleBulkAssign}
-                                disabled={!selectedUser || assignLoading || assignSuccess}
-                                className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
+                            <button onClick={handleBulkAssign} disabled={!selectedUser || assignLoading || assignSuccess} className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" >
                                 {assignLoading ? (
                                     <span className="flex items-center">
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

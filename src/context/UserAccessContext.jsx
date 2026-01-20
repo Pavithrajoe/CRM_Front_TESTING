@@ -26,6 +26,17 @@ export const UserAccessProvider = ({ children, data }) => {
     }
   }, [data]);
 
+
+  useEffect(() => {
+  if (data) {
+    console.log("Login Data from API:", data);
+  } else {
+    const stored = localStorage.getItem("loginResponse");
+    console.log("Login Data from localStorage:", JSON.parse(stored));
+  }
+}, [data]);
+
+
   return (
     <UserAccessContext.Provider value={{ userAccess, userModules }}>
       {children}

@@ -72,7 +72,6 @@ const LoginPage = () => {
         window.location.href = '/leaddashboard';
       } 
       else if (response.status === 403 || data.error === "FREE_TRIAL_EXPIRED") {
-        //  Show modal for trial expired
         setShowTrialModal(true);
       } 
       else {
@@ -100,9 +99,7 @@ const LoginPage = () => {
         <p className="text-gray-600 mb-6">
           Your 1-month free CRM access has ended. Please contact <strong>Inklidox Technologies</strong>.
         </p>
-        <button
-          onClick={onClose}
-          className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+        <button onClick={onClose} className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
         >
           OK
         </button>
@@ -122,11 +119,7 @@ const LoginPage = () => {
         <div className={`w-full max-w-[1100px] bg-white rounded-3xl shadow-xl flex flex-col md:flex-row overflow-hidden transition-all duration-300 ${showTopCard ? 'blur-sm pointer-events-none select-none' : ''}`}>
           {/* Left Image */}
           <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-500 to-indigo-600 flex justify-center items-center p-6">
-            <img
-              src="/images/login/login.svg"
-              alt="Illustration"
-              className="w-[250px] md:w-[300px] z-10"
-            />
+            <img src="/images/login/login.svg" alt="Illustration" className="w-[250px] md:w-[300px] z-10" />
           </div>
 
           {/* Right Form */}
@@ -190,13 +183,17 @@ const LoginPage = () => {
                   ) : 'Login'}
                 </button>
 
-                <button
+                {/* <button
                   type="button"
                   onClick={() => window.open('/CreateAnAccount', '_blank')}
                   className="mt-4 text-sm text-blue-600 hover:underline"
                 >
                   Create an Account
-                </button>  
+                </button>   */}
+
+                <button type="button" onClick={() => window.open('/request-demo', '_blank')} className="mt-4 text-sm text-blue-600 hover:underline" >
+                  Request a Demo
+                </button>
 
                 {loginError && <LoginFailedAlert message={loginError} />}
               </div>
@@ -439,13 +436,13 @@ export default LoginPage;
 //                   Create an Account
 //                 </button> 
 
-//                 <button
-//                   type="button"
-//                   onClick={() => window.open('/request-demo', '_blank')}
-//                   className="mt-4 text-sm text-blue-600 hover:underline"
-//                 >
-//                   Request a Demo
-//                 </button>
+                // <button
+                //   type="button"
+                //   onClick={() => window.open('/request-demo', '_blank')}
+                //   className="mt-4 text-sm text-blue-600 hover:underline"
+                // >
+                //   Request a Demo
+                // </button>
 
 //                 {loginError && <LoginFailedAlert message={loginError} />}
 //               </div>

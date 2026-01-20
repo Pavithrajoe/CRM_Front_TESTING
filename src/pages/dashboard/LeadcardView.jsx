@@ -14,28 +14,23 @@ import { fetchLeads } from "../../Redux/leadActions";
 import { GlobUserContext } from "../../context/userContex";
 import { Menu, ChevronDown } from 'lucide-react';
 const LeadCardViewPage = () => {
-  const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
-  const hasImportAccess = user_attributes.some(
-    (attr) => attr.attribute_name === "Import" && attr.bactive === true
-  );
-  const hasWebsiteLeadAccess = user_attributes.some(
-    (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true
-  );
+  // const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
+  const user_attributes = useMemo(() => { return JSON.parse(localStorage.getItem("user_attributes")) || [];}, []);
+  const hasImportAccess = user_attributes.some( (attr) => attr.attribute_name === "Import" && attr.bactive === true );
+  const hasAllLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "All Leads" && attr.bactive === true), [user_attributes]);
+  const hasActiveLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Active Leads" && attr.bactive === true), [user_attributes]);
+  const hasWebsiteLeadAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Website Lead" && attr.bactive === true), [user_attributes]);
+
+  // const hasAllLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "All Leads" && attr.bactive === true );
+  // const hasActiveLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "Active Leads" && attr.bactive === true );
+  // const hasWebsiteLeadAccess = user_attributes.some( (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true );
 
   const { user } = useContext(GlobUserContext);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userModules } = useUserAccess();
-  
-  // REDUX: Get loading, error, and leads data from Redux store
-  const {
-    loading,
-    error,
-    allLeads: allLeadsFromRedux,
-  } = useSelector((state) => state.leadState);
-
-  // LOCAL STATE: For UI, pagination, and filtering
+  const { loading, error, allLeads: allLeadsFromRedux,} = useSelector((state) => state.leadState);
   const [allLeads, setAllLeads] = useState([]);
   const [assignedLeads, setAssignedLeads] = useState([]);
   const [lostLeads, setLostLeads] = useState([]);
@@ -63,7 +58,6 @@ const LeadCardViewPage = () => {
   const [statuses, setStatuses] = useState([]);
   const [sources, setSources] = useState([]);
   const [displayedData, setDisplayedData] = useState([]);
-  
 
   // Bulk assignment states
   const [selectedLeads, setSelectedLeads] = useState([]);
@@ -86,7 +80,6 @@ const LeadCardViewPage = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Get page from URL or state
   const params = new URLSearchParams(location.search);
   const pageFromUrl = Number(params.get("page")) || 1;
   const pageFromState = location.state?.returnPage;
@@ -105,20 +98,54 @@ const LeadCardViewPage = () => {
     }
   }, [allLeadsFromRedux]);
 
+
+   useEffect(() => {
+    let nextFilter = selectedFilter;
+
+    if (selectedFilter === "all" && !hasAllLeadsAccess) {
+      if (hasActiveLeadsAccess) nextFilter = "leads";
+      else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
+    }
+
+    if (selectedFilter === "leads" && !hasActiveLeadsAccess) {
+      if (hasAllLeadsAccess) nextFilter = "all";
+      else if (hasWebsiteLeadAccess) nextFilter = "websiteLeads";
+    }
+
+    if (selectedFilter === "websiteLeads" && !hasWebsiteLeadAccess) {
+      if (hasAllLeadsAccess) nextFilter = "all";
+      else if (hasActiveLeadsAccess) nextFilter = "leads";
+    }
+
+    if (nextFilter !== selectedFilter) {
+      setSelectedFilter(nextFilter);
+    }
+  }, [selectedFilter, hasAllLeadsAccess, hasActiveLeadsAccess, hasWebsiteLeadAccess]);
+
+
   // Proper tab filtration logic
   const dataToDisplay = useMemo(() => {
     let data = [];
 
-    // Determine base data according to selected tab filter
+    //BASE DATA ACCESS CHECK
     if (selectedFilter === "assignedToMe") {
       data = assignedLeads;
     } else if (selectedFilter === "lost") {
       data = lostLeads;
+    } else if (selectedFilter === "all") {
+      if (!hasAllLeadsAccess) return [];
+      data = allLeads;
+    } else if (selectedFilter === "leads") {
+      if (!hasActiveLeadsAccess) return [];
+      data = allLeads;
+    } else if (selectedFilter === "websiteLeads") {
+      if (!hasWebsiteLeadAccess) return [];
+      data = allLeads;
     } else {
       data = allLeads;
     }
 
-    // Filtering logic
+    // FILTERING LOGIC
     return data.filter((item) => {
       const match = (text) =>
         String(text || "")
@@ -152,40 +179,62 @@ const LeadCardViewPage = () => {
 
       let matchesModalFilters = true;
 
+      // MODAL FILTER ACCESS CHECK
       if (
-        selectedFilter === "all" || selectedFilter === "leads" || selectedFilter === "websiteLeads"
+        (selectedFilter === "all" && hasAllLeadsAccess) ||
+        (selectedFilter === "leads" && hasActiveLeadsAccess) ||
+        (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
       ) {
         if (selectedPotential) {
           const itemPotential =
             item.lead_potential?.clead_name || item.potentialDisplay;
-          if (itemPotential !== selectedPotential) matchesModalFilters = false;
+          if (itemPotential !== selectedPotential)
+            matchesModalFilters = false;
         }
+
         if (selectedStatus) {
-          const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
-          if (itemStatus !== selectedStatus) matchesModalFilters = false;
+          const itemStatus =
+            item.lead_status?.clead_name || item.statusDisplay;
+          if (itemStatus !== selectedStatus)
+            matchesModalFilters = false;
         }
+
         if (selectedSource) {
           if (item.lead_source_id !== Number(selectedSource))
             matchesModalFilters = false;
         }
+
         if (selectedIndustry) {
           if (item.cindustry_id !== Number(selectedIndustry))
             matchesModalFilters = false;
         }
+
         if (selectedService) {
           if (item.iservice_id !== Number(selectedService))
             matchesModalFilters = false;
         }
       }
 
-      const isConverted = item.bisConverted === true || item.bisConverted === "true";
-      const isActive = item.bactive === true || item.bactive === "true";
-      const isWebsite = item.website_lead === true || item.website_lead === "true" || item.website_lead === 1;
+      const isConverted =
+        item.bisConverted === true || item.bisConverted === "true";
+      const isActive =
+        item.bactive === true || item.bactive === "true";
+      const isWebsite =
+        item.website_lead === true ||
+        item.website_lead === "true" ||
+        item.website_lead === 1;
 
       if (selectedFilter === "all") {
-        return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
+        return (
+          hasAllLeadsAccess &&
+          matchesSearch &&
+          matchesDate &&
+          matchesModalFilters &&
+          !isConverted
+        );
       } else if (selectedFilter === "leads") {
         return (
+          hasActiveLeadsAccess &&
           matchesSearch &&
           matchesDate &&
           matchesModalFilters &&
@@ -195,6 +244,7 @@ const LeadCardViewPage = () => {
         );
       } else if (selectedFilter === "websiteLeads") {
         return (
+          hasWebsiteLeadAccess &&
           matchesSearch &&
           matchesDate &&
           matchesModalFilters &&
@@ -211,6 +261,7 @@ const LeadCardViewPage = () => {
       } else if (selectedFilter === "assignedToMe") {
         return matchesSearch && matchesDate && isActive;
       }
+
       return matchesSearch && matchesDate && matchesModalFilters;
     });
   }, [
@@ -228,7 +279,134 @@ const LeadCardViewPage = () => {
     selectedSource,
     selectedIndustry,
     selectedService,
+    hasAllLeadsAccess,
+    hasActiveLeadsAccess,
+    hasWebsiteLeadAccess
   ]);
+
+  // const dataToDisplay = useMemo(() => {
+  //   let data = [];
+
+  //   // Determine base data according to selected tab filter
+  //   if (selectedFilter === "assignedToMe") {
+  //     data = assignedLeads;
+  //   } else if (selectedFilter === "lost") {
+  //     data = lostLeads;
+  //   } else {
+  //     data = allLeads;
+  //   }
+
+  //   // Filtering logic
+  //   return data.filter((item) => {
+  //     const match = (text) =>
+  //       String(text || "")
+  //         .toLowerCase()
+  //         .includes(searchTerm.toLowerCase());
+
+  //     const matchesSearch =
+  //       match(item.clead_name) ||
+  //       match(item.corganization || item.c_organization) ||
+  //       match(item.cemail || item.c_email) ||
+  //       match(item.iphone_no || item.c_phone) ||
+  //       (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
+  //       (selectedFilter === "assignedToMe" && match(item.statusDisplay));
+
+  //     let dateToFilter = item.dmodified_dt || item.d_modified_date;
+  //     if (selectedFilter === "assignedToMe") {
+  //       dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+  //     }
+
+  //     const isWithinDateRange = (date) => {
+  //       if (!date) return true;
+  //       const d = new Date(date);
+  //       const from = fromDate ? new Date(fromDate) : null;
+  //       const to = toDate
+  //         ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+  //         : null;
+  //       return (!from || d >= from) && (!to || d <= to);
+  //     };
+
+  //     const matchesDate = isWithinDateRange(dateToFilter);
+
+  //     let matchesModalFilters = true;
+
+  //     if (
+  //       selectedFilter === "all" || selectedFilter === "leads" || selectedFilter === "websiteLeads"
+  //     ) {
+  //       if (selectedPotential) {
+  //         const itemPotential =
+  //           item.lead_potential?.clead_name || item.potentialDisplay;
+  //         if (itemPotential !== selectedPotential) matchesModalFilters = false;
+  //       }
+  //       if (selectedStatus) {
+  //         const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
+  //         if (itemStatus !== selectedStatus) matchesModalFilters = false;
+  //       }
+  //       if (selectedSource) {
+  //         if (item.lead_source_id !== Number(selectedSource))
+  //           matchesModalFilters = false;
+  //       }
+  //       if (selectedIndustry) {
+  //         if (item.cindustry_id !== Number(selectedIndustry))
+  //           matchesModalFilters = false;
+  //       }
+  //       if (selectedService) {
+  //         if (item.iservice_id !== Number(selectedService))
+  //           matchesModalFilters = false;
+  //       }
+  //     }
+
+  //     const isConverted = item.bisConverted === true || item.bisConverted === "true";
+  //     const isActive = item.bactive === true || item.bactive === "true";
+  //     const isWebsite = item.website_lead === true || item.website_lead === "true" || item.website_lead === 1;
+
+  //     if (selectedFilter === "all") {
+  //       return matchesSearch && matchesDate && matchesModalFilters && !isConverted;
+  //     } else if (selectedFilter === "leads") {
+  //       return (
+  //         matchesSearch &&
+  //         matchesDate &&
+  //         matchesModalFilters &&
+  //         isActive &&
+  //         !isConverted &&
+  //         !isWebsite
+  //       );
+  //     } else if (selectedFilter === "websiteLeads") {
+  //       return (
+  //         matchesSearch &&
+  //         matchesDate &&
+  //         matchesModalFilters &&
+  //         isWebsite &&
+  //         isActive
+  //       );
+  //     } else if (selectedFilter === "lost") {
+  //       if (isActive === false) {
+  //         const isLeadLost = !isConverted && showLostLeads;
+  //         const isDealLost = isConverted && showLostDeals;
+  //         return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+  //       }
+  //       return false;
+  //     } else if (selectedFilter === "assignedToMe") {
+  //       return matchesSearch && matchesDate && isActive;
+  //     }
+  //     return matchesSearch && matchesDate && matchesModalFilters;
+  //   });
+  // }, [
+  //   selectedFilter,
+  //   assignedLeads,
+  //   lostLeads,
+  //   allLeads,
+  //   searchTerm,
+  //   fromDate,
+  //   toDate,
+  //   showLostLeads,
+  //   showLostDeals,
+  //   selectedPotential,
+  //   selectedStatus,
+  //   selectedSource,
+  //   selectedIndustry,
+  //   selectedService,
+  // ]);
 
   // Proper displayed data calculation
   const displayedDataCalculated = useMemo(() => {
@@ -490,7 +668,17 @@ const LeadCardViewPage = () => {
     }
   };
 
-  const menuFilters = ['all', 'leads', ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
+  // const menuFilters = ['all', 'leads', ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
+  const menuFilters = [ ...(hasAllLeadsAccess ? ['all'] : []), ...(hasActiveLeadsAccess ? ['leads'] : []), ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []), 'assignedToMe', 'lost'];
+//   const menuFilters = [
+//   ...(hasAllLeadsAccess ? ['all'] : []),
+//   ...(hasActiveLeadsAccess ? ['leads'] : []),
+//   ...(websiteActive || hasWebsiteLeadAccess ? ['websiteLeads'] : []),
+//   'assignedToMe',
+//   'lost'
+// ];
+
+
 
   const fetchLostLeads = useCallback(async () => {
     if (!currentUserId || !currentToken) return;
@@ -963,9 +1151,9 @@ const LeadCardViewPage = () => {
       )}
     </div>
 
-    {/* Tablet+: Compact Buttons (All/Leads/Website/Lost) */}
+    {/* Compact Buttons (All/Leads/Website/Lost) */}
     <div className="hidden md:flex flex-wrap gap-2 flex-1 lg:ml-4">
-      {menuFilters.map((filterKey) => {  {/* Use your full menuFilters */}
+      {menuFilters.map((filterKey) => {  
         const labels = { 
           all: "All Leads", 
           leads: "Leads", 

@@ -82,6 +82,8 @@ import { SettingsProvider } from "./context/companySettingsContext.jsx"
 import { LeadFormProvider } from "./context/LeadFormContext.jsx";
 import { GlobeUserProvider } from "./context/userContex.jsx";
 import { DemoSessionProvider } from "./context/demo_session_session_context.jsx";
+import { RoleProvider } from "./context/RoleContext";
+
 function App() {
   return (
     <PopupProvider>
@@ -91,6 +93,7 @@ function App() {
             <UserAccessProvider>
                   <ModuleProvider>
                     <SettingsProvider>
+                       <RoleProvider>
                       <GlobeUserProvider>
                         <BusinessProvider>
                       <CompanyProvider>
@@ -183,6 +186,7 @@ function App() {
                       </CompanyProvider>
                       </BusinessProvider>
                       </GlobeUserProvider>
+                      </RoleProvider>
                     </SettingsProvider>
                   </ModuleProvider>
             </UserAccessProvider>

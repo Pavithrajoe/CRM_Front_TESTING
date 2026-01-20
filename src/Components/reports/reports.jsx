@@ -44,14 +44,16 @@ const cardsData = [
     image: "/illustrations/funnel.svg",  
     reportKey: "CompanyOverallReport"
   },
-  {
-    title: "Lead Owner Efficiency",
-    description: "View performance of opportunities across sales stages.",
-    route: "/lead-owner-efficiency",
-    // image: "/public/illustrations/efficeincy.svg", 
-    image: "/illustrations/efficeincy.svg", 
-    reportKey: "LeadOwnerActivityReport",
-  },
+
+  // no need now
+  // {
+  //   title: "Lead Owner Efficiency",
+  //   description: "View performance of opportunities across sales stages.",
+  //   route: "/lead-owner-efficiency",
+  //   // image: "/public/illustrations/efficeincy.svg", 
+  //   image: "/illustrations/efficeincy.svg", 
+  //   reportKey: "LeadOwnerActivityReport",
+  // },
   {
     title: "Sales Pipeline",
     description: "View performance of opportunities across sales stages.",

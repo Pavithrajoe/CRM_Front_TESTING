@@ -12,10 +12,10 @@ import UserLead from '../pages/userPage/userLead'
 import DCRMSettingsForm from './userPage/DCRMsettingsForm';
 import UserDashboard from './userPage/userOverview'; 
 import UserAttributes from './userPage/UserAttributes';
-import { GlobeUserProvider, GlobUserContext } from '../context/userContex';
-import {
-  FaEdit, FaUser, FaEnvelope, FaIdBadge, FaBriefcase, FaUserTie,
-  FaUserCircle, FaCheckCircle, FaTimesCircle, FaPhone, } from 'react-icons/fa';
+import UserEditForm from './userPage/UserEditForm';
+import { GlobUserContext } from '../context/userContex';
+import { RoleContext } from "../context/RoleContext";
+import { FaEdit, FaUserCircle, FaCheckCircle, FaTimesCircle, } from 'react-icons/fa';
 
 const OverviewDashboard = ({ userId }) => (
     <div className="text-center p-10">
@@ -31,17 +31,13 @@ const OverviewDashboard = ({ userId }) => (
 const ToggleSwitch = ({ label, isChecked, onToggle }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-200 last:border-b-0">
     <span className="text-gray-700 font-semibold">{label}</span>
-    <div
-      onClick={onToggle}
-      className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
+    <div onClick={onToggle}  className={`relative w-12 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${
         isChecked ? 'bg-green-600' : 'bg-yellow-400'
       }`}
     >
       <div
-        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
-          isChecked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      ></div>
+        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${ isChecked ? 'translate-x-5' : 'translate-x-0' }`}>
+      </div>
     </div>
   </div>
 );
@@ -49,7 +45,6 @@ const ToggleSwitch = ({ label, isChecked, onToggle }) => (
 // Reusable MessageDisplay component
 const MessageDisplay = ({ message, type, onClose }) => {
   if (!message) return null;
-
   const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
   const textColor = type === 'success' ? 'text-green-700' : 'text-red-700';
   const Icon = type === 'success' ? FaCheckCircle : FaTimesCircle;
@@ -74,18 +69,8 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
       <h3 className="text-xl font-bold text-gray-800 mb-4">{title}</h3>
       <p className="text-gray-700 mb-6">{message}</p>
       <div className="flex justify-end space-x-3">
-        <button
-          onClick={onCancel}
-          className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={onConfirm}
-          className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-        >
-          Confirm
-        </button>
+        <button onClick={onCancel} className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors" > Cancel </button>
+        <button onClick={onConfirm} className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"> Confirm </button>
       </div>
     </div>
   </div>
@@ -93,10 +78,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 
   const UserProfile = ({ settingsData, isLoadingSettings = false}) => {
     const { user } = useContext (GlobUserContext);
+    const { roles } = useContext(RoleContext);
     const { userId } = useParams();
     const token = localStorage.getItem('token'); 
     const [email, setEmail] = useState('');
-  const [users, setUsers] = useState(null);
+    const [users, setUsers] = useState(null);
     const [activeTab, setActiveTab] = useState('Overview');
     const [showForm, setShowForm] = useState(false);
     const [editFormData, setEditFormData] = useState({
@@ -199,6 +185,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
           cUser_name: data.cUser_name || '',
           cEmail: data.cEmail || '',
           cjob_title: data.cjob_title || '',
+          irole_id: data.irole_id || '',
           reports_to: data.reports_to || '',
           i_bPhone_no: data.i_bPhone_no || '', 
           iphone_no: data.iphone_no || '',
@@ -277,13 +264,13 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
   const handleToggleDCRM = useCallback(() => {
     if (!users) return;
 
-    // 🔴 FIRST TIME → OPEN FORM
+    //  FIRST TIME → OPEN FORM
     if (!isDCRMAlreadyCreated) {
       setShowDCRMForm(true);
       return;
     }
 
-    // 🔴 AFTER FIRST TIME → ONLY TOGGLE TRUE / FALSE
+    //  AFTER FIRST TIME → ONLY TOGGLE TRUE / FALSE
     const newStatus = !users.DCRM_enabled;
 
     setConfirmModalMessage(
@@ -351,12 +338,13 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+  setIsSubmitting(true);
 
   try {
     const token = localStorage.getItem("token");
 
     const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-      method: "PUT", // ✅ UPDATE
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -366,15 +354,55 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.message);
+    if (!res.ok) {
+      //  show popup
+      if (res.status === 403) {
+        showAppMessage("Access denied: Permission not granted", "error");
+        setShowForm(false);
+        return;
+      } else {
+        throw new Error(data.message || "Failed to update user");
+      }
+    }
 
     setUsers(data);
     setShowForm(false);
-    alert("User updated successfully");
+    showAppMessage("User updated successfully!", "success");
+
   } catch (err) {
-    alert(err.message);
+    showAppMessage(err.message || "Something went wrong!", "error");
+  } finally {
+    setIsSubmitting(false);
   }
 };
+
+
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   try {
+//     const token = localStorage.getItem("token");
+
+//     const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
+//       method: "PUT", 
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(editFormData),
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok) throw new Error(data.message);
+
+//     setUsers(data);
+//     setShowForm(false);
+//     alert("User updated successfully");
+//   } catch (err) {
+//     alert(err.message);
+//   }
+// };
 
   const handleFormClose = () => {
     setEditFormData({
@@ -442,24 +470,19 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
                   )}
 
                   {users.DCRM_enabled && (
-                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block">
-                      DCRM Enabled
-                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 inline-block"> DCRM Enabled </span>
                   )}
                 </div>
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2 self-start"> 
-              <button
-                onClick={() => setIsProfileCardVisible(false)}
+              <button onClick={() => setIsProfileCardVisible(false)}
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium border border-blue-600 px-3 py-1 rounded-lg transition-colors"
               >
                 Collapse
               </button>
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-300"
+              <button onClick={() => setShowForm(true)} className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition-colors border border-gray-300"
                 aria-label="Edit Profile"
               >
                 <FaEdit size={18} />
@@ -477,9 +500,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 
         <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
           {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)} 
+            <button key={tab} onClick={() => setActiveTab(tab)} 
               className={`px-5 py-2 rounded-lg text-sm font-medium border border-gray-300 transition-colors duration-200 shadow-sm ${
                 activeTab === tab ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
@@ -538,117 +559,17 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
     </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={handleFormClose} >
-        <div className="bg-white rounded-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 mt-10 max-h-[90vh] overflow-y-auto shadow-2xl relative mb-10" onClick={(e) => e.stopPropagation()}  >
-      <button onClick={handleFormClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors rounded-full p-1 hover:bg-gray-100" aria-label="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-            <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Edit Profile</h3>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div className="relative">
-                  <FaUser className="absolute top-4 left-3 text-gray-500" />
-                  <input type="text" name="cFull_name" placeholder="Full Name" value={editFormData.cFull_name} onChange={handleChange} 
-                  className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required maxLength={40}
-                  />
-                </div>
-                <div className="relative">
-                  <FaIdBadge className="absolute top-4  left-3 text-gray-500" />
-                  <input type="text" name="cUser_name" placeholder="Username" value={editFormData.cUser_name} onChange={handleChange}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required maxLength={40}
-                  />
-                </div>
-              </div>
-              
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <div className="relative">
-                  <FaEnvelope className="absolute top-4 left-3 text-gray-500" />
-                  <input type="email" name="cEmail" placeholder="Email" value={editFormData.cEmail} onChange={handleChange} required maxLength={40}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"  
-                  />
-                </div>
-
-                <div className="relative">
-                  <FaBriefcase className="absolute top-4 left-3 text-gray-500" />
-                  <input type="text" name="cjob_title" placeholder="Job Title" value={editFormData.cjob_title} onChange={handleChange}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    maxLength={40}
-                  />
-                </div>
-              </div>
-
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-               <div className="relative">
-                <FaUserTie className="absolute top-4 left-3 text-gray-500" />
-                <select
-                  name="reports_to"
-                  value={editFormData.reports_to}
-                  onChange={handleChange}
-                  className="w-full border p-3 pl-10 rounded-lg appearance-none bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                >
-                  <option value="">Select Reports To</option>
-                  {reportToUsers.map(u => (
-                    <option key={u.iUser_id} value={u.iUser_id}>
-                      {u.cFull_name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/>
-                  </svg>
-                </div>
-              </div>
-
-                <div className="relative">
-                  <FaPhone className="absolute top-4 left-3 text-gray-500" />
-                  <input
-                    type="text"
-                    name="iphone_no"
-                    placeholder="Personal Phone"
-                    value={editFormData.iphone_no}
-                    onChange={handleChange}
-                    className="w-full border p-3 pl-10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    maxLength={15}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <ToggleSwitch
-                  label="User Status"
-                  isChecked={users.bactive}
-                  onToggle={handleToggleUserActive}
-                />
-                <p className="text-xs text-gray-500 mt-2">Toggle to activate or deactivate this user's account.</p>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <ToggleSwitch
-                  label="DCRM Enable"
-                  // isChecked={users.DCRM_enabled || false}
-                  isChecked={users.DCRM_enabled === true}
-                  onToggle={handleToggleDCRM}
-                />
-                <p className="text-xs text-gray-500 mt-2">Toggle to enable/disable DCRM integration.</p>
-              </div>
-
-              <div className="flex justify-center mt-6">
-                <button
-                  type="submit"
-                  className={`w-[150px] p-3 text-white justify-center rounded-xl font-medium transition-colors transform hover:scale-105 active:scale-95 shadow-md ${
-                    isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-blue-700'
-                  }`}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <UserEditForm
+          users={users}
+          editFormData={editFormData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          handleFormClose={handleFormClose}
+          reportToUsers={reportToUsers}
+          handleToggleUserActive={handleToggleUserActive}
+          handleToggleDCRM={handleToggleDCRM}
+          isSubmitting={isSubmitting}
+        />
       )}
 
       {showDCRMForm && (

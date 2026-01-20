@@ -5,19 +5,18 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
   const navigate = useNavigate();
   const now = new Date();
 
-  // 1. Get User Data and check for Special Company
+  //  Get User Data and check for Special Company
   const { userName, isSpecialCompany } = useMemo(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     const XCODEFIX_FLOW = Number(import.meta.env.VITE_XCODEFIX_FLOW);
     
     return {
       userName: user?.cUser_name || user?.username || "User",
-      // If user's company matches the Env ID, it's a special company
       isSpecialCompany: user?.iCompany_id === XCODEFIX_FLOW
     };
   }, []);
 
-  // 2. Determine Labels based on Company ID
+  //  Determine Labels based on Company ID
   const displayLabel = useMemo(() => {
     if (isMissed) {
       return isSpecialCompany ? "Missed Follow up" : "Missed Tasks";
@@ -35,11 +34,7 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
         </h1>
 
         {!isMissed && (
-          <select
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-            className="border px-2 py-1 text-sm rounded outline-none bg-white"
-          >
+          <select value={filter} onChange={e => setFilter(e.target.value)} className="border px-2 py-1 text-sm rounded outline-none bg-white" >
             <option>Today</option>
             <option>Yesterday</option>
             <option>Tomorrow</option>
@@ -63,6 +58,8 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
                 onClick={() => navigate(`/leaddetailview/${t.ilead_id}`)}
                 className="p-3 border rounded mb-2 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
               >
+               <h2 className="font-semibold text-gray-800">{t.ctitle} - <span className="text-blue-700 font-bold"> {t.crm_lead?.clead_name || "No Lead"}</span> </h2>
+
                 {/* TITLE */}
                 <h2 className="font-semibold text-gray-800">{t.ctitle}</h2>
 
@@ -115,12 +112,6 @@ const TaskSameDay = ({ tasks, filter, setFilter, isMissed, loading }) => {
 };
 
 export default TaskSameDay;
-
-
-
-
-
-
 
 
 // import React, { useState, useEffect } from "react";

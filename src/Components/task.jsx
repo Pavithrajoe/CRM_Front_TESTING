@@ -28,15 +28,17 @@ const TaskItem = React.memo(({
   canDelete, 
   onEdit, 
   onDelete, 
-  formatDateTime 
+  onStatusChange,
+  formatDateTime, 
 }) => {
   return (
     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
-      <div className="flex justify-between items-start gap-2">
-        <span className="font-semibold text-base sm:text-lg md:text-xl text-gray-900 break-words flex-1 min-w-0">
-          {task.ctitle}
-        </span>
-        {(canEdit || canDelete) && (
+      <div className="flex justify-between items-center gap-3">
+  <span className="font-semibold text-base sm:text-lg text-gray-900">
+    {task.ctitle}
+  </span>
+  <div >
+    {(canEdit || canDelete) && (
           <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
             <button
               onClick={() => canEdit ? onEdit(task) : null}
@@ -64,7 +66,26 @@ const TaskItem = React.memo(({
             )}
           </div>
         )}
-      </div>
+          <select
+    value={task.task_progress || "In_progress"}
+    onChange={(e) =>
+      onStatusChange(task.itask_id, e.target.value)
+    }
+    className={`
+      text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
+      ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+      ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+      ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+    `}
+  >
+    <option value="In_progress">In Progress</option>
+    <option value="On_hold">On Hold</option>
+    <option value="Completed">Completed</option>
+  </select>
+  </div>
+
+</div>
+
       
       <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
         {task.ctask_content}
@@ -90,6 +111,7 @@ const TaskItem = React.memo(({
           ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
           : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
       </p>
+     
     </div>
   );
 });
@@ -116,7 +138,6 @@ const Tasks = ({ onCountChange }) => {
   const formRef = useRef(null);
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
-
   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",
@@ -273,6 +294,32 @@ const Tasks = ({ onCountChange }) => {
       setIsListening(false);
     }
   }, [showForm, isSpecialCompany, isMobile]);
+
+  const handleStatusChange = async (taskId, newStatus) => {
+  try {
+    await axios.put(
+      `${ENDPOINTS.TASK}/${taskId}`,
+      {task_progress: newStatus },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    //  UI instant update
+    setTasks(prev =>
+      prev.map(t =>
+        t.itask_id === taskId
+          ? { ...t, task_progress: newStatus }
+          : t
+      )
+    );
+  } catch (error) {
+    showPopup("Error", "Status update failed", "error");
+  }
+};
+
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
@@ -473,7 +520,7 @@ const Tasks = ({ onCountChange }) => {
       {loadingTasks ? <div className="text-center py-8 animate-pulse text-gray-500">Loading...</div> : 
         filteredTasks.length === 0 ? <p className="text-center text-gray-400 py-8">No tasks found.</p> :
         currentTasks.map(task => (
-          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} />
+          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} />
         ))
       }
       {totalPages > 1 && (
@@ -550,7 +597,6 @@ const Tasks = ({ onCountChange }) => {
 export default Tasks;
 
 
-
 // import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from "react";
 // import { useParams } from "react-router-dom";
 // import { usePopup } from "../context/PopupContext";
@@ -605,7 +651,11 @@ export default Tasks;
 //               </svg>
 //             </button>
 //             {canDelete && ( 
-//               <button onClick={() => onDelete(task.itask_id)} className="text-gray-400 hover:text-red-500 transition-colors duration-200" title="Delete task" >
+//               <button
+//                 onClick={() => onDelete(task.itask_id)}
+//                 className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+//                 title="Delete task"
+//               >
 //                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 //                   <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 //                 </svg>
@@ -615,11 +665,19 @@ export default Tasks;
 //         )}
 //       </div>
       
-//       <p className="text-gray-700 text-sm mt-2 leading-normal break-words"> {task.ctask_content} </p>
+//       <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
+//         {task.ctask_content}
+//       </p>
       
 //       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
-//         <p className="break-words"> <span className="font-medium text-gray-700">Assigned to:</span>{" "} {task.user_task_iassigned_toTouser?.cFull_name || "-"} </p>
-//         <p className="break-words"> <span className="font-semibold text-gray-700">Notified to:</span>{" "} {task.user_task_inotify_toTouser?.cFull_name || "-"} </p>
+//         <p className="break-words">
+//           <span className="font-medium text-gray-700">Assigned to:</span>{" "}
+//           {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+//         </p>
+//         <p className="break-words">
+//           <span className="font-semibold text-gray-700">Notified to:</span>{" "}
+//           {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
+//         </p>
 //       </div>
       
 //       <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
@@ -635,7 +693,7 @@ export default Tasks;
 //   );
 // });
 
-// const Tasks = () => {
+// const Tasks = ({ onCountChange }) => {
 //   const { leadId } = useParams();
 //   const { user } = useContext(GlobUserContext);
 //   const [tasks, setTasks] = useState([]);
@@ -657,6 +715,7 @@ export default Tasks;
 //   const formRef = useRef(null);
 //   const searchInputRef = useRef(null);
 //   const tasksContainerRef = useRef(null);
+
 //   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 //   const [formData, setFormData] = useState({
 //     ctitle: "",
@@ -664,7 +723,6 @@ export default Tasks;
 //     iassigned_to: null,
 //     inotify_to: null,
 //     task_date: new Date(),
-//     task_progress: "In_progress",
 //   });
 
 //   const tasksPerPage = 10;
@@ -729,7 +787,9 @@ export default Tasks;
 
 //   // Fetch company users
 //   const fetchUsers = useCallback(async () => {
-//     const activeCompanyUsers = user.filter(u => (u.bactive === true || u.bactive === 1 || u.bactive === "true"));
+//     const activeCompanyUsers = user.filter(u => 
+//       (u.bactive === true || u.bactive === 1 || u.bactive === "true")
+//     );
 //     setCompanyUsers(activeCompanyUsers);
 //   }, [user]);
 
@@ -762,6 +822,13 @@ export default Tasks;
 //     fetchTasks();
 //   }, [fetchUsers, fetchTasks]);
 
+//   useEffect(() => {
+//   if (typeof onCountChange === "function") {
+//     onCountChange(tasks.length);
+//   }
+// }, [tasks, onCountChange]);
+
+
 //   // Speech recognition effect
 //   useEffect(() => {
 //     if (!mic) return;
@@ -791,9 +858,11 @@ export default Tasks;
 //   const handleClickOutside = useCallback((event) => {
 //     if (isSpecialCompany && !isMobile) return;
 //     if (!showForm) return;
+
 //     const formEl = formRef.current;
 //     const pickerPopup = document.querySelector('.MuiPopper-root'); 
 //     const calendarDialog = document.querySelector('.MuiModal-root');
+
 //     const clickedInsideForm = formEl?.contains(event.target);
 //     const clickedInsidePicker = pickerPopup?.contains(event.target) || calendarDialog?.contains(event.target);
 
@@ -816,7 +885,6 @@ export default Tasks;
 //       iassigned_to: userId,
 //       inotify_to: null,
 //       task_date: new Date(),
-//       task_progress: task.task_progress,
 //     });
 //     setAssignToMe(true);
 //     setEditingTask(null);
@@ -933,13 +1001,18 @@ export default Tasks;
 //   }, []);
 
 //   const renderTaskForm = useCallback(() => (
-//     <div ref={formRef} className={`${ isSpecialCompany && !isMobile
+//     <div
+//       ref={formRef}
+//       className={`${
+//         isSpecialCompany && !isMobile
 //           ? 'w-full min-h-[520px] lg:min-h-[600] bg-gradient-to-b from-white via-blue-50/30 to-indigo-50/20 border-0 shadow-2xl backdrop-blur-sm  p-3 sm:p-4 md:p-5 pb-28  flex flex-col rounded-2xl '
 //           : "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] max-w-lg p-5 bg-white rounded-2xl shadow-2xl max-h-[85vh]  z-[1001]"
 //       }`}
 //     >
 //       <div className="flex justify-between items-center mb-4">
-//         <h3 className="font-medium text-lg text-gray-800"> {editingTask ? `Edit ${isSpecialCompany ? 'Follow-up' : 'Task'}` : `Add ${isSpecialCompany ? 'Follow-up' : 'Task'}`} </h3>
+//         <h3 className="font-medium text-lg text-gray-800">
+//           {editingTask ? `Edit ${isSpecialCompany ? 'Follow-up' : 'Task'}` : `Add ${isSpecialCompany ? 'Follow-up' : 'Task'}`}
+//         </h3>
 //         {(isMobile || !isSpecialCompany) && (
 //           <button onClick={() => { setShowForm(false); setEditingTask(null); }} className="text-2xl text-gray-500 hover:text-red-500">×</button>
 //         )}
@@ -977,14 +1050,33 @@ export default Tasks;
 //   ), [isSpecialCompany, isMobile, editingTask, formData, assignToMe, companyUsers, userName, saving, isListening, handleFormSubmission, handleChange, handleAssignToMeChange, handleDateChange]);
 
 //   const renderTaskHistory = useCallback(() => (
-//       <div ref={tasksContainerRef} className="p-3 sm:p-6 space-y-4 flex-1 h-full overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-thin scrollbar-thumb-blue-900  scrollbar-track-gray-100  hover:scrollbar-thumb-blue-700 scroll-smooth " >
+//  <div
+//   ref={tasksContainerRef}
+//   className="
+//     p-3 sm:p-6 
+//     space-y-4 
+//     flex-1 
+//      h-full
+//     overflow-y-auto 
+//     max-h-[calc(100vh-150px)] 
+//     /* 2. CUSTOM SCROLLBAR STYLES */
+//     scrollbar-thin 
+//     scrollbar-thumb-blue-900 
+//     scrollbar-track-gray-100 
+//     hover:scrollbar-thumb-blue-700
+   
+//     scroll-smooth
+//   "
+// >
+
 //       {loadingTasks ? <div className="text-center py-8 animate-pulse text-gray-500">Loading...</div> : 
 //         filteredTasks.length === 0 ? <p className="text-center text-gray-400 py-8">No tasks found.</p> :
 //         currentTasks.map(task => (
 //           <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} />
 //         ))
 //       }
-//       {totalPages > 1 && ( <div className="flex justify-center gap-2 mt-4">
+//       {totalPages > 1 && (
+//         <div className="flex justify-center gap-2 mt-4">
 //           {Array.from({ length: totalPages }, (_, i) => (
 //             <button key={i + 1} onClick={() => setCurrentPage(i + 1)} className={`px-3 py-1 rounded-full text-xs ${currentPage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-100"}`}>{i + 1}</button>
 //           ))}
@@ -992,18 +1084,20 @@ export default Tasks;
 //       )}
 //     </div>
 //   ), [loadingTasks, filteredTasks, currentTasks, totalPages, currentPage, canEditTask, canDeleteTask, handleEditClick, handleDeleteTask, formatDateTime]);
+  
+
 
 //   return (
 //     <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
 //       <div className={`${isSpecialCompany ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-screen overflow-visible'
-//         : "relative bg-white border rounded-2xl max-w-7xl  shadow-sm"}`}>
+//  : "relative bg-white border rounded-2xl max-w-7xl  shadow-sm"}`}>
 //         {isSpecialCompany ? (
 //           <>
 //             {/* Left: Chat/History */}
 //             <div className="col-span-1 flex flex-col h-fit  bg-white rounded-2xl lg:rounded-r-none border-r border-gray-100">
 //               <div className="p-4 border-b flex items-center justify-between">
 //                 <div className="flex-1 relative">
-//                   <input ref={searchInputRef} type="text" placeholder="search follow-up..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full bg-gray-50 border-0 outline-none text-sm rounded-full px-4 py-2" />
+//                   <input ref={searchInputRef} type="text" placeholder="Search follow-up..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full bg-gray-50 border-0 outline-none text-sm rounded-full px-4 py-2" />
 //                 </div>
 //                 {/* Show Button ONLY on Mobile */}
 //                 {isMobile && (
@@ -1039,8 +1133,9 @@ export default Tasks;
 //                transition duration-150 ease-in-out text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center flex-shrink-0 ">+ New Task </button>
 //             </div>
 //             {renderTaskHistory()}
-//             {showForm && ( <> 
-//               <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={handleClickOutside}></div>
+//             {showForm && (
+//               <>
+//                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={handleClickOutside}></div>
 //                 {renderTaskForm()}
 //               </>
 //             )}

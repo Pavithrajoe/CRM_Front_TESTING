@@ -7,6 +7,7 @@ pipeline {
         REPO_URL  = 'https://github.com/Pavithrajoe/CRM_Front_TESTING.git'
         PLINK     = 'C:\\Program Files (x86)\\PuTTY\\plink.exe'
         HOSTKEY   = 'ssh-ed25519 SHA256:imGQ86RxgWO2zpTEzF611KwaDE+L/jpadEGZ9nCbu1k'
+        BRANCH    = 'revamp'
     }
 
     stages {
@@ -20,18 +21,7 @@ pipeline {
                     )
                 ]) {
                     bat """
-"%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" -hostkey "%HOSTKEY%" "bash -lc '
-if [ ! -d ${APP_DIR}/.git ]; then
-  git clone ${REPO_URL} ${APP_DIR}
-else
-  cd ${APP_DIR} &&
-  git fetch --all &&
-  git reset --hard origin/revamp
-fi &&
-cd ${APP_DIR} &&
-npm install --no-fund --no-audit &&
-npm run build
-'"
+"%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" -hostkey "%HOSTKEY%" "bash -lc \\"if [ ! -d ${APP_DIR}/.git ]; then git clone -b ${BRANCH} ${REPO_URL} ${APP_DIR}; else cd ${APP_DIR} && git fetch --all && git reset --hard origin/${BRANCH}; fi && cd ${APP_DIR} && npm install --no-fund --no-audit && npm run build\\""
                     """
                 }
             }

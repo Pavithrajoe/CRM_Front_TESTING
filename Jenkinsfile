@@ -16,8 +16,8 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building React app using npm script (Vite)...'
-                bat 'npm run build'
+                echo 'Building React app using local Vite binary...'
+                bat 'node_modules\\.bin\\vite.cmd build'
             }
         }
     }

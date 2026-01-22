@@ -2,39 +2,48 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'production'
+        BETA_HOST = '192.168.29.236'
+        APP_DIR   = '/var/www/ocrm-beta'
+        REPO_URL  = 'https://github.com/Pavithrajoe/CRM_Front_TESTING.git'
     }
 
     stages {
 
-        stage('Install Dependencies') {
+        stage('Build & Deploy on Linux Beta Server') {
             steps {
-                echo 'Installing npm dependencies...'
-                bat '''
-                npm config set script-shell cmd
-                npm install
-                npm rebuild
-                '''
-            }
-        }
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'beta-linux-password',
+                        usernameVariable: 'SSH_USER',
+                        passwordVariable: 'SSH_PASS'
+                    )
+                ]) {
+                    bat """
+                    sshpass -p "%SSH_PASS%" ssh -o StrictHostKeyChecking=no %SSH_USER%@%BETA_HOST% "
+                        set -e
 
-        stage('Build') {
-            steps {
-                echo 'Building React app using npm (Vite)...'
-                bat 'npm run build'
+                        if [ ! -d ${APP_DIR}/.git ]; then
+                            git clone ${REPO_URL} ${APP_DIR}
+                        else
+                            cd ${APP_DIR} && git pull
+                        fi
+
+                        cd ${APP_DIR}
+                        npm install --no-fund --no-audit
+                        npm run build
+                    "
+                    """
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build completed successfully!'
+            echo '✅ Successfully built and deployed to beta server (xcserver@192.168.29.236)'
         }
         failure {
-            echo '❌ Build failed. Check console output.'
-        }
-        always {
-            echo 'Pipeline execution finished.'
+            echo '❌ Beta deployment failed'
         }
     }
 }

@@ -19,9 +19,7 @@ pipeline {
                     )
                 ]) {
                     bat """
-                    sshpass -p "%SSH_PASS%" ssh -o StrictHostKeyChecking=no %SSH_USER%@%BETA_HOST% "
-                        set -e
-
+                    echo y | "C:\\Program Files\\PuTTY\\plink.exe" -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" "
                         if [ ! -d ${APP_DIR}/.git ]; then
                             git clone ${REPO_URL} ${APP_DIR}
                         else
@@ -40,7 +38,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Successfully built and deployed to beta server (xcserver@192.168.29.236)'
+            echo '✅ Successfully built and deployed to beta server'
         }
         failure {
             echo '❌ Beta deployment failed'

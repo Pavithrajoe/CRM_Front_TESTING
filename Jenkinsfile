@@ -20,7 +20,18 @@ pipeline {
                     )
                 ]) {
                     bat """
-"%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" -hostkey "%HOSTKEY%" "bash -lc 'rm -rf ${APP_DIR} && git clone ${REPO_URL} ${APP_DIR} && cd ${APP_DIR} && npm install --no-fund --no-audit && npm run build'"
+"%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" -hostkey "%HOSTKEY%" "bash -lc '
+if [ ! -d ${APP_DIR}/.git ]; then
+  git clone ${REPO_URL} ${APP_DIR}
+else
+  cd ${APP_DIR} &&
+  git fetch --all &&
+  git reset --hard origin/revamp
+fi &&
+cd ${APP_DIR} &&
+npm install --no-fund --no-audit &&
+npm run build
+'"
                     """
                 }
             }

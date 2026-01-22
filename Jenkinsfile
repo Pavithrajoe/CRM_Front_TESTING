@@ -10,14 +10,18 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing npm dependencies...'
-                bat 'npm install --no-fund --no-audit'
+                bat '''
+                npm config set script-shell cmd
+                npm install
+                npm rebuild
+                '''
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building React app using local Vite binary...'
-                bat 'node_modules\\.bin\\vite.cmd build'
+                echo 'Building React app using npm (Vite)...'
+                bat 'npm run build'
             }
         }
     }

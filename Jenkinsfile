@@ -6,6 +6,7 @@ pipeline {
         APP_DIR   = '/var/www/ocrm-beta'
         REPO_URL  = 'https://github.com/Pavithrajoe/CRM_Front_TESTING.git'
         PLINK     = 'C:\\Program Files (x86)\\PuTTY\\plink.exe'
+        HOSTKEY   = 'ssh-ed25519 SHA256:imGQ86RxgWO2zpTEzF611KwaDE+L/jpadEGZ9nCbu1k'
     }
 
     stages {
@@ -19,7 +20,7 @@ pipeline {
                     )
                 ]) {
                     bat """
-                    "%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" "cd ${APP_DIR} || git clone ${REPO_URL} ${APP_DIR} && cd ${APP_DIR} && git pull || true && npm install --no-fund --no-audit && npm run build"
+                    "%PLINK%" -batch -ssh %SSH_USER%@%BETA_HOST% -pw "%SSH_PASS%" -hostkey "%HOSTKEY%" "cd ${APP_DIR} || git clone ${REPO_URL} ${APP_DIR} && cd ${APP_DIR} && git pull || true && npm install --no-fund --no-audit && npm run build"
                     """
                 }
             }

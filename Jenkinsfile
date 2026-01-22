@@ -10,14 +10,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing npm dependencies...'
-                bat 'npm install'
+                bat 'npm install --no-fund --no-audit'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building React application...'
-                bat 'npm run build'
+                echo 'Building React app using Vite...'
+                bat 'npx vite build'
             }
         }
     }
@@ -27,7 +27,7 @@ pipeline {
             echo '✅ Build completed successfully!'
         }
         failure {
-            echo '❌ Build failed. Check console logs.'
+            echo '❌ Build failed. Check console output.'
         }
         always {
             echo 'Pipeline execution finished.'

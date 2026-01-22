@@ -1,10 +1,9 @@
-// last update 11/12 workinh fine
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Swal from "sweetalert2";
 import withReactContent from 'sweetalert2-react-content';
 import axios from 'axios';
 import { X, Search } from "lucide-react";
-import { useUserAccess } from "../context/UserAccessContext";
+ import { useUserAccess } from "../../context/UserAccessContext";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
   const Both = ({ onClose, onSuccess,  }) => {
@@ -63,6 +62,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     csubindustry_id: "",
     lead_source_id: "",
     ino_employee: 0,
+    quantity: "",
     iproject_value: 0,
     clead_name: "",
     cemail: "",
@@ -348,6 +348,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     const resetForm = () => {
       setForm({
         iLeadpoten_id: "",
+        quantity: "",
         ileadstatus_id: "",
         cindustry_id: "",
         csubindustry_id: "",
@@ -629,7 +630,9 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
       if (form.iservice_id && subServiceList.length > 0) {
       const filtered = subServiceList.filter(
   (sub) =>
-    form.iservice_id.includes(sub.iservice_parent) &&
+Array.isArray(form.iservice_id) &&
+form.iservice_id.includes(sub.iservice_parent)
+ &&
     sub.subservice_name.toLowerCase().includes(searchSubService.toLowerCase())
 );
 
@@ -1208,10 +1211,10 @@ const handleChange = (e) => {
             setSearchSubIndustry("");
         }
 
-        if (name === "iservice_id" ) {
-            updated.isubservice_id = "";
-            setSearchSubService("");
-        }
+      if (name === "iservice_id") {
+  updated.isubservice_id = "";
+  setSearchSubService("");
+}
 
         // Add this new condition for sub-source
         if (name === "lead_source_id" && prev.lead_source_id !== value) {
@@ -1472,53 +1475,109 @@ const handleSubmit = async (e) => {
     }
   }
   try {
-    const formData = {
-      bactive: true,
-      cemail: form.cemail,
-      cgender: 1,
-      cimage: "noimg.png",
-      clead_address1: form.clead_address1,
-      clead_address2: form.clead_address2,
-      clead_address3: form.clead_address3,
-      clead_city: Number(form.icity),
-      clead_name: form.clead_name,
-      clead_owner: userId,
-      clogo: "logo.png",
-      corganization: form.corganization,
-      cresponded_by: userId,
-      ileadstatus_id: Number(form.ileadstatus_id),
-      cindustry_id: Number(form.cindustry_id),
-      isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
-    iLeadpoten_id: form.iLeadpoten_id
-  ? Number(form.iLeadpoten_id)
-  : null,
+  //   const formData = {
+  //     bactive: true,
+  //     cemail: form.cemail,
+  //     quantity: form.quantity || null,
+  //     cgender: 1,
+  //     cimage: "noimg.png",
+  //     clead_address1: form.clead_address1,
+  //     clead_address2: form.clead_address2,
+  //     clead_address3: form.clead_address3,
+  //     clead_city: Number(form.icity),
+  //     clead_name: form.clead_name,
+  //     clead_owner: userId,
+  //     clogo: "logo.png",
+  //     corganization: form.corganization,
+  //     cresponded_by: userId,
+  //     ileadstatus_id: Number(form.ileadstatus_id),
+  //     cindustry_id: Number(form.cindustry_id),
+  //     isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
+  //   iLeadpoten_id: form.iLeadpoten_id
+  // ? Number(form.iLeadpoten_id)
+  // : null,
 
-      cwebsite: form.cwebsite,
-      dmodified_dt: new Date().toISOString(),
-      ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
-      icity: Number(form.icity),
-      icompany_id: company_id,
-      // iphone_no: `${form.phone_country_code}${form.iphone_no}`,
-      iphone_no: form.iphone_no,
-      iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
-      modified_by: userId,
-      iuser_tags: userId,
-      iservice_id: form.iservice_id,
-      isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
-      lead_source_id: Number(form.lead_source_id),
-      whatsapp_number: form.cwhatsapp,
-      cpincode: form.cpincode ? Number(form.cpincode) : null,
-      icurrency_id: selectedCurrency.icurrency_id,
-      subSrcId: form.subSrcId ? Number(form.subSrcId) : null,
-      phone_country_code: form.phone_country_code,
-      whatsapp_country_code: form.whatsapp_country_code,
-    };
+  //     cwebsite: form.cwebsite,
+  //     dmodified_dt: new Date().toISOString(),
+  //     ino_employee: form.ino_employee === "" ? 0 : Number(form.ino_employee),
+  //     icity: Number(form.icity),
+  //     icompany_id: company_id,
+  //     // iphone_no: `${form.phone_country_code}${form.iphone_no}`,
+  //     iphone_no: form.iphone_no,
+  //     iproject_value: form.iproject_value === "" ? 0 : Number(form.iproject_value),
+  //     modified_by: userId,
+  //     iuser_tags: userId,
+  //     iservice_id: form.iservice_id,
+  //     isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
+  //     lead_source_id: Number(form.lead_source_id),
+  //     whatsapp_number: form.cwhatsapp,
+  //     cpincode: form.cpincode ? Number(form.cpincode) : null,
+  //     icurrency_id: selectedCurrency.icurrency_id,
+  //     subSrcId: form.subSrcId ? Number(form.subSrcId) : null,
+  //     phone_country_code: form.phone_country_code,
+  //     whatsapp_country_code: form.whatsapp_country_code,
+  //   };
+  const formData = {
+  bactive: true,
+  cemail: form.cemail,
+  quantity: form.quantity || null,
+  cgender: 1,
+  cimage: "noimg.png",
+
+  clead_address1: form.clead_address1,
+  clead_address2: form.clead_address2,
+  clead_address3: form.clead_address3,
+
+  clead_city: Number(form.icity),
+  clead_name: form.clead_name,
+  clead_owner: userId,
+  clogo: "logo.png",
+  corganization: form.corganization,
+  cresponded_by: userId,
+
+  ileadstatus_id: Number(form.ileadstatus_id),
+  cindustry_id: Number(form.cindustry_id),
+  isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
+  iLeadpoten_id: form.iLeadpoten_id ? Number(form.iLeadpoten_id) : null,
+
+  cwebsite: form.cwebsite,
+  dmodified_dt: new Date().toISOString(),
+  ino_employee: Number(form.ino_employee) || 0,
+  icity: Number(form.icity),
+  icompany_id: company_id,
+
+  iphone_no: form.iphone_no,
+  iproject_value: Number(form.iproject_value) || 0,
+  modified_by: userId,
+  iuser_tags: userId,
+
+  // 🔥 THIS IS THE FIX
+iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice_id],
+
+  isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
+
+  lead_source_id: Number(form.lead_source_id),
+  whatsapp_number: form.cwhatsapp,
+  cpincode: form.cpincode ? Number(form.cpincode) : null,
+
+  icurrency_id: selectedCurrency.icurrency_id,
+  subSrcId: form.subSrcId ? Number(form.subSrcId) : null,
+
+  phone_country_code: form.phone_country_code,
+  whatsapp_country_code: form.whatsapp_country_code,
+};
+console.log("Industry ID:", form.cindustry_id);
+console.log("Selected Services:", form.iservice_id);
+console.log("Sending Service Payload:", formData.iservice_id);
+
 
     if (saveTriggerRef.current) {
       formData.save = true;
       saveTriggerRef.current = false;
     }
-
+console.log("Industry ID:", form.cindustry_id);
+console.log("Selected Services:", form.iservice_id);
+console.log("Sending Service Payload:", formData.iservice_id);
     const res = await fetch(`${apiEndPoint}/lead`, {
       method: "POST",
       headers: {
@@ -2208,24 +2267,43 @@ const handleSubmit = async (e) => {
                   </div>
                 )
               )}
-              <div>
-                <label className="text-sm font-medium">No. of employees
+              
+              {/* <div> */}
+                {/* <label className="text-sm font-medium">No. of employees */}
                 {/* <span className="text-red-600">*</span>  */}
-                </label>
-                <input
-                  type="number"
-                  name="ino_employee"
-                  value={form.ino_employee === 0 ? "" : form.ino_employee}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder="Enter number of employees"
-                  className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                  min="0"
-                />
-                {errors.ino_employee && (
-                  <p className="text-red-600 text-sm">{errors.ino_employee}</p>
-                )}
-              </div>
+                {/* </label> */}
+                {/* <input */}
+                  {/* type="number" */}
+                  {/* name="ino_employee" */}
+                  {/* value={form.ino_employee === 0 ? "" : form.ino_employee} */}
+                  {/* onChange={handleChange} */}
+                  {/* onBlur={handleBlur} */}
+                  {/* placeholder="Enter number of employees" */}
+                  {/* className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none" */}
+                  {/* min="0" */}
+                {/* /> */}
+                {/* {errors.ino_employee && ( */}
+                  {/* <p className="text-red-600 text-sm">{errors.ino_employee}</p> */}
+                {/* )} */}
+              {/* </div> */}
+              <div>
+  <label className="text-sm font-medium">
+    Quantity
+  </label>
+  <input
+    type="text"
+    name="quantity"
+    value={form.quantity}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    placeholder="e.g. 50 Licenses / 100 Units"
+    className="mt-1 w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+  />
+  {errors.quantity && (
+    <p className="text-red-600 text-sm">{errors.quantity}</p>
+  )}
+</div>
+
 
               {/* for currency coode + project value */}
      <div>

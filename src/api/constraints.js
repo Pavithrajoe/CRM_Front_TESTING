@@ -84,7 +84,8 @@ export const ENDPOINTS = {
   LEADS_COUNT_BY_USER_ID: `${BASE_URL}/leadcount/user/`,
   RECURRING_CLIENT_REPORT: `${BASE_URL}/reports/recurring-client`,
   SMTP_SETTINGS: `${BASE_URL}/smtp-settings`,
-  COMPANY_SETTINGS:`${BASE_URL}/company`,
+  COMPANY_SETTINGS:`${BASE_URL}/company`, 
+  CUSTOM_STATUS:`${BASE_URL}/custom-status`, 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,
 
   // Master endpoints

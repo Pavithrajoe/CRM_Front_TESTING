@@ -19,6 +19,8 @@ import { useUserAccess } from "../../context/UserAccessContext";
 import { GlobUserContext } from "../../context/userContex.jsx";
 import { useDemoSession } from "../../context/demo_session_session_context.jsx";
 
+import InteriorDesignEditForm from "../../Industries/InteriorDesigning/InteriorDesignEditForm.jsx"
+
 const apiEndPoint = import.meta.env.VITE_API_URL;
 const apiNoEndPoint = import.meta.env.VITE_NO_API_URL;
 
@@ -201,52 +203,109 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
     }
   }, [leadId]);
 
-  const handleEditLead = async (lead) => {
-    try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const companyId = user?.iCompany_id ?? user?.iCompanyId ?? null;
+  // const handleEditLead = async (lead) => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const user = JSON.parse(localStorage.getItem("user") || "{}");
+  //     const companyId = user?.iCompany_id ?? user?.iCompanyId ?? null;
 
-      if (!token || !companyId) {
-        console.error("Token or company ID is missing.");
-        if (popup?.show)
-          popup.show("Missing authentication or company info.", {
-            type: "error",
-          });
-        return;
-      }
+  //     if (!token || !companyId) {
+  //       console.error("Token or company ID is missing.");
+  //       if (popup?.show)
+  //         popup.show("Missing authentication or company info.", {
+  //           type: "error",
+  //         });
+  //       return;
+  //     }
 
-      const res = await axios.get(`${apiEndPoint}/company/${companyId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const companyData = res?.data?.result ?? null;
+  //     const res = await axios.get(`${apiEndPoint}/company/${companyId}`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     const companyData = res?.data?.result ?? null;
 
-      if (companyData) {
+  //     if (companyData) {
+  //       const businessTypeId = Number(companyData?.ibusiness_type);
+  //       if (businessTypeId === 1) {
+  //         setEditFormType(1);
+  //       } else if (businessTypeId === 2) {
+  //         setEditFormType(2);
+  //       }else if (businessTypeId === 3) {
+  // setEditFormType(3);}
+  //        else {
+  //         setEditFormType(null);
+  //       }
+  //       setEditingLead(lead);
+  //       setShowEditForm(true);
+  //     } else {
+  //       console.error("Could not find company data.");
+  //       if (popup?.show)
+  //         popup.show("Could not find company data.", { type: "error" });
+  //     }
+  //   } catch (err) {
+  //     console.error("Error fetching company data:", err);
+  //     if (popup?.show)
+  //       popup.show("Failed to fetch company data.", { type: "error" });
+  //   }
+  // };
+
+  // Save profile after edit
+ 
+ const handleEditLead = async (lead) => {
+  try {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const companyId = user?.iCompany_id ?? user?.iCompanyId ?? null;
+
+    if (!token || !companyId) {
+      console.error("Token or company ID is missing.");
+      if (popup?.show)
+        popup.show("Missing authentication or company info.", {
+          type: "error",
+        });
+      return;
+    }
+
+    const res = await axios.get(`${apiEndPoint}/company/${companyId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const companyData = res?.data?.result ?? null;
+
+    if (companyData && lead) {
+      // 🔥 CHECK LEAD INDUSTRY FIRST (same logic as backend)
+      const isMultiServiceCompany = Number(lead.cindustry_id) === 5;
+      
+      if (isMultiServiceCompany) {
+        // Interior Design → Special Multi-Service Form
+        setEditFormType(5);  // InteriorDesignEditForm.jsx
+      } else {
+        // Normal forms (unchanged)
         const businessTypeId = Number(companyData?.ibusiness_type);
         if (businessTypeId === 1) {
           setEditFormType(1);
         } else if (businessTypeId === 2) {
           setEditFormType(2);
-        }else if (businessTypeId === 3) {
-  setEditFormType(3);}
-         else {
+        } else if (businessTypeId === 3) {
+          setEditFormType(3);
+        } else {
           setEditFormType(null);
         }
-        setEditingLead(lead);
-        setShowEditForm(true);
-      } else {
-        console.error("Could not find company data.");
-        if (popup?.show)
-          popup.show("Could not find company data.", { type: "error" });
       }
-    } catch (err) {
-      console.error("Error fetching company data:", err);
+      
+      setEditingLead(lead);
+      setShowEditForm(true);
+    } else {
+      console.error("Could not find company data.");
       if (popup?.show)
-        popup.show("Failed to fetch company data.", { type: "error" });
+        popup.show("Could not find company data.", { type: "error" });
     }
-  };
+  } catch (err) {
+    console.error("Error fetching company data:", err);
+    if (popup?.show)
+      popup.show("Failed to fetch company data.", { type: "error" });
+  }
+};
 
-  // Save profile after edit
+ 
   const handleSaveProfile = async (updatedFormData) => {
     const token = localStorage.getItem("token");
     try {
@@ -1026,6 +1085,12 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
     onSave={handleSaveProfile}
   />
 )}
+{editFormType === 5 && (  // 🔥 ADD THIS BLOCK
+  <InteriorDesignEditForm
+    profile={editingLead}
+    onClose={() => setShowEditForm(false)}
+    onSave={handleSaveProfile}
+  />)}
               {editFormType === null && (
                 <div className="p-6">
                   <p className="text-sm text-gray-500"> Unable to determine which edit form to show. </p>

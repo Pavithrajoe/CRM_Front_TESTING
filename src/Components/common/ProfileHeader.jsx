@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import LeadForm from "../LeadForm";
 import LeadFormB2C from "../LeadFormB2C";
 import Both from "../BothLeadFormB2B_B2C.jsx";
-import { companyContext } from "../../context/companyContext";
 import { useUserAccess } from "../../context/UserAccessContext";
+import { companyContext } from "../../context/companyContext";
 import axios from "axios";
 import { ENDPOINTS } from "../../api/constraints";
 import { useLeadForm } from "../../context/LeadFormContext";
-
+import InteriorDesigningLeadForm from "../../Industries/InteriorDesigning/InteriorDesigningLeadForm.jsx";
 
 // const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
 const LAST_SEEN_TS_KEY = "notifications_last_seen";
@@ -35,6 +35,7 @@ const ProfileHeader = () => {
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const appMenuRef = useRef(null);
+  const [companyIndustryId, setCompanyIndustryId] = useState(null);
 
   // filter logic - only show if bactive is true
   const pdfPermissions = useMemo(() => {
@@ -61,7 +62,7 @@ const ProfileHeader = () => {
         const decoded = JSON.parse(atob(token.split(".")[1]));
         const userId = decoded.user_id;
         
-        console.log("Decoded userId:", userId); // Check this in console
+        // console.log("Decoded userId:", userId); // Check this in console
         
         if (!userId) return;
 
@@ -96,8 +97,7 @@ const ProfileHeader = () => {
         name: userObject.cFull_name || "",
         email: userObject.cEmail || "",
         role: userObject.cRole_name || userObject.irole_id || "-",
-        company_name:
-          userObject.company_name || userObject.company?.cCompany_name || "-",
+        company_name: userObject.company_name || userObject.company?.cCompany_name || "-",
         roleType: userObject.roleType || "-",
       });
     } catch {
@@ -110,6 +110,9 @@ const ProfileHeader = () => {
 
   // Update leadFormType when company context updates
   useEffect(() => {
+    const industryId = company?.result?.companyIndustry?.icompanyindustry_id ?? null;
+    console.log("login usr company industery ", industryId)
+    setCompanyIndustryId(industryId);
     const newBusinessTypeId = company?.result?.businessType?.id ?? null;
     if (newBusinessTypeId !== leadFormType) {
       setLeadFormType(newBusinessTypeId);
@@ -131,8 +134,30 @@ const ProfileHeader = () => {
   }, [leadFormType]);
 
   const handleLeadFormOpen = () => {
-    if (leadFormType === 1 || leadFormType === 2 || leadFormType === 3) setShowLeadForm(true);
+    if (companyIndustryId === 5) {
+      setShowLeadForm(true);
+      return; 
+    }
+
+    if (leadFormType === 1 || leadFormType === 2 || leadFormType === 3) {
+      setShowLeadForm(true);
+      return;
+    }
   };
+
+
+  // const handleLeadFormOpen = () => {
+  //   if (companyIndustryId === 5) {
+  //     setShowLeadForm(true);
+  //     return; 
+  //   }
+
+  //   if (leadFormType === 1 || leadFormType === 2 || leadFormType === 3) {
+  //   setShowLeadForm(true);
+  //   return;
+  // }
+  // //   if (leadFormType === 1 || leadFormType === 2 || leadFormType === 3) setShowLeadForm(true);
+  //  };
 
   const handleLeadFormClose = () => setShowLeadForm(false);
 
@@ -204,6 +229,27 @@ return (
     {showLeadForm && (
       <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
         <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
+          
+          {companyIndustryId === 5 ? (
+            <InteriorDesigningLeadForm onClose={handleLeadFormClose} />
+          ) : leadFormType === 1 ? (
+            <LeadForm onClose={handleLeadFormClose} />
+          ) : leadFormType === 2 ? (
+            <LeadFormB2C onClose={handleLeadFormClose} />
+          ) : leadFormType === 3 ? (
+            <Both onClose={handleLeadFormClose} />
+          ) : null}
+
+        </div>
+      </div>
+    )}
+
+    {/* {showLeadForm && (
+      <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
+        <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
+          {companyIndustryId === 5 && (
+            <InteriorDesigningLeadForm onClose={handleLeadFormClose} />
+          )}
           {leadFormType === 1 && <LeadForm onClose={handleLeadFormClose} />}
           {leadFormType === 2 && (
             <LeadFormB2C onClose={handleLeadFormClose} />
@@ -211,7 +257,7 @@ return (
           {leadFormType ===3 && <Both onClose={handleLeadFormClose}/>}
         </div>
       </div>
-    )}
+    )} */}
 
     {/* + Create Lead Button - responsive text */}
    <div className="hidden md:flex">
@@ -384,6 +430,7 @@ return (
 );
 
 };
+
 
 export default ProfileHeader;
 

@@ -50,7 +50,6 @@ import { toast } from 'react-toastify';
 import { useUserAccess } from "../context/UserAccessContext";
 import { MdAccountCircle, MdClose } from 'react-icons/md';
 
-
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
@@ -1168,6 +1167,7 @@ const renderTabContent = () => {
 
           {leadData?.postSalesMaster?.length === 0 ? (
             <StatusBar
+              companyInfo={companyInfo} 
               leadId={leadId}
               leadData={leadData}
               isLost={isLost} 

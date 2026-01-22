@@ -1,21 +1,22 @@
 pipeline {
     agent any
 
+    environment {
+        NODE_ENV = 'production'
+    }
+
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/Pavithrajoe/CRM_Front_TESTING.git'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
+                echo 'Installing npm dependencies...'
                 bat 'npm install'
             }
         }
 
         stage('Build') {
             steps {
+                echo 'Building React application...'
                 bat 'npm run build'
             }
         }
@@ -23,10 +24,13 @@ pipeline {
 
     post {
         success {
-            echo 'Build completed successfully!'
+            echo '✅ Build completed successfully!'
         }
         failure {
-            echo 'Build failed!'
+            echo '❌ Build failed. Check console logs.'
+        }
+        always {
+            echo 'Pipeline execution finished.'
         }
     }
 }

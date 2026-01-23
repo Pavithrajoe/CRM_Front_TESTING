@@ -115,17 +115,18 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
               <DetailField label="Sub-Industry" value={profile.subindustry?.subindustry_name} />
               <DetailField label="Source" value={profile.lead_sources?.source_name} />
               <DetailField label="Sub-Source" value={profile.sub_src_lead?.sub_source?.ssub_src_name}/>
-              <DetailField label="Quantity" value={profile.quantity || '-'} />
-          <DetailField 
-  label="Service" 
-  value={
-    profile.crm_lead_multi_service?.length
-      ? profile.crm_lead_multi_service
-          .map(s => s.service?.cservice_name)
-          .join(", ")
-      : profile.service?.cservice_name
-  } 
-/>
+              {/* <DetailField label="Quantity" value={profile.quantity || '-'} /> */}
+              {profile.quantity && (<DetailField label="Quantity" value={profile.quantity} />)}
+            <DetailField 
+              label="Service" 
+              value={
+                profile.crm_lead_multi_service?.length
+                  ? profile.crm_lead_multi_service
+                      .map(s => s.service?.cservice_name)
+                      .join(", ")
+                  : profile.service?.cservice_name
+              } 
+            />
 
               <DetailField label="Sub-Service" value={profile.subservice?.subservice_name} />
             </div>

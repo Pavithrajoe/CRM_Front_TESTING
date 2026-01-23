@@ -41,7 +41,6 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks,  }) => {
 
   const { company } = useContext(companyContext);
   const companyIndustryId = company?.result?.icompanyindustry_id || company?.result?.companyIndustry?.icompanyindustry_id;
-  // console.log("cooooommmpaany industry id chefkcibgfdkg", companyIndustryId)
   const { user } = useContext(GlobUserContext);
   const [stages, setStages] = useState([]);
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
@@ -115,6 +114,40 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks,  }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localStatusRemarks, setLocalStatusRemarks] = useState([]);
   const [debugInfo, setDebugInfo] = useState('');
+const [uniqueRemarks, setUniqueRemarks] = useState([]);
+
+// assume you get leadId from props or state
+// const leadId = 322; // replace dynamically if needed
+
+useEffect(() => {
+  if (leadId) {
+    fetchCustomStatus(leadId); // ✅ pass leadId
+  }
+}, [leadId]);
+
+const fetchCustomStatus = async (leadId) => {
+  try {
+    const res = await axios.get(
+      `${BASE_URL}${ENDPOINTS.CUSTOM_STATUS}/${leadId}`
+    );
+
+    const mappedRemarks = res.data.Message.map(item => ({
+      ilead_status_remarks_id: item.id,
+      lead_status_remarks: item.comments || "-",
+      createdBy: item.data?.createdBy || "-",
+      dcreated_dt: item.createdAt,
+      status_name: item.lead_status?.clead_name || "-",
+      due_date: item.data?.next_payment_date || null,
+      rawData: item.data
+    }));
+
+    setUniqueRemarks(mappedRemarks);
+
+  } catch (error) {
+    console.error("Failed to fetch custom status for lead", leadId, error);
+  }
+};
+
 
   const PopperProps = {
     placement: 'top-start',
@@ -1572,7 +1605,7 @@ useEffect(() => {
             />
 
              {/* STATUS-BASED FORMS */}
-             {companyIndustryId === 5 && selectedRemark && (() => {
+             {/* {companyIndustryId === 5 && selectedRemark && (() => {
                 const statusName = selectedRemark.status_name?.toLowerCase();
 
                 if (statusName?.includes("quotation")) {
@@ -1592,8 +1625,72 @@ useEffect(() => {
                 }
 
                 return null;
-              })()}
+              })()} */}
 
+{companyIndustryId === 5 && selectedRemark && (() => {
+  const statusName = selectedRemark.status_name?.toLowerCase();
+
+  return (
+    <div className="space-y-4">
+
+      {/* 🔹 REMARK DISPLAY */}
+      <div className="bg-gray-50 border rounded-xl p-4">
+        <p className="text-sm text-gray-800">
+          <strong>Remark:</strong>{" "}
+          {selectedRemark.lead_status_remarks ||
+           selectedRemark.comments ||
+           "-"}
+        </p>
+
+        <p className="text-sm text-gray-600">
+          <strong>Status:</strong> {selectedRemark.status_name}
+        </p>
+
+        <p className="text-sm text-gray-600">
+          <strong>Date:</strong>{" "}
+          {formatDateOnly(selectedRemark.dcreated_dt)}
+        </p>
+
+        {selectedRemark.due_date && (
+          <p className="text-sm text-gray-600">
+            <strong>Due Date:</strong>{" "}
+            {new Date(selectedRemark.due_date).toLocaleString("en-GB")}
+          </p>
+        )}
+      </div>
+
+      {/* 🔹 STATUS FORMS */}
+      {statusName?.includes("quotation") && (
+        <QuotationForm
+          value={statusFormData}
+          onChange={setStatusFormData}
+        />
+      )}
+
+      {statusName?.includes("order") && (
+        <OrderStatusForm
+          value={statusFormData}
+          onChange={setStatusFormData}
+        />
+      )}
+
+      {statusName?.includes("payment") && (
+        <PaymentStatusForm
+          value={statusFormData}
+          onChange={setStatusFormData}
+        />
+      )}
+
+      {statusName?.includes("billing") && (
+        <BillingDetailsForm
+          value={statusFormData}
+          onChange={setStatusFormData}
+        />
+      )}
+
+    </div>
+  );
+})()}
 
            
           </DialogContent>

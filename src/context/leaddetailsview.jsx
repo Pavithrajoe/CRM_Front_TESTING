@@ -55,7 +55,6 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
-
   return (
     <Dialog 
       open={open} 
@@ -179,9 +178,10 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
   const formRef = useRef(null); 
-  const leadsList = location.state?.leadList || [];
-  const leadIds = leadsList.map((lead) => lead.ilead_id);
-  const currentIndex = leadIds.indexOf(Number(leadId));
+const passedLead = location.state?.lead || location.state?.leadList?.[0];
+const leadsList = passedLead ? [passedLead] : [];
+const leadIds = leadsList.map((lead) => lead.ilead_id);  // 🔥 ADD THIS LINE
+const currentIndex = leadIds.indexOf(Number(leadId));
   const theme = useTheme();
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -236,26 +236,6 @@ const LeadDetailView = () => {
 const [taskCount, setTaskCount] = useState(0);
 const [commentCount, setCommentCount] = useState(0);
 const [reminderCount, setReminderCount] = useState(0);
-  const [customStatusData, setCustomStatusData] = useState([]);
-  const fetchCustomStatus = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${ENDPOINTS.CUSTOM_STATUS_GET_BY_LEAD_ID}/${leadId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      setCustomStatusData(data);
-    }
-  } catch (error) {
-    console.error("Failed to fetch custom status:", error);
-  }
-};
-
 
 
 
@@ -758,7 +738,15 @@ const [reminderCount, setReminderCount] = useState(0);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [leadLostDescriptionTrue]);
-
+useEffect(() => {
+  const passedLead = location.state?.lead;
+  if (passedLead && passedLead.ilead_id == leadId) {
+    console.log("✅ USING PASSED LEAD:", passedLead.clead_name);
+    setLeadData(passedLead);
+    setLoading(false);
+    return; // Skip API!
+  }
+}, []);
   const fetchLeadData = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -880,7 +868,6 @@ const [reminderCount, setReminderCount] = useState(0);
       fetchLostReasons();
       getUserInfoFromLocalStorage();
       fetchQuotations();
-      fetchCustomStatus();
     }
   }, [leadId]);
 
@@ -966,10 +953,16 @@ const [reminderCount, setReminderCount] = useState(0);
     }
   },[isMailOpen]);
 
-  const applyTemplate = (template) => {
-    setMailSubject(template.mailTitle);
-    setMailContent(template.mailBody);
-  };
+const decodeHTML = (html) => {
+  const txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
+};
+
+const applyTemplate = (template) => {
+  setMailSubject(template.mailTitle || "");
+  setMailContent(decodeHTML(template.mailBody || ""));
+};;
 
   // Fetch stages for the StatusBar component
   const fetchStages = async () => {
@@ -983,7 +976,7 @@ const [reminderCount, setReminderCount] = useState(0);
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
-      // console.log("MASTER DATA BEFORE SORT:", data);
+      console.log("MASTER DATA BEFORE SORT:", data);
 
       const formattedStages = data.response
         .map(item => ({
@@ -1197,10 +1190,7 @@ const renderTabContent = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              customDataFromParent={customStatusData}
-              // customStatusData={customStatusData}
-              //  customStatusData={customStatusData} 
-              // stages={stages} 
+              stages={stages} 
             />
           ) : (
             <MilestoneStatusBar
@@ -1771,33 +1761,50 @@ const renderTabContent = () => {
                       </svg>
                       <p>No templates available</p>
                     </div>
-                  ) : (
-                    <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
-                      {templates.map((template) => (
-                        <div
-                          key={template.mailTemplateId}
-                          className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-                          onClick={() => applyTemplate(template)}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg">
-                              <MdEmail className="text-blue-600" size={18} />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold">
-                                {template.mailTitle}
-                              </h4>
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                {template.mailBody?.replace(/<[^>]*>/g, "").substring(0, 100) || ""}
-                              </p>
-                              
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  ) : 
+            (
+  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
+    {templates.map((template) => {
+      console.log("FULL TEMPLATE:", template);
+      console.log("MAIL BODY:", template.mailBody);
+
+      return (
+        <div
+          key={template.mailTemplateId}
+          className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+          onClick={() => applyTemplate(template)}
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg">
+              <MdEmail className="text-blue-600" size={18} />
+            </div>
+
+            <div>
+              <h4 className="font-semibold">{template.mailTitle}</h4>
+
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {template.mail_template_body
+
+                  ? template.mail_template_body
+
+                      .replace(/&nbsp;/g, " ")
+                      .replace(/<[^>]+>/g, "")
+                      .replace(/\s+/g, " ")
+                      .trim()
+                      .substring(0, 120)
+                  : "No content"}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
                   )}
-                </div>
+                </div>                                      
+
+
+
 
                 {/* Email Form Section */}
                 <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
@@ -1862,7 +1869,7 @@ const renderTabContent = () => {
                       <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
                         <ReactQuill
                           theme="snow"
-                          value={mailContent}
+                       value={mailContent || ""}
                           onChange={setMailContent}
                           modules={{
                             ...modules,
@@ -3796,4 +3803,3 @@ export default LeadDetailView;
 // };
 
 // export default LeadDetailView;
-

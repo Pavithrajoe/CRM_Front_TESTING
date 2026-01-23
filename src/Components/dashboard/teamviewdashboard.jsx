@@ -65,7 +65,7 @@ const TeamviewDashboard = ({ dashboardData, reminders }) => {
     fetchTeamDashboardData();
   }, [fetchTeamDashboardData]);
 
-  console.log("The response data areeeee:", teamDashboardData);
+  // console.log("The response data areeeee:", teamDashboardData);
   const leads = dashboardData?.details?.leads || [];
   const teamMembers = dashboardData?.details?.subordinateNames || [];
   const childSubordinates = dashboardData?.details?.childSubordinateIds || [];

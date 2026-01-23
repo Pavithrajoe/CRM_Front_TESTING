@@ -39,7 +39,6 @@ const UserPage = () => {
     return Array.from(new Map(filtered.map((item) => [item.attributes_id, item])).values());
   }, [userModules]);
 
-  console.log("testing", userAccess);
 
   /**
    * Decodes the JWT token from local storage.

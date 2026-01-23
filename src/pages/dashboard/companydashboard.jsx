@@ -9,7 +9,6 @@ import LeadStatusChart from "../../Components/dashboard/company/leadStatus";
 let apiCallInitModuleFlag = false; 
 
 export default function CompanyDashboard() {
-    // console.log("Component Body Rendered!"); 
     
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -30,13 +29,6 @@ export default function CompanyDashboard() {
     };
 
     const fetchDashboardData = useCallback(async () => {
-        // if (apiCallInitModuleFlag) {
-        //     setLoading(false); 
-        //     // console.log("Prevented duplicate API call via module flag.");
-        //     return; 
-        // }
-
-        // apiCallInitModuleFlag = true; 
         
         setLoading(true);
         setError(null);
@@ -62,7 +54,6 @@ export default function CompanyDashboard() {
             }
 
             const result = await response.json();
-            // console.log("result:", result);
             setDashboardData(result.data); 
         } catch (err) {
             console.error('API Error:', err);

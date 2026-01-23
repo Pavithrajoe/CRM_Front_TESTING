@@ -44,7 +44,7 @@ function LabelMaster() {
                     companyId: payload.company_id,
                     userId: payload.user_id,
                 });
-                console.log(`[DEBUG: INIT] Decoded Token IDs - Company ID: ${payload.company_id}, User ID: ${payload.user_id}`);
+                // console.log(`[DEBUG: INIT] Decoded Token IDs - Company ID: ${payload.company_id}, User ID: ${payload.user_id}`);
             }
         }
         

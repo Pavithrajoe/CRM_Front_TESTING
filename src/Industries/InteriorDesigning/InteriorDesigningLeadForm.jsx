@@ -11,7 +11,6 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const { userModules } = useUserAccess();
   const canSeeExistingLeads = React.useMemo(() => {
     if (!userModules || !Array.isArray(userModules)) {
-      console.log("userModules is missing or not an array:", userModules);
       return false;
     }
     
@@ -1551,7 +1550,7 @@ const handleSubmit = async (e) => {
   modified_by: userId,
   iuser_tags: userId,
 
-  // 🔥 THIS IS THE FIX
+  //  THIS IS THE FIX
 iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice_id],
 
   isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
@@ -1565,19 +1564,13 @@ iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice
 
   phone_country_code: form.phone_country_code,
   whatsapp_country_code: form.whatsapp_country_code,
-};
-console.log("Industry ID:", form.cindustry_id);
-console.log("Selected Services:", form.iservice_id);
-console.log("Sending Service Payload:", formData.iservice_id);
+ };
 
 
     if (saveTriggerRef.current) {
       formData.save = true;
       saveTriggerRef.current = false;
     }
-console.log("Industry ID:", form.cindustry_id);
-console.log("Selected Services:", form.iservice_id);
-console.log("Sending Service Payload:", formData.iservice_id);
     const res = await fetch(`${apiEndPoint}/lead`, {
       method: "POST",
       headers: {
@@ -1590,18 +1583,7 @@ console.log("Sending Service Payload:", formData.iservice_id);
     const resData = await res.json();
 
     if (res.ok) {
-      // setPopupMessage("Lead created successfully!");
-      // setIsPopupVisible(true);
 
-      // setTimeout(() => {
-      //   setIsPopupVisible(false);
-      //   onClose();
-      //   if (onSuccess) {
-      //     onSuccess();
-      //   } else {
-      //     window.location.reload();
-      //   }
-      // }, 3000);
 
       MySwal.fire({
     title: 'Success!',

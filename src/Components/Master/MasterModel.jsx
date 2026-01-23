@@ -438,9 +438,7 @@ useEffect(() => {
   let newFormData = {};
 
   if (selectedItemForEdit) {
-    console.log('=== DEBUG: Editing item ===');
-    console.log('Selected item:', selectedItemForEdit);
-
+  
     if (selectedItemForEdit.isSubIndustry && subIndustryConfig) {
       const parentIdKey =
         subIndustryConfig.parentMasterConfig?.parentIdInChildResponseKey ||
@@ -449,10 +447,6 @@ useEffect(() => {
         subIndustryConfig.parentMasterConfig?.formFieldKey ||
         "industryParent";
 
-      console.log('Parent ID key:', parentIdKey);
-      console.log('Form parent key:', formParentKey);
-      console.log('Parent ID value from item:', selectedItemForEdit[parentIdKey]);
-      console.log('Parent options:', parentOptions);
 
       newFormData = {
         [subIndustryConfig.payloadKey]:
@@ -469,27 +463,19 @@ useEffect(() => {
         }),
       };
 
-      console.log('New form data:', newFormData);
     } else if (master.title === "Email Template") {
-      // SPECIAL HANDLING FOR EMAIL TEMPLATE
-      console.log('Editing Email Template');
-      console.log('API response fields:', selectedItemForEdit);
       
-      // Map API response fields to form fields
       newFormData = {
         mailTitle: selectedItemForEdit.mail_template_title || "",
         mailBody: selectedItemForEdit.mail_template_body || "",
         mail_template_id: selectedItemForEdit.mail_template_id,
-        // Include any other fields that might be needed
       };
       
-      console.log('Mapped form data for email template:', newFormData);
     } else {
       // Regular items
       newFormData = { ...selectedItemForEdit };
     }
   } else {
-    // New item - start with base payload
     newFormData = { ...master.basePostPayload };
 
     if (master.isHierarchical && master.parentMasterConfig) {
@@ -790,8 +776,8 @@ const handleSave = async () => {
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    console.log('Saving payload:', payload); // Debug log
-    console.log('URL:', url); // Debug log
+    // console.log('Saving payload:', payload);
+    // console.log('URL:', url); 
 
     if (method === "POST") {
       await axios.post(url, payload, { headers });
@@ -815,7 +801,6 @@ const handleSave = async () => {
     let newEntryFormData = { ...currentSaveMasterConfig.basePostPayload };
     
     if (master.title === "Email Template") {
-      // For email template, reset both fields
       newEntryFormData = {
         mailTitle: '',
         mailBody: ''

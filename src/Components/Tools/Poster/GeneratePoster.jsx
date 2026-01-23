@@ -4,9 +4,7 @@ import { Download, X, UploadCloud, Trash2 } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 
 const apiEndPoint = import.meta.env.VITE_API_URL;
-// console.log('API Endpoint:', apiEndPoint);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-// console.log('API Base URL:', apiBaseUrl);
 
 const GeneratePoster = () => {
   const [image, setImage] = useState(null);
@@ -26,7 +24,6 @@ const GeneratePoster = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [posterToDelete, setPosterToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const posterRef = useRef(null);
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);

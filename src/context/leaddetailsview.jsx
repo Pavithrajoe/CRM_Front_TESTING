@@ -55,6 +55,7 @@ const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
 // PDF Viewer Component
 const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
+
   return (
     <Dialog 
       open={open} 
@@ -235,6 +236,26 @@ const LeadDetailView = () => {
 const [taskCount, setTaskCount] = useState(0);
 const [commentCount, setCommentCount] = useState(0);
 const [reminderCount, setReminderCount] = useState(0);
+  const [customStatusData, setCustomStatusData] = useState([]);
+  const fetchCustomStatus = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.CUSTOM_STATUS_GET_BY_LEAD_ID}/${leadId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      setCustomStatusData(data);
+    }
+  } catch (error) {
+    console.error("Failed to fetch custom status:", error);
+  }
+};
+
 
 
 
@@ -859,6 +880,7 @@ const [reminderCount, setReminderCount] = useState(0);
       fetchLostReasons();
       getUserInfoFromLocalStorage();
       fetchQuotations();
+      fetchCustomStatus();
     }
   }, [leadId]);
 
@@ -961,7 +983,7 @@ const [reminderCount, setReminderCount] = useState(0);
       });
       if (!response.ok) throw new Error('Failed to fetch stages');
       const data = await response.json();
-      console.log("MASTER DATA BEFORE SORT:", data);
+      // console.log("MASTER DATA BEFORE SORT:", data);
 
       const formattedStages = data.response
         .map(item => ({
@@ -1175,7 +1197,10 @@ const renderTabContent = () => {
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
-              stages={stages} 
+              customDataFromParent={customStatusData}
+              // customStatusData={customStatusData}
+              //  customStatusData={customStatusData} 
+              // stages={stages} 
             />
           ) : (
             <MilestoneStatusBar

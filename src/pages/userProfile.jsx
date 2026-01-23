@@ -377,33 +377,6 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
 };
 
 
-//   const handleSubmit = async (e) => {
-//   e.preventDefault();
-
-//   try {
-//     const token = localStorage.getItem("token");
-
-//     const res = await fetch(`${ENDPOINTS.USER_GET}/${userId}`, {
-//       method: "PUT", 
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify(editFormData),
-//     });
-
-//     const data = await res.json();
-
-//     if (!res.ok) throw new Error(data.message);
-
-//     setUsers(data);
-//     setShowForm(false);
-//     alert("User updated successfully");
-//   } catch (err) {
-//     alert(err.message);
-//   }
-// };
-
   const handleFormClose = () => {
     setEditFormData({
       cFull_name: users.cFull_name || '',
@@ -586,11 +559,6 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, title = "Confirm Acti
             showAppMessage("DCRM user created successfully!", "success");
           }}
 
-          // onSuccess={(createdUser) => {
-          //   setUsers(prev => ({ ...prev, DCRM_enabled: true }));
-          //   setShowDCRMForm(false);
-          //   showAppMessage('DCRM user created successfully!', 'success');
-          // }}
         />
       )}
       {showConfirmModal && (

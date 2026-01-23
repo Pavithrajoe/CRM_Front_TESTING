@@ -109,16 +109,11 @@ const BulkMailSender = () => {
       try {
         setIsLoadingLeads(true);
         const leadsUrl = ENDPOINTS.BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID(companyId);
-        console.log("bulk mail API checking", leadsUrl)
         const res = await axios.get(leadsUrl, {
           headers: { Authorization: `Bearer ${token}` }
         });
-                console.log("res", res)
-
         
        const rawLeads = Array.isArray(res.data) ? res.data : [];
-               console.log("lawleads", rawLeads)
-
 
         //  A to Z Alphabetical Sorting Logic
         const sortedLeads = [...rawLeads].sort((a, b) => {

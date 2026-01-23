@@ -2,7 +2,7 @@ import React from 'react';
 import { Dialog } from '@headlessui/react';
 
 const LeadProfileView = ({ profile, showDetails, onClose }) => {
-  console.log("LEAD PROFILE DATA:", profile);
+  // console.log("LEAD PROFILE DATA:", profile);
 
   if (!showDetails || !profile) return null;
 

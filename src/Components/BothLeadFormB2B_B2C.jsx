@@ -12,7 +12,6 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const { userModules } = useUserAccess();
   const canSeeExistingLeads = React.useMemo(() => {
     if (!userModules || !Array.isArray(userModules)) {
-      console.log("userModules is missing or not an array:", userModules);
       return false;
     }
     
@@ -487,7 +486,6 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
         });
 
         const resData = await res.json();
-        console.log("Existing lead search response:", resData);
 
         if (res.ok && Array.isArray(resData.data) && resData.data.length > 0) {
           setFoundLeads(resData.data);

@@ -15,7 +15,7 @@ export const CompanyProvider = ({ children }) => {
       const userString = JSON.parse(user);
       return userString?.company_id || null;
     } catch (error) {
-      console.log("no user details found:", error);
+      // console.log("no user details found:", error);
       return null;
     }
   };

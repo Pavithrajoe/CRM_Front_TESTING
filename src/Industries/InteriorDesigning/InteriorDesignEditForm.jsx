@@ -315,7 +315,7 @@ iservice_id: Array.isArray(profile?.services)
       }
 
       const rawData = await response.json();
-        console.log("SERVICE DATA:", rawData.data);
+        // console.log("SERVICE DATA:", rawData.data);
       setService(rawData.data || []);
     } catch (e) {
       console.error("Error in fetching lead services:", e);
@@ -677,10 +677,9 @@ const validateForm = () => {
     }
   }
 
-  if (form.cwebsite.trim()) {
-    if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(form.cwebsite)) {
-      newErrors.cwebsite = "Invalid website format.";
-    }
+
+  if (form.cwebsite.trim() && form.cwebsite.trim().length > 1000) {
+    newErrors.cwebsite = "Site location cannot exceed 1000 characters.";
   }
   
   if (form.cpincode && !/^[0-9]{6,10}$/.test(form.cpincode)) {  

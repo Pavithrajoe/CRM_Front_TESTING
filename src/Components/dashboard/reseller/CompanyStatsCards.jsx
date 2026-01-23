@@ -14,7 +14,6 @@ const CompanyStatsCards = () => {
 
   const getUserInfoFromToken = () => {
     const token = localStorage.getItem('token');
-    // console.log('Token from localStorage:', token ? 'Token found' : 'No token found');
 
     if (!token) {
       return { userIdFromToken: null, roleId: null }; 
@@ -22,7 +21,6 @@ const CompanyStatsCards = () => {
 
     try {
       const decoded = jwtDecode(token);
-      // console.log('Decoded token payload:', decoded);
 
       return {
         userIdFromToken: decoded?.user_id || null,
@@ -38,9 +36,6 @@ const CompanyStatsCards = () => {
     const fetchCompanyStats = async () => {
       const { userIdFromToken, roleId } = getUserInfoFromToken();
 
-      // console.log('Extracted User ID from Token (for filtering):', userIdFromToken);
-      // console.log('Extracted Role ID:', roleId);
-
       if (!userIdFromToken || roleId !== 3) {
         // console.warn('User is not a reseller (role_id !== 3) or User ID from token is missing. Skipping company stats fetch.');
         return;
@@ -53,7 +48,6 @@ const CompanyStatsCards = () => {
           return;
         }
 
-        // console.log(`Attempting to fetch from: ${ENDPOINTS.COMPANY} with Authorization header.`);
         const res = await fetch(ENDPOINTS.COMPANY, {
           method: 'GET',
           headers: {
@@ -69,16 +63,13 @@ const CompanyStatsCards = () => {
         }
 
         const result = await res.json();
-        // console.log('API response for companies:', result);
 
         if (result && Array.isArray(result)) {
           const companies = result;
-          // console.log('Processing companies array:', companies);
 
           const relevantCompanies = companies.filter(
             (company) => company.ireseller_admin_id === userIdFromToken
           );
-          // console.log('Filtered companies (relevant to this reseller_admin_id):', relevantCompanies);
 
           const total = relevantCompanies.length;
           const active = relevantCompanies.filter((company) => company.bactive).length;

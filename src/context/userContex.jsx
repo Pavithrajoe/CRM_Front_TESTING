@@ -18,7 +18,7 @@ export const GlobeUserProvider = ({ children }) => {
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       return JSON.parse(atob(base64));
     } catch (error) {
-      console.log("Token decode error is", error);
+      // console.log("Token decode error is", error);
       return null;
     }
   }, []);

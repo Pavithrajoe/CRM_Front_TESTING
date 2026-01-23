@@ -168,12 +168,8 @@ export default function SalesByStageReport() {
      fetchData();
   }, []);
      
-    
-
-
-
   //log the api hitting count
-             console.log("API called times:",apiHittingCount);
+            //  console.log("API called times:",apiHittingCount);
   // Function to handle Excel export
   const handleExport = () => {
     if (tableData.length === 0) {

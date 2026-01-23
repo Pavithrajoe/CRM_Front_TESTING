@@ -29,10 +29,10 @@ export const UserAccessProvider = ({ children, data }) => {
 
   useEffect(() => {
   if (data) {
-    console.log("Login Data from API:", data);
+    // console.log("Login Data from API:", data);
   } else {
     const stored = localStorage.getItem("loginResponse");
-    console.log("Login Data from localStorage:", JSON.parse(stored));
+    // console.log("Login Data from localStorage:", JSON.parse(stored));
   }
 }, [data]);
 

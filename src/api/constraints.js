@@ -86,6 +86,10 @@ export const ENDPOINTS = {
   SMTP_SETTINGS: `${BASE_URL}/smtp-settings`,
   COMPANY_SETTINGS:`${BASE_URL}/company`, 
   CUSTOM_STATUS:`${BASE_URL}/custom-status`, 
+  CUSTOM_STATUS_GET_BY_LEAD_ID:`${BASE_URL}/custom-status/lead`, 
+  ASSIGN_TO_MES: `${BASE_URL}/lead/assign-to-me`,
+
+
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,
 
   // Master endpoints

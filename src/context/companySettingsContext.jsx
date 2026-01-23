@@ -34,7 +34,7 @@ export const SettingsProvider = ({ children }) => {
         const response = await axios.get(`${ENDPOINTS.COMPANY_SETTINGS}/${company_id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("settings Data", response.data.result);
+        // console.log("settings Data", response.data.result);
         setSettingsAccess(response.data.result);
       } catch (error) {
         setError(error.message || "Something went wrong");

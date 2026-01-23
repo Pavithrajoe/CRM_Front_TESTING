@@ -11,11 +11,11 @@ const CityLeadsAnalytics = (props) => {
 
     useEffect(()=>{
         //log the count to check 
-        console.log("City Leads API Response:");
+        // console.log("City Leads API Response:");
         const leadsByCity = {};
         //PASS THE PROP DATA
         const conversionData = props.conversionPerTerritory;
-        console.log("Conversion Data:", conversionData);
+        // console.log("Conversion Data:", conversionData);
         if (conversionData) {
           for (const city in conversionData) {
             leadsByCity[city] = conversionData[city].total;

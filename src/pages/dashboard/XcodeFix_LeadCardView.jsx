@@ -112,167 +112,348 @@ const Xcode_LeadCardViewPage = () => {
         }
      }, [selectedFilter, hasAllLeadsAccess, hasActiveLeadsAccess, hasWebsiteLeadAccess]);
     
-    
+const dataToDisplay = useMemo(() => {
+  let data = [];
+
+  // BASE DATA ACCESS CHECK
+  if (selectedFilter === "assignedToMe") {
+    data = assignedLeads;
+  } else if (selectedFilter === "lost") {
+    data = lostLeads;
+  } else if (selectedFilter === "all") {
+    if (!hasAllLeadsAccess) return [];
+    data = allLeads;
+  } else if (selectedFilter === "activeLeads") { // CHANGED: from "leads" to "activeLeads"
+    if (!hasActiveLeadsAccess) return [];
+    data = allLeads;
+  } else if (selectedFilter === "websiteLeads") {
+    if (!hasWebsiteLeadAccess) return [];
+    data = allLeads;
+  } else {
+    data = allLeads;
+  }
+
+  // FILTERING LOGIC
+  return data.filter((item) => {
+    const match = (text) =>
+      String(text || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesSearch =  
+      match(item.clead_name) || 
+      match(item.corganization || item.c_organization) || 
+      match(item.cemail || item.c_email) ||
+      match(item.iphone_no || item.c_phone) || 
+      (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||  
+      (selectedFilter === "assignedToMe" && match(item.statusDisplay));
+
+    let dateToFilter = item.dmodified_dt || item.d_modified_date;
+    if (selectedFilter === "assignedToMe") {
+      dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+    }
+
+    const isWithinDateRange = (date) => {
+      if (!date) return true;
+      const d = new Date(date);
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate
+        ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+        : null;
+      return (!from || d >= from) && (!to || d <= to);
+    };
+
+    const matchesDate = isWithinDateRange(dateToFilter);
+
+    let matchesModalFilters = true;
+
+    // MODAL FILTER ACCESS CHECK
+    if (
+      (selectedFilter === "all" && hasAllLeadsAccess) ||
+      (selectedFilter === "activeLeads" && hasActiveLeadsAccess) || // CHANGED: from "leads" to "activeLeads"
+      (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
+    ) {
+      if (selectedPotential) {
+        const itemPotential = item.lead_potential?.clead_name || item.potentialDisplay;
+        if (itemPotential !== selectedPotential)
+          matchesModalFilters = false;
+      }
+
+      if (selectedStatus) {
+        const itemStatus = item.lead_status?.clead_name || item.statusDisplay;
+        if (itemStatus !== selectedStatus)
+          matchesModalFilters = false;
+      }
+
+      if (selectedSource) {
+        if (item.lead_source_id !== Number(selectedSource))
+          matchesModalFilters = false;
+      }
+
+      if (selectedIndustry) {
+        if (item.cindustry_id !== Number(selectedIndustry))
+          matchesModalFilters = false;
+      }
+
+      if (selectedService) {
+        if (item.iservice_id !== Number(selectedService))
+          matchesModalFilters = false;
+      }
+    }
+
+    // Check for boolean conversion properly
+    const isConverted = 
+      item.bisConverted === true || 
+      String(item.bisConverted).toLowerCase() === 'true' ||
+      item.bisConverted === 1;
+
+    const isActive = 
+      item.bactive === true || 
+      String(item.bactive).toLowerCase() === 'true' ||
+      item.bactive === 1;
+
+    const isWebsite = 
+      item.website_lead === true || 
+      String(item.website_lead).toLowerCase() === 'true' ||
+      item.website_lead === 1;
+
+    if (selectedFilter === "all") {
+      return (
+        hasAllLeadsAccess && matchesSearch && matchesDate && matchesModalFilters && !isConverted
+      );
+    } else if (selectedFilter === "activeLeads") { // CHANGED: from "leads" to "activeLeads"
+      return ( 
+        hasActiveLeadsAccess && 
+        matchesSearch && 
+        matchesDate && 
+        matchesModalFilters && 
+        isActive && 
+        !isConverted && 
+        !isWebsite 
+      );
+    } else if (selectedFilter === "websiteLeads") {
+      return ( 
+        hasWebsiteLeadAccess && 
+        matchesSearch && 
+        matchesDate && 
+        matchesModalFilters && 
+        isWebsite && 
+        isActive 
+      );
+    } else if (selectedFilter === "lost") {
+      if (!isActive) {
+        const isLeadLost = !isConverted && showLostLeads;
+        const isDealLost = isConverted && showLostDeals;
+        return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+      }
+      return false;
+    } else if (selectedFilter === "assignedToMe") {
+      return matchesSearch && matchesDate && isActive;
+    }
+
+    return matchesSearch && matchesDate && matchesModalFilters;
+  });
+}, [
+  selectedFilter,
+  assignedLeads,
+  lostLeads,
+  allLeads,
+  searchTerm,
+  fromDate,
+  toDate,
+  showLostLeads,
+  showLostDeals,
+  selectedPotential,
+  selectedStatus,
+  selectedSource,
+  selectedIndustry,
+  selectedService,
+  hasAllLeadsAccess,
+  hasActiveLeadsAccess,
+  hasWebsiteLeadAccess
+]);
       // Proper tab filtration logic
-      const dataToDisplay = useMemo(() => {
-        let data = [];
+//       const dataToDisplay = useMemo(() => {
+//         let data = [];
     
-        //BASE DATA ACCESS CHECK
-        if (selectedFilter === "assignedToMe") {
-          data = assignedLeads;
-        } else if (selectedFilter === "lost") {
-          data = lostLeads;
-        } else if (selectedFilter === "all") {
-          if (!hasAllLeadsAccess) return [];
-          data = allLeads;
-        } else if (selectedFilter === "leads") {
-          if (!hasActiveLeadsAccess) return [];
-          data = allLeads;
-        } else if (selectedFilter === "websiteLeads") {
-          if (!hasWebsiteLeadAccess) return [];
-          data = allLeads;
-        } else {
-          data = allLeads;
-        }
+//         //BASE DATA ACCESS CHECK
+//         if (selectedFilter === "assignedToMe") {
+//           data = assignedLeads;
+//         } else if (selectedFilter === "lost") {
+//           data = lostLeads;
+//         } else if (selectedFilter === "all") {
+//           if (!hasAllLeadsAccess) return [];
+//           data = allLeads;
+//         } else if (selectedFilter === "leads") {
+//           if (!hasActiveLeadsAccess) return [];
+//           data = allLeads;
+//         } else if (selectedFilter === "websiteLeads") {
+//           if (!hasWebsiteLeadAccess) return [];
+//           data = allLeads;
+//         } else {
+//           data = allLeads;
+//         }
     
-        // FILTERING LOGIC
-        return data.filter((item) => {
-          const match = (text) =>
-            String(text || "")
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase());
+//         // FILTERING LOGIC
+//         return data.filter((item) => {
+//           const match = (text) =>
+//             String(text || "")
+//               .toLowerCase()
+//               .includes(searchTerm.toLowerCase());
     
-          const matchesSearch =
-            match(item.clead_name) ||
-            match(item.corganization || item.c_organization) ||
-            match(item.cemail || item.c_email) ||
-            match(item.iphone_no || item.c_phone) ||
-            (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
-            (selectedFilter === "assignedToMe" && match(item.statusDisplay));
+//           const matchesSearch =
+//             match(item.clead_name) ||
+//             match(item.corganization || item.c_organization) ||
+//             match(item.cemail || item.c_email) ||
+//             match(item.iphone_no || item.c_phone) ||
+//             (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
+//             (selectedFilter === "assignedToMe" && match(item.statusDisplay));
     
-          let dateToFilter = item.dmodified_dt || item.d_modified_date;
-          if (selectedFilter === "assignedToMe") {
-            dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
-          }
+//           let dateToFilter = item.dmodified_dt || item.d_modified_date;
+//           if (selectedFilter === "assignedToMe") {
+//             dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+//           }
     
-          const isWithinDateRange = (date) => {
-            if (!date) return true;
-            const d = new Date(date);
-            const from = fromDate ? new Date(fromDate) : null;
-            const to = toDate
-              ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
-              : null;
-            return (!from || d >= from) && (!to || d <= to);
-          };
+//           const isWithinDateRange = (date) => {
+//             if (!date) return true;
+//             const d = new Date(date);
+//             const from = fromDate ? new Date(fromDate) : null;
+//             const to = toDate
+//               ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+//               : null;
+//             return (!from || d >= from) && (!to || d <= to);
+//           };
     
-          const matchesDate = isWithinDateRange(dateToFilter);
+//           const matchesDate = isWithinDateRange(dateToFilter);
     
-          let matchesModalFilters = true;
+//           let matchesModalFilters = true;
     
-          // MODAL FILTER ACCESS CHECK
-          if (
-            (selectedFilter === "all" && hasAllLeadsAccess) ||
-            (selectedFilter === "leads" && hasActiveLeadsAccess) ||
-            (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
-          ) {
-            if (selectedPotential) {
-              const itemPotential =
-                item.lead_potential?.clead_name || item.potentialDisplay;
-              if (itemPotential !== selectedPotential)
-                matchesModalFilters = false;
-            }
+//           // MODAL FILTER ACCESS CHECK
+//           if (
+//             (selectedFilter === "all" && hasAllLeadsAccess) ||
+//             (selectedFilter === "leads" && hasActiveLeadsAccess) ||
+//             (selectedFilter === "websiteLeads" && hasWebsiteLeadAccess)
+//           ) {
+//             if (selectedPotential) {
+//               const itemPotential =
+//                 item.lead_potential?.clead_name || item.potentialDisplay;
+//               if (itemPotential !== selectedPotential)
+//                 matchesModalFilters = false;
+//             }
     
-            if (selectedStatus) {
-              const itemStatus =
-                item.lead_status?.clead_name || item.statusDisplay;
-              if (itemStatus !== selectedStatus)
-                matchesModalFilters = false;
-            }
+//             if (selectedStatus) {
+//               const itemStatus =
+//                 item.lead_status?.clead_name || item.statusDisplay;
+//               if (itemStatus !== selectedStatus)
+//                 matchesModalFilters = false;
+//             }
     
-            if (selectedSource) {
-              if (item.lead_source_id !== Number(selectedSource))
-                matchesModalFilters = false;
-            }
+//             if (selectedSource) {
+//               if (item.lead_source_id !== Number(selectedSource))
+//                 matchesModalFilters = false;
+//             }
     
-            if (selectedIndustry) {
-              if (item.cindustry_id !== Number(selectedIndustry))
-                matchesModalFilters = false;
-            }
+//             if (selectedIndustry) {
+//               if (item.cindustry_id !== Number(selectedIndustry))
+//                 matchesModalFilters = false;
+//             }
     
-            if (selectedService) {
-              if (item.iservice_id !== Number(selectedService))
-                matchesModalFilters = false;
-            }
-          }
+//             if (selectedService) {
+//               if (item.iservice_id !== Number(selectedService))
+//                 matchesModalFilters = false;
+//             }
+//           }
     
-          const isConverted =
-            item.bisConverted === true || item.bisConverted === "true";
-          const isActive =
-            item.bactive === true || item.bactive === "true";
-          const isWebsite =
-            item.website_lead === true ||
-            item.website_lead === "true" ||
-            item.website_lead === 1;
+//           const isConverted =
+//             item.bisConverted === true || item.bisConverted === "true";
+//           const isActive =
+//             item.bactive === true || item.bactive === "true";
+//           const isWebsite =
+//             item.website_lead === true ||
+//             item.website_lead === "true" ||
+//             item.website_lead === 1;
     
-          if (selectedFilter === "all") {
-            return (
-              hasAllLeadsAccess &&
-              matchesSearch &&
-              matchesDate &&
-              matchesModalFilters &&
-              !isConverted
-            );
-          } else if (selectedFilter === "leads") {
-            return (
-              hasActiveLeadsAccess &&
-              matchesSearch &&
-              matchesDate &&
-              matchesModalFilters &&
-              isActive &&
-              !isConverted &&
-              !isWebsite
-            );
-          } else if (selectedFilter === "websiteLeads") {
-            return (
-              hasWebsiteLeadAccess &&
-              matchesSearch &&
-              matchesDate &&
-              matchesModalFilters &&
-              isWebsite &&
-              isActive
-            );
-          } else if (selectedFilter === "lost") {
-            if (isActive === false) {
-              const isLeadLost = !isConverted && showLostLeads;
-              const isDealLost = isConverted && showLostDeals;
-              return matchesSearch && matchesDate && (isLeadLost || isDealLost);
-            }
-            return false;
-          } else if (selectedFilter === "assignedToMe") {
-            return matchesSearch && matchesDate && isActive;
-          }
+//           if (selectedFilter === "all") {
+//             return (
+//               hasAllLeadsAccess &&
+//               matchesSearch &&
+//               matchesDate &&
+//               matchesModalFilters &&
+//               !isConverted
+//             );
+//           }else if (selectedFilter === "leads") {
+
+//   const isActive =
+//     item.bactive === true ||
+//     item.bactive === "true" ||
+//     item.bactive === 1;
+
+//   const isConverted =
+//     item.bisConverted === true ||
+//     item.bisConverted === "true" ||
+//     item.bisConverted === 1 ||
+//     !!item.convertToDealTime; // extra safety
+
+//   const isWebsite =
+//     item.website_lead === true ||
+//     item.website_lead === "true" ||
+//     item.website_lead === 1;
+
+//   // ❌ BLOCK WON / Converted Leads
+//   if (isConverted) {
+//     console.log("❌ BLOCKED WON LEAD:", item.ilead_id);
+//     return false;
+//   }
+
+//   return (
+//     hasActiveLeadsAccess &&
+//     matchesSearch &&
+//     matchesDate &&
+//     matchesModalFilters &&
+//     isActive &&
+//     !isWebsite
+//   );
+// }else if (selectedFilter === "websiteLeads") {
+//             return (
+//               hasWebsiteLeadAccess &&
+//               matchesSearch &&
+//               matchesDate &&
+//               matchesModalFilters &&
+//               isWebsite &&
+//               isActive
+//             );
+//           } else if (selectedFilter === "lost") {
+//             if (isActive === false) {
+//               const isLeadLost = !isConverted && showLostLeads;
+//               const isDealLost = isConverted && showLostDeals;
+//               return matchesSearch && matchesDate && (isLeadLost || isDealLost);
+//             }
+//             return false;
+//           } else if (selectedFilter === "assignedToMe") {
+//   return matchesSearch && matchesDate;
+// }
     
-          return matchesSearch && matchesDate && matchesModalFilters;
-        });
-      }, [
-        selectedFilter,
-        assignedLeads,
-        lostLeads,
-        allLeads,
-        searchTerm,
-        fromDate,
-        toDate,
-        showLostLeads,
-        showLostDeals,
-        selectedPotential,
-        selectedStatus,
-        selectedSource,
-        selectedIndustry,
-        selectedService,
-        hasAllLeadsAccess,
-        hasActiveLeadsAccess,
-        hasWebsiteLeadAccess
-      ]);
+//           return matchesSearch && matchesDate && matchesModalFilters;
+//         });
+//       }, [
+//         selectedFilter,
+//         assignedLeads,
+//         lostLeads,
+//         allLeads,
+//         searchTerm,
+//         fromDate,
+//         toDate,
+//         showLostLeads,
+//         showLostDeals,
+//         selectedPotential,
+//         selectedStatus,
+//         selectedSource,
+//         selectedIndustry,
+//         selectedService,
+//         hasAllLeadsAccess,
+//         hasActiveLeadsAccess,
+//         hasWebsiteLeadAccess
+//       ]);
 
     // const dataToDisplay = useMemo(() => {
     //     let data = [];
@@ -814,65 +995,97 @@ const Xcode_LeadCardViewPage = () => {
             setLoading(false);
         }
     }, [currentUserId, currentToken]);
+const fetchAssignedLeads = useCallback(async () => {
+  if (!currentUserId || !currentToken) return [];
+
+  setError(null);
+
+  try {
+    const response = await fetch(
+      `${ENDPOINTS.ASSIGN_TO_MES}/${currentUserId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const resJson = await response.json();
+
+    const assignedEntries = resJson?.data?.assignedEntries || [];
+    const leadsAssigned = resJson?.data?.leadsAssigned || [];
 
 
-    const fetchAssignedLeads = useCallback(async () => {
-        if (!currentUserId || !currentToken) return [];
-        setError(null);
-        try {
-            const response = await fetch(`${ENDPOINTS.ASSIGN_TO_ME}/${currentUserId}`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${currentToken}`,
-                },
-            });
-            if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData || response.statusText}`);
-            }
+    // ✅ Merge ONLY by lead ID
+    const mergedLeads = assignedEntries.map(entry => {
+      const leadId = Number(entry.ilead_id);
 
-            const resJson = await response.json();
-            const assignedEntries = resJson?.data?.assignedEntries || [];
-            const leadsAssigned = resJson?.data?.leadsAssigned || [];
-            const mergedLeads = assignedEntries.map((entry, index) => {
-                const leadDetails = leadsAssigned[index] || {};
-                const statusName = leadDetails?.lead_status?.clead_name || "Assigned";
-                const potentialName = leadDetails?.lead_potential?.clead_name || "-";
-                const statusColor = getStatusColor(statusName); 
+      const leadDetails = leadsAssigned.find(
+        lead => Number(lead.ilead_id) === leadId
+      ) || {};
 
-                return {
-                    ...leadDetails,
-                    ...entry,
-                    iassigned_by_name: entry.user_assigned_to_iassigned_byTouser?.cFull_name || '-',           
-                    statusDisplay: statusName,
-                    statusColor: statusColor, 
-                    potentialDisplay: potentialName,
-                    clead_name: leadDetails.clead_name || '-',
-                    corganization: leadDetails.corganization || '-',
-                    cemail: leadDetails.cemail || '-',
-                    iphone_no: leadDetails.iphone_no || '-',
-                };
-            });
+      const statusName = leadDetails?.lead_status?.clead_name || "Assigned";
 
-            const sortedLeads = mergedLeads.sort((a, b) => {
-                const dateA = new Date(a.dcreate_dt);
-                const dateB = new Date(b.dcreate_dt);
-                return dateB.getTime() - dateA.getTime();
-            });
+      return {
+        ...entry,
+        ...leadDetails,
 
-            const uniqueLeads = Array.from(
-                new Map(sortedLeads.map((lead) => [lead.ilead_id, lead])).values()
-            );
+        ilead_id: leadId,
 
-            setAssignedLeads(uniqueLeads);
-            return uniqueLeads;
-        } catch (err) {
-            console.error("Failed to fetch assigned leads:", err);
-            setError(`Failed to fetch assigned leads: ${err.message}`);
-            setAssignedLeads([]);
-            return [];
-        }
-    }, [currentUserId, currentToken, ENDPOINTS]);
+        clead_name:
+          leadDetails.clead_name ||
+          entry.clead_name ||
+          "No Name",
+
+        corganization:
+          leadDetails.corganization ||
+          entry.corganization ||
+          "-",
+
+        cemail:
+          leadDetails.cemail ||
+          entry.cemail ||
+          "-",
+
+        iphone_no:
+          leadDetails.iphone_no ||
+          entry.iphone_no ||
+          "-",
+
+        iassigned_by_name:
+          entry.user_assigned_to_iassigned_byTouser?.cFull_name || "-",
+
+        statusDisplay: statusName,
+        statusColor: getStatusColor(statusName),
+
+        dcreate_dt: entry.dcreate_dt,
+        dupdate_dt: entry.dupdate_dt,
+        dmodified_dt: leadDetails.dmodified_dt || entry.dupdate_dt,
+      };
+    });
+
+    // ✅ Sort newest first
+    mergedLeads.sort(
+      (a, b) => new Date(b.dcreate_dt || 0) - new Date(a.dcreate_dt || 0)
+    );
+
+    setAssignedLeads(mergedLeads);
+    return mergedLeads;
+
+  } catch (err) {
+    console.error("❌ Failed to fetch assigned leads:", err);
+    setAssignedLeads([]);
+    return [];
+  }
+}, [currentUserId, currentToken]);
+
+
 
 
     const fetchLeads = useCallback(async () => {

@@ -1571,7 +1571,6 @@ export default CalendarView;
 // import { useUserAccess } from "../context/UserAccessContext"
 
 // const XCODEFIX_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-// // console.log("calender xcode id check", XCODEFIX_ID)
 
 // function SlideTransition(props) {
 //   return <Slide {...props} direction="down" />;

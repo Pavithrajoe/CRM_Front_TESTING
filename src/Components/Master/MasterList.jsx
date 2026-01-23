@@ -1,6 +1,5 @@
 
 export default function MasterList({ items, onEdit, onDelete }) {
-  // console.log("[MasterList] Rendering with items:", items);
 
   return (
     <ul className="divide-y">
@@ -14,7 +13,6 @@ export default function MasterList({ items, onEdit, onDelete }) {
             <button
               className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
               onClick={() => {
-                // console.log("[MasterList] Edit clicked for item:", item.id);
                 onEdit(item);
               }}
               title="Edit"
@@ -24,7 +22,6 @@ export default function MasterList({ items, onEdit, onDelete }) {
             <button
               className="p-1 text-red-600 hover:text-red-800 transition-colors"
               onClick={() => {
-                // console.log("[MasterList] Delete clicked for item ID:", item.id);
                 onDelete(item.id);
               }}
               title="Delete"

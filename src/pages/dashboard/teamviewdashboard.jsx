@@ -53,7 +53,7 @@ const TeamviewDashboard = () => {
         throw new Error((await response.json()).message || "API error");
 
       const result = await response.json();
-      console.log("the response data are:", result)
+      // console.log("the response data are:", result)
 
       setTeamDashboardData(result?.details)
 

@@ -11,7 +11,7 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   const { userModules } = useUserAccess();
   const canSeeExistingLeads = React.useMemo(() => {
     if (!userModules || !Array.isArray(userModules)) {
-      console.log("userModules is missing or not an array:", userModules);
+      // console.log("userModules is missing or not an array:", userModules);
       return false;
     }
     return userModules.some(
@@ -71,9 +71,9 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     
           if (res.data?.data?.data) {
             setCurrencies(res.data.data.data);
-            console.log("Fetched currencies successfully:", res.data.data.data);
+            // console.log("Fetched currencies successfully:", res.data.data.data);
           } else {
-            console.log("API response has no currency data:", res.data);
+            // console.log("API response has no currency data:", res.data);
           }
         } catch (error) {
           console.error("Failed to fetch currencies", error);
@@ -538,7 +538,7 @@ else {
         const processedData = transform(rawData);
         setter(Array.isArray(processedData) ? processedData : []);
       } catch (e) {
-        console.log(`Error in fetching ${errorMessage}:`, e);
+        // console.log(`Error in fetching ${errorMessage}:`, e);
         setter([]);
       }
     },
@@ -1364,7 +1364,7 @@ const handleSubmit = async (e) => {
     formValid = Object.keys(validationErrors).length === 0;
 
     if (!formValid) {
-      console.log("Validation failed with errors:", validationErrors);
+      // console.log("Validation failed with errors:", validationErrors);
       setLoading(false);
       return;
     }

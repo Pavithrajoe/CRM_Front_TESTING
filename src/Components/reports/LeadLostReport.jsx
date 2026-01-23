@@ -115,7 +115,7 @@ export default function LostLeadReports() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("hit the api for table data :",apiUrl);
+        // console.log("hit the api for table data :",apiUrl);
         if (!response.ok) {
           console.error("Can't fetch filtered table data", response);
           setLoadingTable(false);

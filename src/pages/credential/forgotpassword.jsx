@@ -30,7 +30,6 @@ const ForgetPassword = () => {
 
         if (response.ok) {
   const data = await response.json();
-  // console.log("Response data:", data);
 
   const otpText = data.data; 
   const extractedOtp = otpText.match(/\d+/)?.[0]; 

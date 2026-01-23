@@ -13,7 +13,7 @@ const NotificationPage = () => {
     if (token) {
       try {
         const decoded = JSON.parse(atob(token.split(".")[1]));
-        console.log("Decoded token:", decoded);
+        // console.log("Decoded token:", decoded);
         setUserId(decoded.user_id);
       } catch (err) {
         console.error("Invalid token", err);

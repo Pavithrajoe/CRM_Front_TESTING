@@ -273,7 +273,7 @@ const QuotationForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Submitting services:", formData.services);
+    // console.log("Submitting services:", formData.services);
 
     if (!companyInfo || !companyInfo.iCompany_id || !companyInfo.iCreated_by) {
       showPopup('Error', 'Company info missing.', 'error');
@@ -286,27 +286,7 @@ const QuotationForm = ({
       return;
     }
 
-    // Validate all service fields filled
-//     for (const service of formData.services) {
-//       const hasQtyPrice =
-//         Number(service.iQuantity) > 0 &&
-//         Number(service.fPrice) > 0;
-
-//       const hasHoursRate =
-//         Number(service.iHours) > 0 &&
-//         Number(service.fHourly_rate) > 0;
-
-//       // if (!service.cService_name || !service.cDescription) {
-//       //   showPopup('Error', 'Please fill all service fields.', 'error');
-//       //   return;
-//       // }
-
-//       // At least one billing method must be filled
-//       if (!hasQtyPrice && !hasHoursRate) {
-//         showPopup('Error', 'Enter either (Quantity & Price) OR (Hours & Hourly Rate)', 'error');
-//         return;
-//       }
-// }
+    
 
     for (const service of formData.services) {
       if (!service.cService_name || !service.cDescription ||

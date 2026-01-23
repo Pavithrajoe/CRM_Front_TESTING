@@ -45,7 +45,6 @@ const TerritoryLeadsAnalytics = () => {
   }, []);
 
 
-  console.log("Count the api rerender : ")
   if (!data) {
     return <div className="text-center mt-10 text-gray-500">Loading analytics data...</div>;
   }

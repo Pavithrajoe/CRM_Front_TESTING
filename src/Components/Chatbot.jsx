@@ -34,7 +34,6 @@ const Chatbot = () => {
           ignoreLocation: true
         });
         setFuse(fuseInstance);
-        console.log('Total Q&A entries loaded:', qnaData.length);
       } catch (error) {
         console.error('Failed to load Q&A data:', error);
       }

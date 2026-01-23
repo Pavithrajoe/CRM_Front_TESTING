@@ -454,7 +454,6 @@ export default BulkMailStatus;
 //   if (token) {
 //     try {
 //       const decoded = JSON.parse(atob(token.split(".")[1]));
-//       // console.log("token", decoded)
 //       const companyId = decoded.company_id || decoded.iCompany_id || decoded.companyId;
 //       const userId = decoded.user_id || decoded.iUser_id || decoded.userId;
 //       if (companyId && userId) return { companyId, userId };

@@ -10,7 +10,7 @@ const CountryLeadsAnalytics = (leadsPerCountry) => {
 
     useEffect(() => {
         const childData = Object.values(leadsPerCountry)[0]
-        console.log("From Parent Com:", childData);
+        // console.log("From Parent Com:", childData);
         setData(childData);
         setLoading(false);
     }, [leadsPerCountry]);

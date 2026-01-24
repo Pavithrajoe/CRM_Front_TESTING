@@ -1,3 +1,4 @@
+//LeadDetailView;
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -1163,7 +1164,9 @@ const renderTabContent = () => {
       )}
 
         {/* Right Column: Status Bar, Tabs, and Content */}
-       <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-y-auto lg:overflow-y-visible">
+<div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-hidden">
+
+
         {showConfetti && (
           <Confetti
             width={window.innerWidth}

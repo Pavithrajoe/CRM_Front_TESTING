@@ -1,3 +1,5 @@
+ //StatusBar.js
+
 import React, { useState, useEffect, useContext } from 'react';
 import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
 import { GlobUserContext } from './userContex';
@@ -117,52 +119,94 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
 
   // Process custom status data from parent
   useEffect(() => {
-    if (customDataFromParent && customDataFromParent.length > 0) {
-      console.log("Processing custom data from parent:", customDataFromParent);
+  if (!Array.isArray(customDataFromParent)) return;
+
+  const processedData = customDataFromParent.map(item => {
+    const data = item.data || {};
+
+    return {
+      ilead_status_remarks_id: item.id,
+      lead_status_remarks: item.comments || data.comments || "-",
+      createdBy: data.createdBy || item.createdBy || "-",
+      dcreated_dt: item.createdAt || item.dcreated_dt,
+      status_name: item.lead_status?.clead_name || data.status_name || "-",
+      due_date: data.next_payment_date || data.dueDate || null,
+      rawData: item,
+
+      quotation_no: data.quotation_no || data.invoice_no,
+      quotation_date: data.quotation_date || data.invoice_date,
+      quotation_value: data.quotation_value,
+
+      order_status: data.order_status,
+
+      paid_amount: data.paid_amount,
+      payment_date: data.payment_date,
+      balance_amount: data.balance_amount,
+      payment_status: data.payment_status,
+      next_payment_date: data.next_payment_date,
+
+      invoice_no: data.invoice_no || data.quotation_no,
+      invoice_date: data.invoice_date || data.quotation_date,
+
+      comments: data.comments || item.comments
+    };
+  });
+
+  //  Only update state if data actually changed
+  setCustomStatusData(prev => {
+    const prevStr = JSON.stringify(prev);
+    const newStr = JSON.stringify(processedData);
+    return prevStr === newStr ? prev : processedData;
+  });
+
+}, [customDataFromParent]);
+  // useEffect(() => {
+  //   if (customDataFromParent && customDataFromParent.length > 0) {
+  //     console.log("Processing custom data from parent:", customDataFromParent);
       
-      const processedData = customDataFromParent.map(item => {
-        // Extract data from the nested structure
-        const data = item.data || {};
+  //     const processedData = customDataFromParent.map(item => {
+  //       // Extract data from the nested structure
+  //       const data = item.data || {};
         
-        return {
-          ilead_status_remarks_id: item.id,
-          lead_status_remarks: item.comments || data.comments || "-",
-          createdBy: data.createdBy || item.createdBy || "-",
-          dcreated_dt: item.createdAt || item.dcreated_dt,
-          status_name: item.lead_status?.clead_name || data.status_name || "-",
-          due_date: data.next_payment_date || data.dueDate || null,
-          rawData: item,
+  //       return {
+  //         ilead_status_remarks_id: item.id,
+  //         lead_status_remarks: item.comments || data.comments || "-",
+  //         createdBy: data.createdBy || item.createdBy || "-",
+  //         dcreated_dt: item.createdAt || item.dcreated_dt,
+  //         status_name: item.lead_status?.clead_name || data.status_name || "-",
+  //         due_date: data.next_payment_date || data.dueDate || null,
+  //         rawData: item,
           
-          // QUOTATION fields
-          quotation_no: data.quotation_no || data.invoice_no,
-          quotation_date: data.quotation_date || data.invoice_date,
-          quotation_value: data.quotation_value,
+  //         // QUOTATION fields
+  //         quotation_no: data.quotation_no || data.invoice_no,
+  //         quotation_date: data.quotation_date || data.invoice_date,
+  //         quotation_value: data.quotation_value,
           
-          // ORDER fields
-          order_status: data.order_status,
+  //         // ORDER fields
+  //         order_status: data.order_status,
           
-          // PAYMENT fields
-          paid_amount: data.paid_amount,
-          payment_date: data.payment_date,
-          balance_amount: data.balance_amount,
-          payment_status: data.payment_status,
-          next_payment_date: data.next_payment_date,
+  //         // PAYMENT fields
+  //         paid_amount: data.paid_amount,
+  //         payment_date: data.payment_date,
+  //         balance_amount: data.balance_amount,
+  //         payment_status: data.payment_status,
+  //         next_payment_date: data.next_payment_date,
           
-          // BILLING fields
-          invoice_no: data.invoice_no || data.quotation_no,
-          invoice_date: data.invoice_date || data.quotation_date,
+  //         // BILLING fields
+  //         invoice_no: data.invoice_no || data.quotation_no,
+  //         invoice_date: data.invoice_date || data.quotation_date,
           
-          // COMMON fields
-          comments: data.comments || item.comments
-        };
-      });
+  //         // COMMON fields
+  //         comments: data.comments || item.comments
+  //       };
+  //     });
       
-      // console.log("Processed custom status data:", processedData);
-      setCustomStatusData(processedData);
-    } else {
-      setCustomStatusData([]);
-    }
-  }, [customDataFromParent]);
+  //     // console.log("Processed custom status data:", processedData);
+  //     setCustomStatusData(processedData);
+  //   } else {
+  //     setCustomStatusData([]);
+  //   }
+  // }, [customDataFromParent]);
 
   const PopperProps = {
     placement: 'top-start',
@@ -1609,116 +1653,89 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
           }
 
           return (
-            <div className="mt-6">
-              <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
-              <div className="flex overflow-x-auto space-x-4 px-2 py-4 relative custom-scrollbar">
-                {allRemarks.map((remark, index) => {
-                  const statusName = remark.status_name?.toLowerCase();
-                  const isSpecialStatus = specialStatuses.some(s => statusName?.includes(s));
-                  
-                  return (
-                    <div key={`${remark.ilead_status_remarks_id || remark.id}-${index}`} className="relative flex-shrink-0">
-                      {index !== allRemarks.length - 1 && (
-                        <div className="absolute top-1/2 left-full w-6 h-1 bg-gray-400 shadow-md shadow-gray-600 transform -translate-y-1/2 z-0"></div>
-                      )}
-                      <div
-                        className="bg-white shadow-md rounded-3xl p-5 flex flex-col justify-between min-h-[200px] max-h-[200px] w-[230px] overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:scale-[1.02] z-10"
-                        style={{ minWidth: "250px", maxWidth: "250px" }}
-                        onClick={() => setSelectedRemark(remark)}
-                      >
-                        <div className="space-y-2 text-sm">
-                          {/* QUOTATION STATUS */}
-                          {statusName?.includes('quotation') ? (
-                            <>
-                              <p className="text-sm font-medium text-gray-800">
-                                <strong>Quotation No:</strong> {remark.quotation_no || '-'}
-                              </p>
-                              <p className="text-sm text-gray-700">
-                                <strong>Value:</strong> ₹{remark.quotation_value || '0'}
-                              </p>
-                              <p className="text-sm text-gray-700">
-                                <strong>Date:</strong> {remark.quotation_date ? formatDateOnly(remark.quotation_date) : '-'}
-                              </p>
-                              {remark.comments && (
-                                <p className="text-sm text-gray-700 line-clamp-1">
-                                  <strong>Comments:</strong> {remark.comments}
-                                </p>
-                              )}
-                            </>
-                          ) : statusName?.includes('order') ? (
-                            <>
-                              <p className="text-sm font-medium text-gray-800">
-                                <strong>Order Status:</strong> {remark.order_status || '-'}
-                              </p>
-                              {remark.comments && (
-                                <p className="text-sm text-gray-700 line-clamp-2">
-                                  <strong>Comments:</strong> {remark.comments}
-                                </p>
-                              )}
-                            </>
-                          ) : statusName?.includes('payment') ? (
-                            <>
-                              <p className="text-sm font-medium text-gray-800">
-                                <strong>Payment Status:</strong> {remark.payment_status || '-'}
-                              </p>
-                              <p className="text-sm text-gray-700">
-                                <strong>Paid:</strong> ₹{remark.paid_amount || '0'}
-                              </p>
-                              {remark.balance_amount && (
-                                <p className="text-sm text-gray-700">
-                                  <strong>Balance:</strong> ₹{remark.balance_amount || '0'}
-                                </p>
-                              )}
-                              {remark.payment_date && (
-                                <p className="text-sm text-gray-700">
-                                  <strong>Date:</strong> {formatDateOnly(remark.payment_date)}
-                                </p>
-                              )}
-                              {remark.next_payment_date && (
-                                <p className="text-sm text-gray-700">
-                                  <strong>Next Due:</strong> {formatDateOnly(remark.next_payment_date)}
-                                </p>
-                              )}
-                              {remark.comments && (
-                                <p className="text-sm text-gray-700 line-clamp-1">
-                                  <strong>Comments:</strong> {remark.comments}
-                                </p>
-                              )}
-                            </>
-                          ) : statusName?.includes('billing') ? (
-                            <>
-                              <p className="text-sm font-medium text-gray-800"> <strong>Invoice No:</strong> {remark.invoice_no || '-'} </p>
-                              {remark.invoice_date && (
-                                <p className="text-sm text-gray-700"> <strong>Date:</strong> {formatDateOnly(remark.invoice_date)} </p>
-                              )}
-                              {remark.comments && (
-                                <p className="text-sm text-gray-700 line-clamp-2"> <strong>Comments:</strong> {remark.comments} </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="text-sm break-words line-clamp-3 font-medium text-gray-800"> <strong>Remark:</strong> {remark.lead_status_remarks || remark.comments} </p>
-                          )}
-                          
-                          {/* COMMON FIELDS FOR ALL */}
-                          <p className="text-sm text-gray-700"> <strong>Status:</strong> <span className="font-semibold text-blue-600">{remark.status_name}</span>
-                          </p>
-                          <p className="text-sm text-gray-700">
-                            <strong>Created:</strong> {formatDateOnly(remark.dcreated_dt || remark.createdAt)}
-                          </p>
-                          {remark.due_date && (
-                            <p className="text-sm text-gray-700">
-                              <strong>Due Date:</strong> {formatDateOnly(remark.due_date)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+  <div className="mt-6">
+    <h3 className="text-xl font-bold mb-4">Remarks Timeline</h3>
+
+<div className="w-full overflow-x-auto overflow-y-hidden timeline-scroll pb-6">
+
+      <div className="flex gap-10 min-w-max px-6">
+
+        {allRemarks.map((remark, index) => {
+          const statusName = remark.status_name?.toLowerCase();
+
+          return (
+            <div 
+              key={`${remark.ilead_status_remarks_id || remark.id}-${index}`} 
+              className="relative flex-shrink-0 w-[260px]"
+            >
+              {/* Connector Line */}
+              {index !== allRemarks.length - 1 && (
+                <div className="absolute top-1/2 left-full w-10 h-[3px] bg-gray-300 rounded-full -translate-y-1/2 z-0"></div>
+              )}
+
+              {/* Card */}
+ <div
+  className="bg-white shadow-lg rounded-2xl p-5 
+             min-h-[240px] max-h-[320px]
+             overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100
+             flex flex-col justify-between
+             transition hover:shadow-2xl hover:-translate-y-1 
+             cursor-pointer z-10"
+  onClick={() => setSelectedRemark(remark)}
+>
+
+                <div className="space-y-2 text-sm">
+
+                  {/* QUOTATION */}
+                  {statusName?.includes('quotation') ? (
+                    <>
+                      <p className="font-semibold text-gray-800">
+                        Quotation No: {remark.quotation_no || '-'}
+                      </p>
+                      <p>Value: ₹{remark.quotation_value || '0'}</p>
+                      <p>Date: {remark.quotation_date ? formatDateOnly(remark.quotation_date) : '-'}</p>
+                      {remark.comments && <p className="line-clamp-1">Comments: {remark.comments}</p>}
+                    </>
+                  ) : statusName?.includes('order') ? (
+                    <>
+                      <p className="font-semibold">Order Status: {remark.order_status || '-'}</p>
+                      {remark.comments && <p className="line-clamp-2">Comments: {remark.comments}</p>}
+                    </>
+                  ) : statusName?.includes('payment') ? (
+                    <>
+                      <p className="font-semibold">Payment Status: {remark.payment_status || '-'}</p>
+                      <p>Paid: ₹{remark.paid_amount || '0'}</p>
+                      {remark.balance_amount && <p>Balance: ₹{remark.balance_amount}</p>}
+                      {remark.payment_date && <p>Date: {formatDateOnly(remark.payment_date)}</p>}
+                      {remark.next_payment_date && <p>Next Due: {formatDateOnly(remark.next_payment_date)}</p>}
+                    </>
+                  ) : statusName?.includes('billing') ? (
+                    <>
+                      <p className="font-semibold">Invoice No: {remark.invoice_no || '-'}</p>
+                      {remark.invoice_date && <p>Date: {formatDateOnly(remark.invoice_date)}</p>}
+                      {remark.comments && <p className="line-clamp-2">Comments: {remark.comments}</p>}
+                    </>
+                  ) : (
+                    <p className="line-clamp-3 font-medium">
+                      Remark: {remark.lead_status_remarks || remark.comments}
+                    </p>
+                  )}
+
+                  {/* COMMON */}
+                  <p>Status: <span className="font-semibold text-blue-600">{remark.status_name}</span></p>
+                  <p>Created: {formatDateOnly(remark.dcreated_dt || remark.createdAt)}</p>
+                  {remark.due_date && <p>Due Date: {formatDateOnly(remark.due_date)}</p>}
+
+                </div>
               </div>
             </div>
           );
-        })()}
+        })}
+      </div>
+    </div>
+  </div>
+);
+        })()} 
 
         {/* Detail Dialog */}
         <Dialog

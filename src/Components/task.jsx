@@ -51,19 +51,14 @@ const TaskItem = React.memo(({
   }
   return (
     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
-      <div className="flex justify-between items-center gap-3">
+      {/* <div className="flex justify-between items-center gap-3">
         <span className="font-semibold text-base sm:text-lg text-gray-900">
           {task.ctitle}
         </span>
         <div >
           {(canEdit || canDelete) && (
                 <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-                  <button
-                    onClick={() => canEdit ? onEdit(task) : null}
-                    className={`
-                      text-gray-400 hover:text-blue-500 transition-colors duration-200
-                      ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-                    `}
+                  <button onClick={() => canEdit ? onEdit(task) : null} className={` text-gray-500 hover:text-blue-500 transition-colors duration-200 ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'} `}
                     title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
                     disabled={!canEdit}
                   >
@@ -72,11 +67,7 @@ const TaskItem = React.memo(({
                     </svg>
                   </button>
                   {canDelete && ( 
-                    <button
-                      onClick={() => onDelete(task.itask_id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-                      title="Delete task"
-                    >
+                    <button onClick={() => onDelete(task.itask_id)} className="text-gray-500 hover:text-red-500 transition-colors duration-200" title="Delete task">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -101,24 +92,93 @@ const TaskItem = React.memo(({
           <option value="Completed">Completed</option>
         </select>
         </div>
+      </div> */}
+      <div className="flex justify-between items-center gap-3 w-full">
+        {/* Left Side: Task Title */}
+        <span className="font-semibold text-base sm:text-lg text-gray-900 truncate">  {task.ctitle} </span>
+
+        {/* Right Side: Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Status Select */}
+          <select value={task.task_progress || "In_progress"} onChange={(e) => onStatusChange(task.itask_id, e.target.value)}
+            className={`
+              text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer
+              w-[95px] sm:w-[110px] transition-all
+              ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+              ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+              ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+            `}
+          >
+            <option value="In_progress">In Progress</option>
+            <option value="On_hold">On Hold</option>
+            <option value="Completed">Completed</option>
+          </select>
+          
+          {/* Edit and Delete Buttons */}
+          {(canEdit || canDelete) && (
+            <div className="flex items-center gap-1 sm:gap-2">
+              {canEdit && (
+                <button onClick={() => onEdit(task)}
+                  className="text-gray-500 hover:text-blue-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-gray-100"
+                  title="Edit task"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+                    />
+                  </svg>
+                </button>
+              )}
+              
+              {canDelete && ( 
+                <button 
+                  onClick={() => onDelete(task.itask_id)} 
+                  className="text-gray-500 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50" 
+                  title="Delete task" 
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       
-      <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
-        {task.ctask_content}
-      </p>
+      <p className="text-gray-700 text-sm mt-2 leading-normal break-words"> {task.ctask_content} </p>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
         <p className="break-words">
           <span className="font-medium text-gray-700">Assigned to:</span>{" "}
-          {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+          {task.user_task_iassigned_toTouser?.cFull_name || "-"}
         </p>
         <p className="break-words">
           <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-          {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
+          {task.user_task_inotify_toTouser?.cFull_name || "-"}
         </p>
       </div>
 
-      
       
     <p className="text-xs mt-2 italic text-gray-700 flex items-center gap-2 flex-wrap">
       <span>
@@ -480,7 +540,7 @@ const Tasks = ({ onCountChange }) => {
   }, [token, showPopup, fetchTasks]);
 
   const formatDateTime = useCallback((dateStr) => {
-    if (!dateStr) return "N/A";
+    if (!dateStr) return "-";
     const date = new Date(dateStr);
     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }, []);

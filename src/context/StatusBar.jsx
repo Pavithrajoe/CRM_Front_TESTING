@@ -1,5 +1,3 @@
- //StatusBar.js
-
 import React, { useState, useEffect, useContext } from 'react';
 import { CheckCircle, Circle, X, Calendar, User } from 'lucide-react';
 import { GlobUserContext } from './userContex';
@@ -356,6 +354,7 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
       setProposalSendModes([]);
     }
   };
+  
 
   useEffect(() => {
     fetchStages(); 

@@ -269,14 +269,13 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
       headers: { Authorization: `Bearer ${token}` },
     });
     const companyData = res?.data?.result ?? null;
+    console.log("company data", companyData)
 
     if (companyData && lead) {
-      // 🔥 CHECK LEAD INDUSTRY FIRST (same logic as backend)
       const isMultiServiceCompany = Number(lead.cindustry_id) === 5;
       
       if (isMultiServiceCompany) {
-        // Interior Design → Special Multi-Service Form
-        setEditFormType(5);  // InteriorDesignEditForm.jsx
+        setEditFormType(5);  
       } else {
         // Normal forms (unchanged)
         const businessTypeId = Number(companyData?.ibusiness_type);

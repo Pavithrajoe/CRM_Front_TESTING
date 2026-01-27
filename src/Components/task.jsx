@@ -513,12 +513,37 @@ const Tasks = ({ onCountChange }) => {
       if (response.data.success || response.data.message === "Task Added Successfully") {
         if (mic && isListening) mic.stop();
         setIsListening(false);
+
         showPopup("Success", "🎉 Saved successfully!", "success");
+
         await fetchTasks();
-        setShowForm(false);
+
+        //  RESET FORM STATE
+        setFormData({
+          ctitle: "",
+          ctask_content: "",
+          iassigned_to: userId,
+          inotify_to: null,
+          task_date: new Date(),
+        });
+
+        //  RESET MODE & UI
         setEditingTask(null);
+        setAssignToMe(true);
         setCurrentPage(1);
+
+        //  CLOSE FORM
+        setShowForm(false);
       }
+      // if (response.data.success || response.data.message === "Task Added Successfully") {
+      //   if (mic && isListening) mic.stop();
+      //   setIsListening(false);
+      //   showPopup("Success", "🎉 Saved successfully!", "success");
+      //   await fetchTasks();
+      //   setShowForm(false);
+      //   setEditingTask(null);
+      //   setCurrentPage(1);
+      // }
     } catch (error) {
       showPopup("Error", "Failed to save.", "error");
     } finally {

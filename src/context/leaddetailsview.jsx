@@ -1,4 +1,3 @@
-//LeadDetailView;
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -179,10 +178,19 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
   const formRef = useRef(null); 
-const passedLead = location.state?.lead || location.state?.leadList?.[0];
-const leadsList = passedLead ? [passedLead] : [];
-const leadIds = leadsList.map((lead) => lead.ilead_id);  // 🔥 ADD THIS LINE
+// const passedLead = location.state?.lead || location.state?.leadList?.[0];
+// const leadsList = passedLead ? [passedLead] : [];
+// const leadIds = leadsList.map((lead) => lead.ilead_id); 
+// const currentIndex = leadIds.indexOf(Number(leadId));
+const leadsList = location.state?.leadList?.length 
+  ? location.state.leadList 
+  : leadData 
+    ? [leadData] 
+    : [];
+
+const leadIds = leadsList.map(lead => lead.ilead_id);
 const currentIndex = leadIds.indexOf(Number(leadId));
+
   const theme = useTheme();
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -616,6 +624,7 @@ const [reminderCount, setReminderCount] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth > 1280);
 
   const fetchStatusRemarks = async () => {
+    
     try {
       const token = localStorage.getItem("token");
       const endpointsToTry = [
@@ -657,6 +666,8 @@ const [reminderCount, setReminderCount] = useState(0);
 
       const data = await response.json();
       const remarks = data.Response || data.data || data || [];
+
+ // ✅ ADD HERE
       setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
       
     } catch (error) {

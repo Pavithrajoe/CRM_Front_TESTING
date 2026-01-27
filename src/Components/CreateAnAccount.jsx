@@ -5,7 +5,7 @@ import { FaInstagram, FaYoutube, FaLinkedinIn } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { parsePhoneNumber, AsYouType } from 'libphonenumber-js';
 import { getNames, getCodes } from 'country-list';
-import { useBusiness } from "../context/BusinessTypeContext.jsx"; // Ensure this matches your filename
+import { useBusiness } from "../context/BusinessTypeContext.jsx"; 
 
 const CreateAnAccount = () => {
   const navigate = useNavigate(); 

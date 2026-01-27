@@ -245,8 +245,7 @@ const currentIndex = leadIds.indexOf(Number(leadId));
 const [taskCount, setTaskCount] = useState(0);
 const [commentCount, setCommentCount] = useState(0);
 const [reminderCount, setReminderCount] = useState(0);
-
-
+const [customStatusData, setCustomStatusData] = useState([]);
 
 
   const [userSettings, setUserSettings] = useState({
@@ -616,6 +615,25 @@ const [reminderCount, setReminderCount] = useState(0);
     }
   };
 
+const fetchCustomStatus = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${ENDPOINTS.CUSTOM_STATUS_GET_BY_LEAD_ID}/${leadId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      setCustomStatusData(data);
+    }
+  } catch (error) {
+    console.error("Failed to fetch custom status:", error);
+  }
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     await lostLead();
@@ -667,7 +685,7 @@ const [reminderCount, setReminderCount] = useState(0);
       const data = await response.json();
       const remarks = data.Response || data.data || data || [];
 
- // ✅ ADD HERE
+ //  ADD HERE
       setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
       
     } catch (error) {
@@ -678,11 +696,11 @@ const [reminderCount, setReminderCount] = useState(0);
     }
   };
 
-  useEffect(() => {
-    if (leadId) {
-      fetchStatusRemarks();
-    }
-    }, [leadId]);
+  // useEffect(() => {
+  //   if (leadId) {
+  //     fetchStatusRemarks();
+  //   }
+  //   }, [leadId]);
 
 
   const sendEmail = async () => {
@@ -875,13 +893,24 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    if (leadId) {
-      fetchLeadData();
-      fetchLostReasons();
-      getUserInfoFromLocalStorage();
-      fetchQuotations();
-    }
-  }, [leadId]);
+  if (leadId) {
+    fetchLeadData();
+    fetchLostReasons();
+    getUserInfoFromLocalStorage();
+    fetchQuotations();
+    fetchCustomStatus();
+    fetchStatusRemarks();
+  }
+}, [leadId]);
+
+  // useEffect(() => {
+  //   if (leadId) {
+  //     fetchLeadData();
+  //     fetchLostReasons();
+  //     getUserInfoFromLocalStorage();
+  //     fetchQuotations();
+  //   }
+  // }, [leadId]);
 
   useEffect(() => {
     if (isMailOpen && leadData) {
@@ -977,38 +1006,38 @@ const applyTemplate = (template) => {
 };;
 
   // Fetch stages for the StatusBar component
-  const fetchStages = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch stages');
-      const data = await response.json();
-      console.log("MASTER DATA BEFORE SORT:", data);
+  // const fetchStages = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         ...(token && { Authorization: `Bearer ${token}` }),
+  //       },
+  //     });
+  //     if (!response.ok) throw new Error('Failed to fetch stages');
+  //     const data = await response.json();
+  //     console.log("MASTER DATA BEFORE SORT:", data);
 
-      const formattedStages = data.response
-        .map(item => ({
-          id: item.ilead_status_id,
-          name: item.clead_name,
-          order: Number(item.orderId) || 9999,
-        }))
-        .sort((a, b) => a.order - b.order);
-      setStages(formattedStages);
-    } catch (err) {
-      console.error('Error fetching stages:', err.message);
-    }
-  };
+  //     const formattedStages = data.response
+  //       .map(item => ({
+  //         id: item.ilead_status_id,
+  //         name: item.clead_name,
+  //         order: Number(item.orderId) || 9999,
+  //       }))
+  //       .sort((a, b) => a.order - b.order);
+  //     setStages(formattedStages);
+  //   } catch (err) {
+  //     console.error('Error fetching stages:', err.message);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchStages();
-  }, []);
+  // useEffect(() => {
+  //   fetchStages();
+  // }, []);
 
   const formatDate = (dateInput) => {
-    if (!dateInput) return "N/A";
+    if (!dateInput) return "-";
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return "Invalid Date";
     const day = String(date.getDate()).padStart(2, "0");
@@ -1201,6 +1230,8 @@ const renderTabContent = () => {
               leadData={leadData}
               isLost={isLost} 
               statusRemarks={statusRemarks}
+              customDataFromParent={customStatusData} 
+              // customStatusData={customStatusData}
               isWon={
                 isWon || immediateWonStatus || leadData?.bisConverted === true
               }
@@ -1351,11 +1382,7 @@ const renderTabContent = () => {
           <DialogTitle>Enter Remark for Won Status</DialogTitle>
           <DialogContent>
             <TextField
-              label={
-                <span>
-                  Remark <span style={{ color: "red" }}>*</span>
-                </span>
-              }
+              label={ <span> Remark <span style={{ color: "red" }}>*</span> </span> }
               fullWidth
               multiline
               rows={3}
@@ -1426,25 +1453,15 @@ const renderTabContent = () => {
         >
           <DialogTitle className="bg-blue-50">
             <div className="flex items-center justify-between">
-              <div className="flex items-center text-blue-700">
-                Quotation Details
-              </div>
-              <IconButton
-                onClick={() => setShowQuotationsList(false)}
-                size="small"
-              >
+              <div className="flex items-center text-blue-700"> Quotation Details </div>
+              <IconButton onClick={() => setShowQuotationsList(false)} size="small" >
                 <Close />
               </IconButton>
             </div>
           </DialogTitle>
           <DialogContent dividers className="bg-gray-50">
             {quotationsLoading ? (
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                height={200}
-              >
+              <Box display="flex" justifyContent="center" alignItems="center" height={200} >
                 <CircularProgress />
               </Box>
             ) : quotations.length > 0 ? (
@@ -1558,13 +1575,8 @@ const renderTabContent = () => {
                             </TableContainer>
                           </Grid>
                           <Grid item xs={12}>
-                            <Typography variant="subtitle2" className="font-bold">
-                              Additional Information
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              className="mt-2 text-gray-700"
-                            >
+                            <Typography variant="subtitle2" className="font-bold"> Additional Information </Typography>
+                            <Typography variant="body2" className="mt-2 text-gray-700" >
                               {quotation.cNotes || "No additional notes"}
                             </Typography>
                           </Grid>
@@ -1575,9 +1587,7 @@ const renderTabContent = () => {
                 ))}
               </List>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                No quotations found for this lead.
-              </div>
+              <div className="text-center py-8 text-gray-500">  No quotations found for this lead. </div>
             )}
           </DialogContent>
           <DialogActions className="bg-gray-100">

@@ -1211,9 +1211,9 @@ const handleChange = (e) => {
         }
 
       if (name === "iservice_id") {
-  updated.isubservice_id = "";
-  setSearchSubService("");
-}
+        updated.isubservice_id = "";
+        setSearchSubService("");
+      }
 
         // Add this new condition for sub-source
         if (name === "lead_source_id" && prev.lead_source_id !== value) {
@@ -1522,39 +1522,30 @@ const handleSubmit = async (e) => {
   quantity: form.quantity || null,
   cgender: 1,
   cimage: "noimg.png",
-
   clead_address1: form.clead_address1,
   clead_address2: form.clead_address2,
   clead_address3: form.clead_address3,
-
   clead_city: Number(form.icity),
   clead_name: form.clead_name,
   clead_owner: userId,
   clogo: "logo.png",
   corganization: form.corganization,
   cresponded_by: userId,
-
   ileadstatus_id: Number(form.ileadstatus_id),
   cindustry_id: Number(form.cindustry_id),
   isubindustry: form.csubindustry_id ? Number(form.csubindustry_id) : null,
   iLeadpoten_id: form.iLeadpoten_id ? Number(form.iLeadpoten_id) : null,
-
   cwebsite: form.cwebsite,
   dmodified_dt: new Date().toISOString(),
   ino_employee: Number(form.ino_employee) || 0,
   icity: Number(form.icity),
   icompany_id: company_id,
-
   iphone_no: form.iphone_no,
   iproject_value: Number(form.iproject_value) || 0,
   modified_by: userId,
   iuser_tags: userId,
-
-  //  THIS IS THE FIX
-iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice_id],
-
+  iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice_id],
   isubservice_id: form.isubservice_id ? Number(form.isubservice_id) : null,
-
   lead_source_id: Number(form.lead_source_id),
   whatsapp_number: form.cwhatsapp,
   cpincode: form.cpincode ? Number(form.cpincode) : null,
@@ -2101,27 +2092,27 @@ iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice
                   required: true,
                   emptyType: "service"
                 },
-                {
-                  label: "Sub Service",
-                  ref: subServiceDropdownRef,
-                  inputName: "searchSubService",
-                  searchValue: searchSubService,
-                  setSearch: setSearchSubService,
-                  open: isSubServiceDropdownOpen,
-                  setOpen: setIsSubServiceDropdownOpen,
-                  list: filteredSubService,
-                  keyField: "isubservice_id",
-                  displayField: "subservice_name",
-                  formField: "isubservice_id",
-                  error: errors.isubservice_id,
-                 disabled:
-  !Array.isArray(form.iservice_id) ||
-  form.iservice_id.length === 0 ||
-  filteredSubService.length === 0,
+                // {
+                //   label: "Sub Service",
+                //   ref: subServiceDropdownRef,
+                //   inputName: "searchSubService",
+                //   searchValue: searchSubService,
+                //   setSearch: setSearchSubService,
+                //   open: isSubServiceDropdownOpen,
+                //   setOpen: setIsSubServiceDropdownOpen,
+                //   list: filteredSubService,
+                //   keyField: "isubservice_id",
+                //   displayField: "subservice_name",
+                //   formField: "isubservice_id",
+                //   error: errors.isubservice_id,
+                //  disabled:
+                //   !Array.isArray(form.iservice_id) ||
+                //   form.iservice_id.length === 0 ||
+                //   filteredSubService.length === 0,
 
-                  required: false,
-                  emptyType: "subservice"
-                },
+                //   required: false,
+                //   emptyType: "subservice"
+                // },
               ].map(
                 ({ label, ref, inputName,searchValue, setSearch, open, setOpen, list,keyField, displayField,
                   formField, error, disabled = false, required = false, emptyType }) => (
@@ -2131,31 +2122,31 @@ iservice_id: Array.isArray(form.iservice_id) ? form.iservice_id : [form.iservice
                       {required && <span className="text-red-500">*</span>}
                     </label>
                     {/* Selected Services */}
-{/* Selected Services Chips */}
-{formField === "iservice_id" && Array.isArray(form.iservice_id) && form.iservice_id.length > 0 && (
-  <div className="flex flex-wrap gap-2 mb-2">
-    {form.iservice_id.map((id) => {
-      const srv = service.find(s => s.serviceId === id);
-      if (!srv) return null;
+                    {/* Selected Services Chips */}
+                    {formField === "iservice_id" && Array.isArray(form.iservice_id) && form.iservice_id.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {form.iservice_id.map((id) => {
+                          const srv = service.find(s => s.serviceId === id);
+                          if (!srv) return null;
 
-      return (
-        <span
-          key={id}
-          className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-        >
-          {srv.serviceName}
-          <button
-            type="button"
-            onClick={() => handleToggleService(srv)}
-            className="text-blue-600 hover:text-red-500"
-          >
-            ✕
-          </button>
-        </span>
-      );
-    })}
-  </div>
-)}
+                          return (
+                            <span
+                              key={id}
+                              className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                            >
+                              {srv.serviceName}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleService(srv)}
+                                className="text-blue-600 hover:text-red-500"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     <input
                       type="text"

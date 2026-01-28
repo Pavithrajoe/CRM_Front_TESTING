@@ -292,20 +292,20 @@ const CreateAnAccount = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-  <label className="block text-sm text-gray-600 mb-1">Password <span className="text-red-500">*</span></label>
-  <input 
-    type="password" 
-    name="password" 
-    value={formData.password} 
-    onChange={handleChange} 
-   
-    className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
-    placeholder="123456" 
-  />
-  {validationErrors.password && (
-    <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.password}</p>
-  )}
-</div>
+                <label className="block text-sm text-gray-600 mb-1">Password <span className="text-red-500">*</span></label>
+                <input 
+                  type="password" 
+                  name="password" 
+                  value={formData.password} 
+                  onChange={handleChange} 
+                
+                  className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
+                  placeholder="123456" 
+                />
+                {validationErrors.password && (
+                  <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.password}</p>
+                )}
+              </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Organization Name <span className="text-red-500">*</span></label>
                 <input type="text" name="org_name" value={formData.org_name} onChange={handleChange} className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.org_name ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="Inklidox Tech" />
@@ -340,33 +340,33 @@ const CreateAnAccount = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
-<div className="w-full">
-  <label className="block text-sm text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
-  <div className="flex">
-    <select 
-      name="countryCode" 
-      value={formData.countryCode} 
-      onChange={handleChange} 
-      className="px-3 py-3 bg-[#f9f9f9] border border-r-0 border-gray-200 rounded-l-xl outline-none w-[100px]"
-    >
-      {allCountryOptions.map(c => ( 
-        <option key={c.code} value={c.code}>{c.dialingCode}</option>
-      ))}
-    </select>
-    <input 
-      type="tel" 
-      name="phoneNumberLocal" 
-      value={formData.phoneNumberLocal} 
-      onChange={handleChange} 
-      maxLength="15"
-      className={`flex-grow px-4 py-3 rounded-r-xl bg-[#f9f9f9] border ${validationErrors.phoneNumberLocal ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
-      placeholder="98765 43210" 
-    />
-  </div>
-  {validationErrors.phoneNumberLocal && (
-    <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.phoneNumberLocal}</p>
-  )}
-</div>
+            <div className="w-full">
+              <label className="block text-sm text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
+              <div className="flex">
+                <select 
+                  name="countryCode" 
+                  value={formData.countryCode} 
+                  onChange={handleChange} 
+                  className="px-3 py-3 bg-[#f9f9f9] border border-r-0 border-gray-200 rounded-l-xl outline-none w-[100px]"
+                >
+                  {allCountryOptions.map(c => ( 
+                    <option key={c.code} value={c.code}>{c.dialingCode}</option>
+                  ))}
+                </select>
+                <input 
+                  type="tel" 
+                  name="phoneNumberLocal" 
+                  value={formData.phoneNumberLocal} 
+                  onChange={handleChange} 
+                  maxLength="15"
+                  className={`flex-grow px-4 py-3 rounded-r-xl bg-[#f9f9f9] border ${validationErrors.phoneNumberLocal ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
+                  placeholder="98765 43210" 
+                />
+              </div>
+              {validationErrors.phoneNumberLocal && (
+                <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.phoneNumberLocal}</p>
+              )}
+            </div>
 
             </div>
 

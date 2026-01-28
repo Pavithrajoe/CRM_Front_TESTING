@@ -254,93 +254,140 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     };
   }, [onClose]);
 
-  useEffect(() => {
+  // useEffect(() => {
       
-      if (existingClientData &&
-          Potential.length > 0 &&
-          status.length > 0 &&
-          leadIndustry.length > 0 &&
-          leadSubIndustry.length > 0 &&
-          source.length > 0 &&
-          service.length > 0 &&
-          subServiceList.length > 0 &&
-          cities.length > 0
-      ) {
+  //     if (existingClientData &&
+  //         Potential.length > 0 &&
+  //         status.length > 0 &&
+  //         leadIndustry.length > 0 &&
+  //         leadSubIndustry.length > 0 &&
+  //         source.length > 0 &&
+  //         service.length > 0 &&
+  //         subServiceList.length > 0 &&
+  //         cities.length > 0
+  //     ) {
 
-          // Extract phone number parts
-          const phoneNum = existingClientData.iphone_no || "";
-          const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
-          const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
-          const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
+  //         // Extract phone number parts
+  //         const phoneNum = existingClientData.iphone_no || "";
+  //         const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
+  //         const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
+  //         const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
 
-          // Extract WhatsApp number parts
-          const waNum = existingClientData.whatsapp_number || "";
-          const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
-          const waCountryCode = waMatch ? waMatch[1] : "+91";
-          const waWithoutCode = waMatch ? waMatch[2] : waNum;
+  //         // Extract WhatsApp number parts
+  //         const waNum = existingClientData.whatsapp_number || "";
+  //         const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
+  //         const waCountryCode = waMatch ? waMatch[1] : "+91";
+  //         const waWithoutCode = waMatch ? waMatch[2] : waNum;
 
-          setForm(prev => ({
-              ...prev,
-              iLeadpoten_id: existingClientData.iLeadpoten_id || "",
-              ileadstatus_id: existingClientData.ileadstatus_id || "",
-              cindustry_id: existingClientData.cindustry_id || "",
-              csubindustry_id: existingClientData.isubindustry || "",
-              lead_source_id: existingClientData.lead_source_id || "",
-              ino_employee: existingClientData.ino_employee || "",
-              iproject_value: existingClientData.iproject_value || "",
-              clead_name: existingClientData.clead_name || "",
-              cemail: existingClientData.cemail || "",
-              corganization: existingClientData.corganization || "",
-              cwebsite: existingClientData.cwebsite || "",
-              icity: existingClientData.clead_city || "",
-              iphone_no: phoneWithoutCode || "",
-              phone_country_code: phoneCountryCode || "+91",
-              clead_address1: existingClientData.clead_address1 || "",
-              cwhatsapp: waWithoutCode || "",
-              whatsapp_country_code: waCountryCode || "+91",
-              clead_address2: existingClientData.clead_address2 || "",
-              clead_address3: existingClientData.clead_address3 || "",
-              cstate: existingClientData.cstate || "",
-              cdistrict: existingClientData.cdistrict || "",
-              cpincode: existingClientData.cpincode || "",
-              ccountry: existingClientData.ccountry || "",
-              iservice_id: existingClientData.serviceId
-  ? [existingClientData.serviceId]
-  : [],
+  //         setForm(prev => ({
+  //             ...prev,
+  //             iLeadpoten_id: existingClientData.iLeadpoten_id || "",
+  //             ileadstatus_id: existingClientData.ileadstatus_id || "",
+  //             cindustry_id: existingClientData.cindustry_id || "",
+  //             csubindustry_id: existingClientData.isubindustry || "",
+  //             lead_source_id: existingClientData.lead_source_id || "",
+  //             ino_employee: existingClientData.ino_employee || "",
+  //             iproject_value: existingClientData.iproject_value || "",
+  //             clead_name: existingClientData.clead_name || "",
+  //             cemail: existingClientData.cemail || "",
+  //             corganization: existingClientData.corganization || "",
+  //             cwebsite: existingClientData.cwebsite || "",
+  //             icity: existingClientData.clead_city || "",
+  //             iphone_no: phoneWithoutCode || "",
+  //             phone_country_code: phoneCountryCode || "+91",
+  //             clead_address1: existingClientData.clead_address1 || "",
+  //             cwhatsapp: waWithoutCode || "",
+  //             whatsapp_country_code: waCountryCode || "+91",
+  //             clead_address2: existingClientData.clead_address2 || "",
+  //             clead_address3: existingClientData.clead_address3 || "",
+  //             cstate: existingClientData.cstate || "",
+  //             cdistrict: existingClientData.cdistrict || "",
+  //             cpincode: existingClientData.cpincode || "",
+  //             ccountry: existingClientData.ccountry || "",
+  //             iservice_id: existingClientData.serviceId
+  // ? [existingClientData.serviceId]
+  // : [],
 
-              isubservice_id: existingClientData.isubservice_id || "",
-          }));
+  //             isubservice_id: existingClientData.isubservice_id || "",
+  //         }));
 
-          // Update dropdown search text fields
-          const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
-          if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
+  //         // Update dropdown search text fields
+  //         const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
+  //         if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
 
-          const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
-          if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
+  //         const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
+  //         if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
 
-          const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
-          if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
+  //         const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
+  //         if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
 
-          const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
-          if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
+  //         const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
+  //         if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
 
-          const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
-          if (selectedSource) setSearchSource(selectedSource.source_name);
+  //         const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
+  //         if (selectedSource) setSearchSource(selectedSource.source_name);
 
-          const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
-          if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
+  //         const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
+  //         if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
 
-          const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
-          if (selectedService) setSearchService(selectedService.serviceName);
+  //         const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
+  //         if (selectedService) setSearchService(selectedService.serviceName);
 
-          const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
-          if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
+  //         const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
+  //         if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
 
-          const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
-          if (selectedCity) setSearchCity(selectedCity.cCity_name);
+  //         const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
+  //         if (selectedCity) setSearchCity(selectedCity.cCity_name);
 
-      } 
-  }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
+  //     } 
+  // }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
+
+
+  useEffect(() => {
+  if (!existingClientData) return;
+
+  const phone = splitPhoneNumber(existingClientData.iphone_no);
+  const whatsapp = splitPhoneNumber(existingClientData.whatsapp_number);
+
+  setForm(prev => ({
+    ...prev,
+    clead_name: existingClientData.clead_name || "",
+    cemail: existingClientData.cemail || "",
+    corganization: existingClientData.corganization || "",
+    cwebsite: existingClientData.cwebsite || "",
+
+    iLeadpoten_id: existingClientData.iLeadpoten_id || "",
+    ileadstatus_id: existingClientData.ileadstatus_id || "",
+    cindustry_id: existingClientData.cindustry_id || "",
+    csubindustry_id: existingClientData.isubindustry || "",
+    lead_source_id: existingClientData.lead_source_id || "",
+
+    icity: existingClientData.clead_city || "",
+
+    iphone_no: phone.nationalNumber,
+    phone_country_code: phone.countryCode,
+
+    cwhatsapp: whatsapp.nationalNumber,
+    whatsapp_country_code: whatsapp.countryCode,
+
+    clead_address1: existingClientData.clead_address1 || "",
+    clead_address2: existingClientData.clead_address2 || "",
+    clead_address3: existingClientData.clead_address3 || "",
+
+    cstate: existingClientData.cstate || "",
+    cdistrict: existingClientData.cdistrict || "",
+    cpincode: existingClientData.cpincode || "",
+    ccountry: existingClientData.ccountry || "",
+
+    iservice_id: Array.isArray(existingClientData.iservice_id)
+      ? existingClientData.iservice_id
+      : existingClientData.iservice_id
+      ? [existingClientData.iservice_id]
+      : [],
+
+    isubservice_id: existingClientData.isubservice_id || "",
+  }));
+}, [existingClientData]);
 
 
     // for new/existing client
@@ -524,57 +571,38 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
       }
     };
 
-    const handleSelectLead = async (leadId) => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          }
-        });
+  const handleSelectLead = async (leadId) => {
+  setLoading(true);
+  try {
+    const res = await fetch(`${apiEndPoint}/lead/${leadId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        if (!res.ok) {
-          const text = await res.text();
-          console.error(`Error fetching lead details [${res.status}]:`, text);
-          throw new Error(`Server returned ${res.status}`);
-        }
+    const resData = await res.json();
 
-        const resData = await res.json();
+    // ✅ IMPORTANT FIX
+    const lead = resData?.data || resData;
 
-    if (resData && resData.ilead_id) {
-      const phoneCode = resData.iphone_no?.match(/^\+\d{1,4}/)?.[0] || "+91";
-      const whatsappCode = resData.whatsapp_number?.match(/^\+\d{1,4}/)?.[0] || "+91";
-
-      const newFormData = {
-        ...form,
-        ...resData,
-        iphone_no: resData.iphone_no?.replace(phoneCode, "").trim() || "",
-        cwhatsapp: resData.whatsapp_number?.replace(whatsappCode, "").trim() || "",
-        phone_country_code: phoneCode,
-        whatsapp_country_code: whatsappCode,
-      };
-
-      setForm(newFormData);
-      setExistingClientData(resData);
-
-      const validationErrors = validateForm(newFormData);
-      setErrors(validationErrors);
+    if (!lead?.ilead_id) {
+      setPopupMessage("Lead details not found");
+      setIsPopupVisible(true);
+      return;
     }
 
-    else {
-          setPopupMessage("Lead details not found for this ID");
-          setIsPopupVisible(true);
-        }
-      } catch (error) {
-        console.error("Fetch lead details error:", error);
-        setPopupMessage("Failed to load lead details. Please try again.");
-        setIsPopupVisible(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setExistingClientData(lead); // 🔥 VERY IMPORTANT
+
+  } catch (error) {
+    console.error("Fetch lead error:", error);
+    setPopupMessage("Failed to load lead details");
+    setIsPopupVisible(true);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     const fetchDropdownData = useCallback(
       async (endpoint, setter, errorMessage, transform = (data) => Array.isArray(data) ? data : []) => {

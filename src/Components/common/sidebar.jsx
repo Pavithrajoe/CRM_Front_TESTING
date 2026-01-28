@@ -428,7 +428,7 @@ const Sidebar = ({ data }) => {
                     attr.attribute_value === 'true'
           );
           if (isTargetCompany || userHasSpecialAccess) {
-            label = 'My Leads';
+            label = 'Leads';
             route = '/xcodefix_leadcardview';
           }
         }

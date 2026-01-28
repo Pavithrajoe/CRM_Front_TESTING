@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
-import { ENDPOINTS } from "../../../api/constraints"; // Adjust path if needed
+import { ENDPOINTS } from "../../../api/constraints";
 
 const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose }) => {
   const [form, setForm] = useState({
@@ -9,28 +9,55 @@ const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose 
     quotation_date: "",
     comments: "",
   });
-
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const API_URL = ENDPOINTS.CUSTOM_STATUS;
+  const MAX_LEN = 25;
 
-  const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+  const update = (key, val) => {
+    // Clamp length for required fields
+    if ((key === "quotation_value" || key === "quotation_no") && val.length > MAX_LEN) {
+      val = val.slice(0, MAX_LEN);
+    }
+    setForm(prev => ({ ...prev, [key]: val }));
+    
+    // ✅ FIXED: Clear specific error when user types
+    setErrors(prev => ({ ...prev, [key]: "" }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.quotation_value?.toString().trim()) {
+      newErrors.quotation_value = "Quotation Value is required ";
+    } else if (form.quotation_value.toString().length > MAX_LEN) {
+      newErrors.quotation_value = `Max ${MAX_LEN} characters allowed`;
+    }
+
+    if (!form.quotation_no?.trim()) {
+      newErrors.quotation_no = "Quotation Number is required ";
+    } else if (form.quotation_no.length > MAX_LEN) {
+      newErrors.quotation_no = `Max ${MAX_LEN} characters allowed`;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async () => {
-    // Basic validation
-    if (!form.quotation_value || !form.quotation_no) {
-      alert("Please fill in Quotation Value and Number");
+    // ✅ FIXED: Use validateForm() instead of old alert()
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-
       const payload = {
         leadId: parseInt(leadId),
         ilead_status_id: ilead_status_id,
         companyId: companyId,
-        data: form, // Backend expects the form object in 'data'
+        data: form,
         comments: form.comments || "",
         createdBy: createdBy,
       };
@@ -51,10 +78,7 @@ const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose 
       }
 
       alert("Quotation saved successfully!");
-
-      if (onClose) {
-        onClose(); // Close parent dialog
-      }
+      if (onClose) onClose();
     } catch (err) {
       console.error("Quotation Form Error:", err);
       alert(`Error: ${err.message}`);
@@ -65,19 +89,38 @@ const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose 
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+      {/* ✅ Add * to labels for consistency */}
       <TextField
-        label="Quotation Value"
+        label="Quotation Value "
         type="number"
         fullWidth
+        required
+        inputProps={{ maxLength: MAX_LEN }}
         value={form.quotation_value}
         onChange={e => update("quotation_value", e.target.value)}
+        error={!!errors.quotation_value}
+        helperText={errors.quotation_value}
+        sx={{
+          "& .MuiFormLabel-asterisk": {
+            color: "#d32f2f",
+          },
+        }}
       />
 
       <TextField
-        label="Quotation Number"
+        label="Quotation Number "
         fullWidth
+        required
+        inputProps={{ maxLength: MAX_LEN }}
         value={form.quotation_no}
         onChange={e => update("quotation_no", e.target.value)}
+        error={!!errors.quotation_no}
+        helperText={errors.quotation_no}
+        sx={{
+          "& .MuiFormLabel-asterisk": {
+            color: "#d32f2f",
+          },
+        }}
       />
 
       <TextField
@@ -90,7 +133,7 @@ const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose 
       />
 
       <TextField
-        label="Comments"
+        label="Remarks"
         multiline
         rows={2}
         fullWidth
@@ -112,64 +155,3 @@ const QuotationForm = ({ leadId, ilead_status_id, companyId, createdBy, onClose 
 };
 
 export default QuotationForm;
-
-//import React, { useState } from "react";
-// import { TextField } from "@mui/material";
-
-// const QuotationForm = ({ value = {}, onChange }) => {
-//   const [form, setForm] = useState({
-//     quotation_value: value.quotation_value || "",
-//     quotation_no: value.quotation_no || "",
-//     quotation_date: value.quotation_date || "",
-//     comments: value.comments || "",
-//   });
-
-//   const update = (key, val) => {
-//     const updated = { ...form, [key]: val };
-//     setForm(updated);
-//     onChange(updated);
-//   };
-
-//   return (
-//     <>
-//       <TextField
-//         label="Quotation Value"
-//         type="number"
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         value={form.quotation_value}
-//         onChange={e => update("quotation_value", e.target.value)}
-//       />
-
-//       <TextField
-//         label="Quotation Number"
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         value={form.quotation_no}
-//         onChange={e => update("quotation_no", e.target.value)}
-//       />
-
-//       <TextField
-//         label="Quotation Date"
-//         type="date"
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         InputLabelProps={{ shrink: true }}
-//         value={form.quotation_date}
-//         onChange={e => update("quotation_date", e.target.value)}
-//       />
-
-//       <TextField
-//         label="Comments"
-//         multiline
-//         rows={3}
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         value={form.comments}
-//         onChange={e => update("comments", e.target.value)}
-//       />
-//     </>
-//   );
-// };
-
-// export default QuotationForm;

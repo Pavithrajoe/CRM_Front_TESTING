@@ -6,6 +6,7 @@ export const ENDPOINTS = {
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
   SIGNUP: `${BASE_URL}/CreateAnAccount`, 
+  VERIFY_OTP: `${BASE_URL}/signup-otp/verify`,
   SIGNUP_OTP: `${BASE_URL}/signup-otp`, 
   PLAN_TYPE: `${BASE_URL}/pricing-plans`,
   RESELLER: `${BASE_URL}/reseller`,

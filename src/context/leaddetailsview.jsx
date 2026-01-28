@@ -178,6 +178,8 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
   const formRef = useRef(null); 
+  const [leadData, setLeadData] = useState(null);
+
 // const passedLead = location.state?.lead || location.state?.leadList?.[0];
 // const leadsList = passedLead ? [passedLead] : [];
 // const leadIds = leadsList.map((lead) => lead.ilead_id); 
@@ -196,7 +198,6 @@ const currentIndex = leadIds.indexOf(Number(leadId));
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
   const [isLost, setIsLost] = useState(false);
-  const [leadData, setLeadData] = useState(null);
   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
   const [lostReasons, setLostReasons] = useState([]);
   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");

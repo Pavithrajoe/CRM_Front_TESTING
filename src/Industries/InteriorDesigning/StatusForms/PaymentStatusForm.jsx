@@ -11,35 +11,76 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
     next_payment_date: "",
     comments: "",
   });
-
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const API_URL = ENDPOINTS.CUSTOM_STATUS;
-  const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+
+  const update = (key, val) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    
+    // Clear error when user types/selects
+    if (errors[key]) {
+      setErrors(prev => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Payment Status is always mandatory
+    if (!form.payment_status?.trim()) {
+      newErrors.payment_status = "Payment Status is required ";
+    }
+
+    // FULL payment validations
+    if (form.payment_status === "FULL") {
+      if (!form.paid_amount || parseFloat(form.paid_amount) <= 0) {
+        newErrors.paid_amount = "Paid Amount is required ";
+      }
+      if (!form.payment_date) {
+        newErrors.payment_date = "Payment Date is required ";
+      }
+    }
+
+    // PARTIAL payment validations
+    if (form.payment_status === "PARTIAL") {
+      if (!form.paid_amount || parseFloat(form.paid_amount) <= 0) {
+        newErrors.paid_amount = "Paid Amount is required ";
+      }
+      if (!form.balance_amount || parseFloat(form.balance_amount) <= 0) {
+        newErrors.balance_amount = "Balance Amount is required ";
+      }
+      if (!form.next_payment_date) {
+        newErrors.next_payment_date = "Next Payment Date is required ";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async () => {
-    if (!form.payment_status) {
-      alert("Please select a payment status");
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("token"); 
-
+      const token = localStorage.getItem("token");
       const payload = {
         leadId: parseInt(leadId),
         ilead_status_id: ilead_status_id,
         companyId: companyId,
-        data: form, 
+        data: form,
         comments: form.comments || "",
-        createdBy: createdBy, 
+        createdBy: createdBy,
       };
 
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(payload),
       });
@@ -51,11 +92,7 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
       }
 
       alert("Payment status saved successfully!");
-      
-      if (onClose) {
-        onClose();
-      }
-      
+      if (onClose) onClose();
     } catch (err) {
       console.error("Payment Form Error:", err);
       alert(`Error: ${err.message}`);
@@ -68,10 +105,18 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
       <TextField
         select
-        label="Payment Status"
+        label="Payment Status "
         fullWidth
+        required
         value={form.payment_status}
         onChange={e => update("payment_status", e.target.value)}
+        error={!!errors.payment_status}
+        helperText={errors.payment_status}
+        sx={{
+          "& .MuiFormLabel-asterisk": {
+            color: "#d32f2f",
+          },
+        }}
       >
         <MenuItem value="FULL">Fully Paid</MenuItem>
         <MenuItem value="PARTIAL">Partially Paid</MenuItem>
@@ -80,19 +125,36 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
       {form.payment_status === "FULL" && (
         <>
           <TextField
-            label="Amount"
+            label="Amount "
             type="number"
             fullWidth
+            required
+            inputProps={{ min: 0, step: "0.01" }}
             value={form.paid_amount}
             onChange={e => update("paid_amount", e.target.value)}
+            error={!!errors.paid_amount}
+            helperText={errors.paid_amount}
+            sx={{
+              "& .MuiFormLabel-asterisk": {
+                color: "#d32f2f",
+              },
+            }}
           />
           <TextField
-            label="Payment Date"
+            label="Payment Date "
             type="date"
             fullWidth
             InputLabelProps={{ shrink: true }}
+            required
             value={form.payment_date}
             onChange={e => update("payment_date", e.target.value)}
+            error={!!errors.payment_date}
+            helperText={errors.payment_date}
+            sx={{
+              "& .MuiFormLabel-asterisk": {
+                color: "#d32f2f",
+              },
+            }}
           />
         </>
       )}
@@ -100,32 +162,58 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
       {form.payment_status === "PARTIAL" && (
         <>
           <TextField
-            label="Paid Amount"
+            label="Paid Amount "
             type="number"
             fullWidth
+            required
+            inputProps={{ min: 0, step: "0.01" }}
             value={form.paid_amount}
             onChange={e => update("paid_amount", e.target.value)}
+            error={!!errors.paid_amount}
+            helperText={errors.paid_amount}
+            sx={{
+              "& .MuiFormLabel-asterisk": {
+                color: "#d32f2f",
+              },
+            }}
           />
           <TextField
-            label="Balance Amount"
+            label="Balance Amount "
             type="number"
             fullWidth
+            required
+            inputProps={{ min: 0, step: "0.01" }}
             value={form.balance_amount}
             onChange={e => update("balance_amount", e.target.value)}
+            error={!!errors.balance_amount}
+            helperText={errors.balance_amount}
+            sx={{
+              "& .MuiFormLabel-asterisk": {
+                color: "#d32f2f",
+              },
+            }}
           />
           <TextField
-            label="Next Payment Date"
+            label="Next Payment Date "
             type="date"
             fullWidth
             InputLabelProps={{ shrink: true }}
+            required
             value={form.next_payment_date}
             onChange={e => update("next_payment_date", e.target.value)}
+            error={!!errors.next_payment_date}
+            helperText={errors.next_payment_date}
+            sx={{
+              "& .MuiFormLabel-asterisk": {
+                color: "#d32f2f",
+              },
+            }}
           />
         </>
       )}
 
       <TextField
-        label="Comments"
+        label="Remarks"
         multiline
         rows={2}
         fullWidth
@@ -138,7 +226,11 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
         fullWidth
         onClick={handleSubmit}
         disabled={isSubmitting}
-        sx={{ bgcolor: '#1976d2', color: 'white', '&:hover': { bgcolor: '#1565c0' } }}
+        sx={{ 
+          bgcolor: '#1976d2', 
+          color: 'white', 
+          '&:hover': { bgcolor: '#1565c0' } 
+        }}
       >
         {isSubmitting ? "Saving..." : "Save Payment Status"}
       </Button>
@@ -147,158 +239,3 @@ const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onCl
 };
 
 export default PaymentStatusForm;
-
-
-
-
-// import React, { useState } from "react";
-// import { TextField, MenuItem, Button, Box, Typography } from "@mui/material";
-
-// const PaymentStatusForm = ({ leadId, ilead_status_id, companyId, createdBy }) => {
-//   const [form, setForm] = useState({
-//     payment_status: "",
-//     paid_amount: "",
-//     balance_amount: "",
-//     payment_date: "",
-//     next_payment_date: "",
-//     comments: "",
-//   });
-
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-
-//   // YOUR API URL
-//   const API_URL = "http://192.168.29.236:3000/api/custom-status";
-
-//   const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
-
-//   const handleSubmit = async () => {
-//     if (!form.payment_status) {
-//       alert("Please select a payment status");
-//       return;
-//     }
-
-//     setIsSubmitting(true);
-//     try {
-//       // 1. Get token from localStorage
-//       const token = localStorage.getItem("token"); 
-
-//       const payload = {
-//         leadId: parseInt(leadId),
-//         ilead_status_id: ilead_status_id,
-//         companyId: companyId,
-//         // BACKEND KEY CHANGE: Use 'data' instead of 'formData' 
-//         // to match req.body.data in your controller
-//         data: form, 
-//         comments: form.comments || "",
-//       };
-
-//       const response = await fetch(API_URL, {
-//         method: "POST",
-//         headers: { 
-//           "Content-Type": "application/json",
-//           // 2. SEND THE TOKEN
-//           "Authorization": `Bearer ${token}` 
-//         },
-//         body: JSON.stringify(payload),
-//       });
-
-//       const result = await response.json();
-
-//       if (!response.ok) {
-//         throw new Error(result.Message || "Failed to submit payment status");
-//       }
-
-//       alert("Payment status saved successfully!");
-      
-//       // Clear form logic...
-//     } catch (err) {
-//       console.error(err);
-//       alert(`Error: ${err.message}`);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-//       <TextField
-//         select
-//         label="Payment Status"
-//         fullWidth
-//         value={form.payment_status}
-//         onChange={e => update("payment_status", e.target.value)}
-//       >
-//         <MenuItem value="FULL">Fully Paid</MenuItem>
-//         <MenuItem value="PARTIAL">Partially Paid</MenuItem>
-//       </TextField>
-
-//       {form.payment_status === "FULL" && (
-//         <>
-//           <TextField
-//             label="Amount"
-//             type="number"
-//             fullWidth
-//             value={form.paid_amount}
-//             onChange={e => update("paid_amount", e.target.value)}
-//           />
-//           <TextField
-//             label="Payment Date"
-//             type="date"
-//             fullWidth
-//             InputLabelProps={{ shrink: true }}
-//             value={form.payment_date}
-//             onChange={e => update("payment_date", e.target.value)}
-//           />
-//         </>
-//       )}
-
-//       {form.payment_status === "PARTIAL" && (
-//         <>
-//           <TextField
-//             label="Paid Amount"
-//             type="number"
-//             fullWidth
-//             value={form.paid_amount}
-//             onChange={e => update("paid_amount", e.target.value)}
-//           />
-//           <TextField
-//             label="Balance Amount"
-//             type="number"
-//             fullWidth
-//             value={form.balance_amount}
-//             onChange={e => update("balance_amount", e.target.value)}
-//           />
-//           <TextField
-//             label="Next Payment Date"
-//             type="date"
-//             fullWidth
-//             InputLabelProps={{ shrink: true }}
-//             value={form.next_payment_date}
-//             onChange={e => update("next_payment_date", e.target.value)}
-//           />
-//         </>
-//       )}
-
-//       <TextField
-//         label="Comments"
-//         multiline
-//         rows={2}
-//         fullWidth
-//         value={form.comments}
-//         onChange={e => update("comments", e.target.value)}
-//       />
-
-//       <Button
-//         variant="contained"
-//         fullWidth
-//         onClick={handleSubmit}
-//         disabled={isSubmitting}
-//         sx={{ bgcolor: '#1976d2', color: 'white', '&:hover': { bgcolor: '#1565c0' } }}
-//       >
-//         {isSubmitting ? "Saving..." : "Save Payment Status"}
-//       </Button>
-//     </Box>
-//   );
-// };
-
-// export default PaymentStatusForm;

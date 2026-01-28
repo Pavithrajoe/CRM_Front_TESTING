@@ -127,6 +127,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
         createdBy: item.data?.createdBy || "-",
         dcreated_dt: item.createdAt,
         status_name: item.lead_status?.clead_name || "-",
+ 
+        assigned_to: item.data?.assignedTo || null,    
+        notify_to: item.data?.notifiedTo || null,      
         due_date: item.data?.next_payment_date || null,
         rawData: item,
         // Add special fields
@@ -138,6 +141,9 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
         payment_date: item.data?.payment_date,
         balance_amount: item.data?.balance_amount,
         payment_status: item.data?.payment_status,
+
+         invoice_no: item.data?.invoice_no,        // ← NEW
+         invoice_date: item.data?.invoice_date,
       }));
       
       setUniqueRemarks(mappedRemarks);
@@ -468,29 +474,54 @@ const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataF
     return isValid;
   };
 
-  const formatDateOnly = dateString => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  const formatDateOnly = (dateString) => {
+  if (!dateString) return '-';
+
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${day}:${month}:${year}`;
+};
 const formatDateTime = (dateString) => {
   if (!dateString) return '-';
-  
+
   const date = new Date(dateString);
-  const options = {
-    day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true // 12 hour format kudukkum
-  };
-  
-  return date.toLocaleString('en-GB', options); // 27/01/2026, 05:54 PM
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+
+  hours = hours % 12 || 12;
+  hours = String(hours).padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
 };
+
+function formatDateDMY(dateString) {
+  const d = new Date(dateString);
+  
+  // Date parts
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  
+  // 12-hour time with AM/PM
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;  // 0 -> 12
+  const timeStr = String(hours).padStart(2, "0") + ":" + minutes + " " + ampm;
+  
+  return `${day}:${month}:${year} ${timeStr}`;
+}
+
 
 
   //handleStageClick function
@@ -1602,7 +1633,7 @@ const formatDateTime = (dateString) => {
                     {selectedRemark.due_date && (
                       <p className="text-sm text-gray-600">
                         <strong>Due Date:</strong>{" "}
-                        {new Date(selectedRemark.due_date).toLocaleString("en-GB")}
+                        {formatDateTime(selectedRemark.due_date).toLocaleString("en-GB")}
                       </p>
                     )}
                   </div>
@@ -1695,7 +1726,7 @@ const formatDateTime = (dateString) => {
                                 <strong>Quotation No:</strong> {remark.quotation_no || '-'}
                               </p>
                               <p className="text-sm text-gray-700">
-                                <strong>Date:</strong> {remark.quotation_date ? formatDateOnly(remark.quotation_date) : '-'}
+                                <strong>Date:</strong> {remark.quotation_date ? formatDateTime(remark.quotation_date) : '-'}
                               </p>
                               <p className="text-sm text-gray-700">
                                 <strong>Value:</strong> ₹{remark.quotation_value || '0'}
@@ -1730,9 +1761,15 @@ const formatDateTime = (dateString) => {
                             <p className="text-sm break-words line-clamp-3 font-medium text-gray-800">
                               <strong>Remark:</strong>  {remark.comments || remark.lead_status_remarks || "-"}
                             </p>
-                              <p className="text-sm font-medium text-gray-800">
+                               <p className="text-sm font-medium text-gray-800">
+      <strong>Invoice No:</strong> {remark.data?.invoice_no|| remark.invoice_no  || '-'}
+    </p>
+     <p className="text-sm text-gray-700">
+      <strong>Invoice Date:</strong> {remark.data?.invoice_date ? formatDateOnly(remark.data.invoice_date) : remark.invoice_date ? formatDateOnly(remark.invoice_date) : '-'}
+    </p>
+                              {/* <p className="text-sm font-medium text-gray-800">
                                 <strong>Billing:</strong> Billing Details
-                              </p>
+                              </p> */}
                             </>
                           ) : (
                             <p className="text-sm break-words line-clamp-3 font-medium text-gray-800">

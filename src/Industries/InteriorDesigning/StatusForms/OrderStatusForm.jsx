@@ -13,11 +13,30 @@ const OrderStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onClos
     order_status: "",
     comments: "",
   });
-
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const API_URL = ENDPOINTS.CUSTOM_STATUS;
 
-  const update = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+    const update = (key, val) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    
+    
+    if (errors[key]) {
+      setErrors(prev => ({ ...prev, [key]: "" }));
+    }
+  };
+    const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.order_status?.trim()) {
+      newErrors.order_status = "Order Status is required ";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
 
   const handleSubmit = async () => {
     if (!form.order_status) {
@@ -68,12 +87,20 @@ const OrderStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onClos
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-      <TextField
+       <TextField
         select
-        label="Order Status"
+        label="Order Status "
         fullWidth
+        required
         value={form.order_status}
         onChange={e => update("order_status", e.target.value)}
+        error={!!errors.order_status}
+        helperText={errors.order_status}
+        sx={{
+          "& .MuiFormLabel-asterisk": {
+            color: "#d32f2f",
+          },
+        }}
       >
         {orderOptions.map(opt => (
           <MenuItem key={opt} value={opt}>{opt}</MenuItem>
@@ -81,7 +108,7 @@ const OrderStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onClos
       </TextField>
 
       <TextField
-        label="Comments"
+        label="Remarks"
         multiline
         rows={2}
         fullWidth
@@ -109,53 +136,3 @@ const OrderStatusForm = ({ leadId, ilead_status_id, companyId, createdBy, onClos
 
 export default OrderStatusForm;
 
-// import React, { useState } from "react";
-// import { TextField, MenuItem } from "@mui/material";
-
-// const orderOptions = [
-//   "Order Confirmed",
-//   "Negotiation",
-//   "Need Time to Confirm"
-// ];
-
-// const OrderStatusForm = ({ value = {}, onChange }) => {
-//   const [form, setForm] = useState({
-//     order_status: value.order_status || "",
-//     comments: value.comments || "",
-//   });
-
-//   const update = (key, val) => {
-//     const updated = { ...form, [key]: val };
-//     setForm(updated);
-//     onChange(updated);
-//   };
-
-//   return (
-//     <>
-//       <TextField
-//         select
-//         label="Order Status"
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         value={form.order_status}
-//         onChange={e => update("order_status", e.target.value)}
-//       >
-//         {orderOptions.map(opt => (
-//           <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-//         ))}
-//       </TextField>
-
-//       <TextField
-//         label="Comments"
-//         multiline
-//         rows={3}
-//         fullWidth
-//         sx={{ mt: 2 }}
-//         value={form.comments}
-//         onChange={e => update("comments", e.target.value)}
-//       />
-//     </>
-//   );
-// };
-
-// export default OrderStatusForm;

@@ -25,8 +25,6 @@ const CreateAnAccount = () => {
   });
 
   // OTP States
-  const [resendDisabled, setResendDisabled] = useState(false);
-const [resendTimer, setResendTimer] = useState(0); // seconds
   const [otpSent, setOtpSent] = useState(false);
   const [userOtpInput, setUserOtpInput] = useState("");
   const [serverOtp, setServerOtp] = useState(null);
@@ -65,20 +63,6 @@ const [resendTimer, setResendTimer] = useState(0); // seconds
     };
     fetchCountries();
   }, []);
-  useEffect(() => {
-  let interval = null;
-
-  if (resendTimer > 0) {
-    interval = setInterval(() => {
-      setResendTimer((prev) => prev - 1);
-    }, 1000);
-  } else if (resendTimer === 0) {
-    setResendDisabled(false);
-  }
-
-  return () => clearInterval(interval);
-}, [resendTimer]);
-
 
   const allCountryOptions = useMemo(() => {
     if (countriesLoading || countriesData.length === 0) {
@@ -101,18 +85,30 @@ const [resendTimer, setResendTimer] = useState(0); // seconds
       case "work_email":
         return !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) ? "Valid work email is required." : "";
       case "password":
-        return value.length < 8 ? "Password must be at least 8 characters." : "";
+         return value.length < 6 ? "Password must be min 6 digits." : "";
       case "org_name":
         return !value.trim() ? "Organization name is required." : "";
       case "business_type":
         return !value ? "Business type is required." : "";
+      // case "phoneNumberLocal":
+      //   if (!value.trim()) return "Phone number is required.";
+      //   try {
+      //     const phoneNumber = parsePhoneNumber(value.trim(), currentFormData.countryCode);
+      //     if (!phoneNumber || !phoneNumber.isValid()) return "Invalid phone number.";
+      //   } catch (e) { return "Invalid phone number."; }
+      //   return "";
       case "phoneNumberLocal":
-        if (!value.trim()) return "Phone number is required.";
-        try {
-          const phoneNumber = parsePhoneNumber(value.trim(), currentFormData.countryCode);
-          if (!phoneNumber || !phoneNumber.isValid()) return "Invalid phone number.";
-        } catch (e) { return "Invalid phone number."; }
-        return "";
+  if (!value.trim()) return "Phone number is required.";
+  
+  const digitsOnly = value.replace(/\D/g, '');
+  
+  // 6 digits minimum - NO max limit, NO format check after 6 digits!
+  if (digitsOnly.length < 6) {
+    return "Phone number must be at least 6 to 15 digits.";
+  }
+  
+  // 6+ digits = PERFECT! No format check, no max limit!
+  return "";
       default:
         return "";
     }
@@ -136,72 +132,46 @@ const [resendTimer, setResendTimer] = useState(0); // seconds
     }));
   };
 
-
-const handleSendOtp = async () => {
-  if (resendDisabled) return;
-
-  setVerifyingEmail(true);
-  try {
-    const response = await fetch(ENDPOINTS.SIGNUP_OTP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: formData.work_email }),
-    });
-    const result = await response.json();
-    const otpValue = result.data?.data; 
-    
-    if (otpValue) {
-      setServerOtp(otpValue);  
-      setOtpSent(true);
-      alert("OTP sent!" );
-      // alert("OTP sent! Check console: " + otpValue);
-      setResendDisabled(true);
-      setResendTimer(120);
-    } else {
-  
-      alert("No OTP received");
+  // OTP FUNCTIONS
+  const handleSendOtp = async () => {
+    const emailError = validateField("work_email", formData.work_email);
+    if (emailError) {
+      setValidationErrors(prev => ({ ...prev, work_email: emailError }));
+      return;
     }
-  } catch (error) {
-    alert("Server error");
-  } finally {
-    setVerifyingEmail(false);
-  }
-};
 
-
-  const handleCheckOtp = async () => {
+    setVerifyingEmail(true);
     try {
-      setVerifyingEmail(true);
-
-      const response = await fetch(ENDPOINTS.VERIFY_OTP, {
+      const response = await fetch(ENDPOINTS.SIGNUP_OTP, {    
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.work_email,
-          otp: userOtpInput,
-        }),
+        body: JSON.stringify({ email: formData.work_email }),
       });
-
       const result = await response.json();
-
-      if (response.ok && result.data?.success) {
-        setIsEmailVerified(true);
-        setOtpSent(false);        // ← Hides OTP box
-        setUserOtpInput("");      // ← Clears input
-        setResendTimer(0);        // ← Stops timer  
-        setResendDisabled(false); // ← Resets resend
-
-        alert("✅ Email Verified!");
+      
+      if (response.ok || result.success) {
+        setServerOtp(result.data); 
+        setOtpSent(true);
+        alert("OTP sent to your email!");
       } else {
-        alert(result.message || "Invalid OTP");
+        alert(result.message || "Failed to send OTP");
       }
     } catch (error) {
-      alert("Server error: " + error.message);
+      alert("Error connecting to server");
     } finally {
       setVerifyingEmail(false);
     }
   };
 
+  const handleCheckOtp = () => {
+    if (userOtpInput === serverOtp?.toString()) {
+      setIsEmailVerified(true);
+      setOtpSent(false);
+      alert("Email Verified!");
+    } else {
+      alert("Invalid OTP. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -256,7 +226,7 @@ const handleSendOtp = async () => {
       }, 1500);
 
     } catch (err) {
-      alert("inavlaid");
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -292,43 +262,19 @@ const handleSendOtp = async () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Full Name *</label>
+                <label className="block text-sm text-gray-600 mb-1">Full Name <span className="text-red-500">*</span></label>
                 <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.full_name ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="John Doe" />
               </div>
               
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Work Email *</label>
+                <label className="block text-sm text-gray-600 mb-1">Work Email <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <input type="email" name="work_email" disabled={isEmailVerified} value={formData.work_email} onChange={handleChange} className={`flex-grow px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.work_email ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="john@company.com" />
-                    {!isEmailVerified && (
-                    <button
-                      type="button"
-                      onClick={handleSendOtp}
-                      disabled={verifyingEmail || resendDisabled}
-                      className={`px-4 py-2 font-semibold rounded-xl text-xs transition-all flex items-center gap-1 ${
-                        verifyingEmail || resendDisabled
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700'
-                      }`}
-                    >
-                      {verifyingEmail ? (
-                        <>
-                          <div className="w-3 h-3 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
-                          Sending...
-                        </>
-                      ) : resendDisabled ? (
-                        <>
-                          ⏱️ Resend ({Math.floor(resendTimer / 60)}:{resendTimer % 60 < 10 ? '0' : ''}{resendTimer % 60}s)
-                        </>
-                      ) : otpSent ? (
-                        ' Resend'
-                      ) : (
-                        ' Verify'
-                      )}
+                  {!isEmailVerified && (
+                    <button type="button" onClick={handleSendOtp} disabled={verifyingEmail} className="px-4 bg-blue-50 text-blue-600 font-semibold rounded-xl text-xs hover:bg-blue-100 transition-all">
+                      {verifyingEmail ? "..." : otpSent ? "Resend" : "Verify"}
                     </button>
                   )}
-
-
                 </div>
                 {isEmailVerified && <p className="text-green-600 text-[10px] mt-1 font-medium">✓ Email Verified</p>}
               </div>
@@ -346,11 +292,22 @@ const handleSendOtp = async () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Password *</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="••••••••" />
-              </div>
+  <label className="block text-sm text-gray-600 mb-1">Password <span className="text-red-500">*</span></label>
+  <input 
+    type="password" 
+    name="password" 
+    value={formData.password} 
+    onChange={handleChange} 
+   
+    className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.password ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
+    placeholder="123456" 
+  />
+  {validationErrors.password && (
+    <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.password}</p>
+  )}
+</div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Organization Name *</label>
+                <label className="block text-sm text-gray-600 mb-1">Organization Name <span className="text-red-500">*</span></label>
                 <input type="text" name="org_name" value={formData.org_name} onChange={handleChange} className={`w-full px-4 py-3 rounded-xl bg-[#f9f9f9] border ${validationErrors.org_name ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="Inklidox Tech" />
               </div>
             </div>
@@ -358,7 +315,7 @@ const handleSendOtp = async () => {
             {/*  Business Type & User Count Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Business Type *</label>
+                <label className="block text-sm text-gray-600 mb-1">Business Type <span className="text-red-500">*</span></label>
                 <select 
                   name="business_type" 
                   value={formData.business_type} 
@@ -382,15 +339,35 @@ const handleSendOtp = async () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="w-full">
-                <label className="block text-sm text-gray-600 mb-1">Phone Number *</label>
-                <div className="flex">
-                  <select name="countryCode" value={formData.countryCode} onChange={handleChange} className="px-3 py-3 bg-[#f9f9f9] border border-r-0 border-gray-200 rounded-l-xl outline-none w-[100px]">
-                    {allCountryOptions.map(c => ( <option key={c.code} value={c.code}>{c.dialingCode}</option>))}
-                  </select>
-                  <input type="tel" name="phoneNumberLocal" value={formData.phoneNumberLocal} onChange={handleChange} className={`flex-grow px-4 py-3 rounded-r-xl bg-[#f9f9f9] border ${validationErrors.phoneNumberLocal ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} placeholder="98765 43210" />
-                </div>
-              </div>
+              
+<div className="w-full">
+  <label className="block text-sm text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
+  <div className="flex">
+    <select 
+      name="countryCode" 
+      value={formData.countryCode} 
+      onChange={handleChange} 
+      className="px-3 py-3 bg-[#f9f9f9] border border-r-0 border-gray-200 rounded-l-xl outline-none w-[100px]"
+    >
+      {allCountryOptions.map(c => ( 
+        <option key={c.code} value={c.code}>{c.dialingCode}</option>
+      ))}
+    </select>
+    <input 
+      type="tel" 
+      name="phoneNumberLocal" 
+      value={formData.phoneNumberLocal} 
+      onChange={handleChange} 
+      maxLength="15"
+      className={`flex-grow px-4 py-3 rounded-r-xl bg-[#f9f9f9] border ${validationErrors.phoneNumberLocal ? 'border-red-400' : 'border-gray-200'} outline-none focus:ring-2 focus:ring-blue-500`} 
+      placeholder="98765 43210" 
+    />
+  </div>
+  {validationErrors.phoneNumberLocal && (
+    <p className="text-red-500 text-[12px] mt-1 font-medium">{validationErrors.phoneNumberLocal}</p>
+  )}
+</div>
+
             </div>
 
             <div className="flex flex-col items-center gap-3 pt-2">

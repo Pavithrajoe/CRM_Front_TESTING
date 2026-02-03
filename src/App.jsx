@@ -20,6 +20,11 @@ import UserAttributes from "./pages/userPage/UserAttributes.jsx";
 import { CompanyProvider } from "./context/companyContext.jsx";
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
+import CustomerSalesHistoryReport from "./Components/reports/CustomerSalesHistoryReport.jsx";
+import LeadSourcePerformanceReport from "./Components/reports/LeadSourcePerformanceReport;.jsx";
+import RevenueBreakdownReport from "./Components/reports/RevenueBreakdownReport.jsx";
+import SalespersonPerformanceReport from "./Components/reports/SalespersonPerformanceReport.jsx";
+import SalesTargetReport from "./Components/reports/SalesTargetReport.jsx";
 import UserProfile from "./pages/userProfile";
 import CalendarPage from "./pages/calenderpage";
 import CardsPage from './Components/reports/reports';
@@ -115,6 +120,11 @@ function App() {
                                 <Route element={<AppLayout />}>
                                   <Route path="/notifications" element={<NotificationPage />} />
                                   <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
+                                  <Route path="/CustomerSalesHistoryReport" element={<CustomerSalesHistoryReport />} />
+                                  <Route path="/LeadSourcePerformanceReport" element={<LeadSourcePerformanceReport />} />
+                                  <Route path="/RevenueBreakdownReport" element={<RevenueBreakdownReport />} />
+                                  <Route path="/SalespersonPerformanceReport" element={<SalespersonPerformanceReport />} />
+                                  <Route path="/SalesTargetReport" element={<SalesTargetReport />} />
                                   <Route path="userprofile/:userId" element={<UserProfile />} />
                                   <Route path="calenderpage" element={<CalendarPage />} />
                                   <Route path="/reportpage" element={<CardsPage />} />

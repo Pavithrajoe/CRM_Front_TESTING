@@ -49,7 +49,7 @@ import PostSalesForm from "../Industries/Marketing/XcodeFix/Components/postSales
 import { toast } from 'react-toastify';
 import { useUserAccess } from "../context/UserAccessContext";
 import { MdAccountCircle, MdClose } from 'react-icons/md';
-
+import LeadCallHistory from "./LeadCallHistory";
 // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
@@ -178,8 +178,6 @@ const LeadDetailView = () => {
   const location = useLocation();
   const lostReasonDialogRef = useRef(null);
   const formRef = useRef(null); 
-  const [leadData, setLeadData] = useState(null);
-
 // const passedLead = location.state?.lead || location.state?.leadList?.[0];
 // const leadsList = passedLead ? [passedLead] : [];
 // const leadIds = leadsList.map((lead) => lead.ilead_id); 
@@ -198,6 +196,7 @@ const currentIndex = leadIds.indexOf(Number(leadId));
   const [loading, setLoading] = useState(true);
   const [isDeal, setIsDeal] = useState(false);
   const [isLost, setIsLost] = useState(false);
+  const [leadData, setLeadData] = useState(null);
   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
   const [lostReasons, setLostReasons] = useState([]);
   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
@@ -381,40 +380,72 @@ const [customStatusData, setCustomStatusData] = useState([]);
   }, [urlUserId]);
 
   // PDF View Handler
-  const handleViewPdf = async (quotation) => {
-    try {
-      if (!companyInfo || !leadData) {
-        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-        return;
-      }
+  // const handleViewPdf = async (quotation) => {
+  //   try {
+  //     if (!companyInfo || !leadData) {
+  //       showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+  //       return;
+  //     }
       
-      setCurrentPdfUrl(null);
-      setCurrentQuotation(quotation);
-      setPdfViewerOpen(true);
-      const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
-      setCurrentPdfUrl(pdfDataUrl);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-      setPdfViewerOpen(false);
+  //     setCurrentPdfUrl(null);
+  //     setCurrentQuotation(quotation);
+  //     setPdfViewerOpen(true);
+  //     const pdfDataUrl = await generateQuotationPDF(quotation);
+  //     setCurrentPdfUrl(pdfDataUrl);
+  //   } catch (error) {
+  //     console.error("Error generating PDF:", error);
+  //     showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+  //     setPdfViewerOpen(false);
+  //   }
+  // };
+const handleViewPdf = async (quotation) => {
+  try {
+    if (!companyInfo || !leadData) {
+         showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+      return;
     }
-  };
+    setCurrentQuotation(quotation);
+    setPdfViewerOpen(true);
+    setCurrentPdfUrl(null);
+
+    const doc = await generateQuotationPDF(quotation);
+
+    const blobUrl = doc.output("bloburl"); // ✅ IMPORTANT
+    setCurrentPdfUrl(blobUrl);
+  } catch (error) {
+    console.error(error);
+    showPopup("Error", "Failed to generate PDF", "error");
+    setPdfViewerOpen(false);
+  }
+};
 
   // PDF Download Handler
+  // const handleDownloadPdf = async (quotation) => {
+  //   try {
+  //     if (!companyInfo || !leadData) {
+  //       showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+  //       return;
+  //     }
+  //     const doc = await generateQuotationPDF(quotation, companyInfo, leadData);
+  //     doc.save(`${quotation.cQuote_number}.pdf`);
+  //     showPopup('Success', `PDF downloaded successfully!`, 'success');
+  //   } catch (error) {
+  //     console.error("Error generating PDF:", error);
+  //     showPopup('Error', error.message || 'Failed to generate PDF', 'error');
+  //   }
+  // };
+
   const handleDownloadPdf = async (quotation) => {
-    try {
-      if (!companyInfo || !leadData) {
-        showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-        return;
-      }
-      const doc = await generateQuotationPDF(quotation, companyInfo, leadData);
-      doc.save(`${quotation.cQuote_number}.pdf`);
-      showPopup('Success', `PDF downloaded successfully!`, 'success');
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-    }
-  };
+  try {
+    const doc = await generateQuotationPDF(quotation);
+
+    doc.save(`Quotation-${quotation.cQuote_number}.pdf`); // ✅ WORKS
+    showPopup("Success", "PDF downloaded successfully!", "success");
+  } catch (error) {
+    console.error(error);
+    showPopup("Error", "Failed to download PDF", "error");
+  }
+};
 
   // Download from PDF Viewer
   const handleDownloadFromViewer = async () => {
@@ -1003,8 +1034,12 @@ const decodeHTML = (html) => {
 
 const applyTemplate = (template) => {
   setMailSubject(template.mailTitle || "");
-  setMailContent(decodeHTML(template.mailBody || ""));
-};;
+  setMailContent(
+    decodeHTML(
+      template.mail_template_body || template.mailBody || ""
+    )
+  );
+};
 
   // Fetch stages for the StatusBar component
   // const fetchStages = async () => {
@@ -1094,12 +1129,26 @@ const getTabLabels = () => {
     });
   }
   
- if (isLargeScreen) {
-    availableTabs.push({
-      key:'Activity',
-      label:'Activity'
+//  if (isLargeScreen) {
+//     availableTabs.push({
+//       key:'Activity',
+//       label:'Activity'
+//     });
+//   }
+if (isLargeScreen) {
+  availableTabs.push(
+    {
+      key: "Activity",
+      label: "Activity"
+    }
+  );
+}
+ availableTabs.push({
+      key: "CallHistory",
+      label: "Call History",
     });
-  }
+return availableTabs;
+
   return availableTabs;
 };
 
@@ -1124,6 +1173,22 @@ const renderTabContent = () => {
                 leadId={leadId}
                 isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
               />;
+
+    case "CallHistory":
+  return (
+   <LeadCallHistory
+  phone={
+    leadData?.iphone_no ||                 
+    leadData?.whatsapp_number ||      
+    leadData?.cphone ||
+    leadData?.cPhone ||
+    leadData?.cMobile ||
+    leadData?.phone_number
+  }
+/>
+
+  );
+          
     default:
       return <div>Content not available for tab: {currentTab.label}</div>;
   }
@@ -1420,6 +1485,10 @@ const renderTabContent = () => {
                   }
                   sx={{ mt: 2 }}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{
+        ...params.inputProps,
+        readOnly: true, 
+      }}
                 />
               )}
             />
@@ -1955,7 +2024,6 @@ const renderTabContent = () => {
 export default LeadDetailView;
 
 
-
 // import React, { useState, useEffect, useRef, useMemo } from "react";
 // import { useParams, useLocation, useNavigate } from "react-router-dom";
 // import {
@@ -2007,7 +2075,6 @@ export default LeadDetailView;
 // import { toast } from 'react-toastify';
 // import { useUserAccess } from "../context/UserAccessContext";
 // import { MdAccountCircle, MdClose } from 'react-icons/md';
-
 
 // // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 // const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
@@ -2137,15 +2204,26 @@ export default LeadDetailView;
 //   const location = useLocation();
 //   const lostReasonDialogRef = useRef(null);
 //   const formRef = useRef(null); 
-//   const leadsList = location.state?.leadList || [];
-//   const leadIds = leadsList.map((lead) => lead.ilead_id);
-//   const currentIndex = leadIds.indexOf(Number(leadId));
+//   const [leadData, setLeadData] = useState(null);
+
+// // const passedLead = location.state?.lead || location.state?.leadList?.[0];
+// // const leadsList = passedLead ? [passedLead] : [];
+// // const leadIds = leadsList.map((lead) => lead.ilead_id); 
+// // const currentIndex = leadIds.indexOf(Number(leadId));
+// const leadsList = location.state?.leadList?.length 
+//   ? location.state.leadList 
+//   : leadData 
+//     ? [leadData] 
+//     : [];
+
+// const leadIds = leadsList.map(lead => lead.ilead_id);
+// const currentIndex = leadIds.indexOf(Number(leadId));
+
 //   const theme = useTheme();
 //   const [tabIndex, setTabIndex] = useState(0);
 //   const [loading, setLoading] = useState(true);
 //   const [isDeal, setIsDeal] = useState(false);
 //   const [isLost, setIsLost] = useState(false);
-//   const [leadData, setLeadData] = useState(null);
 //   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
 //   const [lostReasons, setLostReasons] = useState([]);
 //   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
@@ -2190,6 +2268,11 @@ export default LeadDetailView;
 
 //   const [dragActive, setDragActive] = useState(false);
 //   const [profileImagePreview, setProfileImagePreview] = useState(null);
+  
+// const [taskCount, setTaskCount] = useState(0);
+// const [commentCount, setCommentCount] = useState(0);
+// const [reminderCount, setReminderCount] = useState(0);
+// const [customStatusData, setCustomStatusData] = useState([]);
 
 
 //   const [userSettings, setUserSettings] = useState({
@@ -2559,6 +2642,25 @@ export default LeadDetailView;
 //     }
 //   };
 
+// const fetchCustomStatus = async () => {
+//   try {
+//     const token = localStorage.getItem("token");
+//     const response = await fetch(`${ENDPOINTS.CUSTOM_STATUS_GET_BY_LEAD_ID}/${leadId}`, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+    
+//     if (response.ok) {
+//       const data = await response.json();
+//       setCustomStatusData(data);
+//     }
+//   } catch (error) {
+//     console.error("Failed to fetch custom status:", error);
+//   }
+// };
+
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     await lostLead();
@@ -2567,6 +2669,7 @@ export default LeadDetailView;
 //   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth > 1280);
 
 //   const fetchStatusRemarks = async () => {
+    
 //     try {
 //       const token = localStorage.getItem("token");
 //       const endpointsToTry = [
@@ -2607,7 +2710,12 @@ export default LeadDetailView;
 //       }
 
 //       const data = await response.json();
+//       console.log(" paviii Status Remarks API Response:", data);
+//       // Or check a specific remark:
+//       console.log("pavviii Latest remark data:", data.Response?.[0] || data.data?.[0]);
 //       const remarks = data.Response || data.data || data || [];
+
+//  //  ADD HERE
 //       setStatusRemarks(Array.isArray(remarks) ? remarks : [remarks]);
       
 //     } catch (error) {
@@ -2618,11 +2726,11 @@ export default LeadDetailView;
 //     }
 //   };
 
-//   useEffect(() => {
-//     if (leadId) {
-//       fetchStatusRemarks();
-//     }
-//     }, [leadId]);
+//   // useEffect(() => {
+//   //   if (leadId) {
+//   //     fetchStatusRemarks();
+//   //   }
+//   //   }, [leadId]);
 
 
 //   const sendEmail = async () => {
@@ -2690,7 +2798,15 @@ export default LeadDetailView;
 //       document.removeEventListener('mousedown', handleClickOutside);
 //     };
 //   }, [leadLostDescriptionTrue]);
-
+// useEffect(() => {
+//   const passedLead = location.state?.lead;
+//   if (passedLead && passedLead.ilead_id == leadId) {
+//     console.log("✅ USING PASSED LEAD:", passedLead.clead_name);
+//     setLeadData(passedLead);
+//     setLoading(false);
+//     return; // Skip API!
+//   }
+// }, []);
 //   const fetchLeadData = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
@@ -2807,13 +2923,24 @@ export default LeadDetailView;
 //   };
 
 //   useEffect(() => {
-//     if (leadId) {
-//       fetchLeadData();
-//       fetchLostReasons();
-//       getUserInfoFromLocalStorage();
-//       fetchQuotations();
-//     }
-//   }, [leadId]);
+//   if (leadId) {
+//     fetchLeadData();
+//     fetchLostReasons();
+//     getUserInfoFromLocalStorage();
+//     fetchQuotations();
+//     fetchCustomStatus();
+//     fetchStatusRemarks();
+//   }
+// }, [leadId]);
+
+//   // useEffect(() => {
+//   //   if (leadId) {
+//   //     fetchLeadData();
+//   //     fetchLostReasons();
+//   //     getUserInfoFromLocalStorage();
+//   //     fetchQuotations();
+//   //   }
+//   // }, [leadId]);
 
 //   useEffect(() => {
 //     if (isMailOpen && leadData) {
@@ -2897,44 +3024,50 @@ export default LeadDetailView;
 //     }
 //   },[isMailOpen]);
 
-//   const applyTemplate = (template) => {
-//     setMailSubject(template.mailTitle);
-//     setMailContent(template.mailBody);
-//   };
+// const decodeHTML = (html) => {
+//   const txt = document.createElement("textarea");
+//   txt.innerHTML = html;
+//   return txt.value;
+// };
+
+// const applyTemplate = (template) => {
+//   setMailSubject(template.mailTitle || "");
+//   setMailContent(decodeHTML(template.mailBody || ""));
+// };;
 
 //   // Fetch stages for the StatusBar component
-//   const fetchStages = async () => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           ...(token && { Authorization: `Bearer ${token}` }),
-//         },
-//       });
-//       if (!response.ok) throw new Error('Failed to fetch stages');
-//       const data = await response.json();
-//       console.log("MASTER DATA BEFORE SORT:", data);
+//   // const fetchStages = async () => {
+//   //   try {
+//   //     const token = localStorage.getItem("token");
+//   //     const response = await fetch(`${ENDPOINTS.LEAD_STATUS}`, {
+//   //       headers: {
+//   //         'Content-Type': 'application/json',
+//   //         ...(token && { Authorization: `Bearer ${token}` }),
+//   //       },
+//   //     });
+//   //     if (!response.ok) throw new Error('Failed to fetch stages');
+//   //     const data = await response.json();
+//   //     console.log("MASTER DATA BEFORE SORT:", data);
 
-//       const formattedStages = data.response
-//         .map(item => ({
-//           id: item.ilead_status_id,
-//           name: item.clead_name,
-//           order: Number(item.orderId) || 9999,
-//         }))
-//         .sort((a, b) => a.order - b.order);
-//       setStages(formattedStages);
-//     } catch (err) {
-//       console.error('Error fetching stages:', err.message);
-//     }
-//   };
+//   //     const formattedStages = data.response
+//   //       .map(item => ({
+//   //         id: item.ilead_status_id,
+//   //         name: item.clead_name,
+//   //         order: Number(item.orderId) || 9999,
+//   //       }))
+//   //       .sort((a, b) => a.order - b.order);
+//   //     setStages(formattedStages);
+//   //   } catch (err) {
+//   //     console.error('Error fetching stages:', err.message);
+//   //   }
+//   // };
 
-//   useEffect(() => {
-//     fetchStages();
-//   }, []);
+//   // useEffect(() => {
+//   //   fetchStages();
+//   // }, []);
 
 //   const formatDate = (dateInput) => {
-//     if (!dateInput) return "N/A";
+//     if (!dateInput) return "-";
 //     const date = new Date(dateInput);
 //     if (isNaN(date.getTime())) return "Invalid Date";
 //     const day = String(date.getDate()).padStart(2, "0");
@@ -2964,25 +3097,37 @@ export default LeadDetailView;
 //   if (userModules.some(module => module.module_id === 5 &&  module.bactive && 
 //     (module.attributes_id === 12 || module.attribute_name?.toLowerCase().includes('task'))
 //   )) {
-//     availableTabs.push(isXcodeFix ? "Follow-up" : "Task");
+//     availableTabs.push({
+//       key: "Task",
+//       label: `${isXcodeFix ? "Follow-up" : "Task"} (${taskCount})`
+//     });
 //   }
   
 //   //  Check for Comments Permission (ID 11)
 //   if (userModules.some(module => module.module_id === 5 && module.bactive && 
 //     (module.attributes_id === 11 || module.attribute_name?.toLowerCase().includes('comment'))
 //   )) {
-//     availableTabs.push("Comments");
+//       availableTabs.push({
+//       key: "Comments",
+//       label: `Comments (${commentCount})`
+//     });
 //   }
   
 //   //  Check for Reminder Permission (ID 13)
 //   if (userModules.some(module => module.module_id === 5 && module.bactive && 
 //     (module.attributes_id === 13 || module.attribute_name?.toLowerCase().includes('reminder'))
 //   )) {
-//     availableTabs.push("Reminders");
+//     availableTabs.push({
+//       key: "Reminders",
+//       label: `Reminders (${reminderCount})`
+//     });
 //   }
   
 //  if (isLargeScreen) {
-//     availableTabs.push('Activity');
+//     availableTabs.push({
+//       key:'Activity',
+//       label:'Activity'
+//     });
 //   }
 //   return availableTabs;
 // };
@@ -2990,30 +3135,38 @@ export default LeadDetailView;
 
 // const renderTabContent = () => {
 //   const tabLabels = getTabLabels();
-//   if (!tabLabels.length) return <div>No tabs available</div>;
-//   const currentTabLabel = tabLabels[tabIndex];
+//   if (!tabLabels.length) return <div>No accessible tabs for your permissions</div>;
+//   const currentTab = tabLabels[tabIndex];
+//   if (!currentTab) return <div>Invalid tab selection</div>;
   
-//   // Dynamic switch based on current tab label
-//   switch (currentTabLabel) {
-//     case "Follow-up":
+//   //  Use currentTab.key instead of currentTab (object)
+//   switch (currentTab.key) {
 //     case "Task":
-//       return <Tasks leadId={leadId} />;
+//     case "Follow-up":
+//       return <Tasks leadId={leadId} onCountChange={setTaskCount} />;
 //     case "Comments":
-//       return <Comments leadId={leadId} />;
+//       return <Comments leadId={leadId} onCountChange={setCommentCount} />;
 //     case "Reminders":
-//       return <RemainderPage leadId={leadId} />;
+//       return <RemainderPage leadId={leadId} onCountChange={setReminderCount} />;
 //     case "Activity":
 //       return <LeadTimeline
 //                 leadId={leadId}
 //                 isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
 //               />;
 //     default:
-//       return <div>Tab content not available</div>;
+//       return <div>Content not available for tab: {currentTab.label}</div>;
 //   }
 // };
 
+
 //   return (
 //     <>
+//      <div style={{ display: "none" }}>
+//       <Tasks leadId={leadId} onCountChange={setTaskCount} />
+//       <Comments leadId={leadId} onCountChange={setCommentCount} />
+//       <RemainderPage leadId={leadId} onCountChange={setReminderCount} />
+//     </div>
+
 //     <div className="flex min-h-[100vh] bg-gray-100 relative overflow-x-hidden">
       
 //       {/* DESKTOP: Always Full ProfileCard */}
@@ -3081,7 +3234,9 @@ export default LeadDetailView;
 //       )}
 
 //         {/* Right Column: Status Bar, Tabs, and Content */}
-//        <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-y-auto lg:overflow-y-visible">
+// <div className="flex-1 lg:ml-0 p-2 sm:p-3 md:p-4 overflow-hidden">
+
+
 //         {showConfetti && (
 //           <Confetti
 //             width={window.innerWidth}
@@ -3100,10 +3255,13 @@ export default LeadDetailView;
 
 //           {leadData?.postSalesMaster?.length === 0 ? (
 //             <StatusBar
+//               companyInfo={companyInfo} 
 //               leadId={leadId}
 //               leadData={leadData}
 //               isLost={isLost} 
 //               statusRemarks={statusRemarks}
+//               customDataFromParent={customStatusData} 
+//               // customStatusData={customStatusData}
 //               isWon={
 //                 isWon || immediateWonStatus || leadData?.bisConverted === true
 //               }
@@ -3135,9 +3293,9 @@ export default LeadDetailView;
 //           {/* Tab Navigation and Action Buttons */}
 //           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-4 w-full">
 //             <div className="flex flex-wrap gap-1 sm:gap-2 bg-gray-100 shadow-md rounded-full p-1 w-full sm:w-auto">
-//               {getTabLabels().map((label, idx) => (
+//               {getTabLabels().map((tab, idx) => (
 //                 <button
-//                   key={label}
+//                   key={tab.key}
 //                   onClick={() => handleTabChange(null, idx)}
 //                   className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-full transition-colors duration-200 ${
 //                     tabIndex === idx
@@ -3145,7 +3303,7 @@ export default LeadDetailView;
 //                       : "text-gray-500 hover:bg-white hover:text-blue-900"
 //                   }`}
 //                 >
-//                   {label}
+//                   {tab.label}
 //                 </button>
 //               ))}
 //             </div>
@@ -3254,11 +3412,7 @@ export default LeadDetailView;
 //           <DialogTitle>Enter Remark for Won Status</DialogTitle>
 //           <DialogContent>
 //             <TextField
-//               label={
-//                 <span>
-//                   Remark <span style={{ color: "red" }}>*</span>
-//                 </span>
-//               }
+//               label={ <span> Remark <span style={{ color: "red" }}>*</span> </span> }
 //               fullWidth
 //               multiline
 //               rows={3}
@@ -3329,25 +3483,15 @@ export default LeadDetailView;
 //         >
 //           <DialogTitle className="bg-blue-50">
 //             <div className="flex items-center justify-between">
-//               <div className="flex items-center text-blue-700">
-//                 Quotation Details
-//               </div>
-//               <IconButton
-//                 onClick={() => setShowQuotationsList(false)}
-//                 size="small"
-//               >
+//               <div className="flex items-center text-blue-700"> Quotation Details </div>
+//               <IconButton onClick={() => setShowQuotationsList(false)} size="small" >
 //                 <Close />
 //               </IconButton>
 //             </div>
 //           </DialogTitle>
 //           <DialogContent dividers className="bg-gray-50">
 //             {quotationsLoading ? (
-//               <Box
-//                 display="flex"
-//                 justifyContent="center"
-//                 alignItems="center"
-//                 height={200}
-//               >
+//               <Box display="flex" justifyContent="center" alignItems="center" height={200} >
 //                 <CircularProgress />
 //               </Box>
 //             ) : quotations.length > 0 ? (
@@ -3461,13 +3605,8 @@ export default LeadDetailView;
 //                             </TableContainer>
 //                           </Grid>
 //                           <Grid item xs={12}>
-//                             <Typography variant="subtitle2" className="font-bold">
-//                               Additional Information
-//                             </Typography>
-//                             <Typography
-//                               variant="body2"
-//                               className="mt-2 text-gray-700"
-//                             >
+//                             <Typography variant="subtitle2" className="font-bold"> Additional Information </Typography>
+//                             <Typography variant="body2" className="mt-2 text-gray-700" >
 //                               {quotation.cNotes || "No additional notes"}
 //                             </Typography>
 //                           </Grid>
@@ -3478,9 +3617,7 @@ export default LeadDetailView;
 //                 ))}
 //               </List>
 //             ) : (
-//               <div className="text-center py-8 text-gray-500">
-//                 No quotations found for this lead.
-//               </div>
+//               <div className="text-center py-8 text-gray-500">  No quotations found for this lead. </div>
 //             )}
 //           </DialogContent>
 //           <DialogActions className="bg-gray-100">
@@ -3678,33 +3815,50 @@ export default LeadDetailView;
 //                       </svg>
 //                       <p>No templates available</p>
 //                     </div>
-//                   ) : (
-//                     <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
-//                       {templates.map((template) => (
-//                         <div
-//                           key={template.mailTemplateId}
-//                           className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-//                           onClick={() => applyTemplate(template)}
-//                         >
-//                           <div className="flex items-start gap-3">
-//                             <div className="p-2 rounded-lg">
-//                               <MdEmail className="text-blue-600" size={18} />
-//                             </div>
-//                             <div>
-//                               <h4 className="font-semibold">
-//                                 {template.mailTitle}
-//                               </h4>
-//                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-//                                 {template.mailBody?.replace(/<[^>]*>/g, "").substring(0, 100) || ""}
-//                               </p>
-                              
-//                             </div>
-//                           </div>
-//                         </div>
-//                       ))}
-//                     </div>
+//                   ) : 
+//             (
+//   <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
+//     {templates.map((template) => {
+//       console.log("FULL TEMPLATE:", template);
+//       console.log("MAIL BODY:", template.mailBody);
+
+//       return (
+//         <div
+//           key={template.mailTemplateId}
+//           className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+//           onClick={() => applyTemplate(template)}
+//         >
+//           <div className="flex items-start gap-3">
+//             <div className="p-2 rounded-lg">
+//               <MdEmail className="text-blue-600" size={18} />
+//             </div>
+
+//             <div>
+//               <h4 className="font-semibold">{template.mailTitle}</h4>
+
+//               <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+//                 {template.mail_template_body
+
+//                   ? template.mail_template_body
+
+//                       .replace(/&nbsp;/g, " ")
+//                       .replace(/<[^>]+>/g, "")
+//                       .replace(/\s+/g, " ")
+//                       .trim()
+//                       .substring(0, 120)
+//                   : "No content"}
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+//       );
+//     })}
+//   </div>
 //                   )}
-//                 </div>
+//                 </div>                                      
+
+
+
 
 //                 {/* Email Form Section */}
 //                 <div className="w-full md:w-1/2 lg:w-3/5 flex flex-col max-h-[63vh]">
@@ -3769,7 +3923,7 @@ export default LeadDetailView;
 //                       <div className="rounded-xl bg-white/80 shadow-sm flex-grow h-[380px] overflow-y-scroll">
 //                         <ReactQuill
 //                           theme="snow"
-//                           value={mailContent}
+//                        value={mailContent || ""}
 //                           onChange={setMailContent}
 //                           modules={{
 //                             ...modules,
@@ -3828,3 +3982,5 @@ export default LeadDetailView;
 // };
 
 // export default LeadDetailView;
+
+

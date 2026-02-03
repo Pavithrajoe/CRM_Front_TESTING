@@ -83,10 +83,42 @@ const cardsData = [
 
    {
     title: "Sales Target vs Achievement",
-    description: "Monitor sales targets, achieved revenue, and performance status for individual sales users or teams",
-    route: "/sales-target-achievement",
-    image: "/illustrations/sales_target_vs_achievement.svg",
-    reportKey: "Sales-Target-Achievement"
+    description: "Track assigned sales targets against achieved revenue, view remaining goals, achievement percentage, and over- or under-performance by period.",
+    route: "/SalesTargetReport",
+    image: "/illustrations/efficeincy.svg",
+    reportKey: "SalesTargetAchievement"
+  },
+
+  {
+    title: "Salesperson Performance",
+    description: "Analyze individual salesperson productivity including leads handled, deals closed, revenue generated, conversion rate, and activity performance.",
+    route: "/SalespersonPerformanceReport",
+    image: "/illustrations/efficeincy.svg",
+    reportKey: "SalespersonPerformance"
+  },
+
+  {
+    title: "Lead Source Performance",
+    description: "Evaluate the effectiveness of each lead source by tracking lead volume, qualified leads, conversions, revenue generated, and marketing ROI.",
+    route: "/LeadSourcePerformanceReport",
+    image: "/illustrations/efficeincy.svg",
+    reportKey: "LeadSourcePerformance"
+  },
+
+  {
+    title: "Revenue Breakdown",
+    description: "Gain insights into revenue distribution across products, salespersons, clients, regions, and time periods for better financial planning.",
+    route: "/RevenueBreakdownReport",
+    image: "/illustrations/efficeincy.svg",
+    reportKey: "RevenueBreakdown"
+  },
+
+  {
+    title: "Customer Sales History",
+    description: "View complete customer-wise sales history including total deals, revenue earned, purchased products, and purchase timelines.",
+    route: "/CustomerSalesHistoryReport",
+    image: "/illustrations/efficeincy.svg",
+    reportKey: "CustomerSalesHistory"
   },
 
 ];
@@ -127,10 +159,8 @@ const CardsPage = () => {
         {/* Search Bar */}
         <div className="mb-8">
           <div className="relative">
-            <input
-              type="text"
-              placeholder="Search Dashboards"
-              className="w-full px-5 py-3 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+            <input type="text" placeholder="Search Dashboards"
+             className="w-full px-5 py-3 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -144,9 +174,7 @@ const CardsPage = () => {
         {filteredCards.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {filteredCards.map((card, index) => (
-              <div
-                key={index}
-                onClick={() => navigate(card.route)}
+              <div key={index} onClick={() => navigate(card.route)}
                 className="flex items-center justify-between bg-white rounded-2xl p-6 min-h-[180px] shadow-sm hover:shadow-md transition cursor-pointer border border-gray-200 hover:border-blue-400"
               >
                 <div className="flex-1 pr-4">
@@ -156,11 +184,7 @@ const CardsPage = () => {
 
                 {/* Image */}
               <div className="w-40 h-40 flex-shrink-0">
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-full object-cover rounded-lg"
-                />
+                <img src={card.image} alt={card.title} className="w-full h-full object-cover rounded-lg" />
               </div>
               </div>
             ))}

@@ -89,7 +89,10 @@ export const ENDPOINTS = {
   CUSTOM_STATUS:`${BASE_URL}/custom-status`, 
   CUSTOM_STATUS_GET_BY_LEAD_ID:`${BASE_URL}/custom-status/lead`, 
   ASSIGN_TO_MES: `${BASE_URL}/lead/assign-to-me`,
-
+  USER_TARGET:`${BASE_URL}/LoginUserTarget/targets`,
+  USER_ACHIVEMENT:`${BASE_URL}/LoginUserTarget/achievement`,
+  LEAD_SUMMARY: `${BASE_URL}/lead/lead-summary`,
+  CALL_HISTORY_BY_PHONE: (phone) => `${BASE_URL_DCRM}/call-history-by-phone/${phone}`,
 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,
 

@@ -11,7 +11,91 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showTopCard, setShowTopCard] = useState(false);
   const [showTrialModal, setShowTrialModal] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [countdown, setCountdown] = useState(() => {
+    const saved = localStorage.getItem("loginLock");
+    if (!saved) return 0;
+    const { expiresAt } = JSON.parse(saved);
+    const remaining = Math.ceil((expiresAt - Date.now()) / 1000);
+    return remaining > 0 ? remaining : 0;
+  });
+
+  // Track failed attempts (client‑side only)
+  const [loginAttempts, setLoginAttempts] = useState(() => {
+    const saved = localStorage.getItem("loginAttempts");
+    if (!saved) return 0;
+    const { count, timestamp } = JSON.parse(saved);
+    const now = Date.now();
+    // Reset attempts if older than 5 minutes
+    if (now - timestamp > 5 * 60 * 1000) {
+      localStorage.removeItem("loginAttempts");
+      return 0;
+    }
+    return count;
+  });
+
   const navigate = useNavigate();
+
+  // Save lock + expiry whenever countdown changes
+  useEffect(() => {
+    if (isLocked && countdown > 0) {
+      const expiresAt = Date.now() + countdown * 1000;
+      localStorage.setItem("loginLock", JSON.stringify({ expiresAt }));
+    } else {
+      localStorage.removeItem("loginLock");
+    }
+  }, [isLocked, countdown]);
+
+  // Restore lock + attempts from localStorage on mount
+  useEffect(() => {
+    const savedLock = localStorage.getItem("loginLock");
+    if (savedLock) {
+      const { expiresAt } = JSON.parse(savedLock);
+      const remaining = Math.ceil((expiresAt - Date.now()) / 1000);
+      if (remaining > 0) {
+        setIsLocked(true);
+        setCountdown(remaining);
+      } else {
+        localStorage.removeItem("loginLock");
+      }
+    }
+
+    const savedAttempts = localStorage.getItem("loginAttempts");
+    if (savedAttempts) {
+      const { count, timestamp } = JSON.parse(savedAttempts);
+      const now = Date.now();
+      if (now - timestamp > 5 * 60 * 1000) {
+        localStorage.removeItem("loginAttempts");
+        setLoginAttempts(0);
+      } else {
+        setLoginAttempts(count);
+        if (count >= 5 && !isLocked) {
+          setIsLocked(true);
+          const elapsed = Math.floor((now - timestamp) / 1000);
+          const remaining = Math.max(60 - elapsed, 1);
+          setCountdown(remaining);
+        }
+      }
+    }
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!isLocked || countdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsLocked(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isLocked, countdown]);
 
   useEffect(() => {
     const handleResize = () => setShowTopCard(false);
@@ -59,9 +143,12 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
-      // console.log("login data", data);
 
       if (response.ok && data.jwtToken) {
+        // Reset attempts on success
+        localStorage.removeItem("loginAttempts");
+        setLoginAttempts(0);
+
         localStorage.clear();
         localStorage.setItem('loginResponse', JSON.stringify(data));
         localStorage.setItem('token', data.jwtToken);
@@ -70,12 +157,31 @@ const LoginPage = () => {
         localStorage.setItem('profileImage', data.user.cProfile_pic || '');
         window.dispatchEvent(new Event("token-set"));
         window.location.href = '/leaddashboard';
-      } 
-      else if (response.status === 403 || data.error === "FREE_TRIAL_EXPIRED") {
+      } else if (response.status === 429) {
+        const seconds = parseInt(data.message?.match(/\d+/)?.[0] || 60);
+
+        setIsLocked(true);
+        setCountdown(seconds);
+        setLoginError(data.message);
+      } else if (response.status === 403 || data.error === "FREE_TRIAL_EXPIRED") {
         setShowTrialModal(true);
-      } 
-      else {
-        setLoginError(data.message || data.error || 'Login failed, please enter correct details');
+      } else {
+        // Wrong email/password: increment attempt count
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        localStorage.setItem(
+          "loginAttempts",
+          JSON.stringify({ count: newAttempts, timestamp: Date.now() })
+        );
+
+        if (newAttempts >= 5) {
+          // Lock for 1 minute (60 seconds)
+          setIsLocked(true);
+          setCountdown(60);
+          setLoginError("Too many failed attempts. Try again in 1 minute.");
+        } else {
+          setLoginError(data.message || data.error || 'Login failed, please enter correct details');
+        }
       }
     } catch (error) {
       setLoginError('Something went wrong. Please try again.');
@@ -91,7 +197,6 @@ const LoginPage = () => {
     </div>
   );
 
-  //  Modal component
   const TrialExpiredModal = ({ onClose }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-xl p-6 w-11/12 max-w-md shadow-lg text-center">
@@ -99,7 +204,9 @@ const LoginPage = () => {
         <p className="text-gray-600 mb-6">
           Your 1-month free CRM access has ended. Please contact <strong>Inklidox Technologies</strong>.
         </p>
-        <button onClick={onClose} className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+        <button
+          onClick={onClose}
+          className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
         >
           OK
         </button>
@@ -112,7 +219,7 @@ const LoginPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 relative">
         {showTopCard && (
           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-white border border-blue-300 text-blue-800 px-5 py-4 rounded-xl shadow-md text-sm font-medium z-50">
-            <p className="mb-2"> Login from your desktop or laptop for a better experience.</p>
+            <p className="mb-2">Login from your desktop or laptop for a better experience.</p>
           </div>
         )}
 
@@ -133,7 +240,7 @@ const LoginPage = () => {
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className="text-gray-600 text-sm font-medium block mb-1">Email </label>
+                <label className="text-gray-600 text-sm font-medium block mb-1">Email</label>
                 <input
                   type="text"
                   value={email}
@@ -172,46 +279,29 @@ const LoginPage = () => {
               <div className="flex flex-col items-center">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className={`w-36 bg-blue-600 text-white py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:bg-blue-700 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  disabled={loading || isLocked}
+                  className={`w-36 bg-blue-600 text-white py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
+                    ${(loading || isLocked) ? 'opacity-60 cursor-not-allowed' : 'hover:bg-blue-700'}`}
                 >
                   {loading ? (
                     <svg className="animate-spin h-5 w-5 mx-auto" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
+                  ) : isLocked ? (
+                    countdown > 0 ? `Try again in ${countdown}s` : "Locked (wait…)"
                   ) : 'Login'}
                 </button>
 
                 <div className="mt-4">
-                  <button
-                    type="button"
-                    onClick={() => window.open('/CreateAnAccount', '_blank')}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
+                  <button type="button" onClick={() => window.open('/CreateAnAccount', '_blank')} className="text-sm text-blue-600 hover:underline" >
                     Create an Account
                   </button>
                   <span className="mx-2 text-gray-600">||</span>
-                  <button 
-                    type="button" 
-                    onClick={() => window.open('/request-demo', '_blank')} 
-                    className="text-sm text-blue-600 hover:underline"
-                  >
+                  <button type="button" onClick={() => window.open('/request-demo', '_blank')} className="text-sm text-blue-600 hover:underline" >
                     Request a Demo
                   </button>
                 </div>
-
-                 {/* <button
-                  type="button"
-                  onClick={() => window.open('/CreateAnAccount', '_blank')}
-                  className="mt-4 text-sm text-blue-600 hover:underline"
-                >
-                  Create an Account
-                </button>   
-
-                <button type="button" onClick={() => window.open('/request-demo', '_blank')} className="mt-4 text-sm text-blue-600 hover:underline" >
-                  Request a Demo
-                </button> */}
 
                 {loginError && <LoginFailedAlert message={loginError} />}
               </div>
@@ -223,11 +313,14 @@ const LoginPage = () => {
         {showTrialModal && <TrialExpiredModal onClose={() => setShowTrialModal(false)} />}
 
         <footer className="absolute bottom-4 text-center w-full text-gray-400 text-sm">
-          © {new Date().getFullYear()} <a href="https://www.inklidox.com" className="hover:underline">Inklidox Technologies</a> · Version 4.1
+          © {new Date().getFullYear()}{' '}
+          <a href="https://www.inklidox.com" className="hover:underline">
+            Inklidox Technologies
+          </a>{' '}
+          · Version 4.1
         </footer>
       </div>
 
-      {/* Animations */}
       <style>{`
         @keyframes shake {
           0% { transform: translateX(0); }
@@ -261,5 +354,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
-

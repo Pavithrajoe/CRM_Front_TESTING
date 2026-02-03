@@ -11,6 +11,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { ENDPOINTS } from "../api/constraints";
 import { Search, X, Plus } from "lucide-react";
 import { GlobUserContext } from "../context/userContex";
+import Comments from "@/Components/commandshistory";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = SpeechRecognition ? new SpeechRecognition() : null;
@@ -31,6 +32,7 @@ const TaskItem = React.memo(({
   onDelete, 
   onStatusChange,
   formatDateTime, 
+  onViewComments
 
   
 }) => {
@@ -51,154 +53,98 @@ const TaskItem = React.memo(({
   }
   return (
     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
-      {/* <div className="flex justify-between items-center gap-3">
-        <span className="font-semibold text-base sm:text-lg text-gray-900">
-          {task.ctitle}
-        </span>
-        <div >
-          {(canEdit || canDelete) && (
-                <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-                  <button onClick={() => canEdit ? onEdit(task) : null} className={` text-gray-500 hover:text-blue-500 transition-colors duration-200 ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'} `}
-                    title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-                    disabled={!canEdit}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                  {canDelete && ( 
-                    <button onClick={() => onDelete(task.itask_id)} className="text-gray-500 hover:text-red-500 transition-colors duration-200" title="Delete task">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              )}
-                <select
-          value={task.task_progress || "In_progress"}
-          onChange={(e) =>
-            onStatusChange(task.itask_id, e.target.value)
-          }
-          className={`
-            text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
-            ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
-            ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
-            ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
-          `}
-        >
-          <option value="In_progress">In Progress</option>
-          <option value="On_hold">On Hold</option>
-          <option value="Completed">Completed</option>
-        </select>
-        </div>
-      </div> */}
-      <div className="flex justify-between items-center gap-3 w-full">
-        {/* Left Side: Task Title */}
-        <span className="font-semibold text-base sm:text-lg text-gray-900 truncate">  {task.ctitle} </span>
+      <div className="flex justify-between items-center gap-3">
+  <span className="font-semibold text-base sm:text-lg text-gray-900">
+    {task.ctitle}
+  </span>
+  <div >
+    {(canEdit || canDelete) && (
+          <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              onClick={() => canEdit ? onEdit(task) : null}
+              className={`
+                text-gray-400 hover:text-blue-500 transition-colors duration-200
+                ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
+              `}
+              title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
+              disabled={!canEdit}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            {canDelete && ( 
+              <button
+                onClick={() => onDelete(task.itask_id)}
+                className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                title="Delete task"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+          <select
+    value={task.task_progress || "In_progress"}
+    onChange={(e) =>
+      onStatusChange(task.itask_id, e.target.value)
+    }
+    className={`
+      text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
+      ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+      ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+      ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+    `}
+  >
+    <option value="In_progress">In Progress</option>
+    <option value="On_hold">On Hold</option>
+    <option value="Completed">Completed</option>
+  </select>
+  </div>
+    
 
-        {/* Right Side: Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Status Select */}
-          <select value={task.task_progress || "In_progress"} onChange={(e) => onStatusChange(task.itask_id, e.target.value)}
-            className={`
-              text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer
-              w-[95px] sm:w-[110px] transition-all
-              ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
-              ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
-              ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
-            `}
-          >
-            <option value="In_progress">In Progress</option>
-            <option value="On_hold">On Hold</option>
-            <option value="Completed">Completed</option>
-          </select>
-          
-          {/* Edit and Delete Buttons */}
-          {(canEdit || canDelete) && (
-            <div className="flex items-center gap-1 sm:gap-2">
-              {canEdit && (
-                <button onClick={() => onEdit(task)}
-                  className="text-gray-500 hover:text-blue-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-gray-100"
-                  title="Edit task"
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-                    />
-                  </svg>
-                </button>
-              )}
-              
-              {canDelete && ( 
-                <button 
-                  onClick={() => onDelete(task.itask_id)} 
-                  className="text-gray-500 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50" 
-                  title="Delete task" 
-                >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+
+</div>
+
       
-      <p className="text-gray-700 text-sm mt-2 leading-normal break-words"> {task.ctask_content} </p>
+      <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
+        {task.ctask_content}
+      </p>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
         <p className="break-words">
           <span className="font-medium text-gray-700">Assigned to:</span>{" "}
-          {task.user_task_iassigned_toTouser?.cFull_name || "-"}
+          {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
         </p>
         <p className="break-words">
           <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-          {task.user_task_inotify_toTouser?.cFull_name || "-"}
+          {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
         </p>
       </div>
 
       
+      
     <p className="text-xs mt-2 italic text-gray-700 flex items-center gap-2 flex-wrap">
-      <span>
-        Due on: {formatDateTime(task.task_date)}
-      </span>
+  <span>
+    Due on: {formatDateTime(task.task_date)}
+  </span>
 
-      {isExpired ? (
-        <span className="text-red-600 font-bold">
-          • Expired
-        </span>
-      ) : (
-        <span
-          className={
-            statusLabelMap[task.task_progress]?.className
-          }
-        >
-          • {statusLabelMap[task.task_progress]?.label}
-        </span>
-      )}
-    </p>
+  {isExpired ? (
+    <span className="text-red-600 font-bold">
+      • Expired
+    </span>
+  ) : (
+    <span
+      className={
+        statusLabelMap[task.task_progress]?.className
+      }
+    >
+      • {statusLabelMap[task.task_progress]?.label}
+    </span>
+  )}
+</p>
 
 
       
@@ -207,6 +153,13 @@ const TaskItem = React.memo(({
           ? `Edited by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dmodified_dt)}`
           : `Posted by ${task.user_task_iassigned_toTouser?.cFull_name || "Unknown"} • ${formatDateTime(task.dcreate_dt)}`}
       </p>
+      <button
+  onClick={() => onViewComments(task.itask_id)}
+  className="mt-2 text-xs font-semibold text-indigo-600 "
+>
+  View Comments
+</button>
+
      
     </div>
   );
@@ -234,7 +187,8 @@ const Tasks = ({ onCountChange }) => {
   const formRef = useRef(null);
   const searchInputRef = useRef(null);
   const tasksContainerRef = useRef(null);
-
+  const [showTaskComments, setShowTaskComments] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState(null);
   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
   const [formData, setFormData] = useState({
     ctitle: "",
@@ -513,37 +467,12 @@ const Tasks = ({ onCountChange }) => {
       if (response.data.success || response.data.message === "Task Added Successfully") {
         if (mic && isListening) mic.stop();
         setIsListening(false);
-
         showPopup("Success", "🎉 Saved successfully!", "success");
-
         await fetchTasks();
-
-        //  RESET FORM STATE
-        setFormData({
-          ctitle: "",
-          ctask_content: "",
-          iassigned_to: userId,
-          inotify_to: null,
-          task_date: new Date(),
-        });
-
-        //  RESET MODE & UI
-        setEditingTask(null);
-        setAssignToMe(true);
-        setCurrentPage(1);
-
-        //  CLOSE FORM
         setShowForm(false);
+        setEditingTask(null);
+        setCurrentPage(1);
       }
-      // if (response.data.success || response.data.message === "Task Added Successfully") {
-      //   if (mic && isListening) mic.stop();
-      //   setIsListening(false);
-      //   showPopup("Success", "🎉 Saved successfully!", "success");
-      //   await fetchTasks();
-      //   setShowForm(false);
-      //   setEditingTask(null);
-      //   setCurrentPage(1);
-      // }
     } catch (error) {
       showPopup("Error", "Failed to save.", "error");
     } finally {
@@ -565,7 +494,7 @@ const Tasks = ({ onCountChange }) => {
   }, [token, showPopup, fetchTasks]);
 
   const formatDateTime = useCallback((dateStr) => {
-    if (!dateStr) return "-";
+    if (!dateStr) return "N/A";
     const date = new Date(dateStr);
     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }, []);
@@ -642,7 +571,10 @@ const Tasks = ({ onCountChange }) => {
       {loadingTasks ? <div className="text-center py-8 animate-pulse text-gray-500">Loading...</div> : 
         filteredTasks.length === 0 ? <p className="text-center text-gray-400 py-8">No tasks found.</p> :
         currentTasks.map(task => (
-          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} />
+          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} onViewComments={(taskId) => {
+    setActiveTaskId(taskId);
+    setShowTaskComments(true);
+  }} />
         ))
       }
       {totalPages > 1 && (
@@ -712,11 +644,83 @@ const Tasks = ({ onCountChange }) => {
           </>
         )}
       </div>
+      {showTaskComments && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center">
+    <div className="bg-white rounded-2xl w-[95%] max-w-2xl h-[80vh] shadow-2xl relative flex flex-col">
+
+      {/* Header */}
+      <div className="flex justify-between items-center px-5 py-3 border-b">
+        <h3 className="font-semibold text-lg">Task Comments</h3>
+       <p className="text-xs text-gray-400">
+  Active Task ID: {activeTaskId ?? "none"}
+</p>
+
+        <button
+          onClick={() => {
+            setShowTaskComments(false);
+            setActiveTaskId(null);
+          }}
+          className="text-2xl text-gray-500 hover:text-red-500"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Comments Body */}
+      <div className="flex-1 overflow-y-auto">
+        <Comments
+          leadId={leadId}
+          taskId={activeTaskId}   
+          hideHeader={true}
+        />
+      </div>
+    </div>
+  </div>
+)}
+{showTaskComments && activeTaskId && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl w-full max-w-md h-[70vh] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+      
+      {/* Compact Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+          <h3 className="font-semibold text-gray-900 text-base">Task Comments</h3>
+        </div>
+        <button
+          onClick={() => {
+            setShowTaskComments(false);
+            setActiveTaskId(null);
+          }}
+          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-900"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Scrollable Comments - Full height */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-500">
+          <Comments
+            leadId={leadId}
+            taskId={activeTaskId}
+            hideHeader={true}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };
 
 export default Tasks;
+
 
 // import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from "react";
 // import { useParams } from "react-router-dom";
@@ -741,6 +745,7 @@ export default Tasks;
 //   mic.lang = "en-US";
 // }
 
+
 // // Memoized Task Item Component
 // const TaskItem = React.memo(({ 
 //   task, 
@@ -750,81 +755,176 @@ export default Tasks;
 //   onDelete, 
 //   onStatusChange,
 //   formatDateTime, 
+
+  
 // }) => {
+//   const isExpired  = task.task_progress === "In_progress" && task.task_date && isPast(parseISO(task.task_date));
+//   const statusLabelMap = {
+//     Completed: {
+//     label: "Completed",
+//     className: "text-green-600 font-semibold",
+//   },
+//   On_hold: {
+//     label: "On Hold",
+//     className: "text-yellow-600 font-semibold",
+//   },
+//   In_progress: {
+//     label: "In Progress",
+//     className: "text-blue-600 font-semibold",
+//   },
+//   }
 //   return (
 //     <div className="border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out relative">
-//       <div className="flex justify-between items-center gap-3">
-//   <span className="font-semibold text-base sm:text-lg text-gray-900">
-//     {task.ctitle}
-//   </span>
-//   <div >
-//     {(canEdit || canDelete) && (
-//           <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
-//             <button
-//               onClick={() => canEdit ? onEdit(task) : null}
-//               className={`
-//                 text-gray-400 hover:text-blue-500 transition-colors duration-200
-//                 ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'}
-//               `}
-//               title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
-//               disabled={!canEdit}
-//             >
-//               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-//               </svg>
-//             </button>
-//             {canDelete && ( 
-//               <button
-//                 onClick={() => onDelete(task.itask_id)}
-//                 className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-//                 title="Delete task"
-//               >
-//                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-//                   <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-//                 </svg>
-//               </button>
-//             )}
-//           </div>
-//         )}
-//           <select
-//     value={task.task_progress || "In_progress"}
-//     onChange={(e) =>
-//       onStatusChange(task.itask_id, e.target.value)
-//     }
-//     className={`
-//       text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
-//       ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
-//       ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
-//       ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
-//     `}
-//   >
-//     <option value="In_progress">In Progress</option>
-//     <option value="On_hold">On Hold</option>
-//     <option value="Completed">Completed</option>
-//   </select>
-//   </div>
+//       {/* <div className="flex justify-between items-center gap-3">
+//         <span className="font-semibold text-base sm:text-lg text-gray-900">
+//           {task.ctitle}
+//         </span>
+//         <div >
+//           {(canEdit || canDelete) && (
+//                 <div className="flex space-x-1 sm:space-x-2 flex-shrink-0">
+//                   <button onClick={() => canEdit ? onEdit(task) : null} className={` text-gray-500 hover:text-blue-500 transition-colors duration-200 ${canEdit ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed hover:text-gray-400'} `}
+//                     title={canEdit ? "Edit task" : "Cannot edit: Expired or not the most recent task"}
+//                     disabled={!canEdit}
+//                   >
+//                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+//                     </svg>
+//                   </button>
+//                   {canDelete && ( 
+//                     <button onClick={() => onDelete(task.itask_id)} className="text-gray-500 hover:text-red-500 transition-colors duration-200" title="Delete task">
+//                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                         <path strokeLinecap=" round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+//                       </svg>
+//                     </button>
+//                   )}
+//                 </div>
+//               )}
+//                 <select
+//           value={task.task_progress || "In_progress"}
+//           onChange={(e) =>
+//             onStatusChange(task.itask_id, e.target.value)
+//           }
+//           className={`
+//             text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer relative  top-[100px]
+//             ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+//             ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+//             ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+//           `}
+//         >
+//           <option value="In_progress">In Progress</option>
+//           <option value="On_hold">On Hold</option>
+//           <option value="Completed">Completed</option>
+//         </select>
+//         </div>
+//       </div> */}
+//       <div className="flex justify-between items-center gap-3 w-full">
+//         {/* Left Side: Task Title */}
+//         <span className="font-semibold text-base sm:text-lg text-gray-900 truncate">  {task.ctitle} </span>
 
-// </div>
-
+//         {/* Right Side: Actions */}
+//         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+//           {/* Status Select */}
+//           <select value={task.task_progress || "In_progress"} onChange={(e) => onStatusChange(task.itask_id, e.target.value)}
+//             className={`
+//               text-xs px-3 py-1 rounded-full border font-semibold cursor-pointer
+//               w-[95px] sm:w-[110px] transition-all
+//               ${task.task_progress === "Completed" && "bg-green-100 text-green-700 border-green-300"}
+//               ${task.task_progress === "On_hold" && "bg-yellow-100 text-yellow-700 border-yellow-300"}
+//               ${task.task_progress === "In_progress" && "bg-blue-100 text-blue-700 border-blue-300"}
+//             `}
+//           >
+//             <option value="In_progress">In Progress</option>
+//             <option value="On_hold">On Hold</option>
+//             <option value="Completed">Completed</option>
+//           </select>
+          
+//           {/* Edit and Delete Buttons */}
+//           {(canEdit || canDelete) && (
+//             <div className="flex items-center gap-1 sm:gap-2">
+//               {canEdit && (
+//                 <button onClick={() => onEdit(task)}
+//                   className="text-gray-500 hover:text-blue-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-gray-100"
+//                   title="Edit task"
+//                 >
+//                   <svg 
+//                     xmlns="http://www.w3.org/2000/svg" 
+//                     className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
+//                     fill="none" 
+//                     viewBox="0 0 24 24" 
+//                     stroke="currentColor"
+//                   >
+//                     <path 
+//                       strokeLinecap="round" 
+//                       strokeLinejoin="round" 
+//                       strokeWidth={2} 
+//                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+//                     />
+//                   </svg>
+//                 </button>
+//               )}
+              
+//               {canDelete && ( 
+//                 <button 
+//                   onClick={() => onDelete(task.itask_id)} 
+//                   className="text-gray-500 hover:text-red-500 transition-colors duration-200 p-1.5 rounded-full hover:bg-red-50" 
+//                   title="Delete task" 
+//                 >
+//                   <svg 
+//                     xmlns="http://www.w3.org/2000/svg" 
+//                     className="h-4 w-4 sm:h-5 sm:w-5 overflow-visible" 
+//                     fill="none" 
+//                     viewBox="0 0 24 24" 
+//                     stroke="currentColor"
+//                   >
+//                     <path 
+//                       strokeLinecap="round" 
+//                       strokeLinejoin="round" 
+//                       strokeWidth={2} 
+//                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+//                     />
+//                   </svg>
+//                 </button>
+//               )}
+//             </div>
+//           )}
+//         </div>
+//       </div>
       
-//       <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
-//         {task.ctask_content}
-//       </p>
+//       <p className="text-gray-700 text-sm mt-2 leading-normal break-words"> {task.ctask_content} </p>
       
 //       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-2 sm:mt-3 text-xs text-gray-500 space-y-1 sm:space-y-0">
 //         <p className="break-words">
 //           <span className="font-medium text-gray-700">Assigned to:</span>{" "}
-//           {task.user_task_iassigned_toTouser?.cFull_name || "N/A"}
+//           {task.user_task_iassigned_toTouser?.cFull_name || "-"}
 //         </p>
 //         <p className="break-words">
 //           <span className="font-semibold text-gray-700">Notified to:</span>{" "}
-//           {task.user_task_inotify_toTouser?.cFull_name || "N/A"}
+//           {task.user_task_inotify_toTouser?.cFull_name || "-"}
 //         </p>
 //       </div>
+
       
-//       <p className={`text-xs mt-2 italic break-words ${task.task_date && isPast(parseISO(task.task_date)) ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
-//         Due on: {formatDateTime(task.task_date)} {task.task_date && isPast(parseISO(task.task_date)) && '(EXPIRED)'}
-//       </p>
+//     <p className="text-xs mt-2 italic text-gray-700 flex items-center gap-2 flex-wrap">
+//       <span>
+//         Due on: {formatDateTime(task.task_date)}
+//       </span>
+
+//       {isExpired ? (
+//         <span className="text-red-600 font-bold">
+//           • Expired
+//         </span>
+//       ) : (
+//         <span
+//           className={
+//             statusLabelMap[task.task_progress]?.className
+//           }
+//         >
+//           • {statusLabelMap[task.task_progress]?.label}
+//         </span>
+//       )}
+//     </p>
+
+
       
 //       <p className="text-xs text-gray-900 mt-1 italic break-words">
 //         {task.dmodified_dt
@@ -858,6 +958,7 @@ export default Tasks;
 //   const formRef = useRef(null);
 //   const searchInputRef = useRef(null);
 //   const tasksContainerRef = useRef(null);
+
 //   const COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 //   const [formData, setFormData] = useState({
 //     ctitle: "",
@@ -1027,7 +1128,7 @@ export default Tasks;
 //       }
 //     );
 
-//     //  UI instant update
+//     // UI instant update
 //     setTasks(prev =>
 //       prev.map(t =>
 //         t.itask_id === taskId
@@ -1136,12 +1237,37 @@ export default Tasks;
 //       if (response.data.success || response.data.message === "Task Added Successfully") {
 //         if (mic && isListening) mic.stop();
 //         setIsListening(false);
+
 //         showPopup("Success", "🎉 Saved successfully!", "success");
+
 //         await fetchTasks();
-//         setShowForm(false);
+
+//         //  RESET FORM STATE
+//         setFormData({
+//           ctitle: "",
+//           ctask_content: "",
+//           iassigned_to: userId,
+//           inotify_to: null,
+//           task_date: new Date(),
+//         });
+
+//         //  RESET MODE & UI
 //         setEditingTask(null);
+//         setAssignToMe(true);
 //         setCurrentPage(1);
+
+//         //  CLOSE FORM
+//         setShowForm(false);
 //       }
+//       // if (response.data.success || response.data.message === "Task Added Successfully") {
+//       //   if (mic && isListening) mic.stop();
+//       //   setIsListening(false);
+//       //   showPopup("Success", "🎉 Saved successfully!", "success");
+//       //   await fetchTasks();
+//       //   setShowForm(false);
+//       //   setEditingTask(null);
+//       //   setCurrentPage(1);
+//       // }
 //     } catch (error) {
 //       showPopup("Error", "Failed to save.", "error");
 //     } finally {
@@ -1163,7 +1289,7 @@ export default Tasks;
 //   }, [token, showPopup, fetchTasks]);
 
 //   const formatDateTime = useCallback((dateStr) => {
-//     if (!dateStr) return "N/A";
+//     if (!dateStr) return "-";
 //     const date = new Date(dateStr);
 //     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 //   }, []);
@@ -1315,4 +1441,3 @@ export default Tasks;
 // };
 
 // export default Tasks;
-

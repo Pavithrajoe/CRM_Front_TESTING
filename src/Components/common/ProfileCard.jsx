@@ -45,7 +45,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isDeal,  isLost }) => {
+const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isDeal,  isLost, setShowSummary }) => {
   const { user } = useContext(GlobUserContext);
   const { userModules } = useUserAccess();
   const { leadId } = useParams();

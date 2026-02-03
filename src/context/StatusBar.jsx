@@ -37,7 +37,7 @@ const MAX_PLACE_LENGTH = 300;
 const MAX_PROPOSAL_NOTES_LENGTH = 500;
 
 const StatusBar = ({ leadId, leadData, isLost, isWon, statusRemarks, customDataFromParent = [] }) => {
-  console.log("company lead of infor", leadData);
+  // console.log("company lead of infor", leadData);
 
   const { company } = useContext(companyContext);
   const companyIndustryId = company?.result?.icompanyindustry_id || company?.result?.companyIndustry?.icompanyindustry_id;
@@ -543,9 +543,10 @@ function formatDateDMY(dateString) {
       return;
     }
 
-    const stageName = stages[clickedIndex]?.name?.toLowerCase() || '';
-    setDialogStageIndex(clickedIndex);
-    setRemarkStageId(statusId);
+    // const stageName = stages[clickedIndex]?.name?.toLowerCase() || ''; 
+    const stageName = stages[clickedIndex]?.name?.trim()?.toLowerCase() || '';
+     setDialogStageIndex(clickedIndex);
+     setRemarkStageId(statusId);
 
     if (stageName.includes('demo') || stageName.includes('session')) {
       setDialogValue({

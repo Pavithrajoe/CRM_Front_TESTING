@@ -93,6 +93,8 @@ export const ENDPOINTS = {
   USER_ACHIVEMENT:`${BASE_URL}/LoginUserTarget/achievement`,
   LEAD_SUMMARY: `${BASE_URL}/lead/lead-summary`,
   CALL_HISTORY_BY_PHONE: (phone) => `${BASE_URL_DCRM}/call-history-by-phone/${phone}`,
+  USER_TARGET_ACHIEVEMENT: `${BASE_URL}/mobile/target`,
+
 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,
 

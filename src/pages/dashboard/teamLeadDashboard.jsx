@@ -174,9 +174,9 @@ const LeadsDashboard = () => {
     <div className="flex mt-[-80px]">
       <main className="w-full flex-1 p-6 mt-[80px]">
         <div className="flex justify-between items-center mb-6 w-full relative z-50">
-          <div className=""> <TeamleadHeader /> 
-           {/* <MyTargetSection /> */}
-           
+          <div className=""> 
+           <TeamleadHeader /> 
+           <MyTargetSection />
            </div>
           <div className="shrink-0 ml-4"> <ProfileHeader /> </div>
         </div>
@@ -199,7 +199,6 @@ const LeadsDashboard = () => {
               sx={{
                 borderBottom: 1,
                 borderColor: 'divider',
-                
                 '& .MuiTabs-flexContainer': {
                   minHeight: '48px', 
                 }

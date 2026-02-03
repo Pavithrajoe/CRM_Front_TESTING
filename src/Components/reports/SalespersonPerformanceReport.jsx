@@ -39,9 +39,7 @@ const SalespersonPerformanceReport = () => {
     if (!companyId) return;
     const token = localStorage.getItem("token");
 
-    axios
-      .get(
-        `http://192.168.29.236:3000/api/reports/salesperson-performance/${companyId}`,
+    axios .get(`http://192.168.29.236:3000/api/reports/salesperson-performance/${companyId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => setData(res.data.data || []))

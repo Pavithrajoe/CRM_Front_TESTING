@@ -1752,32 +1752,32 @@ const fetchLeadSummary = async (leadId) => {
 
                 return (
                 <div   
-  key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
-  className="relative group bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
->
-{/* Info / Summary button */}
-<button
-  onClick={(e) => {
-    e.stopPropagation();          // 🚫 stop card click
-    setActiveSummaryLeadId(item.ilead_id);
-    fetchLeadSummary(item.ilead_id);
-    setShowSummary(true);
-  }}
-  className="
-    absolute top-3 left-3
-    w-9 h-9
-    rounded-full
-    bg-blue-50
-    text-blue-600
-    hover:bg-blue-600 hover:text-white
-    transition-all
-    shadow-sm hover:shadow-md
-    flex items-center justify-center
-  "
-  title="View Lead Summary"
->
-  ℹ
-</button>
+                key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
+                className="relative group bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
+              >
+              {/* Info / Summary button */}
+              {/* <button
+                onClick={(e) => {
+                  e.stopPropagation();         
+                  setActiveSummaryLeadId(item.ilead_id);
+                  fetchLeadSummary(item.ilead_id);
+                  setShowSummary(true);
+                }}
+                className="
+                  absolute top-3 left-3
+                  w-9 h-9
+                  rounded-full
+                  bg-blue-50
+                  text-blue-600
+                  hover:bg-blue-600 hover:text-white
+                  transition-all
+                  shadow-sm hover:shadow-md
+                  flex items-center justify-center
+                "
+                title="View Lead Summary"
+              >
+                ℹ
+              </button> */}
 
 
                     {/* Checkbox for selection */}

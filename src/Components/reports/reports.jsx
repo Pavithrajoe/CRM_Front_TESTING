@@ -85,7 +85,7 @@ const cardsData = [
     title: "Sales Target vs Achievement",
     description: "Track assigned sales targets against achieved revenue, view remaining goals, achievement percentage, and over- or under-performance by period.",
     route: "/SalesTargetReport",
-    image: "/illustrations/efficeincy.svg",
+    image: "/illustrations/target.svg",
     reportKey: "SalesTargetAchievement"
   },
 
@@ -93,7 +93,7 @@ const cardsData = [
     title: "Salesperson Performance",
     description: "Analyze individual salesperson productivity including leads handled, deals closed, revenue generated, conversion rate, and activity performance.",
     route: "/SalespersonPerformanceReport",
-    image: "/illustrations/efficeincy.svg",
+    image: "/illustrations/salesperson_perform.svg",
     reportKey: "SalespersonPerformance"
   },
 
@@ -101,7 +101,7 @@ const cardsData = [
     title: "Lead Source Performance",
     description: "Evaluate the effectiveness of each lead source by tracking lead volume, qualified leads, conversions, revenue generated, and marketing ROI.",
     route: "/LeadSourcePerformanceReport",
-    image: "/illustrations/efficeincy.svg",
+    image: "/illustrations/Source.svg",
     reportKey: "LeadSourcePerformance"
   },
 
@@ -109,7 +109,7 @@ const cardsData = [
     title: "Revenue Breakdown",
     description: "Gain insights into revenue distribution across products, salespersons, clients, regions, and time periods for better financial planning.",
     route: "/RevenueBreakdownReport",
-    image: "/illustrations/efficeincy.svg",
+    image: "/illustrations/Revenue.svg",
     reportKey: "RevenueBreakdown"
   },
 
@@ -117,7 +117,7 @@ const cardsData = [
     title: "Customer Sales History",
     description: "View complete customer-wise sales history including total deals, revenue earned, purchased products, and purchase timelines.",
     route: "/CustomerSalesHistoryReport",
-    image: "/illustrations/efficeincy.svg",
+    image: "/illustrations/Customer.svg",
     reportKey: "CustomerSalesHistory"
   },
 

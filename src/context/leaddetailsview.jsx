@@ -246,6 +246,7 @@ const [taskCount, setTaskCount] = useState(0);
 const [commentCount, setCommentCount] = useState(0);
 const [reminderCount, setReminderCount] = useState(0);
 const [customStatusData, setCustomStatusData] = useState([]);
+const [showCallHistory, setShowCallHistory] = useState(false);
 
 
   const [userSettings, setUserSettings] = useState({
@@ -1143,10 +1144,10 @@ if (isLargeScreen) {
     }
   );
 }
- availableTabs.push({
-      key: "CallHistory",
-      label: "Call History",
-    });
+//  availableTabs.push({
+//       key: "CallHistory",
+//       label: "Call History",
+//     });
 return availableTabs;
 
   return availableTabs;
@@ -1193,7 +1194,6 @@ const renderTabContent = () => {
       return <div>Content not available for tab: {currentTab.label}</div>;
   }
 };
-
 
   return (
     <>
@@ -1345,13 +1345,58 @@ const renderTabContent = () => {
             </div>
 
             <div className="flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start w-full sm:w-auto mt-2 sm:mt-0">
+          {/* {showCallHistory && (
+  <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
+    <DialogTitle>Call History</DialogTitle>
+    <DialogContent dividers>
+      <LeadCallHistory 
+        phone={leadData?.iphone_no ||           // ← snake_case (TAB la same)
+              leadData?.whatsapp_number ||      // ← snake_case (TAB la same)  
+              leadData?.cphone || 
+              leadData?.cPhone || 
+              leadData?.cMobile || 
+              leadData?.phone_number}          // ← snake_case
+      />
+    </DialogContent>
+  </Dialog>
+
+)}
+ <button
+      onClick={() => setShowCallHistory(true)}
+      className="hidden sm:flex bg-white hover:bg-green-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+      title="Call History"
+    ></button> */}
+              
+               {showProjectValue && (leadData?.iphone_no || leadData?.whatsapp_number) && (
+    <button
+      onClick={() => setShowCallHistory(true)}
+    //  className="flex items-center bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-xl shadow-sm border border-green-200 font-semibold text-sm transition-all"
+    className="hidden xl:flex bg-blue-600 shadow-md shadow-blue-900 hover:bg-blue-900 text-white font-semibold py-2 px-6 rounded-xl transition text-base items-center"
+      title={`Call History - ${leadData?.iphone_no}`}
+    >
+      <img src="/images/detailview/call.svg" className="w-4 h-4 mr-2 invert brightness-0" />
+      {/* <span className="font-medium">{leadData.iphone_no || leadData.whatsapp_number}</span> */}
+      <span className="font-medium">Call History</span>
+    </button>
+  )}
               {showProjectValue && projectValueDisplay && (
+                
                 <div className="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl shadow-md">
+                  
                   <FaCheck className="mr-1 sm:mr-2" />
                   <span className="text-xs sm:text-sm md:text-base font-semibold">Project Value: {projectValueDisplay} </span>
                 </div>
               )}
-
+{showCallHistory && (
+  <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
+    <DialogTitle>Call History</DialogTitle>
+    <DialogContent dividers>
+      <LeadCallHistory 
+        phone={leadData?.iphone_no || leadData?.whatsapp_number || leadData?.cphone || leadData?.cPhone || leadData?.cMobile || leadData?.phone_number}
+      />
+    </DialogContent>
+  </Dialog>
+)}
               {/* View Quotations Button  */}
               {(isWon || immediateWonStatus || leadData?.bisConverted) &&
                 quotations.length > 0 && (
@@ -1362,6 +1407,7 @@ const renderTabContent = () => {
                     <FaEye className="mr-1" /> View Quotations
                   </button>
                 )}
+                
 
               {/* Create Quotation Button */}
               {showCreateQuotationButton && (
@@ -1384,9 +1430,39 @@ const renderTabContent = () => {
                   )}
                 </>
               )}
+{showCallHistory && (
+  <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
+    <DialogTitle>Call History</DialogTitle>
+    <DialogContent dividers>
+      <LeadCallHistory 
+        phone={leadData?.iphone_no ||           // ← snake_case (TAB la same)
+              leadData?.whatsapp_number ||      // ← snake_case (TAB la same)  
+              leadData?.cphone || 
+              leadData?.cPhone || 
+              leadData?.cMobile || 
+              leadData?.phone_number}          // ← snake_case
+      />
+    </DialogContent>
+  </Dialog>
+)}
 
               {showActionButtons && (
                 <>
+                 <button
+      onClick={() => setShowCallHistory(true)}
+      className="hidden sm:flex bg-white hover:bg-green-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+      title="Call History"
+    >
+      <div className="w-px h-5 bg-gray-600"></div>
+
+      <img
+        src="/images/detailview/call.svg"
+        className="w-4 h-4"
+        alt="Call icon"
+      />
+
+      <div className="w-px h-5 bg-gray-600"></div>
+    </button>
                   {userSettings.mail_access && (
                     <button
                       onClick={() => setIsMailOpen(true)}
@@ -1421,6 +1497,7 @@ const renderTabContent = () => {
                 </>
               )}
             </div>
+            
           </div>
 
           {/* Tab Content */}
@@ -1856,44 +1933,44 @@ const renderTabContent = () => {
                       <p>No templates available</p>
                     </div>
                   ) : 
-            (
-  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
-    {templates.map((template) => {
-      console.log("FULL TEMPLATE:", template);
-      console.log("MAIL BODY:", template.mailBody);
+                  (
+                  <div className="space-y-3 h-[calc(100%-50px)] overflow-y-scroll pr-2">
+                    {templates.map((template) => {
+                      console.log("FULL TEMPLATE:", template);
+                      console.log("MAIL BODY:", template.mailBody);
 
-      return (
-        <div
-          key={template.mailTemplateId}
-          className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
-          onClick={() => applyTemplate(template)}
-        >
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg">
-              <MdEmail className="text-blue-600" size={18} />
-            </div>
+                      return (
+                        <div
+                          key={template.mailTemplateId}
+                          className="p-4 bg-white border rounded-lg cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all duration-200"
+                          onClick={() => applyTemplate(template)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg">
+                              <MdEmail className="text-blue-600" size={18} />
+                            </div>
 
-            <div>
-              <h4 className="font-semibold">{template.mailTitle}</h4>
+                            <div>
+                              <h4 className="font-semibold">{template.mailTitle}</h4>
 
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                {template.mail_template_body
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                {template.mail_template_body
 
-                  ? template.mail_template_body
+                                  ? template.mail_template_body
 
-                      .replace(/&nbsp;/g, " ")
-                      .replace(/<[^>]+>/g, "")
-                      .replace(/\s+/g, " ")
-                      .trim()
-                      .substring(0, 120)
-                  : "No content"}
-              </p>
-            </div>
-          </div>
-        </div>
-      );
-    })}
-  </div>
+                                      .replace(/&nbsp;/g, " ")
+                                      .replace(/<[^>]+>/g, "")
+                                      .replace(/\s+/g, " ")
+                                      .trim()
+                                      .substring(0, 120)
+                                  : "No content"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                   )}
                 </div>                                      
 
@@ -2024,6 +2101,7 @@ const renderTabContent = () => {
 export default LeadDetailView;
 
 
+
 // import React, { useState, useEffect, useRef, useMemo } from "react";
 // import { useParams, useLocation, useNavigate } from "react-router-dom";
 // import {
@@ -2075,7 +2153,7 @@ export default LeadDetailView;
 // import { toast } from 'react-toastify';
 // import { useUserAccess } from "../context/UserAccessContext";
 // import { MdAccountCircle, MdClose } from 'react-icons/md';
-
+// import LeadCallHistory from "./LeadCallHistory";
 // // const XCODEFIX_COMPANY_ID = import.meta.env.VITE_XCODEFIX_FLOW;
 // const XCODEFIX_COMPANY_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 
@@ -2204,8 +2282,6 @@ export default LeadDetailView;
 //   const location = useLocation();
 //   const lostReasonDialogRef = useRef(null);
 //   const formRef = useRef(null); 
-//   const [leadData, setLeadData] = useState(null);
-
 // // const passedLead = location.state?.lead || location.state?.leadList?.[0];
 // // const leadsList = passedLead ? [passedLead] : [];
 // // const leadIds = leadsList.map((lead) => lead.ilead_id); 
@@ -2224,6 +2300,7 @@ export default LeadDetailView;
 //   const [loading, setLoading] = useState(true);
 //   const [isDeal, setIsDeal] = useState(false);
 //   const [isLost, setIsLost] = useState(false);
+//   const [leadData, setLeadData] = useState(null);
 //   const [leadLostDescriptionTrue, setLeadLostDescriptionTrue] = useState(false);
 //   const [lostReasons, setLostReasons] = useState([]);
 //   const [selectedLostReasonId, setSelectedLostReasonId] = useState("");
@@ -2406,41 +2483,40 @@ export default LeadDetailView;
 //     fetchUserProfile();
 //   }, [urlUserId]);
 
-//   // PDF View Handler
-//   const handleViewPdf = async (quotation) => {
-//     try {
-//       if (!companyInfo || !leadData) {
-//         showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-//         return;
-//       }
-      
-//       setCurrentPdfUrl(null);
-//       setCurrentQuotation(quotation);
-//       setPdfViewerOpen(true);
-//       const pdfDataUrl = await generateQuotationPDF(quotation, companyInfo, leadData, true);
-//       setCurrentPdfUrl(pdfDataUrl);
-//     } catch (error) {
-//       console.error("Error generating PDF:", error);
-//       showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-//       setPdfViewerOpen(false);
+// const handleViewPdf = async (quotation) => {
+//   try {
+//     if (!companyInfo || !leadData) {
+//          showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
+//       return;
 //     }
-//   };
+//     setCurrentQuotation(quotation);
+//     setPdfViewerOpen(true);
+//     setCurrentPdfUrl(null);
 
-//   // PDF Download Handler
+//     const doc = await generateQuotationPDF(quotation);
+
+//     const blobUrl = doc.output("bloburl"); 
+//     setCurrentPdfUrl(blobUrl);
+//   } catch (error) {
+//     console.error(error);
+//     showPopup("Error", "Failed to generate PDF", "error");
+//     setPdfViewerOpen(false);
+//   }
+// };
+
+
+
 //   const handleDownloadPdf = async (quotation) => {
-//     try {
-//       if (!companyInfo || !leadData) {
-//         showPopup('Error', 'Missing company or lead data. Please try again.', 'error');
-//         return;
-//       }
-//       const doc = await generateQuotationPDF(quotation, companyInfo, leadData);
-//       doc.save(`${quotation.cQuote_number}.pdf`);
-//       showPopup('Success', `PDF downloaded successfully!`, 'success');
-//     } catch (error) {
-//       console.error("Error generating PDF:", error);
-//       showPopup('Error', error.message || 'Failed to generate PDF', 'error');
-//     }
-//   };
+//   try {
+//     const doc = await generateQuotationPDF(quotation);
+
+//     doc.save(`Quotation-${quotation.cQuote_number}.pdf`); 
+//     showPopup("Success", "PDF downloaded successfully!", "success");
+//   } catch (error) {
+//     console.error(error);
+//     showPopup("Error", "Failed to download PDF", "error");
+//   }
+// };
 
 //   // Download from PDF Viewer
 //   const handleDownloadFromViewer = async () => {
@@ -2710,9 +2786,6 @@ export default LeadDetailView;
 //       }
 
 //       const data = await response.json();
-//       console.log(" paviii Status Remarks API Response:", data);
-//       // Or check a specific remark:
-//       console.log("pavviii Latest remark data:", data.Response?.[0] || data.data?.[0]);
 //       const remarks = data.Response || data.data || data || [];
 
 //  //  ADD HERE
@@ -3032,8 +3105,12 @@ export default LeadDetailView;
 
 // const applyTemplate = (template) => {
 //   setMailSubject(template.mailTitle || "");
-//   setMailContent(decodeHTML(template.mailBody || ""));
-// };;
+//   setMailContent(
+//     decodeHTML(
+//       template.mail_template_body || template.mailBody || ""
+//     )
+//   );
+// };
 
 //   // Fetch stages for the StatusBar component
 //   // const fetchStages = async () => {
@@ -3123,12 +3200,26 @@ export default LeadDetailView;
 //     });
 //   }
   
-//  if (isLargeScreen) {
-//     availableTabs.push({
-//       key:'Activity',
-//       label:'Activity'
+// //  if (isLargeScreen) {
+// //     availableTabs.push({
+// //       key:'Activity',
+// //       label:'Activity'
+// //     });
+// //   }
+// if (isLargeScreen) {
+//   availableTabs.push(
+//     {
+//       key: "Activity",
+//       label: "Activity"
+//     }
+//   );
+// }
+//  availableTabs.push({
+//       key: "CallHistory",
+//       label: "Call History",
 //     });
-//   }
+// return availableTabs;
+
 //   return availableTabs;
 // };
 
@@ -3153,6 +3244,22 @@ export default LeadDetailView;
 //                 leadId={leadId}
 //                 isReadOnly={isLost || isWon || immediateWonStatus || leadData?.bisConverted === true}
 //               />;
+
+//     case "CallHistory":
+//   return (
+//    <LeadCallHistory
+//   phone={
+//     leadData?.iphone_no ||                 
+//     leadData?.whatsapp_number ||      
+//     leadData?.cphone ||
+//     leadData?.cPhone ||
+//     leadData?.cMobile ||
+//     leadData?.phone_number
+//   }
+// />
+
+//   );
+          
 //     default:
 //       return <div>Content not available for tab: {currentTab.label}</div>;
 //   }
@@ -3449,6 +3556,10 @@ export default LeadDetailView;
 //                   }
 //                   sx={{ mt: 2 }}
 //                   InputLabelProps={{ shrink: true }}
+//                   inputProps={{
+//         ...params.inputProps,
+//         readOnly: true, 
+//       }}
 //                 />
 //               )}
 //             />
@@ -3982,5 +4093,4 @@ export default LeadDetailView;
 // };
 
 // export default LeadDetailView;
-
 

@@ -94,6 +94,7 @@ export const ENDPOINTS = {
   LEAD_SUMMARY: `${BASE_URL}/lead/lead-summary`,
   CALL_HISTORY_BY_PHONE: (phone) => `${BASE_URL_DCRM}/call-history-by-phone/${phone}`,
   USER_TARGET_ACHIEVEMENT: `${BASE_URL}/mobile/target`,
+  CUSTOMER_SALES_HISTORY: `${BASE_URL}/reports/customer-sales-history`,
 
 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,

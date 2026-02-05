@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ENDPOINTS } from "../api/constraints";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend,} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -32,16 +23,8 @@ function LeadCallHistory({ phone }) {
 const [toDate, setToDate] = useState("");
 
 const [currentPage, setCurrentPage] = useState(1);
-const itemsPerPage = 1;
+const itemsPerPage = 5;
 
-// const filteredCalls = calls.filter((call) => {
-//   const text = search.toLowerCase();
-//   return (
-//     call.caller_name?.toLowerCase().includes(text) ||
-//     call.agent_name?.toLowerCase().includes(text) ||
-//     call.call_type?.toLowerCase().includes(text)
-//   );
-// });
 
 const filteredCalls = calls.filter((call) => {
   const text = search.toLowerCase();
@@ -207,18 +190,18 @@ const capitalize = (text = "") => text.charAt(0).toUpperCase() + text.slice(1).t
         ))}
       </div>
       <div className="flex justify-center items-center gap-2 mt-4">
-  <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="px-3 py-1 border rounded disabled:opacity-50">
-    Prev
-  </button>
+        <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="px-3 py-1 border rounded disabled:opacity-50">
+          Prev
+        </button>
 
-  <span className="text-sm font-semibold">
-    Page {currentPage} of {totalPages}
-  </span>
+        <span className="text-sm font-semibold">
+          Page {currentPage} of {totalPages}
+        </span>
 
-  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="px-3 py-1 border rounded disabled:opacity-50">
-    Next
-  </button>
-</div>
+        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="px-3 py-1 border rounded disabled:opacity-50">
+          Next
+        </button>
+      </div>
 
     </div>
   );

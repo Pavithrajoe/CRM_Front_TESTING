@@ -13,6 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchLeads } from "../../Redux/leadActions";
 import { GlobUserContext } from "../../context/userContex";
 import { Menu, ChevronDown } from 'lucide-react';
+import LeadSummaryModal from "./LeadViewComponents/LeadSummaryModal";
 
 const LeadCardViewPage = () => {
   // const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
@@ -21,10 +22,6 @@ const LeadCardViewPage = () => {
   const hasAllLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "All Leads" && attr.bactive === true), [user_attributes]);
   const hasActiveLeadsAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Active Leads" && attr.bactive === true), [user_attributes]);
   const hasWebsiteLeadAccess = useMemo(() => user_attributes.some(attr => attr.attribute_name === "Website Lead" && attr.bactive === true), [user_attributes]);
-
-  // const hasAllLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "All Leads" && attr.bactive === true );
-  // const hasActiveLeadsAccess = user_attributes.some( (attr) => attr.attribute_name === "Active Leads" && attr.bactive === true );
-  // const hasWebsiteLeadAccess = user_attributes.some( (attr) => attr.attribute_name === "Website Lead" && attr.bactive === true );
 
   const { user } = useContext(GlobUserContext);
   const location = useLocation();
@@ -81,11 +78,9 @@ const LeadCardViewPage = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [leadSummaryMap, setLeadSummaryMap] = useState({});
-const [hoveredLeadId, setHoveredLeadId] = useState(null);
-const [showSummary, setShowSummary] = useState(false);
-const [activeSummaryLeadId, setActiveSummaryLeadId] = useState(null);
-
-
+  const [hoveredLeadId, setHoveredLeadId] = useState(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryLeadId, setSummaryLeadId] = useState(null);
 
   const params = new URLSearchParams(location.search);
   const pageFromUrl = Number(params.get("page")) || 1;
@@ -698,35 +693,35 @@ const [activeSummaryLeadId, setActiveSummaryLeadId] = useState(null);
 //   'lost'
 // ];
 
-const fetchLeadSummary = async (leadId) => {
-  // already fetched → skip API
-  if (leadSummaryMap[leadId]) return;
+// const fetchLeadSummary = async (leadId) => {
+//   // already fetched → skip API
+//   if (leadSummaryMap[leadId]) return;
 
-  try {
-    const token = localStorage.getItem("token");
+//   try {
+//     const token = localStorage.getItem("token");
 
-    const res = await fetch(
-      `${ENDPOINTS.LEAD_SUMMARY}/${leadId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+//     const res = await fetch(
+//       `${ENDPOINTS.LEAD_SUMMARY}/${leadId}`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
 
-    if (!res.ok) return;
+//     if (!res.ok) return;
 
-    const data = await res.json();
+//     const data = await res.json();
 
-    setLeadSummaryMap((prev) => ({
-      ...prev,
-      [leadId]: data.summary,
-    }));
+//     setLeadSummaryMap((prev) => ({
+//       ...prev,
+//       [leadId]: data.summary,
+//     }));
 
-  } catch (err) {
-    console.error("Summary hover fetch failed", err);
-  }
-};
+//   } catch (err) {
+//     console.error("Summary hover fetch failed", err);
+//   }
+// };
 
 
   const fetchLostLeads = useCallback(async () => {
@@ -1752,50 +1747,53 @@ const fetchLeadSummary = async (leadId) => {
 
                 return (
                 <div   
-                key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
-                className="relative group bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
-              >
-              {/* Info / Summary button */}
-              {/* <button
-                onClick={(e) => {
-                  e.stopPropagation();         
-                  setActiveSummaryLeadId(item.ilead_id);
-                  fetchLeadSummary(item.ilead_id);
-                  setShowSummary(true);
-                }}
-                className="
-                  absolute top-3 left-3
-                  w-9 h-9
-                  rounded-full
-                  bg-blue-50
-                  text-blue-600
-                  hover:bg-blue-600 hover:text-white
-                  transition-all
-                  shadow-sm hover:shadow-md
-                  flex items-center justify-center
-                "
-                title="View Lead Summary"
-              >
-                ℹ
-              </button> */}
+                  key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
+                  className="relative group bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
+                >
+                {/* Info / Summary button */}
+                <div className="absolute top-3 left-3 flex items-center gap-2">
+                  {/* Lead Summary */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSummaryLeadId(item.ilead_id);
+                      setShowSummary(true);
+                    }}
+                    title="View Lead Summary"
+                    className="
+                      w-8 h-8
+                      rounded-full
+                      bg-transparent
+                      text-gray-400
+                      hover:bg-blue-100 hover:text-blue-600
+                      transition-all duration-200
+                      flex items-center justify-center
+                    "
+                  >
+                    ℹ
+                  </button>
 
+                  {/* Website Lead */}
+                  {(item.website_lead === true ||
+                    item.website_lead === "true" ||
+                    item.website_lead === 1) && (
+                    <FaGlobe
+                      size={18}
+                      className="text-blue-600"
+                      title="Website Lead"
+                    />
+                  )}
+                </div>
+                <div className="absolute top-3 right-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedLeads.includes(item.ilead_id)}
+                    onChange={() => toggleLeadSelection(item.ilead_id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-3 w-3 text-blue-600 rounded"
+                  />
+                </div>
 
-                    {/* Checkbox for selection */}
-                    <div className="absolute top-3 right-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(item.ilead_id)}
-                        onChange={() => toggleLeadSelection(item.ilead_id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-3 w-3 mt-[-2px] text-blue-600 rounded"
-                      />
-                    </div>
-
-                    {(item.website_lead === true ||
-                      item.website_lead === "true" ||
-                      item.website_lead === 1) && (
-                      <div className="absolute top-3 left-10 text-blue-600" title="Website Lead" > <FaGlobe size={18} /> </div>
-                    )}
                     <div onClick={() => goToDetail(item.ilead_id, displayedData)} >
                       <div className="flex w-full justify-between items-center space-x-10">
                         <h3 className="font-semibold text-lg text-gray-1000 truncate mb-1"> {item.clead_name || "-"} </h3>
@@ -1841,32 +1839,13 @@ const fetchLeadSummary = async (leadId) => {
           )}
         </>
       )}
-      {showSummary && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div className="relative w-[90vw] max-w-2xl bg-white rounded-2xl shadow-[0_25px_60px_rgba(59,130,246,0.25)] px-8 py-7">
-
-      {/* Close */}
-      <button
-        onClick={() => setShowSummary(false)}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
-      >
-        ✕
-      </button>
-
-      {/* Title */}
-      <h2 className="text-xl font-bold text-gray-900 mb-2">
-        Lead Summary
-      </h2>
-
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-5" />
-
-      {/* BACKEND SUMMARY ONLY */}
-      <div className="text-[15px] leading-7 text-gray-700 font-medium whitespace-pre-line">
-        {leadSummaryMap[activeSummaryLeadId] || "Loading summary…"}
-      </div>
-    </div>
-  </div>
+{showSummary && summaryLeadId && (
+  <LeadSummaryModal
+    leadId={summaryLeadId}
+    onClose={() => setShowSummary(false)}
+  />
 )}
+
 
 
       {/* PAGINATION - Using Local State */}
@@ -1889,6 +1868,7 @@ const fetchLeadSummary = async (leadId) => {
 
 export default LeadCardViewPage;
 
+
 // import React, {useEffect, useState, useCallback, useMemo, useContext} from "react";
 // import { useNavigate, useLocation } from "react-router-dom";
 // import { FaEnvelope, FaPhone, FaGlobe, FaCrown, FaUser, FaEdit, } from "react-icons/fa";
@@ -1904,6 +1884,7 @@ export default LeadCardViewPage;
 // import { fetchLeads } from "../../Redux/leadActions";
 // import { GlobUserContext } from "../../context/userContex";
 // import { Menu, ChevronDown } from 'lucide-react';
+
 // const LeadCardViewPage = () => {
 //   // const user_attributes = JSON.parse(localStorage.getItem("user_attributes")) || [];
 //   const user_attributes = useMemo(() => { return JSON.parse(localStorage.getItem("user_attributes")) || [];}, []);
@@ -1970,6 +1951,12 @@ export default LeadCardViewPage;
 //   const [showPagination, setShowPagination] = useState(true);
 //   const [showMenu, setShowMenu] = useState(false);
 //   const [showMobileMenu, setShowMobileMenu] = useState(false);
+//   const [leadSummaryMap, setLeadSummaryMap] = useState({});
+// const [hoveredLeadId, setHoveredLeadId] = useState(null);
+// const [showSummary, setShowSummary] = useState(false);
+// const [activeSummaryLeadId, setActiveSummaryLeadId] = useState(null);
+
+
 
 //   const params = new URLSearchParams(location.search);
 //   const pageFromUrl = Number(params.get("page")) || 1;
@@ -2311,15 +2298,28 @@ export default LeadCardViewPage;
 //   }, [dataToDisplay, leadsToShow, currentPage, leadsPerPage]);
 
 //   // single declaration
+//   // const goToDetail = (id, leadsList) => {
+//   //   navigate(`/leaddetailview/${id}`, { 
+//   //     state: { 
+//   //       returnPage: currentPage,
+//   //       activeTab: selectedFilter,
+//   //       leadList: leadsList
+//   //     }
+//   //   });
+//   // };
 //   const goToDetail = (id, leadsList) => {
-//     navigate(`/leaddetailview/${id}`, { 
-//       state: { 
-//         returnPage: currentPage,
-//         activeTab: selectedFilter,
-//         leadList: leadsList
-//       }
-//     });
-//   };
+//   navigate(`/leaddetailview/${id}`, { 
+//     state: { 
+//       returnPage: currentPage,
+//       activeTab: selectedFilter,
+//       leadList: leadsList,
+
+//       // ✅ STEP 1 ADD THIS
+//       openSummary: true
+//     }
+//   });
+// };
+
 
 //   const totalPages = leadsToShow ? 1  : Math.ceil(dataToDisplay.length / leadsPerPage);
 
@@ -2569,6 +2569,35 @@ export default LeadCardViewPage;
 // //   'lost'
 // // ];
 
+// const fetchLeadSummary = async (leadId) => {
+//   // already fetched → skip API
+//   if (leadSummaryMap[leadId]) return;
+
+//   try {
+//     const token = localStorage.getItem("token");
+
+//     const res = await fetch(
+//       `${ENDPOINTS.LEAD_SUMMARY}/${leadId}`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+
+//     if (!res.ok) return;
+
+//     const data = await res.json();
+
+//     setLeadSummaryMap((prev) => ({
+//       ...prev,
+//       [leadId]: data.summary,
+//     }));
+
+//   } catch (err) {
+//     console.error("Summary hover fetch failed", err);
+//   }
+// };
 
 
 //   const fetchLostLeads = useCallback(async () => {
@@ -3593,10 +3622,35 @@ export default LeadCardViewPage;
 //                 }
 
 //                 return (
-//                   <div
-//                     key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
-//                     className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
-//                   >
+//                 <div   
+//                 key={ item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${ item.dcreate_dt || Date.now() }` }
+//                 className="relative group bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
+//               >
+//               {/* Info / Summary button */}
+//               {/* <button
+//                 onClick={(e) => {
+//                   e.stopPropagation();         
+//                   setActiveSummaryLeadId(item.ilead_id);
+//                   fetchLeadSummary(item.ilead_id);
+//                   setShowSummary(true);
+//                 }}
+//                 className="
+//                   absolute top-3 left-3
+//                   w-9 h-9
+//                   rounded-full
+//                   bg-blue-50
+//                   text-blue-600
+//                   hover:bg-blue-600 hover:text-white
+//                   transition-all
+//                   shadow-sm hover:shadow-md
+//                   flex items-center justify-center
+//                 "
+//                 title="View Lead Summary"
+//               >
+//                 ℹ
+//               </button> */}
+
+
 //                     {/* Checkbox for selection */}
 //                     <div className="absolute top-3 right-3">
 //                       <input
@@ -3658,6 +3712,33 @@ export default LeadCardViewPage;
 //           )}
 //         </>
 //       )}
+//       {showSummary && (
+//   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+//     <div className="relative w-[90vw] max-w-2xl bg-white rounded-2xl shadow-[0_25px_60px_rgba(59,130,246,0.25)] px-8 py-7">
+
+//       {/* Close */}
+//       <button
+//         onClick={() => setShowSummary(false)}
+//         className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
+//       >
+//         ✕
+//       </button>
+
+//       {/* Title */}
+//       <h2 className="text-xl font-bold text-gray-900 mb-2">
+//         Lead Summary
+//       </h2>
+
+//       <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-5" />
+
+//       {/* BACKEND SUMMARY ONLY */}
+//       <div className="text-[15px] leading-7 text-gray-700 font-medium whitespace-pre-line">
+//         {leadSummaryMap[activeSummaryLeadId] || "Loading summary…"}
+//       </div>
+//     </div>
+//   </div>
+// )}
+
 
 //       {/* PAGINATION - Using Local State */}
 //       {showPagination && (

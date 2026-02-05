@@ -182,14 +182,7 @@ const LeadDetailView = () => {
 // const leadsList = passedLead ? [passedLead] : [];
 // const leadIds = leadsList.map((lead) => lead.ilead_id); 
 // const currentIndex = leadIds.indexOf(Number(leadId));
-const leadsList = location.state?.leadList?.length 
-  ? location.state.leadList 
-  : leadData 
-    ? [leadData] 
-    : [];
 
-const leadIds = leadsList.map(lead => lead.ilead_id);
-const currentIndex = leadIds.indexOf(Number(leadId));
 
   const theme = useTheme();
   const [tabIndex, setTabIndex] = useState(0);
@@ -238,6 +231,7 @@ const currentIndex = leadIds.indexOf(Number(leadId));
   const [editingComment, setEditingComment] = useState(null); 
   const [showForm, setShowForm] = useState(false); 
   const [showMobileProfileDrawer, setShowMobileProfileDrawer] = useState(false);
+  
 
   const [dragActive, setDragActive] = useState(false);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
@@ -247,6 +241,15 @@ const [commentCount, setCommentCount] = useState(0);
 const [reminderCount, setReminderCount] = useState(0);
 const [customStatusData, setCustomStatusData] = useState([]);
 const [showCallHistory, setShowCallHistory] = useState(false);
+
+const leadsList = location.state?.leadList?.length 
+  ? location.state.leadList 
+  : leadData 
+    ? [leadData] 
+    : [];
+
+const leadIds = leadsList.map(lead => lead.ilead_id);
+const currentIndex = leadIds.indexOf(Number(leadId));
 
 
   const [userSettings, setUserSettings] = useState({
@@ -1387,16 +1390,16 @@ const renderTabContent = () => {
                   <span className="text-xs sm:text-sm md:text-base font-semibold">Project Value: {projectValueDisplay} </span>
                 </div>
               )}
-{showCallHistory && (
-  <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
-    <DialogTitle>Call History</DialogTitle>
-    <DialogContent dividers>
-      <LeadCallHistory 
-        phone={leadData?.iphone_no || leadData?.whatsapp_number || leadData?.cphone || leadData?.cPhone || leadData?.cMobile || leadData?.phone_number}
-      />
-    </DialogContent>
-  </Dialog>
-)}
+              {showCallHistory && (
+                <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
+                  <DialogTitle>Call History</DialogTitle>
+                  <DialogContent dividers>
+                    <LeadCallHistory 
+                      phone={leadData?.iphone_no || leadData?.whatsapp_number || leadData?.cphone || leadData?.cPhone || leadData?.cMobile || leadData?.phone_number}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
               {/* View Quotations Button  */}
               {(isWon || immediateWonStatus || leadData?.bisConverted) &&
                 quotations.length > 0 && (
@@ -1430,52 +1433,32 @@ const renderTabContent = () => {
                   )}
                 </>
               )}
-{showCallHistory && (
-  <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
-    <DialogTitle>Call History</DialogTitle>
-    <DialogContent dividers>
-      <LeadCallHistory 
-        phone={leadData?.iphone_no ||           // ← snake_case (TAB la same)
-              leadData?.whatsapp_number ||      // ← snake_case (TAB la same)  
-              leadData?.cphone || 
-              leadData?.cPhone || 
-              leadData?.cMobile || 
-              leadData?.phone_number}          // ← snake_case
-      />
-    </DialogContent>
-  </Dialog>
-)}
+              {showCallHistory && (
+                <Dialog open={showCallHistory} onClose={() => setShowCallHistory(false)} fullWidth maxWidth="md">
+                  <DialogTitle>Call History</DialogTitle>
+                  <DialogContent dividers>
+                    <LeadCallHistory 
+                      phone={leadData?.iphone_no || leadData?.whatsapp_number || leadData?.cphone || leadData?.cPhone ||  leadData?.cMobile ||  leadData?.phone_number}         
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
 
               {showActionButtons && (
                 <>
-                 <button
-      onClick={() => setShowCallHistory(true)}
-      className="hidden sm:flex bg-white hover:bg-green-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
-      title="Call History"
-    >
-      <div className="w-px h-5 bg-gray-600"></div>
+                 <button onClick={() => setShowCallHistory(true)} className="hidden sm:flex bg-white hover:bg-green-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
+                  title="Call History"
+                >
 
-      <img
-        src="/images/detailview/call.svg"
-        className="w-4 h-4"
-        alt="Call icon"
-      />
+                  <img src="/images/detailview/call.svg" className="w-4 h-4" alt="Call icon" />
 
-      <div className="w-px h-5 bg-gray-600"></div>
-    </button>
+                </button>
                   {userSettings.mail_access && (
-                    <button
-                      onClick={() => setIsMailOpen(true)}
+                    <button onClick={() => setIsMailOpen(true)}
                       className="hidden sm:flex bg-white hover:bg-blue-100 shadow-md shadow-gray-400 text-gray-900 border-grey-900 font-semibold py-1 sm:py-2 px-3 sm:px-4 rounded-xl transition items-center justify-center gap-1 text-xs sm:text-sm md:text-base"
                       title="Email"
                     >
-                      <div className="w-px h-5 bg-gray-600"></div>
-                      <img
-                         src="/images/detailview/email.svg" 
-                        className=" w-4 h-4"
-                        alt="Email icon"
-                      />
-                      <div className="w-px h-5 bg-gray-600"></div>
+                      <img src="/images/detailview/email.svg"   className=" w-4 h-4" alt="Email icon" />
                     </button>
                   )}
 

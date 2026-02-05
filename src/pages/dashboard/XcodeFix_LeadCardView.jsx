@@ -8,6 +8,7 @@ import LeadFilterModal from './LeadViewComponents/LeadFilterModal';
 import LeadCountSelector from './LeadViewComponents/LeadCountSelector';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
+import LeadSummaryModal from './LeadViewComponents/LeadSummaryModal.jsx';
 
 const Xcode_LeadCardViewPage = () => {
     const location = useLocation();
@@ -63,6 +64,8 @@ const Xcode_LeadCardViewPage = () => {
     const [companyId, setCompanyId] = useState(null);
     const [roleType, setRoleType] = useState('');
     const [addAssignedLeads,setAddAssignedLeads]=useState(false)
+    const [showSummary, setShowSummary] = useState(false);
+    const [summaryLeadId, setSummaryLeadId] = useState(null);
     // Get page from URL or state
     const params = new URLSearchParams(location.search);
     const pageFromUrl = Number(params.get("page")) || 1;
@@ -1929,7 +1932,27 @@ const fetchAssignedLeads = useCallback(async () => {
                                     <div key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                         className="relative bg-white rounded-xl shadow-lg p-10 border border-gray-200 hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col justify-between"
                                     >
-                                        {/* Checkbox for selection */}
+                                    {/* <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setSummaryLeadId(item.ilead_id);
+    setShowSummary(true);
+  }}
+  title="View Lead Summary"
+  className="
+    absolute top-3 left-3
+    w-8 h-8
+    rounded-full
+    bg-transparent
+    text-gray-400
+    hover:bg-blue-100 hover:text-blue-600
+    transition-all duration-200
+    flex items-center justify-center
+  "
+>
+  ℹ
+</button>
+                                        
                                         <div className="absolute top-3 right-3">
                                         <input
                                             type="checkbox"
@@ -1944,7 +1967,49 @@ const fetchAssignedLeads = useCallback(async () => {
                                             <div className="absolute top-3 left-10 text-blue-600" title="Website Lead">
                                                 <FaGlobe size={18} />
                                             </div>
-                                        )}
+                                        )} */}
+                                        <div className="absolute top-3 left-3 flex items-center gap-2">
+                                          {/* Lead Summary */}
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSummaryLeadId(item.ilead_id);
+                                              setShowSummary(true);
+                                            }}
+                                            title="View Lead Summary"
+                                            className="
+                                              w-8 h-8
+                                              rounded-full
+                                              bg-transparent
+                                              text-gray-400
+                                              hover:bg-blue-100 hover:text-blue-600
+                                              transition-all duration-200
+                                              flex items-center justify-center
+                                            "
+                                          >
+                                            ℹ
+                                          </button>
+                                        
+                                          {/* Website Lead */}
+                                          {(item.website_lead === true ||
+                                            item.website_lead === "true" ||
+                                            item.website_lead === 1) && (
+                                            <FaGlobe
+                                              size={18}
+                                              className="text-blue-600"
+                                              title="Website Lead"
+                                            />
+                                          )}
+                                        </div>
+                                        <div className="absolute top-3 right-3">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedLeads.includes(item.ilead_id)}
+                                            onChange={() => toggleLeadSelection(item.ilead_id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="h-3 w-3 text-blue-600 rounded"
+                                          />
+                                        </div>
                                         <div onClick={() => goToDetail(item.ilead_id, displayedData)}>
                                             <div className="flex w-full justify-between items-center space-x-10">
                                                 <h3 className="font-bold text-lg text-gray-900 truncate mb-1">
@@ -2003,6 +2068,13 @@ const fetchAssignedLeads = useCallback(async () => {
                     )}
                 </>
             )}
+            {showSummary && summaryLeadId && (
+  <LeadSummaryModal
+    leadId={summaryLeadId}
+    onClose={() => setShowSummary(false)}
+  />
+)}
+
 
             {totalPages > 1 && showPagination && (
                 <div className="flex justify-center items-center space-x-2 mt-6">
@@ -2035,6 +2107,7 @@ const fetchAssignedLeads = useCallback(async () => {
 };
 
 export default Xcode_LeadCardViewPage;
+
 
 // import React, { useEffect, useState, useCallback, useMemo } from 'react';
 // import { useNavigate, useLocation } from 'react-router-dom';
@@ -2252,7 +2325,7 @@ export default Xcode_LeadCardViewPage;
 
 //     const isWebsite = 
 //       item.website_lead === true || 
-//       String(item.website_lead).toLowerCase() === 'true' ||
+//       //String(item.website_lead).toLowerCase() === 'true' ||
 //       item.website_lead === 1;
 
 //     if (selectedFilter === "all") {
@@ -2276,7 +2349,8 @@ export default Xcode_LeadCardViewPage;
 //         matchesDate && 
 //         matchesModalFilters && 
 //         isWebsite && 
-//         isActive 
+//         isActive &&
+//         !isConverted 
 //       );
 //     } else if (selectedFilter === "lost") {
 //       if (!isActive) {

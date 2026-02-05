@@ -6,7 +6,7 @@ import { X, Search } from "lucide-react";
  import { useUserAccess } from "../../context/UserAccessContext";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
-  const Both = ({ onClose, onSuccess,  }) => {
+  const Both = ({ onClose, onSuccess, initialData }) => {
 
   const { userModules } = useUserAccess();
   const canSeeExistingLeads = React.useMemo(() => {
@@ -241,7 +241,6 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
   //outside onclose function 
   useEffect(() => {
     function handleClickOutside(event) {
-      // Check if click is outside the modal form
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose();
       }
@@ -254,93 +253,25 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
     };
   }, [onClose]);
 
-  // useEffect(() => {
-      
-  //     if (existingClientData &&
-  //         Potential.length > 0 &&
-  //         status.length > 0 &&
-  //         leadIndustry.length > 0 &&
-  //         leadSubIndustry.length > 0 &&
-  //         source.length > 0 &&
-  //         service.length > 0 &&
-  //         subServiceList.length > 0 &&
-  //         cities.length > 0
-  //     ) {
+  useEffect(() => {
+  if (initialData?.phoneNumber) {
 
-  //         // Extract phone number parts
-  //         const phoneNum = existingClientData.iphone_no || "";
-  //         const phoneMatch = phoneNum.match(/^(\+\d{1,2})(.*)$/);
-  //         const phoneCountryCode = phoneMatch ? phoneMatch[1] : "+91";
-  //         const phoneWithoutCode = phoneMatch ? phoneMatch[2] : phoneNum;
+    const fullNumber = initialData.phoneNumber;
 
-  //         // Extract WhatsApp number parts
-  //         const waNum = existingClientData.whatsapp_number || "";
-  //         const waMatch = waNum.match(/^(\+\d{1,2})(.*)$/);
-  //         const waCountryCode = waMatch ? waMatch[1] : "+91";
-  //         const waWithoutCode = waMatch ? waMatch[2] : waNum;
+    const { countryCode, nationalNumber } = splitPhoneNumber(fullNumber);
 
-  //         setForm(prev => ({
-  //             ...prev,
-  //             iLeadpoten_id: existingClientData.iLeadpoten_id || "",
-  //             ileadstatus_id: existingClientData.ileadstatus_id || "",
-  //             cindustry_id: existingClientData.cindustry_id || "",
-  //             csubindustry_id: existingClientData.isubindustry || "",
-  //             lead_source_id: existingClientData.lead_source_id || "",
-  //             ino_employee: existingClientData.ino_employee || "",
-  //             iproject_value: existingClientData.iproject_value || "",
-  //             clead_name: existingClientData.clead_name || "",
-  //             cemail: existingClientData.cemail || "",
-  //             corganization: existingClientData.corganization || "",
-  //             cwebsite: existingClientData.cwebsite || "",
-  //             icity: existingClientData.clead_city || "",
-  //             iphone_no: phoneWithoutCode || "",
-  //             phone_country_code: phoneCountryCode || "+91",
-  //             clead_address1: existingClientData.clead_address1 || "",
-  //             cwhatsapp: waWithoutCode || "",
-  //             whatsapp_country_code: waCountryCode || "+91",
-  //             clead_address2: existingClientData.clead_address2 || "",
-  //             clead_address3: existingClientData.clead_address3 || "",
-  //             cstate: existingClientData.cstate || "",
-  //             cdistrict: existingClientData.cdistrict || "",
-  //             cpincode: existingClientData.cpincode || "",
-  //             ccountry: existingClientData.ccountry || "",
-  //             iservice_id: existingClientData.serviceId
-  // ? [existingClientData.serviceId]
-  // : [],
+    setForm((prev) => ({
+      ...prev,
+      iphone_no: nationalNumber,
+      phone_country_code: countryCode,
+      cwhatsapp: nationalNumber,
+      whatsapp_country_code: countryCode,
+    }));
 
-  //             isubservice_id: existingClientData.isubservice_id || "",
-  //         }));
-
-  //         // Update dropdown search text fields
-  //         const selectedPotential = Potential.find(p => p.ileadpoten_id === existingClientData.iLeadpoten_id);
-  //         if (selectedPotential) setSearchPotential(selectedPotential.clead_name);
-
-  //         const selectedStatus = status.find(s => s.ilead_status_id === existingClientData.ileadstatus_id);
-  //         if (selectedStatus) setSearchStatus(selectedStatus.clead_name);
-
-  //         const selectedIndustry = leadIndustry.find(i => i.iindustry_id === existingClientData.cindustry_id);
-  //         if (selectedIndustry) setSearchIndustry(selectedIndustry.cindustry_name);
-
-  //         const selectedSubIndustry = leadSubIndustry.find(si => si.isubindustry === existingClientData.isubindustry);
-  //         if (selectedSubIndustry) setSearchSubIndustry(selectedSubIndustry.subindustry_name);
-
-  //         const selectedSource = source.find(s => s.source_id === existingClientData.lead_source_id);
-  //         if (selectedSource) setSearchSource(selectedSource.source_name);
-
-  //         const selectedSubSource = subSources.find(ss => ss.isub_src_id === existingClientData.subSrcId);
-  //         if (selectedSubSource) setSearchSubSource(selectedSubSource.ssub_src_name);
-
-  //         const selectedService = service.find(s => s.serviceId === existingClientData.iservice_id);
-  //         if (selectedService) setSearchService(selectedService.serviceName);
-
-  //         const selectedSubService = subServiceList.find(ss => ss.isubservice_id === existingClientData.isubservice_id);
-  //         if (selectedSubService) setSearchSubService(selectedSubService.subservice_name);
-
-  //         const selectedCity = cities.find(c => c.icity_id === existingClientData.clead_city);
-  //         if (selectedCity) setSearchCity(selectedCity.cCity_name);
-
-  //     } 
-  // }, [existingClientData, Potential, status, leadIndustry, leadSubIndustry, source, subSources, service, subServiceList, cities]);
+    setSearchMobileCountryCode(countryCode);
+    setSearchWhatsappCountryCode(countryCode);
+  }
+}, [initialData]);
 
 
   useEffect(() => {

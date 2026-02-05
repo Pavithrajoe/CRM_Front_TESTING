@@ -7,7 +7,7 @@ import { X, Search } from "lucide-react";
 import { useUserAccess } from "../context/UserAccessContext";
 const apiEndPoint = import.meta.env.VITE_API_URL;
 
-  const LeadForm = ({ onClose, onSuccess,  }) => {
+  const LeadForm = ({ onClose, onSuccess, initialData  }) => {
 
   const { userModules } = useUserAccess();
   const canSeeExistingLeads = React.useMemo(() => {
@@ -239,6 +239,27 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onClose]);
+
+
+  useEffect(() => {
+  if (initialData?.phoneNumber) {
+
+    const fullNumber = initialData.phoneNumber;
+
+    const { countryCode, nationalNumber } = splitPhoneNumber(fullNumber);
+
+    setForm((prev) => ({
+      ...prev,
+      iphone_no: nationalNumber,
+      phone_country_code: countryCode,
+      cwhatsapp: nationalNumber,
+      whatsapp_country_code: countryCode,
+    }));
+
+    setSearchMobileCountryCode(countryCode);
+    setSearchWhatsappCountryCode(countryCode);
+  }
+}, [initialData]);
 
   useEffect(() => {
       

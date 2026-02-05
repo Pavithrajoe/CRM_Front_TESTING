@@ -34,7 +34,7 @@ const cardsData = [
     route: "/First-Response-Time-for-Opportunity",
     // image: "/public/illustrations/firstresponse.svg",
     image: "/illustrations/firstresponse.svg",  
-    reportKey: "FirstResponseTimeOpportunityReport",
+    reportKey: "FirstResponseTimeOppurtunityReport",
   },
   {
     title: "Company Leads",
@@ -54,14 +54,16 @@ const cardsData = [
   //   image: "/illustrations/efficeincy.svg", 
   //   reportKey: "LeadOwnerActivityReport",
   // },
-  {
-    title: "Sales Pipeline",
-    description: "View performance of opportunities across sales stages.",
-    route: "/Sales-pipeline",
-    // image: "/public/illustrations/salespipeline.svg",
-    image: "/illustrations/salespipeline.svg",
-    reportKey: "SalesPipelineReport"
-  },
+
+  // // no need now
+  // {
+  //   title: "Sales Pipeline",
+  //   description: "View performance of opportunities across sales stages.",
+  //   route: "/Sales-pipeline",
+  //   // image: "/public/illustrations/salespipeline.svg",
+  //   image: "/illustrations/salespipeline.svg",
+  //   reportKey: "SalesPipelineReport"
+  // },
   {
     title: "Territory Based Analytics",
     description: "View performance of opportunities across sales Regions.",
@@ -71,15 +73,15 @@ const cardsData = [
     reportKey: "TerritoryLeadReport"
 
   },
-   {
-    title: "Recurring Client Analytics",
-    description: "Track and analyze repeat business performance across client segments",
-    route: "/recurring-client-analytics",  
-    // image: "/public/illustrations/recurring_client_report.svg",
-    image: "/illustrations/recurring_client_report.svg",  
-    reportKey: "Reccuring-Client"
+  //  {
+  //   title: "Recurring Client Analytics",
+  //   description: "Track and analyze repeat business performance across client segments",
+  //   route: "/recurring-client-analytics",  
+  //   // image: "/public/illustrations/recurring_client_report.svg",
+  //   image: "/illustrations/recurring_client_report.svg",  
+  //   reportKey: "LeadConversionReport" 
 
-  },
+  // },
 
    {
     title: "Sales Target vs Achievement",

@@ -96,6 +96,8 @@ export const ENDPOINTS = {
   USER_TARGET_ACHIEVEMENT: `${BASE_URL}/mobile/target`,
   CUSTOMER_SALES_HISTORY: `${BASE_URL}/reports/customer-sales-history`,
   LEAD_SOURCE_PERFORM: `${BASE_URL}/reports/lead-source-performance`,
+  REVENUE_REPORT: `${BASE_URL}/reports/revenue`,
+  LINKED_LEADS:`${BASE_URL}/lead/linked-leads`,
 
 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,

@@ -1689,7 +1689,6 @@ function formatDateDMY(dateString) {
           ) || [];
 
           if (validRemarks.length === 0) {
-            console.log('No valid remarks - Hiding section');
             return null;
           }
 

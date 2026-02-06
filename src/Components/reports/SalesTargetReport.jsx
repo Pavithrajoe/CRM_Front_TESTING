@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useContext } from "react";
 import axios from "axios";
 import { companyContext } from "../../context/companyContext";
 import { useNavigate } from "react-router-dom";
+import { ENDPOINTS } from "../../api/constraints";
 
 /* ===== chart.js ===== */
 import {
@@ -38,20 +39,18 @@ ChartJS.register(
 const SalesTargetReport = () => {
   const { companyId } = useContext(companyContext);
   const navigate = useNavigate();
-
   const [data, setData] = useState([]);
   const [selectedUser, setSelectedUser] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
-const [currentPage, setCurrentPage] = useState(1);
-const rowsPerPage = 10;
-const [searchText, setSearchText] = useState("");
-const [dateRange, setDateRange] = useState({ start: '', end: '' });
- 
-const [selectedYear, setSelectedYear] = useState("");
-const [selectedMonth, setSelectedMonth] = useState("");
-const [dateFilterType, setDateFilterType] = useState('year'); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+  const [searchText, setSearchText] = useState("");
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [dateFilterType, setDateFilterType] = useState('year'); 
 
 
 
@@ -60,9 +59,7 @@ const [dateFilterType, setDateFilterType] = useState('year');
     if (!companyId) return;
 
     setLoading(true);
-    axios
-      .get(
-        "http://192.168.29.236:3000/api/reports/sales-target-vs-achievement",
+    axios.get( ENDPOINTS.TARGET_ARCHIVEMENT_REPORT,
         { params: { company_id: companyId } }
       )
       .then((res) => {

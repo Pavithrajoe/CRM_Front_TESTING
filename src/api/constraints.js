@@ -94,10 +94,14 @@ export const ENDPOINTS = {
   LEAD_SUMMARY: `${BASE_URL}/lead/lead-summary`,
   CALL_HISTORY_BY_PHONE: (phone) => `${BASE_URL_DCRM}/call-history-by-phone/${phone}`,
   USER_TARGET_ACHIEVEMENT: `${BASE_URL}/mobile/target`,
+  // REPORTS
   CUSTOMER_SALES_HISTORY: `${BASE_URL}/reports/customer-sales-history`,
   LEAD_SOURCE_PERFORM: `${BASE_URL}/reports/lead-source-performance`,
   REVENUE_REPORT: `${BASE_URL}/reports/revenue`,
   LINKED_LEADS:`${BASE_URL}/lead/linked-leads`,
+  TARGET_ARCHIVEMENT_REPORT: `${BASE_URL}/reports/sales-target-vs-achievement`,
+  SALES_PERSON_PERFORMANCE: `${BASE_URL}/reports/salesperson-performance`,
+  // CUSTOMER_SALES_HISTORY: `${BASE_URL}/reports/customer-sales-history`,
 
 
   BULK_MAIL_ACTIVE_LEADS_GET_BY_COMPANYID: (companyId) =>`${BASE_URL}/lead/company/${companyId}/leads`,

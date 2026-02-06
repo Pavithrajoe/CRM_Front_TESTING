@@ -667,8 +667,10 @@ const updateLeadProfile = async () => {
     payload.cemail = form.cemail;
     payload.corganization = form.corganization;
     payload.cwebsite = form.cwebsite;
-    payload.iphone_no = form.iphone_no;
-    payload.whatsapp_number = form.cwhatsapp;
+    // payload.iphone_no = form.iphone_no;
+    payload.iphone_no = form.iphone_no || "";
+     console.log("📱 Mobile number in form:", form.iphone_no, "Type:", typeof form.iphone_no);
+    payload.whatsapp_number = form.cwhatsapp || "";
     // payload.iphone_no = form.phone_country_code + form.iphone_no;
     // payload.whatsapp_number = form.cwhatsapp ? form.whatsapp_country_code + form.cwhatsapp : "";
     payload.cgender = form.cgender;
@@ -1223,26 +1225,17 @@ const handleSubmit = async (e) => {
 
           {/* Project Value with Currency */}
           <div>
-            <label htmlFor="iproject_value" className={labelClasses}>
-              Project Value
-            </label>
+            <label htmlFor="iproject_value" className={labelClasses}> Project Value </label>
             <div className="flex mt-1">
               {/* Currency Dropdown */}
               <div className="relative" ref={currencyDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => !isReadOnly && setIsCurrencyDropdownOpen(prev => !prev)}
+                <button type="button" onClick={() => !isReadOnly && setIsCurrencyDropdownOpen(prev => !prev)}
                   className={`border px-3 py-2 rounded-l-md focus:ring-2 focus:ring-blue-500 outline-none flex items-center gap-1 ${isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   disabled={isReadOnly}
                 >
                   {selectedCurrency.currency_code} ({selectedCurrency.symbol})
                   {!isReadOnly && (
-                    <svg
-                      className="w-3 h-3 ml-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="w-3 h-3 ml-1" fill="none"  stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   )}
@@ -1250,11 +1243,7 @@ const handleSubmit = async (e) => {
                 {isCurrencyDropdownOpen && (
                   <div className="absolute z-10 top-full left-0 mt-1 w-36 bg-white border rounded shadow-md max-h-48 overflow-y-auto">
                     {currencies.map((cur) => (
-                      <div
-                        key={cur.icurrency_id}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                        onClick={() => handleCurrencySelect(cur)}
-                      >
+                      <div key={cur.icurrency_id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm" onClick={() => handleCurrencySelect(cur)} >
                         {cur.currency_code} ({cur.symbol})
                       </div>
                     ))}
@@ -1296,9 +1285,7 @@ const handleSubmit = async (e) => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="cemail" className={labelClasses}>
-                E-mail ID
-              </label>
+              <label htmlFor="cemail" className={labelClasses}> E-mail ID </label>
               <input
                 type="email"
                 id="cemail"
@@ -1314,9 +1301,7 @@ const handleSubmit = async (e) => {
 
             {/* Phone Field */}
             <div>
-              <label htmlFor="iphone_no" className={labelClasses}>
-                Mobile Number <span className="text-red-500">*</span>
-              </label>
+              <label htmlFor="iphone_no" className={labelClasses}> Mobile Number <span className="text-red-500">*</span> </label>
             <div className="flex gap-2">
               {/* Country Code Dropdown */}
               
@@ -1370,13 +1355,10 @@ const handleSubmit = async (e) => {
             </div>
             {/* WhatsApp Field */}
             <div>
-              <label htmlFor="cwhatsapp" className={labelClasses}>
-                WhatsApp Number
-              </label>
+              <label htmlFor="cwhatsapp" className={labelClasses}> WhatsApp Number </label>
               <div className="flex gap-2">
               <div className="relative" ref={whatsappCountryCodeRef}>
-                <button
-                  type="button"
+                <button type="button"
                   onClick={() => !isReadOnly && setIsWhatsappCountryCodeOpen(!isWhatsappCountryCodeOpen)}
                   className={getDropdownButtonClasses()}
                   disabled={isReadOnly}
@@ -1424,9 +1406,7 @@ const handleSubmit = async (e) => {
 
             {/* Address 1 Field */}
             <div>
-              <label htmlFor="clead_address1" className={labelClasses}>
-                Address Line 1
-              </label>
+              <label htmlFor="clead_address1" className={labelClasses}> Address Line 1 </label>
               <input
                 type="text"
                 id="clead_address1"

@@ -153,7 +153,7 @@ useEffect(() => {
     customers.forEach(c => {
       salesMap[c.leadOwnerName] = (salesMap[c.leadOwnerName] || 0) + (c.totalRevenue || 0);
     });
-    const topSalesPersonName = Object.keys(salesMap).reduce((a, b) => salesMap[a] > salesMap[b] ? a : b, "N/A");
+    const topSalesPersonName = Object.keys(salesMap).reduce((a, b) => salesMap[a] > salesMap[b] ? a : b, "-");
 
     return {
       totalRevenue,

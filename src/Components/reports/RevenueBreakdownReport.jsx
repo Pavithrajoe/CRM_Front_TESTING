@@ -469,7 +469,7 @@ const DataTable = ({ data, page, setPage }) => {
           <thead className="bg-indigo-50 text-indigo-700">
             <tr>
               <th className="p-3 border border-indigo-200 text-center w-12">
-                #
+                S.No
               </th>
               <th className="p-3 border border-indigo-200 text-left">
                 Label

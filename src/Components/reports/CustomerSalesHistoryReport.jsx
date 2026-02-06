@@ -159,7 +159,7 @@ useEffect(() => {
       totalRevenue,
       totalDeals,
       highestRevenue: highestRecord ? highestRecord.totalRevenue : 0,
-      topCustomerName: highestRecord ? highestRecord.customerName : "N/A",
+      topCustomerName: highestRecord ? highestRecord.customerName : "-",
       topSalesPerson: topSalesPersonName
     };
   }, [filteredByOwner, customers]);

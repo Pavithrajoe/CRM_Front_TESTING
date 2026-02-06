@@ -468,24 +468,12 @@ const DataTable = ({ data, page, setPage }) => {
         <table className="min-w-full text-sm border border-indigo-200 rounded-lg overflow-hidden">
           <thead className="bg-indigo-50 text-indigo-700">
             <tr>
-              <th className="p-3 border border-indigo-200 text-center w-12">
-                S.No
-              </th>
-              <th className="p-3 border border-indigo-200 text-left">
-                Label
-              </th>
-              <th className="p-3 border border-indigo-200 text-center">
-                Leads
-              </th>
-              <th className="p-3 border border-indigo-200 text-right">
-                Pipeline
-              </th>
-              <th className="p-3 border border-indigo-200 text-center">
-                Customer
-              </th>
-              <th className="p-3 border border-indigo-200 text-right">
-                Revenue
-              </th>
+              <th className="p-3 border border-indigo-200 text-center w-12"> S.No </th>
+              <th className="p-3 border border-indigo-200 text-left"> Label </th>
+              <th className="p-3 border border-indigo-200 text-center"> Leads </th>
+              <th className="p-3 border border-indigo-200 text-right"> Pipeline </th>
+              <th className="p-3 border border-indigo-200 text-center"> Customer </th>
+              <th className="p-3 border border-indigo-200 text-right"> Revenue </th>
             </tr>
           </thead>
 

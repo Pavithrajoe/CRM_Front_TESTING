@@ -116,17 +116,7 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
       setLoading(false);
     }
   }, [leadData]);
-  useEffect(() => {
-  if (profile && linkedCount === 0) {
-    // Trigger hidden fetch
-    setLinkedOpen(true);
 
-    // Close immediately after fetch
-    setTimeout(() => {
-      setLinkedOpen(false);
-    }, 1);
-  }
-}, [profile]);
 
 
   //for FileUpload
@@ -1154,12 +1144,18 @@ const ProfileCard = ({ settingsData,  isLoadingSettings = false,  leadData,  isD
     leadId={summaryLeadId}
     onClose={() => setShowLeadSummary(false)}
   />
-)}<LinkedLeads
-  open={linkedOpen}
-  onClose={() => setLinkedOpen(false)}
-  lead={profile}
-   onCountUpdate={setLinkedCount}
-/>
+)}
+
+      {profile && (
+        <LinkedLeads
+          open={linkedOpen || linkedCount === 0}
+          onClose={() => setLinkedOpen(false)}
+          lead={profile}
+          onCountUpdate={setLinkedCount}
+          hidden={linkedOpen === false} 
+        />
+      )}
+
 
 
     </ErrorBoundary>

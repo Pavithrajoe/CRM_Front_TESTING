@@ -22,7 +22,7 @@ const highlightText = (text) => {
     /\bby\s+([A-Z][a-zA-Z]+)/g,
 
     // Currency values
-  /(₹\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/g,
+    /(₹\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/g,
 
     // Counts
     /\d+\s+task\(s\)/gi,
@@ -88,10 +88,7 @@ const LeadSummaryModal = ({ leadId, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-200 ${
-          visible ? "opacity-100" : "opacity-0"
-        }`}
+      <div className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
         onClick={handleClose}
       />
 

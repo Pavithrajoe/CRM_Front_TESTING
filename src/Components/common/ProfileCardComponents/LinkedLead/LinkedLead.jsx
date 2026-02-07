@@ -22,7 +22,7 @@ import { ENDPOINTS } from "../../../../api/constraints.js";
 
 
 
-const LinkedLeads = ({ open, onClose, lead,onCountUpdate }) => {
+const LinkedLeads = ({ open, onClose, lead,onCountUpdate, hidden }) => {
   const { companyId } = useContext(companyContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -33,10 +33,10 @@ const LinkedLeads = ({ open, onClose, lead,onCountUpdate }) => {
 
 
   useEffect(() => {
-    if (open && lead?.iphone_no) {
-      fetchLinkedLeads();
-    }
-  }, [open, lead]);
+    if ((open || hidden) && lead?.iphone_no) {
+    fetchLinkedLeads();
+  }
+    }, [open, lead]);
 
 
 const fetchLinkedLeads = async () => {
@@ -62,7 +62,7 @@ const fetchLinkedLeads = async () => {
 
 return (
   <Dialog
-    open={open}
+    open={open && !hidden}
     onClose={onClose}
     maxWidth="md"
     fullWidth

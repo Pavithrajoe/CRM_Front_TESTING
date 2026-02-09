@@ -274,24 +274,24 @@ const EditProfileForm_Customer  = ({ profile, onClose, onSave, isReadOnly }) => 
 
 
   // for status
-  useEffect(() => {
-    const fetchLeadStatus = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`${apiEndPoint}/lead-status/company-lead`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { icompany_id: company_id },
-        });
+  // useEffect(() => {
+  //   const fetchLeadStatus = async () => {
+  //     try {
+  //       const token = localStorage.getItem("token");
+  //       const res = await axios.get(`${apiEndPoint}/lead-status/company-lead`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //         params: { icompany_id: company_id },
+  //       });
         
-        // setStatus(res.data);
-        setStatus(res.data.data || []);  
+  //       // setStatus(res.data);
+  //       setStatus(res.data.data || []);  
 
-      } catch (err) {
-        console.error("Failed to fetch lead status", err);
-      }
-    };
-    fetchLeadStatus();
-  }, []);
+  //     } catch (err) {
+  //       console.error("Failed to fetch lead status", err);
+  //     }
+  //   };
+  //   fetchLeadStatus();
+  // }, []);
 
 
 

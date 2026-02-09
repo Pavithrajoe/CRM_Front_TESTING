@@ -1,51 +1,153 @@
 import React, { useState, useEffect } from "react";
 import { ENDPOINTS } from "../../../api/constraints";
 
+// const highlightText = (text) => {
+//   if (!text) return "";
+
+//   const patterns = [
+//     // Lead name
+//     /Lead\s+"([^"]+)"/gi,
+
+//     // Stage / status
+//     /"(.*?)"\s+stage/gi,
+//     /\b(pipeline|won|lost|open|closed)\b/gi,
+
+//     // Assigned
+//     /\bassigned to\s+(no one|[^.\n]+)/gi,
+
+//     // Date formats
+//     /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d{1,2}\s+\d{4}\b/gi,
+
+//     // Created by / person name
+//     /\bby\s+([A-Z][a-zA-Z]+)/g,
+
+//     // Currency values
+//     /(₹\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/g,
+
+//     // Counts
+//     /\d+\s+task\(s\)/gi,
+//     /\d+\s+email\(s\)/gi,
+//     /\d+\s+comment\(s\)/gi,
+
+//     // Files
+//     /\d+\s+file\(s\)\s+uploaded/gi,
+//   ];
+
+//   let highlighted = text;
+
+//   patterns.forEach((pattern) => {
+//     highlighted = highlighted.replace(
+//       pattern,
+//       (match) =>
+//         `<span class="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold shadow-sm">${match}</span>`
+//     );
+//   });
+
+//   return highlighted;
+// };
+
 const highlightText = (text) => {
   if (!text) return "";
 
-  const patterns = [
+  /* ================= CLEAN UNWANTED LINES ================= */
+  let cleaned = text
+    .split("\n")
+    .filter(line => {
+      if (/Assigned to:\s*Not assigned/i.test(line)) return false;
+      if (/Sub-service:\s*Not specified/i.test(line)) return false;
+      return true;
+    })
+    .join("\n");
+
+  /* ================= HIGHLIGHT RULES ================= */
+  const rules = [
     // Lead name
-    /Lead\s+"([^"]+)"/gi,
+    {
+      regex: /Lead\s+"([^"]+)"/gi,
+      className: "bg-indigo-50 text-indigo-700"
+    },
 
-    // Stage / status
-    /"(.*?)"\s+stage/gi,
-    /\b(pipeline|won|lost|open|closed)\b/gi,
+    // Created date
+    {
+      regex: /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d{1,2}\s+\d{4}\b/gi,
+      className: "bg-gray-100 text-gray-700"
+    },
 
-    // Assigned
-    /\bassigned to\s+(no one|[^.\n]+)/gi,
+    // Created by
+    {
+      regex: /\bby\s+[A-Z][a-zA-Z]+/g,
+      className: "bg-cyan-50 text-cyan-700"
+    },
 
-    // Date formats
-    /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\w+\s+\d{1,2}\s+\d{4}\b/gi,
+    // Status
+    {
+      regex: /Status:\s*"([^"]+)"/gi,
+      className: "bg-blue-50 text-blue-700"
+    },
 
-    // Created by / person name
-    /\bby\s+([A-Z][a-zA-Z]+)/g,
+    // Deal status
+    {
+      regex: /\b(In pipeline|Converted|Won)\b/gi,
+      className: "bg-green-50 text-green-700"
+    },
+    {
+      regex: /\bLost\b/gi,
+      className: "bg-red-50 text-red-700"
+    },
 
-    // Currency values
-    /(₹\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/g,
+    //  Service 
+    {
+      regex: /Services:\s*([A-Za-z ]+)/gi,
+      className: "bg-violet-50 text-violet-700"
+    },
 
-    // Counts
-    /\d+\s+task\(s\)/gi,
-    /\d+\s+email\(s\)/gi,
-    /\d+\s+comment\(s\)/gi,
+    // Money
+    {
+      regex: /(₹\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?)/g,
+      className: "bg-emerald-50 text-emerald-700"
+    },
 
-    // Files
-    /\d+\s+file\(s\)\s+uploaded/gi,
+    // Activity counts
+    {
+      regex: /\d+\s+tasks?/gi,
+      className: "bg-blue-50 text-blue-700"
+    },
+    {
+      regex: /\d+\s+emails?/gi,
+      className: "bg-sky-50 text-sky-700"
+    },
+    {
+      regex: /\d+\s+comments?/gi,
+      className: "bg-indigo-50 text-indigo-700"
+    },
+    {
+      regex: /\d+\s+files?/gi,
+      className: "bg-purple-50 text-purple-700"
+    },
+    {
+      regex: /\d+\s+WhatsApp\s+messages?/gi,
+      className: "bg-green-50 text-green-700"
+    },
+
+    // Last activity
+    {
+      regex: /No activity/gi,
+      className: "bg-gray-200 text-gray-600"
+    }
   ];
 
-  let highlighted = text;
+  let highlighted = cleaned;
 
-  patterns.forEach((pattern) => {
+  rules.forEach(({ regex, className }) => {
     highlighted = highlighted.replace(
-      pattern,
-      (match) =>
-        `<span class="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold shadow-sm">${match}</span>`
+      regex,
+      match =>
+        <span class="px-1.5 py-0.5 rounded-md font-semibold shadow-sm ${className}">${match}</span>
     );
   });
 
   return highlighted;
 };
-
 
 const LeadSummaryModal = ({ leadId, onClose }) => {
   const [loading, setLoading] = useState(true);

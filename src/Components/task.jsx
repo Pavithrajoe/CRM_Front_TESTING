@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
@@ -32,7 +33,8 @@ const TaskItem = React.memo(({
   onDelete, 
   onStatusChange,
   formatDateTime, 
-  onViewComments
+  onViewComments,
+   commentCount
 
   
 }) => {
@@ -157,7 +159,9 @@ const TaskItem = React.memo(({
   onClick={() => onViewComments(task.itask_id)}
   className="mt-2 text-xs font-semibold text-indigo-600 "
 >
-  View Comments
+  View Comments  <span className="text-gray-500">
+    ({commentCount || 0})
+  </span>
 </button>
 
      
@@ -281,7 +285,11 @@ const Tasks = ({ onCountChange }) => {
         const sortedTasks = response.data.data.sort(
           (a, b) => new Date(b.dcreate_dt) - new Date(a.dcreate_dt)
         );
-        setTasks(sortedTasks);
+          const mappedTasks = sortedTasks.map(task => ({
+    ...task,
+    commentCount: task._count?.comments || 0
+  }));
+        setTasks(mappedTasks);
       }
     } catch (error) {
       console.error("Fetch tasks error:", error);
@@ -591,7 +599,7 @@ const Tasks = ({ onCountChange }) => {
       {loadingTasks ? <div className="text-center py-8 animate-pulse text-gray-500">Loading...</div> : 
         filteredTasks.length === 0 ? <p className="text-center text-gray-400 py-8">No tasks found.</p> :
         currentTasks.map(task => (
-          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)} canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} onViewComments={(taskId) => {
+          <TaskItem key={task.itask_id} task={task} canEdit={canEditTask(task)}   commentCount={task.commentCount}  canDelete={canDeleteTask(task)} onEdit={handleEditClick} onDelete={handleDeleteTask} formatDateTime={formatDateTime} onStatusChange={handleStatusChange} onViewComments={(taskId) => {
     setActiveTaskId(taskId);
     setShowTaskComments(true);
   }} />
@@ -667,7 +675,7 @@ const Tasks = ({ onCountChange }) => {
      
 {showTaskComments && activeTaskId && (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl w-full max-w-md h-[70vh] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+    <div className="bg-white rounded-2xl w-full max-w-2xl h-[70vh] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300">
       
       {/* Compact Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
@@ -1204,11 +1212,31 @@ export default Tasks;
 //     }
 //   }, [token, showPopup, fetchTasks]);
 
+//   // const formatDateTime = useCallback((dateStr) => {
+//   //   if (!dateStr) return "N/A";
+//   //   const date = new Date(dateStr);
+//   //   return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+//   // }, []);
+
 //   const formatDateTime = useCallback((dateStr) => {
-//     if (!dateStr) return "N/A";
-//     const date = new Date(dateStr);
-//     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-//   }, []);
+//   if (!dateStr) return "-";
+
+//   const date = new Date(dateStr);
+
+//   let hours = date.getHours();
+//   const minutes = String(date.getMinutes()).padStart(2, "0");
+//   const ampm = hours >= 12 ? "PM" : "AM";
+
+//   hours = hours % 12;
+//   hours = hours ? hours : 12; // 0 → 12
+
+//   return `${String(date.getDate()).padStart(2, "0")}/${String(
+//     date.getMonth() + 1
+//   ).padStart(2, "0")}/${date.getFullYear()} ${String(hours).padStart(
+//     2,
+//     "0"
+//   )}:${minutes} ${ampm}`;
+// }, []);
 
 //   const renderTaskForm = useCallback(() => (
 //     <div
@@ -1250,7 +1278,7 @@ export default Tasks;
 //           </select>
 //         </div>
 //         <LocalizationProvider dateAdapter={AdapterDateFns}>
-//           <DateTimePicker label="Date & Time" value={formData.task_date} format="dd/MM/yyyy hh:mm a" onChange={handleDateChange} viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }} slotProps={{ textField: { size: "small", fullWidth: true } }} />
+//           <DateTimePicker label="Date & Time" value={formData.task_date} format="dd/MM/yyyy hh:mm a" onChange={handleDateChange}  viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }} slotProps={{ textField: { size: "small", fullWidth: true } }} />
 //         </LocalizationProvider>
 //         <button type="submit" disabled={saving} className="w-full bg-indigo-700 text-white py-3 rounded-full hover:bg-indigo-800 transition disabled:opacity-50">
 //           {saving ? "Saving..." : editingTask ? "Update" : "Save"}
@@ -1355,39 +1383,7 @@ export default Tasks;
 //           </>
 //         )}
 //       </div>
-//       {showTaskComments && (
-//   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center">
-//     <div className="bg-white rounded-2xl w-[95%] max-w-2xl h-[80vh] shadow-2xl relative flex flex-col">
-
-//       {/* Header */}
-//       <div className="flex justify-between items-center px-5 py-3 border-b">
-//         <h3 className="font-semibold text-lg">Task Comments</h3>
-//        <p className="text-xs text-gray-400">
-//   Active Task ID: {activeTaskId ?? "none"}
-// </p>
-
-//         <button
-//           onClick={() => {
-//             setShowTaskComments(false);
-//             setActiveTaskId(null);
-//           }}
-//           className="text-2xl text-gray-500 hover:text-red-500"
-//         >
-//           ×
-//         </button>
-//       </div>
-
-//       {/* Comments Body */}
-//       <div className="flex-1 overflow-y-auto">
-//         <Comments
-//           leadId={leadId}
-//           taskId={activeTaskId}   
-//           hideHeader={true}
-//         />
-//       </div>
-//     </div>
-//   </div>
-// )}
+     
 // {showTaskComments && activeTaskId && (
 //   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
 //     <div className="bg-white rounded-2xl w-full max-w-md h-[70vh] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300">
@@ -1415,9 +1411,8 @@ export default Tasks;
 //       <div className="flex-1 min-h-0 overflow-hidden">
 //         <div className="h-full overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-500">
 //           <Comments
-//             leadId={leadId}
-//             taskId={activeTaskId}
-//             hideHeader={true}
+//              taskId={activeTaskId}
+//   compact={true}
 //           />
 //         </div>
 //       </div>
@@ -1431,4 +1426,6 @@ export default Tasks;
 // };
 
 // export default Tasks;
+
+
 

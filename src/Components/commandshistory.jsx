@@ -128,6 +128,13 @@ const Comments = ({ onCountChange, taskId,compact = false }) => {
       setCurrentPage(1);
     }
   }, [taskId, fetchComments]);
+  //add feb9
+  useEffect(() => {
+  if (leadId && token) {
+    fetchTasksByLead();
+  }
+}, [leadId, token, fetchTasksByLead]);
+
 
   useEffect(() => {
     if (typeof onCountChange === "function") {
@@ -400,7 +407,7 @@ const Comments = ({ onCountChange, taskId,compact = false }) => {
                       </span>
                     </div>
                   )}
-                  {userId && userId === comment.iuser_id && (
+                  {!compact && userId && userId === comment.iuser_id && (
                     <button
                       onClick={() => handleEditClick(comment)}
                       className="text-gray-400 hover:text-blue-500 transition-colors duration-200 flex-shrink-0"
@@ -512,6 +519,7 @@ const Comments = ({ onCountChange, taskId,compact = false }) => {
 
 export default Comments;
 
+
 // import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 // import { useParams } from "react-router-dom";
 // import { usePopup } from "../context/PopupContext";
@@ -527,7 +535,7 @@ export default Comments;
 //   mic.lang = "en-US";
 // }
 
-// const Comments = ({ onCountChange, taskId }) => {
+// const Comments = ({ onCountChange, taskId,compact = false }) => {
 //   const { leadId } = useParams();
 //   const [comments, setComments] = useState([]);
 //   const [showForm, setShowForm] = useState(false);
@@ -813,11 +821,32 @@ export default Comments;
 //     return Math.ceil(filteredComments.length / commentsPerPage);
 //   }, [filteredComments, commentsPerPage]);
 
+//   // const formatDateTime = useCallback((dateStr) => {
+//   //   if (!dateStr) return "N/A";
+//   //   const date = new Date(dateStr);
+//   //   return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+//   // }, []);
+
 //   const formatDateTime = useCallback((dateStr) => {
-//     if (!dateStr) return "N/A";
-//     const date = new Date(dateStr);
-//     return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-//   }, []);
+//   if (!dateStr) return "-";
+
+//   const date = new Date(dateStr);
+
+//   let hours = date.getHours();
+//   const minutes = String(date.getMinutes()).padStart(2, "0");
+//   const ampm = hours >= 12 ? "PM" : "AM";
+
+//   hours = hours % 12;
+//   hours = hours ? hours : 12; // 0 → 12
+
+//   return `${String(date.getDate()).padStart(2, "0")}/${String(
+//     date.getMonth() + 1
+//   ).padStart(2, "0")}/${date.getFullYear()} ${String(hours).padStart(
+//     2,
+//     "0"
+//   )}:${minutes} ${ampm}`;
+// }, []);
+
 
 //   const taskMap = useMemo(() => {
 //     const map = {};
@@ -828,9 +857,17 @@ export default Comments;
 //   }, [tasks]);
 
 //   return (
-//     <div className="w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6">
-//       <div className="relative bg-white border rounded-2xl max-w-7xl shadow-sm mx-auto">
+//    <div className={compact ? "w-full h-full" : "w-full min-h-screen bg-[#f8f8f8] py-4 px-2 sm:px-4 lg:px-6"}>
+
+//      <div
+//   className={
+//     compact
+//       ? "w-full h-full" // popup → no card
+//       : "relative bg-white border rounded-2xl max-w-7xl shadow-sm mx-auto"
+//   }
+// >
 //         {/* Header */}
+//         {!compact &&(
 //         <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-b bg-gray-50 rounded-t-2xl gap-4">
 //           <div className="relative flex items-center bg-white border rounded-full w-full sm:w-72 px-3">
 //             <Search size={16} className="text-gray-400" />
@@ -846,16 +883,26 @@ export default Comments;
 //               className="w-full p-2 outline-none text-sm ml-8" 
 //             />
 //           </div>
+//           {!compact && (
 //           <button 
 //             onClick={handleNewCommentClick} 
 //             className="bg-blue-900 shadow-md shadow-blue-900 text-white px-4 py-2 sm:px-5 sm:py-2 rounded-full hover:bg-blue-700 transition duration-150 ease-in-out text-sm sm:text-base whitespace-nowrap w-full sm:w-auto text-center flex-shrink-0"
 //           >
 //             + New Comment
 //           </button>
+//           )}
 //         </div>
-
+// )}
 //         {/* Comments List */}
-//         <div className="p-3 sm:p-6 space-y-4 flex-1 h-full overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-thin scrollbar-thumb-blue-900 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-700 scroll-smooth">
+//         <div
+//           className={`
+//             p-3 sm:p-6 space-y-4 flex-1 overflow-y-auto
+//             scrollbar-thin scrollbar-thumb-blue-900 scrollbar-track-gray-100
+//             hover:scrollbar-thumb-blue-700 scroll-smooth
+//             ${compact ? "h-full max-h-full" : "h-full max-h-[calc(100vh-150px)]"}
+//           `}
+//         >
+
 //           {filteredComments.length === 0 ? (
 //             <p className="text-center text-gray-400 py-8 text-sm sm:text-base">No comments found.</p>
 //           ) : (
@@ -887,7 +934,7 @@ export default Comments;
 //                     </button>
 //                   )}
 //                 </div>
-//                 <p className="text-gray-700 text-sm mt-2 leading-normal break-words">
+//                 <p className="text-gray-700 text-sm mt-2 leading-normal break-words font-bold">
 //                   {comment.ccomment_content}
 //                 </p>
 //                 <p className="text-xs text-gray-900 mt-2 italic break-words">

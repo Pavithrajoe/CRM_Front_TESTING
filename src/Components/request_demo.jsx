@@ -329,9 +329,7 @@ setSuccessPopup(true);
             <h2 className="text-4xl font-semibold text-gray-900 mb-4 tracking-tight">
               Request a Demo
             </h2>
-            <p className="text-gray-500 text-base mb-6 max-w-md mx-auto">
-              Explore how our product can elevate your business. Get a personalized walkthrough.
-            </p>
+            <p className="text-gray-500 text-base mb-6 max-w-md mx-auto"> Explore how our product can elevate your business. Get a personalized walkthrough. </p>
             <ul className="space-y-3 text-left max-w-md mx-auto text-gray-700 text-[15px]">
               {[
                 "Learn more about our products",
@@ -347,11 +345,7 @@ setSuccessPopup(true);
           </div>
 
           <div className="flex justify-center mb-6">
-            <img
-              src="/illustrations/Demo-bro.svg"
-              alt="Demo Preview"
-              className="max-h-40 object-contain"
-            />
+            <img src="/illustrations/Demo-bro.svg" alt="Demo Preview" className="max-h-40 object-contain" />
           </div>
 
           <div className="text-center mt-6">
@@ -514,9 +508,7 @@ setSuccessPopup(true);
                 onChange={handleChange}
                 className="mt-1"
               />
-              <label>
-                Yes, I’d like to receive marketing communications. I can unsubscribe at any time.
-              </label>
+              <label> Yes, I’d like to receive marketing communications. I can unsubscribe at any time. </label>
             </div>
 
             <button
@@ -534,7 +526,7 @@ setSuccessPopup(true);
 
           {successPopup && (
             <div className="mt-6 text-green-700 bg-green-100 border border-green-300 p-4 rounded-xl shadow-sm">
-              🎉 Your demo request was successfully submitted! Our team will contact you shortly.
+               🎉 Your demo request was successfully submitted! Our team will contact you shortly.
             </div>
           )}
         </div>

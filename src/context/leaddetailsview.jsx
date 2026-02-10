@@ -113,62 +113,145 @@ const PDFViewer = ({ open, onClose, pdfUrl, quotationNumber, onDownload }) => {
   );
 };
 
+const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => {
+  const fromPage = location.state?.fromPage;
 
-const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
-  <div className="flex gap-6 justify-end items-center my-4">
-    <div className="relative group">
+  const backPath =
+    fromPage === "xcodeleadcardview"
+      ? "/xcodeleadcardview"
+      : "/leadcardview";
+
+  return (
+    <div className="flex gap-6 justify-between items-center my-4">
+
+      {/* 🔙 BACK */}
       <button
         onClick={() => {
-          if (currentIndex > 0) {
-            const prevLeadId = leadIds[currentIndex - 1];
-            navigate(`/leaddetailview/${prevLeadId}`, {
-              state: { ...location.state },
-            });
-          }
+          navigate(backPath, {
+            state: {
+              returnPage: location.state?.returnPage,
+              activeTab: location.state?.activeTab,
+              filters: location.state?.filters,
+              lastViewedLeadId: location.state?.lastViewedLeadId,
+              fromPage,
+            },
+          });
         }}
-        disabled={currentIndex <= 0}
-        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-          currentIndex <= 0
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
-        }`}
+        className="px-4 py-2 rounded-full bg-gray-700 text-white font-semibold hover:bg-gray-600 transition"
       >
-        ←
+        ⬅ Back
       </button>
-      {currentIndex > 0 && (
-        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-          Previous Lead
-        </span>
-      )}
-    </div>
 
-    <div className="relative group">
-      <button
-        onClick={() => {
-          if (currentIndex < leadIds.length - 1) {
-            const nextLeadId = leadIds[currentIndex + 1];
-            navigate(`/leaddetailview/${nextLeadId}`, {
-              state: { ...location.state },
-            });
-          }
-        }}
-        disabled={currentIndex >= leadIds.length - 1}
-        className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
-          currentIndex >= leadIds.length - 1
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
-        }`}
-      >
-        →
-      </button>
-      {currentIndex < leadIds.length - 1 && (
-        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-          Next Lead
-        </span>
-      )}
+      {/* PREV / NEXT */}
+      <div className="flex gap-6">
+
+        {/* PREVIOUS */}
+        <button
+          disabled={currentIndex <= 0}
+          onClick={() => {
+            if (currentIndex > 0) {
+              const prevLeadId = leadIds[currentIndex - 1];
+              navigate(/leaddetailview/`${prevLeadId}`, {
+                state: {
+                  ...location.state,
+                  lastViewedLeadId: prevLeadId,
+                },
+              });
+            }
+          }}
+          className={`px-3 py-2 rounded-full font-extrabold text-2xl ${
+            currentIndex <= 0
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-800 text-white hover:bg-blue-600 hover:scale-110"
+          }`}
+        >
+          ←
+        </button>
+
+        {/* NEXT */}
+        <button
+          disabled={currentIndex >= leadIds.length - 1}
+          onClick={() => {
+            if (currentIndex < leadIds.length - 1) {
+              const nextLeadId = leadIds[currentIndex + 1];
+              navigate(/leaddetailview/`${nextLeadId}`, {
+                state: {
+                  ...location.state,
+                  lastViewedLeadId: nextLeadId,
+                },
+              });
+            }
+          }}
+          className={`px-3 py-2 rounded-full font-extrabold text-2xl ${
+            currentIndex >= leadIds.length - 1
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-800 text-white hover:bg-blue-600 hover:scale-110"
+          }`}
+        >
+          →
+        </button>
+
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+
+// const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => (
+//   <div className="flex gap-6 justify-end items-center my-4">
+//     <div className="relative group">
+//       <button
+//         onClick={() => {
+//           if (currentIndex > 0) {
+//             const prevLeadId = leadIds[currentIndex - 1];
+//             navigate(`/leaddetailview/${prevLeadId}`, {
+//               state: { ...location.state },
+//             });
+//           }
+//         }}
+//         disabled={currentIndex <= 0}
+//         className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+//           currentIndex <= 0
+//             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//             : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:-translate-x-1"
+//         }`}
+//       >
+//         ←
+//       </button>
+//       {currentIndex > 0 && (
+//         <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+//           Previous Lead
+//         </span>
+//       )}
+//     </div>
+
+//     <div className="relative group">
+//       <button
+//         onClick={() => {
+//           if (currentIndex < leadIds.length - 1) {
+//             const nextLeadId = leadIds[currentIndex + 1];
+//             navigate(`/leaddetailview/${nextLeadId}`, {
+//               state: { ...location.state },
+//             });
+//           }
+//         }}
+//         disabled={currentIndex >= leadIds.length - 1}
+//         className={`px-3 py-2 rounded-full font-extrabold text-2xl transition-all duration-300 transform  ${
+//           currentIndex >= leadIds.length - 1
+//             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//             : "bg-blue-800 text-white hover:bg-blue-600 hover:shadow-lg hover:scale-110 hover:translate-x-1"
+//         }`}
+//       >
+//         →
+//       </button>
+//       {currentIndex < leadIds.length - 1 && (
+//         <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+//           Next Lead
+//         </span>
+//       )}
+//     </div>
+//   </div>
+// );
 
 const LeadDetailView = () => {
   const { userModules } = useUserAccess();

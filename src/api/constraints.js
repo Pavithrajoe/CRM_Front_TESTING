@@ -5,6 +5,7 @@ export const BASE_URL_DCRM = import.meta.env.VITE_DCRM_API_URL;
 export const ENDPOINTS = {
   BASE_URL_IS: BASE_URL,
   LOGIN: `${BASE_URL}/login`,
+  GOOGLE_LOGIN: `${BASE_URL}/login/google`,
   SIGNUP: `${BASE_URL}/CreateAnAccount`, 
   VERIFY_OTP: `${BASE_URL}/signup-otp/verify`,
   SIGNUP_OTP: `${BASE_URL}/signup-otp`, 
@@ -101,6 +102,7 @@ export const ENDPOINTS = {
   LINKED_LEADS:`${BASE_URL}/lead/linked-leads`,
   TARGET_ARCHIVEMENT_REPORT: `${BASE_URL}/reports/sales-target-vs-achievement`,
   SALES_PERSON_PERFORMANCE: `${BASE_URL}/reports/salesperson-performance`,
+  
   // CUSTOMER_SALES_HISTORY: `${BASE_URL}/reports/customer-sales-history`,
 
 
@@ -181,7 +183,9 @@ export const ENDPOINTS = {
   
   
   //DCRM Integration API
-
+  DCRM_UNIQUE_NUMBER_CHECK: `${BASE_URL_DCRM}/unique-numbers`,
+  DCRM_BLOCK_NUMBER: `${BASE_URL_DCRM}/block-number`,
+  DCRM_UNBLOCK_NUMBER: `${BASE_URL_DCRM}/unblock-number`,
   DCRM_SETTINGS: `${BASE_URL_DCRM}/add-user`,
   DCRM_USER_ACCESS_CHECKING: `${BASE_URL_DCRM}/users`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,

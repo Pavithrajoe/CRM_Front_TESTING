@@ -6,12 +6,17 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import "./index.css";
 import { TabProvider } from "./context/TabContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <TabProvider>
         <Provider store={store}>
-      <App />
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+            <App />
+          </GoogleOAuthProvider>
+      {/* <App /> */}
         </Provider>
       </TabProvider>
     </BrowserRouter>

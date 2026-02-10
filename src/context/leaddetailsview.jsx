@@ -124,7 +124,7 @@ const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => {
   return (
     <div className="flex gap-6 justify-between items-center my-4">
 
-      {/* 🔙 BACK */}
+      {/*  BACK */}
       <button
         onClick={() => {
           navigate(backPath, {
@@ -139,7 +139,7 @@ const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => {
         }}
         className="px-4 py-2 rounded-full bg-gray-700 text-white font-semibold hover:bg-gray-600 transition"
       >
-        ⬅ Back
+        ⬅ 
       </button>
 
       {/* PREV / NEXT */}
@@ -151,7 +151,7 @@ const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => {
           onClick={() => {
             if (currentIndex > 0) {
               const prevLeadId = leadIds[currentIndex - 1];
-              navigate(/leaddetailview/`${prevLeadId}`, {
+              navigate(`/leaddetailview/${prevLeadId}`, {
                 state: {
                   ...location.state,
                   lastViewedLeadId: prevLeadId,
@@ -174,7 +174,7 @@ const NavigationButtons = ({ currentIndex, leadIds, navigate, location }) => {
           onClick={() => {
             if (currentIndex < leadIds.length - 1) {
               const nextLeadId = leadIds[currentIndex + 1];
-              navigate(/leaddetailview/`${nextLeadId}`, {
+              navigate(`/leaddetailview/${nextLeadId}`, {
                 state: {
                   ...location.state,
                   lastViewedLeadId: nextLeadId,

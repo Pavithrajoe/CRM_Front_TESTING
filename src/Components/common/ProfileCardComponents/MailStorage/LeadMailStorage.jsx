@@ -27,9 +27,6 @@ const LeadMailStorage = ({ leadId, isOpen, onClose }) => {
       setError(null);
       try {
         const token = localStorage.getItem("token");
-        // console.log("Fetching all mails from:", `${apiEndPoint}/sentmail`);
-        // console.log("Current Lead ID:", leadId);
-
         const response = await axios.get(`${apiEndPoint}/sentmail`, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -44,18 +41,15 @@ const LeadMailStorage = ({ leadId, isOpen, onClose }) => {
           return String(mail.lead_id) === String(leadId);
         });
 
-        // console.log("Filtered Mails for this lead:", leadMails);
 
         if (leadMails.length > 0) {
           const sortedMails = leadMails.sort(
             (a, b) => new Date(b.created_at) - new Date(a.created_at)
           );
           setMails(sortedMails);
-          // console.log("Mails successfully set in state.");
         } 
         else {
           setMails([]);
-          // console.log("No mails found for this lead after filtering.");
         }
       } 
       catch (err) {
@@ -106,10 +100,7 @@ const LeadMailStorage = ({ leadId, isOpen, onClose }) => {
       />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="w-full max-w-4xl h-[80vh] bg-white rounded-3xl shadow-2xl flex flex-col sm:flex-row overflow-hidden relative">
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-          >
+          <button  onClick={handleClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors" >
             <FiX size={24} />
           </button>
 

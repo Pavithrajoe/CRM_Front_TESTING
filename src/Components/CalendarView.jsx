@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone,FaSearch  } from 'react-icons/fa';
-import { Drawer, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Drawer, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
-import { format } from 'date-fns';
-import axios from 'axios';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
@@ -15,9 +13,6 @@ import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../context/UserAccessContext";
 import Pagination from '../context/Pagination/pagination';
 import usePagination from '../hooks/usePagination';
-
-const XCODEFIX_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
-// console.log("calender xcode id check", XCODEFIX_ID)
 
 function SlideTransition(props) {
   return <Slide {...props} direction="down" />;
@@ -450,10 +445,10 @@ const CalendarView = () => {
   const [taskError, setTaskError] = useState(null);
   const [userTaskError, setUserTaskError] = useState(null);
   const [userTask, setUserTask] =useState([]);
-const [gcalConnected, setGcalConnected] = useState(false);
-const [checkingGcalStatus, setCheckingGcalStatus] = useState(false);
-const userAccess = useUserAccess();
-const navigate = useNavigate();
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [checkingGcalStatus, setCheckingGcalStatus] = useState(false);
+  const userAccess = useUserAccess();
+  const navigate = useNavigate();
 
 
   const token = localStorage.getItem("token");
@@ -1585,10 +1580,10 @@ const disconnectGCal = async () => {
       
         )}
             <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  setCurrentPage={setCurrentPage}
-/>
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+            />
 
       </div>
       <Snackbar

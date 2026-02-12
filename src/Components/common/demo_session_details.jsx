@@ -189,13 +189,10 @@ const DemoSessionDetails = ({ leadId }) => {
     }
   }, [leadId, fetchDemoSessions]);
 
-  // Remove local loading states since we're using context
   if (loading) {
     return (
       <Box mt={4}>
-        <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', mt: 4 }}>
-          Loading demo sessions...
-        </Typography>
+        <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', mt: 4 }}> Loading demo sessions... </Typography>
       </Box>
     );
   }
@@ -203,9 +200,7 @@ const DemoSessionDetails = ({ leadId }) => {
   if (error) {
     return (
       <Box mt={4}>
-        <Typography variant="h6" color="error" sx={{ textAlign: 'center', mt: 4 }}>
-          {error}
-        </Typography>
+        <Typography variant="h6" color="error" sx={{ textAlign: 'center', mt: 4 }}> {error} </Typography>
       </Box>
     );
   }
@@ -214,16 +209,12 @@ const DemoSessionDetails = ({ leadId }) => {
     <ThemeProvider theme={theme}>
       <Box mt={4}>
         {sessions.length === 0 ? (
-          <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', mt: 4 }}>
-            No demo sessions found for this lead.
-          </Typography>
+          <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', mt: 4 }}> No demo sessions found for this lead. </Typography>
         ) : (
           sessions.map((session) => (
             <Card key={`session-${session.idemoSessionId}`} sx={{ mb: 3, boxShadow: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Session - {session.cDemoSessionType?.toUpperCase()}
-                </Typography>
+                <Typography variant="h6" gutterBottom> Session - {session.cDemoSessionType?.toUpperCase()} </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <Typography><strong>Start Time:</strong> {formatDate(session.dDemoSessionStartTime)}</Typography>
                 <Typography><strong>End Time:</strong> {formatDate(session.dDemoSessionEndTime)}</Typography>
@@ -252,14 +243,7 @@ const DemoSessionDetails = ({ leadId }) => {
                   ))}
                 </Box>
 
-                <Button 
-                  onClick={() => openEditDialog(session)} 
-                  variant="contained" 
-                  sx={{ mt: 2 }} 
-                  color="primary"
-                >
-                  Edit
-                </Button>
+                <Button onClick={() => openEditDialog(session)}  variant="contained"  sx={{ mt: 2 }} color="primary" > Edit </Button>
               </CardContent>
             </Card>
           ))

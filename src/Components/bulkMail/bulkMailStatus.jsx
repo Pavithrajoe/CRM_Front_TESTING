@@ -47,9 +47,6 @@ const BulkMailStatus = () => {
   const [statusFilter, setStatusFilter] = useState("all"); 
   const [sentClicked, setSentClicked] = useState(false);
   const [failedClicked, setFailedClicked] = useState(false);
-
-  
-
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const { companyId, userId } = getIdsFromStorage();

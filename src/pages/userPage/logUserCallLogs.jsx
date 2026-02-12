@@ -201,10 +201,7 @@ const parseTime = useCallback((timeStr) => {
     const logsArray = Array.isArray(data) ? data : (data.logs || []);
     setCallLogs(logsArray);
     
-    // Check if logsArray is empty and a 'no logs found' toast hasn't been shown
-    // if (logsArray.length === 0) {
-    //   toast.info('No call logs found for this user');
-    // }
+   
   } catch (err) {
     console.error('Fetch call logs error:', err);
     // Check if an error has already been set to avoid duplicate toasts
@@ -402,7 +399,7 @@ if (startTime && endTime) {
         return;
     }
     
-    // NEW: Validate time range
+    // Validate time range
     if (startTime && endTime) {
         const startMinutes = parseTime(startTime);
         const endMinutes = parseTime(endTime);
@@ -483,9 +480,7 @@ if (startTime && endTime) {
                     />
 
                     <div className="rounded-3xl">
-                        <h2 className="text-3xl font-semibold text-blue-900 mb-10 text-center tracking-tight">
-                             User Call Logs
-                        </h2>
+                        <h2 className="text-3xl font-semibold text-blue-900 mb-10 text-center tracking-tight"> User Call Logs </h2>
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 mb-12">
@@ -495,114 +490,111 @@ if (startTime && endTime) {
                             <StatsCard label="Missed" value={callStats.missedCalls} color="yellow" />
                             <StatsCard label="Rejected" value={callStats.rejectedCalls} color="red" />
                         </div>
-{/* Block / Unblock Button */}
 
+                       {/* Block / Unblock Button */}
 
-
-
-                        
                       {/* Filter Controls - ADD THIS */}
-<div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 p-6 backdrop-blur-md mb-8 rounded-2xl border border-blue-100 bg-white/60">
-    {/* All Filters in Uniform Grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full lg:w-auto items-center">
-        
-        {/* From Date */}
-        <div className="flex items-center gap-2 min-w-[140px]">
-            <label htmlFor="startDate" className="text-sm text-blue-700 font-medium whitespace-nowrap">From:</label>
-            <input
-                id="startDate"
-                type="date"
-                value={isDefaultFilter ? getCurrentMonthDates().start : startDate}
-                onChange={(e) => {
-                    setIsDefaultFilter(false);
-                    setStartDate(e.target.value);
-                }}
-                className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[120px] h-11"
-            />
-        </div>
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 p-6 backdrop-blur-md mb-8 rounded-2xl border border-blue-100 bg-white/60">
+                            {/* All Filters in Uniform Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full lg:w-auto items-center">
+                                
+                                {/* From Date */}
+                                <div className="flex items-center gap-2 min-w-[140px]">
+                                    <label htmlFor="startDate" className="text-sm text-blue-700 font-medium whitespace-nowrap">From:</label>
+                                    <input
+                                        id="startDate"
+                                        type="date"
+                                        value={isDefaultFilter ? getCurrentMonthDates().start : startDate}
+                                        onChange={(e) => {
+                                            setIsDefaultFilter(false);
+                                            setStartDate(e.target.value);
+                                        }}
+                                        className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[120px] h-11"
+                                    />
+                                </div>
 
-        {/* To Date */}
-        <div className="flex items-center gap-2 min-w-[120px]">
-            <label htmlFor="endDate" className="text-sm text-blue-700 font-medium whitespace-nowrap">To:</label>
-            <input
-                id="endDate"
-                type="date"
-                value={isDefaultFilter ? getCurrentMonthDates().end : endDate}
-                onChange={(e) => {
-                    setIsDefaultFilter(false);
-                    setEndDate(e.target.value);
-                }}
-                className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[120px] h-11"
-            />
-        </div>
+                                {/* To Date */}
+                                <div className="flex items-center gap-2 min-w-[120px]">
+                                    <label htmlFor="endDate" className="text-sm text-blue-700 font-medium whitespace-nowrap">To:</label>
+                                    <input
+                                        id="endDate"
+                                        type="date"
+                                        value={isDefaultFilter ? getCurrentMonthDates().end : endDate}
+                                        onChange={(e) => {
+                                            setIsDefaultFilter(false);
+                                            setEndDate(e.target.value);
+                                        }}
+                                        className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[120px] h-11"
+                                    />
+                                </div>
 
-        {/* From Time */}
-        <div className="flex items-center gap-2 min-w-[140px]">
-    
-            <label className="text-sm text-blue-700 font-medium whitespace-nowrap">From:</label>
-            <input
-                id="startTime"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[100px] h-11"
-            />
-        </div>
+                                {/* From Time */}
+                                <div className="flex items-center gap-2 min-w-[140px]">
+                            
+                                    <label className="text-sm text-blue-700 font-medium whitespace-nowrap">From:</label>
+                                    <input
+                                        id="startTime"
+                                        type="time"
+                                        value={startTime}
+                                        onChange={(e) => setStartTime(e.target.value)}
+                                        className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[100px] h-11"
+                                    />
+                                </div>
 
-        {/* To Time */}
-        <div className="flex items-center gap-2 min-w-[120px]">
-            <label className="text-sm text-blue-700 font-medium whitespace-nowrap">To:</label>
-            <input
-                id="endTime"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[100px] h-11"
-            />
-        </div>
+                                {/* To Time */}
+                                <div className="flex items-center gap-2 min-w-[120px]">
+                                    <label className="text-sm text-blue-700 font-medium whitespace-nowrap">To:</label>
+                                    <input
+                                        id="endTime"
+                                        type="time"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                        className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[100px] h-11"
+                                    />
+                                </div>
 
-        {/* Call Type */}
-        <div className="flex items-center gap-2 min-w-[140px]">
-            <label className="text-sm text-blue-700 font-medium whitespace-nowrap">Type:</label>
-            <select
-                value={selectedCallType}
-                onChange={(e) => setSelectedCallType(e.target.value)}
-                className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white min-w-[120px] h-11"
-            >
-                {callTypes.map(type => (
-                    <option key={type.id} value={type.value}>{type.label}</option>
-                ))}
-            </select>
-        </div>
-    </div>
+                                {/* Call Type */}
+                                <div className="flex items-center gap-2 min-w-[140px]">
+                                    <label className="text-sm text-blue-700 font-medium whitespace-nowrap">Type:</label>
+                                    <select
+                                        value={selectedCallType}
+                                        onChange={(e) => setSelectedCallType(e.target.value)}
+                                        className="flex-1 p-2 rounded-full border border-black-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white min-w-[120px] h-11"
+                                    >
+                                        {callTypes.map(type => (
+                                            <option key={type.id} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
 
-    {/* Buttons & Block Button */}
-    <div className="flex items-center gap-3 mt-4 lg:mt-0 flex-shrink-0">
-        <button
-            onClick={() => setShowFilterSummary(true)}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
-        >
-            <Filter size={16} /> Apply Filters
-        </button>
-        <button
-            onClick={handleReset}
-            className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-full shadow-md flex items-center gap-2 focus:outline-none whitespace-nowrap"
-        >
-            <RotateCcw size={16} /> Reset
-        </button>
-        <div className="flex justify-end relative group ml-2">
-            <button
-                onClick={() => setIsBlockPopupOpen(true)}
-                className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center"
-            >
-                <PhoneOff size={20} strokeWidth={2.2} />
-            </button>
-            <span className="absolute bottom-full mb-2 right-0 scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
-                Block / Unblock Numbers
-            </span>
-        </div>
-    </div>
-</div>
+                            {/* Buttons & Block Button */}
+                            <div className="flex items-center gap-3 mt-4 lg:mt-0 flex-shrink-0">
+                                <button
+                                    onClick={() => setShowFilterSummary(true)}
+                                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400 whitespace-nowrap"
+                                >
+                                    <Filter size={16} /> Apply Filters
+                                </button>
+                                <button
+                                    onClick={handleReset}
+                                    className="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-full shadow-md flex items-center gap-2 focus:outline-none whitespace-nowrap"
+                                >
+                                    <RotateCcw size={16} /> Reset
+                                </button>
+                                <div className="flex justify-end relative group ml-2">
+                                    <button
+                                        onClick={() => setIsBlockPopupOpen(true)}
+                                        className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center"
+                                    >
+                                        <PhoneOff size={20} strokeWidth={2.2} />
+                                    </button>
+                                    <span className="absolute bottom-full mb-2 right-0 scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
+                                        Block / Unblock Numbers
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
 
 
 
@@ -697,8 +689,7 @@ if (startTime && endTime) {
                                                     <td className="px-4 py-3">{formatTime(log.call_time)}</td>
                                                     <td className="px-4 py-3">{formatDuration(log.duration)}</td>
                                                     <td className="px-4 py-3">
-                                                        <button
-                                                            onClick={() => handleAddLeadClick(log)}
+                                                        <button onClick={() => handleAddLeadClick(log)}
                                                             className="text-blue-600 font-semibold hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                                             title="Add as Lead"
                                                         >
@@ -716,9 +707,7 @@ if (startTime && endTime) {
                         {/* Pagination Controls */}
                         {totalPages > 1 && (
                             <div className="flex justify-center items-center mt-8 space-x-2">
-                                <button
-                                    onClick={() => paginate(currentPage - 1)}
-                                    disabled={currentPage === 1}
+                                <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
                                     Previous
@@ -772,9 +761,7 @@ if (startTime && endTime) {
                                     </>
                                 )}
                                 
-                                <button
-                                    onClick={() => paginate(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
+                                <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
                                     Next
@@ -791,9 +778,7 @@ if (startTime && endTime) {
                     <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-semibold text-blue-900">Add New Lead</h3>
-                            <button 
-                                onClick={closeLeadForm} 
-                                className="text-gray-500 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-full transition-all duration-200"
+                            <button onClick={closeLeadForm} className="text-gray-500 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-full transition-all duration-200"
                                 title="Close"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -814,26 +799,12 @@ if (startTime && endTime) {
             )}
             {/* Block / Unblock Modal */}
                 {isBlockPopupOpen && (
-                <div
-                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50"
-                    onClick={() => setIsBlockPopupOpen(false)}
-                >
-                    <div
-                    className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
-                    >
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50" onClick={() => setIsBlockPopupOpen(false)} >
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} >
                     {/* Header */}
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800">
-                        Block / Unblock Numbers
-                        </h3>
-
-                        <button
-                        onClick={() => setIsBlockPopupOpen(false)}
-                        className="text-gray-500 hover:text-black text-xl"
-                        >
-                        ✖
-                        </button>
+                        <h3 className="text-xl font-semibold text-gray-800"> Block / Unblock Numbers </h3>
+                        <button onClick={() => setIsBlockPopupOpen(false)} className="text-gray-500 hover:text-black text-xl" > ✖ </button>
                     </div>
 
                     {/* Component */}
@@ -841,7 +812,6 @@ if (startTime && endTime) {
                     </div>
                 </div>
                 )}
-
         </div>
     );
 }

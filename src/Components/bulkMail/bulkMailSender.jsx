@@ -65,22 +65,20 @@ const BulkMailSender = () => {
   const { companyId, userId } = getIdsFromStorage();
   const token = localStorage.getItem("token");
   const isLeadOptionsArray = Array.isArray(leadOptions) && leadOptions.length > 0;
-  const isAllLeadsSelected = leadOptions.length > 0 && 
-    selectedLeadIds.length === leadOptions.length && 
-    selectedLeadIds.every(id => leadOptions.some(lead => lead.id === id));
+  const isAllLeadsSelected = leadOptions.length > 0 && selectedLeadIds.length === leadOptions.length && selectedLeadIds.every(id => leadOptions.some(lead => lead.id === id));
   const getWordCount = (str) => str.trim().split(/\s+/).filter(Boolean).length;
   const handleSubjectChange = (e) => {
-  const newValue = e.target.value;
-  const currentWordCount = newValue.trim().split(/\s+/).filter(Boolean).length;
-  
-  if (currentWordCount <= 50) {
-    setSubject(newValue);
-  } else {
-    const words = newValue.trim().split(/\s+/).filter(Boolean);
-    const limitedValue = words.slice(0, 50).join(" ");
-    setSubject(limitedValue);
-  }
-};
+    const newValue = e.target.value;
+    const currentWordCount = newValue.trim().split(/\s+/).filter(Boolean).length;
+    
+    if (currentWordCount <= 50) {
+      setSubject(newValue);
+    } else {
+      const words = newValue.trim().split(/\s+/).filter(Boolean);
+      const limitedValue = words.slice(0, 50).join(" ");
+      setSubject(limitedValue);
+    }
+  };
 
     const getQuillWordCount = (html) => {
       if (!html) return 0;

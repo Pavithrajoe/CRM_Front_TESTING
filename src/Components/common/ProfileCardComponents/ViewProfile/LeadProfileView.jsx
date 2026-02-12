@@ -2,7 +2,6 @@ import React from 'react';
 import { Dialog } from '@headlessui/react';
 
 const LeadProfileView = ({ profile, showDetails, onClose }) => {
-  // console.log("LEAD PROFILE DATA:", profile);
 
   if (!showDetails || !profile) return null;
 
@@ -86,16 +85,13 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm sm:text-base">
             {/* Left Column - Basic Contact & Organization Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2">
-                Basic Information
-              </h3>
+              <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2">  Basic Information </h3>
 
               <DetailField label="Lead Name" value={profile.clead_name} />
               <DetailField label="Organization Name" value={profile.corganization} />
               <DetailField label="Website" value={profile.cwebsite} />
               <DetailField label="No. of Employees" value={profile.ino_employee} />
-              <DetailField label="Project Value" value={profile.iproject_value ? `${profile.currency?.symbol || '' } ${profile.iproject_value} `
-                    : null}/>
+              <DetailField label="Project Value" value={profile.iproject_value ? `${profile.currency?.symbol || '' } ${profile.iproject_value} ` : null}/>
               <DetailField label="Email" value={profile.cemail} />
               <DetailField label="Mobile Number" value={profile.iphone_no} />
               <DetailField label="WhatsApp Number" value={profile.whatsapp_number} />
@@ -105,9 +101,7 @@ const LeadProfileView = ({ profile, showDetails, onClose }) => {
 
             {/* Right Column - Lead & Industry Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2">
-                Lead & Industry Details
-              </h3>
+              <h3 className="text-lg font-semibold text-black border-b pb-2 mb-2"> Lead & Industry Details </h3>
 
               <DetailField label="Lead Potential" value={profile.lead_potential?.clead_name} />
               <DetailField label="Lead Status" value={profile.lead_status?.clead_name} />

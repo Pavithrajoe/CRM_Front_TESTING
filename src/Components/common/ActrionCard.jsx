@@ -52,22 +52,6 @@ const ActionCard = ({ leadId, onActionClick = () => {} }) => {
           {error}
         </Typography>
       )}
-
-      {/* {actions.length === 0 ? (
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            textAlign: 'center',
-            borderRadius: 3,
-            backgroundColor: '#f0f0f5',
-            color: '#8e8e93',
-            fontSize: '16px',
-          }}
-        >
-          No actions available for this lead.
-        </Paper>
-      )  */}
       
         <Box
           sx={{

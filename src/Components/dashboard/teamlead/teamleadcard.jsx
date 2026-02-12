@@ -1,13 +1,14 @@
 import { useState,  useMemo} from "react";
 import { useNavigate } from 'react-router-dom';
 import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import Pagination from "../../../context/Pagination/pagination";
+import usePagination from "../../../hooks/usePagination";
 
 export default function LeadsTable({leadsData, subordinatesData, loading, error}) {
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState(null);
   const [selectedTab, setSelectedTab] = useState("active"); 
-  const leadsPerPage = 8;
+  const leadsPerPage = 10;
 
   const navigate = useNavigate();
   const activeSubordinatesMap = useMemo(() => {
@@ -94,17 +95,7 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
     return filtered;
   }, [search, leads, sortOrder]);
 
-  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
-  const currentLeads = filteredLeads.slice(
-    (currentPage - 1) * leadsPerPage,
-    currentPage * leadsPerPage
-  );
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
+  const { currentPage, setCurrentPage, totalPages, paginatedData: currentLeads,} = usePagination(filteredLeads, leadsPerPage);
 
   const handleSortToggle = () => {
     if (sortOrder === "asc") {
@@ -192,10 +183,7 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                onClick={handleSortToggle}
-              >
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none" onClick={handleSortToggle} >
                 <div className="flex items-center gap-2">
                   Name
                   {sortOrder === "asc" ? (
@@ -207,15 +195,9 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
                   )}
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assigned To
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Modified By
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Status </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Assigned To </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"> Modified By </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
@@ -242,8 +224,8 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
                         className="w-8 h-8 rounded-full object-cover"
                       /> */}
                         <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
-      {lead.assignedTo.charAt(0).toUpperCase()}
-    </div>
+                          {lead.assignedTo.charAt(0).toUpperCase()}
+                        </div>
                       <span className="text-gray-900">{lead.assignedTo}</span>
                     </div>
                   </td>
@@ -255,8 +237,8 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
                       className="w-8 h-8 rounded-full object-cover"
                       /> */}
                       <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
-      {lead.assignedTo.charAt(0).toUpperCase()}
-    </div>
+                        {lead.assignedTo.charAt(0).toUpperCase()}
+                      </div>
 
                       <div className="flex flex-col">
                         <span className="font-semibold text-gray-900">
@@ -282,46 +264,21 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6 select-none">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`rounded-full px-5 py-2 font-semibold text-sm transition
-              ${
-                currentPage === 1
-                  ? "text-gray-400 border border-gray-300 cursor-not-allowed"
-                  : "text-blue-600 border border-blue-400 hover:bg-blue-50"
-              }`}
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`rounded-full px-5 py-2 font-semibold text-sm transition
-              ${
-                currentPage === totalPages
-                  ? "text-gray-400 border border-gray-300 cursor-not-allowed"
-                  : "text-blue-600 border border-blue-400 hover:bg-blue-50"
-              }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
+     
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
+
     </div>
   );
 }
 
-
 // import { useState,  useMemo} from "react";
-
 // import { useNavigate } from 'react-router-dom';
 // import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+// import Pagination from "../../../context/Pagination/pagination";
 
 // export default function LeadsTable({leadsData, subordinatesData, loading, error}) {
 //   const [search, setSearch] = useState("");
@@ -331,8 +288,6 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //   const leadsPerPage = 8;
 
 //   const navigate = useNavigate();
-
-
 //   const activeSubordinatesMap = useMemo(() => {
 //     const map = new Map();
 //     if (Array.isArray(subordinatesData)) {
@@ -365,12 +320,27 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //       .filter(item => {
 //         const isOwnerActive = activeSubordinatesMap.has(item.clead_owner);
 
-//         if (selectedTab === "active") {
-//           // active leads
-//           return item.bactive === true && isOwnerActive;
-//         } else { // lost leads
-//           return item.bactive === false && item.bisConverted === false && isOwnerActive;
+//         if(selectedTab === "active") {
+//           return item.bactive === true &&
+//                  item.bisConverted === false &&
+//                   isOwnerActive ;
 //         }
+//         else if(selectedTab === "won") {
+//           return item.bisConverted === true &&
+//                   item.bactive === true &&
+//                   isOwnerActive ;
+//         }
+//         else if(selectedTab === "lost") {
+//           return item.bactive === false &&
+//                  item.bisConverted === false &&
+//                   isOwnerActive ;
+//         }
+//         // if (selectedTab === "active") {
+//         //   // active leads
+//         //   return item.bactive === true && isOwnerActive ;
+//         // } else { // lost leads
+//         //   return item.bactive === false && item.bisConverted === false && isOwnerActive;
+//         // }
 //       })
 //       .map((item) => ({
 //         id: item.ilead_id,
@@ -449,10 +419,23 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //         >
 //           Active Leads
 //         </button>
+//          <button
+//           className={`px-4 py-2 rounded-full font-medium ${
+//             selectedTab === "won"
+//               ? "bg-green-500 text-white"
+//               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+//           }`}
+//           onClick={() => {
+//             setSelectedTab("won");
+//             setCurrentPage(1)
+//           }}
+//         >
+//           Won Leads
+//         </button>
 //         <button
 //           className={`px-4 py-2 rounded-full font-medium ${
 //             selectedTab === "lost"
-//               ? "bg-blue-500 text-white"
+//               ? "bg-red-500 text-white"
 //               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
 //           }`}
 //           onClick={() => {
@@ -531,21 +514,28 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //                   </td>
 //                   <td className="px-6 py-4 whitespace-nowrap">
 //                     <div className="flex items-center space-x-3">
-//                       <img
+//                       {/* <img
 //                         src={lead.avatar}
 //                         alt={`${lead.assignedTo} avatar`}
 //                         className="w-8 h-8 rounded-full object-cover"
-//                       />
+//                       /> */}
+//                         <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+//                           {lead.assignedTo.charAt(0).toUpperCase()}
+//                         </div>
 //                       <span className="text-gray-900">{lead.assignedTo}</span>
 //                     </div>
 //                   </td>
 //                   <td className="px-6 py-4 whitespace-nowrap">
 //                     <div className="flex items-center space-x-3">
-//                       <img
+//                       {/* <img
 //                         src={lead.avatar}
 //                         alt={`${lead.modifiedBy} avatar`}
-//                         className="w-8 h-8 rounded-full object-cover"
-//                       />
+//                       className="w-8 h-8 rounded-full object-cover"
+//                       /> */}
+//                       <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+//                         {lead.assignedTo.charAt(0).toUpperCase()}
+//                       </div>
+
 //                       <div className="flex flex-col">
 //                         <span className="font-semibold text-gray-900">
 //                           {lead.modifiedBy}
@@ -570,37 +560,14 @@ export default function LeadsTable({leadsData, subordinatesData, loading, error}
 //       </div>
 
 //       {/* Pagination */}
-//       {totalPages > 1 && (
-//         <div className="flex justify-center items-center gap-4 mt-6 select-none">
-//           <button
-//             onClick={() => handlePageChange(currentPage - 1)}
-//             disabled={currentPage === 1}
-//             className={`rounded-full px-5 py-2 font-semibold text-sm transition
-//               ${
-//                 currentPage === 1
-//                   ? "text-gray-400 border border-gray-300 cursor-not-allowed"
-//                   : "text-blue-600 border border-blue-400 hover:bg-blue-50"
-//               }`}
-//           >
-//             Previous
-//           </button>
-//           <span className="text-sm text-gray-600">
-//             Page {currentPage} of {totalPages}
-//           </span>
-//           <button
-//             onClick={() => handlePageChange(currentPage + 1)}
-//             disabled={currentPage === totalPages}
-//             className={`rounded-full px-5 py-2 font-semibold text-sm transition
-//               ${
-//                 currentPage === totalPages
-//                   ? "text-gray-400 border border-gray-300 cursor-not-allowed"
-//                   : "text-blue-600 border border-blue-400 hover:bg-blue-50"
-//               }`}
-//           >
-//             Next
-//           </button>
-//         </div>
-//       )}
+//       <Pagination
+//         currentPage={currentPage}
+//         totalPages={totalPages}
+//         setCurrentPage={setCurrentPage}
+//       />
+
+      
 //     </div>
 //   );
 // }
+

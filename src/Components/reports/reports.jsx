@@ -123,6 +123,14 @@ const cardsData = [
     reportKey: "CustomerSalesHistory"
   },
 
+  {
+    title: "Call Logs Report",
+    description: "View complete customer-wise call history including total calls, call duration, conversion outcomes, discussed services/products, and engagement timelines.",
+    route: "/call-logs-report",
+    image: "/illustrations/call-report.svg",
+    reportKey: "CallLogsReport"
+  },
+
 ];
 
 const CardsPage = () => {

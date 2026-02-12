@@ -219,23 +219,39 @@ const dataToDisplay = useMemo(() => {
       (selectedFilter === "assignedToMe" && match(item.iassigned_by_name)) ||
       (selectedFilter === "assignedToMe" && match(item.statusDisplay));
 
-    // ✅ DATE FILTER
-    let dateToFilter = item.dmodified_dt || item.d_modified_date;
-    if (selectedFilter === "assignedToMe") {
-      dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
-    }
+    //  DATE FILTER
+    let dateToFilter = item.dcreated_dt;
 
     const isWithinDateRange = (date) => {
       if (!date) return true;
-      const d = new Date(date);
-      const from = fromDate ? new Date(fromDate) : null;
-      const to = toDate
-        ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
-        : null;
-      return (!from || d >= from) && (!to || d <= to);
+      const createdDate = new Date(date)
+        .toISOString()
+        .split("T")[0];
+
+      return (
+        (!fromDate || createdDate >= fromDate) &&
+        (!toDate || createdDate <= toDate)
+      );
     };
 
     const matchesDate = isWithinDateRange(dateToFilter);
+    
+    // let dateToFilter = item.dmodified_dt || item.d_modified_date;
+    // if (selectedFilter === "assignedToMe") {
+    //   dateToFilter = item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+    // }
+
+    // const isWithinDateRange = (date) => {
+    //   if (!date) return true;
+    //   const d = new Date(date);
+    //   const from = fromDate ? new Date(fromDate) : null;
+    //   const to = toDate
+    //     ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+    //     : null;
+    //   return (!from || d >= from) && (!to || d <= to);
+    // };
+
+    // const matchesDate = isWithinDateRange(dateToFilter);
 
     // ✅ MODAL FILTERS (NO ACCESS CHECK HERE)
     let matchesModalFilters = true;

@@ -20,6 +20,7 @@ import UserAttributes from "./pages/userPage/UserAttributes.jsx";
 import { CompanyProvider } from "./context/companyContext.jsx";
 import NotificationPage from "./pages/notification";
 import TerritoryLeadsAnalytics from "./Components/reports/TerritoryReport/TerritoryLeads.jsx"
+import CallLogsReport from "./Components/reports/CallLogsReport/callLogReport.jsx";
 import CustomerSalesHistoryReport from "./Components/reports/CustomerSalesHistoryReport.jsx";
 import LeadSourcePerformanceReport from "./Components/reports/LeadSourcePerformanceReport;.jsx";
 import RevenueBreakdownReport from "./Components/reports/RevenueBreakdownReport.jsx";
@@ -120,6 +121,7 @@ function App() {
                                 <Route element={<AppLayout />}>
                                   <Route path="/notifications" element={<NotificationPage />} />
                                   <Route path="/territory-based-analytics" element={<TerritoryLeadsAnalytics />} />
+                                  <Route path="/call-logs-report" element={<CallLogsReport />} />
                                   <Route path="/CustomerSalesHistoryReport" element={<CustomerSalesHistoryReport />} />
                                   <Route path="/LeadSourcePerformanceReport" element={<LeadSourcePerformanceReport />} />
                                   <Route path="/RevenueBreakdownReport" element={<RevenueBreakdownReport />} />

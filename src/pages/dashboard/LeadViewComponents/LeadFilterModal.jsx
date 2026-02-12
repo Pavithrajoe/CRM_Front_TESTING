@@ -46,22 +46,12 @@ const LeadFilterModal = ({
     "w-full h-9 px-3 rounded-lg bg-white border border-gray-300 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-3"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-4xl bg-white rounded-2xl shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-3" onClick={onClose} >
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()} >
         {/* HEADER */}
         <div className="px-5 py-3 border-b bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-2xl">
-          <h2 className="text-base font-semibold text-white">
-            Advanced Filters
-          </h2>
-          <p className="text-xs text-blue-100">
-            Refine leads using precise conditions
-          </p>
+          <h2 className="text-base font-semibold text-white">  Advanced Filters </h2>
+          <p className="text-xs text-blue-100"> Refine leads using precise conditions </p>
         </div>
 
         {/* BODY */}
@@ -91,11 +81,7 @@ const LeadFilterModal = ({
 
               <div>
                 <label className={labelCls}>Potential</label>
-                <select
-                  value={selectedPotential}
-                  onChange={(e) => setSelectedPotential(e.target.value)}
-                  className={inputCls}
-                >
+                <select  value={selectedPotential}  onChange={(e) => setSelectedPotential(e.target.value)} className={inputCls} >
                   <option value="">All Potentials</option>
                   {potentials?.data?.map((p) => (
                     <option key={p.ileadpoten_id} value={p.clead_name}>

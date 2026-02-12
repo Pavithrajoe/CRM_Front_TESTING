@@ -9,116 +9,38 @@ import {
   Legend,
 } from "chart.js";
 import { ENDPOINTS } from "../../api/constraints";
-import { useNavigate } from "react-router-dom"; // For navigation
+import { useNavigate } from "react-router-dom"; 
 import { FaArrowLeft } from "react-icons/fa";
 import { HiDownload } from "react-icons/hi";
-
-import * as XLSX from 'xlsx'; // Import xlsx library for Excel export
-import { saveAs } from 'file-saver'; // Import saveAs from file-saver for downloading files
+import * as XLSX from 'xlsx'; 
+import { saveAs } from 'file-saver'; 
+import Pagination from "../../context/Pagination/pagination";
+import usePagination from "../../hooks/usePagination.jsx";
 
 // Register Chart.js components that will be used
 ChartJS.register(BarElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-
-const formatDecimalDaysToDaysHours = (decimalDays) => {
-  const numDays = parseFloat(decimalDays);
-  if (isNaN(numDays) || numDays < 0) return '0 Days';
-
-  const days = Math.floor(numDays);
-  const fractionalPart = numDays - days;
-  const hours = Math.round(fractionalPart * 24); // Round to nearest hour
-
-  let result = '';
-  if (days > 0) {
-    result += `${days} Day${days > 1 ? 's' : ''}`;
-  }
-  if (hours > 0) {
-    if (result) result += ' '; // Add space if days exist
-    result += `${hours} Hr${hours > 1 ? 's' : ''}`;
-  }
-
-  if (days === 0 && hours === 0) {
-    return '0 Days'; // For values like 0.00 or very small fractions
-  }
-  return result.trim(); // Trim any leading/trailing spaces
-};
-
-// Helper function to format date and time to DD/MM/YYYY HH.MM AM/PM
-// This is used for displaying dates in a user-friendly format.
-const formatDateTimeForTable = (isoString) => {
-  if (!isoString) return '-';
-  const date = new Date(isoString);
-
-  // Check for valid date object
-  if (isNaN(date.getTime())) return '-';
-
-  const pad = (num) => String(num).padStart(2, '0'); // Helper to add leading zero if needed
-
-  const day = pad(date.getDate());
-  const month = pad(date.getMonth() + 1); // Month is 0-indexed, so add 1
-  const year = date.getFullYear();
-
-  let hours = date.getHours();
-  const minutes = pad(date.getMinutes());
-  const ampm = hours >= 12 ? 'PM' : 'AM'; // Determine AM/PM
-  hours = hours % 12; // Convert to 12-hour format
-  hours = hours ? hours : 12; // The hour '0' (midnight) should be '12 AM'
-
-  return `${day}/${month}/${year} ${pad(hours)}.${minutes} ${ampm}`;
-};
-
 // Main component for Prospects Engaged Report
 export default function ProspectsEngagedReport() {
-  // State to store the fetched data from the API
   const [prospectsEngaged, setProspectsEngaged] = useState({
-    leadEngagementDetails: [], // Array for detailed lead engagement data
-    leadCovertToDeal: [],     // Array for leads converted to deals
+    leadEngagementDetails: [], 
+    leadCovertToDeal: [],     
   });
-  // State to control the active filter for the chart ('all', 'converted', 'nonConverted')
   const [activeChartFilter, setActiveChartFilter] = useState("all");
-  // State to manage loading status for data fetching
   const [loading, setLoading] = useState(true);
-
-  // States for date filtering inputs
   const [dateFilterFrom, setDateFilterFrom] = useState('');
   const [dateFilterTo, setDateFilterTo] = useState('');
-  // State to track if the default current month filter is active
   const [isDefaultMonth, setIsDefaultMonth] = useState(true);
-
-  // Helper function to format a Date object to "YYYY-MM-DD" string for input type="date"
-  const formatDateForInput = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  // // Effect hook to set the default date range to the current month on initial component mount
-  // useEffect(() => {
-  //   const today = new Date();
-  //   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  //   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-  //   const formattedFirstDay = formatDateForInput(firstDayOfMonth);
-  //   const formattedLastDay = formatDateForInput(lastDayOfMonth);
-
-  //   setDateFilterFrom(formattedFirstDay);
-  //   setDateFilterTo(formattedLastDay);
-  //   setIsDefaultMonth(true); // Indicate that the default month filter is applied
-  // }, []); // Empty dependency array ensures this runs only once on mount
 
   // Hook for programmatic navigation
   const navigate = useNavigate();
 
-  // Effect hook to fetch data from the API whenever date filters change
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // Set loading to true before fetching data
+      setLoading(true); 
       try {
-        const token = localStorage.getItem("token"); // Retrieve authentication token
-        if (!token) throw new Error("Token not found"); // Handle missing token
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token not found"); 
 
         // Decode JWT token to get company_id
         const base64Url = token.split(".")[1];
@@ -130,7 +52,7 @@ export default function ProspectsEngagedReport() {
             .join("")
         );
         const { company_id } = JSON.parse(jsonPayload);
-        if (!company_id) throw new Error("Company ID missing"); // Handle missing company ID
+        if (!company_id) throw new Error("Company ID missing"); 
 
         // Construct query parameters for date filtering
         const queryParams = new URLSearchParams();
@@ -139,7 +61,7 @@ export default function ProspectsEngagedReport() {
         }
         if (dateFilterTo) {
           const endOfDay = new Date(dateFilterTo);
-          endOfDay.setHours(23, 59, 59, 999); // Set to end of the day for 'toDate' filter
+          endOfDay.setHours(23, 59, 59, 999); 
           queryParams.append("toDate", endOfDay.toISOString());
         }
 
@@ -157,18 +79,17 @@ export default function ProspectsEngagedReport() {
           },
         });
 
-        const result = await res.json(); // Parse the JSON response
-        setProspectsEngaged(result); // Update state with fetched data
+        const result = await res.json();
+        setProspectsEngaged(result); 
       } catch (err) {
         console.error("API error:", err.message);
-        // In a real application, you might set an error state here to display a message to the user.
       } finally {
-        setLoading(false); // Set loading to false after data fetching is complete
+        setLoading(false); 
       }
     };
 
-    fetchData(); // Call the fetchData function
-  }, [dateFilterFrom, dateFilterTo]); // Dependencies: re-run effect when date filters change
+    fetchData(); 
+  }, [dateFilterFrom, dateFilterTo]); 
 
   // Calculate counts and percentages for cards
   const convertedCount = prospectsEngaged.leadCovertToDeal?.length ?? 0;
@@ -176,7 +97,7 @@ export default function ProspectsEngagedReport() {
   const totalCount = convertedCount + lostCount;
   const lostPercentage = totalCount > 0 ? (lostCount / totalCount) * 100 : 0;
 
-  // Helper function to format numbers for display (removes .00 if whole number)
+  // Helper function to format numbers for display
   const formatNumberForDisplay = (num) => {
     if (num === null || num === undefined) return "--";
     const parsedNum = parseFloat(num);
@@ -189,17 +110,17 @@ export default function ProspectsEngagedReport() {
     {
       title: "Engaged Not Converted",
       value: formatNumberForDisplay(lostCount),
-      changeType: "positive", // Placeholder for actual change logic
+      changeType: "positive", 
     },
     {
       title: "Avg Engagement Score",
       value: formatNumberForDisplay(prospectsEngaged?.avgEngagementScore),
-      changeType: "neutral", // Placeholder for actual change logic
+      changeType: "neutral", 
     },
     {
       title: "Avg No. of Interactions",
       value: formatNumberForDisplay(prospectsEngaged?.avgInteractions),
-      changeType: "positive", // Placeholder for actual change logic
+      changeType: "positive",
     },
     {
       title: "Lost Percentage",
@@ -211,18 +132,17 @@ export default function ProspectsEngagedReport() {
   // Aggregate data for the bar chart based on lead statuses
   const statusCounts = {};
   prospectsEngaged.leadEngagementDetails?.forEach((lead) => {
-    const status = lead.previousActionBeforeLost || "Lost"; // Default to "Lost" if not specified
+    const status = lead.previousActionBeforeLost || "Lost";
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
   prospectsEngaged.leadCovertToDeal?.forEach((lead) => {
-    const status = lead.lead_status?.clead_name || "Converted"; // Default to "Converted"
+    const status = lead.lead_status?.clead_name || "Converted"; 
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
 
-  const convertedStatuses = ["Won", "Converted"]; // Define statuses considered "converted"
-  const labels = Object.keys(statusCounts); // Get unique status labels for chart X-axis
+  const convertedStatuses = ["Won", "Converted"]; 
+  const labels = Object.keys(statusCounts); 
 
-  // Function to prepare data for the Chart.js Bar chart based on the active filter
   const getChartData = () => {
     const convertedData = [];
     const nonConvertedData = [];
@@ -230,10 +150,10 @@ export default function ProspectsEngagedReport() {
     labels.forEach((status) => {
       if (convertedStatuses.includes(status)) {
         convertedData.push(statusCounts[status]);
-        nonConvertedData.push(0); // Non-converted count is 0 for converted statuses
+        nonConvertedData.push(0); 
       } else {
         nonConvertedData.push(statusCounts[status]);
-        convertedData.push(0); // Converted count is 0 for non-converted statuses
+        convertedData.push(0); 
       }
     });
 
@@ -279,15 +199,15 @@ export default function ProspectsEngagedReport() {
     };
   };
 
-  const leadHandlingChartData = getChartData(); // Get chart data based on current filter
+  const leadHandlingChartData = getChartData(); 
 
   // Options for the Chart.js Bar chart
   const leadHandlingChartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // Allow chart to resize freely
+    maintainAspectRatio: false, 
     plugins: {
       legend: {
-        display: false, // Hide legend as buttons control visibility
+        display: false, 
       },
       tooltip: {
         backgroundColor: "#111827", // Dark background for tooltips
@@ -313,11 +233,11 @@ export default function ProspectsEngagedReport() {
         },
         ticks: {
           color: "#4B5563", // Color for Y-axis labels
-          precision: 0, // Display whole numbers for counts
+          precision: 0, 
         },
         title: {
           display: true,
-          text: "No. Of Prospects", // Y-axis title
+          text: "No. Of Prospects",
           color: "#374151",
           font: {
             size: 14,
@@ -330,17 +250,16 @@ export default function ProspectsEngagedReport() {
 
   // Prepare data for the Prospects Engaged Metrics table
   const tableData = prospectsEngaged.leadEngagementDetails.map((lead, index) => ({
-    sNo: index + 1, // Serial number
-    prospectName: lead.clead_name, // Lead name
-    engagementScore: lead.engagementScore, // Engagement score
-    interactionCount: lead.interactionCount, // Number of interactions
-    status: lead.previousActionBeforeLost || "Lost", // Status (default to "Lost")
+    sNo: index + 1, 
+    prospectName: lead.clead_name,
+    engagementScore: lead.engagementScore, 
+    interactionCount: lead.interactionCount, 
+    status: lead.previousActionBeforeLost || "Lost", 
     disqualificationReason:
-      // Conditional check for disqualification reason
       typeof lead.previousActionBeforeLost === "object" &&
       lead.previousActionBeforeLost?.reason
         ? lead.previousActionBeforeLost.reason
-        : "No Reason", // Default reason
+        : "No Reason", 
   }));
 
   // Function to generate the intimation message for date filters
@@ -359,47 +278,30 @@ export default function ProspectsEngagedReport() {
 
   // Function to handle Excel export for the Prospects Engaged table data
   const handleExport = () => {
-    // Check if there's any data to export. If not, show an alert and stop.
     if (prospectsEngaged.leadEngagementDetails.length === 0) {
       alert("No data to export for the current filter.");
       return;
     }
 
-    // Transform the data from 'prospectsEngaged.leadEngagementDetails'
-    // into a new array of objects, where each object represents a row in the Excel sheet.
-    // The keys of these objects will become the column headers in Excel.
     const dataToExport = prospectsEngaged.leadEngagementDetails.map((lead, index) => {
-      // Ensure all fields match the table columns and are formatted as desired for the export.
-      // 'S.No' is included as a placeholder and will be filled with sequential numbers.
       return {
-        'S.No': index + 1, // Assign sequential number directly here
-        'Prospect Name': lead.clead_name || "-", // Use 'clead_name' for prospect name, default to "-"
-        'Engagement Score': lead.engagementScore || 0, // Default to 0 if not available
-        'Num of Interactions': lead.interactionCount || 0, // Default to 0 if not available
-        'Status': lead.previousActionBeforeLost || "Lost", // Default to "Lost" if not available
+        'S.No': index + 1, 
+        'Prospect Name': lead.clead_name || "-",
+        'Engagement Score': lead.engagementScore || 0,
+        'Num of Interactions': lead.interactionCount || 0, 
+        'Status': lead.previousActionBeforeLost || "Lost",
         'Disqualification Reason':
-          // Check if 'previousActionBeforeLost' is an object and has a 'reason' property
           typeof lead.previousActionBeforeLost === "object" &&
           lead.previousActionBeforeLost?.reason
-            ? lead.previousActionBeforeLost.reason // Use the reason if it exists
-            : "No Reason", // Default if no specific reason is found
+            ? lead.previousActionBeforeLost.reason 
+            : "No Reason", 
       };
     });
 
-    // Create a new Excel worksheet from the transformed JSON data.
     const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-    // Create a new Excel workbook.
     const wb = XLSX.utils.book_new();
-
-    // Append the created worksheet to the workbook with a specified sheet name.
     XLSX.utils.book_append_sheet(wb, ws, "ProspectsEngagedReport");
-
-    // Write the workbook data to an ArrayBuffer, specifying the file type as XLSX.
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-
-    // Use 'file-saver' to trigger the download of the generated Excel file.
-    // The Blob constructor creates a file-like object from the ArrayBuffer.
     saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'ProspectsEngagedReport.xlsx');
   };
 
@@ -411,7 +313,7 @@ export default function ProspectsEngagedReport() {
           onClick={() => navigate("/reportpage")}
           style={{
             color: "#6B7280", // Equivalent to text-gray-600
-            padding: "8px", // Equivalent to p-2
+            padding: "8px", 
             borderRadius: "9999px",
             marginRight: "16px",
             fontSize: "24px",
@@ -421,9 +323,9 @@ export default function ProspectsEngagedReport() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transition: "background-color 0.2s ease", // Equivalent to transition-colors
+            transition: "background-color 0.2s ease", 
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} // Equivalent to hover:bg-gray-200
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E5E7EB")} 
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           aria-label="Back to reports"
         >
@@ -445,7 +347,7 @@ export default function ProspectsEngagedReport() {
             <div className="text-2xl font-bold text-gray-800 mt-2">
               {card.value}
             </div>
-            {card.change && ( // Only render if 'change' property exists
+            {card.change && ( 
               <div
                 className={`text-xs mt-1 ${
                   card.changeType === "positive"
@@ -500,7 +402,7 @@ export default function ProspectsEngagedReport() {
             Non-Converted
           </button>
         </div>
-        <div className="relative h-96"> {/* Chart container with fixed height */}
+        <div className="relative h-96"> 
           {loading ? (
             <p className="text-center text-gray-500">Loading chart data...</p>
           ) : (
@@ -530,8 +432,8 @@ export default function ProspectsEngagedReport() {
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 16,
-            flexWrap: "wrap", // Allow wrapping on smaller screens
-            gap: "15px", // Spacing between items
+            flexWrap: "wrap", 
+            gap: "15px", 
           }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <label style={{ fontSize: 16, color: "#555", fontWeight: "bold" }}>From:</label>
@@ -540,7 +442,7 @@ export default function ProspectsEngagedReport() {
               value={dateFilterFrom}
               onChange={(e) => {
                 setDateFilterFrom(e.target.value);
-                setIsDefaultMonth(false); // No longer default month if user changes it
+                setIsDefaultMonth(false); 
               }}
               style={{
                 padding: "8px 12px",
@@ -557,7 +459,7 @@ export default function ProspectsEngagedReport() {
               value={dateFilterTo}
               onChange={(e) => {
                 setDateFilterTo(e.target.value);
-                setIsDefaultMonth(false); // No longer default month if user changes it
+                setIsDefaultMonth(false); 
               }}
               style={{
                 padding: "8px 12px",
@@ -570,10 +472,9 @@ export default function ProspectsEngagedReport() {
             />
             <button
               onClick={() => {
-                // Clear date filters to fetch all data
                 setDateFilterFrom('');
                 setDateFilterTo('');
-                setIsDefaultMonth(false); // Not default month when showing all
+                setIsDefaultMonth(false); 
               }}
               style={{
                 padding: "8px 16px",
@@ -626,24 +527,17 @@ export default function ProspectsEngagedReport() {
   );
 }
 
-// PaginatedTable Component: Renders a table with pagination controls
+// PaginatedTable Component
 function PaginatedTable({ data }) {
-  const itemsPerPage = 10; // Number of items to display per page
-  const [currentPage, setCurrentPage] = useState(1); // Current active page
+  const itemsPerPage = 10; 
 
-  // Calculate total pages and data slice for the current page
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const {
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  paginatedData: currentTableData,
+} = usePagination(data, itemsPerPage);
 
-  // Function to change the current page
-  const changePage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   return (
     <div className="overflow-x-auto">
@@ -656,7 +550,7 @@ function PaginatedTable({ data }) {
               "Engagement Score",
               "Num of Interactions",
               "Status",
-              "Disqualification Reason", // Added this header to match tableData
+              "Disqualification Reason", 
             ].map((header) => (
               <th key={header} className="p-4 border-b">
                 {header}
@@ -665,8 +559,8 @@ function PaginatedTable({ data }) {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.length > 0 ? (
-            paginatedData.map((row, index) => (
+          {currentTableData.length > 0 ? (
+            currentTableData.map((row, index) => (
               <tr key={row.sNo} className="hover:bg-gray-50">
                 <td className="p-4 border-b">
                   {(currentPage - 1) * itemsPerPage + index + 1}
@@ -675,7 +569,7 @@ function PaginatedTable({ data }) {
                 <td className="p-4 border-b">{row.engagementScore}</td>
                 <td className="p-4 border-b">{row.interactionCount}</td>
                 <td className="p-4 border-b">{row.status}</td>
-                <td className="p-4 border-b">{row.disqualificationReason}</td> {/* Display disqualification reason */}
+                <td className="p-4 border-b">{row.disqualificationReason}</td> 
               </tr>
             ))
           ) : (
@@ -688,38 +582,12 @@ function PaginatedTable({ data }) {
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
-      <div className="flex justify-end items-center gap-2 mt-4">
-        <button
-          onClick={() => changePage(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
+       <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
 
-        {[...Array(totalPages)].map((_, i) => (
-          <button
-            key={i}
-            onClick={() => changePage(i + 1)}
-            className={`px-3 py-1 rounded ${
-              currentPage === i + 1
-                ? "bg-lime-500 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            {i + 1}
-          </button>
-        ))}
-
-        <button
-          onClick={() => changePage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 }

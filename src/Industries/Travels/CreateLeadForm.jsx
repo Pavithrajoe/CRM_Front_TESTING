@@ -1,4 +1,3 @@
-
 // last update 11/12 workinh fine
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Swal from "sweetalert2";
@@ -998,10 +997,13 @@ const apiEndPoint = import.meta.env.VITE_API_URL;
       }
     }
     if (name === "cwebsite") {
-      const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
-      if (value && !urlRegex.test(value)) {
-        error = "Invalid website URL format";
+      if (value.length > 25) {
+        error = "Enquiry Number cannot exceed 25 characters";
       }
+    //   const urlRegex = /^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|[a-zA-Z0-9]+\.[^\s]{2,})$/i;
+    //   if (value && !urlRegex.test(value)) {
+    //     error = "Invalid website URL format";
+    //   }
     }
 
     if (name === "corganization") {
@@ -1687,7 +1689,7 @@ const handleSubmit = async (e) => {
   const basicLeadFields = [
     { label: "Lead Name", name: "clead_name", required: true },
     { label: "Organization Name", name: "corganization", required: true },
-    { label: "Website", name: "cwebsite", required: false },
+    { label: "Websitesss", name: "cwebsite", required: true },
   ];
 
   const contactInfoFields = [

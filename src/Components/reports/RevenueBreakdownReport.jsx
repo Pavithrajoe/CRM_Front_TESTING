@@ -20,6 +20,8 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import Pagination from "../../context/Pagination/pagination";
+import usePagination from "../../hooks/usePagination.jsx";
 
 /* ================= CONSTANTS ================= */
 
@@ -32,7 +34,7 @@ const COLORS = [
   "#a855f7",
 ];
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 
 const formatCurrencyShort = (value) => {
@@ -89,7 +91,7 @@ const RevenueBreakdownReport = () => {
     // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    // Auto column width (important for long labels)
+    // Auto column width 
     worksheet["!cols"] = [
       { wch: 6 },
       { wch: 45 },
@@ -196,9 +198,7 @@ const RevenueBreakdownReport = () => {
         >
           <FaArrowLeft />
         </button>
-        <h2 className="text-xl md:text-2xl font-bold">
-          Revenue Breakdown
-        </h2>
+        <h2 className="text-xl md:text-2xl font-bold">  Revenue Breakdown </h2>
       </div>
 
       {/* Tabs */}
@@ -241,12 +241,7 @@ const RevenueBreakdownReport = () => {
             />
           </div>
 
-          <button
-            onClick={fetchTimeData}
-            className="px-4 py-2 bg-indigo-600 text-white rounded"
-          >
-            Apply
-          </button>
+          <button onClick={fetchTimeData} className="px-4 py-2 bg-indigo-600 text-white rounded" > Apply </button>
         </div>
       )}
 
@@ -457,135 +452,112 @@ const ChartSection = ({ data, type }) => {
 /* TABLE  PAGINATION */
 
 const DataTable = ({ data, page, setPage }) => {
-  const start = (page - 1) * PAGE_SIZE;
-  const paged = data.slice(start, start + PAGE_SIZE);
-  const totalPages = Math.ceil(data.length / PAGE_SIZE);
+const {
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  paginatedData
+} = usePagination(data, PAGE_SIZE);
+
 
   return (
     <div>
- <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200 bg-white">
-  <table className="min-w-full text-sm">
-    {/* Header */}
-    <thead className="bg-gray-50 border-b border-gray-200">
-      <tr>
-        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 w-14">
-        S.No
-        </th>
-        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600">
-          Label
-        </th>
-        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
-          Leads
-        </th>
-        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
-          Pipeline
-        </th>
-        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
-          Customers
-        </th>
-        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
-          Revenue
-        </th>
-      </tr>
-    </thead>
+      <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200 bg-white">
+        <table className="min-w-full text-sm">
+          {/* Header */}
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 w-14">
+              S.No
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600">
+                Label
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+                Leads
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+                Pipeline
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+                Customers
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+                Revenue
+              </th>
+            </tr>
+          </thead>
 
-    <tbody className="divide-y divide-gray-100">
-      {paged.length === 0 ? (
-        <tr>
-          <td
-            colSpan={6}
-            className="px-6 py-14 text-center text-gray-400 text-sm"
-          >
-            No data available
-          </td>
-        </tr>
-      ) : (
-        paged.map((row, i) => (
-          <tr
-            key={i}
-            className="hover:bg-indigo-50/40 transition-colors"
-          >
-            {/* Index */}
-            <td className="px-6 py-4 text-sm font-semibold text-gray-700">
-              {start + i + 1}
-            </td>
+          <tbody className="divide-y divide-gray-100">
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-6 py-14 text-center text-gray-400 text-sm"
+                >
+                  No data available
+                </td>
+              </tr>
+            ) : (
+              paginatedData.map((row, i) => (
 
-            {/* Label */}
-            <td className="px-6 py-4">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">
-                  {row.label || "Unspecified"}
-                </span>
-              </div>
-            </td>
+                <tr
+                  key={i}
+                  className="hover:bg-indigo-50/40 transition-colors"
+                >
+                  {/* Index */}
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-700">
+                  {(currentPage - 1) * PAGE_SIZE + i + 1}
 
-            {/* Leads */}
-            <td className="px-6 py-4 text-right">
-              <span className="inline-flex px-2 py-0.5 rounded-md bg-gray-100 text-gray-900 font-semibold">
-                {row.totalLeads ?? 0}
-              </span>
-            </td>
+                  </td>
 
-            {/* Pipeline */}
-            <td className="px-6 py-4 text-right font-medium text-gray-800">
-              <span className="text-gray-700">₹</span>
-              {(row.pipelineValue ?? 0).toLocaleString()}
-            </td>
+                  {/* Label */}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {row.label || "Unspecified"}
+                      </span>
+                    </div>
+                  </td>
 
-            {/* Customers */}
-            <td className="px-6 py-4 text-right">
-              <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold">
-                {row.totalDeals ?? 0}
-              </span>
-            </td>
+                  {/* Leads */}
+                  <td className="px-6 py-4 text-right">
+                    <span className="inline-flex px-2 py-0.5 rounded-md bg-gray-100 text-gray-900 font-semibold">
+                      {row.totalLeads ?? 0}
+                    </span>
+                  </td>
 
-            {/* Revenue */}
-            <td className="px-6 py-4 text-right font-semibold text-green-700">
-              ₹{(row.totalRevenue ?? 0).toLocaleString()}
-            </td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-</div>
+                  {/* Pipeline */}
+                  <td className="px-6 py-4 text-right font-medium text-gray-800">
+                    <span className="text-gray-700">₹</span>
+                    {(row.pipelineValue ?? 0).toLocaleString()}
+                  </td>
 
+                  {/* Customers */}
+                  <td className="px-6 py-4 text-right">
+                    <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold">
+                      {row.totalDeals ?? 0}
+                    </span>
+                  </td>
 
-
-      {/* Pagination */}
-      <div className="flex justify-end items-center gap-3 mt-4">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-          className="
-            px-3 py-1
-            border border-indigo-300
-            rounded
-            text-indigo-700
-            disabled:opacity-40
-          "
-        >
-          Prev
-        </button>
-
-        <span className="text-sm text-gray-600">
-          Page {page} of {totalPages || 1}
-        </span>
-
-        <button
-          disabled={page === totalPages || totalPages === 0}
-          onClick={() => setPage(page + 1)}
-          className="
-            px-3 py-1
-            border border-indigo-300
-            rounded
-            text-indigo-700
-            disabled:opacity-40
-          "
-        >
-          Next
-        </button>
+                  {/* Revenue */}
+                  <td className="px-6 py-4 text-right font-semibold text-green-700">
+                    ₹{(row.totalRevenue ?? 0).toLocaleString()}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {/* Pagination */}   
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        setCurrentPage={setPage}
+      />
+      
     </div>
   );
 };
@@ -593,17 +565,8 @@ const DataTable = ({ data, page, setPage }) => {
 /* UI  */
 const ChartCard = ({ title, children }) => (
   <div
-    className="
-      bg-white
-      border border-indigo-200
-      rounded-xl
-      p-4
-      shadow-sm
-    "
-  >
-    <h3 className="text-sm font-semibold text-indigo-700 mb-2">
-      {title}
-    </h3>
+    className=" bg-white border border-indigo-200  rounded-xl p-4 shadow-sm" >
+    <h3 className="text-sm font-semibold text-indigo-700 mb-2"> {title} </h3>
     {children}
   </div>
 );
@@ -632,6 +595,15 @@ const FlipCard = ({ showBack, children }) => {
 export default RevenueBreakdownReport;
 
 
+
+
+
+
+
+
+
+
+
 // import React, { useContext, useEffect, useState } from "react";
 // import { ENDPOINTS } from "../../api/constraints";
 // import axios from "axios";
@@ -654,6 +626,7 @@ export default RevenueBreakdownReport;
 // import { FaArrowLeft } from "react-icons/fa";
 // import * as XLSX from "xlsx";
 // import { saveAs } from "file-saver";
+// import Pagination from "../../context/Pagination/pagination";
 
 // /* ================= CONSTANTS ================= */
 
@@ -666,7 +639,7 @@ export default RevenueBreakdownReport;
 //   "#a855f7",
 // ];
 
-// const PAGE_SIZE = 5;
+// const PAGE_SIZE = 10;
 
 
 // const formatCurrencyShort = (value) => {
@@ -1000,8 +973,7 @@ export default RevenueBreakdownReport;
 
 //   //  limit bars ONLY for chart 
 //   const chartData = data.slice(0, 6);
-
-//   return (
+//  return (
 //     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
 //       {/* Revenue Chart */}
 //       <ChartCard title="Revenue">
@@ -1098,65 +1070,97 @@ export default RevenueBreakdownReport;
 
 //   return (
 //     <div>
-//       <div className="overflow-x-auto">
-//         <table className="min-w-full text-sm border border-indigo-200 rounded-lg overflow-hidden">
-//           <thead className="bg-indigo-50 text-indigo-700">
-//             <tr>
-//               <th className="p-3 border border-indigo-200 text-center w-12"> S.No </th>
-//               <th className="p-3 border border-indigo-200 text-left"> Label </th>
-//               <th className="p-3 border border-indigo-200 text-center"> Leads </th>
-//               <th className="p-3 border border-indigo-200 text-right"> Pipeline </th>
-//               <th className="p-3 border border-indigo-200 text-center"> Customer </th>
-//               <th className="p-3 border border-indigo-200 text-right"> Revenue </th>
-//             </tr>
-//           </thead>
+//  <div className="overflow-x-auto rounded-2xl shadow-md border border-gray-200 bg-white">
+//   <table className="min-w-full text-sm">
+//     {/* Header */}
+//     <thead className="bg-gray-50 border-b border-gray-200">
+//       <tr>
+//         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 w-14">
+//         S.No
+//         </th>
+//         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600">
+//           Label
+//         </th>
+//         <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+//           Leads
+//         </th>
+//         <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+//           Pipeline
+//         </th>
+//         <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+//           Customers
+//         </th>
+//         <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600">
+//           Revenue
+//         </th>
+//       </tr>
+//     </thead>
 
-//           <tbody>
-//             {paged.length === 0 ? (
-//               <tr>
-//                 <td
-//                   colSpan={6}
-//                   className="p-4 text-center text-gray-500"
-//                 >
-//                   No data available
-//                 </td>
-//               </tr>
-//             ) : (
-//               paged.map((row, i) => (
-//                 <tr
-//                   key={i}
-//                   className="hover:bg-indigo-50 transition"
-//                 >
-//                   {/* SERIAL NUMBER  */}
-//                   <td className="p-3 border border-indigo-100 text-center font-medium">
-//                     {start + i + 1}
-//                   </td>
+//     <tbody className="divide-y divide-gray-100">
+//       {paged.length === 0 ? (
+//         <tr>
+//           <td
+//             colSpan={6}
+//             className="px-6 py-14 text-center text-gray-400 text-sm"
+//           >
+//             No data available
+//           </td>
+//         </tr>
+//       ) : (
+//         paged.map((row, i) => (
+//           <tr
+//             key={i}
+//             className="hover:bg-indigo-50/40 transition-colors"
+//           >
+//             {/* Index */}
+//             <td className="px-6 py-4 text-sm font-semibold text-gray-700">
+//               {start + i + 1}
+//             </td>
 
-//                   <td className="p-3 border border-indigo-100 text-gray-800">
-//                     {row.label}
-//                   </td>
+//             {/* Label */}
+//             <td className="px-6 py-4">
+//               <div className="flex flex-col">
+//                 <span className="text-sm font-semibold text-gray-900">
+//                   {row.label || "Unspecified"}
+//                 </span>
+//               </div>
+//             </td>
 
-//                   <td className="p-3 border border-indigo-100 text-center font-semibold">
-//                     {row.totalLeads ?? 0}
-//                   </td>
-//                   <td className="p-3 border border-indigo-100 text-right">
-//                     ₹{(row.pipelineValue ?? 0).toLocaleString()}
-//                   </td>
-//                   <td className="p-3 border border-indigo-100 text-center font-semibold">
-//                     {row.totalDeals ?? 0}
-//                   </td>
-//                   <td className="p-3 border border-indigo-100 text-right font-medium">
-//                     ₹{(row.totalRevenue ?? 0).toLocaleString()}
-//                   </td>
-//                 </tr>
-//               ))
-//             )}
-//           </tbody>
-//         </table>
-//       </div>
+//             {/* Leads */}
+//             <td className="px-6 py-4 text-right">
+//               <span className="inline-flex px-2 py-0.5 rounded-md bg-gray-100 text-gray-900 font-semibold">
+//                 {row.totalLeads ?? 0}
+//               </span>
+//             </td>
+
+//             {/* Pipeline */}
+//             <td className="px-6 py-4 text-right font-medium text-gray-800">
+//               <span className="text-gray-700">₹</span>
+//               {(row.pipelineValue ?? 0).toLocaleString()}
+//             </td>
+
+//             {/* Customers */}
+//             <td className="px-6 py-4 text-right">
+//               <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold">
+//                 {row.totalDeals ?? 0}
+//               </span>
+//             </td>
+
+//             {/* Revenue */}
+//             <td className="px-6 py-4 text-right font-semibold text-green-700">
+//               ₹{(row.totalRevenue ?? 0).toLocaleString()}
+//             </td>
+//           </tr>
+//         ))
+//       )}
+//     </tbody>
+//   </table>
+// </div>
+
+
 
 //       {/* Pagination */}
-//       <div className="flex justify-end items-center gap-3 mt-4">
+//       {/* <div className="flex justify-end items-center gap-3 mt-4">
 //         <button
 //           disabled={page === 1}
 //           onClick={() => setPage(page - 1)}
@@ -1188,7 +1192,15 @@ export default RevenueBreakdownReport;
 //         >
 //           Next
 //         </button>
-//       </div>
+//       </div> */}
+      
+// <Pagination
+//   currentPage={page}
+//   totalPages={totalPages}
+//   setCurrentPage={setPage}
+// />
+
+      
 //     </div>
 //   );
 // };
@@ -1233,5 +1245,4 @@ export default RevenueBreakdownReport;
 // };
 
 // export default RevenueBreakdownReport;
-
 

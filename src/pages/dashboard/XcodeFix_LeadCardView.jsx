@@ -9,6 +9,7 @@ import LeadCountSelector from './LeadViewComponents/LeadCountSelector';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
 import LeadSummaryModal from './LeadViewComponents/LeadSummaryModal.jsx';
+import Pagination from '../../context/Pagination/pagination.jsx';
 
 const Xcode_LeadCardViewPage = () => {
     const location = useLocation();
@@ -222,23 +223,38 @@ console.log("Applied Filters:", appliedFilters);
       (selectedFilter === "assignedToMe" && match(item.statusDisplay));
 
     // DATE
-    let dateToFilter = item.dmodified_dt || item.d_modified_date;
-    if (selectedFilter === "assignedToMe") {
-      dateToFilter =
-        item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
-    }
+    let dateToFilter = item.dcreated_dt;
 
     const isWithinDateRange = (date) => {
       if (!date) return true;
-      const d = new Date(date);
-      const from = fromDate ? new Date(fromDate) : null;
-      const to = toDate
-        ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
-        : null;
-      return (!from || d >= from) && (!to || d <= to);
+      const createdDate = new Date(date)
+        .toISOString()
+        .split("T")[0];
+
+      return (
+        (!fromDate || createdDate >= fromDate) &&
+        (!toDate || createdDate <= toDate)
+      );
     };
 
     const matchesDate = isWithinDateRange(dateToFilter);
+    // let dateToFilter = item.dmodified_dt || item.d_modified_date;
+    // if (selectedFilter === "assignedToMe") {
+    //   dateToFilter =
+    //     item.dupdate_dt || item.dmodified_dt || item.dcreate_dt;
+    // }
+
+    // const isWithinDateRange = (date) => {
+    //   if (!date) return true;
+    //   const d = new Date(date);
+    //   const from = fromDate ? new Date(fromDate) : null;
+    //   const to = toDate
+    //     ? new Date(new Date(toDate).setHours(23, 59, 59, 999))
+    //     : null;
+    //   return (!from || d >= from) && (!to || d <= to);
+    // };
+
+    // const matchesDate = isWithinDateRange(dateToFilter);
 
     let matchesModalFilters = true;
 
@@ -1749,48 +1765,48 @@ const handleResetFilters = () => {
             )}
 
           <LeadFilterModal
-  showModal={showFilterModal}
-  onClose={() => setShowFilterModal(false)}
-  onApply={handleFilterApply}
-  onReset={handleResetFilters}
+            showModal={showFilterModal}
+            onClose={() => setShowFilterModal(false)}
+            onApply={handleFilterApply}
+            onReset={handleResetFilters}
 
-  fromDate={fromDate}
-  setFromDate={setFromDate}
-  toDate={toDate}
-  setToDate={setToDate}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
 
-  selectedPotential={selectedPotential}
-  setSelectedPotential={setSelectedPotential}
-  selectedStatus={selectedStatus}
-  setSelectedStatus={setSelectedStatus}
+            selectedPotential={selectedPotential}
+            setSelectedPotential={setSelectedPotential}
+            selectedStatus={selectedStatus}
+            setSelectedStatus={setSelectedStatus}
 
-  sources={sources}
-  selectedSource={selectedSource}
-  setSelectedSource={setSelectedSource}
+            sources={sources}
+            selectedSource={selectedSource}
+            setSelectedSource={setSelectedSource}
 
-  selectedSubSource={selectedSubSource}
-  setSelectedSubSource={setSelectedSubSource}
+            selectedSubSource={selectedSubSource}
+            setSelectedSubSource={setSelectedSubSource}
 
-  industries={industries}
-  selectedIndustry={selectedIndustry}
-  setSelectedIndustry={setSelectedIndustry}
+            industries={industries}
+            selectedIndustry={selectedIndustry}
+            setSelectedIndustry={setSelectedIndustry}
 
-  selectedSubIndustry={selectedSubIndustry}
-  setSelectedSubIndustry={setSelectedSubIndustry}
+            selectedSubIndustry={selectedSubIndustry}
+            setSelectedSubIndustry={setSelectedSubIndustry}
 
-  services={services}
-  selectedService={selectedService}
-  setSelectedService={setSelectedService}
+            services={services}
+            selectedService={selectedService}
+            setSelectedService={setSelectedService}
 
-  selectedSubService={selectedSubService}
-  setSelectedSubService={setSelectedSubService}
-subIndustries={filteredSubIndustries}
-subServices={filteredSubServices}
-subSources={filteredSubSources}
+            selectedSubService={selectedSubService}
+            setSelectedSubService={setSelectedSubService}
+            subIndustries={filteredSubIndustries}
+            subServices={filteredSubServices}
+            subSources={filteredSubSources}
 
-  potentials={potentials}
-  statuses={statuses}
-/>
+            potentials={potentials}
+            statuses={statuses}
+          />
 
 
             {showAssignModal && (
@@ -2054,18 +2070,18 @@ subSources={filteredSubSources}
                                     <div
                                         key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
                                       ref={(el) => {
-    if (item.ilead_id && el) {
-      leadRefs.current[item.ilead_id] = el;
-    }
-  }}
-  className={`min-w-[600px] grid gap-4 px-4 py-3 border-t cursor-pointer text-sm
-    ${
-      blinkLeadId === item.ilead_id
-        ? "bg-blue-50 ring-2 ring-blue-500 animate-pulse"
-        : "hover:bg-gray-100"
-    }
-    ${selectedFilter === 'assignedToMe' ? 'grid-cols-11' : 'grid-cols-8'}
-  `}
+                                        if (item.ilead_id && el) {
+                                        leadRefs.current[item.ilead_id] = el;
+                                        }
+                                    }}
+                                    className={`min-w-[600px] grid gap-4 px-4 py-3 border-t cursor-pointer text-sm
+                                        ${
+                                        blinkLeadId === item.ilead_id
+                                            ? "bg-blue-50 ring-2 ring-blue-500 animate-pulse"
+                                            : "hover:bg-gray-100"
+                                        }
+                                        ${selectedFilter === 'assignedToMe' ? 'grid-cols-11' : 'grid-cols-8'}
+                                    `}
                                     >
                                         {/* Checkbox for selection */}
                                         <div className="flex items-center">
@@ -2160,57 +2176,22 @@ subSources={filteredSubSources}
 
                                 return (
                                     <div key={item.ilead_id || `assigned-${item.cemail}-${item.iphone_no}-${item.dcreate_dt || Date.now()}`}
- ref={(el) => {
-    if (item.ilead_id && el) {
-      leadRefs.current[item.ilead_id] = el;
-    }
-  }}
-  className={`
-    relative bg-white rounded-xl shadow-lg p-10 cursor-pointer
-    transition-all duration-300
-    ${
-      blinkLeadId === item.ilead_id
-        ? "ring-4 ring-blue-500 bg-blue-50 animate-pulse"
-        : "border border-gray-200 hover:shadow-xl"
-    }
-  `}
+                                        ref={(el) => {
+                                            if (item.ilead_id && el) {
+                                            leadRefs.current[item.ilead_id] = el;
+                                            }
+                                        }}
+                                        className={`
+                                            relative bg-white rounded-xl shadow-lg p-10 cursor-pointer
+                                            transition-all duration-300
+                                            ${
+                                            blinkLeadId === item.ilead_id
+                                                ? "ring-4 ring-blue-500 bg-blue-50 animate-pulse"
+                                                : "border border-gray-200 hover:shadow-xl"
+                                            }
+                                        `}
                                     >
-                                    {/* <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setSummaryLeadId(item.ilead_id);
-    setShowSummary(true);
-  }}
-  title="View Lead Summary"
-  className="
-    absolute top-3 left-3
-    w-8 h-8
-    rounded-full
-    bg-transparent
-    text-gray-400
-    hover:bg-blue-100 hover:text-blue-600
-    transition-all duration-200
-    flex items-center justify-center
-  "
->
-  ℹ
-</button>
-                                        
-                                        <div className="absolute top-3 right-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedLeads.includes(item.ilead_id)}
-                                            onChange={() => toggleLeadSelection(item.ilead_id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="h-3 w-3 mt-[-2px] text-blue-600 rounded "
-                                        />
-                                        </div>
-                                        
-                                        {(item.website_lead === true || item.website_lead === 'true' || item.website_lead === 1) && (
-                                            <div className="absolute top-3 left-10 text-blue-600" title="Website Lead">
-                                                <FaGlobe size={18} />
-                                            </div>
-                                        )} */}
+                                    
                                         <div className="absolute top-3 left-3 flex items-center gap-2">
                                           {/* Lead Summary */}
                                           <button
@@ -2312,38 +2293,17 @@ subSources={filteredSubSources}
                 </>
             )}
             {showSummary && summaryLeadId && (
-  <LeadSummaryModal
-    leadId={summaryLeadId}
-    onClose={() => setShowSummary(false)}
-  />
-)}
-
-
-            {totalPages > 1 && showPagination && (
-                <div className="flex justify-center items-center space-x-2 mt-6">
-                    <button
-                    onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                    Previous
-                    </button>
-                    <span className="text-gray-700">
-                    Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                    onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-full bg-white text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                    Next
-                    </button>
-                </div>
+                <LeadSummaryModal
+                    leadId={summaryLeadId}
+                    onClose={() => setShowSummary(false)}
+                />
             )}
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+            />
 
         </div>
     );

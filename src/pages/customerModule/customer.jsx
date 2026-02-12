@@ -6,6 +6,8 @@ import Loader from '../../Components/common/Loader';
 import { ENDPOINTS } from '../../api/constraints';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '../../context/Pagination/pagination';
+import usePagination from '../../hooks/usePagination';
 
 const WonList = () => {
   const [deals, setDeals] = useState([]);
@@ -19,12 +21,11 @@ const WonList = () => {
   const [error, setError] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: 'modified_date', direction: 'descending' });
   const [companyIdFromToken, setCompanyIdFromToken] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const dealsPerPage = 12;
+  const dealsPerPage = 10;
 
   const navigate = useNavigate();
 
@@ -151,11 +152,13 @@ const WonList = () => {
     return sortableItems;
   }, [deals, applyFilters, sortConfig]);
 
-  const displayedData = useMemo(() => {
-    return sortedData.slice((currentPage - 1) * dealsPerPage, currentPage * dealsPerPage);
-  }, [sortedData, currentPage]);
+  const {
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  paginatedData: displayedData,
+} = usePagination(sortedData, dealsPerPage);
 
-  const totalPages = Math.ceil(sortedData.length / dealsPerPage);
 
   const handleSort = (key) => {
     setSortConfig((prev) => ({
@@ -270,7 +273,7 @@ const WonList = () => {
               onClick={() =>
   navigate(`/leaddetailview/${item.id}`, {
     state: {
-      leadList: sortedData, // VERY IMPORTANT
+      leadList: sortedData, 
     },
   })
 }
@@ -322,27 +325,11 @@ const WonList = () => {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8 pb-10">
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(p => p - 1)} 
-            className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
-          >
-            PREV
-          </button>
-          <div className="text-xs font-bold text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
-            {currentPage} / {totalPages}
-          </div>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(p => p + 1)} 
-            className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
-          >
-            NEXT
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
 
       {/* Filter Modal */}
       {showFilterModal && (
@@ -384,6 +371,8 @@ export default WonList;
 // import Loader from '../../Components/common/Loader';
 // import { ENDPOINTS } from '../../api/constraints';
 // import { jwtDecode } from 'jwt-decode';
+// import { useNavigate } from 'react-router-dom';
+// import Pagination from '../../context/Pagination/pagination';
 
 // const WonList = () => {
 //   const [deals, setDeals] = useState([]);
@@ -403,6 +392,8 @@ export default WonList;
 //   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 //   const dealsPerPage = 12;
+
+//   const navigate = useNavigate();
 
 //   useEffect(() => {
 //     try {
@@ -643,7 +634,13 @@ export default WonList;
 //           {displayedData.map((item,) => (
 //             <div 
 //               key={item.id} 
-//               onClick={() => window.location.href=`/leaddetailview/${item.id}`} 
+//               onClick={() =>
+//   navigate(`/leaddetailview/${item.id}`, {
+//     state: {
+//       leadList: sortedData, // VERY IMPORTANT
+//     },
+//   })
+// }
 //               className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
 //             >
 //               <div>
@@ -692,27 +689,11 @@ export default WonList;
 //       )}
 
 //       {/* Pagination */}
-//       {totalPages > 1 && (
-//         <div className="flex justify-center items-center gap-4 mt-8 pb-10">
-//           <button 
-//             disabled={currentPage === 1} 
-//             onClick={() => setCurrentPage(p => p - 1)} 
-//             className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
-//           >
-//             PREV
-//           </button>
-//           <div className="text-xs font-bold text-gray-600 bg-gray-100 px-4 py-2 rounded-full">
-//             {currentPage} / {totalPages}
-//           </div>
-//           <button 
-//             disabled={currentPage === totalPages} 
-//             onClick={() => setCurrentPage(p => p + 1)} 
-//             className="px-4 py-2 bg-white border border-gray-300 rounded-full text-xs font-bold disabled:opacity-40 hover:bg-gray-50 transition"
-//           >
-//             NEXT
-//           </button>
-//         </div>
-//       )}
+//       <Pagination
+//         currentPage={currentPage}
+//         totalPages={totalPages}
+//         setCurrentPage={setCurrentPage}
+//       />
 
 //       {/* Filter Modal */}
 //       {showFilterModal && (

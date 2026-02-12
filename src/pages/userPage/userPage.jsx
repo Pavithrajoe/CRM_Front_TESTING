@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { FaCrown, FaEnvelope, FaCity, FaTh, FaBars, FaSpinner,} from "react-icons/fa";
 import ProfileHeader from "../../Components/common/ProfileHeader";
-import { ENDPOINTS } from "../../api/constraints";
-import CreateUserForm from "../../Components/registerUser";
 import { useNavigate } from "react-router-dom";
 import { useUserAccess } from "../../context/UserAccessContext";
 import { companyContext } from "../../context/companyContext";
 import { GlobUserContext } from "../../context/userContex";
+import Pagination from "../../context/Pagination/pagination";
+import usePagination from "../../hooks/usePagination";
 
 const UserPage = () => {
-  const { userModules, userAccess } = useUserAccess();
+  const { userModules, } = useUserAccess();
   const { user } = useContext(GlobUserContext);
   const { company } = useContext(companyContext);
   const companyUserLimit = company?.result?.iUser_no || 0;
@@ -18,14 +18,12 @@ const UserPage = () => {
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState("grid");
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("asc");
   const [activeTab, setActiveTab] = useState("active");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
-  const usersPerPage = 6;
   const navigate = useNavigate();
 
   const dynamicUserCreate = useMemo(() => {
@@ -40,10 +38,6 @@ const UserPage = () => {
   }, [userModules]);
 
 
-  /**
-   * Decodes the JWT token from local storage.
-   * @returns {object | null} The decoded token payload or null if not found/invalid.
-   */
   const getDecodedToken = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -60,19 +54,6 @@ const UserPage = () => {
     }
   };
 
-  /**
-   * Retrieves the company ID from the decoded token.
-   * @returns {string | null} The company ID.
-   */
-  const getCompanyId = () => {
-    const payload = getDecodedToken();
-    return payload?.company_id || payload?.iCompany_id;
-  };
-
-  /**
-   * Retrieves the user's role from the decoded token.
-   * @returns {string | null} The user's role in lowercase.
-   */
   const getUserRole = () => {
     const payload = getDecodedToken();
     return payload?.roleType?.toLowerCase();
@@ -87,25 +68,6 @@ const UserPage = () => {
     navigate("/users");
   };
 
-
-  const fetching = useRef(false);
-
-  // useEffect(() => {
-  //   console.log("UserPage mounted or fetchUsers changed");
-
-  //   if (effectRan.current === false) {
-  //     setUsers(user);
-  //     setUserRole(getUserRole());
-  //     setLoading(false);
-  //     effectRan.current = true;
-  //   }
-
-  //   return () => {
-  //     effectRan.current = false;
-  //   };
-  // }, []);
-
-  // Effect to filter users based on search term and active/inactive tab
  
 useEffect(() => {
   if (user) {
@@ -144,6 +106,14 @@ useEffect(() => {
     setFiltered(sortedUsers);
     setCurrentPage(1);
   }, [searchTerm, users, activeTab, sortOrder]);
+  
+  const {
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  paginatedData: displayedUsers,
+} = usePagination(filtered, 6);
+
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -157,17 +127,6 @@ useEffect(() => {
     navigate(`/userprofile/${userId}`);
   };
 
-  const totalPages = Math.ceil(filtered.length / usersPerPage);
-  const startIndex = (currentPage - 1) * usersPerPage;
-  const displayedUsers = filtered.slice(startIndex, startIndex + usersPerPage);
-
-  const isAuthorized = [
-    "admin",
-    "administrator",
-    "super_admin",
-    "super_administrator",
-    "Administrator",
-  ].includes(userRole);
 
   return (
     <div className="p-6 min-h-screen text-gray-800">
@@ -391,40 +350,12 @@ useEffect(() => {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && !loading && !error && displayedUsers.length > 0 && (
-        <div className="flex justify-center gap-2 mt-8 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-100 disabled:opacity-50"
-          >
-            Prev
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              type="button"
-              key={`page-${i + 1}`}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-2 text-sm rounded-xl shadow-sm ${
-                currentPage === i + 1
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-gray-300 hover:bg-gray-100"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-100 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
+
 
       {showLimitPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -447,6 +378,8 @@ useEffect(() => {
 
 export default UserPage;
 
+
+
 // import React, { useState, useEffect, useCallback, useRef, useContext, useMemo } from "react";
 // import { FaCrown, FaEnvelope, FaCity, FaTh, FaBars, FaSpinner,} from "react-icons/fa";
 // import ProfileHeader from "../../Components/common/ProfileHeader";
@@ -456,13 +389,14 @@ export default UserPage;
 // import { useUserAccess } from "../../context/UserAccessContext";
 // import { companyContext } from "../../context/companyContext";
 // import { GlobUserContext } from "../../context/userContex";
+// import Pagination from "../../context/Pagination/pagination";
 
 // const UserPage = () => {
 //   const { userModules, userAccess } = useUserAccess();
 //   const { user } = useContext(GlobUserContext);
 //   const { company } = useContext(companyContext);
 //   const companyUserLimit = company?.result?.iUser_no || 0;
-//   const effectRan = useRef(false);
+//   // const effectRan = useRef(false);
 //   const [users, setUsers] = useState([]);
 //   const [filtered, setFiltered] = useState([]);
 //   const [searchTerm, setSearchTerm] = useState("");
@@ -488,7 +422,6 @@ export default UserPage;
 //     return Array.from(new Map(filtered.map((item) => [item.attributes_id, item])).values());
 //   }, [userModules]);
 
-//   console.log("testing", userAccess);
 
 //   /**
 //    * Decodes the JWT token from local storage.
@@ -540,22 +473,17 @@ export default UserPage;
 
 //   const fetching = useRef(false);
 
-//   useEffect(() => {
-//     console.log("UserPage mounted or fetchUsers changed");
-
-//     if (effectRan.current === false) {
-//       setUsers(user);
-//       setUserRole(getUserRole());
-//       setLoading(false);
-//       effectRan.current = true;
-//     }
-
-//     return () => {
-//       effectRan.current = false;
-//     };
-//   }, []);
 
 //   // Effect to filter users based on search term and active/inactive tab
+ 
+// useEffect(() => {
+//   if (user) {
+//     setUsers(user);
+//     setUserRole(getUserRole());
+//     setLoading(false);
+//   }
+// }, [user]);
+
 //   useEffect(() => {
 //     let currentFilteredUsers = users.filter((user) => {
 //       const lowerCaseSearchTerm = searchTerm.toLowerCase();
@@ -832,40 +760,11 @@ export default UserPage;
 //       )}
 
 //       {/* Pagination */}
-//       {totalPages > 1 && !loading && !error && displayedUsers.length > 0 && (
-//         <div className="flex justify-center gap-2 mt-8 flex-wrap">
-//           <button
-//             type="button"
-//             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-//             disabled={currentPage === 1}
-//             className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-100 disabled:opacity-50"
-//           >
-//             Prev
-//           </button>
-//           {[...Array(totalPages)].map((_, i) => (
-//             <button
-//               type="button"
-//               key={`page-${i + 1}`}
-//               onClick={() => setCurrentPage(i + 1)}
-//               className={`px-3 py-2 text-sm rounded-xl shadow-sm ${
-//                 currentPage === i + 1
-//                   ? "bg-blue-600 text-white"
-//                   : "bg-white border border-gray-300 hover:bg-gray-100"
-//               }`}
-//             >
-//               {i + 1}
-//             </button>
-//           ))}
-//           <button
-//             type="button"
-//             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-//             disabled={currentPage === totalPages}
-//             className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-100 disabled:opacity-50"
-//           >
-//             Next
-//           </button>
-//         </div>
-//       )}
+//       <Pagination
+//         currentPage={currentPage}
+//         totalPages={totalPages}
+//         setCurrentPage={setCurrentPage}
+//       />
 
 //       {showLimitPopup && (
 //         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">

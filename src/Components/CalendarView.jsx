@@ -6,13 +6,15 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { format } from 'date-fns';
-
+import axios from 'axios';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { ENDPOINTS } from "../api/constraints";
 import Slide from '@mui/material/Slide';  
 import { useNavigate } from "react-router-dom";
-import { useUserAccess } from "../context/UserAccessContext"
+import { useUserAccess } from "../context/UserAccessContext";
+import Pagination from '../context/Pagination/pagination';
+import usePagination from '../hooks/usePagination';
 
 const XCODEFIX_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
 // console.log("calender xcode id check", XCODEFIX_ID)
@@ -466,17 +468,20 @@ const navigate = useNavigate();
     }
   }
 
+// useEffect(() => {
+//   const urlParams = new URLSearchParams(window.location.search);
+
+//   if (urlParams.get('gcal') === 'connected') {
+//     setGcalConnected(true);
+
+//     // remove query param safely
+//     navigate("/calenderpage", { replace: true });
+//     return;
+//   }
+
+//   checkGCalStatus();
+// }, []);
 useEffect(() => {
-  // 1. CHECK URL PARAMS FIRST (OAuth success!)
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('gcal') === 'connected') {
-    setGcalConnected(true); 
-    // Clear URL params
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return;
-  }
-  
-  // 2. THEN check API status
   checkGCalStatus();
 }, []);
 
@@ -485,72 +490,131 @@ const checkGCalStatus = async () => {
   setCheckingGcalStatus(true);
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/status`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/task/google-calendar/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache' // Additional cache busting
+        },
+        cache: 'no-store'
       }
-    });
+    );
+
     const data = await response.json();
-    setGcalConnected(data.connected);
+
+    console.log('🔍 GCal status:', data);
+
+    const isConnected = Boolean(data.connected);
+    setGcalConnected(isConnected);
+
+   
+    if (isConnected) {
+      fetchUserCalendarEvents();
+    } else {
+   
+      setCalendarEvents([]);
+      setUserCalendarEvents([]);
+    }
+
   } catch (error) {
-    console.error('GCal status check failed:', error);
+    console.error('GCal status failed:', error);
+    setGcalConnected(false);
+    setCalendarEvents([]);
+    setUserCalendarEvents([]);
+  } finally {
+    setCheckingGcalStatus(false);
   }
-  setCheckingGcalStatus(false);
 };
+
+
 
 const connectGCal = () => {
-  const userString = localStorage.getItem("user");
-  if (!userString) {
-    alert("👤 Please login first!");
-    return;
-  }
-  
-  let user_data;
-  try {
-    user_data = JSON.parse(userString);
-  } catch (error) {
-    console.error("JSON Parse Error:", error);
-    alert("Login data corrupted. Please login again.");
-    return;
-  }
-  
-  if (!user_data.iUser_id) {
-    alert("User ID missing. Please login again.");
-    return;
-  }
-  
-  const url = `${import.meta.env.VITE_API_URL}/task/google-calendar/connect?userId=${user_data.iUser_id}`;
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  window.location.href = url;
+  if (!user) {
+    alert("Please login again");
+    return;
+  }
+
+  const returnUrl = "/calenderpage";
+
+  window.location.href =
+    `${import.meta.env.VITE_API_URL}/task/google-calendar/connect` +
+    `?userId=${user.iUser_id}&returnUrl=${returnUrl}`;
 };
-
-
 
 const disconnectGCal = async () => {
   try {
     const token = localStorage.getItem("token");
-    await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/disconnect`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/task/google-calendar/disconnect`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
+    );
+
+    // Get response data to see the actual error
+    const data = await response.json().catch(() => ({}));
+    
+    console.log('Disconnect response:', { status: response.status, data });
+
+    // ✅ Even if backend fails, update UI and re-check status
+    // The status check will tell us the real state
     setGcalConnected(false);
+    setCalendarEvents([]);
+    setUserCalendarEvents([]);
+
+    if (!response.ok) {
+      console.error('Disconnect backend error:', data);
+      
+      setSnackbar({
+        open: true,
+        message: `Disconnect partially failed (${response.status}). Checking actual status...`,
+        severity: 'warning'
+      });
+    } else {
+      setSnackbar({
+        open: true,
+        message: '✅ Google Calendar disconnected!',
+        severity: 'success'
+      });
+    }
+
+    // ⏰ Re-check status after a delay regardless of response
+    setTimeout(() => {
+      checkGCalStatus();
+    }, 1000);
+
+  } catch (e) {
+    console.error('Disconnect error:', e);
+    
+    // Still try to update UI and check status
+    setGcalConnected(false);
+    setCalendarEvents([]);
+    setUserCalendarEvents([]);
+    
     setSnackbar({
       open: true,
-      message: '✅ Google Calendar disconnected!',
-      severity: 'success'
+      message: 'Disconnect request failed. Verifying connection status...',
+      severity: 'warning'
     });
-  } catch (error) {
-    setSnackbar({
-      open: true,
-      message: 'Disconnect failed',
-      severity: 'error'
-    });
+
+    // Check actual status from backend
+    setTimeout(() => {
+      checkGCalStatus();
+    }, 1000);
   }
 };
+
+
   const dynamicPermission = useMemo(() => {
     return userModules.filter(
       (attr) => 
@@ -885,20 +949,6 @@ const disconnectGCal = async () => {
     activeTab === 'calendarEvents' ? calendarEvents :
     activeTab === 'tasks' ? tasks : [];
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedCurrentItems = currentTabItems.slice(indexOfFirstItem, indexOfLastItem);
-
-  
-  const totalPages = Math.ceil(currentTabItems.length / itemsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
-    }
-  };
 
   const fetchUserCalendarEvents = async () => {
     const token = localStorage.getItem("token");
@@ -984,9 +1034,11 @@ const disconnectGCal = async () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchUserCalendarEvents();
-  }, []);
+// useEffect(() => {
+//   if (gcalConnected) {
+//     fetchUserCalendarEvents();
+//   }
+// }, [gcalConnected]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -1065,6 +1117,15 @@ const disconnectGCal = async () => {
   };
 
   const filteredTableData = getFilteredTableData();
+
+  const {
+  currentPage,
+  setCurrentPage,
+  totalPages,
+  paginatedData: paginatedCurrentItems,
+} = usePagination(filteredTableData, 10);
+
+// const indexOfFirstItem = (currentPage - 1) * 5;
 
   return (
     <div >
@@ -1430,7 +1491,7 @@ const disconnectGCal = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTableData.map((item, index) => (
+                    {paginatedCurrentItems.map((item, index) => (
                       <tr key={item.itask_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"  onClick={() => navigate(`/leaddetailview/${item.ilead_id}`)} >
                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
                         <td className="px-4 py-3 border-b align-top break-words">{item.ctitle || "No Title"}</td>
@@ -1468,7 +1529,7 @@ const disconnectGCal = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTableData.map((item, index) => (
+                    {paginatedCurrentItems.map((item, index) => (
                       <tr key={item.icalender_event} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
                         <td className="px-4 py-3 border-b align-top break-words">{item.ctitle}</td>
@@ -1506,7 +1567,7 @@ const disconnectGCal = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTableData.map((item, index) => (
+                    {paginatedCurrentItems.map((item, index) => (
                       <tr key={item.iremainder_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"> 
                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
                         <td className="px-4 py-3 border-b align-top break-words">{item.cremainder_content}</td>
@@ -1521,7 +1582,14 @@ const disconnectGCal = async () => {
               </div>
             )}
           </>
+      
         )}
+            <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  setCurrentPage={setCurrentPage}
+/>
+
       </div>
       <Snackbar
         open={snackbar.open}
@@ -1553,8 +1621,6 @@ export default CalendarView;
 
 
 
-
-
 // import React, { useState, useEffect, useRef, useMemo } from 'react';
 // import { FaCheckSquare, FaRegSquare, FaUserAlt, FaClock, FaPlus, FaChevronLeft, FaChevronRight, FaMicrophone,FaSearch  } from 'react-icons/fa';
 // import { Drawer, Button, CircularProgress, Snackbar, Alert } from '@mui/material';
@@ -1563,14 +1629,17 @@ export default CalendarView;
 // import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 // import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 // import { format } from 'date-fns';
+
 // import Calendar from 'react-calendar';
 // import 'react-calendar/dist/Calendar.css';
 // import { ENDPOINTS } from "../api/constraints";
 // import Slide from '@mui/material/Slide';  
 // import { useNavigate } from "react-router-dom";
 // import { useUserAccess } from "../context/UserAccessContext"
+// import Pagination from '../context/Pagination/pagination';
 
 // const XCODEFIX_ID = Number(import.meta.env.VITE_XCODEFIX_FLOW);
+// // console.log("calender xcode id check", XCODEFIX_ID)
 
 // function SlideTransition(props) {
 //   return <Slide {...props} direction="down" />;
@@ -1606,6 +1675,7 @@ export default CalendarView;
   
 //   const recognitionRef = useRef(null);
 //   const descriptionRef = useRef('');
+  
 
 //   useEffect(() => {
 //     if (open && selectedDate) {
@@ -1975,6 +2045,7 @@ export default CalendarView;
 // };
 
 // const CalendarView = () => {
+
 //   const { userModules } = useUserAccess();
 //   const [selectedDate, setSelectedDate] = useState(new Date());
 //   const [msg, setMsg] = useState('');
@@ -2001,6 +2072,11 @@ export default CalendarView;
 //   const [taskError, setTaskError] = useState(null);
 //   const [userTaskError, setUserTaskError] = useState(null);
 //   const [userTask, setUserTask] =useState([]);
+// const [gcalConnected, setGcalConnected] = useState(false);
+// const [checkingGcalStatus, setCheckingGcalStatus] = useState(false);
+// const userAccess = useUserAccess();
+// const navigate = useNavigate();
+
 
 //   const token = localStorage.getItem("token");
 //   let company_id = null;
@@ -2014,6 +2090,91 @@ export default CalendarView;
 //     }
 //   }
 
+// useEffect(() => {
+//   // 1. CHECK URL PARAMS FIRST (OAuth success!)
+//   const urlParams = new URLSearchParams(window.location.search);
+//   if (urlParams.get('gcal') === 'connected') {
+//     setGcalConnected(true); 
+//     // Clear URL params
+//     window.history.replaceState({}, document.title, window.location.pathname);
+//     return;
+//   }
+  
+//   // 2. THEN check API status
+//   checkGCalStatus();
+// }, []);
+
+
+// const checkGCalStatus = async () => {
+//   setCheckingGcalStatus(true);
+//   try {
+//     const token = localStorage.getItem("token");
+//     const response = await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/status`, {
+//       headers: {
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+//     const data = await response.json();
+//     setGcalConnected(data.connected);
+//   } catch (error) {
+//     console.error('GCal status check failed:', error);
+//   }
+//   setCheckingGcalStatus(false);
+// };
+
+// const connectGCal = () => {
+//   const userString = localStorage.getItem("user");
+//   if (!userString) {
+//     alert("👤 Please login first!");
+//     return;
+//   }
+  
+//   let user_data;
+//   try {
+//     user_data = JSON.parse(userString);
+//   } catch (error) {
+//     console.error("JSON Parse Error:", error);
+//     alert("Login data corrupted. Please login again.");
+//     return;
+//   }
+  
+//   if (!user_data.iUser_id) {
+//     alert("User ID missing. Please login again.");
+//     return;
+//   }
+  
+//   const url = `${import.meta.env.VITE_API_URL}/task/google-calendar/connect?userId=${user_data.iUser_id}`;
+
+//   window.location.href = url;
+// };
+
+
+
+// const disconnectGCal = async () => {
+//   try {
+//     const token = localStorage.getItem("token");
+//     await fetch(`${import.meta.env.VITE_API_URL}/task/google-calendar/disconnect`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+//     setGcalConnected(false);
+//     setSnackbar({
+//       open: true,
+//       message: '✅ Google Calendar disconnected!',
+//       severity: 'success'
+//     });
+//   } catch (error) {
+//     setSnackbar({
+//       open: true,
+//       message: 'Disconnect failed',
+//       severity: 'error'
+//     });
+//   }
+// };
 //   const dynamicPermission = useMemo(() => {
 //     return userModules.filter(
 //       (attr) => 
@@ -2348,15 +2509,6 @@ export default CalendarView;
 //     activeTab === 'calendarEvents' ? calendarEvents :
 //     activeTab === 'tasks' ? tasks : [];
 
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const itemsPerPage = 5;
-//   const indexOfLastItem = currentPage * itemsPerPage;
-//   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-//   const paginatedCurrentItems = currentTabItems.slice(indexOfFirstItem, indexOfLastItem);
-//   const navigate = useNavigate();
-  
-//   const totalPages = Math.ceil(currentTabItems.length / itemsPerPage);
-
 //   const handlePageChange = (pageNumber) => {
 //     if (pageNumber > 0 && pageNumber <= totalPages) {
 //       setCurrentPage(pageNumber);
@@ -2528,13 +2680,68 @@ export default CalendarView;
 //   };
 
 //   const filteredTableData = getFilteredTableData();
+//   const itemsPerPage = 10;
+// const [currentPage, setCurrentPage] = useState(1);
+
+// const indexOfLastItem = currentPage * itemsPerPage;
+// const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+// const paginatedTableData = filteredTableData.slice(
+//   indexOfFirstItem,
+//   indexOfLastItem
+// );
+
+// const totalPages = Math.ceil(filteredTableData.length / itemsPerPage);
+
 
 //   return (
 //     <div >
 //       <div >
 //        <div className="flex flex-col lg:flex-row w-full h-auto p-4 gap-8">
 //           {/* LEFT HALF: Calendar */}
-//          <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6  lg:h-[450px] flex flex-col order-1 lg:order-1">
+// <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6 min-h-[450px] flex flex-col order-1 lg:order-1">
+//          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
+//     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+//       <div className="flex items-center gap-3">
+//         <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+//         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+//           📅 Google Calendar Sync
+//         </h3>
+//       </div>
+      
+//       {checkingGcalStatus ? (
+//         <div className="flex items-center gap-2 text-blue-600 bg-blue-100 px-3 py-1.5 rounded-full">
+//           <CircularProgress size={18} />
+//           <span className="text-sm font-medium">Checking...</span>
+//         </div>
+//       ) : gcalConnected ? (
+//         <div className="flex items-center gap-3">
+//           <span className="text-green-600 bg-green-100 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1">
+//             ✅ Connected
+//           </span>
+//           <button
+//             onClick={disconnectGCal}
+//             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
+//           >
+//             Disconnect
+//           </button>
+//         </div>
+//       ) : (
+//         <button
+//           onClick={connectGCal}
+//           className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+//         >
+//           🔗 Connect Google Calendar
+//         </button>
+//       )}
+//     </div>
+    
+//     {gcalConnected && (
+//       <p className="text-xs text-gray-500 mt-2">
+//         All new calendar events will sync automatically to your Google Calendar
+//       </p>
+//     )}
+//   </div>
 //             <Calendar
 //               className="w-full border border-white [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center"
 //               onChange={(newDate) => {
@@ -2576,24 +2783,23 @@ export default CalendarView;
 //               )}
 //             />
 //             {/* New buttons section */}
-//     <div className="flex sm:flex-row gap-3 mt-auto pt-4 pb-4 border-t border-gray-200">
-
-//               <button
-//                 onClick={() => setOpenDrawer(true)}
-//                 className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md flex-1"
-//               >
-//                 <FaPlus className="mr-2" />
-//                 Calendar Event
-//               </button>
-//               <button
-//                 onClick={() => window.open("https://meet.google.com/landing", "_blank")}
-//                 className="w-[200px] bg-black mt-[30px] hover:bg-gray-800 text-white py-2 px-4 rounded-xl flex items-center justify-center shadow-md "
-//               >
-//                 <b className="text-white font-bold mr-1">G</b>
-//                 <span>Create Meet</span>
-//               </button>
-//             </div>
-//           </div>
+// <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200 mt-4">
+//     <button
+//       onClick={() => setOpenDrawer(true)}
+//       className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-xl flex items-center justify-center shadow-md h-12"
+//     >
+//       <FaPlus className="mr-2" />
+//       Calendar Event
+//     </button>
+//     <button
+//       onClick={() => window.open("https://meet.google.com/landing", "_blank")}
+//       className="flex-1 bg-black hover:bg-gray-800 text-white py-3 px-6 rounded-xl flex items-center justify-center shadow-md h-12"
+//     >
+//       <b className="text-white font-bold mr-1">G</b>
+//       <span>Create Meet</span>
+//     </button>
+//   </div>
+// </div>
 
 //           {/* Tab view with cards */}
 //        <div className="w-full lg:w-1/2 bg-white rounded-2xl shadow-lg p-6 h-96 lg:h-[450px] flex flex-col order-1 lg:order-2 mt-4 lg:mt-0">
@@ -2818,7 +3024,7 @@ export default CalendarView;
 //                     ? "✅ All Follow Ups" 
 //                     : "✅ All Tasks"
 //                 )}
-//                 {/* {tab === "tasks" && "✅ All Tasks"} */}
+//                 {/* {tab === "tasks" && " All Tasks"} */}
 //               </button>
 //             ))}
 //           </div>
@@ -2852,9 +3058,11 @@ export default CalendarView;
 //                     </tr>
 //                   </thead>
 //                   <tbody>
-//                     {filteredTableData.map((item, index) => (
+//                     {/* {filteredTableData.map((item, index) => ( */}
+//                       {paginatedTableData.map((item, index) => (
+
 //                       <tr key={item.itask_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"  onClick={() => navigate(`/leaddetailview/${item.ilead_id}`)} >
-//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{indexOfFirstItem + index + 1}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.ctitle || "No Title"}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.ctask_content}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">
@@ -2890,9 +3098,10 @@ export default CalendarView;
 //                     </tr>
 //                   </thead>
 //                   <tbody>
-//                     {filteredTableData.map((item, index) => (
+//                     {/* {filteredTableData.map((item, index) => ( */}
+//                     {paginatedTableData.map((item, index) => (
 //                       <tr key={item.icalender_event} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out">
-//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{indexOfFirstItem + index + 1}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.ctitle}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.cdescription || "-"}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.recurring_task || "None"}</td>
@@ -2928,9 +3137,10 @@ export default CalendarView;
 //                     </tr>
 //                   </thead>
 //                   <tbody>
-//                     {filteredTableData.map((item, index) => (
+//                     {/* {filteredTableData.map((item, index) => ( */}
+//                      {paginatedTableData.map((item, index) => (
 //                       <tr key={item.iremainder_id} className="bg-white hover:bg-blue-50 transition duration-150 ease-in-out"> 
-//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{index + 1}</td>
+//                         <td className="px-4 py-3 border-b text-center font-medium align-top">{indexOfFirstItem + index + 1}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.cremainder_content}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.created_by}</td>
 //                         <td className="px-4 py-3 border-b align-top break-words">{item.assigned_to}</td>
@@ -2945,6 +3155,13 @@ export default CalendarView;
 //           </>
 //         )}
 //       </div>
+//         <Pagination
+//         currentPage={currentPage}
+//         totalPages={totalPages}
+//         setCurrentPage={setCurrentPage}
+//       />
+
+
 //       <Snackbar
 //         open={snackbar.open}
 //         autoHideDuration={4000}

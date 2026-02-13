@@ -190,4 +190,6 @@ export const ENDPOINTS = {
   DCRM_USER_ACCESS_CHECKING: `${BASE_URL_DCRM}/users`,
   CREATE_USER_SETTINGS: `${BASE_URL_DCRM}/create-userSettings`,
   POST_SALES_POST_METHOD: `${BASE_URL}/post-sales/`,
+  DCRM_CALL_REPORT: `${BASE_URL_DCRM}/dashboard/report`,
+
 };

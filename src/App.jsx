@@ -11,7 +11,6 @@ import RequestDemo from "./Components/request_demo.jsx";
 import CreateAnAccount from "./Components/CreateAnAccount.jsx";
 import UpdatePassword from "./Components/UpdatePassword";
 import AppLayout from "./Components/AppLayout";
-import PrivateRoute from "./Components/PrivateRoute.jsx";
 import { UserProvider } from "./context/UserContext";
 import { TabProvider } from "./context/TabContext";
 import { UserAccessProvider } from "./context/UserAccessContext.jsx";

@@ -10,6 +10,7 @@ import axios from "axios";
 import { ENDPOINTS } from "../../api/constraints";
 import { useLeadForm } from "../../context/LeadFormContext";
 import InteriorDesigningLeadForm from "../../Industries/InteriorDesigning/InteriorDesigningLeadForm.jsx";
+import TravelLeadForm from "../../Industries/Travels/CreateLeadFormTravel/CreateLeadForm.jsx";
 
 // const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
 const LAST_SEEN_TS_KEY = "notifications_last_seen";
@@ -136,6 +137,11 @@ const ProfileHeader = () => {
       return; 
     }
 
+    if (companyIndustryId === 6) {
+      setShowLeadForm(true);
+      return;
+    }
+
     if (leadFormType === 1 || leadFormType === 2 || leadFormType === 3) {
       setShowLeadForm(true);
       return;
@@ -212,9 +218,12 @@ return (
     {showLeadForm && (
       <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
         <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
-          
-          {companyIndustryId === 5 ? (
+
+
+         {companyIndustryId === 5 ? (
             <InteriorDesigningLeadForm onClose={handleLeadFormClose} />
+          ) : companyIndustryId === 6 ? (
+            <TravelLeadForm onClose={handleLeadFormClose} />
           ) : leadFormType === 1 ? (
             <LeadForm onClose={handleLeadFormClose} />
           ) : leadFormType === 2 ? (
@@ -222,6 +231,16 @@ return (
           ) : leadFormType === 3 ? (
             <Both onClose={handleLeadFormClose} />
           ) : null}
+          
+          {/* {companyIndustryId === 5 ? (
+            <InteriorDesigningLeadForm onClose={handleLeadFormClose} />
+          ) :  leadFormType === 1 ? (
+            <LeadForm onClose={handleLeadFormClose} />
+          ) : leadFormType === 2 ? (
+            <LeadFormB2C onClose={handleLeadFormClose} />
+          ) : leadFormType === 3 ? (
+            <Both onClose={handleLeadFormClose} />
+          ) : null} */}
 
         </div>
       </div>
@@ -231,7 +250,7 @@ return (
    <div className="hidden md:flex">
     <button
       onClick={handleLeadFormOpen}
-      disabled={!(leadFormType === 1 || leadFormType === 2 || leadFormType ===3)}
+      disabled={!(leadFormType === 1 || leadFormType === 2 || leadFormType === 3)}
       className={`flex items-center justify-center px-3 md:px-5 py-2 rounded-full text-white font-medium 
         bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 
         border border-blue-300 shadow-lg 

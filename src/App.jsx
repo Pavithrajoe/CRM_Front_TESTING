@@ -1,4 +1,3 @@
-import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ForgetPassword from "./Components/ForgetPassword";
 import { ToastProvider } from "./context/ToastContext";
@@ -88,6 +87,9 @@ import { LeadFormProvider } from "./context/LeadFormContext.jsx";
 import { GlobeUserProvider } from "./context/userContex.jsx";
 import { DemoSessionProvider } from "./context/demo_session_session_context.jsx";
 import { RoleProvider } from "./context/RoleContext";
+import { ServiceProvider } from "./context/Master/ServiceContext/ServiceContext.jsx";
+import { SubServiceProvider } from "./context/Master/SubServiceContext/SubserviceContext.jsx";
+import { CountryCodeProvider } from "./context/Master/CountryCodeContext/CountryCodeContext.jsx";
 
 function App() {
   return (
@@ -96,12 +98,15 @@ function App() {
         <TabProvider>
           <UserProvider>
             <UserAccessProvider>
+               <CountryCodeProvider>
                   <ModuleProvider>
                     <SettingsProvider>
                        <RoleProvider>
                       <GlobeUserProvider>
                         <BusinessProvider>
                       <CompanyProvider>
+                        <ServiceProvider>
+                           <SubServiceProvider>
                         <DemoSessionProvider>
                           <LeadFormProvider>
                             <Routes>
@@ -194,12 +199,15 @@ function App() {
                            </LeadFormProvider>
                       
                         </DemoSessionProvider>
+                        </SubServiceProvider>
+                        </ServiceProvider>
                       </CompanyProvider>
                       </BusinessProvider>
                       </GlobeUserProvider>
                       </RoleProvider>
                     </SettingsProvider>
                   </ModuleProvider>
+                </CountryCodeProvider>
             </UserAccessProvider>
           </UserProvider>
         </TabProvider>

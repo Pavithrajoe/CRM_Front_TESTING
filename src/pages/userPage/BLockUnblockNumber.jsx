@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ENDPOINTS } from "../../api/constraints";
@@ -225,7 +224,7 @@ return (
               }}
             >
               <td style={{ color: "#8e8e93" }}>
-                {startIndex + index + 1}
+                 {(currentPage - 1) * 10 + index + 1}
               </td>
 
               <td>{item.call_log_number}</td>

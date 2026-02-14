@@ -15,7 +15,6 @@ import TravelLeadForm from "../../Industries/Travels/CreateLeadFormTravel/Create
 // const LAST_SEEN_TS_KEY = "notifications_today_last_seen_at";
 const LAST_SEEN_TS_KEY = "notifications_last_seen";
 
-
 const ProfileHeader = () => {
   const { userModules } = useUserAccess();
   const { company } = useContext(companyContext);
@@ -218,8 +217,6 @@ return (
     {showLeadForm && (
       <div className="fixed inset-0 z-40 bg-black bg-opacity-30 flex justify-center items-center">
         <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto transition-all duration-300">
-
-
          {companyIndustryId === 5 ? (
             <InteriorDesigningLeadForm onClose={handleLeadFormClose} />
           ) : companyIndustryId === 6 ? (
